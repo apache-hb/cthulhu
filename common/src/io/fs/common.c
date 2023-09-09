@@ -1,5 +1,7 @@
 #include "common.h"
 
+#include "report/report.h"
+
 #include "std/vector.h"
 #include "std/str.h"
 

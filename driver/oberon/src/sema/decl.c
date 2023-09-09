@@ -56,6 +56,7 @@ static obr_t *begin_resolve(tree_t *sema, tree_t *self, void *user, obr_kind_t k
 
 static void resolve_const(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
+    CTU_UNUSED(cookie);
     obr_t *decl = begin_resolve(sema, self, user, eObrDeclConst);
 
     tree_t *expr = obr_sema_rvalue(sema, decl->value, NULL);
@@ -65,6 +66,7 @@ static void resolve_const(cookie_t *cookie, tree_t *sema, tree_t *self, void *us
 
 static void resolve_var(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
+    CTU_UNUSED(cookie);
     begin_resolve(sema, self, user, eObrDeclVar);
 
     tree_t *value = obr_default_value(self->node, tree_get_type(self));
@@ -74,6 +76,7 @@ static void resolve_var(cookie_t *cookie, tree_t *sema, tree_t *self, void *user
 
 static void resolve_type(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
+    CTU_UNUSED(cookie);
     obr_t *decl = begin_resolve(sema, self, user, eObrDeclType);
 
     tree_t *type = obr_sema_type(sema, decl->type, decl->name);
@@ -84,6 +87,7 @@ static void resolve_type(cookie_t *cookie, tree_t *sema, tree_t *self, void *use
 
 static void resolve_proc(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
+    CTU_UNUSED(cookie);
     obr_t *decl = begin_resolve(sema, self, user, eObrDeclProcedure);
 
     vector_t *params = tree_fn_get_params(self);
@@ -121,7 +125,7 @@ static void resolve_proc(cookie_t *cookie, tree_t *sema, tree_t *self, void *use
         obr_add_decl(ctx, eObrTagValues, param->name, param);
     }
 
-    tree_t *body = obr_sema_stmts(ctx, decl->node, decl->name, decl->body);
+    tree_t *body = obr_sema_stmts(ctx, decl->node, decl->body);
 
     tree_close_function(self, body);
 }
@@ -263,9 +267,10 @@ obr_forward_t obr_forward_decl(tree_t *sema, obr_t *decl)
 
 static void obr_resolve_init(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
+    CTU_UNUSED(cookie);
     obr_t *mod = begin_resolve(sema, self, user, eObrModule);
 
-    tree_t *body = obr_sema_stmts(sema, mod->node, mod->name, mod->init);
+    tree_t *body = obr_sema_stmts(sema, mod->node, mod->init);
     tree_close_function(self, body);
 }
 

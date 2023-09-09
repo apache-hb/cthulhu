@@ -13,6 +13,8 @@
 
 static tree_t *sema_digit(tree_t *sema, obr_t *expr, const tree_t *implicitType)
 {
+    CTU_UNUSED(sema);
+
     // TODO: get correct digit size
     const tree_t *type = implicitType != NULL ? implicitType : obr_get_digit_type(eDigitInt, eSignSigned);
     return tree_expr_digit(expr->node, type, expr->digit);
@@ -213,7 +215,7 @@ static tree_t *sema_stmt(tree_t *sema, obr_t *stmt)
     }
 }
 
-tree_t *obr_sema_stmts(tree_t *sema, const node_t *node, const char *name, vector_t *stmts)
+tree_t *obr_sema_stmts(tree_t *sema, const node_t *node, vector_t *stmts)
 {
     size_t len = vector_len(stmts);
     vector_t *result = vector_of(len);

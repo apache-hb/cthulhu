@@ -191,7 +191,7 @@ void pl0_init(driver_t *handle)
     gPrintString = tree_decl_global(node, "$fmt", storage, stringType, tree_expr_string(node, stringType, "%d\n", 4));
     tree_set_attrib(gPrintString, &kExportAttrib);
 
-    tree_t *signature = tree_type_closure(node, "print", gVoidType, params, eArityVariable);
+    tree_t *signature = tree_type_closure(node, "print", gIntType, params, eArityVariable);
     gPrint = tree_decl_function(node, "print", signature, params, vector_of(0), NULL);
     tree_set_attrib(gPrint, &kPrintAttrib);
 
@@ -441,11 +441,13 @@ static void sema_proc(tree_t *sema, tree_t *tree, pl0_t *node)
 
 static void resolve_global(cookie_t *cookie, tree_t *sema, tree_t *decl, void *user)
 {
+    CTU_UNUSED(cookie);
     tree_close_global(decl, sema_global(sema, user));
 }
 
 static void resolve_proc(cookie_t *cookie, tree_t *sema, tree_t *decl, void *user)
 {
+    CTU_UNUSED(cookie);
     sema_proc(sema, decl, user);
 }
 

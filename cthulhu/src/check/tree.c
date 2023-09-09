@@ -32,6 +32,8 @@ typedef struct check_t {
 // check for a valid name and a type being set
 static bool check_simple(check_t *check, const tree_t *decl)
 {
+    CTU_UNUSED(check);
+
     if (tree_is(decl, eTreeError)) { return false; } // TODO: are errors always reported?
 
     const char *id = tree_get_name(decl);

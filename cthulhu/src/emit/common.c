@@ -22,6 +22,8 @@ static bool check_root_mod(vector_t *path, const char *id)
 
 char *begin_module(emit_t *emit, fs_t *fs, const ssa_module_t *mod)
 {
+    CTU_UNUSED(emit);
+
     // if the last element of the path and the module name are the same then remove the last element
     // this isnt required to be semanticly correct but it makes the output look nicer
 

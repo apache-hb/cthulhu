@@ -28,7 +28,7 @@
 
 #if CC_CLANG || CC_GNU
 #    ifndef NORETURN
-#        define NORETURN _Noreturn void
+#        define NORETURN __attribute__((noreturn)) void
 #    endif
 #elif CC_MSVC
 #    ifndef NORETURN

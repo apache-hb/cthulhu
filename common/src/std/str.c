@@ -527,7 +527,8 @@ const char *common_prefix(vector_t *args)
 
 static size_t str_rfind_inner(const char *str, size_t len, const char *sub, size_t sublen)
 {
-    CTASSERTM(len > 0, "str must be non-empty");
+    if (len == 0) { return SIZE_MAX; }
+
     CTASSERTM(sublen > 0, "sub must be non-empty");
 
     while (len--)

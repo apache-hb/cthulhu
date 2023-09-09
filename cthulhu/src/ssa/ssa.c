@@ -57,6 +57,8 @@ static void add_dep(ssa_compile_t *ssa, const ssa_symbol_t *symbol, const ssa_sy
 
 static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const tree_t *tree, ssa_storage_t storage)
 {
+    CTU_UNUSED(ssa);
+
     const char *name = tree_get_name(tree);
     const ssa_type_t *type = ssa_type_from(tree_get_type(tree));
     const attribs_t *attrib = tree_get_attrib(tree);

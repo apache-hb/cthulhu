@@ -159,8 +159,8 @@ int main(int argc, const char **argv)
 
     const char *testDir = format("%s" NATIVE_PATH_SEPARATOR "test-out", OS_VALUE(const char*, cwd));
     const char *runDir = format("%s" NATIVE_PATH_SEPARATOR "%s", testDir, argv[1]);
-    const char *libDir = format("%s" NATIVE_PATH_SEPARATOR "lib", runDir);
 
+    logverbose("creating output directory %s", runDir);
     fs_t *out = fs_physical(reports, runDir);
     CHECK_REPORTS(reports, "creating output directory");
 
@@ -176,7 +176,12 @@ int main(int argc, const char **argv)
         vector_set(sources, i, path);
     }
 
+    logverbose("compiling: %s", str_join(" ", sources));
+    logverbose("include: %s", runDir);
+
 #if OS_WINDOWS
+    const char *libDir = format("%s" NATIVE_PATH_SEPARATOR "lib", runDir);
+
     OS_RESULT(bool) create = os_dir_create(libDir);
     CTASSERTF(os_error(create) == 0, "failed to create dir `%s` %s", libDir, os_decode(os_error(create)));
 
@@ -186,7 +191,7 @@ int main(int argc, const char **argv)
         report(reports, eFatal, NULL, "compilation failed `%d`", status);
     }
 #else
-    int status = system(format("cc %s -c -o%s.o", srcPath, libPath));
+    int status = system(format("cd %s && cc %s -c -Iinclude", runDir, str_join(" ", sources)));
     if (WEXITSTATUS(status) != EXIT_OK)
     {
         report(reports, eFatal, NULL, "compilation failed %d", WEXITSTATUS(status));

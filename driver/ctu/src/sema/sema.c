@@ -99,7 +99,7 @@ static tree_t *make_bool_type(const char *name)
 
 static tree_t *make_str_type(const char *name)
 {
-    return (gStringType = tree_type_pointer(node_builtin(), "str", gStringChar, SIZE_MAX));
+    return (gStringType = tree_type_pointer(node_builtin(), name, gStringChar, SIZE_MAX));
 }
 
 static tree_t *make_void_type(const char *name)

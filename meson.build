@@ -1,4 +1,4 @@
-project('cthulhu', [ 'c', 'cpp' ],
+project('cthulhu', [ 'c' ],
     license : 'LGPLv3',
     version : '0.2.4',
     meson_version : '>=0.59',
@@ -30,12 +30,11 @@ host = host_machine.system()
 cc = meson.get_compiler('c')
 buildtype = get_option('buildtype')
 
+message('building for', target, 'on', host)
+
 parts = version.split('.')
 cwd = meson.current_source_dir()
 bld = meson.current_build_dir()
-
-# TODO: not quite accurate for some reason
-stacktrace = get_option('stacktrace').disable_auto_if(target != 'windows' and not cc.has_header('<execinfo.h>'))
 
 config = {
     'major': parts[0].to_int(),

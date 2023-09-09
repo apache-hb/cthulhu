@@ -2,6 +2,8 @@
 
 #include "cthulhu/mediator/common.h"
 
+#include <stddef.h>
+
 typedef struct vector_t vector_t;
 
 typedef struct reports_t reports_t;

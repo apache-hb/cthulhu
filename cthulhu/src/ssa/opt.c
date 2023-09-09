@@ -117,8 +117,6 @@ static const ssa_value_t *ssa_opt_unary(ssa_scope_t *vm, ssa_unary_t step)
     unary_t unary = step.unary;
     const ssa_value_t *operand = ssa_opt_operand(vm, step.operand);
 
-    CTASSERTF(value_is(operand, eTypeDigit), "operand of unary %s is not a digit (inside %s)", unary_name(unary), vm->symbol->name);
-
     if (!check_init(vm, operand)) { return operand; }
 
     mpz_t result;
@@ -127,14 +125,23 @@ static const ssa_value_t *ssa_opt_unary(ssa_scope_t *vm, ssa_unary_t step)
     switch (unary)
     {
     case eUnaryNeg:
+        CTASSERTF(value_is(operand, eTypeDigit), "operand of unary %s is not a digit (inside %s)", unary_name(unary), vm->symbol->name);
         mpz_neg(result, operand->digitValue);
         break;
+
     case eUnaryAbs:
+        CTASSERTF(value_is(operand, eTypeDigit), "operand of unary %s is not a digit (inside %s)", unary_name(unary), vm->symbol->name);
         mpz_abs(result, operand->digitValue);
         break;
+
     case eUnaryFlip:
+        CTASSERTF(value_is(operand, eTypeDigit), "operand of unary %s is not a digit (inside %s)", unary_name(unary), vm->symbol->name);
         mpz_com(result, operand->digitValue);
         break;
+
+    case eUnaryNot:
+        CTASSERTF(value_is(operand, eTypeBool), "operand of unary %s is not a bool (inside %s)", unary_name(unary), vm->symbol->name);
+        return ssa_value_bool(operand->type, !operand->boolValue);
 
     default: NEVER("unhandled unary %s (inside %s)", unary_name(unary), vm->symbol->name);
     }

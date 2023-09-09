@@ -58,6 +58,9 @@ static tree_t *gTypeBoolean = NULL;
 
 tree_t *obr_get_digit_type(digit_t digit, sign_t sign)
 {
+    CTU_UNUSED(digit); // TODO: use digit
+    CTU_UNUSED(sign);
+
     CTASSERT(gTypeInteger != NULL);
     return gTypeInteger;
 }

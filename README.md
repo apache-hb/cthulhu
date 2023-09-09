@@ -36,11 +36,9 @@ ninja -C build test # build and run tests
 
 * `driver` - language frontends
   * `pl0` - pl0 frontend, good for referencing how to use the common framework
-  * `ctu` - cthulhu language frontend (TODO)
-  * `lox` - lox language frontend (TODO)
+  * `ctu` - cthulhu language frontend (WIP)
   * `jvm` - jvm classfile consumer (TODO)
   * `cc` - C11 frontend (TODO)
-  * `cpp` - C preprocessor (TODO)
   * `example` - example frontend
 
 * `interface` - user facing components used to interact with drivers and the collection
@@ -66,7 +64,7 @@ ninja -C build test # build and run tests
     * `check` - validates state for various structures
     * `ssa` - tree to ssa transforms, as well as optimizations
 
-* `subprojects` - 3rd & 1st party dependencies
+* `subprojects` - dependencies
   * `cjson` - json serialization + deserialization library
   * `mini-gmp` - fallback gmp library if system gmp isnt installed
   * `glad` - gl loader for gui interface

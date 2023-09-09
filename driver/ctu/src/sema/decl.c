@@ -54,6 +54,7 @@ static ctu_t *begin_resolve(tree_t *sema, tree_t *self, void *user, ctu_kind_t k
 
 static void ctu_resolve_global(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
+    CTU_UNUSED(cookie);
     ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclGlobal);
 
     tree_t *type = decl->type == NULL ? NULL : ctu_sema_type(sema, decl->type);
@@ -79,6 +80,7 @@ static void ctu_resolve_global(cookie_t *cookie, tree_t *sema, tree_t *self, voi
 
 static void ctu_resolve_function(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
+    CTU_UNUSED(cookie);
     ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclFunction);
 
     size_t len = vector_len(self->params);
@@ -108,6 +110,7 @@ static void ctu_resolve_function(cookie_t *cookie, tree_t *sema, tree_t *self, v
 
 static void ctu_resolve_type(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
+    CTU_UNUSED(cookie);
     ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclTypeAlias);
     CTASSERTF(decl->type != NULL, "decl %s has no type", decl->name);
 
@@ -117,6 +120,7 @@ static void ctu_resolve_type(cookie_t *cookie, tree_t *sema, tree_t *self, void 
 
 static void ctu_resolve_struct(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
+    CTU_UNUSED(cookie);
     ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclStruct);
 
     size_t len = vector_len(decl->fields);

@@ -137,7 +137,7 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
         const ssa_step_t *step = typevec_offset(bb->steps, i);
         switch (step->opcode)
         {
-        case eOpUnary:
+        case eOpUnary: {
             ssa_unary_t unary = step->unary;
             write_string(io, "\t%%%s = unary %s %s\n",
                 get_step_name(&emit->emit, step),
@@ -145,7 +145,8 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
                 operand_to_string(emit, unary.operand)
             );
             break;
-        case eOpBinary:
+        }
+        case eOpBinary: {
             ssa_binary_t binary = step->binary;
             write_string(io, "\t%%%s = binary %s %s %s\n",
                 get_step_name(&emit->emit, step),
@@ -154,7 +155,8 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
                 operand_to_string(emit, binary.rhs)
             );
             break;
-        case eOpCast:
+        }
+        case eOpCast: {
             ssa_cast_t cast = step->cast;
             write_string(io, "\t%%%s = cast %s %s\n",
                 get_step_name(&emit->emit, step),
@@ -162,14 +164,16 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
                 operand_to_string(emit, cast.operand)
             );
             break;
-        case eOpLoad:
+        }
+        case eOpLoad: {
             ssa_load_t load = step->load;
             write_string(io, "\t%%%s = load %s\n",
                 get_step_name(&emit->emit, step),
                 operand_to_string(emit, load.src)
             );
             break;
-        case eOpOffset:
+        }
+        case eOpOffset: {
             ssa_offset_t offset = step->offset;
             write_string(io, "\t%%%s = offset %s %s\n",
                 get_step_name(&emit->emit, step),
@@ -177,29 +181,34 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
                 operand_to_string(emit, offset.offset)
             );
             break;
-        case eOpAddress:
+        }
+        case eOpAddress: {
             ssa_addr_t addr = step->addr;
             write_string(io, "\t%%%s = addr %s\n",
                 get_step_name(&emit->emit, step),
                 operand_to_string(emit, addr.symbol)
             );
             break;
-        case eOpReturn:
+        }
+        case eOpReturn: {
             ssa_return_t ret = step->ret;
             write_string(io, "\tret %s\n", operand_to_string(emit, ret.value));
             break;
-        case eOpJump:
+        }
+        case eOpJump: {
             ssa_jump_t jmp = step->jump;
             write_string(io, "\tjump %s\n", operand_to_string(emit, jmp.target));
             break;
-        case eOpStore:
+        }
+        case eOpStore: {
             ssa_store_t store = step->store;
             write_string(io, "\tstore %s %s\n",
                 operand_to_string(emit, store.dst),
                 operand_to_string(emit, store.src)
             );
             break;
-        case eOpCall:
+        }
+        case eOpCall: {
             ssa_call_t call = step->call;
             size_t len = typevec_len(call.args);
             vector_t *args = vector_of(len);
@@ -214,7 +223,8 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
                 str_join(", ", args)
             );
             break;
-        case eOpBranch:
+        }
+        case eOpBranch: {
             ssa_branch_t branch = step->branch;
             write_string(io, "\tbranch %s %s %s\n",
                 operand_to_string(emit, branch.cond),
@@ -222,7 +232,8 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
                 operand_to_string(emit, branch.other)
             );
             break;
-        case eOpCompare:
+        }
+        case eOpCompare: {
             ssa_compare_t compare = step->compare;
             write_string(io, "\t%%%s = compare %s %s %s\n",
                 get_step_name(&emit->emit, step),
@@ -231,6 +242,7 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
                 operand_to_string(emit, compare.rhs)
             );
             break;
+        }
         default: NEVER("unknown opcode %d", step->opcode);
         }
     }
@@ -248,6 +260,7 @@ static void emit_ssa_blocks(ssa_emit_t *emit, io_t *io, vector_t *bbs)
 
 static void emit_ssa_consts(ssa_emit_t *emit, io_t *io, vector_t *consts)
 {
+    CTU_UNUSED(emit);
     size_t len = vector_len(consts);
     for (size_t i = 0; i < len; i++)
     {
@@ -266,6 +279,7 @@ static const char *storage_to_string(ssa_storage_t storage)
 
 static void emit_ssa_locals(ssa_emit_t *emit, io_t *io, typevec_t *locals)
 {
+    CTU_UNUSED(emit);
     size_t len = typevec_len(locals);
     for (size_t i = 0; i < len; i++)
     {

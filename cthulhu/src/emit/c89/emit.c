@@ -175,7 +175,7 @@ static void write_global(c89_emit_t *emit, io_t *io, const ssa_symbol_t *global)
     write_string(io, "%s%s", link, it);
 }
 
-static void c89_proto_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *global)
+void c89_proto_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *global)
 {
     if (global->visibility == eVisiblePublic)
     {
@@ -193,7 +193,7 @@ static void c89_proto_global(c89_emit_t *emit, const ssa_module_t *mod, const ss
     }
 }
 
-static void c89_proto_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *func)
+void c89_proto_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *func)
 {
     // dont generate prototypes for entry points
     if (is_entry_point(func->linkage)) { return; }
@@ -451,7 +451,7 @@ static void c89_write_offset(c89_emit_t *emit, io_t *io, const ssa_step_t *step)
 static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
 {
     size_t len = typevec_len(bb->steps);
-    write_string(io, "bb%s: /* len = %zu */\n", get_block_name(&emit->emit, bb), len);
+    write_string(io, "bb%s: { /* len = %zu */\n", get_block_name(&emit->emit, bb), len);
     for (size_t i = 0; i < len; i++)
     {
         const ssa_step_t *step = typevec_offset(bb->steps, i);
@@ -580,6 +580,7 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
         default: NEVER("unknown opcode %d", step->opcode);
         }
     }
+    write_string(io, "} /* end %s */\n", get_block_name(&emit->emit, bb));
 }
 
 /// defines

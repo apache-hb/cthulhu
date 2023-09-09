@@ -1,6 +1,6 @@
 src = [ 'src/stacktrace/common.c' ]
 
-if stacktrace.allowed()
+if true
     src += [ 'src/stacktrace/stacktrace-target.c'.replace('target', target) ]
     if target == 'windows'
         stacktrace_links = [ 'dbghelp.lib' ]

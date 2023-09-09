@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
+#include <string.h>
 
 USE_DECL
 OS_RESULT(bool) os_file_create(const char *path)
@@ -53,7 +54,15 @@ USE_DECL
 OS_RESULT(bool) os_dir_create(const char *path)
 {
     CTASSERT(path != NULL);
-    
+
+    // TODO: this is a bit of a hack to avoid a bug in mkdir_recursive
+    // on linux it will pass an empty string into mkdir because of the leading `/`
+    if (strlen(path) == 0)
+    {
+        bool created = true;
+        return linux_result(0, &created, sizeof(bool));
+    }
+
     if (mkdir(path, 0777) != 0)
     {
         if (errno != EEXIST)
@@ -119,7 +128,7 @@ OS_RESULT(os_dirent_t) os_dirent_type(const char *path)
         return linux_error(errno);
     }
 
-    if (sb.st_mode & S_IFDIR) 
+    if (sb.st_mode & S_IFDIR)
     {
         os_dirent_t ent = eOsNodeDir;
         return os_result_new(0, &ent, sizeof(os_dirent_t));

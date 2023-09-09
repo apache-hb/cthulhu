@@ -36,14 +36,15 @@ extern panic_handler_t gPanicHandler;
 FORMAT_ATTRIB(2, 3)
 NORETURN ctpanic(panic_t panic, FORMAT_STRING const char *msg, ...);
 
+#define CTU_PANIC(...) do { panic_t panic = {__FILE__, __LINE__, FUNCNAME}; ctpanic(panic, __VA_ARGS__); } while (0)
+
 #if ENABLE_DEBUG
 #    define CTASSERTF(expr, ...)                                                                                       \
         do                                                                                                             \
         {                                                                                                              \
             if (!(expr))                                                                                               \
             {                                                                                                          \
-                panic_t panic = {__FILE__, __LINE__, FUNCNAME};                                                        \
-                ctpanic(panic, __VA_ARGS__);                                                                           \
+                CTU_PANIC(__VA_ARGS__);                                                                         \
             }                                                                                                          \
         } while (0)
 #else
@@ -52,6 +53,6 @@ NORETURN ctpanic(panic_t panic, FORMAT_STRING const char *msg, ...);
 
 #define CTASSERTM(expr, msg) CTASSERTF(expr, msg)
 #define CTASSERT(expr) CTASSERTM(expr, #expr)
-#define NEVER(...) CTASSERTF(false, __VA_ARGS__)
+#define NEVER(...) CTU_PANIC(__VA_ARGS__)
 
 #define GLOBAL_INIT(ID) do { static bool init = false; CTASSERTM(!init, ID " already initialized"); init = true; } while (0)
