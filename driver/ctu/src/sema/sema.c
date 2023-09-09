@@ -36,6 +36,12 @@ tree_t *ctu_get_decl(tree_t *sema, const char *name)
     return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
 }
 
+tree_t *ctu_get_loop(tree_t *sema, const char *name)
+{
+    const size_t tags[] = { eCtuTagLabels };
+    return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
+}
+
 void ctu_add_decl(tree_t *sema, ctu_tag_t tag, const char *name, tree_t *decl)
 {
     CTASSERT(name != NULL);

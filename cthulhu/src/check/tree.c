@@ -172,6 +172,9 @@ static void check_func_body(check_t *check, const tree_t *returnType, const tree
         check_func_return_equal(check, returnType, tree_get_type(stmt->value));
         break;
 
+    case eTreeExprCompare:
+    case eTreeExprBinary:
+    case eTreeExprLoad:
     case eTreeExprCall:
         break; // TODO: check
 
@@ -404,6 +407,7 @@ static void check_inner_type_recursion(check_t *check, const tree_t *type)
 
     case eTreeTypePointer:
     case eTreeTypeReference:
+    case eTreeTypeArray:
         check_type_recursion(check, type->ptr);
         break;
 

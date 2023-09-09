@@ -81,9 +81,9 @@ ctu_t *ctu_stmt_return(scan_t *scan, where_t where, ctu_t *value)
     return ast;
 }
 
-ctu_t *ctu_stmt_while(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then, ctu_t *other)
+ctu_t *ctu_stmt_while(scan_t *scan, where_t where, char *name, ctu_t *cond, ctu_t *then, ctu_t *other)
 {
-    ctu_t *ast = ctu_new(scan, where, eCtuStmtWhile);
+    ctu_t *ast = ctu_decl(scan, where, eCtuStmtWhile, name, false);
     ast->cond = cond;
     ast->then = then;
     ast->other = other;
@@ -170,6 +170,14 @@ ctu_t *ctu_expr_index(scan_t *scan, where_t where, ctu_t *expr, ctu_t *index)
     ctu_t *ast = ctu_new(scan, where, eCtuExprIndex);
     ast->expr = expr;
     ast->index = index;
+    return ast;
+}
+
+ctu_t *ctu_expr_field(scan_t *scan, where_t where, ctu_t *expr, char *field)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuExprField);
+    ast->expr = expr;
+    ast->field = field;
     return ast;
 }
 

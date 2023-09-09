@@ -64,10 +64,11 @@ static void ctu_resolve_global(cookie_t *cookie, tree_t *sema, tree_t *self, voi
     const tree_t *realType = expr == NULL ? type : tree_get_type(expr);
 
     size_t size = ctu_resolve_storage_size(realType);
+    const tree_t *ty = ctu_resolve_storage_type(realType);
 
     // TODO: handle arrays
     tree_storage_t storage = {
-        .storage = realType,
+        .storage = ty,
         .size = size,
         .quals = decl->mut ? eQualMutable : eQualConst
     };

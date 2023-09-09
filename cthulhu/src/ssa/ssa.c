@@ -29,6 +29,7 @@ typedef struct ssa_compile_t {
     map_t *functions; ///< map<tree, ssa_symbol>
 
     map_t *locals; ///< map<tree, ssa_symbol>
+    map_t *loops; ///< map<tree, ssa_loop>
 
     ssa_block_t *currentBlock;
     ssa_symbol_t *currentSymbol;
@@ -36,6 +37,11 @@ typedef struct ssa_compile_t {
 
     vector_t *path;
 } ssa_compile_t;
+
+typedef struct ssa_loop_t {
+    ssa_block_t *enterLoop;
+    ssa_block_t *exitLoop;
+} ssa_loop_t;
 
 static void add_dep(ssa_compile_t *ssa, const ssa_symbol_t *symbol, const ssa_symbol_t *dep)
 {
@@ -274,6 +280,11 @@ static ssa_operand_t compile_loop(ssa_compile_t *ssa, const tree_t *tree)
     ssa_block_t *bodyBlock = ssa_block_create(ssa->currentSymbol, NULL, 0);
     ssa_block_t *tailBlock = ssa_block_create(ssa->currentSymbol, NULL, 0);
 
+    ssa_loop_t *save = ctu_malloc(sizeof(ssa_loop_t));
+    save->enterLoop = bodyBlock;
+    save->exitLoop = tailBlock;
+    map_set_ptr(ssa->loops, tree, save);
+
     ssa_operand_t loop = {
         .kind = eOperandBlock,
         .bb = loopBlock
@@ -317,6 +328,33 @@ static ssa_operand_t compile_loop(ssa_compile_t *ssa, const tree_t *tree)
 
     ssa->currentBlock = tailBlock;
     return loop;
+}
+
+static ssa_operand_t add_jump(ssa_compile_t *ssa, ssa_loop_t *loop, tree_jump_t jump)
+{
+    switch (jump)
+    {
+    case eJumpBreak: {
+        ssa_step_t step = {
+            .opcode = eOpJump,
+            .jump = {
+                .target = operand_bb(loop->exitLoop)
+            }
+        };
+        return add_step(ssa, step);
+    }
+    case eJumpContinue: {
+        ssa_step_t step = {
+            .opcode = eOpJump,
+            .jump = {
+                .target = operand_bb(loop->enterLoop)
+            }
+        };
+        return add_step(ssa, step);
+    }
+
+    default: NEVER("unhandled jump %d", jump);
+    }
 }
 
 static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
@@ -373,6 +411,10 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
         return add_step(ssa, step);
     }
 
+    case eTreeExprField: {
+        NEVER("unhandled field access");
+    }
+
     case eTreeExprUnary: {
         ssa_operand_t expr = compile_tree(ssa, tree->operand);
         ssa_step_t step = {
@@ -422,6 +464,13 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
             }
         };
         return add_step(ssa, step);
+    }
+
+    case eTreeStmtJump: {
+        ssa_loop_t *target = map_get_ptr(ssa->loops, tree->label);
+        CTASSERTF(target != NULL, "loop not found");
+
+        return add_jump(ssa, target, tree->jump);
     }
 
     case eTreeExprReference:
@@ -625,7 +674,9 @@ ssa_result_t ssa_compile(map_t *mods)
 
         .globals = map_optimal(32),
         .functions = map_optimal(32),
-        .locals = map_optimal(32)
+
+        .locals = map_optimal(32),
+        .loops = map_optimal(32),
     };
 
     map_iter_t iter = map_iter(mods);

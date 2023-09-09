@@ -29,6 +29,7 @@ WS [ \t\r\v\n\f]
 <COMMENT>. ;
 
 "->" { return ARROW; }
+"." { return DOT; }
 
 "+" { return PLUS; }
 "-" { return MINUS; }

@@ -1,0 +1,11 @@
+struct Data {
+    i: int;
+    b: bool;
+}
+
+export def doThing: Data {
+    var x: Data = noinit;
+    x.i = 25;
+    x.b = false;
+    return x;
+}

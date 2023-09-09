@@ -183,7 +183,7 @@ int main(int argc, const char **argv)
     int status = system(format("cl /nologo /c %s /I%s\\include /Fo%s\\", str_join(" ", sources), runDir, libDir));
     if (status != 0)
     {
-        report(reports, eFatal, NULL, "compilation failed %d", errno);
+        report(reports, eFatal, NULL, "compilation failed `%d`", status);
     }
 #else
     int status = system(format("cc %s -c -o%s.o", srcPath, libPath));

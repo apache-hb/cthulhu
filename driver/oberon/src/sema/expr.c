@@ -44,10 +44,13 @@ static tree_t *sema_binary(tree_t *sema, obr_t *expr, const tree_t *implicitType
 
 static tree_t *sema_compare(tree_t *sema, obr_t *expr)
 {
-    // TODO: check types are comparable
-
     tree_t *lhs = obr_sema_rvalue(sema, expr->lhs, NULL);
     tree_t *rhs = obr_sema_rvalue(sema, expr->rhs, NULL);
+
+    if (!util_types_equal(lhs, rhs))
+    {
+        return tree_raise(expr->node, sema->reports, "cannot compare types %s and %s", tree_to_string(lhs), tree_to_string(rhs));
+    }
 
     return tree_expr_compare(expr->node, obr_get_bool_type(), expr->compare, lhs, rhs);
 }
@@ -119,7 +122,7 @@ static tree_t *sema_field(tree_t *sema, obr_t *expr)
         return tree_raise(expr->node, sema->reports, "struct %s has no field %s", tree_to_string(decl), expr->object);
     }
 
-    return tree_expr_field(expr->node, decl, field);
+    return tree_expr_field(expr->node, tree_get_type(field), decl, field);
 }
 
 tree_t *obr_sema_rvalue(tree_t *sema, obr_t *expr, const tree_t *implicitType)

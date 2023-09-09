@@ -201,6 +201,36 @@ tree_t *util_type_cast(const tree_t *dst, tree_t *expr)
     }
 }
 
+static bool eval_binary(mpz_t value, const tree_t *expr)
+{
+    CTASSERT(expr != NULL);
+
+    mpz_t lhs;
+    mpz_t rhs;
+    mpz_init(lhs);
+    mpz_init(rhs);
+
+    if (!util_eval_digit(lhs, expr->lhs)) { return false; }
+    if (!util_eval_digit(rhs, expr->rhs)) { return false; }
+
+    switch (expr->binary)
+    {
+    case eBinaryAdd:
+        mpz_add(value, lhs, rhs);
+        break;
+    case eBinarySub:
+        mpz_sub(value, lhs, rhs);
+        break;
+    case eBinaryMul:
+        mpz_mul(value, lhs, rhs);
+        break;
+    default:
+        return false;
+    }
+
+    return true;
+}
+
 bool util_eval_digit(mpz_t value, const tree_t *expr)
 {
     CTASSERT(expr != NULL);
@@ -209,6 +239,9 @@ bool util_eval_digit(mpz_t value, const tree_t *expr)
     case eTreeExprDigit:
         mpz_set(value, expr->digitValue);
         return true;
+
+    case eTreeExprBinary:
+        return eval_binary(value, expr);
 
     default:
         return false;

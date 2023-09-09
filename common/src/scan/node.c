@@ -14,16 +14,26 @@ typedef struct node_t
     where_t where; ///< the location of this node in the source file
 } node_t;
 
+static node_t kBuiltinNode = {
+    .scan = NULL,
+    .where = { 0, 0, 0, 0 }
+};
+
+static node_t kInvalidNode = {
+    .scan = NULL,
+    .where = { UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX }
+};
+
 USE_DECL
 node_t *node_builtin(void)
 {
-    return (void*)UINTPTR_MAX;
+    return &kBuiltinNode;
 }
 
 USE_DECL
 node_t *node_invalid(void)
 {
-    return NULL;
+    return &kInvalidNode;
 }
 
 USE_DECL

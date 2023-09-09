@@ -82,6 +82,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     MODULO "`%`"
 
     NOT "`!`"
+    DOT "`.`"
 
     SHL "`<<`"
     SHR "`>>`"
@@ -156,7 +157,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     fnParam fnResult
 
 %type<ident>
-    importAlias ident optIdent
+    importAlias ident optIdent whileName
 
 %type<boolean>
     exported mut
@@ -313,8 +314,12 @@ stmtList: %empty { $$ = vector_of(0); }
     | stmtList stmt { vector_push(&$1, $2); $$ = $1; }
     ;
 
-whileStmt: WHILE expr stmts { $$ = ctu_stmt_while(x, @$, $2, $3, NULL); }
-    | WHILE expr stmts ELSE stmts { $$ = ctu_stmt_while(x, @$, $2, $3, $5); }
+whileName: %empty { $$ = NULL; }
+    | COLON2 IDENT { $$ = $2; }
+    ;
+
+whileStmt: WHILE whileName expr stmts { $$ = ctu_stmt_while(x, @$, $2, $3, $4, NULL); }
+    | WHILE whileName expr stmts ELSE stmts { $$ = ctu_stmt_while(x, @$, $2, $3, $4, $6); }
     ;
 
 returnStmt: RETURN expr SEMI { $$ = ctu_stmt_return(x, @$, $2); }
@@ -365,6 +370,7 @@ primary: LPAREN expr RPAREN { $$ = $2; }
 postExpr: primary { $$ = $1; }
     | postExpr LPAREN optExprList RPAREN { $$ = ctu_expr_call(x, @$, $1, $3); }
     | postExpr LSQUARE expr RSQUARE { $$ = ctu_expr_index(x, @$, $1, $3); }
+    | postExpr DOT IDENT { $$ = ctu_expr_field(x, @$, $1, $3); }
     ;
 
 unaryExpr: postExpr { $$ = $1; }

@@ -345,7 +345,7 @@ tree_t *tree_expr_unary(const node_t *node, unary_t unary, tree_t *expr);
 tree_t *tree_expr_binary(const node_t *node, const tree_t *type, binary_t binary, tree_t *lhs, tree_t *rhs);
 tree_t *tree_expr_compare(const node_t *node, const tree_t *type, compare_t compare, tree_t *lhs, tree_t *rhs);
 
-tree_t *tree_expr_field(const node_t *node, tree_t *object, tree_t *field);
+tree_t *tree_expr_field(const node_t *node, const tree_t *type, tree_t *object, tree_t *field);
 tree_t *tree_expr_offset(const node_t *node, const tree_t *type, tree_t *object, tree_t *offset);
 
 tree_t *tree_expr_call(const node_t *node, const tree_t *callee, vector_t *args);

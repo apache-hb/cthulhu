@@ -84,7 +84,6 @@ static bool is_type(tree_kind_t kind)
     case eTreeTypeDigit:
     case eTreeTypeClosure:
     case eTreeTypePointer:
-    case eTreeTypeReference:
     case eTreeTypeArray:
     case eTreeError:
     case eTreeTypeStruct:
@@ -95,7 +94,24 @@ static bool is_type(tree_kind_t kind)
     }
 }
 
+static bool is_load_type(tree_kind_t kind)
+{
+    switch (kind)
+    {
+    case eTreeError:
+    case eTreeTypePointer:
+    case eTreeTypeArray:
+    case eTreeTypeReference:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
 #define EXPECT_TYPE(TYPE) CTASSERTF(is_type(tree_get_kind(TYPE)), "expected type, found %s", tree_to_string(TYPE))
+
+#define EXPECT_LOAD_TYPE(TYPE) CTASSERTF(is_load_type(tree_get_kind(TYPE)), "expected load type, found %s", tree_to_string(TYPE))
 
 tree_t *tree_type_empty(const node_t *node, const char *name)
 {
@@ -229,7 +245,7 @@ tree_t *tree_expr_cast(const node_t *node, const tree_t *type, tree_t *expr)
 tree_t *tree_expr_load(const node_t *node, tree_t *expr)
 {
     const tree_t *type = tree_get_type(expr);
-    TREE_EXPECT_ADDRESS(type);
+    EXPECT_LOAD_TYPE(type);
 
     tree_t *self = tree_new(eTreeExprLoad, node, tree_ty_load_type(type));
     self->load = expr;
@@ -245,10 +261,16 @@ tree_t *tree_expr_ref(const node_t *node, tree_t *expr)
     return self;
 }
 
+static const tree_t *get_ref_inner(const tree_t *ty)
+{
+    if (tree_is(ty, eTreeTypeReference)) { return ty->ptr; }
+    return ty;
+}
+
 tree_t *tree_expr_address(const node_t *node, tree_t *expr)
 {
     const tree_t *type = tree_get_type(expr);
-    tree_t *inner = tree_type_pointer(node, tree_get_name(type), type, 1);
+    tree_t *inner = tree_type_pointer(node, tree_get_name(type), get_ref_inner(type), 1);
     tree_t *self = tree_new(eTreeExprAddress, node, inner);
     self->expr = expr;
     return self;
@@ -283,11 +305,12 @@ tree_t *tree_expr_compare(const node_t *node, const tree_t *type, compare_t comp
     return self;
 }
 
-tree_t *tree_expr_field(const node_t *node, tree_t *object, tree_t *field)
+tree_t *tree_expr_field(const node_t *node, const tree_t *type, tree_t *object, tree_t *field)
 {
-    CTASSERTF(tree_is(object, eTreeTypeStruct), "object must be an aggregate, found %s", tree_to_string(object));
+    const tree_t *ty = get_ref_inner(tree_get_type(object));
+    CTASSERTF(tree_is(ty, eTreeTypeStruct), "object must be an aggregate, found %s", tree_to_string(ty));
 
-    tree_t *self = tree_new(eTreeExprField, node, tree_get_type(field));
+    tree_t *self = tree_new(eTreeExprField, node, type);
     self->object = object;
     self->field = field;
     return self;

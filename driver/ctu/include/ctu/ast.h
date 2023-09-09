@@ -22,6 +22,7 @@ typedef enum ctu_kind_t {
     eCtuExprUnary,
     eCtuExprCall,
     eCtuExprIndex,
+    eCtuExprField,
 
     eCtuExprRef,
     eCtuExprDeref,
@@ -73,6 +74,13 @@ typedef struct ctu_t {
             union {
                 /* eCtuImport */
                 vector_t *importPath;
+
+                /* eCtuStmtWhile */
+                struct {
+                    ctu_t *cond;
+                    ctu_t *then;
+                    ctu_t *other;
+                };
 
                 /* eCtuGlobal|eCtuStmtLocal */
                 struct {
@@ -140,6 +148,9 @@ typedef struct ctu_t {
 
                 /* eCtuExprUnary */
                 unary_t unary;
+
+                /* eCtuExprField */
+                char *field;
             };
 
             ctu_t *expr;
@@ -156,13 +167,6 @@ typedef struct ctu_t {
 
         /* eCtuStmtReturn */
         ctu_t *result;
-
-        /* eCtuStmtWhile */
-        struct {
-            ctu_t *cond;
-            ctu_t *then;
-            ctu_t *other;
-        };
 
         /* eCtuStmtAssign */
         struct {
@@ -220,7 +224,7 @@ void add_attrib(scan_t *scan, where_t where, vector_t *path, vector_t *args);
 ctu_t *ctu_stmt_list(scan_t *scan, where_t where, vector_t *stmts);
 ctu_t *ctu_stmt_local(scan_t *scan, where_t where, bool mutable, char *name, ctu_t *type, ctu_t *value);
 ctu_t *ctu_stmt_return(scan_t *scan, where_t where, ctu_t *value);
-ctu_t *ctu_stmt_while(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then, ctu_t *other);
+ctu_t *ctu_stmt_while(scan_t *scan, where_t where, char *name, ctu_t *cond, ctu_t *then, ctu_t *other);
 ctu_t *ctu_stmt_assign(scan_t *scan, where_t where, ctu_t *dst, ctu_t *src);
 ctu_t *ctu_stmt_break(scan_t *scan, where_t where, char *label);
 ctu_t *ctu_stmt_continue(scan_t *scan, where_t where, char *label);
@@ -238,6 +242,7 @@ ctu_t *ctu_expr_name(scan_t *scan, where_t where, vector_t *path);
 ctu_t *ctu_expr_ref(scan_t *scan, where_t where, ctu_t *expr);
 ctu_t *ctu_expr_deref(scan_t *scan, where_t where, ctu_t *expr);
 ctu_t *ctu_expr_index(scan_t *scan, where_t where, ctu_t *expr, ctu_t *index);
+ctu_t *ctu_expr_field(scan_t *scan, where_t where, ctu_t *expr, char *field);
 
 ctu_t *ctu_expr_unary(scan_t *scan, where_t where, unary_t unary, ctu_t *expr);
 ctu_t *ctu_expr_binary(scan_t *scan, where_t where, binary_t binary, ctu_t *lhs, ctu_t *rhs);

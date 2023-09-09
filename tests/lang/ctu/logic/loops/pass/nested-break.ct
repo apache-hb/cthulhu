@@ -1,6 +1,6 @@
 @entry
 def main {
-    outer: while true {
+    while::outer true {
         while true {
             break outer;
         }

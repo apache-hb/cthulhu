@@ -308,6 +308,12 @@ static const char *c89_name_load_vreg_by_operand(c89_emit_t *emit, const ssa_ste
     return c89_name_vreg(emit, step, get_reg_type(type));
 }
 
+static const char *operand_type_string(c89_emit_t *emit, ssa_operand_t operand)
+{
+    const ssa_type_t *type = get_operand_type(emit, operand);
+    return type_to_string(type);
+}
+
 static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value);
 
 static const char *c89_format_pointer(c89_emit_t *emit, vector_t *data)
@@ -433,10 +439,12 @@ static void c89_write_address(c89_emit_t *emit, io_t *io, const ssa_step_t *step
 static void c89_write_offset(c89_emit_t *emit, io_t *io, const ssa_step_t *step)
 {
     ssa_offset_t offset = step->offset;
-    write_string(io, "\t%s = &%s[%s];\n",
+    write_string(io, "\t%s = &%s[%s]; // (array = %s, offset = %s)\n",
         c89_name_vreg_by_operand(emit, step, offset.array),
         c89_format_operand(emit, offset.array),
-        c89_format_operand(emit, offset.offset)
+        c89_format_operand(emit, offset.offset),
+        operand_type_string(emit, offset.array),
+        operand_type_string(emit, offset.offset)
     );
 }
 
@@ -474,6 +482,7 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
             );
             break;
         }
+
         case eOpAddress:
             c89_write_address(emit, io, step);
             break;

@@ -48,15 +48,15 @@ tests = {
     'logic.loops': {
         'fail': [
             'loop-nonbool-expr',
-            #'invalid-break-label',
-            #'incorrect-break-label'
+            'invalid-break-label',
+            'incorrect-break-label'
         ],
         'pass': [
             'loop',
             'for',
-            'break'
-            #'break-label',
-            #'nested-break'
+            'break',
+            'break-label',
+            'nested-break'
         ]
     },
     'logic.return': {
@@ -106,7 +106,8 @@ tests = {
             'mutural-recursion',
             'recursive',
             'single-element',
-            'discard-element'
+            'discard-element',
+            'use-struct'
         ]
     },
     # 'types.union': {
@@ -143,16 +144,16 @@ tests = {
     #         'no-elements'
     #     ]
     # },
-    # 'types.array': {
-    #     'fail': [
-    #         'non-int-size'
-    #     ],
-    #     'pass': [
-    #         'simple',
-    #         '2d',
-    #         'expr-size'
-    #     ]
-    # },
+    'types.array': {
+        'fail': [
+            'non-int-size'
+        ],
+        'pass': [
+            'simple',
+            '2d',
+            'expr-size'
+        ]
+    },
     # 'varargs': {
     #     'fail': [
     #         'forward-varargs',
@@ -188,12 +189,12 @@ crashes = {
     '3': true,
     '5': false,
     '6': false,
-    #'7': true,
+    '7': true,
     '8': false,
-    #'9': true,
+    '9': true,
     '10': false,
     '11': false,
-    #'12': true,
+    '12': true,
     '13': false,
     '14': false,
     '15': false,

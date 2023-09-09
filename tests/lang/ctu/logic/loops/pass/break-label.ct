@@ -1,6 +1,6 @@
 @entry
 def main {
-    inner: while true {
+    while::inner true {
         break inner;
     }
 }

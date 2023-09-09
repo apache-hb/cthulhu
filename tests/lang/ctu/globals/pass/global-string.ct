@@ -1,2 +1,2 @@
 const y = "world";
-const x: str = "hello";
+export const x: str = "hello";

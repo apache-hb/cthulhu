@@ -84,8 +84,8 @@ const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char
 
 const char *c89_format_storage(c89_emit_t *emit, ssa_storage_t storage, const char *name)
 {
-    const char *inner = c89_format_type(emit, storage.type, NULL, true);
-    return format("%s %s[%zu]", inner, name, storage.size);
+    char *it = format("%s[%zu]", name, storage.size);
+    return c89_format_type(emit, storage.type, it, true);
 }
 
 const char *c89_format_params(c89_emit_t *emit, typevec_t *params, bool variadic)
