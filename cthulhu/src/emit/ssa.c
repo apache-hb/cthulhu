@@ -182,6 +182,15 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
             );
             break;
         }
+        case eOpMember: {
+            ssa_member_t member = step->member;
+            write_string(io, "\t%%%s = member %s.%zu\n",
+                get_step_name(&emit->emit, step),
+                operand_to_string(emit, member.object),
+                member.index
+            );
+            break;
+        }
         case eOpAddress: {
             ssa_addr_t addr = step->addr;
             write_string(io, "\t%%%s = addr %s\n",

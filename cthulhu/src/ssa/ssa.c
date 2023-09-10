@@ -359,6 +359,29 @@ static ssa_operand_t add_jump(ssa_compile_t *ssa, ssa_loop_t *loop, tree_jump_t 
     }
 }
 
+static size_t get_field_index(const tree_t *ty, const tree_t *field)
+{
+    size_t result = vector_find(ty->fields, field);
+    CTASSERTF(result != SIZE_MAX, "field `%s` not found in `%s`", tree_get_name(field), tree_to_string(ty));
+    return result;
+}
+
+static ssa_operand_t get_field(ssa_compile_t *ssa, const tree_t *tree)
+{
+    const tree_t *ty = tree_get_type(tree->object);
+    ssa_operand_t object = compile_tree(ssa, tree->object);
+    size_t index = get_field_index(ty, tree->field);
+
+    ssa_step_t step = {
+        .opcode = eOpMember,
+        .member = {
+            .object = object,
+            .index = index
+        }
+    };
+    return add_step(ssa, step);
+}
+
 static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
 {
     CTASSERT(ssa != NULL);
@@ -414,7 +437,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
     }
 
     case eTreeExprField: {
-        NEVER("unhandled field access");
+        return get_field(ssa, tree);
     }
 
     case eTreeExprUnary: {

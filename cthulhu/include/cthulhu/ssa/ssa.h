@@ -206,7 +206,7 @@ typedef struct ssa_offset_t {
 
 typedef struct ssa_member_t {
     ssa_operand_t object;
-    const ssa_field_t *field;
+    size_t index;
 } ssa_member_t;
 
 typedef struct ssa_return_t {
