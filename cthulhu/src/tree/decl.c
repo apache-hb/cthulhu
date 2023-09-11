@@ -197,8 +197,20 @@ tree_t *tree_alias(const tree_t *tree, const char *name)
 /// structs
 ///
 
+static void check_struct_fields(vector_t *fields)
+{
+    size_t len = vector_len(fields);
+    for (size_t i = 0; i < len; i++)
+    {
+        const tree_t *field = vector_get(fields, i);
+        CTASSERTF(tree_is(field, eTreeDeclField), "expected field, got %s", tree_to_string(field));
+    }
+}
+
 tree_t *tree_decl_struct(const node_t *node, const char *name, vector_t *fields)
 {
+    check_struct_fields(fields);
+
     tree_t *self = decl_open(node, name, NULL, eTreeTypeStruct, NULL);
     self->fields = fields;
     return self;
@@ -215,4 +227,5 @@ void tree_close_struct(tree_t *self, vector_t *fields)
 {
     decl_close(self, eTreeTypeStruct);
     self->fields = fields;
+    check_struct_fields(fields);
 }

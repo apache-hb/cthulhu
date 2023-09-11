@@ -53,7 +53,8 @@ static tree_t *sema_type_record(tree_t *sema, obr_t *type, const char *name)
     {
         obr_t *field = vector_get(type->fields, i);
         tree_t *it = obr_sema_type(sema, field->type, field->name);
-        vector_set(result, i, it);
+        tree_t *decl = tree_decl_field(field->node, field->name, it);
+        vector_set(result, i, decl);
     }
 
     return tree_decl_struct(type->node, name, result);

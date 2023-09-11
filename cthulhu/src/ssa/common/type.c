@@ -2,12 +2,14 @@
 
 #include "cthulhu/tree/query.h"
 
+#include "std/map.h"
 #include "std/vector.h"
-
 #include "std/typed/vector.h"
 
 #include "base/memory.h"
 #include "base/panic.h"
+
+#include <string.h>
 
 ssa_type_t *ssa_type_new(ssa_kind_t kind, const char *name, quals_t quals)
 {
@@ -74,7 +76,7 @@ ssa_type_t *ssa_type_struct(const char *name, quals_t quals, typevec_t *fields)
     return type;
 }
 
-static typevec_t *collect_params(const tree_t *type)
+static typevec_t *collect_params(map_t *cache, const tree_t *type)
 {
     vector_t *vec = tree_fn_get_params(type);
 
@@ -91,7 +93,7 @@ static typevec_t *collect_params(const tree_t *type)
 
         ssa_param_t entry = {
             .name = name,
-            .type = ssa_type_from(type)
+            .type = ssa_type_create_cached(cache, type)
         };
 
         typevec_set(result, i, &entry);
@@ -100,7 +102,7 @@ static typevec_t *collect_params(const tree_t *type)
     return result;
 }
 
-static typevec_t *collect_fields(const tree_t *type)
+static typevec_t *collect_fields(map_t *cache, const tree_t *type)
 {
     size_t len = vector_len(type->fields);
     typevec_t *result = typevec_of(sizeof(ssa_field_t), len);
@@ -114,7 +116,7 @@ static typevec_t *collect_fields(const tree_t *type)
 
         ssa_field_t entry = {
             .name = name,
-            .type = ssa_type_from(type)
+            .type = ssa_type_create_cached(cache, type)
         };
 
         typevec_set(result, i, &entry);
@@ -123,7 +125,7 @@ static typevec_t *collect_fields(const tree_t *type)
     return result;
 }
 
-ssa_type_t *ssa_type_from(const tree_t *type)
+ssa_type_t *ssa_type_create(map_t *cache, const tree_t *type)
 {
     tree_kind_t kind = tree_get_kind(type);
     const char *name = tree_get_name(type);
@@ -139,20 +141,33 @@ ssa_type_t *ssa_type_from(const tree_t *type)
         return ssa_type_closure(
             /* name = */ name,
             /* quals = */ quals,
-            /* result = */ ssa_type_from(tree_fn_get_return(type)),
-            /* params = */ collect_params(type),
+            /* result = */ ssa_type_create_cached(cache, tree_fn_get_return(type)),
+            /* params = */ collect_params(cache, type),
             /* variadic = */ tree_fn_get_arity(type) == eArityVariable
         );
 
     case eTreeTypeReference:
-        return ssa_type_pointer(name, quals, ssa_type_from(type->ptr), 1);
+        return ssa_type_pointer(name, quals, ssa_type_create_cached(cache, type->ptr), 1);
 
     case eTreeTypeArray:
     case eTreeTypePointer:
-        return ssa_type_pointer(name, quals, ssa_type_from(type->ptr), type->length);
+        return ssa_type_pointer(name, quals, ssa_type_create_cached(cache, type->ptr), type->length);
 
-    case eTreeTypeStruct: return ssa_type_struct(name, quals, collect_fields(type));
+    case eTreeTypeStruct: return ssa_type_struct(name, quals, collect_fields(cache, type));
 
     default: NEVER("unexpected type kind: %s", tree_to_string(type));
     }
+}
+
+ssa_type_t *ssa_type_create_cached(map_t *cache, const tree_t *type)
+{
+    ssa_type_t *old = map_get_ptr(cache, type);
+    if (old != NULL) { return old; }
+
+    ssa_type_t *temp = ssa_type_empty(tree_get_name(type), eQualUnknown);
+    map_set_ptr(cache, type, temp);
+
+    ssa_type_t *result = ssa_type_create(cache, type);
+    memcpy(temp, result, sizeof(ssa_type_t));
+    return temp;
 }

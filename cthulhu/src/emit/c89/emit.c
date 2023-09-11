@@ -175,8 +175,9 @@ void c89_proto_type(c89_emit_t *emit, const ssa_module_t *mod, const ssa_type_t 
     case eTypeRecord:
         write_string(hdr->io, "struct %s;\n", type->name);
         break;
+
     default:
-        NEVER("unknown type kind %d", type->kind);
+        break; // TODO: how should we honor visiblity and aliases?
     }
 }
 
@@ -242,6 +243,14 @@ static void proto_symbols(c89_emit_t *emit, const ssa_module_t *mod, vector_t *v
 static void c89_proto_module(c89_emit_t *emit, const ssa_module_t *mod)
 {
     emit_required_headers(emit, mod);
+
+    size_t len = vector_len(mod->types);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_type_t *type = vector_get(mod->types, i);
+        c89_proto_type(emit, mod, type);
+    }
+
     proto_symbols(emit, mod, mod->globals, c89_proto_global);
     proto_symbols(emit, mod, mod->functions, c89_proto_function);
 }
@@ -622,6 +631,33 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
 
 /// defines
 
+static void define_record(c89_emit_t *emit, io_t *io, const ssa_type_t *type)
+{
+    const ssa_type_record_t record = type->record;
+    write_string(io, "struct %s {\n", type->name);
+    size_t len = typevec_len(record.fields);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_field_t *field = typevec_offset(record.fields, i);
+        write_string(io, "\t%s %s;\n", format_symbol(emit, field->type, NULL), field->name);
+    }
+    write_string(io, "};\n");
+}
+
+void c89_define_type(c89_emit_t *emit, const ssa_module_t *mod, const ssa_type_t *type)
+{
+    c89_source_t *hdr = map_get_ptr(emit->hdrmap, mod);
+    switch (type->kind)
+    {
+    case eTypeRecord:
+        define_record(emit, hdr->io, type);
+        break;
+
+    default:
+        break;
+    }
+}
+
 static void write_init(c89_emit_t *emit, io_t *io, const ssa_value_t *value)
 {
     const ssa_type_t *type = value->type;
@@ -720,6 +756,13 @@ static void define_symbols(c89_emit_t *emit, const ssa_module_t *mod, vector_t *
 
 static void c89_define_module(c89_emit_t *emit, const ssa_module_t *mod)
 {
+    size_t len = vector_len(mod->types);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_type_t *type = vector_get(mod->types, i);
+        c89_define_type(emit, mod, type);
+    }
+
     define_symbols(emit, mod, mod->globals, c89_define_global);
     define_symbols(emit, mod, mod->functions, c89_define_function);
 }

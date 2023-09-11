@@ -14,7 +14,8 @@ ssa_type_t *ssa_type_closure(const char *name, quals_t quals, ssa_type_t *result
 ssa_type_t *ssa_type_array(const char *name, quals_t quals, ssa_type_t *element, size_t length);
 ssa_type_t *ssa_type_struct(const char *name, quals_t quals, typevec_t *fields);
 
-ssa_type_t *ssa_type_from(const tree_t *type);
+ssa_type_t *ssa_type_create(map_t *cache, const tree_t *type);
+ssa_type_t *ssa_type_create_cached(map_t *cache, const tree_t *type);
 
 ssa_type_t *ssa_type_common(const ssa_type_t *lhs, const ssa_type_t *rhs);
 
@@ -31,7 +32,7 @@ ssa_value_t *ssa_value_digit(const ssa_type_t *type, const mpz_t value);
 ssa_value_t *ssa_value_char(const ssa_type_t *type, char value);
 ssa_value_t *ssa_value_string(const ssa_type_t *type, const char *value, size_t length);
 
-ssa_value_t *ssa_value_from(const tree_t *expr);
+ssa_value_t *ssa_value_from(map_t *types, const tree_t *expr);
 ssa_value_t *ssa_value_noinit(const ssa_type_t *type);
 
 ///

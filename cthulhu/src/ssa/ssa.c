@@ -27,6 +27,7 @@ typedef struct ssa_compile_t {
 
     map_t *globals; ///< map<tree, ssa_symbol>
     map_t *functions; ///< map<tree, ssa_symbol>
+    map_t *types; ///< map<tree, ssa_type>
 
     map_t *locals; ///< map<tree, ssa_symbol>
     map_t *loops; ///< map<tree, ssa_loop>
@@ -60,7 +61,7 @@ static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const tree_t *tree, ssa_s
     CTU_UNUSED(ssa);
 
     const char *name = tree_get_name(tree);
-    const ssa_type_t *type = ssa_type_from(tree_get_type(tree));
+    const ssa_type_t *type = ssa_type_create_cached(ssa->types, tree_get_type(tree));
     const attribs_t *attrib = tree_get_attrib(tree);
 
     ssa_symbol_t *symbol = ctu_malloc(sizeof(ssa_symbol_t));
@@ -83,10 +84,10 @@ static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const tree_t *tree, ssa_s
     return symbol;
 }
 
-static ssa_storage_t create_storage_type(const tree_t *decl)
+static ssa_storage_t create_storage_type(map_t *types, const tree_t *decl)
 {
     ssa_storage_t storage = {
-        .type = ssa_type_from(tree_get_storage_type(decl)),
+        .type = ssa_type_create_cached(types, tree_get_storage_type(decl)),
         .size = tree_get_storage_size(decl),
         .quals = tree_get_storage_quals(decl)
     };
@@ -105,8 +106,8 @@ static ssa_symbol_t *function_create(ssa_compile_t *ssa, const tree_t *tree)
     for (size_t i = 0; i < locals; i++)
     {
         const tree_t *local = vector_get(tree->locals, i);
-        ssa_storage_t storage = create_storage_type(local);
-        const ssa_type_t *type = ssa_type_from(tree_get_type(local));
+        ssa_storage_t storage = create_storage_type(ssa->types, local);
+        const ssa_type_t *type = ssa_type_create_cached(ssa->types, tree_get_type(local));
         const char *name = tree_get_name(local);
 
         ssa_local_t it = {
@@ -124,7 +125,7 @@ static ssa_symbol_t *function_create(ssa_compile_t *ssa, const tree_t *tree)
     for (size_t i = 0; i < params; i++)
     {
         const tree_t *param = vector_get(tree->params, i);
-        ssa_type_t *ty = ssa_type_from(tree_get_type(param));
+        ssa_type_t *ty = ssa_type_create_cached(ssa->types, tree_get_type(param));
         const char *name = tree_get_name(param);
 
         ssa_param_t it = {
@@ -149,6 +150,7 @@ static ssa_module_t *module_create(ssa_compile_t *ssa, const char *name)
 
     mod->globals = vector_new(32);
     mod->functions = vector_new(32);
+    mod->types = vector_new(32);
 
     return mod;
 }
@@ -223,7 +225,7 @@ static ssa_operand_t compile_branch(ssa_compile_t *ssa, const tree_t *branch)
 
     ssa_block_t *tailBlock = ssa_block_create(ssa->currentSymbol, "tail", 0);
     ssa_block_t *thenBlock = ssa_block_create(ssa->currentSymbol, "then", 0);
-    ssa_block_t *elseBlock = branch->other ? ssa_block_create(ssa->currentSymbol, "else", 0) : NULL;
+    ssa_block_t *elseBlock = branch->other != NULL ? ssa_block_create(ssa->currentSymbol, "other", 0) : NULL;
 
     ssa_step_t step = {
         .opcode = eOpBranch,
@@ -405,13 +407,13 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
     case eTreeExprUnit: {
         ssa_operand_t operand = {
             .kind = eOperandImm,
-            .value = ssa_value_from(tree)
+            .value = ssa_value_from(ssa->types, tree)
         };
         return operand;
     }
 
     case eTreeExprString: {
-        return add_const(ssa, ssa_value_from(tree));
+        return add_const(ssa, ssa_value_from(ssa->types, tree));
     }
 
     case eTreeExprCast: {
@@ -420,7 +422,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
             .opcode = eOpCast,
             .cast = {
                 .operand = expr,
-                .type = ssa_type_from(tree_get_type(tree))
+                .type = ssa_type_create_cached(ssa->types, tree_get_type(tree))
             }
         };
         return add_step(ssa, step);
@@ -641,7 +643,7 @@ static void add_module_globals(ssa_compile_t *ssa, ssa_module_t *mod, map_t *glo
         const tree_t *tree = entry.value;
         CTASSERTF(tree_is(tree, eTreeDeclGlobal), "expected global, got %s", tree_to_string(tree));
 
-        ssa_symbol_t *global = symbol_create(ssa, tree, create_storage_type(tree));
+        ssa_symbol_t *global = symbol_create(ssa, tree, create_storage_type(ssa->types, tree));
 
         vector_push(&mod->globals, global);
         map_set_ptr(ssa->globals, tree, global);
@@ -663,6 +665,21 @@ static void add_module_functions(ssa_compile_t *ssa, ssa_module_t *mod, map_t *f
     }
 }
 
+static void add_module_types(ssa_compile_t *ssa, ssa_module_t *mod, map_t *types)
+{
+    map_iter_t iter = map_iter(types);
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+
+        const tree_t *tree = entry.value;
+        ssa_type_t *type = ssa_type_create(ssa->types, tree);
+
+        vector_push(&mod->types, type);
+        map_set_ptr(ssa->types, tree, type);
+    }
+}
+
 static void compile_module(ssa_compile_t *ssa, const tree_t *tree)
 {
     const char *id = tree_get_name(tree);
@@ -670,6 +687,7 @@ static void compile_module(ssa_compile_t *ssa, const tree_t *tree)
 
     add_module_globals(ssa, mod, tree_module_tag(tree, eSemaValues));
     add_module_functions(ssa, mod, tree_module_tag(tree, eSemaProcs));
+    add_module_types(ssa, mod, tree_module_tag(tree, eSemaTypes));
 
     vector_push(&ssa->modules, mod);
     vector_push(&ssa->path, (char*)id);
@@ -703,6 +721,7 @@ ssa_result_t ssa_compile(map_t *mods)
 
         .globals = map_optimal(32),
         .functions = map_optimal(32),
+        .types = map_optimal(32),
 
         .locals = map_optimal(32),
         .loops = map_optimal(32),

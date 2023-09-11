@@ -46,6 +46,6 @@ void c89_proto_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_sym
 /// symbol definitions
 ///
 
+void c89_define_type(c89_emit_t *emit, const ssa_module_t *mod, const ssa_type_t *type);
 void c89_define_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *symbol);
 void c89_define_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *symbol);
-void c89_define_type(c89_emit_t *emit, const ssa_module_t *mod, const ssa_type_t *type);
