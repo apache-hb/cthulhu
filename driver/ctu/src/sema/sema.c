@@ -30,6 +30,12 @@ tree_t *ctu_get_type(tree_t *sema, const char *name)
     return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
 }
 
+ctu_attrib_t *ctu_get_attrib(tree_t *sema, const char *name)
+{
+    const size_t tags[] = { eCtuTagAttribs };
+    return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
+}
+
 tree_t *ctu_get_decl(tree_t *sema, const char *name)
 {
     const size_t tags[] = { eCtuTagValues, eCtuTagFunctions };
@@ -116,6 +122,18 @@ tree_t *ctu_get_char_type(void) { return gStringChar; }
 tree_t *ctu_get_bool_type(void) { return gBoolType; }
 tree_t *ctu_get_void_type(void) { return gVoidType; }
 
+///
+/// runtime and builtin modules
+///
+
+vector_t *ctu_rt_path(void)
+{
+    vector_t *path = vector_new(2);
+    vector_push(&path, "cthulhu");
+    vector_push(&path, "lang");
+    return path;
+}
+
 tree_t *ctu_rt_mod(lifetime_t *lifetime)
 {
     GLOBAL_INIT("cthulhu runtime module");
@@ -151,12 +169,4 @@ tree_t *ctu_rt_mod(lifetime_t *lifetime)
     ctu_add_decl(root, eCtuTagTypes, "void", make_void_type("void"));
 
     return root;
-}
-
-vector_t *ctu_rt_path(void)
-{
-    vector_t *path = vector_new(2);
-    vector_push(&path, "cthulhu");
-    vector_push(&path, "lang");
-    return path;
 }

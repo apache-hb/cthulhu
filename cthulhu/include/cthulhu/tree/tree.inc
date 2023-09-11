@@ -18,6 +18,7 @@ TREE_KIND(eTreeTypePointer, "type-pointer") ///< a pointer to an object
 TREE_KIND(eTreeTypeArray, "type-array") ///< an array of objects
 
 TREE_KIND(eTreeTypeStruct, "type-struct")
+TREE_KIND(eTreeTypeUnion, "type-union")
 
 ///
 /// expressions

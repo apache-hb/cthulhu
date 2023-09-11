@@ -277,6 +277,13 @@ ctu_t *ctu_decl_struct(scan_t *scan, where_t where, bool exported, char *name, v
     return ast;
 }
 
+ctu_t *ctu_decl_variant(scan_t *scan, where_t where, bool exported, char *name, vector_t *cases)
+{
+    ctu_t *ast = ctu_decl(scan, where, eCtuDeclVariant, name, exported);
+    ast->cases = cases;
+    return ast;
+}
+
 ctu_t *ctu_field(scan_t *scan, where_t where, char *name, ctu_t *type)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuField);
@@ -290,5 +297,13 @@ ctu_t *ctu_param(scan_t *scan, where_t where, char *name, ctu_t *type)
     ctu_t *ast = ctu_new(scan, where, eCtuParam);
     ast->name = name;
     ast->paramType = type;
+    return ast;
+}
+
+ctu_t *ctu_variant_case(scan_t *scan, where_t where, char *name, ctu_t *expr)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuVariantCase);
+    ast->name = name;
+    ast->caseValue = expr;
     return ast;
 }

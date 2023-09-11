@@ -1,21 +1,21 @@
 dir = meson.current_source_dir()
 
 tests = {
-    # 'attribs': {
-    #     'pass': [
-    #         'entry-point',
-    #         'multi-attrib-array',
-    #         'multi-attrib',
-    #         'single-attrib-array'
-    #     ],
-    #     'fail': [
-    #         'duplicate-attribs',
-    #         'entry-var',
-    #         'imported-entry',
-    #         'invalid-attribute',
-    #         'multiple-entry'
-    #     ]
-    # },
+    'attribs': {
+        'pass': [
+            'entry-point',
+            'multi-attrib-array',
+            'multi-attrib',
+            'single-attrib-array'
+        ],
+        'fail': [
+            'duplicate-attribs',
+            'entry-var',
+            'imported-entry',
+            'invalid-attribute',
+            'multiple-entry'
+        ]
+    },
     'digits': {
         'pass': [
             'no-suffix',
@@ -203,19 +203,19 @@ crashes = {
 }
 
 cases = {
-    # 'imports': {
-    #     'fails': {
-    #         'missing-import': [ 'main' ],
-    #         'duplicate-name': [ 'main', 'lib', 'subdir/lib' ],
-    #         'duplicate-import': [ 'main', 'lib' ],
-    #         'private-symbol': [ 'main', 'lib' ]
-    #     },
-    #     'passes': {
-    #         'no-imports': [ 'main' ],
-    #         'single-import': [ 'main', 'lib' ],
-    #         'circular-import': [ 'main', 'left', 'right' ]
-    #     }
-    # }
+    'imports': {
+        'fails': {
+            'missing-import': [ 'main' ],
+            'duplicate-name': [ 'main', 'lib', 'subdir/lib' ],
+            'duplicate-import': [ 'main', 'lib' ],
+            'private-symbol': [ 'main', 'lib' ]
+        },
+        'passes': {
+            'no-imports': [ 'main' ],
+            'single-import': [ 'main', 'lib' ],
+            'circular-import': [ 'main', 'left', 'right' ]
+        }
+    }
 }
 
 foreach case, tests : tests

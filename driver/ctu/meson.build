@@ -6,6 +6,7 @@ src = [
     'src/sema/sema.c',
     'src/sema/decl.c',
     'src/sema/expr.c',
+    'src/sema/attrib.c',
 
     'src/ast.c',
     'src/scan.c',

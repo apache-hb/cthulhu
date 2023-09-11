@@ -48,6 +48,7 @@ typedef enum ctu_kind_t {
 
     /* type decls */
     eCtuDeclTypeAlias,
+    eCtuDeclVariant,
     eCtuDeclUnion,
     eCtuDeclStruct,
 
@@ -55,6 +56,7 @@ typedef enum ctu_kind_t {
     eCtuField,
     eCtuParam,
     eCtuAttrib,
+    eCtuVariantCase,
 
     /* modules */
     eCtuImport,
@@ -110,6 +112,12 @@ typedef struct ctu_t {
 
                 /* eCtuParam */
                 ctu_t *paramType;
+
+                /* eCtuDeclVariant */
+                vector_t *cases;
+
+                /* eCtuVariantCase */
+                ctu_t *caseValue;
             };
         };
 
@@ -273,9 +281,12 @@ ctu_t *ctu_decl_typealias(scan_t *scan, where_t where, bool exported, char *name
 ctu_t *ctu_decl_union(scan_t *scan, where_t where, bool exported, char *name, vector_t *fields);
 ctu_t *ctu_decl_struct(scan_t *scan, where_t where, bool exported, char *name, vector_t *fields);
 
+ctu_t *ctu_decl_variant(scan_t *scan, where_t where, bool exported, char *name, vector_t *cases);
+
 ///
 /// internal components
 ///
 
 ctu_t *ctu_field(scan_t *scan, where_t where, char *name, ctu_t *type);
 ctu_t *ctu_param(scan_t *scan, where_t where, char *name, ctu_t *type);
+ctu_t *ctu_variant_case(scan_t *scan, where_t where, char *name, ctu_t *expr);

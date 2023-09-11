@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ctu/sema/attrib.h"
+
 #include "ctu/ast.h"
 
 #include "cthulhu/tree/tree.h"
@@ -28,6 +30,7 @@ tree_t *ctu_get_namespace(tree_t *sema, const char *name);
 tree_t *ctu_get_type(tree_t *sema, const char *name);
 tree_t *ctu_get_decl(tree_t *sema, const char *name);
 tree_t *ctu_get_loop(tree_t *sema, const char *name);
+ctu_attrib_t *ctu_get_attrib(tree_t *sema, const char *name);
 
 ///
 /// adding decls

@@ -58,6 +58,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     STRUCT "`struct`"
     UNION "`union`"
     TYPE "`type`"
+    VARIANT "`variant`"
 
     RETURN "`return`"
     WHILE "`while`"
@@ -126,6 +127,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     attribArgs
     exprList optExprList
     typeList optTypeList
+    variantFields
 
 /**
  * order of operations, tightest first
@@ -155,6 +157,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     maybeExpr
     stmt stmts localDecl returnStmt whileStmt assignExpr
     fnParam fnResult
+    variantDecl variantField
 
 %type<ident>
     importAlias ident optIdent whileName
@@ -232,6 +235,19 @@ innerDecl: globalDecl { $$ = $1; }
     | functionDecl { $$ = $1; }
     | structDecl { $$ = $1; }
     | typeAliasDecl { $$ = $1; }
+    | variantDecl { $$ = $1; }
+    ;
+
+/* variants/enums */
+
+variantDecl: exported VARIANT IDENT LBRACE variantFields RBRACE { $$ = ctu_decl_variant(x, @$, $1, $3, $5); }
+    ;
+
+variantFields: variantField { $$ = vector_init($1); }
+    | variantFields variantField { vector_push(&$1, $2); $$ = $1; }
+    ;
+
+variantField: ident ASSIGN expr SEMI { $$ = ctu_variant_case(x, @$, $1, $3); }
     ;
 
 /* functions */

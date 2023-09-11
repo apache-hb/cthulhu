@@ -85,6 +85,7 @@ WS [ \t\r\v\n\f]
 "struct" { return STRUCT; }
 "union" { return UNION; }
 "type" { return TYPE; }
+"variant" { return VARIANT; }
 
 "return" { return RETURN; }
 "while" { return WHILE; }

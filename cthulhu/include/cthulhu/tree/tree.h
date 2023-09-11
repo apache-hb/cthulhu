@@ -427,6 +427,14 @@ tree_t *tree_open_struct(const node_t *node, const char *name, tree_resolve_info
 void tree_close_struct(tree_t *self, vector_t *fields);
 
 ///
+/// union decls
+///
+
+tree_t *tree_decl_union(const node_t *node, const char *name, vector_t *fields);
+tree_t *tree_open_union(const node_t *node, const char *name, tree_resolve_info_t resolve);
+void tree_close_union(tree_t *self, vector_t *fields);
+
+///
 /// other decls
 ///
 
@@ -448,7 +456,7 @@ tree_t *tree_alias(const tree_t *tree, const char *name);
 /// tree sema interface
 ///
 
-// only declarations placed in the tags eSema2Values, eSema2Types, eSema2Procs, and eSema2Modules
+// only declarations placed in the tags eSemaValues, eSemaTypes, eSemaProcs, and eSemaModules
 // will be emitted, they are also required to be valid tree_t objects
 // any custom slots can contain any data, but they will not be emitted
 

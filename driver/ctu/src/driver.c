@@ -30,16 +30,16 @@
 /// init
 ///
 
-static tree_t *kRootModule = NULL;
+static tree_t *gRootModule = NULL;
 
 void ctu_init(driver_t *handle)
 {
     lifetime_t *lifetime = handle_get_lifetime(handle);
 
-    kRootModule = ctu_rt_mod(lifetime);
+    gRootModule = ctu_rt_mod(lifetime);
     vector_t *path = ctu_rt_path();
 
-    context_t *ctx = compiled_new(handle, kRootModule);
+    context_t *ctx = compiled_new(handle, gRootModule);
     add_context(lifetime, path, ctx);
 }
 
@@ -61,7 +61,7 @@ void ctu_forward_decls(context_t *context)
         [eCtuTagSuffixes] = len,
     };
 
-    tree_t *mod = tree_module(kRootModule, ast->node, name, eCtuTagTotal, sizes);
+    tree_t *mod = tree_module(gRootModule, ast->node, name, eCtuTagTotal, sizes);
 
     for (size_t i = 0; i < len; i++)
     {

@@ -197,7 +197,7 @@ tree_t *tree_alias(const tree_t *tree, const char *name)
 /// structs
 ///
 
-static void check_struct_fields(vector_t *fields)
+static void check_aggregate_fields(vector_t *fields)
 {
     size_t len = vector_len(fields);
     for (size_t i = 0; i < len; i++)
@@ -209,7 +209,7 @@ static void check_struct_fields(vector_t *fields)
 
 tree_t *tree_decl_struct(const node_t *node, const char *name, vector_t *fields)
 {
-    check_struct_fields(fields);
+    check_aggregate_fields(fields);
 
     tree_t *self = decl_open(node, name, NULL, eTreeTypeStruct, NULL);
     self->fields = fields;
@@ -227,5 +227,32 @@ void tree_close_struct(tree_t *self, vector_t *fields)
 {
     decl_close(self, eTreeTypeStruct);
     self->fields = fields;
-    check_struct_fields(fields);
+    check_aggregate_fields(fields);
+}
+
+///
+/// unions
+///
+
+tree_t *tree_decl_union(const node_t *node, const char *name, vector_t *fields)
+{
+    check_aggregate_fields(fields);
+
+    tree_t *self = decl_open(node, name, NULL, eTreeTypeUnion, NULL);
+    self->fields = fields;
+    return self;
+}
+
+tree_t *tree_open_union(const node_t *node, const char *name, tree_resolve_info_t resolve)
+{
+    tree_t *self = decl_open(node, name, NULL, eTreeTypeUnion, BOX(resolve));
+    self->fields = vector_new(4);
+    return self;
+}
+
+void tree_close_union(tree_t *self, vector_t *fields)
+{
+    decl_close(self, eTreeTypeUnion);
+    self->fields = fields;
+    check_aggregate_fields(fields);
 }

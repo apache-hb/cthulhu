@@ -270,5 +270,7 @@ ctu_forward_t ctu_forward_decl(tree_t *sema, ctu_t *decl)
         tree_set_attrib(fwd.decl, decl->exported ? &kAttribExport : &kAttribPrivate);
     }
 
+    ctu_apply_attribs(sema, fwd.decl, decl->attribs);
+
     return fwd;
 }

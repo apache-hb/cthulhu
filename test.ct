@@ -1,0 +1,6 @@
+import pl0::lang as pl0;
+
+@entry(cli)
+export def start {
+    pl0::print("hello world\n");
+}
