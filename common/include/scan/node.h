@@ -6,6 +6,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <inttypes.h>
 
 /**
  * @defgroup LocationTracking AST location tracking
@@ -15,6 +16,9 @@
 
 typedef uint_fast64_t line_t;   ///< line number
 typedef uint_fast64_t column_t; ///< column number
+
+#define PRI_LINE PRIuFAST64
+#define PRI_COLUMN PRIuFAST64
 
 /**
  * @brief a location inside a scanner

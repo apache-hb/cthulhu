@@ -167,6 +167,19 @@ static const char *format_symbol(c89_emit_t *emit, const ssa_type_t *type, const
     return c89_format_type(emit, type, name, true);
 }
 
+void c89_proto_type(c89_emit_t *emit, const ssa_module_t *mod, const ssa_type_t *type)
+{
+    c89_source_t *hdr = map_get_ptr(emit->hdrmap, mod);
+    switch (type->kind)
+    {
+    case eTypeRecord:
+        write_string(hdr->io, "struct %s;\n", type->name);
+        break;
+    default:
+        NEVER("unknown type kind %d", type->kind);
+    }
+}
+
 static void write_global(c89_emit_t *emit, io_t *io, const ssa_symbol_t *global)
 {
     const char *it = c89_format_storage(emit, global->storage, mangle_symbol_name(global));
@@ -449,11 +462,19 @@ static void c89_write_offset(c89_emit_t *emit, io_t *io, const ssa_step_t *step)
 
 static void c89_write_member(c89_emit_t *emit, io_t *io, const ssa_step_t *step)
 {
-    ssa_member_t member = step->member;
-    const ssa_type_t *type = get_operand_type(emit, member.object);
-    CTASSERTF(type->kind == eTypeRecord, "expected record type, got %s", type_to_string(type));
+    CTASSERTF(step->opcode == eOpMember, "expected member, got %s", ssa_opcode_name(step->opcode));
 
-    const ssa_field_t *field = typevec_offset(type->record.fields, member.index);
+    ssa_member_t member = step->member;
+    const ssa_type_t *recordPtr = get_operand_type(emit, member.object);
+    CTASSERTF(recordPtr->kind == eTypePointer, "expected record type, got %s", type_to_string(recordPtr));
+
+    ssa_type_pointer_t ptr = recordPtr->pointer;
+    const ssa_type_t *record = ptr.pointer;
+    CTASSERTF(record->kind == eTypeRecord, "expected record type, got %s", type_to_string(record));
+
+    ssa_type_record_t recordType = record->record;
+    const ssa_field_t *field = typevec_offset(recordType.fields, member.index);
+
     write_string(io, "\t%s = &%s->%s;\n",
         c89_name_vreg(emit, step, ssa_type_pointer(field->name, eQualUnknown, (ssa_type_t*)field->type, 1)),
         c89_format_operand(emit, member.object),

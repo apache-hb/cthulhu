@@ -24,7 +24,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %union {
     char *ident;
-    ctu_string_t string;
+    util_text_t string;
     ctu_digit_t digit;
 
     bool boolean;

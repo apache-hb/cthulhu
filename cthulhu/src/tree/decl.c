@@ -114,7 +114,7 @@ void tree_close_function(tree_t *self, tree_t *body)
     self->body = body;
 
     CTASSERTF(vector_len(self->params) == vector_len(self->type->params),
-        "decl %s has %zu params, expected %zu parameter(s)",
+        "decl %s has %zu params, expected %zu%s parameter(s)",
         tree_get_name(self), vector_len(self->params),
         vector_len(self->type->params), (self->type->arity == eArityFixed) ? "" : " or more"
     );

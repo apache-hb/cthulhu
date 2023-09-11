@@ -265,7 +265,7 @@ tree_t *util_create_string(tree_t *sema, tree_t *letter, const char *text, size_
         .size = length + 1,
         .quals = eQualConst
     };
-    const char *id = format("%s$%llu$%llu", tree_get_name(symbol), where.firstLine, where.firstColumn);
+    const char *id = format("%s$%" PRI_LINE "$%" PRI_COLUMN, tree_get_name(symbol), where.firstLine, where.firstColumn);
     tree_t *str = tree_expr_string(node, type, text, length + 1);
     tree_t *decl = tree_decl_global(node, id, storage, type, str);
 

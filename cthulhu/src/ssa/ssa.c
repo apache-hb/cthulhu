@@ -361,6 +361,8 @@ static ssa_operand_t add_jump(ssa_compile_t *ssa, ssa_loop_t *loop, tree_jump_t 
 
 static size_t get_field_index(const tree_t *ty, const tree_t *field)
 {
+    CTASSERTF(tree_is(ty, eTreeTypeStruct), "expected struct, got %s", tree_to_string(ty));
+
     size_t result = vector_find(ty->fields, field);
     CTASSERTF(result != SIZE_MAX, "field `%s` not found in `%s`", tree_get_name(field), tree_to_string(ty));
     return result;
@@ -369,8 +371,10 @@ static size_t get_field_index(const tree_t *ty, const tree_t *field)
 static ssa_operand_t get_field(ssa_compile_t *ssa, const tree_t *tree)
 {
     const tree_t *ty = tree_get_type(tree->object);
+    CTASSERTF(tree_ty_is_address(ty), "expected address, got %s", tree_to_string(ty));
+
     ssa_operand_t object = compile_tree(ssa, tree->object);
-    size_t index = get_field_index(ty, tree->field);
+    size_t index = get_field_index(ty->ptr, tree->field);
 
     ssa_step_t step = {
         .opcode = eOpMember,

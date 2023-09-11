@@ -20,18 +20,6 @@ ctu_digit_t ctu_parse_digit(scan_t *scan, const char *str, size_t base)
     return result;
 }
 
-ctu_string_t ctu_parse_string(scan_t *scan, const char *str, size_t length)
-{
-    CTU_UNUSED(scan);
-
-    ctu_string_t result = {
-        .text = ctu_strndup(str, length),
-        .length = length
-    };
-
-    return result;
-}
-
 void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg)
 {
     CTU_UNUSED(state);

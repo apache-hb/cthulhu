@@ -63,22 +63,30 @@ const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char
 
     switch (type->kind)
     {
-    case eTypeEmpty: NEVER("cannot emit this type %d", type->kind);
-    case eTypeUnit: return (name != NULL) ? format("void %s", name) : "void";
+    case eTypeUnit: return (name != NULL)
+        ? format("void %s", name)
+        : "void";
 
-    case eTypeBool: return (name != NULL) ? format("%sbool %s", quals, name) : format("%sbool", quals);
+    case eTypeBool: return (name != NULL)
+        ? format("%sbool %s", quals, name)
+        : format("%sbool", quals);
+
     case eTypeDigit: {
         const char *digitName = get_c89_digit(type->digit);
-        return (name != NULL) ? format("%s%s %s", quals, digitName, name) : format("%s%s", quals, digitName);
+        return (name != NULL)
+            ? format("%s%s %s", quals, digitName, name)
+            : format("%s%s", quals, digitName);
     }
 
     case eTypeClosure: return format_c89_closure(emit, quals, type->closure, name);
     case eTypePointer: return format_c89_pointer(emit, quals, type->pointer, name);
 
-    // TODO: emit type definitions for structs
-    case eTypeRecord: return (name != NULL) ? format("%sstruct %s %s", quals, type->name, name) : format("%sstruct %s", quals, type->name);
+    case eTypeRecord: return (name != NULL)
+        ? format("%sstruct %s %s", quals, type->name, name)
+        : format("%sstruct %s", quals, type->name);
 
-    default: NEVER("unknown type %d", type->kind);
+    case eTypeEmpty: NEVER("cannot emit empty type `%s`", type->name);
+    default: NEVER("unknown type %s", type_to_string(type));
     }
 }
 

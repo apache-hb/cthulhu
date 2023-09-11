@@ -103,7 +103,7 @@ WS [ \t\r\v\n\f]
 }
 
 \"([^"\\\n]|{ESCAPES})*\" {
-	yylval->string = obr_parse_string(yyextra, yytext + 1, yyleng - 2);
+	yylval->string = util_text_escape(scan_reports(yyextra), node_new(yyextra, *yylloc), yytext + 1, yyleng - 2);
     return STRING;
 }
 

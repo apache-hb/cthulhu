@@ -77,7 +77,8 @@ mediator = declare_dependency(
 )
 
 src = [
-    'src/util/util.c'
+    'src/util/util.c',
+    'src/util/text.c'
 ]
 
 libutil = library('util', src,

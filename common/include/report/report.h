@@ -58,8 +58,7 @@ typedef int status_t;
 /**
  * @brief part of an error message
  */
-typedef struct
-{
+typedef struct part_t {
     char *message; ///< associated message
     const node_t *node;   ///< associated node
 } part_t;
@@ -67,8 +66,7 @@ typedef struct
 /**
  * @brief an error message
  */
-typedef struct message_t
-{
+typedef struct message_t {
     /* the level of this error */
     level_t level;
 

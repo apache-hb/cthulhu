@@ -32,7 +32,7 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
     char *ident;
     mpz_t number;
     bool boolean;
-    obr_string_t string;
+    util_text_t string;
 }
 
 %type<vector>

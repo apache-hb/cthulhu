@@ -103,7 +103,14 @@ void typevec_pop(typevec_t *vec, void *dst)
 
 void *typevec_offset(typevec_t *vec, size_t index)
 {
-    CTASSERT(index < typevec_len(vec));
+    CTASSERTF(index < typevec_len(vec), "index %zu out of bounds %zu", index, typevec_len(vec));
 
     return ((char*)vec->data) + (index * vec->typeSize);
+}
+
+void *typevec_data(typevec_t *vec)
+{
+    CTASSERT(vec != NULL);
+
+    return vec->data;
 }

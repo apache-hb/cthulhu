@@ -13,8 +13,7 @@ typedef struct scan_t scan_t;
 /**
  * scanner function callbacks for flex and bison
  */
-typedef struct
-{
+typedef struct callbacks_t {
     int (*init)(scan_t *extra, void *scanner);                   ///< yylex_init_extra
     int (*parse)(void *scanner, scan_t *extra);                  ///< yyparse
     void *(*scan)(const char *text, size_t size, void *scanner); ///< yy_scan_string

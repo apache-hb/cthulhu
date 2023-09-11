@@ -15,7 +15,7 @@ static tree_t *tree_module_new(const node_t *node, const char *name,
                                reports_t *reports, map_t *extra,
                                size_t decls, const size_t *sizes)
 {
-    CTASSERTF(decls >= eSemaTotal, "module cannot be constructed with less than %zu tags (%zu given)", eSemaTotal, decls);
+    CTASSERTF(decls >= eSemaTotal, "module cannot be constructed with less than %d tags (%zu given)", eSemaTotal, decls);
     CTASSERT(reports != NULL);
 
     tree_t *self = tree_decl(eTreeDeclModule, node, NULL, name, eQualUnknown);

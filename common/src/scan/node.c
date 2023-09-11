@@ -39,7 +39,7 @@ node_t *node_invalid(void)
 USE_DECL
 bool node_is_valid(const node_t *node)
 {
-    return node != node_invalid();
+    return node != node_invalid() && node != NULL; /* getting null is very bad */
 }
 
 USE_DECL

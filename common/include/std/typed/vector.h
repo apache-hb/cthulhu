@@ -31,4 +31,14 @@ void typevec_pop(typevec_t *vec, void *dst);
  */
 void *typevec_offset(typevec_t *vec, size_t index);
 
+/**
+ * @brief get a pointer to the underlying data
+ *
+ * @note the pointer is only valid until the next call to @a typevec_push or @a typevec_pop
+ *
+ * @param vec the vector to get the data from
+ * @return void* a pointer to the data
+ */
+void *typevec_data(typevec_t *vec);
+
 END_API
