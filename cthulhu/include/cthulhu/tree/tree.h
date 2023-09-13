@@ -30,6 +30,7 @@ typedef struct tree_attribs_t {
     visibility_t visibility; ///< the visibility of the declaration
 
     const char *mangle; ///< override the mangle of the declaration
+    const char *section; ///< override the section of the declaration
     const char *deprecated; ///< the reason for deprecation, or NULL if not deprecated
 } tree_attribs_t;
 

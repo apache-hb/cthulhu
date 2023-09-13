@@ -40,6 +40,24 @@ static ctu_attrib_t *attrib_create(const char *name, ctu_attrib_apply_t fnApply)
 
 #define MALFORMED_ENTRY(REPORTS, NODE) report(REPORTS, eFatal, NODE, "malformed entry point type, must be either `gui` or `cli`")
 
+static const char *get_first_string(tree_t *sema, tree_t *decl, vector_t *args)
+{
+    if (vector_len(args) != 1)
+    {
+        report(sema->reports, eFatal, decl->node, "expected 1 string argument");
+        return NULL;
+    }
+
+    ctu_t *arg = vector_tail(args);
+    if (arg->kind != eCtuExprString)
+    {
+        report(sema->reports, eFatal, arg->node, "expected string argument");
+        return NULL;
+    }
+
+    return arg->text;
+}
+
 static tree_link_t choose_linkage(tree_t *sema, tree_t *decl, const ctu_t *expr)
 {
     if (expr->kind != eCtuExprName)
@@ -81,6 +99,10 @@ static tree_link_t get_linkage(tree_t *sema, tree_t *decl, vector_t *args)
     }
 }
 
+///
+/// attributes
+///
+
 static void apply_entry(tree_t *sema, tree_t *decl, vector_t *args)
 {
     if (!tree_is(decl, eTreeDeclFunction))
@@ -103,12 +125,48 @@ static void apply_entry(tree_t *sema, tree_t *decl, vector_t *args)
 
 static void apply_deprecated(tree_t *sema, tree_t *decl, vector_t *args)
 {
-    NEVER("not implemented");
+    if (!tree_is(decl, eTreeDeclFunction))
+    {
+        report(sema->reports, eFatal, decl->node, "deprecated attribute can only be applied to functions");
+        return;
+    }
+
+    const tree_attribs_t *old = tree_get_attrib(decl);
+    if (old->deprecated != NULL)
+    {
+        report(sema->reports, eFatal, decl->node, "deprecated attribute already applied");
+        return;
+    }
+
+    const char *msg = get_first_string(sema, decl, args);
+    if (msg == NULL) { return; }
+
+    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t));
+    copy->deprecated = msg;
+    tree_set_attrib(decl, copy);
 }
 
 static void apply_section(tree_t *sema, tree_t *decl, vector_t *args)
 {
-    NEVER("not implemented");
+    if (!tree_is(decl, eTreeDeclFunction))
+    {
+        report(sema->reports, eFatal, decl->node, "section attribute can only be applied to functions");
+        return;
+    }
+
+    const tree_attribs_t *old = tree_get_attrib(decl);
+    if (old->section != NULL)
+    {
+        report(sema->reports, eFatal, decl->node, "section attribute already applied");
+        return;
+    }
+
+    const char *msg = get_first_string(sema, decl, args);
+    if (msg == NULL) { return; }
+
+    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t));
+    copy->section = msg;
+    tree_set_attrib(decl, copy);
 }
 
 void ctu_init_attribs(tree_t *sema)
