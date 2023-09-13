@@ -101,15 +101,26 @@ static void apply_entry(tree_t *sema, tree_t *decl, vector_t *args)
     tree_set_attrib(decl, copy);
 }
 
-static ctu_attrib_t *ctu_attrib_entry(void)
+static void apply_deprecated(tree_t *sema, tree_t *decl, vector_t *args)
 {
-    return attrib_create("entry", apply_entry);
+    NEVER("not implemented");
+}
+
+static void apply_section(tree_t *sema, tree_t *decl, vector_t *args)
+{
+    NEVER("not implemented");
 }
 
 void ctu_init_attribs(tree_t *sema)
 {
-    ctu_attrib_t *entry = ctu_attrib_entry();
+    ctu_attrib_t *entry = attrib_create("entry", apply_entry);
     tree_module_set(sema, eCtuTagAttribs, entry->name, entry);
+
+    ctu_attrib_t *deprecated = attrib_create("deprecated", apply_deprecated);
+    tree_module_set(sema, eCtuTagAttribs, deprecated->name, deprecated);
+
+    ctu_attrib_t *section = attrib_create("section", apply_section);
+    tree_module_set(sema, eCtuTagAttribs, section->name, section);
 }
 
 void ctu_apply_attribs(tree_t *sema, tree_t *decl, vector_t *attribs)
