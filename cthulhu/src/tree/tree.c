@@ -10,7 +10,7 @@
 #include "base/memory.h"
 #include "base/panic.h"
 
-static const attribs_t kDefaultAttrib = {
+static const tree_attribs_t kDefaultAttrib = {
     .link = eLinkModule,
     .visibility = eVisiblePrivate
 };

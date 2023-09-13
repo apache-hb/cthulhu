@@ -1,3 +1,4 @@
+#include "cthulhu/util/type.h"
 #include "cthulhu/util/util.h"
 
 #include "cthulhu/tree/query.h"

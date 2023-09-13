@@ -1,4 +1,4 @@
 @entry(cli)
 def main: int {
-    
+    return 0;
 }

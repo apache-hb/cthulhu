@@ -35,7 +35,7 @@ static tree_link_t remap_linkage(obr_visibility_t vis)
 
 static void set_attribs(tree_t *sema, tree_t *decl, obr_visibility_t vis, tree_link_t linkage)
 {
-    attribs_t attrib = {
+    tree_attribs_t attrib = {
         .link = linkage,
         .visibility = remap_visibility(sema->reports, decl->node, vis)
     };
@@ -274,7 +274,7 @@ static void obr_resolve_init(cookie_t *cookie, tree_t *sema, tree_t *self, void 
     tree_close_function(self, body);
 }
 
-static const attribs_t kEntryPoint = {
+static const tree_attribs_t kEntryPoint = {
     .link = eLinkEntryCli
 };
 

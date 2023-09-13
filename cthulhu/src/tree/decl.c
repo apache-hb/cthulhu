@@ -177,7 +177,7 @@ void tree_add_local(tree_t *self, tree_t *decl)
     vector_push(&self->locals, decl);
 }
 
-void tree_set_attrib(tree_t *self, const attribs_t *attrib)
+void tree_set_attrib(tree_t *self, const tree_attribs_t *attrib)
 {
     CTASSERT(self != NULL);
 

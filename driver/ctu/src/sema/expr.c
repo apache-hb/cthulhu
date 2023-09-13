@@ -2,6 +2,7 @@
 #include "ctu/sema/type.h"
 
 #include "cthulhu/util/util.h"
+#include "cthulhu/util/type.h"
 
 #include "cthulhu/tree/query.h"
 
@@ -18,28 +19,24 @@
 /// get decls
 ///
 
+static const size_t kLocalModuleTags[] = { eCtuTagModules };
+static const size_t kGlobalModuleTags[] = { eCtuTagImports };
+static const size_t kDeclTags[] = { eCtuTagValues, eCtuTagFunctions };
+
+static const util_search_t kSearchName = {
+    .localScopeTags = kLocalModuleTags,
+    .localScopeTagsLen = sizeof(kLocalModuleTags) / sizeof(size_t),
+
+    .globalScopeTags = kGlobalModuleTags,
+    .globalScopeTagsLen = sizeof(kGlobalModuleTags) / sizeof(size_t),
+
+    .declTags = kDeclTags,
+    .declTagsLen = sizeof(kDeclTags) / sizeof(size_t)
+};
+
 static tree_t *sema_decl_name(tree_t *sema, const node_t *node, vector_t *path)
 {
-    size_t len = vector_len(path);
-    tree_t *ns = sema;
-    for (size_t i = 0; i < len - 1; i++)
-    {
-        const char *segment = vector_get(path, i);
-        ns = ctu_get_namespace(ns, segment);
-        if (ns == NULL)
-        {
-            return tree_raise(node, sema->reports, "namespace `%s` not found", segment);
-        }
-    }
-
-    const char *name = vector_tail(path);
-    tree_t *decl = ctu_get_decl(ns, name);
-    if (decl == NULL)
-    {
-        return tree_raise(node, sema->reports, "decl `%s` not found", name);
-    }
-
-    return decl;
+    return util_search_path(sema, &kSearchName, node, path);
 }
 
 ///

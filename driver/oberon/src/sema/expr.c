@@ -2,6 +2,7 @@
 #include "oberon/sema/type.h"
 
 #include "cthulhu/util/util.h"
+#include "cthulhu/util/type.h"
 
 #include "std/str.h"
 

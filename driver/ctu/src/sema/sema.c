@@ -1,5 +1,6 @@
 #include "ctu/sema/sema.h"
 
+#include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"
 #include "cthulhu/tree/sema.h"
 
@@ -18,9 +19,26 @@
 /// decls
 ///
 
-tree_t *ctu_get_namespace(tree_t *sema, const char *name)
+tree_t *ctu_get_namespace(tree_t *sema, const char *name, bool *imported)
 {
-    const size_t tags[] = { eCtuTagModules, eCtuTagImports };
+    const size_t local[] = { eCtuTagModules };
+    void *it = util_select_decl(sema, local, sizeof(local) / sizeof(size_t), name);
+    if (it != NULL) { return it; }
+
+    const size_t global[] = { eCtuTagImports };
+    it = util_select_decl(sema, global, sizeof(global) / sizeof(size_t), name);
+    if (it != NULL)
+    {
+        if (imported != NULL) { *imported = true; }
+        return it;
+    }
+
+    return NULL;
+}
+
+tree_t *ctu_get_import(tree_t *sema, const char *name)
+{
+    const size_t tags[] = { eCtuTagImports };
     return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
 }
 
@@ -167,6 +185,8 @@ tree_t *ctu_rt_mod(lifetime_t *lifetime)
     ctu_add_decl(root, eCtuTagTypes, "bool", make_bool_type("bool"));
     ctu_add_decl(root, eCtuTagTypes, "str", make_str_type("str"));
     ctu_add_decl(root, eCtuTagTypes, "void", make_void_type("void"));
+
+    ctu_init_attribs(root);
 
     return root;
 }

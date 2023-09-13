@@ -25,18 +25,18 @@ static const tree_t *gIntRef = NULL;
 static tree_t *gPrint = NULL;
 static tree_t *gPrintString = NULL;
 
-static const attribs_t kPrintAttrib = {
+static const tree_attribs_t kPrintAttrib = {
     .link = eLinkImport,
     .visibility = eVisiblePublic,
     .mangle = "printf"
 };
 
-static const attribs_t kExportAttrib = {
+static const tree_attribs_t kExportAttrib = {
     .link = eLinkExport,
     .visibility = eVisiblePublic
 };
 
-static const attribs_t kEntryAttrib = {
+static const tree_attribs_t kEntryAttrib = {
     .link = eLinkEntryCli,
     .visibility = eVisiblePrivate
 };

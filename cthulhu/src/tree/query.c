@@ -99,7 +99,7 @@ const tree_t *tree_get_type(const tree_t *self)
     return self->type;
 }
 
-const attribs_t *tree_get_attrib(const tree_t *self)
+const tree_attribs_t *tree_get_attrib(const tree_t *self)
 {
     CTASSERT(self != NULL);
     CTASSERT(self->attrib != NULL);
@@ -116,7 +116,7 @@ bool tree_is(const tree_t *self, tree_kind_t kind)
 
 bool tree_has_vis(const tree_t *self, visibility_t visibility)
 {
-    const attribs_t *attrib = tree_get_attrib(self);
+    const tree_attribs_t *attrib = tree_get_attrib(self);
     return attrib->visibility == visibility;
 }
 

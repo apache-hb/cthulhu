@@ -1,9 +1,26 @@
 #include "oberon/sema/type.h"
 #include "oberon/sema/decl.h"
 
+#include "cthulhu/util/util.h"
+
 #include "report/report.h"
 
 #include "base/panic.h"
+
+static const size_t kLocalModuleTags[] = { eObrTagModules };
+static const size_t kGlobalModuleTags[] = { eObrTagImports };
+static const size_t kDeclTags[] = { eObrTagTypes };
+
+static const util_search_t kSearchDecl = {
+    .localScopeTags = kLocalModuleTags,
+    .localScopeTagsLen = sizeof(kLocalModuleTags) / sizeof(size_t),
+
+    .globalScopeTags = kGlobalModuleTags,
+    .globalScopeTagsLen = sizeof(kGlobalModuleTags) / sizeof(size_t),
+
+    .declTags = kDeclTags,
+    .declTagsLen = sizeof(kDeclTags) / sizeof(size_t)
+};
 
 static tree_t *sema_type_name(tree_t *sema, obr_t *type)
 {
@@ -18,19 +35,7 @@ static tree_t *sema_type_name(tree_t *sema, obr_t *type)
 
 static tree_t *sema_type_qual(tree_t *sema, obr_t *type)
 {
-    tree_t *mod = obr_get_module(sema, type->name);
-    if (mod == NULL)
-    {
-        return tree_raise(type->node, sema->reports, "module '%s' not found", type->name);
-    }
-
-    tree_t *it = obr_get_type(mod, type->symbol);
-    if (it == NULL)
-    {
-        return tree_raise(type->node, sema->reports, "type '%s' not found in module '%s'", type->symbol, type->name);
-    }
-
-    return it;
+    return util_search_qualified(sema, &kSearchDecl, type->node, type->name, type->symbol);
 }
 
 static tree_t *sema_type_pointer(tree_t *sema, obr_t *type, const char *name)

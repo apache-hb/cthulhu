@@ -25,13 +25,13 @@ typedef enum sema_tags_t {
     eSemaTotal
 } sema_tags_t;
 
-typedef struct attribs_t {
+typedef struct tree_attribs_t {
     tree_link_t link; ///< the link type of the declaration
     visibility_t visibility; ///< the visibility of the declaration
 
     const char *mangle; ///< override the mangle of the declaration
     const char *deprecated; ///< the reason for deprecation, or NULL if not deprecated
-} attribs_t;
+} tree_attribs_t;
 
 typedef enum tree_kind_t {
 #define TREE_KIND(ID, NAME) ID,
@@ -150,7 +150,7 @@ typedef struct tree_t {
         /* any declaration */
         struct {
             const char *name; ///< the name of the declaration
-            const attribs_t *attrib; ///< the attributes of the declaration
+            const tree_attribs_t *attrib; ///< the attributes of the declaration
             const tree_resolve_info_t *resolve; ///< the resolve configuration of the declaration, NULL if resolved
             quals_t quals;
 
@@ -448,7 +448,7 @@ tree_t *tree_decl_local(const node_t *node, const char *name, tree_storage_t sto
 
 void tree_add_local(tree_t *self, tree_t *decl);
 void tree_add_param(tree_t *self, tree_t *decl);
-void tree_set_attrib(tree_t *self, const attribs_t *attrib);
+void tree_set_attrib(tree_t *self, const tree_attribs_t *attrib);
 
 tree_t *tree_alias(const tree_t *tree, const char *name);
 

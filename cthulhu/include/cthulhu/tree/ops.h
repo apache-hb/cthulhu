@@ -73,7 +73,7 @@ typedef enum tree_jump_t {
 typedef enum visibility_t {
 #define TREE_VISIBILITY(ID, STR) ID,
 #include "tree.inc"
-    eHlirVisibilityTotal
+    eVisibileTotal
 } visibility_t;
 
 typedef enum digit_t {

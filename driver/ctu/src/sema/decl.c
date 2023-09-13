@@ -5,6 +5,7 @@
 #include "cthulhu/tree/query.h"
 
 #include "cthulhu/util/util.h"
+#include "cthulhu/util/type.h"
 
 #include "std/vector.h"
 #include "std/str.h"
@@ -17,22 +18,22 @@
 /// attributes
 ///
 
-static const attribs_t kAttribPrivate = {
+static const tree_attribs_t kAttribPrivate = {
     .link = eLinkModule,
     .visibility = eVisiblePrivate
 };
 
-static const attribs_t kAttribExport = {
+static const tree_attribs_t kAttribExport = {
     .link = eLinkExport,
     .visibility = eVisiblePublic
 };
 
-static const attribs_t kAttribForward = {
+static const tree_attribs_t kAttribForward = {
     .link = eLinkImport,
     .visibility = eVisiblePublic
 };
 
-static const attribs_t kAttribImport = {
+static const tree_attribs_t kAttribImport = {
     .link = eLinkImport,
     .visibility = eVisiblePrivate
 };
@@ -67,7 +68,6 @@ static void ctu_resolve_global(cookie_t *cookie, tree_t *sema, tree_t *self, voi
     size_t size = ctu_resolve_storage_size(realType);
     const tree_t *ty = ctu_resolve_storage_type(realType);
 
-    // TODO: handle arrays
     tree_storage_t storage = {
         .storage = ty,
         .size = size,
@@ -105,6 +105,7 @@ static void ctu_resolve_function(cookie_t *cookie, tree_t *sema, tree_t *self, v
             vector_push(&body->stmts, tree_stmt_return(self->node, tree_expr_unit(self->node, ty)));
         }
     }
+
     tree_close_function(self, body);
 }
 

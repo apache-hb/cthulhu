@@ -18,28 +18,24 @@
 /// sema type
 ///
 
+static const size_t kLocalModuleTags[] = { eCtuTagModules };
+static const size_t kGlobalModuleTags[] = { eCtuTagImports };
+static const size_t kDeclTags[] = { eCtuTagTypes };
+
+static const util_search_t kSearchType = {
+    .localScopeTags = kLocalModuleTags,
+    .localScopeTagsLen = sizeof(kLocalModuleTags) / sizeof(size_t),
+
+    .globalScopeTags = kGlobalModuleTags,
+    .globalScopeTagsLen = sizeof(kGlobalModuleTags) / sizeof(size_t),
+
+    .declTags = kDeclTags,
+    .declTagsLen = sizeof(kDeclTags) / sizeof(size_t)
+};
+
 static tree_t *sema_type_name(tree_t *sema, const ctu_t *type)
 {
-    size_t len = vector_len(type->typeName);
-    tree_t *ns = sema;
-    for (size_t i = 0; i < len - 1; i++)
-    {
-        const char *segment = vector_get(type->typeName, i);
-        ns = ctu_get_namespace(ns, segment);
-        if (ns == NULL)
-        {
-            return tree_raise(type->node, sema->reports, "namespace `%s` not found", segment);
-        }
-    }
-
-    const char *name = vector_tail(type->typeName);
-    tree_t *decl = ctu_get_type(ns, name);
-    if (decl == NULL)
-    {
-        return tree_raise(type->node, sema->reports, "type `%s` not found", name);
-    }
-
-    return decl;
+    return util_search_path(sema, &kSearchType, type->node, type->typeName);
 }
 
 static tree_t *ctu_sema_type_pointer(tree_t *sema, const ctu_t *type)

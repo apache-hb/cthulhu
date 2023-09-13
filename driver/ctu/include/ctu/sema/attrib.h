@@ -10,6 +10,5 @@ typedef struct ctu_attrib_t {
     ctu_attrib_apply_t fnApply;
 } ctu_attrib_t;
 
-ctu_attrib_t *ctu_attrib_entry(void);
-
+void ctu_init_attribs(tree_t *sema);
 void ctu_apply_attribs(tree_t *sema, tree_t *decl, vector_t *attribs);

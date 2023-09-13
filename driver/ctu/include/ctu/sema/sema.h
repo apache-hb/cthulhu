@@ -26,7 +26,7 @@ typedef enum ctu_tag_t {
 /// getting decls
 ///
 
-tree_t *ctu_get_namespace(tree_t *sema, const char *name);
+tree_t *ctu_get_namespace(tree_t *sema, const char *name, bool *imported);
 tree_t *ctu_get_type(tree_t *sema, const char *name);
 tree_t *ctu_get_decl(tree_t *sema, const char *name);
 tree_t *ctu_get_loop(tree_t *sema, const char *name);

@@ -1,8 +1,9 @@
-#include "common.h"
+#include "cthulhu/check/check.h"
 
 #include "cthulhu/mediator/driver.h"
 
 #include "cthulhu/util/util.h"
+#include "cthulhu/util/type.h"
 
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"
@@ -47,7 +48,7 @@ static bool check_simple(check_t *check, const tree_t *decl)
 
 static void check_global_attribs(check_t *check, const tree_t *global)
 {
-    const attribs_t *attribs = tree_get_attrib(global);
+    const tree_attribs_t *attribs = tree_get_attrib(global);
     switch (attribs->link)
     {
     case eLinkImport:
@@ -84,9 +85,19 @@ static void check_global_attribs(check_t *check, const tree_t *global)
     }
 }
 
+static void check_func_has_body(check_t *check, const tree_t *fn)
+{
+    if (fn->body != NULL) { return; }
+
+    report(check->reports, eFatal, tree_get_node(fn),
+        "function `%s` is an entry point, but has no body",
+        tree_get_name(fn)
+    );
+}
+
 static void check_func_attribs(check_t *check, const tree_t *fn)
 {
-    const attribs_t *attribs = tree_get_attrib(fn);
+    const tree_attribs_t *attribs = tree_get_attrib(fn);
 
     switch (attribs->link)
     {
@@ -113,6 +124,7 @@ static void check_func_attribs(check_t *check, const tree_t *fn)
         break;
 
     case eLinkEntryCli:
+        check_func_has_body(check, fn);
         if (check->cliEntryPoint != NULL)
         {
             message_t *id = report(check->reports, eFatal, tree_get_node(fn),
@@ -126,6 +138,7 @@ static void check_func_attribs(check_t *check, const tree_t *fn)
         }
         break;
     case eLinkEntryGui:
+        check_func_has_body(check, fn);
         if (check->guiEntryPoint != NULL)
         {
             message_t *id = report(check->reports, eFatal, tree_get_node(fn),

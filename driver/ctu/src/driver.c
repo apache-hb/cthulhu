@@ -92,7 +92,7 @@ static void import_module(lifetime_t *lifetime, tree_t *sema, ctu_t *include)
         return;
     }
 
-    tree_t *old = ctu_get_namespace(sema, include->name);
+    tree_t *old = ctu_get_namespace(sema, include->name, NULL);
     if (old != NULL)
     {
         message_t *id = report_shadow(sema->reports, include->name, tree_get_node(old), tree_get_node(lib));

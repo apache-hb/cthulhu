@@ -62,7 +62,7 @@ static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const tree_t *tree, ssa_s
 
     const char *name = tree_get_name(tree);
     const ssa_type_t *type = ssa_type_create_cached(ssa->types, tree_get_type(tree));
-    const attribs_t *attrib = tree_get_attrib(tree);
+    const tree_attribs_t *attrib = tree_get_attrib(tree);
 
     ssa_symbol_t *symbol = ctu_malloc(sizeof(ssa_symbol_t));
     symbol->linkage = attrib->link;

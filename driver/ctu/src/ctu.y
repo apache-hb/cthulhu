@@ -202,11 +202,11 @@ attrib: AT attribBody
     ;
 
 attribBody: singleAttrib
-    | LBRACE attribList RBRACE
+    | LSQUARE attribList RSQUARE
     ;
 
 attribList: singleAttrib
-    | attribList singleAttrib
+    | attribList COMMA singleAttrib
     ;
 
 singleAttrib: path { add_attrib(x, @$, $1, vector_of(0)); }
