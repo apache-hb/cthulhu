@@ -96,11 +96,11 @@ static tree_t *sema_call(tree_t *sema, obr_t *expr)
     {
         obr_t *it = vector_get(expr->args, i);
         tree_t *expected = vector_get(params, i);
-        tree_t *arg = obr_sema_rvalue(sema, it, (tree_t*)tree_get_type(expected)); // funky
+        tree_t *arg = obr_sema_rvalue(sema, it, tree_get_type(expected)); // funky
         vector_set(args, i, arg);
     }
 
-    return tree_expr_call(expr->node, callee, args);
+    return util_create_call(sema, expr->node, callee, args);
 }
 
 static tree_t *sema_field(tree_t *sema, obr_t *expr)

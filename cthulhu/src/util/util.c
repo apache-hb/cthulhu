@@ -4,6 +4,8 @@
 #include "cthulhu/tree/query.h"
 #include "cthulhu/tree/sema.h"
 
+#include "report/report.h"
+
 #include "scan/node.h"
 
 #include "std/str.h"
@@ -273,6 +275,18 @@ tree_t *util_create_string(tree_t *sema, tree_t *letter, const char *text, size_
     tree_module_set(mod, eSemaValues, id, decl);
 
     return decl;
+}
+
+tree_t *util_create_call(tree_t *sema, const node_t *node, const tree_t *fn, vector_t *args)
+{
+    const tree_attribs_t *attribs = tree_get_attrib(fn);
+    if (attribs->deprecated != NULL)
+    {
+        message_t *id = report(sema->reports, eWarn, node, "call to deprecated function `%s`", tree_get_name(fn));
+        report_note(id, "deprecated: %s", attribs->deprecated);
+    }
+
+    return tree_expr_call(node, fn, args);
 }
 
 bool util_length_bounded(size_t length)

@@ -1,6 +1,8 @@
 #include "pl0/sema.h"
 #include "pl0/ast.h"
 
+#include "cthulhu/util/util.h"
+
 #include "report/report.h"
 #include "report/report-ext.h"
 
@@ -293,7 +295,7 @@ static tree_t *sema_call(tree_t *sema, pl0_t *node)
 
     vector_t *args = vector_new(0);
 
-    return tree_expr_call(node->node, proc, args);
+    return util_create_call(sema, node->node, proc, args);
 }
 
 static tree_t *sema_branch(tree_t *sema, pl0_t *node)
@@ -355,8 +357,7 @@ static tree_t *sema_stmt(tree_t *sema, pl0_t *node)
     case ePl0Loop: return sema_loop(sema, node);
     case ePl0Assign: return sema_assign(sema, node);
     case ePl0Print: return sema_print(sema, node);
-    default:
-        return tree_raise(node->node, sema->reports, "sema-stmt: %d", node->type);
+    default: return tree_raise(node->node, sema->reports, "sema-stmt: %d", node->type);
     }
 }
 
