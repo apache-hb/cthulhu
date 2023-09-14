@@ -58,6 +58,30 @@ static const char *get_first_string(tree_t *sema, tree_t *decl, vector_t *args)
     return arg->text;
 }
 
+static const char *get_first_ident(tree_t *sema, tree_t *decl, vector_t *args)
+{
+    if (vector_len(args) != 1)
+    {
+        report(sema->reports, eFatal, decl->node, "expected 1 identifier argument");
+        return NULL;
+    }
+
+    ctu_t *arg = vector_tail(args);
+    if (arg->kind != eCtuExprName)
+    {
+        report(sema->reports, eFatal, arg->node, "expected identifier argument");
+        return NULL;
+    }
+
+    if (vector_len(arg->path) != 1)
+    {
+        report(sema->reports, eFatal, arg->node, "expected identifier argument");
+        return NULL;
+    }
+
+    return vector_tail(arg->path);
+}
+
 static tree_link_t choose_linkage(tree_t *sema, tree_t *decl, const ctu_t *expr)
 {
     if (expr->kind != eCtuExprName)
@@ -169,6 +193,47 @@ static void apply_section(tree_t *sema, tree_t *decl, vector_t *args)
     tree_set_attrib(decl, copy);
 }
 
+static void apply_extern(tree_t *sema, tree_t *decl, vector_t *args)
+{
+    if (!tree_is(decl, eTreeDeclFunction))
+    {
+        report(sema->reports, eFatal, decl->node, "extern attribute can only be applied to functions");
+        return;
+    }
+
+    const tree_attribs_t *old = tree_get_attrib(decl);
+    if (old->mangle != NULL)
+    {
+        report(sema->reports, eFatal, decl->node, "extern attribute already applied");
+        return;
+    }
+
+    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t));
+    if (vector_len(args) == 0)
+    {
+        copy->mangle = tree_get_name(decl);
+    }
+    else
+    {
+        const char *msg = get_first_string(sema, decl, args);
+        if (msg == NULL) { return; }
+
+        copy->mangle = msg;
+    }
+    tree_set_attrib(decl, copy);
+}
+
+static void apply_layout(tree_t *sema, tree_t *decl, vector_t *args)
+{
+    if (!tree_is(decl, eTreeTypeStruct))
+    {
+        report(sema->reports, eFatal, decl->node, "layout attribute can only be applied to structs");
+        return;
+    }
+
+    report(sema->reports, eWarn, tree_get_node(decl), "layout attribute not implemented");
+}
+
 void ctu_init_attribs(tree_t *sema)
 {
     ctu_attrib_t *entry = attrib_create("entry", apply_entry);
@@ -179,6 +244,12 @@ void ctu_init_attribs(tree_t *sema)
 
     ctu_attrib_t *section = attrib_create("section", apply_section);
     tree_module_set(sema, eCtuTagAttribs, section->name, section);
+
+    ctu_attrib_t *attribExtern = attrib_create("extern", apply_extern);
+    tree_module_set(sema, eCtuTagAttribs, attribExtern->name, attribExtern);
+
+    ctu_attrib_t *layout = attrib_create("layout", apply_layout);
+    tree_module_set(sema, eCtuTagAttribs, layout->name, layout);
 }
 
 void ctu_apply_attribs(tree_t *sema, tree_t *decl, vector_t *attribs)
