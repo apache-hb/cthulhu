@@ -58,6 +58,7 @@ static const char *get_first_string(tree_t *sema, tree_t *decl, vector_t *args)
     return arg->text;
 }
 
+#if 0
 static const char *get_first_ident(tree_t *sema, tree_t *decl, vector_t *args)
 {
     if (vector_len(args) != 1)
@@ -81,6 +82,7 @@ static const char *get_first_ident(tree_t *sema, tree_t *decl, vector_t *args)
 
     return vector_tail(arg->path);
 }
+#endif
 
 static tree_link_t choose_linkage(tree_t *sema, tree_t *decl, const ctu_t *expr)
 {

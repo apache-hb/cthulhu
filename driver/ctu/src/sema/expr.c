@@ -393,6 +393,15 @@ static tree_t *sema_assign(tree_t *sema, const ctu_t *stmt)
     return tree_stmt_assign(stmt->node, dst, src);
 }
 
+static tree_t *sema_branch(tree_t *sema, const ctu_t *stmt)
+{
+    tree_t *cond = ctu_sema_rvalue(sema, stmt->cond, ctu_get_bool_type());
+    tree_t *then = ctu_sema_stmt(sema, NULL, stmt->then);
+    tree_t *other = stmt->other == NULL ? NULL : ctu_sema_stmt(sema, NULL, stmt->other);
+
+    return tree_stmt_branch(stmt->node, cond, then, other);
+}
+
 static tree_t *get_label_loop(tree_t *sema, const ctu_t *stmt)
 {
     if (stmt->label == NULL)
@@ -439,6 +448,7 @@ tree_t *ctu_sema_stmt(tree_t *sema, tree_t *decl, const ctu_t *stmt)
     case eCtuStmtReturn: return sema_return(sema, decl, stmt);
     case eCtuStmtWhile: return sema_while(sema, decl, stmt);
     case eCtuStmtAssign: return sema_assign(sema, stmt);
+    case eCtuStmtBranch: return sema_branch(sema, stmt);
 
     case eCtuStmtBreak: return sema_break(sema, stmt);
     case eCtuStmtContinue: return sema_continue(sema, stmt);

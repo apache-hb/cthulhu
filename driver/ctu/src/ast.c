@@ -112,6 +112,15 @@ ctu_t *ctu_stmt_continue(scan_t *scan, where_t where, char *label)
     return ast;
 }
 
+ctu_t *ctu_stmt_branch(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then, ctu_t *other)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuStmtBranch);
+    ast->cond = cond;
+    ast->then = then;
+    ast->other = other;
+    return ast;
+}
+
 /* exprs */
 
 ctu_t *ctu_expr_int(scan_t *scan, where_t where, mpz_t value)

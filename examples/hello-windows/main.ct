@@ -67,15 +67,15 @@ def DefWindowProcA(hWnd: HWND, uMsg: uint, wParam: WPARAM, lParam: LPARAM): LRES
 
 @extern("CreateWindowExA")
 def CreateWindowExA(
-    dwExStyle: uint, 
-    lpClassName: str, 
-    lpWindowName: str, 
-    dwStyle: uint, 
-    x: int, y: int, 
-    nWidth: int, nHeight: int, 
-    hWndParent: HWND, 
-    hMenu: HMENU, 
-    hInstance: HINSTANCE, 
+    dwExStyle: uint,
+    lpClassName: str,
+    lpWindowName: str,
+    dwStyle: uint,
+    x: int, y: int,
+    nWidth: int, nHeight: int,
+    hWndParent: HWND,
+    hMenu: HMENU,
+    hInstance: HINSTANCE,
     lpParam: opaque
 ): HWND;
 
@@ -90,18 +90,18 @@ def DestroyWindow(hWnd: HWND): int;
 
 @extern("PeekMessageA")
 def PeekMessageA(
-    lpMsg: *MSG, 
-    hWnd: HWND, 
-    wMsgFilterMin: uint, 
-    wMsgFilterMax: uint, 
+    lpMsg: *MSG,
+    hWnd: HWND,
+    wMsgFilterMin: uint,
+    wMsgFilterMax: uint,
     wRemoveMsg: uint
 ): int;
 
 @extern("GetMessageA")
 def GetMessageA(
-    lpMsg: *MSG, 
-    hWnd: HWND, 
-    wMsgFilterMin: uint, 
+    lpMsg: *MSG,
+    hWnd: HWND,
+    wMsgFilterMin: uint,
     wMsgFilterMax: uint
 ): int;
 
@@ -119,33 +119,33 @@ def main(hInstance: HINSTANCE, hPrevInstance: HINSTANCE, pCmdLine: *char, nCmdSh
     const szAppName = "hello";
     const szTitle = "Hello, World!";
 
-    var wndclass = .WNDCLASSEXA {
-        cbSize = __sizeof(WNDCLASSEXA),
-        style = (1 | 2),
-        lpfnWndProc = windowCallback,
-        cbClsExtra = 0,
-        cbWndExtra = 0,
-        hInstance = hInstance,
-        hIcon = __null,
-        hIconSm = __null,
-        hCursor = __null,
-        hbrBackground = __null,
-        lpszClassName = szAppName,
-        lpszMenuName = ""
-    };
+    // var wndclass = .WNDCLASSEXA {
+    //     cbSize = __sizeof(WNDCLASSEXA),
+    //     style = (1 | 2),
+    //     lpfnWndProc = windowCallback,
+    //     cbClsExtra = 0,
+    //     cbWndExtra = 0,
+    //     hInstance = hInstance,
+    //     hIcon = __null,
+    //     hIconSm = __null,
+    //     hCursor = __null,
+    //     hbrBackground = __null,
+    //     lpszClassName = szAppName,
+    //     lpszMenuName = ""
+    // };
 
     RegisterClassExA(&wndclass);
 
     var hWnd = CreateWindowExA(
-        0, 
-        szAppName, 
-        szTitle, 
-        0xcf0000, 
-        0, 0, 
-        640, 480, 
-        __null, 
-        __null, 
-        hInstance, 
+        0,
+        szAppName,
+        szTitle,
+        0xcf0000,
+        0, 0,
+        640, 480,
+        __null,
+        __null,
+        hInstance,
         __null
     );
 
@@ -169,6 +169,6 @@ def windowCallback(hWnd: HWND, uMsg: uint, wParam: WPARAM, lParam: LPARAM): LRES
         PostQuitMessage(0);
         return 0;
     }
-    
+
     return DefWindowProcA(hWnd, uMsg, wParam, lParam);
 }

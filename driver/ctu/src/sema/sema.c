@@ -108,6 +108,7 @@ static tree_t *gVoidType = NULL;
 static tree_t *gStringType = NULL;
 
 static tree_t *gStringChar = NULL;
+static tree_t *gOpaqueType = NULL;
 
 #define DIGIT_TYPE(DIGIT, SIGN) gIntTypes[DIGIT * eSignTotal + SIGN]
 
@@ -185,6 +186,9 @@ tree_t *ctu_rt_mod(lifetime_t *lifetime)
     ctu_add_decl(root, eCtuTagTypes, "bool", make_bool_type("bool"));
     ctu_add_decl(root, eCtuTagTypes, "str", make_str_type("str"));
     ctu_add_decl(root, eCtuTagTypes, "void", make_void_type("void"));
+
+    gOpaqueType = tree_type_pointer(node_builtin(), "opaque", gVoidType, SIZE_MAX);
+    ctu_add_decl(root, eCtuTagTypes, "opaque", gOpaqueType);
 
     ctu_init_attribs(root);
 

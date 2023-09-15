@@ -35,6 +35,7 @@ typedef enum ctu_kind_t {
     eCtuStmtAssign,
     eCtuStmtBreak,
     eCtuStmtContinue,
+    eCtuStmtBranch,
 
     /* types */
     eCtuTypeName,
@@ -236,6 +237,8 @@ ctu_t *ctu_stmt_while(scan_t *scan, where_t where, char *name, ctu_t *cond, ctu_
 ctu_t *ctu_stmt_assign(scan_t *scan, where_t where, ctu_t *dst, ctu_t *src);
 ctu_t *ctu_stmt_break(scan_t *scan, where_t where, char *label);
 ctu_t *ctu_stmt_continue(scan_t *scan, where_t where, char *label);
+
+ctu_t *ctu_stmt_branch(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then, ctu_t *other);
 
 ///
 /// expressions

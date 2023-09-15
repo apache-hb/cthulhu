@@ -155,7 +155,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     primary expr
     orExpr andExpr eqExpr cmpExpr xorExpr bitExpr shiftExpr addExpr mulExpr unaryExpr postExpr
     maybeExpr
-    stmt stmts localDecl returnStmt whileStmt assignExpr
+    stmt stmts localDecl returnStmt whileStmt assignStmt branchStmt
     fnParam fnResult
     variantDecl variantField
 
@@ -349,7 +349,11 @@ localDecl: mut IDENT COLON type ASSIGN maybeExpr SEMI { $$ = ctu_stmt_local(x, @
     | mut IDENT ASSIGN expr SEMI { $$ = ctu_stmt_local(x, @$, $1, $2, NULL, $4); }
     ;
 
-assignExpr: expr ASSIGN expr SEMI { $$ = ctu_stmt_assign(x, @$, $1, $3); }
+assignStmt: expr ASSIGN expr SEMI { $$ = ctu_stmt_assign(x, @$, $1, $3); }
+    ;
+
+branchStmt: IF expr stmts { $$ = ctu_stmt_branch(x, @$, $2, $3, NULL); }
+    | IF expr stmts ELSE stmts { $$ = ctu_stmt_branch(x, @$, $2, $3, $5); }
     ;
 
 stmt: expr SEMI { $$ = $1; }
@@ -357,7 +361,8 @@ stmt: expr SEMI { $$ = $1; }
     | returnStmt { $$ = $1; }
     | localDecl { $$ = $1; }
     | whileStmt { $$ = $1; }
-    | assignExpr { $$ = $1; }
+    | assignStmt { $$ = $1; }
+    | branchStmt { $$ = $1; }
     | BREAK optIdent SEMI { $$ = ctu_stmt_break(x, @$, $2); }
     | CONTINUE optIdent SEMI { $$ = ctu_stmt_continue(x, @$, $2); }
     ;
