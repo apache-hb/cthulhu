@@ -190,6 +190,14 @@ ctu_t *ctu_expr_field(scan_t *scan, where_t where, ctu_t *expr, char *field)
     return ast;
 }
 
+ctu_t *ctu_expr_field_indirect(scan_t *scan, where_t where, ctu_t *expr, char *field)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuExprFieldIndirect);
+    ast->expr = expr;
+    ast->field = field;
+    return ast;
+}
+
 ctu_t *ctu_expr_unary(scan_t *scan, where_t where, unary_t unary, ctu_t *expr)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuExprUnary);
@@ -309,10 +317,11 @@ ctu_t *ctu_param(scan_t *scan, where_t where, char *name, ctu_t *type)
     return ast;
 }
 
-ctu_t *ctu_variant_case(scan_t *scan, where_t where, char *name, ctu_t *expr)
+ctu_t *ctu_variant_case(scan_t *scan, where_t where, char *name, bool isDefault, ctu_t *expr)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuVariantCase);
     ast->name = name;
+    ast->defaultCase = isDefault;
     ast->caseValue = expr;
     return ast;
 }

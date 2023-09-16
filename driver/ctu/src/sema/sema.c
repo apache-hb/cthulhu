@@ -86,7 +86,7 @@ void ctu_add_decl(tree_t *sema, ctu_tag_t tag, const char *name, tree_t *decl)
 /// extras
 ///
 
-static const char *kCurrentLoop = "ctu:current-loop";
+static const char * const kCurrentLoop = "ctu:current-loop";
 
 tree_t *ctu_current_loop(tree_t *sema)
 {
@@ -108,9 +108,8 @@ static tree_t *gVoidType = NULL;
 static tree_t *gStringType = NULL;
 
 static tree_t *gStringChar = NULL;
-static tree_t *gOpaqueType = NULL;
 
-#define DIGIT_TYPE(DIGIT, SIGN) gIntTypes[DIGIT * eSignTotal + SIGN]
+#define DIGIT_TYPE(DIGIT, SIGN) gIntTypes[(DIGIT) * eSignTotal + (SIGN)]
 
 static tree_t *make_int_type(const char *name, digit_t digit, sign_t sign)
 {
@@ -186,9 +185,6 @@ tree_t *ctu_rt_mod(lifetime_t *lifetime)
     ctu_add_decl(root, eCtuTagTypes, "bool", make_bool_type("bool"));
     ctu_add_decl(root, eCtuTagTypes, "str", make_str_type("str"));
     ctu_add_decl(root, eCtuTagTypes, "void", make_void_type("void"));
-
-    gOpaqueType = tree_type_pointer(node_builtin(), "opaque", gVoidType, SIZE_MAX);
-    ctu_add_decl(root, eCtuTagTypes, "opaque", gOpaqueType);
 
     ctu_init_attribs(root);
 

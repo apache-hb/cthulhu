@@ -23,6 +23,7 @@ typedef enum ctu_kind_t {
     eCtuExprCall,
     eCtuExprIndex,
     eCtuExprField,
+    eCtuExprFieldIndirect,
 
     eCtuExprRef,
     eCtuExprDeref,
@@ -118,7 +119,10 @@ typedef struct ctu_t {
                 vector_t *cases;
 
                 /* eCtuVariantCase */
-                ctu_t *caseValue;
+                struct {
+                    bool defaultCase;
+                    ctu_t *caseValue;
+                };
             };
         };
 
@@ -158,7 +162,7 @@ typedef struct ctu_t {
                 /* eCtuExprUnary */
                 unary_t unary;
 
-                /* eCtuExprField */
+                /* eCtuExprField|eCtuExprFieldIndirect */
                 char *field;
             };
 
@@ -254,6 +258,7 @@ ctu_t *ctu_expr_ref(scan_t *scan, where_t where, ctu_t *expr);
 ctu_t *ctu_expr_deref(scan_t *scan, where_t where, ctu_t *expr);
 ctu_t *ctu_expr_index(scan_t *scan, where_t where, ctu_t *expr, ctu_t *index);
 ctu_t *ctu_expr_field(scan_t *scan, where_t where, ctu_t *expr, char *field);
+ctu_t *ctu_expr_field_indirect(scan_t *scan, where_t where, ctu_t *expr, char *field);
 
 ctu_t *ctu_expr_unary(scan_t *scan, where_t where, unary_t unary, ctu_t *expr);
 ctu_t *ctu_expr_binary(scan_t *scan, where_t where, binary_t binary, ctu_t *lhs, ctu_t *rhs);
@@ -292,4 +297,4 @@ ctu_t *ctu_decl_variant(scan_t *scan, where_t where, bool exported, char *name, 
 
 ctu_t *ctu_field(scan_t *scan, where_t where, char *name, ctu_t *type);
 ctu_t *ctu_param(scan_t *scan, where_t where, char *name, ctu_t *type);
-ctu_t *ctu_variant_case(scan_t *scan, where_t where, char *name, ctu_t *expr);
+ctu_t *ctu_variant_case(scan_t *scan, where_t where, char *name, bool isDefault, ctu_t *expr);

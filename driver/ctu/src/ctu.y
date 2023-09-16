@@ -70,6 +70,9 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
     NOINIT "`noinit`"
 
+    DEFAULT "`default`"
+    CASE "`case`"
+
     AS "`as`"
 
     DISCARD "`$`"
@@ -127,7 +130,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     attribArgs
     exprList optExprList
     typeList optTypeList
-    variantFields
+    variantFields optVariantFields
 
 /**
  * order of operations, tightest first
@@ -163,7 +166,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     importAlias ident optIdent whileName
 
 %type<boolean>
-    exported mut
+    exported mut isDefault
 
 %%
 
@@ -240,14 +243,22 @@ innerDecl: globalDecl { $$ = $1; }
 
 /* variants/enums */
 
-variantDecl: exported VARIANT IDENT LBRACE variantFields RBRACE { $$ = ctu_decl_variant(x, @$, $1, $3, $5); }
+variantDecl: exported VARIANT IDENT LBRACE optVariantFields RBRACE { $$ = ctu_decl_variant(x, @$, $1, $3, $5); }
+    ;
+
+optVariantFields: %empty { $$ = vector_of(0); }
+    | variantFields { $$ = $1; }
     ;
 
 variantFields: variantField { $$ = vector_init($1); }
     | variantFields variantField { vector_push(&$1, $2); $$ = $1; }
     ;
 
-variantField: ident ASSIGN expr SEMI { $$ = ctu_variant_case(x, @$, $1, $3); }
+variantField: isDefault ident ASSIGN expr { $$ = ctu_variant_case(x, @$, $2, $1, $4); }
+    ;
+
+isDefault: DEFAULT { $$ = true; }
+    | CASE { $$ = false; }
     ;
 
 /* functions */
@@ -392,6 +403,7 @@ postExpr: primary { $$ = $1; }
     | postExpr LPAREN optExprList RPAREN { $$ = ctu_expr_call(x, @$, $1, $3); }
     | postExpr LSQUARE expr RSQUARE { $$ = ctu_expr_index(x, @$, $1, $3); }
     | postExpr DOT IDENT { $$ = ctu_expr_field(x, @$, $1, $3); }
+    | postExpr ARROW IDENT { $$ = ctu_expr_field_indirect(x, @$, $1, $3); }
     ;
 
 unaryExpr: postExpr { $$ = $1; }

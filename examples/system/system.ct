@@ -8,7 +8,7 @@ struct Arena {
     release: def(*Arena, opaque) -> void;
 }
 
-export struct System {
+struct System {
     name: str;
 }
 
@@ -25,12 +25,6 @@ struct Memory {
     name: str;
     bytes: usize;
     kind: MemoryType;
-}
-
-export variant Weapon {
-    default Invalid(msg: str) = 0
-    case Melee(name: str) = 1
-    case Ranged(name: str, ammo: uint) = 2
 }
 
 @extern("printf")

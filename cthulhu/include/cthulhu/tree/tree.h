@@ -386,10 +386,13 @@ tree_t *tree_stmt_jump(const node_t *node, tree_t *label, tree_jump_t jump);
 
 // delay the resolve of a declaration
 tree_t *tree_resolve(cookie_t *cookie, const tree_t *decl);
-void tree_set_storage(tree_t *self, tree_storage_t storage);
 
 tree_t *tree_open_decl(const node_t *node, const char *name, tree_resolve_info_t resolve);
 void tree_close_decl(tree_t *self, const tree_t *kind);
+
+///
+/// global decls
+///
 
 tree_t *tree_decl_global(
     const node_t *node, const char *name,
@@ -436,12 +439,21 @@ tree_t *tree_open_union(const node_t *node, const char *name, tree_resolve_info_
 void tree_close_union(tree_t *self, vector_t *fields);
 
 ///
+/// enum decls
+///
+
+tree_t *tree_decl_enum(const node_t *node, const char *name, vector_t *fields);
+tree_t *tree_open_enum(const node_t *node, const char *name, tree_resolve_info_t resolve);
+void tree_close_enum(tree_t *self, vector_t *fields);
+
+///
 /// other decls
 ///
 
 tree_t *tree_decl_param(const node_t *node, const char *name, const tree_t *type);
 tree_t *tree_decl_field(const node_t *node, const char *name, const tree_t *type);
 tree_t *tree_decl_local(const node_t *node, const char *name, tree_storage_t storage, const tree_t *type);
+tree_t *tree_decl_case(const node_t *node, const char *name, const tree_t *expr);
 
 ///
 /// various helpers
@@ -449,9 +461,12 @@ tree_t *tree_decl_local(const node_t *node, const char *name, tree_storage_t sto
 
 void tree_add_local(tree_t *self, tree_t *decl);
 void tree_add_param(tree_t *self, tree_t *decl);
+void tree_add_enum(tree_t *self, tree_t *decl);
 void tree_set_attrib(tree_t *self, const tree_attribs_t *attrib);
 
 tree_t *tree_alias(const tree_t *tree, const char *name);
+
+void tree_set_storage(tree_t *self, tree_storage_t storage);
 
 ///
 /// tree sema interface

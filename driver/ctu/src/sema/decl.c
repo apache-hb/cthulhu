@@ -222,6 +222,13 @@ static tree_t *ctu_forward_struct(tree_t *sema, ctu_t *decl)
     return tree_open_struct(decl->node, decl->name, resolve);
 }
 
+static tree_t *ctu_forward_variant(tree_t *sema, ctu_t *decl)
+{
+    CTASSERTF(decl->kind == eCtuDeclVariant, "decl %s is not a variant", decl->name);
+
+    NEVER("not implemented");
+}
+
 static ctu_forward_t forward_decl_inner(tree_t *sema, ctu_t *decl)
 {
     switch (decl->kind)
@@ -251,6 +258,13 @@ static ctu_forward_t forward_decl_inner(tree_t *sema, ctu_t *decl)
         ctu_forward_t fwd = {
             .tag = eCtuTagTypes,
             .decl = ctu_forward_struct(sema, decl)
+        };
+        return fwd;
+    }
+    case eCtuDeclVariant: {
+        ctu_forward_t fwd = {
+            .tag = eCtuTagTypes,
+            .decl = ctu_forward_variant(sema, decl)
         };
         return fwd;
     }

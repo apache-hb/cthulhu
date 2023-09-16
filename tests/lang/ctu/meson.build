@@ -133,17 +133,17 @@ tests = {
             'return-closure'
         ]
     },
-    # 'types.variant': {
-    #     'fail': [
-    #         'duplicate-name',
-    #         'discard-name'
-    #     ],
-    #     'pass': [
-    #         'many-elements',
-    #         'one-element',
-    #         'no-elements'
-    #     ]
-    # },
+    'types.variant': {
+        'fail': [
+            'duplicate-name',
+            'discard-name'
+        ],
+        'pass': [
+            'many-elements',
+            'one-element',
+            'no-elements'
+        ]
+    },
     'types.array': {
         'fail': [
             'non-int-size'

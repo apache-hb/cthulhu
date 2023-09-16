@@ -235,6 +235,11 @@ static tree_t *sema_index_lvalue(tree_t *sema, const ctu_t *expr)
     return tree_expr_offset(expr->node, ref, object, index);
 }
 
+///
+/// fields
+/// TODO: so much duplicated logic
+///
+
 static tree_t *sema_field_lvalue(tree_t *sema, const ctu_t *expr)
 {
     tree_t *object = ctu_sema_lvalue(sema, expr->expr);
@@ -254,6 +259,67 @@ static tree_t *sema_field_lvalue(tree_t *sema, const ctu_t *expr)
     return tree_expr_field(expr->node, ref, object, field);
 }
 
+static tree_t *sema_field_rvalue(tree_t *sema, const ctu_t *expr)
+{
+    tree_t *object = ctu_sema_lvalue(sema, expr->expr);
+    const tree_t *ty = get_ptr_type(tree_get_type(object));
+    if (!tree_is(ty, eTreeTypeStruct))
+    {
+        return tree_raise(expr->node, sema->reports, "cannot access field of non-struct type `%s`", tree_to_string(ty));
+    }
+
+    tree_t *field = tree_ty_get_field(ty, expr->field);
+    if (field == NULL)
+    {
+        return tree_raise(expr->node, sema->reports, "field `%s` not found in struct `%s`", expr->field, tree_to_string(ty));
+    }
+
+    tree_t *ref = tree_type_reference(expr->node, "", tree_get_type(field));
+    tree_t *access = tree_expr_field(expr->node, ref, object, field);
+    return tree_expr_load(expr->node, access);
+}
+
+static tree_t *sema_field_indirect_lvalue(tree_t *sema, const ctu_t *expr)
+{
+    tree_t *object = ctu_sema_lvalue(sema, expr->expr);
+    const tree_t *ptr = get_ptr_type(tree_get_type(object));
+    if (!tree_is(ptr, eTreeTypePointer) || !tree_is(ptr->ptr, eTreeTypeStruct))
+    {
+        return tree_raise(expr->node, sema->reports, "cannot indirectly access field of non-pointer-to-struct type `%s`", tree_to_string(ptr));
+    }
+
+    const tree_t *ty = ptr->ptr;
+    tree_t *field = tree_ty_get_field(ty, expr->field);
+    if (field == NULL)
+    {
+        return tree_raise(expr->node, sema->reports, "field `%s` not found in struct `%s`", expr->field, tree_to_string(ty));
+    }
+
+    tree_t *ref = tree_type_reference(expr->node, "", tree_get_type(field));
+    return tree_expr_field(expr->node, ref, object, field);
+}
+
+static tree_t *sema_field_indirect_rvalue(tree_t *sema, const ctu_t *expr)
+{
+    tree_t *object = ctu_sema_lvalue(sema, expr->expr);
+    const tree_t *ptr = get_ptr_type(tree_get_type(object));
+    if (!tree_is(ptr, eTreeTypePointer) || !tree_is(ptr->ptr, eTreeTypeStruct))
+    {
+        return tree_raise(expr->node, sema->reports, "cannot indirectly access field of non-pointer-to-struct type `%s`", tree_to_string(ptr));
+    }
+
+    const tree_t *ty = ptr->ptr;
+    tree_t *field = tree_ty_get_field(ty, expr->field);
+    if (field == NULL)
+    {
+        return tree_raise(expr->node, sema->reports, "field `%s` not found in struct `%s`", expr->field, tree_to_string(ty));
+    }
+
+    tree_t *ref = tree_type_reference(expr->node, "", tree_get_type(field));
+    tree_t *access = tree_expr_field(expr->node, ref, object, field);
+    return tree_expr_load(expr->node, access);
+}
+
 tree_t *ctu_sema_lvalue(tree_t *sema, const ctu_t *expr)
 {
     CTASSERT(expr != NULL);
@@ -264,6 +330,7 @@ tree_t *ctu_sema_lvalue(tree_t *sema, const ctu_t *expr)
     case eCtuExprDeref: return sema_deref_lvalue(sema, expr);
     case eCtuExprIndex: return sema_index_lvalue(sema, expr);
     case eCtuExprField: return sema_field_lvalue(sema, expr);
+    case eCtuExprFieldIndirect: return sema_field_indirect_lvalue(sema, expr);
 
     default: NEVER("invalid lvalue-expr kind %d", expr->kind);
     }
@@ -287,6 +354,8 @@ tree_t *ctu_sema_rvalue(tree_t *sema, const ctu_t *expr, const tree_t *implicitT
     case eCtuExprRef: return sema_ref(sema, expr);
     case eCtuExprDeref: return sema_deref_rvalue(sema, expr);
     case eCtuExprIndex: return sema_index_rvalue(sema, expr);
+    case eCtuExprField: return sema_field_rvalue(sema, expr);
+    case eCtuExprFieldIndirect: return sema_field_indirect_rvalue(sema, expr);
 
     case eCtuExprCompare: return sema_compare(sema, expr);
     case eCtuExprBinary: return sema_binary(sema, expr, inner);

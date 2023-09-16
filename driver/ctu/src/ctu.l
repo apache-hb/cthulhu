@@ -95,6 +95,9 @@ WS [ \t\r\v\n\f]
 "break" { return BREAK; }
 "continue" { return CONTINUE; }
 
+"default" { return DEFAULT; }
+"case" { return CASE; }
+
 "noinit" { return NOINIT; }
 
 "as" { return AS; }
