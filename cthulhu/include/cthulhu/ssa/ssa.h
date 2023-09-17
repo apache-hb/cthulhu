@@ -123,6 +123,9 @@ typedef struct ssa_value_t {
 
         /* eTypeArray */
         vector_t *data;
+
+        /* eTypePointer */
+        const void *ptrValue;
     };
 } ssa_value_t;
 

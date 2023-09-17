@@ -163,6 +163,7 @@ const char *type_to_string(const ssa_type_t *type)
     case eTypeEmpty: return "empty";
     case eTypeUnit: return "unit";
     case eTypeBool: return "bool";
+    case eTypeOpaque: return "opaque";
     case eTypeDigit: return digit_to_string(type->digit);
     case eTypeClosure: return closure_to_string(type->closure);
     case eTypePointer: return pointer_to_string(type->pointer);

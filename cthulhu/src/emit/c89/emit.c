@@ -94,10 +94,14 @@ static const char *format_c89_link(tree_link_t linkage)
     switch (linkage)
     {
     case eLinkImport: return "extern ";
-    case eLinkExport: return "";
     case eLinkModule: return "static ";
 
-    default: return ""; // TODO: hmmmm
+    case eLinkExport:
+    case eLinkEntryCli:
+    case eLinkEntryGui:
+        return "";
+
+    default: NEVER("unknown linkage %d", linkage);
     }
 }
 

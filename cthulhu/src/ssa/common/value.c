@@ -70,6 +70,14 @@ ssa_value_t *ssa_value_string(const ssa_type_t *type, const char *text, size_t l
     return self;
 }
 
+ssa_value_t *ssa_value_pointer(const ssa_type_t *type, const void *value)
+{
+    EXPECT_TYPE(type, eTypePointer);
+    ssa_value_t *self = ssa_value_new(type, true);
+    self->ptrValue = value;
+    return self;
+}
+
 ssa_value_t *ssa_value_from(map_t *types, const tree_t *expr)
 {
     const ssa_type_t *type = ssa_type_create_cached(types, expr->type);

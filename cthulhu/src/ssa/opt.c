@@ -200,6 +200,34 @@ static const ssa_value_t *ssa_opt_binary(ssa_scope_t *vm, ssa_binary_t step)
     return ssa_value_digit(lhs->type, result);
 }
 
+static const ssa_value_t *cast_to_opaque(const ssa_type_t *type, const ssa_value_t *value)
+{
+    const ssa_type_t *src = type;
+    switch (src->kind)
+    {
+    case eTypeOpaque: return value;
+
+    case eTypeDigit:
+        return ssa_value_pointer(type, (void*)(uintptr_t)mpz_get_ui(value->digitValue));
+
+    default: NEVER("unhandled type %s", ssa_type_name(src->kind));
+    }
+}
+
+static const ssa_value_t *ssa_opt_cast(ssa_scope_t *vm, ssa_cast_t cast)
+{
+    const ssa_value_t *value = ssa_opt_operand(vm, cast.operand);
+    const ssa_type_t *type = cast.type;
+    switch (type->kind)
+    {
+    case eTypeOpaque:
+        return cast_to_opaque(type, value);
+
+    default:
+        NEVER("unhandled type %s", ssa_type_name(type->kind));
+    }
+}
+
 static const ssa_value_t *ssa_opt_step(ssa_scope_t *vm, const ssa_step_t *step)
 {
     switch (step->opcode)
@@ -209,6 +237,7 @@ static const ssa_value_t *ssa_opt_step(ssa_scope_t *vm, const ssa_step_t *step)
 
     case eOpUnary: return ssa_opt_unary(vm, step->unary);
     case eOpBinary: return ssa_opt_binary(vm, step->binary);
+    case eOpCast: return ssa_opt_cast(vm, step->cast);
 
     default: NEVER("unhandled opcode %d (inside %s)", step->opcode, vm->symbol->name);
     }

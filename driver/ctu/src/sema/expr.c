@@ -132,7 +132,7 @@ static tree_t *sema_cast(tree_t *sema, const ctu_t *expr)
 
 static tree_t *sema_string(tree_t *sema, const ctu_t *expr)
 {
-    return util_create_string(sema, ctu_get_char_type(), expr->text, expr->length);
+    return util_create_string(sema, expr->node, ctu_get_char_type(), expr->text, expr->length);
 }
 
 static tree_t *sema_name(tree_t *sema, const ctu_t *expr)

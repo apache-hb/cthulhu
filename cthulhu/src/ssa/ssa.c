@@ -474,7 +474,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
 
     case eTreeDeclGlobal: {
         ssa_symbol_t *symbol = map_get_ptr(ssa->globals, tree);
-        CTASSERTF(symbol != NULL, "symbol table missing `%s`", tree_to_string(tree));
+        CTASSERTF(symbol != NULL, "symbol table missing `%s` (%p)", tree_to_string(tree), tree);
 
         add_dep(ssa, ssa->currentSymbol, symbol);
 
@@ -609,7 +609,9 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
         return operand;
     }
 
-    case eTreeStmtBranch: return compile_branch(ssa, tree);
+    case eTreeStmtBranch:
+        return compile_branch(ssa, tree);
+
     case eTreeExprCompare: {
         ssa_operand_t lhs = compile_tree(ssa, tree->lhs);
         ssa_operand_t rhs = compile_tree(ssa, tree->rhs);
@@ -644,6 +646,8 @@ static void add_module_globals(ssa_compile_t *ssa, ssa_module_t *mod, map_t *glo
         CTASSERTF(tree_is(tree, eTreeDeclGlobal), "expected global, got %s", tree_to_string(tree));
 
         ssa_symbol_t *global = symbol_create(ssa, tree, create_storage_type(ssa->types, tree));
+
+        logverbose("added global `%s` (%p)", global->name, tree);
 
         vector_push(&mod->globals, global);
         map_set_ptr(ssa->globals, tree, global);

@@ -78,6 +78,10 @@ const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char
             : format("%s%s", quals, digitName);
     }
 
+    case eTypeOpaque: return (name != NULL)
+        ? format("%svoid *%s", quals, name)
+        : format("%svoid *", quals);
+
     case eTypeClosure: return format_c89_closure(emit, quals, type->closure, name);
     case eTypePointer: return format_c89_pointer(emit, quals, type->pointer, name);
 

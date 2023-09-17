@@ -118,7 +118,7 @@ const null = as<opaque>(0);
 
 @entry(gui)
 def main(hInstance: HINSTANCE, hPrevInstance: HINSTANCE, pCmdLine: *char, nCmdShow: int): int {
-    const szAppName = "hello";
+    const szAppName = "Hello";
     const szTitle = "Hello, World!";
 
     var wndclass: WNDCLASSEXA = .{
@@ -129,11 +129,11 @@ def main(hInstance: HINSTANCE, hPrevInstance: HINSTANCE, pCmdLine: *char, nCmdSh
         cbWndExtra = 0,
         hInstance = hInstance,
         hIcon = null,
-        hIconSm = null,
         hCursor = null,
         hbrBackground = null,
         lpszClassName = szAppName,
-        lpszMenuName = ""
+        lpszMenuName = null,
+        hIconSm = null
     };
 
     RegisterClassExA(&wndclass);
