@@ -25,7 +25,38 @@ typedef struct util_search_t {
     size_t declTagsLen;
 } util_search_t;
 
+/**
+ * @brief search for a namespace given a path, ignoring the last elemtn in the path
+ *
+ * @param sema the sema context
+ * @param search the search options
+ * @param node the node to report errors on
+ * @param path the path to search
+ * @return tree_t*
+ */
+tree_t *util_search_namespace(tree_t *sema, const util_search_t *search, const node_t *node, vector_t *path, bool *isImported);
+
+/**
+ * @brief search for a decl given a path
+ *
+ * @param sema the sema context
+ * @param search the search options
+ * @param node the node to report errors on
+ * @param path the path to search
+ * @return tree_t* the decl if found, an error otherwise
+ */
 tree_t *util_search_path(tree_t *sema, const util_search_t *search, const node_t *node, vector_t *path);
+
+/**
+ * @brief search for a decl inside a module
+ *
+ * @param sema the sema context
+ * @param search the search options
+ * @param node the node to report errors on
+ * @param mod the module to search in
+ * @param name the name of the decl
+ * @return tree_t*
+ */
 tree_t *util_search_qualified(tree_t *sema, const util_search_t *search, const node_t *node, const char *mod, const char *name);
 
 ///

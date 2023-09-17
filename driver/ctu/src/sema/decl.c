@@ -7,12 +7,12 @@
 #include "cthulhu/util/util.h"
 #include "cthulhu/util/type.h"
 
+#include "report/report.h"
+
 #include "std/vector.h"
 #include "std/str.h"
 
 #include "base/panic.h"
-
-#include <string.h>
 
 ///
 /// attributes
@@ -53,9 +53,8 @@ static ctu_t *begin_resolve(tree_t *sema, tree_t *self, void *user, ctu_kind_t k
     return decl;
 }
 
-static void ctu_resolve_global(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
+static void ctu_resolve_global(tree_t *sema, tree_t *self, void *user)
 {
-    CTU_UNUSED(cookie);
     ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclGlobal);
 
     tree_t *type = decl->type == NULL ? NULL : ctu_sema_type(sema, decl->type);
@@ -78,9 +77,8 @@ static void ctu_resolve_global(cookie_t *cookie, tree_t *sema, tree_t *self, voi
     tree_close_global(self, expr);
 }
 
-static void ctu_resolve_function(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
+static void ctu_resolve_function(tree_t *sema, tree_t *self, void *user)
 {
-    CTU_UNUSED(cookie);
     ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclFunction);
 
     size_t len = vector_len(self->params);
@@ -109,9 +107,8 @@ static void ctu_resolve_function(cookie_t *cookie, tree_t *sema, tree_t *self, v
     tree_close_function(self, body);
 }
 
-static void ctu_resolve_type(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
+static void ctu_resolve_type(tree_t *sema, tree_t *self, void *user)
 {
-    CTU_UNUSED(cookie);
     ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclTypeAlias);
     CTASSERTF(decl->type != NULL, "decl %s has no type", decl->name);
 
@@ -119,9 +116,8 @@ static void ctu_resolve_type(cookie_t *cookie, tree_t *sema, tree_t *self, void 
     tree_close_decl(self, temp);
 }
 
-static void ctu_resolve_struct(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
+static void ctu_resolve_struct(tree_t *sema, tree_t *self, void *user)
 {
-    CTU_UNUSED(cookie);
     ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclStruct);
 
     size_t len = vector_len(decl->fields);
@@ -139,7 +135,49 @@ static void ctu_resolve_struct(cookie_t *cookie, tree_t *sema, tree_t *self, voi
     tree_close_struct(self, items);
 }
 
-/* TODO: set visibility inside forwarding */
+static void ctu_resolve_variant(tree_t *sema, tree_t *self, void *user)
+{
+    ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclVariant);
+    const tree_t *underlying = decl->underlying != NULL
+        ? ctu_sema_type(sema, decl->underlying)
+        : ctu_get_int_type(eDigitInt, eSignSigned); // TODO: have an enum type
+
+    if (!tree_is(underlying, eTreeTypeDigit))
+    {
+        report(sema->reports, eFatal, decl->node, "decl `%s` has non-integer underlying type", decl->name);
+        return;
+    }
+
+    size_t len = vector_len(decl->cases);
+
+    tree_t *defaultCase = NULL;
+    vector_t *result = vector_of(len);
+
+    for (size_t i = 0; i < len; i++)
+    {
+        ctu_t *it = vector_get(decl->cases, i);
+        CTASSERTF(it->kind == eCtuVariantCase, "decl %s is not a variant case", it->name);
+
+        tree_t *val = ctu_sema_rvalue(sema, it->caseValue, underlying);
+        tree_t *field = tree_decl_case(it->node, it->name, val);
+        vector_set(result, i, field);
+
+        if (it->defaultCase)
+        {
+            if (defaultCase != NULL)
+            {
+                message_t *id = report(sema->reports, eFatal, it->node, "decl `%s` has multiple default cases", decl->name);
+                report_append(id, defaultCase->node, "previous default case");
+            }
+            else
+            {
+                defaultCase = field;
+            }
+        }
+    }
+
+    tree_close_enum(self, underlying, result, defaultCase);
+}
 
 ///
 /// forward declarations
@@ -190,8 +228,9 @@ static tree_t *ctu_forward_function(tree_t *sema, ctu_t *decl)
         vector_set(params, i, it);
     }
 
+    arity_t arity = (decl->variadic != NULL) ? eArityVariable : eArityFixed;
     tree_t *returnType = decl->returnType == NULL ? ctu_get_void_type() : ctu_sema_type(sema, decl->returnType);
-    tree_t *signature = tree_type_closure(decl->node, decl->name, returnType, params, eArityFixed);
+    tree_t *signature = tree_type_closure(decl->node, decl->name, returnType, params, arity);
 
     return tree_open_function(decl->node, decl->name, signature, resolve);
 }
@@ -226,7 +265,13 @@ static tree_t *ctu_forward_variant(tree_t *sema, ctu_t *decl)
 {
     CTASSERTF(decl->kind == eCtuDeclVariant, "decl %s is not a variant", decl->name);
 
-    NEVER("not implemented");
+    tree_resolve_info_t resolve = {
+        .sema = sema,
+        .user = decl,
+        .fnResolve = ctu_resolve_variant
+    };
+
+    return tree_open_enum(decl->node, decl->name, resolve);
 }
 
 static ctu_forward_t forward_decl_inner(tree_t *sema, ctu_t *decl)

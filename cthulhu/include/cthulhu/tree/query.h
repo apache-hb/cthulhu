@@ -40,6 +40,7 @@ arity_t tree_fn_get_arity(const tree_t *self);
 ///
 
 tree_t *tree_ty_get_field(const tree_t *self, const char *name);
+tree_t *tree_ty_get_case(const tree_t *self, const char *name);
 bool tree_ty_is_address(const tree_t *type);
 quals_t tree_ty_get_quals(const tree_t *self);
 

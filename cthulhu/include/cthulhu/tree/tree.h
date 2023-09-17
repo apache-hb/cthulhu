@@ -14,7 +14,7 @@ typedef struct node_t node_t;
 typedef struct tree_t tree_t;
 typedef struct cookie_t cookie_t;
 
-typedef void (*resolve_t)(cookie_t *cookie, tree_t *sema, tree_t *self, void *user);
+typedef void (*resolve_t)(tree_t *sema, tree_t *self, void *user);
 
 typedef enum sema_tags_t {
     eSemaValues,
@@ -171,6 +171,16 @@ typedef struct tree_t {
                 /* eTreeTypeStruct */
                 vector_t *fields;
 
+                /* eTreeDeclEnum */
+                struct {
+                    const tree_t *underlying;
+                    vector_t *cases;
+                    tree_t *defaultCase;
+                };
+
+                /* eTreeDeclCase */
+                tree_t *caseValue;
+
                 struct {
                     vector_t *params;
 
@@ -216,6 +226,7 @@ typedef struct tree_t {
 
 tree_t *tree_error(const node_t *node, const char *message, ...);
 tree_t *tree_raise(const node_t *node, reports_t *reports, const char *message, ...);
+void tree_report(reports_t *reports, const tree_t *error);
 
 ///
 /// tree type interface
@@ -247,6 +258,15 @@ tree_t *tree_type_unit(const node_t *node, const char *name);
  * @return a bool type
  */
 tree_t *tree_type_bool(const node_t *node, const char *name, quals_t quals);
+
+/**
+ * @brief create an opaque pointer type
+ *
+ * @param node where this type was defined
+ * @param name the name of the type
+ * @return tree_t*
+ */
+tree_t *tree_type_opaque(const node_t *node, const char *name);
 
 /**
  * @brief create a digit type
@@ -442,9 +462,9 @@ void tree_close_union(tree_t *self, vector_t *fields);
 /// enum decls
 ///
 
-tree_t *tree_decl_enum(const node_t *node, const char *name, vector_t *fields);
+tree_t *tree_decl_enum(const node_t *node, const char *name, const tree_t *underlying, vector_t *fields, tree_t *defaultCase);
 tree_t *tree_open_enum(const node_t *node, const char *name, tree_resolve_info_t resolve);
-void tree_close_enum(tree_t *self, vector_t *fields);
+void tree_close_enum(tree_t *self, const tree_t *underlying, vector_t *fields, tree_t *defaultCase);
 
 ///
 /// other decls
@@ -453,7 +473,7 @@ void tree_close_enum(tree_t *self, vector_t *fields);
 tree_t *tree_decl_param(const node_t *node, const char *name, const tree_t *type);
 tree_t *tree_decl_field(const node_t *node, const char *name, const tree_t *type);
 tree_t *tree_decl_local(const node_t *node, const char *name, tree_storage_t storage, const tree_t *type);
-tree_t *tree_decl_case(const node_t *node, const char *name, const tree_t *expr);
+tree_t *tree_decl_case(const node_t *node, const char *name, tree_t *expr);
 
 ///
 /// various helpers

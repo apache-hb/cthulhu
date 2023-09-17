@@ -16,6 +16,8 @@ typedef enum ctu_kind_t {
     eCtuExprBool,
     eCtuExprString,
     eCtuExprName,
+    eCtuExprCast,
+    eCtuExprInit,
 
     eCtuExprCompare,
     eCtuExprBinary,
@@ -58,6 +60,7 @@ typedef enum ctu_kind_t {
     eCtuField,
     eCtuParam,
     eCtuAttrib,
+    eCtuFieldInit,
     eCtuVariantCase,
 
     /* modules */
@@ -96,6 +99,7 @@ typedef struct ctu_t {
                 /* eCtuDeclFunction|eCtuTypeFunction */
                 struct {
                     vector_t *params;
+                    char *variadic;
                     ctu_t *returnType;
                     ctu_t *body;
                 };
@@ -116,7 +120,10 @@ typedef struct ctu_t {
                 ctu_t *paramType;
 
                 /* eCtuDeclVariant */
-                vector_t *cases;
+                struct {
+                    ctu_t *underlying;
+                    vector_t *cases;
+                };
 
                 /* eCtuVariantCase */
                 struct {
@@ -137,6 +144,9 @@ typedef struct ctu_t {
             char *text;
             size_t length;
         };
+
+        /* eCtuExprInit */
+        vector_t *inits;
 
         /* eCtuExprName */
         vector_t *path;
@@ -162,8 +172,11 @@ typedef struct ctu_t {
                 /* eCtuExprUnary */
                 unary_t unary;
 
-                /* eCtuExprField|eCtuExprFieldIndirect */
+                /* eCtuExprField|eCtuExprFieldIndirect|eCtuFieldInit */
                 char *field;
+
+                /* eCtuExprCast */
+                ctu_t *cast;
             };
 
             ctu_t *expr;
@@ -251,9 +264,12 @@ ctu_t *ctu_stmt_branch(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then, ct
 ctu_t *ctu_expr_int(scan_t *scan, where_t where, mpz_t value);
 ctu_t *ctu_expr_bool(scan_t *scan, where_t where, bool value);
 ctu_t *ctu_expr_string(scan_t *scan, where_t where, char *text, size_t length);
+ctu_t *ctu_expr_init(scan_t *scan, where_t where, vector_t *inits);
 
 ctu_t *ctu_expr_call(scan_t *scan, where_t where, ctu_t *callee, vector_t *args);
 ctu_t *ctu_expr_name(scan_t *scan, where_t where, vector_t *path);
+ctu_t *ctu_expr_cast(scan_t *scan, where_t where, ctu_t *expr, ctu_t *type);
+
 ctu_t *ctu_expr_ref(scan_t *scan, where_t where, ctu_t *expr);
 ctu_t *ctu_expr_deref(scan_t *scan, where_t where, ctu_t *expr);
 ctu_t *ctu_expr_index(scan_t *scan, where_t where, ctu_t *expr, ctu_t *index);
@@ -278,7 +294,7 @@ ctu_t *ctu_type_function(scan_t *scan, where_t where, vector_t *params, ctu_t *r
 ///
 
 ctu_t *ctu_decl_global(scan_t *scan, where_t where, bool exported, bool mutable, char *name, ctu_t *type, ctu_t *value);
-ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name, vector_t *params, ctu_t *returnType, ctu_t *body);
+ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name, vector_t *params, char *variadic, ctu_t *returnType, ctu_t *body);
 
 ///
 /// type declarations
@@ -289,7 +305,7 @@ ctu_t *ctu_decl_typealias(scan_t *scan, where_t where, bool exported, char *name
 ctu_t *ctu_decl_union(scan_t *scan, where_t where, bool exported, char *name, vector_t *fields);
 ctu_t *ctu_decl_struct(scan_t *scan, where_t where, bool exported, char *name, vector_t *fields);
 
-ctu_t *ctu_decl_variant(scan_t *scan, where_t where, bool exported, char *name, vector_t *cases);
+ctu_t *ctu_decl_variant(scan_t *scan, where_t where, bool exported, char *name, ctu_t *underlying, vector_t *cases);
 
 ///
 /// internal components
@@ -297,4 +313,16 @@ ctu_t *ctu_decl_variant(scan_t *scan, where_t where, bool exported, char *name, 
 
 ctu_t *ctu_field(scan_t *scan, where_t where, char *name, ctu_t *type);
 ctu_t *ctu_param(scan_t *scan, where_t where, char *name, ctu_t *type);
+ctu_t *ctu_field_init(scan_t *scan, where_t where, char *name, ctu_t *value);
 ctu_t *ctu_variant_case(scan_t *scan, where_t where, char *name, bool isDefault, ctu_t *expr);
+
+///
+/// extras
+///
+
+typedef struct ctu_params_t {
+    vector_t *params;
+    char *variadic;
+} ctu_params_t;
+
+ctu_params_t ctu_params_new(vector_t *params, char *variadic);

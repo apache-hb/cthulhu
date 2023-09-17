@@ -40,6 +40,11 @@ tree_t *tree_decl(tree_kind_t kind, const node_t *node, const tree_t *type, cons
     return self;
 }
 
+void tree_report(reports_t *reports, const tree_t *error)
+{
+    report(reports, eFatal, tree_get_node(error), "%s", error->message);
+}
+
 static tree_t *error_format(const node_t *node, const char *message, va_list args)
 {
     tree_t *self = tree_new(eTreeError, node, NULL);
@@ -64,7 +69,7 @@ tree_t *tree_raise(const node_t *node, reports_t *reports, const char *message, 
     tree_t *self = error_format(node, message, args);
     va_end(args);
 
-    report(reports, eFatal, node, "%s", self->message);
+    tree_report(reports, self);
 
     return self;
 }
@@ -84,9 +89,12 @@ static bool is_type(tree_kind_t kind)
     case eTreeTypeDigit:
     case eTreeTypeClosure:
     case eTreeTypePointer:
+    case eTreeTypeOpaque:
     case eTreeTypeArray:
     case eTreeError:
     case eTreeTypeStruct:
+    case eTreeTypeUnion:
+    case eTreeTypeEnum:
         return true;
 
     default:
@@ -126,6 +134,11 @@ tree_t *tree_type_unit(const node_t *node, const char *name)
 tree_t *tree_type_bool(const node_t *node, const char *name, quals_t quals)
 {
     return tree_decl(eTreeTypeBool, node, NULL, name, quals);
+}
+
+tree_t *tree_type_opaque(const node_t *node, const char *name)
+{
+    return tree_decl(eTreeTypeOpaque, node, NULL, name, eQualUnknown);
 }
 
 tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sign_t sign, quals_t quals)
@@ -231,7 +244,7 @@ tree_t *tree_expr_string(const node_t *node, const tree_t *type, const char *val
 ///
 
 /// must be either storage or a pointer
-#define TREE_EXPECT_ADDRESS(TYPE) CTASSERTF(tree_is(TYPE, eTreeTypePointer) || tree_is(TYPE, eTreeTypeReference) || tree_is(TYPE, eTreeError), "expected reference or pointer, found %s", tree_to_string(TYPE))
+#define TREE_EXPECT_ADDRESS(TYPE) CTASSERTF(tree_is(TYPE, eTreeTypePointer) || tree_is(TYPE, eTreeTypeReference) || tree_is(TYPE, eTreeTypeOpaque) || tree_is(TYPE, eTreeError), "expected reference or pointer, found %s", tree_to_string(TYPE))
 
 tree_t *tree_expr_cast(const node_t *node, const tree_t *type, tree_t *expr)
 {

@@ -474,7 +474,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
 
     case eTreeDeclGlobal: {
         ssa_symbol_t *symbol = map_get_ptr(ssa->globals, tree);
-        CTASSERT(symbol != NULL);
+        CTASSERTF(symbol != NULL, "symbol table missing `%s`", tree_to_string(tree));
 
         add_dep(ssa, ssa->currentSymbol, symbol);
 

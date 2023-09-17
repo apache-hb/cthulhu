@@ -50,7 +50,7 @@ static tree_t *sema_compare(tree_t *sema, obr_t *expr)
     tree_t *lhs = obr_sema_rvalue(sema, expr->lhs, NULL);
     tree_t *rhs = obr_sema_rvalue(sema, expr->rhs, NULL);
 
-    if (!util_types_equal(lhs, rhs))
+    if (!util_types_comparable(lhs, rhs))
     {
         return tree_raise(expr->node, sema->reports, "cannot compare types %s and %s", tree_to_string(lhs), tree_to_string(rhs));
     }

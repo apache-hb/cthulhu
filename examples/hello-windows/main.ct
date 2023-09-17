@@ -53,7 +53,7 @@ struct MSG {
     time: uint;
     pt: POINT;
 
-    lPrivate: uint;
+    $: uint;
 }
 
 @extern("RegisterClassExA")
@@ -114,25 +114,27 @@ def DispatchMessageA(lpMsg: *MSG): uint;
 @extern("PostQuitMessage")
 def PostQuitMessage(nExitCode: int): void;
 
+const null = as<opaque>(0);
+
 @entry(gui)
 def main(hInstance: HINSTANCE, hPrevInstance: HINSTANCE, pCmdLine: *char, nCmdShow: int): int {
     const szAppName = "hello";
     const szTitle = "Hello, World!";
 
-    // var wndclass = .WNDCLASSEXA {
-    //     cbSize = __sizeof(WNDCLASSEXA),
-    //     style = (1 | 2),
-    //     lpfnWndProc = windowCallback,
-    //     cbClsExtra = 0,
-    //     cbWndExtra = 0,
-    //     hInstance = hInstance,
-    //     hIcon = __null,
-    //     hIconSm = __null,
-    //     hCursor = __null,
-    //     hbrBackground = __null,
-    //     lpszClassName = szAppName,
-    //     lpszMenuName = ""
-    // };
+    var wndclass: WNDCLASSEXA = .{
+        cbSize = 80,
+        style = (1 | 2),
+        lpfnWndProc = windowCallback,
+        cbClsExtra = 0,
+        cbWndExtra = 0,
+        hInstance = hInstance,
+        hIcon = null,
+        hIconSm = null,
+        hCursor = null,
+        hbrBackground = null,
+        lpszClassName = szAppName,
+        lpszMenuName = ""
+    };
 
     RegisterClassExA(&wndclass);
 
@@ -143,17 +145,17 @@ def main(hInstance: HINSTANCE, hPrevInstance: HINSTANCE, pCmdLine: *char, nCmdSh
         0xcf0000,
         0, 0,
         640, 480,
-        __null,
-        __null,
+        null,
+        null,
         hInstance,
-        __null
+        null
     );
 
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
 
     var msg: MSG = noinit;
-    while GetMessageA(&msg, __null, 0, 0) != 0 {
+    while GetMessageA(&msg, null, 0, 0) != 0 {
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }

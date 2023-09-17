@@ -30,10 +30,36 @@ static bool is_public(const tree_t *decl)
     return attrib->visibility == eVisiblePublic;
 }
 
+tree_t *util_search_namespace(tree_t *sema, const util_search_t *search, const node_t *node, vector_t *path, bool *isImported)
+{
+    CTASSERTF(sema != NULL && search != NULL, "(sema = %p, search = %p)", sema, search);
+    CTASSERT(vector_len(path) > 0);
+    CTASSERT(isImported != NULL);
+
+    size_t len = vector_len(path);
+    tree_t *ns = sema;
+    for (size_t i = 0; i < len - 1; i++)
+    {
+        if (!tree_is(ns, eTreeDeclModule))
+        {
+            return tree_raise(node, sema->reports, "expected a namespace but got `%s` instead", tree_to_string(ns));
+        }
+
+        const char *segment = vector_get(path, i);
+        ns = select_module(ns, search, segment, isImported);
+        if (ns == NULL)
+        {
+            return tree_raise(node, sema->reports, "namespace `%s` not found", segment);
+        }
+    }
+
+    return ns;
+}
+
 tree_t *util_search_path(tree_t *sema, const util_search_t *search, const node_t *node, vector_t *path)
 {
     CTASSERTF(sema != NULL && search != NULL, "(sema = %p, search = %p)", sema, search);
-    CTASSERTF(vector_len(path) > 0, "empty path");
+    CTASSERT(vector_len(path) > 0);
 
     bool isImported = false;
     size_t len = vector_len(path);

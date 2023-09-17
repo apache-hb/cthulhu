@@ -105,6 +105,7 @@ void ctu_set_current_loop(tree_t *sema, tree_t *loop)
 static tree_t *gIntTypes[eDigitTotal * eSignTotal] = { NULL };
 static tree_t *gBoolType = NULL;
 static tree_t *gVoidType = NULL;
+static tree_t *gOpaqueType = NULL;
 static tree_t *gStringType = NULL;
 
 static tree_t *gStringChar = NULL;
@@ -129,6 +130,11 @@ static tree_t *make_str_type(const char *name)
 static tree_t *make_void_type(const char *name)
 {
     return (gVoidType = tree_type_unit(node_builtin(), name));
+}
+
+static tree_t *make_opaque_type(const char *name)
+{
+    return (gOpaqueType = tree_type_opaque(node_builtin(), name));
 }
 
 tree_t *ctu_get_int_type(digit_t digit, sign_t sign)
@@ -185,6 +191,7 @@ tree_t *ctu_rt_mod(lifetime_t *lifetime)
     ctu_add_decl(root, eCtuTagTypes, "bool", make_bool_type("bool"));
     ctu_add_decl(root, eCtuTagTypes, "str", make_str_type("str"));
     ctu_add_decl(root, eCtuTagTypes, "void", make_void_type("void"));
+    ctu_add_decl(root, eCtuTagTypes, "opaque", make_opaque_type("opaque"));
 
     ctu_init_attribs(root);
 

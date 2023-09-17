@@ -1,0 +1,2 @@
+@extern("printf")
+export def print(msg: str, args: ...): int;

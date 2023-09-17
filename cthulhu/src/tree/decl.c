@@ -34,7 +34,7 @@ static tree_t *decl_open(const node_t *node, const char *name, const tree_t *typ
 
 static void decl_close(tree_t *decl, tree_kind_t kind)
 {
-    CTASSERTF(tree_is(decl, kind), "decl %s is an unresolved %s, expected %s", tree_get_name(decl), tree_kind_to_string(decl->kind), tree_kind_to_string(kind));
+    CTASSERTF(tree_is(decl, kind), "decl %s is the wrong type, expected %s", tree_to_string(decl), tree_kind_to_string(kind));
 
     decl->kind = kind;
     decl->resolve = NULL;
@@ -58,7 +58,7 @@ tree_t *tree_resolve(cookie_t *cookie, const tree_t *decl)
 
     vector_push(&cookie->stack, inner);
 
-    res->fnResolve(cookie, res->sema, inner, res->user);
+    res->fnResolve(res->sema, inner, res->user);
 
     vector_drop(cookie->stack);
 
@@ -134,6 +134,13 @@ tree_t *tree_decl_local(const node_t *node, const char *name, tree_storage_t sto
 {
     tree_t *self = tree_decl(eTreeDeclLocal, node, type, name, eQualUnknown);
     tree_set_storage(self, storage);
+    return self;
+}
+
+tree_t *tree_decl_case(const node_t *node, const char *name, tree_t *expr)
+{
+    tree_t *self = tree_decl(eTreeDeclCase, node, tree_get_type(expr), name, eQualUnknown);
+    self->caseValue = expr;
     return self;
 }
 
@@ -255,4 +262,53 @@ void tree_close_union(tree_t *self, vector_t *fields)
     decl_close(self, eTreeTypeUnion);
     self->fields = fields;
     check_aggregate_fields(fields);
+}
+
+///
+/// enums
+///
+
+#define CHECK_CASE(TY) CTASSERTF(tree_is(TY, eTreeDeclCase), "expected case, got %s", tree_to_string(TY));
+
+static void check_enum_cases(vector_t *cases)
+{
+    size_t len = vector_len(cases);
+    for (size_t i = 0; i < len; i++)
+    {
+        const tree_t *field = vector_get(cases, i);
+        CHECK_CASE(field);
+    }
+}
+
+tree_t *tree_decl_enum(const node_t *node, const char *name, const tree_t *underlying, vector_t *cases, tree_t *defaultCase)
+{
+    tree_t *self = decl_open(node, name, NULL, eTreeTypeEnum, NULL);
+    tree_close_enum(self, underlying, cases, defaultCase);
+    return self;
+}
+
+tree_t *tree_open_enum(const node_t *node, const char *name, tree_resolve_info_t resolve)
+{
+    tree_t *self = decl_open(node, name, NULL, eTreeTypeEnum, BOX(resolve));
+    self->underlying = NULL;
+    self->cases = vector_new(4);
+    self->defaultCase = NULL;
+    return self;
+}
+
+void tree_close_enum(tree_t *self, const tree_t *underlying, vector_t *cases, tree_t *defaultCase)
+{
+    decl_close(self, eTreeTypeEnum);
+
+    self->underlying = underlying;
+    self->cases = cases;
+    self->defaultCase = defaultCase;
+
+    CTASSERTF(tree_is(underlying, eTreeTypeDigit), "enums must have an underlying digit type, got %s", tree_to_string(underlying));
+
+    check_enum_cases(cases);
+    if (defaultCase != NULL)
+    {
+        CHECK_CASE(defaultCase);
+    }
 }

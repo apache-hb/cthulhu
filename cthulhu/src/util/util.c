@@ -87,6 +87,26 @@ bool util_types_equal(const tree_t *lhs, const tree_t *rhs)
     }
 }
 
+bool util_types_comparable(const tree_t *lhs, const tree_t *rhs)
+{
+    if (util_types_equal(lhs, rhs)) { return true; }
+
+    tree_kind_t lhsKind = tree_get_kind(lhs);
+    tree_kind_t rhsKind = tree_get_kind(rhs);
+
+    if (lhsKind != rhsKind) { return false; }
+
+    switch (lhsKind)
+    {
+    case eTreeTypeBool:
+    case eTreeTypeDigit:
+        return true;
+
+    default:
+        return false; /* TODO probably wrong */
+    }
+}
+
 static bool can_cast_length(size_t dst, size_t src)
 {
     if (!util_length_bounded(dst)) { return true; }
@@ -106,6 +126,24 @@ static tree_t *cast_check_length(const tree_t *dst, tree_t *expr, size_t dstlen,
     }
 
     return tree_expr_cast(tree_get_node(expr), dst, expr);
+}
+
+static tree_t *cast_to_opaque(const tree_t *dst, tree_t *expr)
+{
+    CTASSERTF(tree_is(dst, eTreeTypeOpaque), "(dst=%s)", tree_to_string(dst));
+
+    const tree_t *src = tree_get_type(expr);
+
+    switch (tree_get_kind(src))
+    {
+    case eTreeTypePointer:
+    case eTreeTypeDigit:
+        return tree_expr_cast(tree_get_node(expr), dst, expr); // TODO: a little iffy
+
+    default: return tree_error(tree_get_node(expr),
+                                "cannot cast `%s` to `%s`",
+                                tree_to_string(src), tree_to_string(dst));
+    }
 }
 
 static tree_t *cast_to_pointer(const tree_t *dst, tree_t *expr)
@@ -185,6 +223,9 @@ tree_t *util_type_cast(const tree_t *dst, tree_t *expr)
 
     switch (tree_get_kind(dst))
     {
+    case eTreeTypeOpaque:
+        return cast_to_opaque(dst, expr);
+
     case eTreeTypePointer:
         return cast_to_pointer(dst, expr);
 

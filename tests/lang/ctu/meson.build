@@ -136,12 +136,15 @@ tests = {
     'types.variant': {
         'fail': [
             'duplicate-name',
-            'discard-name'
+            'discard-name',
+            'invalid-underlying'
         ],
         'pass': [
             'many-elements',
             'one-element',
-            'no-elements'
+            'no-elements',
+            'underlying',
+            'use-variant'
         ]
     },
     'types.array': {
@@ -154,15 +157,17 @@ tests = {
             'expr-size'
         ]
     },
-    # 'varargs': {
-    #     'fail': [
-    #         'forward-varargs',
-    #         'only-varargs',
-    #         'return-varargs',
-    #         'vararg-global'
-    #     ],
-    #     'pass': []
-    # },
+    'varargs': {
+        'fail': [
+            #'forward-varargs',
+            'only-varargs',
+            'return-varargs',
+            'vararg-global'
+        ],
+        'pass': [
+            'extern-varargs'
+        ]
+    },
     'variables': {
         'fail': [
             'bad-type',

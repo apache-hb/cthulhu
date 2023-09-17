@@ -10,6 +10,8 @@ typedef struct tree_t tree_t;
 
 bool util_types_equal(const tree_t *lhs, const tree_t *rhs);
 
+bool util_types_comparable(const tree_t *lhs, const tree_t *rhs);
+
 /**
  * @brief attempt to convert the expr @arg expr to a type of @arg dst
  *

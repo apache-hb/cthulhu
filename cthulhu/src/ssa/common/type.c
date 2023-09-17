@@ -68,6 +68,11 @@ ssa_type_t *ssa_type_pointer(const char *name, quals_t quals, ssa_type_t *pointe
     return ptr;
 }
 
+ssa_type_t *ssa_type_opaque_pointer(const char *name, quals_t quals)
+{
+    return ssa_type_new(eTypeOpaque, name, quals);
+}
+
 ssa_type_t *ssa_type_struct(const char *name, quals_t quals, typevec_t *fields)
 {
     ssa_type_record_t it = { .fields = fields };
@@ -153,6 +158,10 @@ ssa_type_t *ssa_type_create(map_t *cache, const tree_t *type)
     case eTreeTypePointer:
         return ssa_type_pointer(name, quals, ssa_type_create_cached(cache, type->ptr), type->length);
 
+    case eTreeTypeOpaque:
+        return ssa_type_opaque_pointer(name, quals);
+
+    case eTreeTypeEnum: return ssa_type_create(cache, type->underlying);
     case eTreeTypeStruct: return ssa_type_struct(name, quals, collect_fields(cache, type));
 
     default: NEVER("unexpected type kind: %s", tree_to_string(type));

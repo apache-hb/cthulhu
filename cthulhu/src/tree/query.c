@@ -21,15 +21,19 @@ static bool has_name(tree_kind_t kind)
     case eTreeTypeDigit:
     case eTreeTypeClosure:
     case eTreeTypePointer:
+    case eTreeTypeOpaque:
     case eTreeTypeArray:
     case eTreeTypeReference:
 
     case eTreeTypeStruct:
+    case eTreeTypeUnion:
+    case eTreeTypeEnum:
 
     case eTreeDeclGlobal:
     case eTreeDeclLocal:
     case eTreeDeclParam:
     case eTreeDeclField:
+    case eTreeDeclCase:
     case eTreeDeclFunction:
     case eTreeDeclModule:
         return true;
@@ -200,6 +204,8 @@ arity_t tree_fn_get_arity(const tree_t *self)
 /// tys
 ///
 
+#include "report/report.h"
+
 static tree_t *find_field(vector_t *fields, const char *name)
 {
     size_t len = vector_len(fields);
@@ -220,6 +226,13 @@ tree_t *tree_ty_get_field(const tree_t *self, const char *name)
     TREE_EXPECT(self, eTreeTypeStruct);
 
     return find_field(self->fields, name);
+}
+
+tree_t *tree_ty_get_case(const tree_t *self, const char *name)
+{
+    TREE_EXPECT(self, eTreeTypeEnum);
+
+    return find_field(self->cases, name);
 }
 
 bool tree_ty_is_address(const tree_t *type)

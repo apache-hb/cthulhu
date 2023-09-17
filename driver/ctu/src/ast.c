@@ -145,6 +145,13 @@ ctu_t *ctu_expr_string(scan_t *scan, where_t where, char *text, size_t length)
     return ast;
 }
 
+ctu_t *ctu_expr_init(scan_t *scan, where_t where, vector_t *inits)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuExprInit);
+    ast->inits = inits;
+    return ast;
+}
+
 ctu_t *ctu_expr_call(scan_t *scan, where_t where, ctu_t *callee, vector_t *args)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuExprCall);
@@ -157,6 +164,14 @@ ctu_t *ctu_expr_name(scan_t *scan, where_t where, vector_t *path)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuExprName);
     ast->path = path;
+    return ast;
+}
+
+ctu_t *ctu_expr_cast(scan_t *scan, where_t where, ctu_t *expr, ctu_t *type)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuExprCast);
+    ast->expr = expr;
+    ast->cast = type;
     return ast;
 }
 
@@ -268,10 +283,11 @@ ctu_t *ctu_decl_global(scan_t *scan, where_t where, bool exported, bool mut, cha
     return ast;
 }
 
-ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name, vector_t *params, ctu_t *returnType, ctu_t *body)
+ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name, vector_t *params, char *variadic, ctu_t *returnType, ctu_t *body)
 {
     ctu_t *ast = ctu_decl(scan, where, eCtuDeclFunction, name, exported);
     ast->params = params;
+    ast->variadic = variadic;
     ast->returnType = returnType;
     ast->body = body;
     return ast;
@@ -294,9 +310,10 @@ ctu_t *ctu_decl_struct(scan_t *scan, where_t where, bool exported, char *name, v
     return ast;
 }
 
-ctu_t *ctu_decl_variant(scan_t *scan, where_t where, bool exported, char *name, vector_t *cases)
+ctu_t *ctu_decl_variant(scan_t *scan, where_t where, bool exported, char *name, ctu_t *underlying, vector_t *cases)
 {
     ctu_t *ast = ctu_decl(scan, where, eCtuDeclVariant, name, exported);
+    ast->underlying = underlying;
     ast->cases = cases;
     return ast;
 }
@@ -317,6 +334,14 @@ ctu_t *ctu_param(scan_t *scan, where_t where, char *name, ctu_t *type)
     return ast;
 }
 
+ctu_t *ctu_field_init(scan_t *scan, where_t where, char *name, ctu_t *value)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuFieldInit);
+    ast->field = name;
+    ast->expr = value;
+    return ast;
+}
+
 ctu_t *ctu_variant_case(scan_t *scan, where_t where, char *name, bool isDefault, ctu_t *expr)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuVariantCase);
@@ -324,4 +349,18 @@ ctu_t *ctu_variant_case(scan_t *scan, where_t where, char *name, bool isDefault,
     ast->defaultCase = isDefault;
     ast->caseValue = expr;
     return ast;
+}
+
+///
+/// extras
+///
+
+ctu_params_t ctu_params_new(vector_t *params, char *variadic)
+{
+    ctu_params_t result = {
+        .params = params,
+        .variadic = variadic
+    };
+
+    return result;
 }

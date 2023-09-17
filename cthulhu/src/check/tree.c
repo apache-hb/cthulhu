@@ -407,6 +407,9 @@ static void check_inner_type_recursion(check_t *check, const tree_t *type)
     case eTreeTypeUnit:
     case eTreeTypeEmpty:
     case eTreeTypeStruct:
+    case eTreeTypeUnion:
+    case eTreeTypeEnum:
+    case eTreeTypeOpaque:
         break;
 
     case eTreeTypeClosure:

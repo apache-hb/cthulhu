@@ -1,11 +1,11 @@
-variant C : char { invalid = 0 }
-variant UC : uchar { invalid = 0 }
-variant S : short { invalid = 0 }
-variant US : ushort { invalid = 0 }
-variant I : int { invalid = 0 }
-variant UI : uint { invalid = 0 }
-variant L : long { invalid = 0 }
-variant UL : ulong { invalid = 0 }
+variant C : char { case invalid = 0 }
+variant UC : uchar { case invalid = 0 }
+variant S : short { case invalid = 0 }
+variant US : ushort { case invalid = 0 }
+variant I : int { case invalid = 0 }
+variant UI : uint { case invalid = 0 }
+variant L : long { case invalid = 0 }
+variant UL : ulong { case invalid = 0 }
 
 def main {
     const c: C = C::invalid;

@@ -440,15 +440,13 @@ static void sema_proc(tree_t *sema, tree_t *tree, pl0_t *node)
     tree_close_function(tree, stmts);
 }
 
-static void resolve_global(cookie_t *cookie, tree_t *sema, tree_t *decl, void *user)
+static void resolve_global(tree_t *sema, tree_t *decl, void *user)
 {
-    CTU_UNUSED(cookie);
     tree_close_global(decl, sema_global(sema, user));
 }
 
-static void resolve_proc(cookie_t *cookie, tree_t *sema, tree_t *decl, void *user)
+static void resolve_proc(tree_t *sema, tree_t *decl, void *user)
 {
-    CTU_UNUSED(cookie);
     sema_proc(sema, decl, user);
 }
 

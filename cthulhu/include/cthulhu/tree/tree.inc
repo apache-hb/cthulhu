@@ -10,6 +10,7 @@
 TREE_KIND(eTreeTypeEmpty, "type-empty") ///< a type that can never be created
 TREE_KIND(eTreeTypeUnit, "type-unit") ///< a type with a single value
 TREE_KIND(eTreeTypeBool, "type-bool") ///< a type with two values
+TREE_KIND(eTreeTypeOpaque, "type-opaque")
 TREE_KIND(eTreeTypeDigit, "type-digit")
 TREE_KIND(eTreeTypeClosure, "type-closure") ///< a function pointer type (no captures)
 
@@ -19,6 +20,7 @@ TREE_KIND(eTreeTypeArray, "type-array") ///< an array of objects
 
 TREE_KIND(eTreeTypeStruct, "type-struct")
 TREE_KIND(eTreeTypeUnion, "type-union")
+TREE_KIND(eTreeTypeEnum, "type-enum")
 
 ///
 /// expressions
@@ -63,6 +65,7 @@ TREE_KIND(eTreeStmtJump, "stmt-jump") ///< loop related jumps
 TREE_KIND(eTreeDeclGlobal, "decl-global")
 TREE_KIND(eTreeDeclLocal, "decl-local")
 TREE_KIND(eTreeDeclParam, "decl-param")
+TREE_KIND(eTreeDeclCase, "decl-case")
 TREE_KIND(eTreeDeclField, "decl-field")
 TREE_KIND(eTreeDeclFunction, "decl-function")
 TREE_KIND(eTreeDeclModule, "decl-module")

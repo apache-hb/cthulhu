@@ -54,9 +54,8 @@ static obr_t *begin_resolve(tree_t *sema, tree_t *self, void *user, obr_kind_t k
     return decl;
 }
 
-static void resolve_const(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
+static void resolve_const(tree_t *sema, tree_t *self, void *user)
 {
-    CTU_UNUSED(cookie);
     obr_t *decl = begin_resolve(sema, self, user, eObrDeclConst);
 
     tree_t *expr = obr_sema_rvalue(sema, decl->value, NULL);
@@ -64,9 +63,8 @@ static void resolve_const(cookie_t *cookie, tree_t *sema, tree_t *self, void *us
     tree_close_global(self, expr);
 }
 
-static void resolve_var(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
+static void resolve_var(tree_t *sema, tree_t *self, void *user)
 {
-    CTU_UNUSED(cookie);
     begin_resolve(sema, self, user, eObrDeclVar);
 
     tree_t *value = obr_default_value(self->node, tree_get_type(self));
@@ -74,20 +72,18 @@ static void resolve_var(cookie_t *cookie, tree_t *sema, tree_t *self, void *user
     tree_close_global(self, value);
 }
 
-static void resolve_type(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
+static void resolve_type(tree_t *sema, tree_t *self, void *user)
 {
-    CTU_UNUSED(cookie);
     obr_t *decl = begin_resolve(sema, self, user, eObrDeclType);
 
     tree_t *type = obr_sema_type(sema, decl->type, decl->name);
-    tree_t *alias = tree_alias(tree_resolve(cookie, type), decl->name);
+    tree_t *alias = tree_alias(tree_resolve(tree_get_cookie(sema), type), decl->name);
 
     tree_close_decl(self, alias);
 }
 
-static void resolve_proc(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
+static void resolve_proc(tree_t *sema, tree_t *self, void *user)
 {
-    CTU_UNUSED(cookie);
     obr_t *decl = begin_resolve(sema, self, user, eObrDeclProcedure);
 
     vector_t *params = tree_fn_get_params(self);
@@ -265,9 +261,8 @@ obr_forward_t obr_forward_decl(tree_t *sema, obr_t *decl)
     return fwd;
 }
 
-static void obr_resolve_init(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
+static void obr_resolve_init(tree_t *sema, tree_t *self, void *user)
 {
-    CTU_UNUSED(cookie);
     obr_t *mod = begin_resolve(sema, self, user, eObrModule);
 
     tree_t *body = obr_sema_stmts(sema, mod->node, mod->init);

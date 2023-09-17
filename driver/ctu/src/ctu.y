@@ -26,12 +26,13 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     char *ident;
     util_text_t string;
     ctu_digit_t digit;
-
     bool boolean;
 
     vector_t *vector;
 
     ctu_t *ast;
+
+    ctu_params_t params;
 }
 
 %token<ident>
@@ -87,6 +88,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
     NOT "`!`"
     DOT "`.`"
+    DOT3 "`...`"
 
     SHL "`<<`"
     SHR "`>>`"
@@ -126,11 +128,12 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     decls declList
     structFields
     stmtList
-    fnParams fnParamList
+    fnParamList
     attribArgs
     exprList optExprList
     typeList optTypeList
     variantFields optVariantFields
+    initList
 
 /**
  * order of operations, tightest first
@@ -160,13 +163,17 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     maybeExpr
     stmt stmts localDecl returnStmt whileStmt assignStmt branchStmt
     fnParam fnResult
-    variantDecl variantField
+    variantDecl variantField underlying
+    fieldInit init
 
 %type<ident>
-    importAlias ident optIdent whileName
+    importAlias ident optIdent whileName variadic
 
 %type<boolean>
     exported mut isDefault
+
+%type<params>
+    fnParams
 
 %%
 
@@ -243,7 +250,11 @@ innerDecl: globalDecl { $$ = $1; }
 
 /* variants/enums */
 
-variantDecl: exported VARIANT IDENT LBRACE optVariantFields RBRACE { $$ = ctu_decl_variant(x, @$, $1, $3, $5); }
+variantDecl: exported VARIANT IDENT underlying LBRACE optVariantFields RBRACE { $$ = ctu_decl_variant(x, @$, $1, $3, $4, $6); }
+    ;
+
+underlying: %empty { $$ = NULL; }
+    | COLON type { $$ = $2; }
     ;
 
 optVariantFields: %empty { $$ = vector_of(0); }
@@ -263,15 +274,19 @@ isDefault: DEFAULT { $$ = true; }
 
 /* functions */
 
-functionDecl: exported DEF IDENT fnParams fnResult functionBody { $$ = ctu_decl_function(x, @$, $1, $3, $4, $5, $6); }
+functionDecl: exported DEF IDENT fnParams fnResult functionBody { $$ = ctu_decl_function(x, @$, $1, $3, $4.params, $4.variadic, $5, $6); }
     ;
 
 fnResult: %empty { $$ = NULL; }
     | COLON type { $$ = $2; }
     ;
 
-fnParams: %empty { $$ = vector_of(0); }
-    | LPAREN fnParamList RPAREN { $$ = $2; }
+fnParams: %empty { $$ = ctu_params_new(vector_of(0), NULL); }
+    | LPAREN fnParamList variadic RPAREN { $$ = ctu_params_new($2, $3); }
+    ;
+
+variadic: %empty { $$ = NULL; }
+    | COMMA IDENT COLON DOT3 { $$ = $2; }
     ;
 
 fnParamList: fnParam { $$ = vector_init($1); }
@@ -378,6 +393,18 @@ stmt: expr SEMI { $$ = $1; }
     | CONTINUE optIdent SEMI { $$ = ctu_stmt_continue(x, @$, $2); }
     ;
 
+/* init */
+
+init: DOT LBRACE initList RBRACE { $$ = ctu_expr_init(x, @$, $3); }
+    ;
+
+initList: fieldInit { $$ = vector_init($1); }
+    | initList COMMA fieldInit { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+fieldInit: ident ASSIGN expr { $$ = ctu_field_init(x, @$, $1, $3); }
+    ;
+
 /* expressions */
 
 maybeExpr: NOINIT { $$ = NULL; }
@@ -397,6 +424,8 @@ primary: LPAREN expr RPAREN { $$ = $2; }
     | BOOLEAN { $$ = ctu_expr_bool(x, @$, $1); }
     | STRING { $$ = ctu_expr_string(x, @$, $1.text, $1.length); }
     | path { $$ = ctu_expr_name(x, @$, $1); }
+    | AS LT type GT LPAREN primary RPAREN { $$ = ctu_expr_cast(x, @$, $6, $3); }
+    | init { $$ = $1; }
     ;
 
 postExpr: primary { $$ = $1; }
