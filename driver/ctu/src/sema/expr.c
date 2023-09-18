@@ -40,6 +40,7 @@ static bool is_public(const tree_t *decl)
     return attrib->visibility == eVisiblePublic;
 }
 
+// TODO: needsLoad is awful
 static tree_t *sema_decl_name(tree_t *sema, const node_t *node, vector_t *path, bool *needsLoad)
 {
     bool isImported = false;
@@ -200,7 +201,13 @@ static tree_t *sema_call(ctu_sema_t *sema, const ctu_t *expr)
     tree_t *callee = ctu_sema_lvalue(sema, expr->callee);
     if (tree_is(callee, eTreeError)) { return callee; }
 
-    vector_t *params = tree_fn_get_params(tree_get_type(callee));
+    const tree_t *type = tree_get_type(callee);
+    if (tree_is(type, eTreeTypeReference))
+    {
+        callee = tree_expr_load(expr->node, callee);
+    }
+
+    vector_t *params = tree_fn_get_params(type);
 
     size_t len = vector_len(expr->args);
     vector_t *result = vector_of(len);
