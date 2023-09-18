@@ -78,15 +78,7 @@ static tree_t *sema_decl_name(tree_t *sema, const node_t *node, vector_t *path, 
             return decl;
         }
 
-        tree_t *resolved = tree_resolve(tree_get_cookie(sema), decl);
-
-        const tree_t *ty = tree_get_type(resolved);
-        if (tree_is(ty, eTreeTypePointer))
-        {
-            *needsLoad = false;
-        }
-
-        return resolved;
+        return tree_resolve(tree_get_cookie(sema), decl);
     }
 
     NEVER("invalid namespace type %s", tree_to_string(ns));
@@ -498,7 +490,7 @@ static tree_t *sema_local(tree_t *sema, tree_t *decl, const ctu_t *stmt)
         report(sema->reports, eFatal, stmt->node, "cannot declare a variable of type `unit`");
     }
 
-    const tree_t *ref = ctu_resolve_decl_type(actualType);
+    const tree_t *ref = tree_type_reference(stmt->node, stmt->name, actualType);
     tree_storage_t storage = {
         .storage = actualType,
         .size = 1,
