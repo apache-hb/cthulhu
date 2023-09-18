@@ -68,7 +68,7 @@ def arenaRelease(mem: *Arena, ptr: opaque) {
 }
 
 def getComputerName(mem: *Arena): str {
-    var size: DWORD = 256u;
+    var size: DWORD = 256;
     var name: str = arenaAlloc(mem, size);
     if win32GetComputerNameA(name, &size) == 0 {
         return "Unknown";
