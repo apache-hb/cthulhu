@@ -378,7 +378,7 @@ static const char *c89_format_local(c89_emit_t *emit, size_t local)
     }
 
     const ssa_local_t *it = typevec_offset(locals, local);
-    return it->name;
+    return format("l_%s", it->name);
 }
 
 static const char *c89_format_param(c89_emit_t *emit, size_t param)
@@ -701,7 +701,7 @@ static void write_locals(c89_emit_t *emit, io_t *io, typevec_t *locals)
     {
         const ssa_local_t *local = typevec_offset(locals, i);
         write_string(io, "\t%s;\n",
-            c89_format_storage(emit, local->storage, local->name)
+            c89_format_storage(emit, local->storage, format("l_%s", local->name))
         );
     }
 }

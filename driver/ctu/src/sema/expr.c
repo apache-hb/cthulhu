@@ -200,12 +200,16 @@ static tree_t *sema_call(ctu_sema_t *sema, const ctu_t *expr)
     tree_t *callee = ctu_sema_lvalue(sema, expr->callee);
     if (tree_is(callee, eTreeError)) { return callee; }
 
+    vector_t *params = tree_fn_get_params(tree_get_type(callee));
+
     size_t len = vector_len(expr->args);
     vector_t *result = vector_of(len);
     for (size_t i = 0; i < len; i++)
     {
+        const tree_t *ty = i >= vector_len(params) ? NULL : tree_get_type(vector_get(params, i));
+
         ctu_t *it = vector_get(expr->args, i);
-        tree_t *arg = ctu_sema_rvalue(sema, it, NULL);
+        tree_t *arg = ctu_sema_rvalue(sema, it, ty);
         vector_set(result, i, arg);
     }
 
@@ -293,6 +297,8 @@ static tree_t *sema_index_lvalue(ctu_sema_t *sema, const ctu_t *expr)
 /// fields
 /// TODO: so much duplicated logic
 ///
+
+/// TODO: what the fuck
 
 static tree_t *sema_field_lvalue(ctu_sema_t *sema, const ctu_t *expr)
 {

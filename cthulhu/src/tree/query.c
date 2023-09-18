@@ -171,8 +171,9 @@ const tree_t *tree_fn_get_return(const tree_t *self)
 {
     switch (tree_get_kind(self))
     {
+    case eTreeTypeReference: return tree_fn_get_return(self->ptr);
     case eTreeTypeClosure: return self->result;
-    case eTreeDeclFunction: return self->type->result;
+    case eTreeDeclFunction: return tree_fn_get_return(tree_get_type(self));
 
     default: NEVER("invalid function kind %s", tree_to_string(self));
     }
@@ -182,8 +183,9 @@ vector_t *tree_fn_get_params(const tree_t *self)
 {
     switch (tree_get_kind(self))
     {
+    case eTreeTypeReference: return tree_fn_get_params(self->ptr);
     case eTreeTypeClosure: return self->params;
-    case eTreeDeclFunction: return self->type->params;
+    case eTreeDeclFunction: return tree_fn_get_params(tree_get_type(self));
 
     default: NEVER("invalid function kind %s", tree_to_string(self));
     }
@@ -203,8 +205,6 @@ arity_t tree_fn_get_arity(const tree_t *self)
 ///
 /// tys
 ///
-
-#include "report/report.h"
 
 static tree_t *find_field(vector_t *fields, const char *name)
 {

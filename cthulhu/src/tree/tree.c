@@ -276,7 +276,7 @@ tree_t *tree_expr_ref(const node_t *node, tree_t *expr)
 
 static const tree_t *get_ref_inner(const tree_t *ty)
 {
-    if (tree_is(ty, eTreeTypeReference)) { return ty->ptr; }
+    if (tree_is(ty, eTreeTypeReference) || tree_is(ty, eTreeTypePointer)) { return ty->ptr; }
     return ty;
 }
 
@@ -320,7 +320,10 @@ tree_t *tree_expr_compare(const node_t *node, const tree_t *type, compare_t comp
 
 tree_t *tree_expr_field(const node_t *node, const tree_t *type, tree_t *object, tree_t *field)
 {
-    const tree_t *ty = get_ref_inner(tree_get_type(object));
+    const tree_t *outer = tree_get_type(object);
+    const tree_t *ty = get_ref_inner(outer);
+
+    CTASSERTF(tree_ty_is_address(outer), "object must be an address, found %s", tree_to_string(outer));
     CTASSERTF(tree_is(ty, eTreeTypeStruct), "object must be an aggregate, found %s", tree_to_string(ty));
 
     tree_t *self = tree_new(eTreeExprField, node, type);
@@ -345,7 +348,7 @@ tree_t *tree_expr_call(const node_t *node, const tree_t *callee, vector_t *args)
     CTASSERT(callee != NULL);
     CTASSERT(args != NULL);
 
-    tree_t *self = tree_new(eTreeExprCall, node, tree_fn_get_return(callee));
+    tree_t *self = tree_new(eTreeExprCall, node, tree_fn_get_return(tree_get_type(callee)));
     self->callee = callee;
     self->args = args;
     return self;

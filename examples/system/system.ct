@@ -93,6 +93,6 @@ def main {
     printMemory(.{
         name = "example",
         bytes = 0x1000,
-        kind = Heap
+        kind = MemoryType::Heap
     });
 }

@@ -79,6 +79,33 @@ static void ctu_resolve_global(tree_t *sema, tree_t *self, void *user)
     tree_close_global(self, expr);
 }
 
+static void add_param(ctu_sema_t *sema, tree_t *param)
+{
+    const tree_t *ty = tree_get_type(param);
+    const char *id = tree_get_name(param);
+    const node_t *node = tree_get_node(param);
+
+    if (!tree_is(ty, eTreeTypeStruct))
+    {
+        ctu_add_decl(sema->sema, eCtuTagValues, id, param);
+        return;
+    }
+
+    tree_t *ref = tree_type_reference(node, id, ty);
+
+    tree_storage_t storage = {
+        .storage = ty,
+        .size = 1,
+        .quals = eQualMutable
+    };
+    tree_t *local = tree_decl_local(node, id, storage, ref);
+    tree_add_local(sema->decl, local);
+    ctu_add_decl(sema->sema, eCtuTagValues, id, local);
+
+    tree_t *init = tree_stmt_assign(node, local, param);
+    vector_push(&sema->block, init);
+}
+
 static void ctu_resolve_function(tree_t *sema, tree_t *self, void *user)
 {
     ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclFunction);
@@ -94,20 +121,32 @@ static void ctu_resolve_function(tree_t *sema, tree_t *self, void *user)
     for (size_t i = 0; i < len; i++)
     {
         tree_t *param = vector_get(self->params, i);
-        ctu_add_decl(ctx, eCtuTagValues, param->name, param);
+        add_param(&inner, param);
     }
 
-    tree_t *body = decl->body == NULL ? NULL : ctu_sema_stmt(&inner, decl->body);
-    if (body != NULL && tree_is(body, eTreeStmtBlock))
+    ctu_t *fnBody = decl->body;
+
+    if (fnBody == NULL)
+    {
+        tree_close_function(self, NULL);
+        return;
+    }
+
+    tree_t *body = ctu_sema_stmt(&inner, fnBody);
+    vector_push(&inner.block, body);
+
+    if (fnBody->kind == eCtuStmtList)
     {
         const tree_t *ty = tree_fn_get_return(self);
         if (util_types_equal(ty, ctu_get_void_type()))
         {
-            vector_push(&body->stmts, tree_stmt_return(self->node, tree_expr_unit(self->node, ty)));
+            tree_t *ret = tree_stmt_return(self->node, tree_expr_unit(self->node, ty));
+            vector_push(&inner.block, ret);
         }
     }
 
-    tree_close_function(self, body);
+    tree_t *block = tree_stmt_block(decl->node, inner.block);
+    tree_close_function(self, block);
 }
 
 static void ctu_resolve_type(tree_t *sema, tree_t *self, void *user)

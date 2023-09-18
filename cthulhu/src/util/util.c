@@ -319,11 +319,14 @@ tree_t *util_create_string(tree_t *sema, const node_t *node, tree_t *letter, con
 
 tree_t *util_create_call(tree_t *sema, const node_t *node, const tree_t *fn, vector_t *args)
 {
-    const tree_attribs_t *attribs = tree_get_attrib(fn);
-    if (attribs->deprecated != NULL)
+    if (tree_is(fn, eTreeDeclFunction))
     {
-        message_t *id = report(sema->reports, eWarn, node, "call to deprecated function `%s`", tree_get_name(fn));
-        report_note(id, "deprecated: %s", attribs->deprecated);
+        const tree_attribs_t *attribs = tree_get_attrib(fn);
+        if (attribs->deprecated != NULL)
+        {
+            message_t *id = report(sema->reports, eWarn, node, "call to deprecated function `%s`", tree_get_name(fn));
+            report_note(id, "deprecated: %s", attribs->deprecated);
+        }
     }
 
     return tree_expr_call(node, fn, args);

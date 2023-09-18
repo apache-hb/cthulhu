@@ -149,8 +149,7 @@ static char *record_to_string(ssa_type_record_t record)
     for (size_t i = 0; i < len; i++)
     {
         const ssa_field_t *field = typevec_offset(record.fields, i);
-        const char *ty = type_to_string(field->type);
-        vector_set(fields, i, format("%s: %s", field->name, ty));
+        vector_set(fields, i, (char*)field->name);
     }
 
     return format("record(fields: [%s])", str_join(", ", fields));
