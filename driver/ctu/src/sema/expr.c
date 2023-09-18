@@ -121,12 +121,12 @@ static tree_t *sema_int(tree_t *sema, const ctu_t *expr, const tree_t *implicitT
     return verify_expr_type(sema, eTreeTypeDigit, type, "integer literal", it);
 }
 
-static tree_t *sema_cast(tree_t *sema, const ctu_t *expr)
+static tree_t *sema_cast(ctu_sema_t sema, const ctu_t *expr)
 {
     const tree_t *ty = ctu_sema_type(sema, expr->cast);
     tree_t *inner = ctu_sema_rvalue(sema, expr->expr, NULL);
     tree_t *cast = util_type_cast(ty, inner);
-    if (tree_is(cast, eTreeError)) { tree_report(sema->reports, cast); }
+    if (tree_is(cast, eTreeError)) { tree_report(ctu_sema_reports(sema), cast); }
     return cast;
 }
 
@@ -154,20 +154,20 @@ static tree_t *sema_load(tree_t *sema, const ctu_t *expr)
     return name;
 }
 
-static tree_t *sema_compare(tree_t *sema, const ctu_t *expr)
+static tree_t *sema_compare(ctu_sema_t sema, const ctu_t *expr)
 {
     tree_t *left = ctu_sema_rvalue(sema, expr->lhs, NULL);
     tree_t *right = ctu_sema_rvalue(sema, expr->rhs, NULL);
 
     if (!util_types_comparable(tree_get_type(left), tree_get_type(right)))
     {
-        return tree_raise(expr->node, sema->reports, "cannot compare `%s` to `%s`", tree_to_string(tree_get_type(left)), tree_to_string(tree_get_type(right)));
+        return tree_raise(expr->node, ctu_sema_reports(sema), "cannot compare `%s` to `%s`", tree_to_string(tree_get_type(left)), tree_to_string(tree_get_type(right)));
     }
 
     return tree_expr_compare(expr->node, ctu_get_bool_type(), expr->compare, left, right);
 }
 
-static tree_t *sema_binary(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
+static tree_t *sema_binary(ctu_sema_t sema, const ctu_t *expr, const tree_t *implicitType)
 {
     tree_t *left = ctu_sema_rvalue(sema, expr->lhs, implicitType);
     tree_t *right = ctu_sema_rvalue(sema, expr->rhs, implicitType);
@@ -183,7 +183,7 @@ static tree_t *sema_binary(tree_t *sema, const ctu_t *expr, const tree_t *implic
     return tree_expr_binary(expr->node, commonType, expr->binary, left, right);
 }
 
-static tree_t *sema_unary(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
+static tree_t *sema_unary(ctu_sema_t sema, const ctu_t *expr, const tree_t *implicitType)
 {
     tree_t *inner = ctu_sema_rvalue(sema, expr->expr, implicitType);
 
@@ -195,7 +195,7 @@ static tree_t *sema_unary(tree_t *sema, const ctu_t *expr, const tree_t *implici
     return tree_expr_unary(expr->node, expr->unary, inner);
 }
 
-static tree_t *sema_call(tree_t *sema, const ctu_t *expr)
+static tree_t *sema_call(ctu_sema_t sema, const ctu_t *expr)
 {
     tree_t *callee = ctu_sema_lvalue(sema, expr->callee);
     if (tree_is(callee, eTreeError)) { return callee; }
@@ -209,10 +209,10 @@ static tree_t *sema_call(tree_t *sema, const ctu_t *expr)
         vector_set(result, i, arg);
     }
 
-    return util_create_call(sema, expr->node, callee, result);
+    return util_create_call(sema.sema, expr->node, callee, result);
 }
 
-static tree_t *sema_deref_lvalue(tree_t *sema, const ctu_t *expr)
+static tree_t *sema_deref_lvalue(ctu_sema_t sema, const ctu_t *expr)
 {
     tree_t *inner = ctu_sema_rvalue(sema, expr->expr, NULL);
     if (tree_is(inner, eTreeError)) { return inner; }
@@ -220,7 +220,7 @@ static tree_t *sema_deref_lvalue(tree_t *sema, const ctu_t *expr)
     return tree_expr_ref(expr->node, inner);
 }
 
-static tree_t *sema_deref_rvalue(tree_t *sema, const ctu_t *expr)
+static tree_t *sema_deref_rvalue(ctu_sema_t sema, const ctu_t *expr)
 {
     tree_t *inner = ctu_sema_rvalue(sema, expr->expr, NULL);
     if (tree_is(inner, eTreeError)) { return inner; }
@@ -228,7 +228,7 @@ static tree_t *sema_deref_rvalue(tree_t *sema, const ctu_t *expr)
     return tree_expr_load(expr->node, inner);
 }
 
-static tree_t *sema_ref(tree_t *sema, const ctu_t *expr)
+static tree_t *sema_ref(ctu_sema_t sema, const ctu_t *expr)
 {
     tree_t *inner = ctu_sema_lvalue(sema, expr->expr);
     if (tree_is(inner, eTreeError) || tree_is(inner, eTreeDeclLocal)) { return inner; }
@@ -259,7 +259,7 @@ static bool can_index_type(const tree_t *ty)
     }
 }
 
-static tree_t *sema_index_rvalue(tree_t *sema, const ctu_t *expr)
+static tree_t *sema_index_rvalue(ctu_sema_t sema, const ctu_t *expr)
 {
     tree_t *index = ctu_sema_rvalue(sema, expr->index, ctu_get_int_type(eDigitSize, eSignUnsigned));
     tree_t *object = ctu_sema_lvalue(sema, expr->expr);
@@ -267,14 +267,14 @@ static tree_t *sema_index_rvalue(tree_t *sema, const ctu_t *expr)
     const tree_t *ty = get_ptr_type(tree_get_type(object));
     if (!can_index_type(ty))
     {
-        return tree_raise(expr->node, sema->reports, "cannot index non-pointer type `%s` inside rvalue", tree_to_string(ty));
+        return tree_raise(expr->node, ctu_sema_reports(sema), "cannot index non-pointer type `%s` inside rvalue", tree_to_string(ty));
     }
 
     tree_t *offset = tree_expr_offset(expr->node, ty, object, index);
     return tree_expr_load(expr->node, offset);
 }
 
-static tree_t *sema_index_lvalue(tree_t *sema, const ctu_t *expr)
+static tree_t *sema_index_lvalue(ctu_sema_t sema, const ctu_t *expr)
 {
     tree_t *index = ctu_sema_rvalue(sema, expr->index, ctu_get_int_type(eDigitSize, eSignUnsigned));
     tree_t *object = ctu_sema_lvalue(sema, expr->expr);
@@ -282,7 +282,7 @@ static tree_t *sema_index_lvalue(tree_t *sema, const ctu_t *expr)
     const tree_t *ty = get_ptr_type(tree_get_type(object));
     if (!can_index_type(ty))
     {
-        return tree_raise(expr->node, sema->reports, "cannot index non-pointer type `%s` inside lvalue", tree_to_string(ty));
+        return tree_raise(expr->node, ctu_sema_reports(sema), "cannot index non-pointer type `%s` inside lvalue", tree_to_string(ty));
     }
 
     tree_t *ref = tree_type_reference(expr->node, "", ty->ptr);
@@ -294,38 +294,38 @@ static tree_t *sema_index_lvalue(tree_t *sema, const ctu_t *expr)
 /// TODO: so much duplicated logic
 ///
 
-static tree_t *sema_field_lvalue(tree_t *sema, const ctu_t *expr)
+static tree_t *sema_field_lvalue(ctu_sema_t sema, const ctu_t *expr)
 {
     tree_t *object = ctu_sema_lvalue(sema, expr->expr);
     const tree_t *ty = get_ptr_type(tree_get_type(object));
     if (!tree_is(ty, eTreeTypeStruct))
     {
-        return tree_raise(expr->node, sema->reports, "cannot access field of non-struct type `%s`", tree_to_string(ty));
+        return tree_raise(expr->node, ctu_sema_reports(sema), "cannot access field of non-struct type `%s`", tree_to_string(ty));
     }
 
     tree_t *field = tree_ty_get_field(ty, expr->field);
     if (field == NULL)
     {
-        return tree_raise(expr->node, sema->reports, "field `%s` not found in struct `%s`", expr->field, tree_to_string(ty));
+        return tree_raise(expr->node, ctu_sema_reports(sema), "field `%s` not found in struct `%s`", expr->field, tree_to_string(ty));
     }
 
     tree_t *ref = tree_type_reference(expr->node, "", tree_get_type(field));
     return tree_expr_field(expr->node, ref, object, field);
 }
 
-static tree_t *sema_field_rvalue(tree_t *sema, const ctu_t *expr)
+static tree_t *sema_field_rvalue(ctu_sema_t sema, const ctu_t *expr)
 {
     tree_t *object = ctu_sema_lvalue(sema, expr->expr);
     const tree_t *ty = get_ptr_type(tree_get_type(object));
     if (!tree_is(ty, eTreeTypeStruct))
     {
-        return tree_raise(expr->node, sema->reports, "cannot access field of non-struct type `%s`", tree_to_string(ty));
+        return tree_raise(expr->node, ctu_sema_reports(sema), "cannot access field of non-struct type `%s`", tree_to_string(ty));
     }
 
     tree_t *field = tree_ty_get_field(ty, expr->field);
     if (field == NULL)
     {
-        return tree_raise(expr->node, sema->reports, "field `%s` not found in struct `%s`", expr->field, tree_to_string(ty));
+        return tree_raise(expr->node, ctu_sema_reports(sema), "field `%s` not found in struct `%s`", expr->field, tree_to_string(ty));
     }
 
     tree_t *ref = tree_type_reference(expr->node, "", tree_get_type(field));
@@ -333,40 +333,40 @@ static tree_t *sema_field_rvalue(tree_t *sema, const ctu_t *expr)
     return tree_expr_load(expr->node, access);
 }
 
-static tree_t *sema_field_indirect_lvalue(tree_t *sema, const ctu_t *expr)
+static tree_t *sema_field_indirect_lvalue(ctu_sema_t sema, const ctu_t *expr)
 {
     tree_t *object = ctu_sema_lvalue(sema, expr->expr);
     const tree_t *ptr = get_ptr_type(tree_get_type(object));
     if (!tree_is(ptr, eTreeTypePointer) || !tree_is(ptr->ptr, eTreeTypeStruct))
     {
-        return tree_raise(expr->node, sema->reports, "cannot indirectly access field of non-pointer-to-struct type `%s`", tree_to_string(ptr));
+        return tree_raise(expr->node, ctu_sema_reports(sema), "cannot indirectly access field of non-pointer-to-struct type `%s`", tree_to_string(ptr));
     }
 
     const tree_t *ty = ptr->ptr;
     tree_t *field = tree_ty_get_field(ty, expr->field);
     if (field == NULL)
     {
-        return tree_raise(expr->node, sema->reports, "field `%s` not found in struct `%s`", expr->field, tree_to_string(ty));
+        return tree_raise(expr->node, ctu_sema_reports(sema), "field `%s` not found in struct `%s`", expr->field, tree_to_string(ty));
     }
 
     tree_t *ref = tree_type_reference(expr->node, "", tree_get_type(field));
     return tree_expr_field(expr->node, ref, object, field);
 }
 
-static tree_t *sema_field_indirect_rvalue(tree_t *sema, const ctu_t *expr)
+static tree_t *sema_field_indirect_rvalue(ctu_sema_t sema, const ctu_t *expr)
 {
     tree_t *object = ctu_sema_lvalue(sema, expr->expr);
     const tree_t *ptr = get_ptr_type(tree_get_type(object));
     if (!tree_is(ptr, eTreeTypePointer) || !tree_is(ptr->ptr, eTreeTypeStruct))
     {
-        return tree_raise(expr->node, sema->reports, "cannot indirectly access field of non-pointer-to-struct type `%s`", tree_to_string(ptr));
+        return tree_raise(expr->node, ctu_sema_reports(sema), "cannot indirectly access field of non-pointer-to-struct type `%s`", tree_to_string(ptr));
     }
 
     const tree_t *ty = ptr->ptr;
     tree_t *field = tree_ty_get_field(ty, expr->field);
     if (field == NULL)
     {
-        return tree_raise(expr->node, sema->reports, "field `%s` not found in struct `%s`", expr->field, tree_to_string(ty));
+        return tree_raise(expr->node, ctu_sema_reports(sema), "field `%s` not found in struct `%s`", expr->field, tree_to_string(ty));
     }
 
     tree_t *ref = tree_type_reference(expr->node, "", tree_get_type(field));
@@ -374,19 +374,20 @@ static tree_t *sema_field_indirect_rvalue(tree_t *sema, const ctu_t *expr)
     return tree_expr_load(expr->node, access);
 }
 
-static tree_t *sema_init(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
+static tree_t *sema_init(ctu_sema_t sema, const ctu_t *expr, const tree_t *implicitType)
 {
+    reports_t *reports = ctu_sema_reports(sema);
     if (implicitType == NULL)
     {
-        return tree_raise(expr->node, sema->reports, "cannot infer type of initializer");
+        return tree_raise(expr->node, reports, "cannot infer type of initializer");
     }
 
     if (!tree_is(implicitType, eTreeTypeStruct))
     {
-        return tree_raise(expr->node, sema->reports, "cannot initialize non-struct type `%s`", tree_to_string(implicitType));
+        return tree_raise(expr->node, reports, "cannot initialize non-struct type `%s`", tree_to_string(implicitType));
     }
 
-    tree_t *fn = util_current_symbol(sema);
+    tree_t *fn = sema.decl;
     const tree_t *ref = ctu_resolve_decl_type(implicitType);
 
     tree_storage_t storage = {
@@ -398,7 +399,6 @@ static tree_t *sema_init(tree_t *sema, const ctu_t *expr, const tree_t *implicit
     tree_add_local(fn, local);
 
     size_t len = vector_len(expr->inits);
-    vector_t *inits = vector_new(len);
     for (size_t i = 0; i < len; i++)
     {
         ctu_t *init = vector_get(expr->inits, i);
@@ -407,7 +407,7 @@ static tree_t *sema_init(tree_t *sema, const ctu_t *expr, const tree_t *implicit
         tree_t *field = tree_ty_get_field(implicitType, init->field);
         if (field == NULL)
         {
-            report(sema->reports, eFatal, init->node, "field `%s` not found in struct `%s`", init->field, tree_to_string(implicitType));
+            report(reports, eFatal, init->node, "field `%s` not found in struct `%s`", init->field, tree_to_string(implicitType));
             continue;
         }
 
@@ -416,24 +416,21 @@ static tree_t *sema_init(tree_t *sema, const ctu_t *expr, const tree_t *implicit
         tree_t *dst = tree_expr_field(init->node, ref, local, field);
         tree_t *assign = tree_stmt_assign(init->node, dst, value);
 
-        vector_push(&inits, assign);
+        vector_push(&sema.block, assign);
     }
 
     // TODO: default init remaining fields
 
-    tree_t *block = tree_stmt_block(expr->node, inits); // TODO: add init block
-    CTU_UNUSED(block);
-
     return tree_expr_load(expr->node, local);
 }
 
-tree_t *ctu_sema_lvalue(tree_t *sema, const ctu_t *expr)
+tree_t *ctu_sema_lvalue(ctu_sema_t sema, const ctu_t *expr)
 {
     CTASSERT(expr != NULL);
 
     switch (expr->kind)
     {
-    case eCtuExprName: return sema_name(sema, expr);
+    case eCtuExprName: return sema_name(sema.sema, expr);
     case eCtuExprDeref: return sema_deref_lvalue(sema, expr);
     case eCtuExprIndex: return sema_index_lvalue(sema, expr);
     case eCtuExprField: return sema_field_lvalue(sema, expr);
@@ -443,21 +440,21 @@ tree_t *ctu_sema_lvalue(tree_t *sema, const ctu_t *expr)
     }
 }
 
-tree_t *ctu_sema_rvalue(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
+tree_t *ctu_sema_rvalue(ctu_sema_t sema, const ctu_t *expr, const tree_t *implicitType)
 {
     CTASSERT(expr != NULL);
 
-    const tree_t *inner = implicitType == NULL ? NULL : tree_resolve(tree_get_cookie(sema), implicitType);
+    const tree_t *inner = implicitType == NULL ? NULL : tree_resolve(tree_get_cookie(sema.sema), implicitType);
 
     switch (expr->kind)
     {
-    case eCtuExprBool: return sema_bool(sema, expr, inner);
-    case eCtuExprInt: return sema_int(sema, expr, inner);
-    case eCtuExprString: return sema_string(sema, expr);
+    case eCtuExprBool: return sema_bool(sema.sema, expr, inner);
+    case eCtuExprInt: return sema_int(sema.sema, expr, inner);
+    case eCtuExprString: return sema_string(sema.sema, expr);
     case eCtuExprCast: return sema_cast(sema, expr);
     case eCtuExprInit: return sema_init(sema, expr, inner);
 
-    case eCtuExprName: return sema_load(sema, expr);
+    case eCtuExprName: return sema_load(sema.sema, expr);
     case eCtuExprCall: return sema_call(sema, expr);
 
     case eCtuExprRef: return sema_ref(sema, expr);
@@ -474,20 +471,21 @@ tree_t *ctu_sema_rvalue(tree_t *sema, const ctu_t *expr, const tree_t *implicitT
     }
 }
 
-static tree_t *sema_local(tree_t *sema, tree_t *decl, const ctu_t *stmt)
+static tree_t *sema_local(ctu_sema_t sema, const ctu_t *stmt)
 {
+    tree_t *decl = sema.decl;
     tree_t *type = stmt->type == NULL ? NULL : ctu_sema_type(sema, stmt->type);
     tree_t *value = stmt->value == NULL ? NULL : ctu_sema_rvalue(sema, stmt->value, type);
 
     CTASSERT(value != NULL || type != NULL);
 
     const tree_t *actualType = type != NULL
-        ? tree_resolve(tree_get_cookie(sema), type)
+        ? tree_resolve(tree_get_cookie(sema.sema), type)
         : tree_get_type(value);
 
     if (tree_is(actualType, eTreeTypeUnit))
     {
-        report(sema->reports, eFatal, stmt->node, "cannot declare a variable of type `unit`");
+        report(ctu_sema_reports(sema), eFatal, stmt->node, "cannot declare a variable of type `unit`");
     }
 
     const tree_t *ref = tree_type_reference(stmt->node, stmt->name, actualType);
@@ -498,7 +496,7 @@ static tree_t *sema_local(tree_t *sema, tree_t *decl, const ctu_t *stmt)
     };
     tree_t *self = tree_decl_local(decl->node, stmt->name, storage, ref);
     tree_add_local(decl, self);
-    ctu_add_decl(sema, eCtuTagValues, stmt->name, self);
+    ctu_add_decl(sema.sema, eCtuTagValues, stmt->name, self);
 
     if (value != NULL)
     {
@@ -508,10 +506,10 @@ static tree_t *sema_local(tree_t *sema, tree_t *decl, const ctu_t *stmt)
     return tree_stmt_block(stmt->node, vector_of(0)); // TODO: good enough
 }
 
-static tree_t *sema_stmts(tree_t *sema, tree_t *decl, const ctu_t *stmt)
+static tree_t *sema_stmts(ctu_sema_t sema, const ctu_t *stmt)
 {
+    tree_t *decl = sema.decl;
     size_t len = vector_len(stmt->stmts);
-    vector_t *stmts = vector_of(len);
 
     size_t sizes[eCtuTagTotal] = {
         [eCtuTagTypes] = 4,
@@ -519,26 +517,27 @@ static tree_t *sema_stmts(tree_t *sema, tree_t *decl, const ctu_t *stmt)
         [eCtuTagFunctions] = 4
     };
 
-    tree_t *ctx = tree_module(sema, stmt->node, decl->name, eCtuTagTotal, sizes);
+    tree_t *ctx = tree_module(sema.sema, stmt->node, decl->name, eCtuTagTotal, sizes);
+    ctu_sema_t inner = ctu_sema_enter_scope(sema, ctx, vector_new(len));
     for (size_t i = 0; i < len; i++)
     {
         ctu_t *it = vector_get(stmt->stmts, i);
-        tree_t *step = ctu_sema_stmt(ctx, decl, it);
-        vector_set(stmts, i, step);
+        tree_t *step = ctu_sema_stmt(inner, it);
+        vector_push(&inner.block, step);
     }
 
-    return tree_stmt_block(stmt->node, stmts);
+    return tree_stmt_block(stmt->node, inner.block);
 }
 
-static tree_t *sema_return(tree_t *sema, tree_t *decl, const ctu_t *stmt)
+static tree_t *sema_return(ctu_sema_t sema, const ctu_t *stmt)
 {
-    const tree_t *result = tree_fn_get_return(decl);
+    const tree_t *result = tree_fn_get_return(sema.decl);
 
     if (stmt->result == NULL)
     {
         if (!tree_is(result, eTreeTypeUnit))
         {
-            report(sema->reports, eFatal, stmt->node, "expected return value of type `%s`", tree_to_string(result));
+            report(ctu_sema_reports(sema), eFatal, stmt->node, "expected return value of type `%s`", tree_to_string(result));
         }
 
         return tree_stmt_return(stmt->node, tree_expr_unit(stmt->node, result));
@@ -549,29 +548,29 @@ static tree_t *sema_return(tree_t *sema, tree_t *decl, const ctu_t *stmt)
     return tree_stmt_return(stmt->node, value);
 }
 
-static tree_t *sema_while(tree_t *sema, tree_t *decl, const ctu_t *stmt)
+static tree_t *sema_while(ctu_sema_t sema, const ctu_t *stmt)
 {
-    tree_t *save = ctu_current_loop(sema);
+    tree_t *save = ctu_current_loop(sema.sema);
 
     tree_t *cond = ctu_sema_rvalue(sema, stmt->cond, ctu_get_bool_type());
     tree_t *loop = tree_stmt_loop(stmt->node, cond, tree_stmt_block(stmt->node, vector_of(0)), NULL);
 
     if (stmt->name != NULL)
     {
-        ctu_add_decl(sema, eCtuTagLabels, stmt->name, loop);
+        ctu_add_decl(sema.sema, eCtuTagLabels, stmt->name, loop);
     }
 
-    ctu_set_current_loop(sema, loop);
+    ctu_set_current_loop(sema.sema, loop);
 
-    loop->then = ctu_sema_stmt(sema, decl, stmt->then);
-    loop->other = stmt->other == NULL ? NULL : ctu_sema_stmt(sema, decl, stmt->other);
+    loop->then = ctu_sema_stmt(sema, stmt->then);
+    loop->other = stmt->other == NULL ? NULL : ctu_sema_stmt(sema, stmt->other);
 
-    ctu_set_current_loop(sema, save);
+    ctu_set_current_loop(sema.sema, save);
 
     return loop;
 }
 
-static tree_t *sema_assign(tree_t *sema, const ctu_t *stmt)
+static tree_t *sema_assign(ctu_sema_t sema, const ctu_t *stmt)
 {
     tree_t *dst = ctu_sema_lvalue(sema, stmt->dst);
     const tree_t *ty = tree_get_type(dst);
@@ -581,11 +580,11 @@ static tree_t *sema_assign(tree_t *sema, const ctu_t *stmt)
     return tree_stmt_assign(stmt->node, dst, src);
 }
 
-static tree_t *sema_branch(tree_t *sema, tree_t *decl, const ctu_t *stmt)
+static tree_t *sema_branch(ctu_sema_t sema, const ctu_t *stmt)
 {
     tree_t *cond = ctu_sema_rvalue(sema, stmt->cond, ctu_get_bool_type());
-    tree_t *then = ctu_sema_stmt(sema, decl, stmt->then);
-    tree_t *other = stmt->other == NULL ? NULL : ctu_sema_stmt(sema, decl, stmt->other);
+    tree_t *then = ctu_sema_stmt(sema, stmt->then);
+    tree_t *other = stmt->other == NULL ? NULL : ctu_sema_stmt(sema, stmt->other);
 
     return tree_stmt_branch(stmt->node, cond, then, other);
 }
@@ -624,28 +623,31 @@ static tree_t *sema_continue(tree_t *sema, const ctu_t *stmt)
     return tree_stmt_jump(stmt->node, loop, eJumpContinue);
 }
 
-tree_t *ctu_sema_stmt(tree_t *sema, tree_t *decl, const ctu_t *stmt)
+tree_t *ctu_sema_stmt(ctu_sema_t sema, const ctu_t *stmt)
 {
-    CTASSERT(decl != NULL);
+    CTASSERT(sema.sema != NULL);
+    CTASSERT(sema.decl != NULL);
+    CTASSERT(sema.block != NULL);
+
     CTASSERT(stmt != NULL);
 
     switch (stmt->kind)
     {
-    case eCtuStmtLocal: return sema_local(sema, decl, stmt);
-    case eCtuStmtList: return sema_stmts(sema, decl, stmt);
-    case eCtuStmtReturn: return sema_return(sema, decl, stmt);
-    case eCtuStmtWhile: return sema_while(sema, decl, stmt);
+    case eCtuStmtLocal: return sema_local(sema, stmt);
+    case eCtuStmtList: return sema_stmts(sema, stmt);
+    case eCtuStmtReturn: return sema_return(sema, stmt);
+    case eCtuStmtWhile: return sema_while(sema, stmt);
     case eCtuStmtAssign: return sema_assign(sema, stmt);
-    case eCtuStmtBranch: return sema_branch(sema, decl, stmt);
+    case eCtuStmtBranch: return sema_branch(sema, stmt);
 
-    case eCtuStmtBreak: return sema_break(sema, stmt);
-    case eCtuStmtContinue: return sema_continue(sema, stmt);
+    case eCtuStmtBreak: return sema_break(sema.sema, stmt);
+    case eCtuStmtContinue: return sema_continue(sema.sema, stmt);
 
     case eCtuExprCompare:
     case eCtuExprBinary:
     case eCtuExprUnary:
     case eCtuExprName:
-        report(sema->reports, eWarn, stmt->node, "expression statement may have no effect");
+        report(ctu_sema_reports(sema), eWarn, stmt->node, "expression statement may have no effect");
         /* fallthrough */
 
     case eCtuExprCall:

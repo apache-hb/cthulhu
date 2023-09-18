@@ -653,6 +653,7 @@ void c89_define_type(c89_emit_t *emit, const ssa_module_t *mod, const ssa_type_t
     switch (type->kind)
     {
     case eTypeRecord:
+        logverbose("define record %s %p", type->name, type);
         define_record(emit, hdr->io, type);
         break;
 
@@ -757,13 +758,34 @@ static void define_symbols(c89_emit_t *emit, const ssa_module_t *mod, vector_t *
     }
 }
 
+static void define_type_ordererd(c89_emit_t *emit, const ssa_module_t *mod, const ssa_type_t *type)
+{
+    if (set_contains_ptr(emit->defined, type)) { return; }
+    set_add_ptr(emit->defined, type);
+
+    // TODO: this is probably a touch broken, types may be put into the wrong translation
+    if (type->kind == eTypeRecord)
+    {
+        logverbose("defining %s", type->name);
+        ssa_type_record_t record = type->record;
+        size_t len = typevec_len(record.fields);
+        for (size_t i = 0; i < len; i++)
+        {
+            const ssa_field_t *field = typevec_offset(record.fields, i);
+            define_type_ordererd(emit, mod, field->type);
+        }
+    }
+
+    c89_define_type(emit, mod, type);
+}
+
 static void c89_define_module(c89_emit_t *emit, const ssa_module_t *mod)
 {
     size_t len = vector_len(mod->types);
     for (size_t i = 0; i < len; i++)
     {
         const ssa_type_t *type = vector_get(mod->types, i);
-        c89_define_type(emit, mod, type);
+        define_type_ordererd(emit, mod, type);
     }
 
     define_symbols(emit, mod, mod->globals, c89_define_global);
@@ -787,6 +809,7 @@ c89_emit_result_t emit_c89(const c89_emit_options_t *options)
 
         .stepmap = map_optimal(64),
         .strmap = map_optimal(64),
+        .defined = set_new(64),
 
         .fs = opts.fs,
         .deps = opts.deps,

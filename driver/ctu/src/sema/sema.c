@@ -16,6 +16,45 @@
 #include "base/util.h"
 
 ///
+/// sema
+///
+
+ctu_sema_t ctu_sema_init(tree_t *sema, tree_t *decl, vector_t *block)
+{
+    CTASSERT(sema != NULL);
+    CTASSERT(block != NULL);
+
+    ctu_sema_t it = {
+        .sema = sema,
+        .decl = decl,
+        .block = block
+    };
+
+    return it;
+}
+
+ctu_sema_t ctu_sema_enter_scope(ctu_sema_t sema, tree_t *scope, vector_t *block)
+{
+    CTASSERT(sema.sema != NULL);
+    CTASSERT(scope != NULL);
+    CTASSERT(block != NULL);
+
+    ctu_sema_t it = {
+        .sema = sema.sema,
+        .decl = scope,
+        .block = block
+    };
+
+    return it;
+}
+
+reports_t *ctu_sema_reports(ctu_sema_t sema)
+{
+    tree_t *it = sema.sema;
+    return it->reports;
+}
+
+///
 /// decls
 ///
 

@@ -130,7 +130,7 @@ static typevec_t *collect_fields(map_t *cache, const tree_t *type)
     return result;
 }
 
-ssa_type_t *ssa_type_create(map_t *cache, const tree_t *type)
+static ssa_type_t *ssa_type_create(map_t *cache, const tree_t *type)
 {
     tree_kind_t kind = tree_get_kind(type);
     const char *name = tree_get_name(type);

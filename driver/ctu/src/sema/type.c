@@ -38,13 +38,13 @@ static tree_t *sema_type_name(tree_t *sema, const ctu_t *type)
     return util_search_path(sema, &kSearchType, type->node, type->typeName);
 }
 
-static tree_t *ctu_sema_type_pointer(tree_t *sema, const ctu_t *type)
+static tree_t *ctu_sema_type_pointer(ctu_sema_t sema, const ctu_t *type)
 {
     tree_t *pointee = ctu_sema_type(sema, type->pointer);
     return tree_type_pointer(type->node, format("*%s", tree_get_name(pointee)), pointee, 1);
 }
 
-static tree_t *sema_type_function(tree_t *sema, const ctu_t *type)
+static tree_t *sema_type_function(ctu_sema_t sema, const ctu_t *type)
 {
     tree_t *returnType = ctu_sema_type(sema, type->returnType);
 
@@ -56,7 +56,7 @@ static tree_t *sema_type_function(tree_t *sema, const ctu_t *type)
         tree_t *ty = ctu_sema_type(sema, param);
         if (tree_is(ty, eTreeTypeUnit))
         {
-            report(sema->reports, eFatal, param->node, "void type is not allowed in function parameters");
+            report(ctu_sema_reports(sema), eFatal, param->node, "void type is not allowed in function parameters");
         }
 
         tree_t *it = tree_decl_param(param->node, "", ty);
@@ -66,7 +66,7 @@ static tree_t *sema_type_function(tree_t *sema, const ctu_t *type)
     return tree_type_closure(type->node, "", returnType, params, eArityFixed);
 }
 
-static tree_t *sema_type_array(tree_t *sema, const ctu_t *type)
+static tree_t *sema_type_array(ctu_sema_t sema, const ctu_t *type)
 {
     tree_t *inner = ctu_sema_type(sema, type->arrayType);
     tree_t *length = ctu_sema_rvalue(sema, type->arrayLength, ctu_get_int_type(eDigitSize, eSignUnsigned));
@@ -75,7 +75,7 @@ static tree_t *sema_type_array(tree_t *sema, const ctu_t *type)
     mpz_init(value);
     if (!util_eval_digit(value, length))
     {
-        report(sema->reports, eFatal, type->node, "array length must be a constant integer");
+        report(ctu_sema_reports(sema), eFatal, type->node, "array length must be a constant integer");
     }
 
     size_t v = mpz_get_ui(value);
@@ -83,14 +83,14 @@ static tree_t *sema_type_array(tree_t *sema, const ctu_t *type)
     return tree_type_array(type->node, "", inner, v);
 }
 
-tree_t *ctu_sema_type(tree_t *sema, const ctu_t *type)
+tree_t *ctu_sema_type(ctu_sema_t sema, const ctu_t *type)
 {
     CTASSERT(type != NULL);
 
     switch (type->kind)
     {
     case eCtuTypePointer: return ctu_sema_type_pointer(sema, type);
-    case eCtuTypeName: return sema_type_name(sema, type);
+    case eCtuTypeName: return sema_type_name(sema.sema, type);
     case eCtuTypeFunction: return sema_type_function(sema, type);
     case eCtuTypeArray: return sema_type_array(sema, type);
 

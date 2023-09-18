@@ -23,6 +23,20 @@ typedef enum ctu_tag_t {
 } ctu_tag_t;
 
 ///
+/// sema context
+///
+
+typedef struct ctu_sema_t {
+    tree_t *sema; ///< current scope
+    tree_t *decl; ///< current decl
+    vector_t *block; ///< current statement block
+} ctu_sema_t;
+
+ctu_sema_t ctu_sema_init(tree_t *sema, tree_t *decl, vector_t *block);
+ctu_sema_t ctu_sema_enter_scope(ctu_sema_t sema, tree_t *scope, vector_t *block);
+reports_t *ctu_sema_reports(ctu_sema_t sema);
+
+///
 /// getting decls
 ///
 

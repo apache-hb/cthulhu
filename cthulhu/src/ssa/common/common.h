@@ -14,7 +14,6 @@ ssa_type_t *ssa_type_closure(const char *name, quals_t quals, ssa_type_t *result
 ssa_type_t *ssa_type_array(const char *name, quals_t quals, ssa_type_t *element, size_t length);
 ssa_type_t *ssa_type_struct(const char *name, quals_t quals, typevec_t *fields);
 
-ssa_type_t *ssa_type_create(map_t *cache, const tree_t *type);
 ssa_type_t *ssa_type_create_cached(map_t *cache, const tree_t *type);
 
 ssa_type_t *ssa_type_common(const ssa_type_t *lhs, const ssa_type_t *rhs);

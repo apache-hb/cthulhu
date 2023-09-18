@@ -677,7 +677,7 @@ static void add_module_types(ssa_compile_t *ssa, ssa_module_t *mod, map_t *types
         map_entry_t entry = map_next(&iter);
 
         const tree_t *tree = entry.value;
-        ssa_type_t *type = ssa_type_create(ssa->types, tree);
+        ssa_type_t *type = ssa_type_create_cached(ssa->types, tree);
 
         vector_push(&mod->types, type);
         map_set_ptr(ssa->types, tree, type);
