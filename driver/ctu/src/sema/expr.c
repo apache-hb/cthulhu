@@ -473,7 +473,6 @@ tree_t *ctu_sema_rvalue(ctu_sema_t sema, const ctu_t *expr, const tree_t *implic
 
 static tree_t *sema_local(ctu_sema_t sema, const ctu_t *stmt)
 {
-    tree_t *decl = sema.decl;
     tree_t *type = stmt->type == NULL ? NULL : ctu_sema_type(sema, stmt->type);
     tree_t *value = stmt->value == NULL ? NULL : ctu_sema_rvalue(sema, stmt->value, type);
 
@@ -494,8 +493,8 @@ static tree_t *sema_local(ctu_sema_t sema, const ctu_t *stmt)
         .size = 1,
         .quals = stmt->mut ? eQualMutable : eQualConst
     };
-    tree_t *self = tree_decl_local(decl->node, stmt->name, storage, ref);
-    tree_add_local(decl, self);
+    tree_t *self = tree_decl_local(stmt->node, stmt->name, storage, ref);
+    tree_add_local(sema.decl, self);
     ctu_add_decl(sema.sema, eCtuTagValues, stmt->name, self);
 
     if (value != NULL)
@@ -518,7 +517,7 @@ static tree_t *sema_stmts(ctu_sema_t sema, const ctu_t *stmt)
     };
 
     tree_t *ctx = tree_module(sema.sema, stmt->node, decl->name, eCtuTagTotal, sizes);
-    ctu_sema_t inner = ctu_sema_enter_scope(sema, ctx, vector_new(len));
+    ctu_sema_t inner = ctu_sema_init(ctx, sema.decl, vector_new(len));
     for (size_t i = 0; i < len; i++)
     {
         ctu_t *it = vector_get(stmt->stmts, i);

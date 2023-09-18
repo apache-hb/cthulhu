@@ -84,7 +84,7 @@ static const char *get_first_ident(tree_t *sema, tree_t *decl, vector_t *args)
 }
 #endif
 
-static tree_link_t choose_linkage(tree_t *sema, tree_t *decl, const ctu_t *expr)
+static tree_link_t choose_linkage(tree_t *sema, const ctu_t *expr)
 {
     if (expr->kind != eCtuExprName)
     {
@@ -120,8 +120,10 @@ static tree_link_t get_linkage(tree_t *sema, tree_t *decl, vector_t *args)
     case 0: return eLinkEntryCli;
     default:
         report(sema->reports, eWarn, tree_get_node(decl), "entry attribute takes at most 1 argument, ignoring extra arguments");
+        /* fallthrough */
+
     case 1:
-        return choose_linkage(sema, decl, vector_tail(args));
+        return choose_linkage(sema, vector_tail(args));
     }
 }
 
@@ -227,6 +229,8 @@ static void apply_extern(tree_t *sema, tree_t *decl, vector_t *args)
 
 static void apply_layout(tree_t *sema, tree_t *decl, vector_t *args)
 {
+    CTU_UNUSED(args);
+
     if (!tree_is(decl, eTreeTypeStruct))
     {
         report(sema->reports, eFatal, decl->node, "layout attribute can only be applied to structs");

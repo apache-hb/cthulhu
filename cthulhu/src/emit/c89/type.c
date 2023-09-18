@@ -46,13 +46,11 @@ static const char *format_c89_closure(c89_emit_t *emit, const char *quals, ssa_t
         : format("%s (*%s%s)(%s)", result, quals, name, params);
 }
 
-static const char *format_c89_pointer(c89_emit_t *emit, const char *quals, ssa_type_pointer_t pointer, const char *name)
+static const char *format_c89_pointer(c89_emit_t *emit, ssa_type_pointer_t pointer, const char *name)
 {
-    const char *result = c89_format_type(emit, pointer.pointer, NULL, true);
+    const char *tmp = (name == NULL) ? "*" : format("*%s", name);
 
-    return (name == NULL)
-        ? format("%s *%s", result, quals)
-        : format("%s *%s%s", result, quals, name);
+    return c89_format_type(emit, pointer.pointer, tmp, true);
 }
 
 const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char *name, bool emitConst)
@@ -83,7 +81,7 @@ const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char
         : format("%svoid *", quals);
 
     case eTypeClosure: return format_c89_closure(emit, quals, type->closure, name);
-    case eTypePointer: return format_c89_pointer(emit, quals, type->pointer, name);
+    case eTypePointer: return format_c89_pointer(emit, type->pointer, name);
 
     case eTypeRecord: return (name != NULL)
         ? format("%sstruct %s %s", quals, type->name, name)
