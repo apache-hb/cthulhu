@@ -1,0 +1,57 @@
+type HINSTANCE = opaque;
+type HANDLE = opaque;
+type HICON = opaque;
+type HCURSOR = opaque;
+type HBRUSH = opaque;
+type HMENU = opaque;
+type HWND = opaque;
+
+type LPCSTR = str;
+type UINT = uint;
+type WORD = ushort;
+type ATOM = WORD;
+type BOOL = int;
+
+type LONG_PTR = long;
+
+type WPARAM = LONG_PTR;
+type LPARAM = LONG_PTR;
+type LRESULT = LONG_PTR;
+
+type WNDPROC = def(HWND, uint, WPARAM, LPARAM) -> LRESULT;
+
+@layout(platform)
+struct WNDCLASSEXA {
+    cbSize: uint;
+
+    style: uint;
+    lpfnWndProc: WNDPROC;
+    cbClsExtra: int;
+    cbWndExtra: int;
+    hInstance: HINSTANCE;
+    hIcon: HICON;
+    hCursor: HCURSOR;
+    hbrBackground: HBRUSH;
+    lpszMenuName: LPCSTR;
+    lpszClassName: LPCSTR;
+
+    hIconSm: HICON;
+}
+
+@layout(platform)
+struct POINT {
+    x: int;
+    y: int;
+}
+
+@layout(platform)
+struct MSG {
+    hwnd: HWND;
+    message: uint;
+    wParam: WPARAM;
+    lParam: LPARAM;
+    time: uint;
+    pt: POINT;
+
+    $: uint;
+}

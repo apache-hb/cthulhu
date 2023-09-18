@@ -78,7 +78,15 @@ static tree_t *sema_decl_name(tree_t *sema, const node_t *node, vector_t *path, 
             return decl;
         }
 
-        return tree_resolve(tree_get_cookie(sema), decl);
+        tree_t *resolved = tree_resolve(tree_get_cookie(sema), decl);
+
+        const tree_t *ty = tree_get_type(resolved);
+        if (tree_is(ty, eTreeTypePointer))
+        {
+            *needsLoad = false;
+        }
+
+        return resolved;
     }
 
     NEVER("invalid namespace type %s", tree_to_string(ns));
@@ -231,7 +239,7 @@ static tree_t *sema_deref_rvalue(tree_t *sema, const ctu_t *expr)
 static tree_t *sema_ref(tree_t *sema, const ctu_t *expr)
 {
     tree_t *inner = ctu_sema_lvalue(sema, expr->expr);
-    if (tree_is(inner, eTreeError)) { return inner; }
+    if (tree_is(inner, eTreeError) || tree_is(inner, eTreeDeclLocal)) { return inner; }
 
     return tree_expr_address(expr->node, inner);
 }
@@ -419,7 +427,11 @@ static tree_t *sema_init(tree_t *sema, const ctu_t *expr, const tree_t *implicit
         vector_push(&inits, assign);
     }
 
-    tree_t *block = tree_stmt_block(expr->node, inits);
+    // TODO: default init remaining fields
+
+    tree_t *block = tree_stmt_block(expr->node, inits); // TODO: add init block
+    CTU_UNUSED(block);
+
     return tree_expr_load(expr->node, local);
 }
 
@@ -486,11 +498,10 @@ static tree_t *sema_local(tree_t *sema, tree_t *decl, const ctu_t *stmt)
         report(sema->reports, eFatal, stmt->node, "cannot declare a variable of type `unit`");
     }
 
-    const tree_t *inner = ctu_resolve_storage_type(actualType);
     const tree_t *ref = ctu_resolve_decl_type(actualType);
     tree_storage_t storage = {
-        .storage = inner,
-        .size = ctu_resolve_storage_size(actualType),
+        .storage = actualType,
+        .size = 1,
         .quals = stmt->mut ? eQualMutable : eQualConst
     };
     tree_t *self = tree_decl_local(decl->node, stmt->name, storage, ref);
@@ -661,6 +672,7 @@ size_t ctu_resolve_storage_size(const tree_t *type)
     case eTreeTypeArray:
         CTASSERTF(type->length != SIZE_MAX, "type %s has no length", tree_to_string(type));
         return ctu_resolve_storage_size(type->ptr) * type->length;
+
     default: return 1;
     }
 }

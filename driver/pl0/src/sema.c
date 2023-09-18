@@ -413,12 +413,12 @@ static tree_t *sema_compare(tree_t *sema, pl0_t *node)
 
 static void sema_proc(tree_t *sema, tree_t *tree, pl0_t *node)
 {
-    size_t nlocals = vector_len(node->locals);
-    size_t sizes[ePl0TagTotal] = {[ePl0TagValues] = nlocals};
+    size_t len = vector_len(node->locals);
+    size_t sizes[ePl0TagTotal] = {[ePl0TagValues] = len};
 
     tree_t *nest = tree_module(sema, node->node, node->name, ePl0TagTotal, sizes);
 
-    for (size_t i = 0; i < nlocals; i++)
+    for (size_t i = 0; i < len; i++)
     {
         pl0_t *local = vector_get(node->locals, i);
         tree_t *it = tree_decl_local(local->node, local->name, get_mutable_storage(), gIntRef);

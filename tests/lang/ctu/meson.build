@@ -184,6 +184,13 @@ tests = {
             'uninit',
             'globals'
         ]
+    },
+    'edgecases': {
+        'fail': [ ],
+        'pass': [
+            'struct-ordering',
+            'string-locals'
+        ]
     }
 }
 

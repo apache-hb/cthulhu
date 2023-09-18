@@ -344,6 +344,8 @@ static void check_struct_type_recursion(check_t *check, const tree_t *type)
     case eTreeTypeUnit:
     case eTreeTypeEmpty:
     case eTreeTypePointer:
+    case eTreeTypeOpaque:
+    case eTreeTypeClosure:
         break;
 
     case eTreeTypeStruct:

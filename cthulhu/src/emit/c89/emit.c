@@ -220,7 +220,6 @@ void c89_proto_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_sym
     c89_source_t *hdr = map_get_ptr(emit->hdrmap, mod);
 
     const ssa_type_t *type = func->type;
-
     CTASSERTF(type->kind == eTypeClosure, "expected closure type on %s, got %d", func->name, type->kind);
 
     ssa_type_closure_t closure = type->closure;
@@ -643,7 +642,7 @@ static void define_record(c89_emit_t *emit, io_t *io, const ssa_type_t *type)
     for (size_t i = 0; i < len; i++)
     {
         const ssa_field_t *field = typevec_offset(record.fields, i);
-        write_string(io, "\t%s %s;\n", format_symbol(emit, field->type, NULL), field->name);
+        write_string(io, "\t%s;\n", format_symbol(emit, field->type, field->name));
     }
     write_string(io, "};\n");
 }

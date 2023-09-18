@@ -1,0 +1,11 @@
+@extern("printf")
+def cPrint(fmt: str, args: ...): int;
+
+def useString(it: str): int = cPrint("%s\n", it);
+
+@entry(gui)
+export def guiMain {
+    const local = "beep";
+
+    useString(local);
+}
