@@ -38,13 +38,13 @@ static tree_t *sema_type_name(tree_t *sema, const ctu_t *type)
     return util_search_path(sema, &kSearchType, type->node, type->typeName);
 }
 
-static tree_t *ctu_sema_type_pointer(ctu_sema_t sema, const ctu_t *type)
+static tree_t *ctu_sema_type_pointer(ctu_sema_t *sema, const ctu_t *type)
 {
     tree_t *pointee = ctu_sema_type(sema, type->pointer);
     return tree_type_pointer(type->node, format("*%s", tree_get_name(pointee)), pointee, 1);
 }
 
-static tree_t *sema_type_function(ctu_sema_t sema, const ctu_t *type)
+static tree_t *sema_type_function(ctu_sema_t *sema, const ctu_t *type)
 {
     tree_t *returnType = ctu_sema_type(sema, type->returnType);
 
@@ -66,7 +66,7 @@ static tree_t *sema_type_function(ctu_sema_t sema, const ctu_t *type)
     return tree_type_closure(type->node, "", returnType, params, eArityFixed);
 }
 
-static tree_t *sema_type_array(ctu_sema_t sema, const ctu_t *type)
+static tree_t *sema_type_array(ctu_sema_t *sema, const ctu_t *type)
 {
     tree_t *inner = ctu_sema_type(sema, type->arrayType);
     tree_t *length = ctu_sema_rvalue(sema, type->arrayLength, ctu_get_int_type(eDigitSize, eSignUnsigned));
@@ -83,14 +83,14 @@ static tree_t *sema_type_array(ctu_sema_t sema, const ctu_t *type)
     return tree_type_array(type->node, "", inner, v);
 }
 
-tree_t *ctu_sema_type(ctu_sema_t sema, const ctu_t *type)
+tree_t *ctu_sema_type(ctu_sema_t *sema, const ctu_t *type)
 {
     CTASSERT(type != NULL);
 
     switch (type->kind)
     {
     case eCtuTypePointer: return ctu_sema_type_pointer(sema, type);
-    case eCtuTypeName: return sema_type_name(sema.sema, type);
+    case eCtuTypeName: return sema_type_name(sema->sema, type);
     case eCtuTypeFunction: return sema_type_function(sema, type);
     case eCtuTypeArray: return sema_type_array(sema, type);
 

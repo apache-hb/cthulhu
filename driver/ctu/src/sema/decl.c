@@ -59,8 +59,8 @@ static void ctu_resolve_global(tree_t *sema, tree_t *self, void *user)
 
     ctu_sema_t ctx = ctu_sema_init(sema, self, vector_new(0));
 
-    tree_t *type = decl->type == NULL ? NULL : ctu_sema_type(ctx, decl->type);
-    tree_t *expr = decl->value == NULL ? NULL : ctu_sema_rvalue(ctx, decl->value, type);
+    tree_t *type = decl->type == NULL ? NULL : ctu_sema_type(&ctx, decl->type);
+    tree_t *expr = decl->value == NULL ? NULL : ctu_sema_rvalue(&ctx, decl->value, type);
 
     CTASSERT(expr != NULL || type != NULL);
 
@@ -97,7 +97,7 @@ static void ctu_resolve_function(tree_t *sema, tree_t *self, void *user)
         ctu_add_decl(ctx, eCtuTagValues, param->name, param);
     }
 
-    tree_t *body = decl->body == NULL ? NULL : ctu_sema_stmt(inner, decl->body);
+    tree_t *body = decl->body == NULL ? NULL : ctu_sema_stmt(&inner, decl->body);
     if (body != NULL && tree_is(body, eTreeStmtBlock))
     {
         const tree_t *ty = tree_fn_get_return(self);
@@ -117,7 +117,7 @@ static void ctu_resolve_type(tree_t *sema, tree_t *self, void *user)
 
     ctu_sema_t inner = ctu_sema_init(sema, self, vector_new(0));
 
-    const tree_t *temp = tree_resolve(tree_get_cookie(sema), ctu_sema_type(inner, decl->typeAlias)); // TODO: doesnt support newtypes, also feels icky
+    const tree_t *temp = tree_resolve(tree_get_cookie(sema), ctu_sema_type(&inner, decl->typeAlias)); // TODO: doesnt support newtypes, also feels icky
     tree_close_decl(self, temp);
 }
 
@@ -131,7 +131,7 @@ static void ctu_resolve_struct(tree_t *sema, tree_t *self, void *user)
     for (size_t i = 0; i < len; i++)
     {
         ctu_t *field = vector_get(decl->fields, i);
-        tree_t *type = ctu_sema_type(inner, field->fieldType);
+        tree_t *type = ctu_sema_type(&inner, field->fieldType);
         char *name = field->name == NULL ? format("field%zu", i) : field->name;
         tree_t *item = tree_decl_field(field->node, name, type);
 
@@ -147,7 +147,7 @@ static void ctu_resolve_variant(tree_t *sema, tree_t *self, void *user)
     ctu_sema_t inner = ctu_sema_init(sema, self, vector_new(0));
 
     const tree_t *underlying = decl->underlying != NULL
-        ? ctu_sema_type(inner, decl->underlying)
+        ? ctu_sema_type(&inner, decl->underlying)
         : ctu_get_int_type(eDigitInt, eSignSigned); // TODO: have an enum type
 
     if (!tree_is(underlying, eTreeTypeDigit))
@@ -166,7 +166,7 @@ static void ctu_resolve_variant(tree_t *sema, tree_t *self, void *user)
         ctu_t *it = vector_get(decl->cases, i);
         CTASSERTF(it->kind == eCtuVariantCase, "decl %s is not a variant case", it->name);
 
-        tree_t *val = ctu_sema_rvalue(inner, it->caseValue, underlying);
+        tree_t *val = ctu_sema_rvalue(&inner, it->caseValue, underlying);
         tree_t *field = tree_decl_case(it->node, it->name, val);
         vector_set(result, i, field);
 
@@ -197,7 +197,7 @@ static tree_t *ctu_forward_global(tree_t *sema, ctu_t *decl)
     CTASSERTF(decl->type != NULL || decl->value != NULL, "decl %s has no type and no init expr", decl->name);
 
     ctu_sema_t inner = ctu_sema_init(sema, NULL, vector_new(0));
-    tree_t *type = decl->type == NULL ? NULL : ctu_sema_type(inner, decl->type);
+    tree_t *type = decl->type == NULL ? NULL : ctu_sema_type(&inner, decl->type);
 
     tree_resolve_info_t resolve = {
         .sema = sema,
@@ -233,7 +233,7 @@ static tree_t *ctu_forward_function(tree_t *sema, ctu_t *decl)
     for (size_t i = 0; i < len; i++)
     {
         ctu_t *param = vector_get(decl->params, i);
-        tree_t *type = ctu_sema_type(inner, param->paramType);
+        tree_t *type = ctu_sema_type(&inner, param->paramType);
         tree_t *it = tree_decl_param(param->node, param->name, type);
         vector_set(params, i, it);
     }
@@ -241,7 +241,7 @@ static tree_t *ctu_forward_function(tree_t *sema, ctu_t *decl)
     arity_t arity = (decl->variadic != NULL) ? eArityVariable : eArityFixed;
     tree_t *returnType = decl->returnType == NULL
         ? ctu_get_void_type()
-        : ctu_sema_type(inner, decl->returnType);
+        : ctu_sema_type(&inner, decl->returnType);
 
     tree_t *signature = tree_type_closure(decl->node, decl->name, returnType, params, arity);
 

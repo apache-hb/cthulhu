@@ -33,9 +33,9 @@ ctu_sema_t ctu_sema_init(tree_t *sema, tree_t *decl, vector_t *block)
     return it;
 }
 
-reports_t *ctu_sema_reports(ctu_sema_t sema)
+reports_t *ctu_sema_reports(ctu_sema_t *sema)
 {
-    tree_t *it = sema.sema;
+    tree_t *it = sema->sema;
     return it->reports;
 }
 
