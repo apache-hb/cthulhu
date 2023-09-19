@@ -109,7 +109,7 @@ DIGIT_KIND(eDigitLeast64, "least64")
 #   define SIGN_KIND(ID, STR)
 #endif
 
-SIGN_KIND(eSignDefault,  "default")
+SIGN_KIND(eSignDefault,  "default") ///< dealing with C interop
 SIGN_KIND(eSignUnsigned, "unsigned")
 SIGN_KIND(eSignSigned,   "signed")
 

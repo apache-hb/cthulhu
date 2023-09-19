@@ -1,3 +1,13 @@
+import cc::lang as cc;
+
+type UINT = cc::intUnsigned;
+type UINT_PTR = cc::uint64;
+type LONG_PTR = cc::int64;
+
+type WPARAM = UINT_PTR;
+type LPARAM = LONG_PTR;
+type LRESULT = LONG_PTR;
+
 type HINSTANCE = opaque;
 type HANDLE = opaque;
 type HICON = opaque;
@@ -7,35 +17,24 @@ type HMENU = opaque;
 type HWND = opaque;
 
 type LPCSTR = str;
-type UINT = uint;
-type WORD = ushort;
+type WORD = cc::shortUnsigned;
 type ATOM = WORD;
-type BOOL = int;
+type BOOL = cc::int;
 
-type LONG_PTR = long;
-
-type WPARAM = LONG_PTR;
-type LPARAM = LONG_PTR;
-type LRESULT = LONG_PTR;
-
-type WNDPROC = def(HWND, uint, WPARAM, LPARAM) -> LRESULT;
+type WNDPROC = def(HWND, UINT, WPARAM, LPARAM) -> LRESULT;
 
 @layout(platform)
-struct WNDCLASSEXA {
-    cbSize: uint;
-
-    style: uint;
+struct WNDCLASSA {
+    style: UINT;
     lpfnWndProc: WNDPROC;
-    cbClsExtra: int;
-    cbWndExtra: int;
+    cbClsExtra: cc::int;
+    cbWndExtra: cc::int;
     hInstance: HINSTANCE;
     hIcon: HICON;
     hCursor: HCURSOR;
     hbrBackground: HBRUSH;
     lpszMenuName: LPCSTR;
     lpszClassName: LPCSTR;
-
-    hIconSm: HICON;
 }
 
 @layout(platform)
@@ -56,8 +55,8 @@ struct MSG {
     $: uint;
 }
 
-@extern("RegisterClassExA")
-def RegisterClassExA(cls: *WNDCLASSEXA): ATOM;
+@extern("RegisterClassA")
+def RegisterClassA(cls: *WNDCLASSA): ATOM;
 
 @extern("UnregisterClassA")
 def UnregisterClassA(lpClassName: str, hInstance: HINSTANCE): BOOL;
@@ -121,8 +120,7 @@ def main(hInstance: HINSTANCE, hPrevInstance: HINSTANCE, pCmdLine: *char, nCmdSh
     const szAppName = "Hello";
     const szTitle = "Hello, World!";
 
-    var wndclass: WNDCLASSEXA = .{
-        cbSize = 80,
+    var wndclass: WNDCLASSA = .{
         style = (1 | 2),
         lpfnWndProc = windowCallback,
         cbClsExtra = 0,
@@ -132,11 +130,10 @@ def main(hInstance: HINSTANCE, hPrevInstance: HINSTANCE, pCmdLine: *char, nCmdSh
         hCursor = null,
         hbrBackground = null,
         lpszClassName = szAppName,
-        lpszMenuName = null,
-        hIconSm = null
+        lpszMenuName = null
     };
 
-    RegisterClassExA(&wndclass);
+    RegisterClassA(&wndclass);
 
     var hWnd = CreateWindowExA(
         0,

@@ -11,8 +11,8 @@
 }
 
 %code requires {
-    #include "ast.h"
-    #include "scan.h"
+    #include "cc/ast.h"
+    #include "cc/scan.h"
     #define YYSTYPE CCSTYPE
     #define YYLTYPE CCLTYPE
 }
@@ -25,17 +25,12 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %union {
     char *ident;
 
-    struct {
-        char *text;
-        size_t length;
-    } string;
+    util_text_t text;
 
     mpz_t mpz;
 
     vector_t *vector;
 
-    cc_t *ast;
-    
     sign_t sign;
     digit_t digit;
 }
@@ -46,7 +41,7 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %token<mpz>
     DIGIT "digit"
 
-%token<string>
+%token<text>
     STRING "string"
 
 %token
@@ -54,7 +49,7 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
     VOID "void"
     BOOL "_Bool"
-    
+
     CHAR "char"
     SHORT "short"
     INT "int"
@@ -113,79 +108,18 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
     COLON ":"
 
     DOT "."
-    
+
     MULEQ "*="
-    MUL "*" 
+    MUL "*"
 
     MODULE "_Module"
     IMPORT "_Import"
-
-%type<vector>
-    path modspec
-    imports importlist
-    decls
-
-%type<ast>
-    import
-    decl typedefDecl type
-
-%type<sign>
-    sign
-
-%type<digit>
-    digit
 
 %start unit
 
 %%
 
-unit: modspec imports decls { scan_set(x, cc_module(x, @$, $1, $2, $3)); }
-    ;
-
-imports: %empty { $$ = vector_new(0); }
-    | importlist { $$ = $1; }
-    ;
-
-importlist: import { $$ = vector_init($1); }
-    | importlist import { vector_push(&$1, $2); $$ = $1; }
-    ;
-
-import: IMPORT path SEMICOLON { $$ = cc_import(x, @$, $2, NULL); }
-    | IMPORT path COLON IDENT SEMICOLON { $$ = cc_import(x, @$, $2, $4); }
-    ;
-
-modspec: %empty { $$ = NULL; }
-    | MODULE path SEMICOLON { $$ = $2; }
-    ;
-
-decls: decl { $$ = vector_init($1); }
-    | decls decl { vector_push(&$1, $2); $$ = $1; }
-    ;
-
-decl: typedefDecl { $$ = $1; }
-    ;
-
-typedefDecl: TYPEDEF IDENT type SEMICOLON { $$ = cc_typedef(x, @$, $2, $3); }
-    ;
-
-type: sign digit { $$ = cc_digit(x, @$, $1, $2); }
-    | BOOL { $$ = cc_bool(x, @$); }
-    | type MUL { $$ = cc_pointer(x, @$, $1); }
-    ;
-
-sign: %empty { $$ = eSigned; }
-    | SIGNED { $$ = eSigned; }
-    | UNSIGNED { $$ = eUnsigned; }
-    ;
-
-digit: CHAR { $$ = eDigitChar; }
-    | SHORT { $$ = eDigitShort; }
-    | INT { $$ = eDigitInt; }
-    | LONG { $$ = eDigitLong; }
-    ;
-
-path: IDENT { $$ = vector_init($1); }
-    | path DOT IDENT { vector_push(&$1, $3); $$ = $1; }
+unit: %empty
     ;
 
 %%

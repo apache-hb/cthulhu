@@ -1,5 +1,7 @@
-#include "cthulhu/mediator/language.h"
+#include "cthulhu/mediator/driver.h"
 #include "scan/compile.h"
+
+#include "cc/driver.h"
 
 #include "base/macros.h"
 
@@ -8,30 +10,11 @@
 #include "cc-bison.h"
 #include "cc-flex.h"
 
-CT_CALLBACKS(kCallbacks, cc);
+// CT_CALLBACKS(kCallbacks, cc);
 
-static void *cc_parse(lang_handle_t *lang, scan_t *scan)
+static void cc_parse(driver_t *handle, scan_t *scan)
 {
-    CTU_UNUSED(lang);
-
-    cc_init_scan(scan);
-    return compile_scanner(scan, &kCallbacks);
-}
-
-static void cc_forward(lang_handle_t *handle, const char *name, void *ast)
-{
-    report(lang_get_reports(handle), eSorry, NULL, "C is unimplemented");
-}
-
-static void cc_imports(lang_handle_t *handle, compile_t *compile)
-{
-    report(lang_get_reports(handle), eSorry, NULL, "C is unimplemented");
-}
-
-static tree_t *cc_compile(lang_handle_t *handle, compile_t *compile)
-{
-    report(lang_get_reports(handle), eSorry, NULL, "C is unimplemented");
-    return NULL;
+    report(scan_reports(scan), eWarn, NULL, "C is unimplemented, ignoring file %s", scan_path(scan));
 }
 
 static const char *kLangNames[] = { "c", "h", NULL };
@@ -50,7 +33,6 @@ const language_t kCModule = {
 
     .fnParse = cc_parse,
 
-    .fnForward = cc_forward,
-    .fnImport = cc_imports,
-    .fnCompile = cc_compile,
+    .fnCreate = cc_create,
+    .fnDestroy = cc_destroy,
 };

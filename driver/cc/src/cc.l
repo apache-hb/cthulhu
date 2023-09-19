@@ -8,7 +8,7 @@
 
 %{
 #include "cc-bison.h"
-#include "scan.h"
+#include "cc/scan.h"
 #include "report/report-ext.h"
 #include "interop/flex.h"
 %}
@@ -113,8 +113,7 @@ WS [ \t\r\v\n\f]
 }
 
 \"([^"\\\n]|{ESCAPES})*\" {
-	yylval->string.text = ctu_strndup(yytext + 1, yyleng - 2);
-    yylval->string.length = yyleng - 2;
+	yylval->text = util_text_escape(scan_reports(yyextra), node_new(yyextra, *yylloc), yytext + 1, yyleng - 2);
     return STRING;
 }
 

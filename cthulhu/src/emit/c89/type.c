@@ -20,6 +20,11 @@ static const char *get_c89_digit(ssa_type_digit_t ty)
     case eDigitSize: return (ty.sign == eSignUnsigned) ? "size_t" : "ptrdiff_t";
     case eDigitPtr: return (ty.sign == eSignUnsigned) ? "uintptr_t" : "intptr_t";
 
+    case eDigit8: return (ty.sign == eSignUnsigned) ? "uint8_t" : "int8_t";
+    case eDigit16: return (ty.sign == eSignUnsigned) ? "uint16_t" : "int16_t";
+    case eDigit32: return (ty.sign == eSignUnsigned) ? "uint32_t" : "int32_t";
+    case eDigit64: return (ty.sign == eSignUnsigned) ? "uint64_t" : "int64_t";
+
     default: NEVER("unknown digit %d", ty.digit);
     }
 }
