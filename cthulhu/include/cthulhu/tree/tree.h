@@ -15,6 +15,7 @@ typedef struct tree_t tree_t;
 typedef struct cookie_t cookie_t;
 
 typedef void (*resolve_t)(tree_t *sema, tree_t *self, void *user);
+typedef void (*resolve_type_t)(tree_t *sema, tree_t *self, void *user);
 
 typedef enum sema_tags_t {
     eSemaValues,
@@ -51,6 +52,7 @@ typedef struct tree_resolve_info_t {
     void *user;
 
     resolve_t fnResolve;
+    resolve_type_t fnResolveType;
 } tree_resolve_info_t;
 
 typedef struct tree_storage_t {
@@ -407,9 +409,10 @@ tree_t *tree_stmt_jump(const node_t *node, tree_t *label, tree_jump_t jump);
 
 // delay the resolve of a declaration
 tree_t *tree_resolve(cookie_t *cookie, const tree_t *decl);
+tree_t *tree_resolve_type(const tree_t *decl);
 
 tree_t *tree_open_decl(const node_t *node, const char *name, tree_resolve_info_t resolve);
-void tree_close_decl(tree_t *self, const tree_t *kind);
+void tree_close_decl(tree_t *self, const tree_t *other);
 
 ///
 /// global decls
@@ -484,6 +487,7 @@ void tree_add_local(tree_t *self, tree_t *decl);
 void tree_add_param(tree_t *self, tree_t *decl);
 void tree_add_enum(tree_t *self, tree_t *decl);
 void tree_set_attrib(tree_t *self, const tree_attribs_t *attrib);
+void tree_set_type(tree_t *self, const tree_t *type);
 
 tree_t *tree_alias(const tree_t *tree, const char *name);
 

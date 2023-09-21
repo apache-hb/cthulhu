@@ -8,6 +8,9 @@ src = [
     'src/sema/expr.c',
     'src/sema/attrib.c',
 
+    'src/sema/decl/resolve.c',
+    'src/sema/decl/function.c',
+
     'src/ast.c',
     'src/scan.c',
     lex.process('src/ctu.l'),

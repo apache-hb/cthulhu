@@ -100,6 +100,7 @@ static tree_link_t choose_linkage(tree_t *sema, const ctu_t *expr)
     }
 
     const char *name = vector_tail(path);
+    logverbose("entry point `%s`", name);
     if (str_equal(name, "gui"))
     {
         return eLinkEntryGui;
@@ -118,12 +119,11 @@ static tree_link_t get_linkage(tree_t *sema, tree_t *decl, vector_t *args)
     switch (vector_len(args))
     {
     case 0: return eLinkEntryCli;
+    case 1: return choose_linkage(sema, vector_tail(args));
+
     default:
         report(sema->reports, eWarn, tree_get_node(decl), "entry attribute takes at most 1 argument, ignoring extra arguments");
-        /* fallthrough */
-
-    case 1:
-        return choose_linkage(sema, vector_tail(args));
+        return eLinkEntryCli;
     }
 }
 
@@ -261,6 +261,7 @@ void ctu_init_attribs(tree_t *sema)
 void ctu_apply_attribs(tree_t *sema, tree_t *decl, vector_t *attribs)
 {
     size_t len = vector_len(attribs);
+    logverbose("applying %zu attributes to %s", len, decl->name);
     for (size_t i = 0; i < len; i++)
     {
         ctu_t *attrib = vector_get(attribs, i);

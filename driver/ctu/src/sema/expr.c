@@ -201,7 +201,7 @@ static tree_t *sema_call(ctu_sema_t *sema, const ctu_t *expr)
     tree_t *callee = ctu_sema_lvalue(sema, expr->callee);
     if (tree_is(callee, eTreeError)) { return callee; }
 
-    const tree_t *type = tree_get_type(callee);
+    const tree_t *type = tree_get_type(tree_resolve_type(callee));
     if (tree_is(type, eTreeTypeReference))
     {
         callee = tree_expr_load(expr->node, callee);

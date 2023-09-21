@@ -39,20 +39,20 @@ struct WNDCLASSA {
 
 @layout(platform)
 struct POINT {
-    x: int;
-    y: int;
+    x: cc::int;
+    y: cc::int;
 }
 
 @layout(platform)
 struct MSG {
     hwnd: HWND;
-    message: uint;
+    message: UINT;
     wParam: WPARAM;
     lParam: LPARAM;
-    time: uint;
+    time: UINT;
     pt: POINT;
 
-    $: uint;
+    $: UINT;
 }
 
 @extern("RegisterClassA")
@@ -66,12 +66,12 @@ def DefWindowProcA(hWnd: HWND, uMsg: uint, wParam: WPARAM, lParam: LPARAM): LRES
 
 @extern("CreateWindowExA")
 def CreateWindowExA(
-    dwExStyle: uint,
+    dwExStyle: UINT,
     lpClassName: str,
     lpWindowName: str,
-    dwStyle: uint,
-    x: int, y: int,
-    nWidth: int, nHeight: int,
+    dwStyle: UINT,
+    x: cc::int, y: cc::int,
+    nWidth: cc::int, nHeight: cc::int,
     hWndParent: HWND,
     hMenu: HMENU,
     hInstance: HINSTANCE,
@@ -79,44 +79,44 @@ def CreateWindowExA(
 ): HWND;
 
 @extern("ShowWindow")
-def ShowWindow(hWnd: HWND, nCmdShow: int): int;
+def ShowWindow(hWnd: HWND, nCmdShow: int): cc::int;
 
 @extern("UpdateWindow")
-def UpdateWindow(hWnd: HWND): int;
+def UpdateWindow(hWnd: HWND): cc::int;
 
 @extern("DestroyWindow")
-def DestroyWindow(hWnd: HWND): int;
+def DestroyWindow(hWnd: HWND): cc::int;
 
 @extern("PeekMessageA")
 def PeekMessageA(
     lpMsg: *MSG,
     hWnd: HWND,
-    wMsgFilterMin: uint,
-    wMsgFilterMax: uint,
-    wRemoveMsg: uint
-): int;
+    wMsgFilterMin: UINT,
+    wMsgFilterMax: UINT,
+    wRemoveMsg: UINT
+): cc::int;
 
 @extern("GetMessageA")
 def GetMessageA(
     lpMsg: *MSG,
     hWnd: HWND,
-    wMsgFilterMin: uint,
-    wMsgFilterMax: uint
-): int;
+    wMsgFilterMin: UINT,
+    wMsgFilterMax: UINT
+): cc::int;
 
 @extern("TranslateMessage")
-def TranslateMessage(lpMsg: *MSG): int;
+def TranslateMessage(lpMsg: *MSG): cc::int;
 
 @extern("DispatchMessageA")
-def DispatchMessageA(lpMsg: *MSG): uint;
+def DispatchMessageA(lpMsg: *MSG): UINT;
 
 @extern("PostQuitMessage")
-def PostQuitMessage(nExitCode: int): void;
+def PostQuitMessage(nExitCode: cc::int): void;
 
 const null = as<opaque>(0);
 
 @entry(gui)
-def main(hInstance: HINSTANCE, hPrevInstance: HINSTANCE, pCmdLine: *char, nCmdShow: int): int {
+def start(hInstance: HINSTANCE, hPrevInstance: HINSTANCE, pCmdLine: *char, nCmdShow: cc::int): cc::int {
     const szAppName = "Hello";
     const szTitle = "Hello, World!";
 
@@ -163,7 +163,7 @@ def main(hInstance: HINSTANCE, hPrevInstance: HINSTANCE, pCmdLine: *char, nCmdSh
     return msg.wParam;
 }
 
-def windowCallback(hWnd: HWND, uMsg: uint, wParam: WPARAM, lParam: LPARAM): LRESULT {
+def windowCallback(hWnd: HWND, uMsg: UINT, wParam: WPARAM, lParam: LPARAM): LRESULT {
     if uMsg == 0x0002 { // WM_DESTROY
         PostQuitMessage(0);
         return 0;

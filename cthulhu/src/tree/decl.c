@@ -65,6 +65,23 @@ tree_t *tree_resolve(cookie_t *cookie, const tree_t *decl)
     return inner;
 }
 
+tree_t *tree_resolve_type(const tree_t *decl)
+{
+    tree_t *inner = (tree_t*)decl;
+    if (tree_is(decl, eTreeError)) { return inner; }
+    if (!tree_is(decl, eTreeDeclFunction)) { return inner; }
+
+    const tree_resolve_info_t *res = decl->resolve;
+    if (res == NULL) { return inner; }
+
+    // TODO: should this be ok?
+    if (res->fnResolveType == NULL) { return inner; }
+
+    res->fnResolveType(res->sema, inner, res->user);
+
+    return inner;
+}
+
 void tree_set_storage(tree_t *self, tree_storage_t storage)
 {
     CTASSERT(self != NULL);
@@ -91,10 +108,13 @@ tree_t *tree_open_global(const node_t *node, const char *name, const tree_t *typ
 
 tree_t *tree_open_function(const node_t *node, const char *name, const tree_t *signature, tree_resolve_info_t resolve)
 {
-    CTASSERTF(tree_is(signature, eTreeTypeClosure), "signature %s is not a closure", tree_to_string(signature));
+    if (signature != NULL)
+    {
+        CTASSERTF(tree_is(signature, eTreeTypeClosure), "signature %s is not a closure", tree_to_string(signature));
+    }
 
     tree_t *self = decl_open(node, name, signature, eTreeDeclFunction, BOX(resolve));
-    self->params = signature->params;
+    self->params = signature == NULL ? NULL : signature->params;
     self->locals = vector_new(4);
     return self;
 }
@@ -189,6 +209,13 @@ void tree_set_attrib(tree_t *self, const tree_attribs_t *attrib)
     CTASSERT(self != NULL);
 
     self->attrib = attrib;
+}
+
+void tree_set_type(tree_t *self, const tree_t *type)
+{
+    CTASSERT(self != NULL);
+
+    self->type = type;
 }
 
 tree_t *tree_alias(const tree_t *tree, const char *name)

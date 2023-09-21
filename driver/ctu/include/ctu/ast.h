@@ -241,7 +241,8 @@ ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, char *name);
 /// decorators
 ///
 
-void add_attrib(scan_t *scan, where_t where, vector_t *path, vector_t *args);
+ctu_t *ctu_attrib(scan_t *scan, where_t where, vector_t *path, vector_t *args);
+ctu_t *ctu_apply(ctu_t *decl, vector_t *attribs);
 
 ///
 /// statements

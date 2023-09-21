@@ -134,6 +134,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     typeList optTypeList
     variantFields optVariantFields
     initList
+    attribs attrib attribBody attribList
 
 /**
  * order of operations, tightest first
@@ -165,6 +166,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     fnParam fnResult
     variantDecl variantField underlying
     fieldInit init
+    singleAttrib
 
 %type<ident>
     importAlias ident optIdent whileName variadic
@@ -205,23 +207,24 @@ importAlias: %empty { $$ = NULL; }
 
 /* decorators */
 
-attribs: %empty | attribs attrib
+attribs: %empty { $$ = vector_of(0); }
+    | attribs attrib { vector_append(&$1, $2); $$ = $1; }
     ;
 
-attrib: AT attribBody
+attrib: AT attribBody { $$ = $2; }
     ;
 
-attribBody: singleAttrib
-    | LSQUARE attribList RSQUARE
+attribBody: singleAttrib { $$ = vector_init($1); }
+    | LSQUARE attribList RSQUARE { $$ = $2; }
     ;
 
-attribList: singleAttrib
-    | attribList COMMA singleAttrib
+attribList: singleAttrib { $$ = vector_init($1); }
+    | attribList COMMA singleAttrib { vector_push(&$1, $3); $$ = $1; }
     ;
 
-singleAttrib: path { add_attrib(x, @$, $1, vector_of(0)); }
-    | path LPAREN RPAREN { add_attrib(x, @$, $1, vector_of(0)); }
-    | path LPAREN attribArgs RPAREN { add_attrib(x, @$, $1, $3); }
+singleAttrib: path { $$ = ctu_attrib(x, @$, $1, vector_of(0)); }
+    | path LPAREN RPAREN { $$ = ctu_attrib(x, @$, $1, vector_of(0)); }
+    | path LPAREN attribArgs RPAREN { $$ = ctu_attrib(x, @$, $1, $3); }
     ;
 
 attribArgs: expr { $$ = vector_init($1); }
@@ -238,7 +241,7 @@ declList: decl { $$ = vector_init($1); }
     | declList decl { vector_push(&$1, $2); $$ = $1; }
     ;
 
-decl: attribs innerDecl { $$ = $2; }
+decl: attribs innerDecl { $$ = ctu_apply($2, $1); }
     ;
 
 innerDecl: globalDecl { $$ = $1; }

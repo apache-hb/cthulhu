@@ -1,15 +1,9 @@
 #include "ctu/ast.h"
 #include "ctu/scan.h"
 
-#include "base/memory.h"
+#include "report/report.h"
 
-static vector_t *acquire_attribs(scan_t *scan)
-{
-    ctu_scan_t *info = scan_get(scan);
-    vector_t *result = info->attribs;
-    info->attribs = vector_of(0);
-    return result;
-}
+#include "base/memory.h"
 
 static ctu_t *ctu_new(scan_t *scan, where_t where, ctu_kind_t kind)
 {
@@ -24,7 +18,7 @@ static ctu_t *ctu_decl(scan_t *scan, where_t where, ctu_kind_t kind, char *name,
     ctu_t *self = ctu_new(scan, where, kind);
     self->name = name;
     self->exported = exported;
-    self->attribs = acquire_attribs(scan);
+    self->attribs = NULL;
     return self;
 }
 
@@ -46,14 +40,18 @@ ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, char *name)
 
 /* attribs */
 
-void add_attrib(scan_t *scan, where_t where, vector_t *path, vector_t *args)
+ctu_t *ctu_attrib(scan_t *scan, where_t where, vector_t *path, vector_t *args)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuAttrib);
     ast->attribPath = path;
     ast->attribArgs = args;
+    return ast;
+}
 
-    ctu_scan_t *info = scan_get(scan);
-    vector_push(&info->attribs, ast);
+ctu_t *ctu_apply(ctu_t *decl, vector_t *attribs)
+{
+    decl->attribs = attribs;
+    return decl;
 }
 
 /* stmts */
@@ -238,7 +236,6 @@ ctu_t *ctu_expr_compare(scan_t *scan, where_t where, compare_t compare, ctu_t *l
     ast->rhs = rhs;
     return ast;
 }
-
 
 /* types */
 
