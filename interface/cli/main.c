@@ -16,7 +16,7 @@
 
 #include "cthulhu/ssa/ssa.h"
 
-#include "cthulhu/emit/c89.h"
+#include "cthulhu/emit/emit.h"
 
 #include "support/langs.h"
 
@@ -78,15 +78,15 @@ int main(int argc, const char **argv)
 
     CHECK_REPORTS(reports, "failed to parse command line arguments");
 
-    size_t len = vector_len(rt.sourcePaths);
-    if (len == 0)
+    size_t totalSources = vector_len(rt.sourcePaths);
+    if (totalSources == 0)
     {
         report(reports, eFatal, NULL, "no source files provided");
     }
 
     CHECK_REPORTS(reports, "failed to load sources");
 
-    for (size_t i = 0; i < len; i++)
+    for (size_t i = 0; i < totalSources; i++)
     {
         const char *path = vector_get(rt.sourcePaths, i);
         parse_source(lifetime, path);
@@ -101,32 +101,49 @@ int main(int argc, const char **argv)
         char *msg = format("running stage %s", stage_to_string(stage));
         CHECK_REPORTS(reports, msg);
     }
+    lifetime_resolve(lifetime);
+    CHECK_REPORTS(reports, "resolving symbols");
 
     map_t *modmap = lifetime_get_modules(lifetime);
-    vector_t *mods = map_values(modmap); // TODO: rewrite ssa to accept map
-    ssa_module_t *ssa = ssa_gen_module(reports, mods);
+    ssa_result_t ssa = ssa_compile(modmap);
     CHECK_REPORTS(reports, "generating ssa");
 
-    ssa_opt_module(reports, ssa);
-    CHECK_REPORTS(reports, "failed to optimize SSA");
+    ssa_opt(reports, ssa);
+    CHECK_REPORTS(reports, "optimizing ssa");
+
+    fs_t *fs = fs_virtual(reports, "out");
+
+    emit_options_t baseOpts = {
+        .reports = reports,
+        .fs = fs,
+
+        .modules = ssa.modules,
+        .deps = ssa.deps,
+    };
 
     if (rt.emitSSA)
     {
-        ssa_emit_module(reports, ssa);
+        logverbose("emitting debug ssa");
+        ssa_emit_options_t emitOpts = {
+            .opts = baseOpts
+        };
+
+        emit_ssa(&emitOpts);
+        CHECK_REPORTS(reports, "emitting ssa");
     }
 
-    OS_RESULT(const char *) cwd = os_dir_current();
-    CTASSERTF(os_error(cwd) == 0, "failed to get current working directory: %s", os_decode(os_error(cwd)));
-    char *path = format("%s" NATIVE_PATH_SEPARATOR "out", OS_VALUE(const char *, cwd));
-
-    fs_t *fs = fs_physical(reports, path);
-    CHECK_REPORTS(reports, "filesystem creation");
-
-    c89_emit_t config = {
-        .reports = reports,
-        .fs = fs
+    c89_emit_options_t c89Opts = {
+        .opts = baseOpts
     };
+    c89_emit_result_t c89Result = emit_c89(&c89Opts);
+    CTU_UNUSED(c89Result); // TODO: check for errors
+    CHECK_REPORTS(reports, "emitting c89");
 
-    c89_emit(config, ssa);
-    CHECK_REPORTS(reports, "failed to emit ssa");
+    fs_t *out = fs_physical(reports, "out");
+    CHECK_REPORTS(reports, "creating output directory");
+
+    fs_sync(out, fs);
+    CHECK_REPORTS(reports, "syncing output directory");
+
+    logverbose("done");
 }

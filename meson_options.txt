@@ -7,7 +7,7 @@ option('languages', type : 'array',
 option('interfaces', type : 'array',
     description : 'select which frontend interfaces to enable',
     choices : [ 'cli', 'gui', 'browser', 'example' ],
-    value : [ 'example' ]
+    value : [ 'cli', 'example' ]
 )
 
 option('tuning', type : 'feature',

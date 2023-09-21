@@ -647,8 +647,6 @@ static void add_module_globals(ssa_compile_t *ssa, ssa_module_t *mod, map_t *glo
 
         ssa_symbol_t *global = symbol_create(ssa, tree, create_storage_type(ssa->types, tree));
 
-        logverbose("added global `%s` (%p)", global->name, tree);
-
         vector_push(&mod->globals, global);
         map_set_ptr(ssa->globals, tree, global);
     }

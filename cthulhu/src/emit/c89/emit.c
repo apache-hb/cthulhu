@@ -653,7 +653,6 @@ void c89_define_type(c89_emit_t *emit, const ssa_module_t *mod, const ssa_type_t
     switch (type->kind)
     {
     case eTypeRecord:
-        logverbose("define record %s %p", type->name, type);
         define_record(emit, hdr->io, type);
         break;
 
@@ -766,7 +765,6 @@ static void define_type_ordererd(c89_emit_t *emit, const ssa_module_t *mod, cons
     // TODO: this is probably a touch broken, types may be put into the wrong translation
     if (type->kind == eTypeRecord)
     {
-        logverbose("defining %s", type->name);
         ssa_type_record_t record = type->record;
         size_t len = typevec_len(record.fields);
         for (size_t i = 0; i < len; i++)

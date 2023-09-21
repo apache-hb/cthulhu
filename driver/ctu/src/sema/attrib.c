@@ -261,7 +261,6 @@ void ctu_init_attribs(tree_t *sema)
 void ctu_apply_attribs(tree_t *sema, tree_t *decl, vector_t *attribs)
 {
     size_t len = vector_len(attribs);
-    logverbose("applying %zu attributes to %s", len, decl->name);
     for (size_t i = 0; i < len; i++)
     {
         ctu_t *attrib = vector_get(attribs, i);
