@@ -24,7 +24,7 @@ static const version_info_t kVersionInfo = {
     .license = "GPLv3",
     .desc = "Cthulhu Compiler Collection CLI",
     .author = "Elliot Haisley",
-    .version = NEW_VERSION(0, 0, 2)
+    .version = NEW_VERSION(0, 0, 3)
 };
 
 #define CHECK_REPORTS(reports, msg) \
@@ -101,6 +101,7 @@ int main(int argc, const char **argv)
         char *msg = format("running stage %s", stage_to_string(stage));
         CHECK_REPORTS(reports, msg);
     }
+
     lifetime_resolve(lifetime);
     CHECK_REPORTS(reports, "resolving symbols");
 
