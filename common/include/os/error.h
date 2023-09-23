@@ -4,6 +4,8 @@
 
 #include <stddef.h>
 
+BEGIN_API
+
 // error api
 
 typedef struct os_result_t os_result_t;
@@ -26,3 +28,5 @@ const char *os_decode(os_error_t error);
 
 #define OS_VALUE(TYPE, RESULT) (*(TYPE *)os_value(RESULT))
 #define OS_VALUE_OR(TYPE, RESULT, OTHER) (os_error(RESULT) ? (OTHER) : OS_VALUE(TYPE, RESULT))
+
+END_API

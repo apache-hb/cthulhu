@@ -4,22 +4,22 @@
 
 #include <stdbool.h>
 
+BEGIN_API
+
 // opaque types
 
 typedef struct os_file_t os_file_t;
 typedef struct os_dir_t os_dir_t;
 typedef struct os_iter_t os_iter_t;
 
-typedef enum os_mode_t
-{
+typedef enum os_mode_t {
     eAccessRead = (1 << 0), // file is readable
     eAccessWrite = (1 << 1), // file is writeable, does not imply readable
 
     eAccessText = (1 << 2), ///< enable eof translation
 } os_access_t;
 
-typedef enum os_dirent_t
-{
+typedef enum os_dirent_t {
     eOsNodeNone,
     eOsNodeFile,
     eOsNodeDir,
@@ -120,3 +120,5 @@ OS_RESULT(const void *) os_file_map(os_file_t *file);
 
 NODISCARD
 const char *os_file_name(os_file_t *file);
+
+END_API

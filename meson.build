@@ -211,18 +211,3 @@ if doxygen.found()
 
     run_target('docs', command : [ doxygen, meson.current_build_dir() / 'Doxyfile' ])
 endif
-
-# TODO: order of files should not matter
-# it = custom_target('ctu-interface',
-#     output : [ 'out.h', 'out.c' ],
-#     input : files('examples/interface/cthulhu.ct', 'examples/interface/main.ct'),
-#     command : [ clis['ctu'].full_path(), '@INPUT@', '-ssa' ],
-#     build_by_default : true,
-#     depends : [ clis['ctu'] ]
-# )
-
-# executable('ctu-interface-build', it,
-#     c_args : [ '/wd4102' ],
-#     dependencies : [ generic ],
-#     build_by_default : true
-# )

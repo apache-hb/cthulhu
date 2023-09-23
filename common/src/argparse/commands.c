@@ -9,7 +9,7 @@
 
 #include <stdio.h>
 
-static const char *kParamTypeNames[] = {
+static const char *const kParamTypeNames[] = {
     [eParamBool] = "boolean",
     [eParamString] = "string",
     [eParamInt] = "integer",
@@ -20,18 +20,17 @@ void ap_print_help_header(const ap_t *ap, const char *name)
     CTASSERT(ap != NULL);
 
     printf("usage: %s [options] [arguments] [sources...]\n", name);
-    version_info_t info = {
-        .license = "LGPLv3",
-        .desc = "common compiler mediator",
-        .author = "Elliot Haisley",
-        .version = NEW_VERSION(CTHULHU_MAJOR, CTHULHU_MINOR, CTHULHU_PATCH)
-    };
+    version_info_t info = {.license = "LGPLv3",
+                           .desc = "common compiler mediator",
+                           .author = "Elliot Haisley",
+                           .version = NEW_VERSION(CTHULHU_MAJOR, CTHULHU_MINOR, CTHULHU_PATCH)};
     ap_print_version_info(info, "cthulhu");
 }
 
 void ap_print_version_info(version_info_t info, const char *name)
 {
-    printf(" | %s: %s (%" PRI_VERSION ".%" PRI_VERSION ".%" PRI_VERSION ")\n", name, info.desc, VERSION_MAJOR(info.version), VERSION_MINOR(info.version), VERSION_PATCH(info.version));
+    printf(" | %s: %s (%" PRI_VERSION ".%" PRI_VERSION ".%" PRI_VERSION ")\n", name, info.desc,
+           VERSION_MAJOR(info.version), VERSION_MINOR(info.version), VERSION_PATCH(info.version));
     printf(" | license: %s\n", info.license);
     printf(" | author: %s\n", info.author);
 }
@@ -76,6 +75,7 @@ void ap_print_help_body(const ap_t *ap, const char *name)
 void ap_version(const ap_t *ap)
 {
     printf("%s\n", ap->desc);
-    printf("interface version: %" PRI_VERSION ".%" PRI_VERSION ".%" PRI_VERSION "\n", VERSION_MAJOR(ap->version), VERSION_MINOR(ap->version), VERSION_PATCH(ap->version));
+    printf("interface version: %" PRI_VERSION ".%" PRI_VERSION ".%" PRI_VERSION "\n", VERSION_MAJOR(ap->version),
+           VERSION_MINOR(ap->version), VERSION_PATCH(ap->version));
     printf("cthulhu version: %d.%d.%d\n", CTHULHU_MAJOR, CTHULHU_MINOR, CTHULHU_PATCH);
 }

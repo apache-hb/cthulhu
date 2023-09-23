@@ -11,8 +11,7 @@
 typedef struct vector_t vector_t;
 typedef struct map_t map_t;
 
-typedef enum ap_param_type_t
-{
+typedef enum ap_param_type_t {
     eParamBool,
     eParamString,
     eParamInt,
@@ -21,8 +20,7 @@ typedef enum ap_param_type_t
     eParamTotal
 } ap_param_type_t;
 
-typedef struct ap_group_t
-{
+typedef struct ap_group_t {
     ap_t *parent;
     const char *name;
     const char *desc;
@@ -30,13 +28,12 @@ typedef struct ap_group_t
     vector_t *params;
 } ap_group_t;
 
-typedef struct ap_param_t
-{
+typedef struct ap_param_t {
     ap_param_type_t type;
 
     const char *name;
     const char *desc;
-    
+
     const char **names;
 } ap_param_t;
 
@@ -49,8 +46,7 @@ typedef struct ap_param_t
 CALLBACK_TYPE(ap_callback_t, ap_event_t)
 CALLBACK_TYPE(ap_err_callback_t, ap_error_t)
 
-typedef struct ap_t
-{
+typedef struct ap_t {
     const char *desc;
     version_t version;
 

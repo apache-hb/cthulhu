@@ -1,0 +1,17 @@
+module main;
+
+import cc::lang as cc;
+
+type float = opaque;
+
+@extern
+def toFloat(numerator: cc::int, denominator: cc::int): float;
+
+@extern("putf")
+def printFloat(f: float);
+
+@entry(cli)
+export def entry {
+    const f = toFloat(1, 2);
+    printFloat(f);
+}

@@ -1,14 +1,15 @@
 module glfw;
 
-export type Window = opaque;
+import cc::lang as cc;
 
+export type Window = opaque;
 export type Monitor = opaque;
 
 @extern("glfwInit")
-export def init: int;
+export def init: cc::int;
 
 @extern("glfwCreateWindow")
-export def createWindow(width: int, height: int, title: str, monitor: Monitor, share: Window): Window;
+export def createWindow(width: cc::int, height: cc::int, title: str, monitor: Monitor, share: Window): Window;
 
 @extern("glfwTerminate")
 export def terminate;
@@ -17,7 +18,7 @@ export def terminate;
 export def makeContextCurrent(window: Window);
 
 @extern("glfwWindowShouldClose")
-export def windowShouldClose(window: Window): int;
+export def windowShouldClose(window: Window): cc::int;
 
 @extern("glfwSwapBuffers")
 export def swapBuffers(window: Window);

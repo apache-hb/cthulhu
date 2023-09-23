@@ -1,5 +1,7 @@
 module std;
 
+import cc::lang as cc;
+
 @extern
 export def malloc(size: usize): opaque;
 
@@ -10,12 +12,12 @@ export def realloc(ptr: opaque, size: usize): opaque;
 export def free(ptr: opaque);
 
 @extern
-export def puts(s: str): int;
+export def puts(s: str): cc::int;
 
 @extern
-export def exit(code: int);
+export def exit(code: cc::int);
 
 export const null = as<opaque>(0);
 
 @extern
-export def puts(s: str): int;
+export def puts(s: str): cc::int;
