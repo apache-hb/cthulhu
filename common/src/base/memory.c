@@ -31,7 +31,7 @@ static void default_global_free(alloc_t *alloc, void *ptr, size_t size)
     free(ptr);
 }
 
-alloc_t globalAlloc = {
+alloc_t gDefaultAlloc = {
     .name = "default global allocator",
     .arenaMalloc = default_global_malloc,
     .arenaRealloc = default_global_realloc,
@@ -45,7 +45,7 @@ void *ctu_malloc(size_t size)
 {
     CTASSERT(size > 0);
 
-    return arena_malloc(&globalAlloc, size, "");
+    return arena_malloc(&gDefaultAlloc, size, "");
 }
 
 USE_DECL
@@ -54,13 +54,13 @@ void *ctu_realloc(void *ptr, size_t newSize)
     CTASSERT(ptr != NULL);
     CTASSERT(newSize > 0);
 
-    return arena_realloc(&globalAlloc, ptr, newSize, ALLOC_SIZE_UNKNOWN);
+    return arena_realloc(&gDefaultAlloc, ptr, newSize, ALLOC_SIZE_UNKNOWN);
 }
 
 USE_DECL
 void ctu_free(void *ptr)
 {
-    arena_free(&globalAlloc, ptr, ALLOC_SIZE_UNKNOWN);
+    arena_free(&gDefaultAlloc, ptr, ALLOC_SIZE_UNKNOWN);
 }
 
 /// arena allocator

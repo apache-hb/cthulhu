@@ -6,11 +6,9 @@
 #include <stddef.h>
 #include <limits.h>
 
-
 BEGIN_API
 
 typedef struct vector_t vector_t;
-
 typedef struct bucket_t bucket_t;
 typedef struct map_t map_t;
 
@@ -24,7 +22,7 @@ typedef struct map_t map_t;
  * @return a new map
  */
 NODISCARD
-map_t *map_new(IN_RANGE(0, SIZE_MAX) size_t size);
+map_t *map_new(size_t size);
 
 /**
  * create a map with an optimal number of buckets
@@ -57,6 +55,8 @@ void map_set_ptr(IN_NOTNULL map_t *map, const void *key, void *value);
  */
 NODISCARD CONSTFN
 void *map_get(IN_NOTNULL map_t *map, IN_STRING const char *key);
+
+
 NODISCARD CONSTFN
 void *map_get_ptr(IN_NOTNULL map_t *map, const void *key);
 

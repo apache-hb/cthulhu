@@ -11,13 +11,11 @@
 
 #include <string.h>
 
-typedef struct virtual_t
-{
+typedef struct virtual_t {
     const char *name;
 } virtual_t;
 
-typedef struct virtual_file_t
-{
+typedef struct virtual_file_t {
     const char *name;
 
     // TODO: mutex
@@ -27,15 +25,13 @@ typedef struct virtual_file_t
     size_t size;
 } virtual_file_t;
 
-typedef struct virtual_dir_t
-{
+typedef struct virtual_dir_t {
     map_t *dirents; ///< map<const char *, inode_t *>
 } virtual_dir_t;
 
 // io impl
 
-typedef struct virtual_io_t
-{
+typedef struct virtual_io_t {
     virtual_file_t *data;
     size_t offset;
 } virtual_io_t;
@@ -104,11 +100,12 @@ static const io_callbacks_t kVirtualCallbacks = {
 
 static io_t *vfs_io(virtual_file_t *file, os_access_t flags)
 {
-    virtual_io_t *io = ctu_malloc(sizeof(virtual_io_t));
-    io->data = file;
-    io->offset = 0;
+    virtual_io_t io = {
+        .data = file,
+        .offset = 0
+    };
 
-    return io_new(&kVirtualCallbacks, flags, file->name, io, sizeof(virtual_io_t));
+    return io_new(&kVirtualCallbacks, flags, file->name, &io, sizeof(virtual_io_t));
 }
 
 // fs impl
@@ -127,7 +124,7 @@ static inode_t *vfs_query_node(fs_t *fs, inode_t *self, const char *name)
     CTU_UNUSED(fs);
 
     virtual_dir_t *dir = inode_data(self);
-    return map_get_default(dir->dirents, name, &kInvalidINode);
+    return map_get_default(dir->dirents, name, &gInvalidINode);
 }
 
 static map_t *vfs_query_dirents(fs_t *fs, inode_t *self)
@@ -191,7 +188,7 @@ static void vfs_delete_file(fs_t *fs, inode_t *self, const char *name)
     map_delete(dir->dirents, name);
 }
 
-static const fs_interface_t kVirtualInterface = {
+static const fs_callbacks_t kVirtualInterface = {
     .fnQueryNode = vfs_query_node,
     .fnQueryDirents = vfs_query_dirents,
     .fnQueryFile = vfs_query_file,

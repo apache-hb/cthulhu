@@ -12,12 +12,11 @@ wow this project got out of hand.
   * `build-essential`
   * `libgmp-dev` (optional)
   * `doxygen` (optional)
-
-  * a `cxx` compiler (gui interface only)
-  * `javac` (jvm driver tests only)
+  * `c++` compiler (optional: gui interface only)
+  * `javac` (optional: jvm driver tests only)
 
 * runtime dependencies
-  * `libgmp` (optional)
+  * `libgmp` (optional: improved performance)
 
 ## Building
 
@@ -76,9 +75,6 @@ ninja -C build test # build and run tests
   * `unit-tests` - compiler code unit tests
   * `corpus` - afl fuzzing corpus
   * `fuzzing` - fuzzing interface
-
-* `tools` - tools
-  * `tune-map` - map runtime perf tuning
 
 ## Fuzzing
 Right now only fuzzing with afl++ is supported

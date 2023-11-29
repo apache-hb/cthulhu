@@ -7,18 +7,15 @@
 
 #include "report/report.h"
 
-typedef struct physical_t
-{
+typedef struct physical_t {
     const char *root; ///< absolute path to root directory
 } physical_t;
 
-typedef struct physical_file_t
-{
+typedef struct physical_file_t {
     const char *path; ///< path to file relative to root
 } physical_file_t;
 
-typedef struct physical_dir_t
-{
+typedef struct physical_dir_t {
     const char *path; ///< path to directory relative to root
 } physical_dir_t;
 
@@ -108,7 +105,7 @@ static inode_t *pfs_query_node(fs_t *fs, inode_t *self, const char *name)
     case eOsNodeDir:
         return physical_dir(relative);
     default:
-        return &kInvalidINode;
+        return &gInvalidINode;
     }
 }
 
@@ -180,7 +177,7 @@ static void pfs_file_delete(fs_t *fs, inode_t *self, const char *name)
     CTASSERT(os_error(check) == 0);
 }
 
-static const fs_interface_t kPhysicalInterface = {
+static const fs_callbacks_t kPhysicalInterface = {
     .fnQueryNode = pfs_query_node,
     .fnQueryDirents = pfs_query_dirents,
     .fnQueryFile = pfs_query_file,

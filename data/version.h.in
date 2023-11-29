@@ -1,5 +1,0 @@
-#pragma once
-
-#define CTHULHU_MAJOR @major@
-#define CTHULHU_MINOR @minor@
-#define CTHULHU_PATCH @patch@

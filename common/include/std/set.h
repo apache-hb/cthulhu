@@ -24,7 +24,7 @@ typedef struct item_t item_t;
  * @return the created set
  */
 NODISCARD
-set_t *set_new(IN_RANGE(0, SIZE_MAX) size_t size);
+set_t *set_new(size_t size);
 
 /**
  * @brief add a string to a set

@@ -6,8 +6,7 @@
 
 #include <string.h>
 
-typedef struct buffer_t
-{
+typedef struct buffer_t {
     char *data;   ///< stored data
     size_t used;  ///< used data
     size_t total; ///< total size of data

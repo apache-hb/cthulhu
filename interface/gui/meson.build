@@ -39,7 +39,7 @@ backend = declare_dependency(
     dependencies : glfw
 )
 
-src = [ 
+src = [
     'interface/include/imnodes/ImNodes.cpp',
     'interface/include/imnodes/ImNodesEz.cpp',
 ]
@@ -71,13 +71,13 @@ dialog = declare_dependency(
 )
 
 libeditor = library('editor', 'interface/src/editor.cpp',
-    dependencies : [ generic, imgui, imnodes, dialog, backend, glfw, glad ],
+    dependencies : [ imgui, imnodes, dialog, backend, glfw, glad ],
     include_directories : 'interface'
 )
 
 editor = declare_dependency(
     link_with : libeditor,
-    dependencies : [ generic, imgui, imnodes, dialog, backend, glfw, glad ]
+    dependencies : [ imgui, imnodes, dialog, backend, glfw, glad ]
 )
 
 error('gui not implemented')

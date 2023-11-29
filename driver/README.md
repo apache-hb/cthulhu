@@ -16,12 +16,12 @@ to be detected by interfaces each build file must add itself to `langs`
 src = [ 'src/main.c' ]
 
 ex = library('example', src,
-    dependencies : [ generic, mediator, interop ],
+    dependencies : [ mediator, interop, location, tree ],
     c_args : args,
-    include_directories : [ 'src', versiondir ]
+    include_directories : [ 'src' ]
 )
 
-langs += { 
+langs += {
     'example': {
         'dep': declare_dependency(link_with : ex), # dependency object
         'mod': 'kExampleModule' # module definition exported from the object

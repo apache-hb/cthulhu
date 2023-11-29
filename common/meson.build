@@ -34,12 +34,12 @@ src = [
 libbase = library('base', src,
     c_args : args,
     dependencies : [ gmp, stacktrace ],
-    include_directories : 'include'
+    include_directories : [ 'include', config_include ]
 )
 
 base = declare_dependency(
     link_with : libbase,
-    include_directories : [ 'include', versiondir ]
+    include_directories : [ 'include', config_include ]
 )
 
 src = [
@@ -82,7 +82,7 @@ common = declare_dependency(
 
 # get the backend
 
-subdir('src/os/target'.replace('target', target))
+subdir('src/os'/target)
 
 # create the native library
 
@@ -160,7 +160,7 @@ src = [
 libargparse = library('argparse', src,
     c_args : args,
     dependencies : [ gmp, std, location, interop ],
-    include_directories : [ 'src', 'include', versiondir ]
+    include_directories : [ 'src', 'include' ]
 )
 
 argparse = declare_dependency(

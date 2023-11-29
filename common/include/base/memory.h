@@ -26,7 +26,7 @@ typedef struct alloc_t
     free_t arenaFree;
 } alloc_t;
 
-extern alloc_t globalAlloc;
+extern alloc_t gDefaultAlloc;
 
 // C allocators
 
@@ -46,7 +46,7 @@ void init_gmp(IN_NOTNULL alloc_t *alloc);
 
 void arena_free(IN_NOTNULL alloc_t *alloc, IN_NOTNULL void *ptr, size_t size);
 
-NODISCARD ALLOC(arena_free, 2) 
+NODISCARD ALLOC(arena_free, 2)
 void *arena_malloc(IN_NOTNULL alloc_t *alloc, size_t size, const char *name);
 
 NODISCARD

@@ -8,7 +8,7 @@
 
 typedef struct os_iter_t
 {
-    HANDLE find;
+    HANDLE hFind;
     WIN32_FIND_DATA data;
     DWORD error;
 } os_iter_t;
@@ -38,8 +38,8 @@ OS_RESULT(os_iter_t) os_iter_begin(const char *path)
     DWORD error = ERROR_SUCCESS;
     HANDLE find = FindFirstFile(wild, &data);
 
-    if (find == INVALID_HANDLE_VALUE) 
-    { 
+    if (find == INVALID_HANDLE_VALUE)
+    {
         error = GetLastError();
         switch (error)
         {
@@ -51,7 +51,7 @@ OS_RESULT(os_iter_t) os_iter_begin(const char *path)
         }
     }
 
-    do 
+    do
     {
         if (!is_special(data.cFileName))
         {
@@ -60,11 +60,11 @@ OS_RESULT(os_iter_t) os_iter_begin(const char *path)
     } while (find_next(find, &data, &error) != 0);
 
     os_iter_t iter = {
-        .find = find,
+        .hFind = find,
         .data = data,
         .error = error
     };
-    
+
     return win_result(ERROR_SUCCESS, &iter, sizeof(os_iter_t));
 }
 
@@ -72,13 +72,13 @@ void os_iter_end(os_iter_t *iter)
 {
     CTASSERT(iter != NULL);
 
-    FindClose(iter->find); // TODO: check result
+    FindClose(iter->hFind); // TODO: check result
 }
 
 OS_RESULT(os_dir_t) os_iter_next(os_iter_t *iter)
 {
     CTASSERT(iter != NULL);
-    
+
     // check for error from previous iteration
     switch (iter->error)
     {
@@ -91,7 +91,7 @@ OS_RESULT(os_dir_t) os_iter_next(os_iter_t *iter)
     os_dir_t dir = { .data = iter->data };
 
     // get the next directory
-    while (find_next(iter->find, data, &iter->error) != 0)
+    while (find_next(iter->hFind, data, &iter->error) != 0)
     {
         if (!is_special(data->cFileName))
         {

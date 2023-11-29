@@ -4,8 +4,7 @@
 
 #include <string.h>
 
-typedef struct view_t
-{
+typedef struct view_t {
     const char *data;
     size_t size;
     size_t offset;

@@ -4,8 +4,7 @@
 
 #include "base/panic.h"
 
-typedef struct io_file_t
-{
+typedef struct io_file_t {
     os_file_t *file;
 } io_file_t;
 

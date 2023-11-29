@@ -72,7 +72,7 @@ libmediator = library('mediator', src,
 
 mediator = declare_dependency(
     link_with : libmediator,
-    include_directories : [ 'include', versiondir ],
+    include_directories : [ 'include' ],
     dependencies : [ base ]
 )
 

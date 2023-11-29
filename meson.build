@@ -1,28 +1,24 @@
-project('cthulhu', [ 'c' ],
+project('cthulhu', 'c',
     license : 'LGPLv3',
-    version : '0.2.4',
-    meson_version : '>=0.59',
+    version : '0.2.5',
+    meson_version : '>=1.3.0',
     default_options : [
-        'c_std=gnu11', # gcc is picky about POSIX stdlib extensions
-        'cpp_std=c++20',
+        'c_std=gnu11,c11', # gcc is picky about POSIX stdlib extensions
+        'cpp_std=c++11,c++14',
         'warning_level=2', # we use unnamed structs
         'default_library=static',
         'werror=true'
     ]
 )
 
-# we use dearimgui for the gui interface (TODO: maybe qt in the future?)
-if get_option('interfaces').contains('gui')
-    add_languages('cpp', native : false)
-endif
+unit_tests = get_option('unit_tests').disable_auto_if(meson.is_subproject())
+driver_tests = get_option('driver_tests').disable_auto_if(meson.is_subproject())
 
-# we use java to generate test cases for the jvm interface
-if get_option('languages').contains('jvm')
-    add_languages('java', native : false)
-endif
+# not sure if theres a better way to do this
+# https://github.com/mesonbuild/meson/issues/12570
+unit_tests.enable_auto_if(add_languages('cpp', native : false, required : unit_tests.enabled()))
 
 analyze = get_option('analyze')
-tuning = get_option('tuning')
 
 version = meson.project_version()
 target = target_machine.system()
@@ -30,53 +26,34 @@ host = host_machine.system()
 cc = meson.get_compiler('c')
 buildtype = get_option('buildtype')
 
-message('building for', target, 'on', host)
+is_debug = buildtype.contains('debug')
+is_release = buildtype.contains('release')
 
 parts = version.split('.')
-cwd = meson.current_source_dir()
-bld = meson.current_build_dir()
 
-config = {
-    'major': parts[0].to_int(),
-    'minor': parts[1].to_int(),
-    'patch': parts[2].to_int(),
-    'source': cwd/'interface' + ' ' + cwd/'common' + ' ' + cwd/'cthulhu' + ' ' + cwd/'driver'
-}
+config_cdata = configuration_data({
+    'CTU_MAJOR': parts[0].to_int(),
+    'CTU_MINOR': parts[1].to_int(),
+    'CTU_PATCH': parts[2].to_int()
+})
 
-configure_file(
-    input : 'data/version.h.in',
-    output : 'version.h',
-    configuration : config
+config_cdata.set10('CTU_DEBUG', is_debug)
+
+config_header = configure_file(
+    output : 'ctu-config.h',
+    configuration : config_cdata
 )
 
-versiondir = include_directories('.')
+config_include = include_directories('.')
 
-gmp = dependency('gmp',
-    not_found_message : 'no system gmp found, falling back to mini-gmp',
-    fallback : [ 'mini-gmp', 'gmp' ]
-)
+gmp = dependency('gmp',fallback : [ 'mini-gmp', 'gmp' ])
 
 args = []
 lexargs = []
 parseargs = []
 
-fs = import('fs')
-
-if tuning.allowed()
-    args += [ '-DENABLE_TUNING=1' ]
-endif
-
-if buildtype.contains('debug')
-    message('enabling `ENABLE_DEBUG` for debug build')
-    args += [ '-DENABLE_DEBUG=1' ]
-else
-    message('disabling `ENABLE_DEBUG` for release build')
-endif
-
 # bison generates a few unused variables
-if cc.has_argument('-Wno-unused-but-set-variable')
-    args += [ '-Wno-unused-but-set-variable' ]
-endif
+args += cc.get_supported_arguments('-Wno-unused-but-set-variable')
 
 if host == 'windows'
     lexargs += [ '--wincompat' ]
@@ -94,16 +71,17 @@ if host == 'darwin'
 endif
 
 # we dont use these features so might as well
-foreach arg : [ '-fstrict-aliasing', '-fno-threadsafe-statics', '-fno-keep-static-consts', '-fmerge-all-constants' ]
-    if cc.has_argument(arg)
-        args += [ arg ]
-    endif
-endforeach
+args += cc.get_supported_arguments(
+    '-fstrict-aliasing',
+    '-fno-threadsafe-statics',
+    '-fno-keep-static-consts',
+    '-fmerge-all-constants'
+)
 
 analyze_args = []
 
 if cc.get_id() == 'msvc'
-    args += [ '/Wv:18' ]
+    args += cc.get_supported_arguments('/Wv:18')
 
     analyze_args += [
         '/analyze',
@@ -120,7 +98,7 @@ else
     ]
 endif
 
-if analyze.require(cc.has_multi_arguments(analyze_args), error_message : 'analyze requires a compiler that supports specified arguments').enabled()
+if analyze.require(cc.has_multi_arguments(analyze_args), error_message : 'analyze requires a compiler that supports alanyzer arguments').enabled()
     args += analyze_args
 endif
 
@@ -151,9 +129,6 @@ subdir('common')
 # common compiler libraries used by interfaces and drivers
 subdir('cthulhu')
 
-message('enabled interfaces:', get_option('interfaces'))
-message('enabled languages:', get_option('languages'))
-
 langs = {}
 interfaces = {}
 plugins = {}
@@ -168,19 +143,17 @@ foreach interface : get_option('interfaces')
     subdir('interface'/interface)
 endforeach
 
-if not meson.is_subproject()
+if unit_tests.allowed()
     subdir('tests/unit-tests')
-    subdir('interface/harness')
+    subdir('tests/unit')
 endif
 
-foreach lang : get_option('languages')
-    subdir('tests/lang'/lang)
-endforeach
+if driver_tests.allowed()
+    subdir('interface/harness')
 
-if tuning.enabled()
-    tune = executable('tune-map', [ 'tools/tune-map.c' ],
-        dependencies : generic
-    )
+    foreach lang : get_option('languages')
+        subdir('tests/lang'/lang)
+    endforeach
 endif
 
 afl = find_program('afl-fuzz', required : get_option('fuzzing'))
@@ -200,14 +173,28 @@ if afl.found()
     endforeach
 endif
 
-doxygen = find_program('doxygen', required : get_option('doxygen'))
+subdir('tools/docs')
 
-if doxygen.found()
-    configure_file(
-        input : 'data/Doxyfile.in',
-        output : 'Doxyfile',
-        configuration : config
-    )
+summary = {
+    'Build': {
+        'Compiler': cc.get_id(),
+        'Debug': is_debug,
+        'Interfaces': ', '.join(get_option('interfaces')),
+        'Languages': ', '.join(get_option('languages')),
+    },
+    'Testing': {
+        'Unit tests': unit_tests.allowed(),
+        'Driver tests': driver_tests.allowed(),
+    },
+    'Documentation': {
+        'Doxygen': doxygen.found(),
+    }
+}
 
-    run_target('docs', command : [ doxygen, meson.current_build_dir() / 'Doxyfile' ])
-endif
+foreach section_title, section : summary
+    summary(section, bool_yn : true, section : section_title)
+endforeach
+
+foreach lang_name, lang_config : langs
+    summary(lang_config.get('summary', {}), bool_yn : true, section : lang_name)
+endforeach

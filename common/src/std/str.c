@@ -39,7 +39,8 @@ char *formatv(const char *fmt, va_list args)
 
     char *out = ctu_malloc(len);
 
-    vsnprintf(out, len, fmt, again);
+    int result = vsnprintf(out, len, fmt, again);
+    CTASSERTF(result == len - 1, "formatv failed to format string: %s (%d == %d - 1)", fmt, result, len);
 
     va_end(again);
 
@@ -48,6 +49,8 @@ char *formatv(const char *fmt, va_list args)
 
 bool char_is_any_of(char c, const char *chars)
 {
+    CTASSERT(chars != NULL);
+
     for (; *chars; chars++)
     {
         if (*chars == c)
@@ -61,6 +64,9 @@ bool char_is_any_of(char c, const char *chars)
 
 static size_t str_rfind_any(const char *str, const char *letters)
 {
+    CTASSERT(str != NULL);
+    CTASSERT(letters != NULL);
+
     size_t i = strlen(str);
     while (i > 0)
     {
@@ -77,6 +83,8 @@ static size_t str_rfind_any(const char *str, const char *letters)
 USE_DECL
 char *str_noext(const char *path)
 {
+    CTASSERT(path != NULL);
+
     size_t idx = str_rfind(path, ".");
     char *base = ctu_strdup(path);
     if (idx == SIZE_MAX)
@@ -91,6 +99,8 @@ char *str_noext(const char *path)
 USE_DECL
 char *str_ext(const char *path)
 {
+    CTASSERT(path != NULL);
+
     size_t idx = str_rfind(path, ".");
     if (idx == SIZE_MAX)
     {
@@ -103,6 +113,8 @@ char *str_ext(const char *path)
 USE_DECL
 char *str_filename_noext(const char *path)
 {
+    CTASSERT(path != NULL);
+
     size_t idx = str_rfind_any(path, PATH_SEPERATORS);
     if (idx == SIZE_MAX)
     {
@@ -115,6 +127,8 @@ char *str_filename_noext(const char *path)
 USE_DECL
 char *str_filename(const char *path)
 {
+    CTASSERT(path != NULL);
+
     size_t idx = str_rfind_any(path, PATH_SEPERATORS);
     if (idx == SIZE_MAX)
     {
@@ -127,12 +141,18 @@ char *str_filename(const char *path)
 USE_DECL
 bool str_startswith(const char *str, const char *prefix)
 {
+    CTASSERT(str != NULL);
+    CTASSERT(prefix != NULL);
+
     return strncmp(str, prefix, strlen(prefix)) == 0;
 }
 
 USE_DECL
 bool str_endswith(const char *str, const char *suffix)
 {
+    CTASSERT(str != NULL);
+    CTASSERT(suffix != NULL);
+
     size_t lenstr = strlen(str);
     size_t lensuffix = strlen(suffix);
     if (lensuffix > lenstr)
@@ -146,6 +166,9 @@ bool str_endswith(const char *str, const char *suffix)
 USE_DECL
 char *str_join(const char *sep, vector_t *parts)
 {
+    CTASSERT(sep != NULL);
+    CTASSERT(parts != NULL);
+
     size_t all = vector_len(parts);
 
     if (all == 0)
@@ -154,7 +177,9 @@ char *str_join(const char *sep, vector_t *parts)
     }
     else if (all == 1)
     {
-        return vector_get(parts, 0);
+        char *it = vector_get(parts, 0);
+        CTASSERT(it != NULL);
+        return ctu_strdup(it);
     }
 
     size_t len = 0;
@@ -162,6 +187,8 @@ char *str_join(const char *sep, vector_t *parts)
     for (size_t i = 0; i < all; i++)
     {
         const char *part = vector_get(parts, i);
+        CTASSERTF(part != NULL, "part[%zu] = NULL", i);
+
         len += strlen(part);
 
         if (i != 0)
@@ -184,10 +211,10 @@ char *str_join(const char *sep, vector_t *parts)
         }
 
         const char *part = vector_get(parts, i);
-        size_t partLength = strlen(part);
-        memcpy(out + idx, part, MIN(remaining, partLength));
-        idx += partLength;
-        remaining -= partLength;
+        size_t part_len = strlen(part);
+        memcpy(out + idx, part, MIN(remaining, part_len));
+        idx += part_len;
+        remaining -= part_len;
     }
 
     out[idx] = 0;
@@ -197,6 +224,8 @@ char *str_join(const char *sep, vector_t *parts)
 USE_DECL
 char *str_repeat(const char *str, size_t times)
 {
+    CTASSERT(str != NULL);
+
     size_t len = strlen(str);
     size_t outlen = len * times;
     char *out = ctu_malloc(outlen + 1);
@@ -297,28 +326,30 @@ static size_t normstr(char *out, char c)
 USE_DECL
 char *str_normalize(const char *input)
 {
-    size_t inputLen = 0;
-    size_t resultLen = 0;
-    const char *lenCount = input;
-    while (*lenCount != '\0')
+    CTASSERT(input != NULL);
+
+    size_t input_length = 0;
+    size_t result_length = 0;
+    const char *length_iter = input;
+    while (*length_iter != '\0')
     {
-        size_t inc = normlen(*lenCount++);
-        resultLen += inc;
-        inputLen += 1;
+        size_t inc = normlen(*length_iter++);
+        result_length += inc;
+        input_length += 1;
     }
 
     // if the string is already normalized, just return a copy
-    if (inputLen == resultLen)
+    if (input_length == result_length)
     {
-        return ctu_strndup(input, inputLen);
+        return ctu_strndup(input, input_length);
     }
 
-    const char *replCount = input;
-    char *buf = ctu_malloc(resultLen + 1);
+    const char *repl_iter = input;
+    char *buf = ctu_malloc(result_length + 1);
     char *result = buf;
-    while (*replCount != '\0')
+    while (*repl_iter != '\0')
     {
-        result += normstr(result, *replCount++);
+        result += normstr(result, *repl_iter++);
     }
     *result = '\0';
 
@@ -328,19 +359,21 @@ char *str_normalize(const char *input)
 USE_DECL
 char *str_normalizen(const char *str, size_t len)
 {
-    size_t resultLen = 1;
+    CTASSERT(str != NULL);
+
+    size_t length = 1;
     for (size_t i = 0; i < len; i++)
     {
-        resultLen += normlen(str[i]);
+        length += normlen(str[i]);
     }
 
     // if the string is already normalized, just return a copy
-    if (resultLen == len)
+    if (length == len)
     {
         return ctu_strndup(str, len);
     }
 
-    char *buf = ctu_malloc(resultLen + 1);
+    char *buf = ctu_malloc(length + 1);
     size_t offset = 0;
     for (size_t i = 0; i < len; i++)
     {
@@ -355,6 +388,23 @@ char *str_normalizen(const char *str, size_t len)
 USE_DECL
 vector_t *str_split(const char *str, const char *sep)
 {
+    CTASSERT(str != NULL);
+    CTASSERT(sep != NULL);
+
+    if (strlen(sep) == 0)
+    {
+        // split into individual characters
+        vector_t *result = vector_new(strlen(str));
+        for (size_t i = 0; i < strlen(str); i++)
+        {
+            char *c = ctu_malloc(2);
+            c[0] = str[i];
+            c[1] = '\0';
+            vector_push(&result, c);
+        }
+        return result;
+    }
+
     size_t seplen = strlen(sep);
     vector_t *result = vector_new(4);
 
@@ -387,6 +437,8 @@ vector_t *str_split(const char *str, const char *sep)
 USE_DECL
 size_t strhash(const char *str)
 {
+    CTASSERT(str != NULL);
+
     size_t hash = 0;
 
     while (*str)
@@ -398,15 +450,27 @@ size_t strhash(const char *str)
 }
 
 USE_DECL
-bool str_contains(const char *str, const char *sub)
+bool str_contains(const char *str, const char *search)
 {
-    return strstr(str, sub) != NULL;
+    CTASSERT(str != NULL);
+    CTASSERT(search != NULL);
+
+    return strstr(str, search) != NULL;
 }
 
 USE_DECL
-char *str_replace(const char *str, const char *sub, const char *repl)
+char *str_replace(const char *str, const char *search, const char *repl)
 {
-    vector_t *split = str_split(str, sub);
+    CTASSERT(str != NULL);
+    CTASSERT(search != NULL);
+    CTASSERT(repl != NULL);
+
+    if (strlen(search) == 0)
+    {
+        return ctu_strdup(str);
+    }
+
+    vector_t *split = str_split(str, search);
     return str_join(repl, split);
 }
 
@@ -415,6 +479,10 @@ static const map_entry_t *find_matching_key(vector_t *pairs, const char *str)
     for (size_t i = 0; i < vector_len(pairs); i++)
     {
         const map_entry_t *entry = vector_get(pairs, i);
+        CTASSERT(entry != NULL);
+        CTASSERT(entry->key != NULL);
+        CTASSERT(entry->value != NULL);
+
         if (str_startswith(str, entry->key))
         {
             return entry;
@@ -427,6 +495,9 @@ static const map_entry_t *find_matching_key(vector_t *pairs, const char *str)
 USE_DECL
 char *str_replace_many(const char *str, map_t *repl)
 {
+    CTASSERT(str != NULL);
+    CTASSERT(repl != NULL);
+
     size_t len = 0;
     vector_t *pairs = map_entries(repl);
 
@@ -472,6 +543,9 @@ char *str_replace_many(const char *str, map_t *repl)
 USE_DECL
 bool str_equal(const char *lhs, const char *rhs)
 {
+    CTASSERT(lhs != NULL);
+    CTASSERT(rhs != NULL);
+
     /* compare pointers as well for better perf
        with interned strings */
     return lhs == rhs || strcmp(lhs, rhs) == 0;
@@ -490,7 +564,9 @@ const char *common_prefix(vector_t *args)
 
     if (len == 1)
     {
-        return vector_get(args, 0);
+        const char *it = vector_get(args, 0);
+        CTASSERT(it != NULL);
+        return it;
     }
 
     char **strings = ctu_malloc(len * sizeof(char *));
@@ -500,6 +576,8 @@ const char *common_prefix(vector_t *args)
     for (size_t i = 0; i < len; i++)
     {
         char *arg = vector_get(args, i);
+        CTASSERT(arg != NULL);
+
         size_t find = str_rfind_any(arg, PATH_SEPERATORS) + 1;
         strings[i] = ctu_strndup(arg, find);
 
@@ -527,6 +605,9 @@ const char *common_prefix(vector_t *args)
 
 static size_t str_rfind_inner(const char *str, size_t len, const char *sub, size_t sublen)
 {
+    CTASSERT(str != NULL);
+    CTASSERT(sub != NULL);
+
     if (len == 0) { return SIZE_MAX; }
 
     CTASSERTM(sublen > 0, "sub must be non-empty");
@@ -545,6 +626,9 @@ static size_t str_rfind_inner(const char *str, size_t len, const char *sub, size
 USE_DECL
 size_t str_rfind(const char *str, const char *sub)
 {
+    CTASSERT(str != NULL);
+    CTASSERT(sub != NULL);
+
     size_t len = strlen(str);
     size_t sublen = strlen(sub);
 
@@ -554,6 +638,9 @@ size_t str_rfind(const char *str, const char *sub)
 USE_DECL
 size_t str_rfindn(const char *str, size_t len, const char *sub)
 {
+    CTASSERT(str != NULL);
+    CTASSERT(sub != NULL);
+
     size_t sublen = strlen(sub);
 
     return str_rfind_inner(str, len, sub, sublen);
@@ -574,7 +661,7 @@ size_t str_count_any(const char *str, const char *chars)
 {
     CTASSERT(str != NULL);
     CTASSERT(chars != NULL);
-    CTASSERT(*chars != '\0');
+    CTASSERT(strlen(chars) > 0);
 
     size_t count = 0;
 
@@ -592,6 +679,9 @@ size_t str_count_any(const char *str, const char *chars)
 USE_DECL
 char *str_trim(const char *str, const char *letters)
 {
+    CTASSERT(str != NULL);
+    CTASSERT(letters != NULL);
+
     const char *tmp = str;
 
     // strip from front
@@ -614,6 +704,9 @@ char *str_trim(const char *str, const char *letters)
 USE_DECL
 char *str_erase(const char *str, size_t len, const char *letters)
 {
+    CTASSERT(str != NULL);
+    CTASSERT(letters != NULL);
+
     char *result = ctu_strndup(str, len);
 
     size_t used = len;
@@ -633,6 +726,8 @@ char *str_erase(const char *str, size_t len, const char *letters)
 USE_DECL
 char *str_upper(const char *str)
 {
+    CTASSERT(str != NULL);
+
     char *result = ctu_strdup(str);
     char *temp = result;
 
@@ -648,6 +743,8 @@ char *str_upper(const char *str)
 USE_DECL
 char *str_lower(const char *str)
 {
+    CTASSERT(str != NULL);
+
     char *result = ctu_strdup(str);
     char *temp = result;
 

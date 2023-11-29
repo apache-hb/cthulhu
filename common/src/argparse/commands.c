@@ -5,7 +5,7 @@
 
 #include "std/vector.h"
 
-#include "version.h"
+#include "ctu-config.h"
 
 #include <stdio.h>
 
@@ -20,10 +20,13 @@ void ap_print_help_header(const ap_t *ap, const char *name)
     CTASSERT(ap != NULL);
 
     printf("usage: %s [options] [arguments] [sources...]\n", name);
-    version_info_t info = {.license = "LGPLv3",
-                           .desc = "common compiler mediator",
-                           .author = "Elliot Haisley",
-                           .version = NEW_VERSION(CTHULHU_MAJOR, CTHULHU_MINOR, CTHULHU_PATCH)};
+    version_info_t info = {
+        .license = "LGPLv3",
+        .desc = "common compiler mediator",
+        .author = "Elliot Haisley",
+        .version = NEW_VERSION(CTU_MAJOR, CTU_MINOR, CTU_PATCH)
+    };
+
     ap_print_version_info(info, "cthulhu");
 }
 
@@ -77,5 +80,5 @@ void ap_version(const ap_t *ap)
     printf("%s\n", ap->desc);
     printf("interface version: %" PRI_VERSION ".%" PRI_VERSION ".%" PRI_VERSION "\n", VERSION_MAJOR(ap->version),
            VERSION_MINOR(ap->version), VERSION_PATCH(ap->version));
-    printf("cthulhu version: %d.%d.%d\n", CTHULHU_MAJOR, CTHULHU_MINOR, CTHULHU_PATCH);
+    printf("cthulhu version: %d.%d.%d\n", CTU_MAJOR, CTU_MINOR, CTU_PATCH);
 }

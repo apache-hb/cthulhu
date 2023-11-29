@@ -37,11 +37,11 @@ typedef struct ap_param_t {
     const char **names;
 } ap_param_t;
 
-#define CALLBACK_TYPE(name, type) \
-    typedef struct name { \
-        type callback; \
+#define CALLBACK_TYPE(NAME, TYPE) \
+    typedef struct NAME { \
+        TYPE callback; \
         void *data; \
-    } name;
+    } NAME;
 
 CALLBACK_TYPE(ap_callback_t, ap_event_t)
 CALLBACK_TYPE(ap_err_callback_t, ap_error_t)

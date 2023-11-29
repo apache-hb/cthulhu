@@ -3,7 +3,7 @@ src = [ 'src/main.c' ]
 ex = library('example', src,
     dependencies : [ mediator, interop, tree ],
     c_args : args,
-    include_directories : [ 'src', versiondir ]
+    include_directories : [ 'src' ]
 )
 
 langs += {

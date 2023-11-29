@@ -10,9 +10,9 @@ Diagnostics:
     Add: [performance*, portability*, bugprone*, clang-analyzer*, cert*, concurrency*, readability-identifier-naming]
     Remove: [bugprone-easily-swappable-parameters, bugprone-narrowing-conversions]
     CheckOptions:
-      readability-identifier-naming.VariableCase: camelBack
-      readability-identifier-naming.ParameterCase: camelBack
-      readability-identifier-naming.MemberCase: camelBack
+      readability-identifier-naming.VariableCase: lower_case
+      readability-identifier-naming.ParameterCase: lower_case
+      readability-identifier-naming.MemberCase: lower_case
 
       readability-identifier-naming.UnionCase: lower_case
       readability-identifier-naming.UnionSuffix: _t

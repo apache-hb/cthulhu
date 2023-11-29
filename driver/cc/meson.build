@@ -8,7 +8,7 @@ src = [
     parse.process('src/cc.y')
 ]
 
-cc = library('cc', src,
+libcc = library('cc', src,
     dependencies : [ mediator, interop, location, tree, util ],
     c_args : args,
     include_directories : [ 'src', 'include' ]
@@ -16,7 +16,7 @@ cc = library('cc', src,
 
 langs += {
     'cc': {
-        'dep': declare_dependency(link_with : cc),
+        'dep': declare_dependency(link_with : libcc),
         'mod': 'kCModule'
     }
 }

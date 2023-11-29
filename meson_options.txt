@@ -10,10 +10,19 @@ option('interfaces', type : 'array',
     value : [ 'cli', 'example' ]
 )
 
-option('tuning', type : 'feature',
-    description : 'compile tuning programs',
+# testing options
+
+option('unit_tests', type : 'feature',
+    description : 'enable unit tests (requires c++ compiler)',
     value : 'auto'
 )
+
+option('driver_tests', type : 'feature',
+    description : 'enable end-to-end driver tests',
+    value : 'auto'
+)
+
+# doxygen options
 
 option('doxygen', type : 'feature',
     description : 'build doxygen docs',

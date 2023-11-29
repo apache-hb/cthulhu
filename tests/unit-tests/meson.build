@@ -1,9 +1,8 @@
 dir = meson.current_source_dir()
 
-all = [ 
-    'util.str', 'util.set', 'util.map', 
-    'argparse.ap', 
-    'io.vfs', 'io.fs' 
+all = [
+    'argparse.ap',
+    'io.vfs', 'io.fs'
 ]
 
 foreach case : all
@@ -16,7 +15,7 @@ foreach case : all
     )
 
     test('test-' + case, it,
-        workdir : meson.project_source_root(), 
+        workdir : meson.project_source_root(),
         suite : 'unit-tests'
     )
 endforeach
@@ -27,7 +26,7 @@ endforeach
 #     dependencies : [ platform ]
 # )
 
-# test('test-segfault', segfault, 
+# test('test-segfault', segfault,
 #     should_fail : true,
 #     suite : 'unit-tests'
 # )

@@ -13,7 +13,7 @@
 
 // inode api
 
-inode_t kInvalidINode = {
+inode_t gInvalidINode = {
     .type = eNodeInvalid
 };
 
@@ -71,7 +71,7 @@ OS_RESULT(bool) mkdir_recursive(const char *path)
 
 // fs api
 
-fs_t *fs_new(reports_t *reports, inode_t *root, const fs_interface_t *cb, const void *data, size_t size)
+fs_t *fs_new(reports_t *reports, inode_t *root, const fs_callbacks_t *cb, const void *data, size_t size)
 {
     CTASSERT(reports != NULL);
     CTASSERT(cb != NULL);

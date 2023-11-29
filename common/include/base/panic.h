@@ -3,8 +3,12 @@
 #include "base/analyze.h"
 #include "base/macros.h"
 
+#include <ctu-config.h>
+
 #include <stdarg.h>
 #include <stddef.h>
+
+BEGIN_API
 
 typedef struct
 {
@@ -38,7 +42,7 @@ NORETURN ctpanic(panic_t panic, FORMAT_STRING const char *msg, ...);
 
 #define CTU_PANIC(...) do { panic_t panic = {__FILE__, __LINE__, FUNCNAME}; ctpanic(panic, __VA_ARGS__); } while (0)
 
-#if ENABLE_DEBUG
+#if CTU_DEBUG
 #    define CTASSERTF(expr, ...)                                                                                       \
         do                                                                                                             \
         {                                                                                                              \
@@ -56,3 +60,5 @@ NORETURN ctpanic(panic_t panic, FORMAT_STRING const char *msg, ...);
 #define NEVER(...) CTU_PANIC(__VA_ARGS__)
 
 #define GLOBAL_INIT(ID) do { static bool init = false; CTASSERTM(!init, ID " already initialized"); init = true; } while (0)
+
+END_API
