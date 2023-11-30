@@ -3,6 +3,7 @@
 #include "cthulhu/ssa/ssa.h"
 #include "cthulhu/emit/emit.h"
 
+#include "stacktrace/stacktrace.h"
 #include "support/langs.h"
 
 #include "report/report.h"

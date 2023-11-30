@@ -6,6 +6,7 @@
 void stacktrace_init(void)
 {
     SymInitialize(GetCurrentProcess(), NULL, TRUE);
+    SymSetOptions(SYMOPT_LOAD_LINES);
 }
 
 const char *stacktrace_backend(void)
@@ -28,23 +29,49 @@ static BOOL get_frame(STACKFRAME *frame, CONTEXT *ctx, HANDLE process, HANDLE th
     );
 }
 
+static void demangle_symbol(HANDLE process, CHAR *name, DWORD size, DWORD64 offset, SYMBOL_INFO *symbol, DWORD disp)
+{
+    DWORD64 disp2 = disp;
+    if (SymFromAddr(process, offset, &disp2, symbol))
+    {
+        DWORD len = UnDecorateSymbolName(symbol->Name, name, size, UNDNAME_COMPLETE);
+        if (len > 0)
+        {
+            strcpy_s(name, STACKTRACE_NAME_LENGTH, name);
+        }
+        else
+        {
+            strcpy_s(name, STACKTRACE_NAME_LENGTH, symbol->Name);
+        }
+    }
+    else
+    {
+        sprintf_s(name, STACKTRACE_NAME_LENGTH, "0x%llX", offset);
+    }
+}
+
+union disp_t {
+    DWORD disp;
+    DWORD64 disp64;
+};
+
 size_t stacktrace_get(frame_t *frames, size_t size)
 {
+    char buffer[sizeof(SYMBOL_INFO) + (STACKTRACE_NAME_LENGTH - 1) * sizeof(TCHAR)] = { 0 };
     HANDLE thread = GetCurrentThread();
     HANDLE process = GetCurrentProcess();
 
-    // TODO: allocating here is probably not a good idea
-    IMAGEHLP_SYMBOL *symbol = malloc(sizeof(IMAGEHLP_SYMBOL) + STACKTRACE_NAME_LENGTH);
-    symbol->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL);
-    symbol->Address = 0;
-    symbol->Size = 0;
-    symbol->Flags = SYMF_FUNCTION;
-    symbol->MaxNameLength = STACKTRACE_NAME_LENGTH;
+    // allocate a symbol from the stack rather than the heap
+    PSYMBOL_INFO symbol = (PSYMBOL_INFO)buffer;
+    symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+    symbol->MaxNameLen = STACKTRACE_NAME_LENGTH;
 
-    DWORD64 disp = 0;
+    IMAGEHLP_LINE64 line = { 0 };
 
     CONTEXT ctx = { 0 };
     RtlCaptureContext(&ctx);
+
+    union disp_t disp = { 0 };
 
     STACKFRAME frame = {
         .AddrPC = {
@@ -61,17 +88,25 @@ size_t stacktrace_get(frame_t *frames, size_t size)
         }
     };
 
-    char name[STACKTRACE_NAME_LENGTH] = { 0 };
-
     size_t used = 0;
     while (get_frame(&frame, &ctx, process, thread) && used < size)
     {
-        memset(name, 0, STACKTRACE_NAME_LENGTH);
+        frame_t result_frame = {
+            .line = 0,
+            .name = { 0 },
+            .path = { 0 }
+        };
 
-        SymGetSymFromAddr(process, frame.AddrPC.Offset, &disp, symbol);
-        UnDecorateSymbolName(symbol->Name, name, STACKTRACE_NAME_LENGTH, UNDNAME_COMPLETE);
+        BOOL has_line = SymGetLineFromAddr64(process, frame.AddrPC.Offset, &disp.disp, &line);
+        if (has_line)
+        {
+            result_frame.line = line.LineNumber;
+            strcpy_s(result_frame.path, STACKTRACE_PATH_LENGTH, line.FileName);
+        }
 
-        memcpy(frames[used].name, name, STACKTRACE_NAME_LENGTH);
+        demangle_symbol(process, result_frame.name, STACKTRACE_NAME_LENGTH, frame.AddrPC.Offset, symbol, disp.disp);
+
+        frames[used] = result_frame;
 
         used += 1;
     }

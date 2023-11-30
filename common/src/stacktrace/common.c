@@ -12,6 +12,7 @@ void stacktrace_print(FILE *file)
     size_t count = stacktrace_get(frames, STACK_FRAMES);
     for (size_t i = 0; i < count; i++)
     {
-        fprintf(file, COLOUR_CYAN "[%zu]" COLOUR_RESET ": %s\n", i, frames[i].name);
+        frame_t *frame = &frames[i];
+        fprintf(file, COLOUR_CYAN "[%zu]" COLOUR_RESET ": %s (%s:%zu)\n", i, frame->name, frame->path, frame->line);
     }
 }
