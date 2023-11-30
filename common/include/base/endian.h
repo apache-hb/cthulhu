@@ -22,12 +22,13 @@
 
 BEGIN_API
 
-/**
- * @defgroup Endian Endianess
- * @brief Endianess and byte swapping
- * @{
- */
+///
+/// @defgroup Endian Endianess
+/// @brief Endianess and byte swapping
+/// @{
+///
 
+/// @brief endianess enum
 typedef enum endian_t
 {
 #define ENDIAN(id, name, v) id = (v),
@@ -36,13 +37,51 @@ typedef enum endian_t
     eEndianTotal
 } endian_t;
 
+/// @brief swap the endianess of a 16-bit value
+///
+/// @param value the value to swap
+///
+/// @return the swapped value
 uint16_t endian_swap16(uint16_t value);
+
+/// @brief swap the endianess of a 32-bit value
+///
+/// @param value the value to swap
+///
+/// @return the swapped value
 uint32_t endian_swap32(uint32_t value);
+
+/// @brief swap the endianess of a 64-bit value
+///
+/// @param value the value to swap
+///
+/// @return the swapped value
 uint64_t endian_swap64(uint64_t value);
 
+/// @brief convert a 16-bit value of a given endianess to the native endianess
+///
+/// @param value the value to convert
+/// @param order the endianess of @a value
+///
+/// @return the converted value
 uint16_t native_order16(uint16_t value, endian_t order);
+
+/// @brief convert a 32-bit value of a given endianess to the native endianess
+///
+/// @param value the value to convert
+/// @param order the endianess of @a value
+///
+/// @return the converted value
 uint32_t native_order32(uint32_t value, endian_t order);
+
+/// @brief convert a 64-bit value of a given endianess to the native endianess
+///
+/// @param value the value to convert
+/// @param order the endianess of @a value
+///
+/// @return the converted value
 uint64_t native_order64(uint64_t value, endian_t order);
 
-/** @} */
+/// @}
+
 END_API

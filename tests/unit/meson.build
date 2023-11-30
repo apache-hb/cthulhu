@@ -11,12 +11,19 @@ cases = [
     'util.set'
 ]
 
+# gcc doesnt let me cast to void to suppress unused result warnings
+test_cpp_args = cpp.get_supported_arguments(
+    '-Wno-unused-result',
+    '-Wno-unused-value'
+)
+
 foreach case : cases
     name = case.replace('.', '/')
     path = 'cases'/name + '.cpp'
 
     exe = executable(case, path,
         include_directories : '.',
+        cpp_args : test_cpp_args,
         dependencies : [ unit, base ]
     )
 

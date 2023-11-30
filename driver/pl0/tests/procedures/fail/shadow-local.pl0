@@ -1,9 +1,0 @@
-var x;
-
-procedure yup;
-var x;
-begin
-    x := 1;
-    ! x
-end;
-.

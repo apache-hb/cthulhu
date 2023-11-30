@@ -1,2 +1,0 @@
-const lhs = rhs, rhs = lhs;
-.

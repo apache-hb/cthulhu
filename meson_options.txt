@@ -35,13 +35,15 @@ option('analyze', type : 'feature',
 )
 
 option('afl_fuzzing', type : 'feature',
-    description : 'fuzz compiler via afl',
-    value : 'auto'
+    description : 'fuzz compiler via afl (this disables all other targets, only use for generating test cases)',
+    value : 'disabled',
+    yield : true
 )
 
 option('llvm_fuzzing', type : 'feature',
-    description : 'fuzz compiler via llvm',
-    value : 'auto'
+    description : 'fuzz compiler via llvm (this disables all other targets, only use for generating test cases)',
+    value : 'disabled',
+    yield : true
 )
 
 option('stacktrace', type : 'feature',

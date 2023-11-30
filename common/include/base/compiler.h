@@ -45,9 +45,9 @@
 #endif
 
 #ifdef CC_MSVC
-#    define ASSUME(expr) __assume(expr)
+#    define CTU_ASSUME(expr) __assume(expr)
 #else
-#    define ASSUME(expr)                                                                                               \
+#    define CTU_ASSUME(expr)                                                                                               \
         do                                                                                                             \
         {                                                                                                              \
             if (!(expr))                                                                                               \

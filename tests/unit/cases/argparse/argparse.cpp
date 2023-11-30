@@ -11,6 +11,8 @@
 #include "std/vector.h"
 #include "std/str.h"
 
+#include <stdlib.h>
+
 typedef struct sources_t
 {
     vector_t *files;
@@ -66,7 +68,6 @@ static AP_EVENT(count_error, ap, node, message, data)
 
     int i = strtol((char*)message, NULL, 10);
     error_filter_t *filter = (error_filter_t*)data;
-    printf("error: i=%d l=%d (%s)\n", i, filter->level, (char*)message);
     if (filter->level != i)
         return eEventContinue;
 

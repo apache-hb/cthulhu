@@ -4,29 +4,29 @@
 #include "std/map.h"
 #include "std/vector.h"
 
+#include <string.h>
+#include <array>
+#include <cstdint>
+
 typedef struct {
     const char *escaped;
     const char *unescaped;
 } pair_t;
 
-static pair_t const kEscapes[] = {
-    { "\n", "\\n" },
-    { "\r", "\\r" },
-    { "\t", "\\t" },
-    { "\v", "\\x0b" },
-    { "\\", "\\\\" },
-    { "\'", "\\\'" },
-    { "\"", "\\\"" },
+static std::array<pair_t, 7> kEscapes = {
+    pair_t { "\n", "\\n" },
+    pair_t { "\r", "\\r" },
+    pair_t { "\t", "\\t" },
+    pair_t { "\v", "\\x0b" },
+    pair_t { "\\", "\\\\" },
+    pair_t { "\'", "\\\'" },
+    pair_t { "\"", "\\\"" },
 };
 
-static const size_t kEscapesSize = std::size(kEscapes);
-
-static const char *const kStringParts[] = {
+static std::array<const char*, 10> kStringParts = {
     "zero", "one", "two", "three", "four",
     "five", "six", "seven", "eight", "nine"
 };
-
-static const size_t kPartsSize = std::size(kStringParts);
 
 int main()
 {
@@ -127,8 +127,8 @@ int main()
         .EXPECT_PANIC("null map", str_replace_many("hello world!", NULL))
         .EXPECT_PANIC("null all", str_replace_many(NULL, NULL));
 
-    vector_t *parts = vector_of(kPartsSize);
-    for (size_t i = 0; i < kPartsSize; i++) {
+    vector_t *parts = vector_of(kStringParts.size());
+    for (size_t i = 0; i < kStringParts.size(); i++) {
         vector_set(parts, i, (char*)kStringParts[i]);
     }
 
@@ -257,7 +257,7 @@ int main()
         })
         .EXPECT_PANIC("normalizen null", str_normalizen(NULL, 0));
 
-    for (size_t i = 0; i < kEscapesSize; i++)
+    for (size_t i = 0; i < kEscapes.size(); i++)
     {
         pair_t pair = kEscapes[i];
 

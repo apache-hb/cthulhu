@@ -31,14 +31,27 @@ unit_tests.require(add_languages('cpp', native : false, required : unit_tests.en
 cc = meson.get_compiler('c')
 cpp = meson.get_compiler('cpp')
 
+afl_fuzzing = get_option('afl_fuzzing').disable_auto_if(meson.is_subproject())
 llvm_fuzzing = get_option('llvm_fuzzing').disable_auto_if(meson.is_subproject())
-llvm_fuzzing = llvm_fuzzing.require(cpp.has_argument('-fsanitize=fuzzer-no-link'))
+
+if afl_fuzzing.enabled() and llvm_fuzzing.enabled()
+    error('afl_fuzzing and llvm_fuzzing are mutually exclusive')
+endif
 
 # only enable fuzzing if its explicitly enabled
 # as it disables everything else
 if llvm_fuzzing.enabled()
-    add_project_arguments('-fsanitize=fuzzer', language : [ 'c', 'cpp' ])
-    add_project_link_arguments('-fsanitize=fuzzer', language : [ 'c', 'cpp' ])
+    # do these checks conservatively
+    llvm_fuzzing = llvm_fuzzing.require(cpp.has_argument('-fsanitize=fuzzer-no-link'))
+
+    if llvm_fuzzing.enabled()
+        add_project_arguments('-fsanitize=fuzzer', language : [ 'c', 'cpp' ])
+        add_project_link_arguments('-fsanitize=fuzzer', language : [ 'c', 'cpp' ])
+    endif
+endif
+
+if afl_fuzzing.enabled()
+    afl_fuzzing = afl_fuzzing.require(cc.get_id().contains('afl'))
 endif
 
 analyze = get_option('analyze')
@@ -151,6 +164,7 @@ subdir('common')
 # common compiler libraries used by interfaces and drivers
 subdir('cthulhu')
 
+driver_summary = {}
 langs = {}
 interfaces = {}
 plugins = {}
@@ -163,7 +177,7 @@ subdir('tools')
 
 # enabling fuzzing needs to disable everything else
 # that has a main function
-if llvm_fuzzing.allowed()
+if llvm_fuzzing.enabled()
     subdir('tools/llvm_fuzzing')
 else
     subdir('interface')
@@ -174,16 +188,7 @@ else
 
     if driver_tests.allowed()
         subdir('interface/harness')
-
-        foreach name, lang_config : langs
-            if lang_config.has_key('test_dir')
-                subdir('driver' / name / lang_config.get('test_dir'))
-            endif
-        endforeach
-
-        foreach lang : get_option('languages')
-            subdir('tests/lang'/lang)
-        endforeach
+        subdir('tests/lang')
     endif
 endif
 
@@ -214,29 +219,24 @@ summary = {
         'Languages': ', '.join(get_option('languages')),
     },
     'Testing': {
-        'Unit tests': unit_tests.allowed(),
-        'Driver tests': driver_tests.allowed(),
-        'AFL fuzzing': afl_fuzzing.allowed(),
-        'LLVM fuzzing': llvm_fuzzing.allowed(),
+        'Unit tests': unit_tests,
+        'Driver tests': driver_tests,
+        'AFL fuzzing': afl_fuzzing,
+        'LLVM fuzzing': llvm_fuzzing,
     },
     'Documentation': {
-        'Doxygen': doxygen.found(),
+        'Doxygen': doxygen,
     }
 }
 
-foreach section_title, section : summary
-    summary(section, bool_yn : true, section : section_title)
+foreach lang_name, lang_config : langs
+    if lang_config.has_key('fuzz_corpus')
+        driver_summary += { lang_name + ' fuzz corpus': lang_config.get('fuzz_corpus') }
+    endif
 endforeach
 
-foreach lang_name, lang_config : langs
-    lang_summary = lang_config.get('summary', {})
-    if lang_config.has_key('fuzz_corpus')
-        lang_summary += { 'Fuzzing corpus': lang_config.get('fuzz_corpus') }
-    endif
+summary += { 'Drivers': driver_summary }
 
-    if lang_config.has_key('test_dir')
-        lang_summary += { 'Tests': meson.current_source_dir() / 'driver' / lang_name / lang_config.get('test_dir') }
-    endif
-
-    summary(lang_summary, bool_yn : true, section : lang_name)
+foreach section_title, section : summary
+    summary(section, bool_yn : true, section : section_title)
 endforeach

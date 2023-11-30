@@ -7,6 +7,8 @@
 #include "base/panic.h"
 #include "std/str.h"
 
+#include <stdlib.h>
+
 static const char *get_test_result_id(test_error_t result)
 {
     switch (result)
@@ -45,7 +47,8 @@ static void test_panic_handler(panic_t panic, const char *fmt, va_list args)
         abort();
     }
 
-    test_exception_t ex = { panic, formatv(fmt, args) };
+    char *msg = formatv(fmt, args);
+    test_exception_t ex = { panic, msg };
     throw test_exception_t{ ex };
 }
 

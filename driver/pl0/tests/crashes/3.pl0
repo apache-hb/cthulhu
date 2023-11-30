@@ -1,9 +1,0 @@
-module Qib;
-
-var lhs, rhs, result;procedure add;
-var tmp;
-begin qmp := lhs + rhs;
-    result := tmp
-end;
-
-.

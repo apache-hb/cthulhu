@@ -1,6 +1,0 @@
-procedure hello;
-begin
-    ! 25
-end;
-
-call hello.

@@ -17,7 +17,6 @@ langs += {
     'pl0': {
         'dep': declare_dependency(link_with : pl0),
         'mod': 'kPl0Module',
-        'fuzz_corpus': meson.current_source_dir() / 'fuzz_corpus',
-        'test_dir': 'tests'
+        'fuzz_corpus': meson.current_source_dir() / 'fuzz_corpus'
     }
 }

@@ -125,8 +125,6 @@ int main()
 
         vector_t *entries = map_entries(map);
 
-        printf("%zu\n", vector_len(entries));
-
         group.EXPECT_PASS("correct entry count", vector_len(entries) == 0);
 
         for (size_t i = 0; i < kSetItemsCount; i++)
