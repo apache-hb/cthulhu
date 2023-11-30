@@ -32,15 +32,15 @@ typedef void (*fs_dir_delete_t)(fs_t *fs, inode_t *node, const char *name);
 typedef void (*fs_file_delete_t)(fs_t *fs, inode_t *node, const char *name);
 
 typedef struct fs_callbacks_t {
-    fs_query_node_t fnQueryNode;
-    fs_query_dirents_t fnQueryDirents;
-    fs_query_file_t fnQueryFile;
+    fs_query_node_t pfn_query_node;
+    fs_query_dirents_t pfn_query_dirents;
+    fs_query_file_t pfn_query_file;
 
-    fs_dir_create_t fnCreateDir;
-    fs_dir_delete_t fnDeleteDir;
+    fs_dir_create_t pfn_create_dir;
+    fs_dir_delete_t pfn_delete_dir;
 
-    fs_file_create_t fnCreateFile;
-    fs_file_delete_t fnDeleteFile;
+    fs_file_create_t pfn_create_file;
+    fs_file_delete_t pfn_delete_file;
 } fs_callbacks_t;
 
 typedef struct fs_t {

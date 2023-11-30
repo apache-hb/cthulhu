@@ -25,9 +25,9 @@ static inode_t *query_inode(fs_t *fs, inode_t *node, const char *name)
     CTASSERT(name != NULL);
 
     CTASSERT(inode_is(node, eNodeDir));
-    CTASSERT(fs->cb->fnQueryNode != NULL);
+    CTASSERT(fs->cb->pfn_query_node != NULL);
 
-    return fs->cb->fnQueryNode(fs, node, name);
+    return fs->cb->pfn_query_node(fs, node, name);
 }
 
 static map_t *query_dirents(fs_t *fs, inode_t *node)
@@ -36,9 +36,9 @@ static map_t *query_dirents(fs_t *fs, inode_t *node)
     CTASSERT(node != NULL);
 
     CTASSERT(inode_is(node, eNodeDir));
-    CTASSERT(fs->cb->fnQueryDirents != NULL);
+    CTASSERT(fs->cb->pfn_query_dirents != NULL);
 
-    return fs->cb->fnQueryDirents(fs, node);
+    return fs->cb->pfn_query_dirents(fs, node);
 }
 
 static io_t *query_file(fs_t *fs, inode_t *node, os_access_t flags)
@@ -47,9 +47,9 @@ static io_t *query_file(fs_t *fs, inode_t *node, os_access_t flags)
     CTASSERT(node != NULL);
 
     CTASSERT(inode_is(node, eNodeFile));
-    CTASSERT(fs->cb->fnQueryFile != NULL);
+    CTASSERT(fs->cb->pfn_query_file != NULL);
 
-    return fs->cb->fnQueryFile(fs, node, flags);
+    return fs->cb->pfn_query_file(fs, node, flags);
 }
 
 static inode_t *create_dir(fs_t *fs, inode_t *node, const char *name)
@@ -59,9 +59,9 @@ static inode_t *create_dir(fs_t *fs, inode_t *node, const char *name)
     CTASSERT(name != NULL);
 
     CTASSERT(inode_is(node, eNodeDir));
-    CTASSERT(fs->cb->fnCreateDir != NULL);
+    CTASSERT(fs->cb->pfn_create_dir != NULL);
 
-    return fs->cb->fnCreateDir(fs, node, name);
+    return fs->cb->pfn_create_dir(fs, node, name);
 }
 
 static void delete_dir(fs_t *fs, inode_t *node, const char *name)
@@ -71,9 +71,9 @@ static void delete_dir(fs_t *fs, inode_t *node, const char *name)
     CTASSERT(name != NULL);
 
     CTASSERT(inode_is(node, eNodeDir));
-    CTASSERT(fs->cb->fnDeleteDir != NULL);
+    CTASSERT(fs->cb->pfn_delete_dir != NULL);
 
-    fs->cb->fnDeleteDir(fs, node, name);
+    fs->cb->pfn_delete_dir(fs, node, name);
 }
 
 static inode_t *create_file(fs_t *fs, inode_t *node, const char *name)
@@ -83,9 +83,9 @@ static inode_t *create_file(fs_t *fs, inode_t *node, const char *name)
     CTASSERT(name != NULL);
 
     CTASSERT(inode_is(node, eNodeDir));
-    CTASSERT(fs->cb->fnCreateFile != NULL);
+    CTASSERT(fs->cb->pfn_create_file != NULL);
 
-    return fs->cb->fnCreateFile(fs, node, name);
+    return fs->cb->pfn_create_file(fs, node, name);
 }
 
 static void delete_file(fs_t *fs, inode_t *node, const char *name)
@@ -95,9 +95,9 @@ static void delete_file(fs_t *fs, inode_t *node, const char *name)
     CTASSERT(name != NULL);
 
     CTASSERT(inode_is(node, eNodeDir));
-    CTASSERT(fs->cb->fnDeleteFile != NULL);
+    CTASSERT(fs->cb->pfn_delete_file != NULL);
 
-    fs->cb->fnDeleteFile(fs, node, name);
+    fs->cb->pfn_delete_file(fs, node, name);
 }
 
 // fs file api

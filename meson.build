@@ -144,7 +144,6 @@ foreach interface : get_option('interfaces')
 endforeach
 
 if unit_tests.allowed()
-    subdir('tests/unit-tests')
     subdir('tests/unit')
 endif
 

@@ -189,19 +189,21 @@ static void vfs_delete_file(fs_t *fs, inode_t *self, const char *name)
 }
 
 static const fs_callbacks_t kVirtualInterface = {
-    .fnQueryNode = vfs_query_node,
-    .fnQueryDirents = vfs_query_dirents,
-    .fnQueryFile = vfs_query_file,
+    .pfn_query_node = vfs_query_node,
+    .pfn_query_dirents = vfs_query_dirents,
+    .pfn_query_file = vfs_query_file,
 
-    .fnCreateDir = vfs_create_dir,
-    .fnDeleteDir = vfs_delete_dir,
+    .pfn_create_dir = vfs_create_dir,
+    .pfn_delete_dir = vfs_delete_dir,
 
-    .fnCreateFile = vfs_create_file,
-    .fnDeleteFile = vfs_delete_file
+    .pfn_create_file = vfs_create_file,
+    .pfn_delete_file = vfs_delete_file
 };
 
 fs_t *fs_virtual(reports_t *reports, const char *name)
 {
+    CTASSERT(name != NULL);
+
     virtual_t self = {
         .name = name
     };

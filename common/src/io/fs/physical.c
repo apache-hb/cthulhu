@@ -178,15 +178,15 @@ static void pfs_file_delete(fs_t *fs, inode_t *self, const char *name)
 }
 
 static const fs_callbacks_t kPhysicalInterface = {
-    .fnQueryNode = pfs_query_node,
-    .fnQueryDirents = pfs_query_dirents,
-    .fnQueryFile = pfs_query_file,
+    .pfn_query_node = pfs_query_node,
+    .pfn_query_dirents = pfs_query_dirents,
+    .pfn_query_file = pfs_query_file,
 
-    .fnCreateDir = pfs_dir_create,
-    .fnDeleteDir = pfs_dir_delete,
+    .pfn_create_dir = pfs_dir_create,
+    .pfn_delete_dir = pfs_dir_delete,
 
-    .fnCreateFile = pfs_file_create,
-    .fnDeleteFile = pfs_file_delete
+    .pfn_create_file = pfs_file_create,
+    .pfn_delete_file = pfs_file_delete
 };
 
 fs_t *fs_physical(reports_t *reports, const char *root)

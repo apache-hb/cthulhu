@@ -2,6 +2,8 @@
 
 #include "scan/node.h"
 
+BEGIN_API
+
 typedef struct vector_t vector_t;
 
 /**
@@ -209,3 +211,4 @@ FORMAT_ATTRIB(1, 2)
 void logverbose(FORMAT_STRING const char *fmt, ...);
 
 /** @} */
+END_API

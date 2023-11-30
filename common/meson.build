@@ -68,7 +68,7 @@ std = declare_dependency(
 
 src = [ 'src/os/common.c' ]
 
-libcommon = static_library('common', src,
+libcommon = library('common', src,
     c_args : args,
     dependencies : [ std ],
     include_directories : 'include'

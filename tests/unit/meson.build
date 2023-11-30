@@ -13,7 +13,7 @@ cases = [
 
 foreach case : cases
     name = case.replace('.', '/')
-    path = name + '.cpp'
+    path = 'cases'/name + '.cpp'
 
     exe = executable(case, path,
         include_directories : '.',
@@ -22,3 +22,33 @@ foreach case : cases
 
     test(case, exe, suite : 'unit')
 endforeach
+
+# vfs
+
+vfs_exe = executable('vfs', 'cases/io/vfs.cpp',
+    include_directories : '.',
+    dependencies : [ unit, base, location, io ]
+)
+
+test('vfs', vfs_exe, suite : 'unit')
+
+# fs
+
+fs_exe = executable('fs', 'cases/io/fs.cpp',
+    include_directories : '.',
+    dependencies : [ unit, base, location, io ]
+)
+
+test('fs', fs_exe,
+    workdir : meson.project_source_root(),
+    suite : 'unit'
+)
+
+# argparse
+
+argparse_exe = executable('argparse.argparse', 'cases/argparse/argparse.cpp',
+    include_directories : '.',
+    dependencies : [ unit, base, argparse ]
+)
+
+test('argparse', argparse_exe, suite : 'unit')
