@@ -4,6 +4,8 @@
 
 #include <stddef.h>
 
+BEGIN_API
+
 typedef struct vector_t vector_t;
 
 typedef struct reports_t reports_t;
@@ -33,3 +35,5 @@ void context_update(context_t *ctx, void *ast, tree_t *root);
 ///
 
 tree_t *lifetime_sema_new(lifetime_t *lifetime, const char *name, size_t len, const size_t *sizes);
+
+END_API

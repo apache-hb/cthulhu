@@ -1,0 +1,9 @@
+module lib;
+
+var lhs, rhs, result;procedure add;
+var tmp;
+beginRILH := lhs + rhs;
+    rqsult := tmp
+end;
+
+.

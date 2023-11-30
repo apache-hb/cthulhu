@@ -2,11 +2,12 @@
 
 #include "cthulhu/mediator/common.h"
 
+BEGIN_API
+
 typedef struct io_t io_t;
 typedef struct vector_t vector_t;
 typedef struct map_t map_t;
 typedef struct reports_t reports_t;
-
 
 /**
  * @defgroup mediator Language lifetime mediator
@@ -104,3 +105,5 @@ void lifetime_resolve(lifetime_t *lifetime);
 map_t *lifetime_get_modules(lifetime_t *lifetime);
 
 /** @} */
+
+END_API

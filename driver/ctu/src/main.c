@@ -13,7 +13,7 @@
 #include "ctu-bison.h"
 #include "ctu-flex.h"
 
-CT_CALLBACKS(kCallbacks, ctu);
+CTU_CALLBACKS(kCallbacks, ctu);
 
 static void ctu_config(lifetime_t *lifetime, ap_t *args)
 {

@@ -8,7 +8,7 @@
 !*.c
 !*.h
 !*.inc
-!langs.c.in
+!*.[ch].in
 !data/**/*
 
 # dont ignore flex and bison files
@@ -44,7 +44,6 @@ vendor/
 temp/
 *build/
 fuzz-*/
-afl*/
 genout*/
 out.c
 *out/

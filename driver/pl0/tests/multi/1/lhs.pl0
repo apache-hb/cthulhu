@@ -1,0 +1,14 @@
+module multi.lhs;
+
+import multi.rhs, 
+       main;
+
+procedure lhs;
+begin
+    if x < LIMIT then
+    begin
+        x := x + 1;
+        call rhs
+    end
+end;
+.

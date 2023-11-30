@@ -1,6 +1,9 @@
 #pragma once
 
+#include "base/macros.h"
 #include "base/version-def.h"
+
+BEGIN_API
 
 typedef struct mediator_t mediator_t;
 typedef struct lifetime_t lifetime_t;
@@ -62,3 +65,5 @@ reports_t *lifetime_get_reports(lifetime_t *lifetime);
 cookie_t *lifetime_get_cookie(lifetime_t *lifetime);
 
 const char *stage_to_string(compile_stage_t stage);
+
+END_API

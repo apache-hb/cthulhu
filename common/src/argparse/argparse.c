@@ -18,7 +18,7 @@
 
 // internals
 
-CT_CALLBACKS(kCallbacks, ap);
+CTU_CALLBACKS(kCallbacks, ap);
 
 static ap_callback_t *ap_callback_new(ap_event_t event, void *data)
 {
@@ -76,7 +76,7 @@ static ap_param_t *add_param(ap_group_t *self, ap_param_type_t type, const char 
     CTASSERT(self != NULL);
     CTASSERT(desc != NULL);
     CTASSERT(*names != NULL);
-    
+
     ap_param_t *param = ap_param_new(type, name, desc, names);
 
     ap_t *parent = self->parent;
@@ -110,7 +110,7 @@ static ap_param_t *add_param(ap_group_t *self, ap_param_type_t type, const char 
 ap_t *ap_new(const char *desc, version_t version)
 {
     ap_t *self = ctu_malloc(sizeof(ap_t));
-    
+
     self->desc = desc;
     self->version = version;
 
@@ -126,8 +126,8 @@ ap_t *ap_new(const char *desc, version_t version)
 }
 
 ap_group_t *ap_group_new(
-    ap_t *parent, 
-    const char *name, 
+    ap_t *parent,
+    const char *name,
     const char *desc
 )
 {

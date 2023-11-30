@@ -1,5 +1,9 @@
 #pragma once
 
+#include "base/macros.h"
+
+BEGIN_API
+
 typedef struct ssa_module_t ssa_module_t;
 typedef struct reports_t reports_t;
 
@@ -58,3 +62,5 @@ typedef struct c89_emit_result_t {
  * @param options the options to use
  */
 c89_emit_result_t emit_c89(const c89_emit_options_t *options);
+
+END_API

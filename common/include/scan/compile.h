@@ -21,7 +21,7 @@ typedef struct callbacks_t {
     void (*destroy)(void *scanner);                              ///< yylex_destroy
 } callbacks_t;
 
-#define CT_CALLBACKS(id, prefix)                                                                                       \
+#define CTU_CALLBACKS(id, prefix)                                                                                       \
     static int prefix##_##id##_##init(scan_t *extra, void *scanner)                                                    \
     {                                                                                                                  \
         return prefix##lex_init_extra(extra, scanner);                                                                 \

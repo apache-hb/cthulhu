@@ -1,0 +1,10 @@
+module maib;procedure entpy;
+begin
+lhs := 25;
+rhs := 50;
+!   -Wlimitd;
+    ! result
+end;
+
+call entry
+.

@@ -1,0 +1,2 @@
+const lhs = 25, rhs = lhs * rhs;
+.

@@ -10,10 +10,11 @@
 #include "cc-bison.h"
 #include "cc-flex.h"
 
-// CT_CALLBACKS(kCallbacks, cc);
+// CTU_CALLBACKS(kCallbacks, cc);
 
 static void cc_parse(driver_t *handle, scan_t *scan)
 {
+    CTU_UNUSED(handle);
     report(scan_reports(scan), eWarn, NULL, "C is unimplemented, ignoring file %s", scan_path(scan));
 }
 

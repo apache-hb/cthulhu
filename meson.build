@@ -26,14 +26,26 @@ driver_tests = get_option('driver_tests').disable_auto_if(meson.is_subproject())
 
 # not sure if theres a better way to do this
 # https://github.com/mesonbuild/meson/issues/12570
-unit_tests.enable_auto_if(add_languages('cpp', native : false, required : unit_tests.enabled()))
+unit_tests.require(add_languages('cpp', native : false, required : unit_tests.enabled()))
+
+cc = meson.get_compiler('c')
+cpp = meson.get_compiler('cpp')
+
+llvm_fuzzing = get_option('llvm_fuzzing').disable_auto_if(meson.is_subproject())
+llvm_fuzzing = llvm_fuzzing.require(cpp.has_argument('-fsanitize=fuzzer-no-link'))
+
+# only enable fuzzing if its explicitly enabled
+# as it disables everything else
+if llvm_fuzzing.enabled()
+    add_project_arguments('-fsanitize=fuzzer', language : [ 'c', 'cpp' ])
+    add_project_link_arguments('-fsanitize=fuzzer', language : [ 'c', 'cpp' ])
+endif
 
 analyze = get_option('analyze')
 
 version = meson.project_version()
 target = target_machine.system()
 host = host_machine.system()
-cc = meson.get_compiler('c')
 buildtype = get_option('buildtype')
 
 is_debug = buildtype.contains('debug')
@@ -56,7 +68,14 @@ lexargs = []
 parseargs = []
 
 # bison generates a few unused variables
-args += cc.get_supported_arguments('-Wno-unused-but-set-variable')
+args += cc.get_supported_arguments(
+    '-Wno-unused-but-set-variable',
+    '-Wno-unused-function',
+    '-Wno-unused-parameter',
+
+    # may need to update bison soon
+    '-Wno-deprecated-non-prototype'
+)
 
 if host == 'windows'
     lexargs += [ '--wincompat' ]
@@ -140,39 +159,32 @@ foreach lang : get_option('languages')
     subdir('driver'/lang)
 endforeach
 
-subdir('interface/support')
+subdir('tools')
 
-foreach interface : get_option('interfaces')
-    subdir('interface'/interface)
-endforeach
+# enabling fuzzing needs to disable everything else
+# that has a main function
+if llvm_fuzzing.allowed()
+    subdir('tools/llvm_fuzzing')
+else
+    subdir('interface')
 
-if unit_tests.allowed()
-    subdir('tests/unit')
-endif
+    if unit_tests.allowed()
+        subdir('tests/unit')
+    endif
 
-if driver_tests.allowed()
-    subdir('interface/harness')
+    if driver_tests.allowed()
+        subdir('interface/harness')
 
-    foreach lang : get_option('languages')
-        subdir('tests/lang'/lang)
-    endforeach
-endif
+        foreach name, lang_config : langs
+            if lang_config.has_key('test_dir')
+                subdir('driver' / name / lang_config.get('test_dir'))
+            endif
+        endforeach
 
-afl = find_program('afl-fuzz', required : get_option('fuzzing'))
-
-if afl.found()
-    subdir('tests/fuzzing')
-
-    here = meson.current_source_dir()
-    foreach lang, interface : fuzzers
-        input = here/'tests/lang'/lang/'fuzzing-input'
-        cmd = [ afl, '-i', input, '-o', 'fuzz-out-' + lang, '-m', 'none', '-d', '--', interface.full_path(), '@@']
-        run_target('fuzz-' + lang,
-            command : cmd,
-            depends : interface,
-            env : { 'AFL_CRASH_EXITCODE': '99' }
-        )
-    endforeach
+        foreach lang : get_option('languages')
+            subdir('tests/lang'/lang)
+        endforeach
+    endif
 endif
 
 doxygen = find_program('doxygen', required : get_option('doxygen'))
@@ -204,6 +216,8 @@ summary = {
     'Testing': {
         'Unit tests': unit_tests.allowed(),
         'Driver tests': driver_tests.allowed(),
+        'AFL fuzzing': afl_fuzzing.allowed(),
+        'LLVM fuzzing': llvm_fuzzing.allowed(),
     },
     'Documentation': {
         'Doxygen': doxygen.found(),
@@ -215,5 +229,14 @@ foreach section_title, section : summary
 endforeach
 
 foreach lang_name, lang_config : langs
-    summary(lang_config.get('summary', {}), bool_yn : true, section : lang_name)
+    lang_summary = lang_config.get('summary', {})
+    if lang_config.has_key('fuzz_corpus')
+        lang_summary += { 'Fuzzing corpus': lang_config.get('fuzz_corpus') }
+    endif
+
+    if lang_config.has_key('test_dir')
+        lang_summary += { 'Tests': meson.current_source_dir() / 'driver' / lang_name / lang_config.get('test_dir') }
+    endif
+
+    summary(lang_summary, bool_yn : true, section : lang_name)
 endforeach

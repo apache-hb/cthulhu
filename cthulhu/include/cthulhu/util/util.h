@@ -1,5 +1,7 @@
 #pragma once
 
+#include "base/macros.h"
+
 #include <stdbool.h>
 
 #include <gmp.h>
@@ -7,6 +9,8 @@
 typedef struct tree_t tree_t;
 typedef struct vector_t vector_t;
 typedef struct node_t node_t;
+
+BEGIN_API
 
 ///
 /// query helpers
@@ -89,3 +93,5 @@ tree_t *util_create_call(tree_t *sema, const node_t *node, const tree_t *fn, vec
 
 bool util_length_bounded(size_t length);
 const char *util_length_name(size_t length);
+
+END_API

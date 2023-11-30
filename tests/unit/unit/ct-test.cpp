@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 
+#include "stacktrace/stacktrace.h"
+
 #include "base/panic.h"
 #include "std/str.h"
 
@@ -35,9 +37,11 @@ static void test_panic_handler(panic_t panic, const char *fmt, va_list args)
 {
     if (!gExpectingPanic)
     {
-        (void)fprintf(stderr, "unexpected panic: %s:%zu: %s: ", panic.file, panic.line, panic.function);
-        (void)vfprintf(stderr, fmt, args);
-        (void)fprintf(stderr, "\n");
+        stacktrace_print(stdout);
+
+        (void)printf("unexpected panic: %s:%zu: %s: ", panic.file, panic.line, panic.function);
+        (void)vprintf(fmt, args);
+        (void)printf("\n");
         abort();
     }
 
@@ -47,6 +51,7 @@ static void test_panic_handler(panic_t panic, const char *fmt, va_list args)
 
 void test_suite_t::install_panic_handler()
 {
+    stacktrace_init();
     gPanicHandler = test_panic_handler;
 }
 

@@ -34,8 +34,13 @@ option('analyze', type : 'feature',
     value : 'auto'
 )
 
-option('fuzzing', type : 'feature',
-    description : 'enable fuzzing support',
+option('afl_fuzzing', type : 'feature',
+    description : 'fuzz compiler via afl',
+    value : 'auto'
+)
+
+option('llvm_fuzzing', type : 'feature',
+    description : 'fuzz compiler via llvm',
     value : 'auto'
 )
 

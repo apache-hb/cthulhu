@@ -1,0 +1,11 @@
+procedure x;
+begin
+    ! 0
+end;
+
+procedure x;
+begin
+    ! 1
+end;
+
+.

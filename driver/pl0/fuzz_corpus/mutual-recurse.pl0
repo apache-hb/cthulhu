@@ -1,0 +1,28 @@
+var x;
+
+procedure lhs;
+begin
+    x := x + 1;
+    ! x;
+
+    if x > 0 then
+        call rhs
+end;
+
+procedure rhs;
+begin
+    x := x - 2;
+    ! x;
+
+    if x > 0 then
+        call lhs
+end;
+
+procedure start;
+begin
+    x := 10;
+    call lhs
+end;
+
+call start
+.

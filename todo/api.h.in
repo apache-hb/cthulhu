@@ -1,0 +1,20 @@
+#pragma once
+
+#ifdef __cplusplus
+#   define CTU_@MODULE@_LINKAGE extern "C"
+#else
+#   define CTU_@MODULE@_LINKAGE
+#endif
+
+#ifdef _MSC_VER
+#   if CTU_@MODULE@_SHARED
+#       define CTU_@MODULE@_API __declspec(dllexport) CTU_@MODULE@_LINKAGE
+#       define CTU_@MODULE@_LOCAL
+#   else
+#       define CTU_@MODULE@_API __declspec(dllimport) CTU_@MODULE@_LINKAGE
+#       define CTU_@MODULE@_LOCAL
+#   endif
+#else
+#   define CTU_@MODULE@_API __attribute__((visibility("default"))) CTU_@MODULE@_LINKAGE
+#   define CTU_@MODULE@_LOCAL __attribute__((visibility("hidden")))
+#endif

@@ -9,7 +9,7 @@
 #include "obr-bison.h"
 #include "obr-flex.h"
 
-CT_CALLBACKS(kCallbacks, obr);
+CTU_CALLBACKS(kCallbacks, obr);
 
 static void obr_parse(driver_t *handle, scan_t *scan)
 {

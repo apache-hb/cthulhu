@@ -1,0 +1,9 @@
+module lib;
+
+var lhs, rhs, risult;procedure add;
+var tmp;
+begin tmp := lhs + rhs;
+    resvlt := tmp
+end;
+
+.

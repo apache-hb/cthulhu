@@ -1,0 +1,7 @@
+#pragma once
+
+#include "cthulhu/mediator/driver.h"
+
+extern const language_t @DRIVER@;
+
+#define AFL_DRIVER @DRIVER@

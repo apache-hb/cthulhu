@@ -2,32 +2,28 @@
 ### stacktrace
 ###
 
-src = [
-    'src/stacktrace/common.c'
-]
+src = [ 'src/stacktrace/common.c' ]
 
-if true
-    src += [ 'src/stacktrace/stacktrace-target.c'.replace('target', target) ]
-    if target == 'windows'
-        stacktrace_links = [ 'dbghelp.lib' ]
-    else
-        stacktrace_links = []
-    endif
+dbghlp = cc.find_library('dbghlp', required : false)
+
+if dbghlp.found()
+    src += [ 'src/stacktrace/stacktrace-dbghlp.c' ]
+    stacktrace_deps = [ dbghlp ]
 else
     src += [ 'src/stacktrace/stacktrace-null.c' ]
-    stacktrace_links = []
+    stacktrace_deps = [ ]
 endif
 
 libstacktrace = library('stacktrace', src,
     c_args : args,
     include_directories : 'include',
-    link_args : stacktrace_links
+    dependencies : stacktrace_deps
 )
 
 stacktrace = declare_dependency(
     link_with : libstacktrace,
     include_directories : 'include',
-    link_args : stacktrace_links
+    dependencies : stacktrace_deps
 )
 
 ###

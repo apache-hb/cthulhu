@@ -8,7 +8,7 @@ src = [
 ]
 
 pl0 = library('pl0', src,
-    dependencies : [ mediator, interop, location, tree ],
+    dependencies : [ mediator, interop, location, tree, util ],
     c_args : args,
     include_directories : [ 'src', 'include' ]
 )
@@ -16,6 +16,8 @@ pl0 = library('pl0', src,
 langs += {
     'pl0': {
         'dep': declare_dependency(link_with : pl0),
-        'mod': 'kPl0Module'
+        'mod': 'kPl0Module',
+        'fuzz_corpus': meson.current_source_dir() / 'fuzz_corpus',
+        'test_dir': 'tests'
     }
 }

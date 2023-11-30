@@ -10,7 +10,7 @@
 #include "pl0-bison.h"
 #include "pl0-flex.h"
 
-CT_CALLBACKS(kCallbacks, pl0);
+CTU_CALLBACKS(kCallbacks, pl0);
 
 static void pl0_parse(driver_t *handle, scan_t *scan)
 {

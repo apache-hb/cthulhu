@@ -1,3 +1,5 @@
+subdir_done()
+
 dir = meson.current_source_dir()
 
 tests = {
@@ -60,7 +62,7 @@ crashes = {
     '11': false, '12': false, '13': false, '14': false,
     '15': false, # 16 omitted
     '17': false, '18': false,
-    '19': false, '20': true, '21': false, '22': false, 
+    '19': false, '20': true, '21': false, '22': false,
     '23': false, '24': false, '25': false, '26': false,
     '27': true, '28': true, '29': true, '30': false,
     '31': false
