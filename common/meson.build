@@ -1,4 +1,10 @@
-src = [ 'src/stacktrace/common.c' ]
+###
+### stacktrace
+###
+
+src = [
+    'src/stacktrace/common.c'
+]
 
 if true
     src += [ 'src/stacktrace/stacktrace-target.c'.replace('target', target) ]
@@ -24,7 +30,20 @@ stacktrace = declare_dependency(
     link_args : stacktrace_links
 )
 
+###
+### base
+###
+
+config_header = configure_file(
+    output : 'ctu-config.h',
+    configuration : config_cdata
+)
+
+config_include = include_directories('.')
+
 src = [
+    config_header,
+
     'src/base/base.c',
     'src/base/panic.c',
     'src/base/endian.c',
@@ -38,9 +57,14 @@ libbase = library('base', src,
 )
 
 base = declare_dependency(
+    sources : config_header,
     link_with : libbase,
     include_directories : [ 'include', config_include ]
 )
+
+###
+### std
+###
 
 src = [
     'src/std/map.c',

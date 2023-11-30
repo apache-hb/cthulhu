@@ -1,6 +1,3 @@
-#include <windows.h>
-WORD a;
-
 #include "cc/driver.h"
 #include "cc/sema/sema.h"
 

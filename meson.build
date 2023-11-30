@@ -3,11 +3,21 @@ project('cthulhu', 'c',
     version : '0.2.5',
     meson_version : '>=1.3.0',
     default_options : [
-        'c_std=gnu11,c11', # gcc is picky about POSIX stdlib extensions
-        'cpp_std=c++11,c++14',
-        'warning_level=2', # we use unnamed structs
-        'default_library=static',
-        'werror=true'
+        # gcc is picky about POSIX stdlib extensions
+        'c_std=gnu11,c11',
+
+        # msvc doesnt support c++11 so specify c++14 first
+        # we only need c++11
+        'cpp_std=c++14,c++11',
+
+        # we use unnamed structs
+        'warning_level=2',
+        'werror=true',
+
+        # currently meson doesnt forward `declare_dependency:sources` between dependencies
+        # which means we cant pass the ctu_xxx_api.h headers between dependencies
+        # so we have to use static linking until thats fixed
+        'default_library=static'
     ]
 )
 
@@ -39,14 +49,7 @@ config_cdata = configuration_data({
 
 config_cdata.set10('CTU_DEBUG', is_debug)
 
-config_header = configure_file(
-    output : 'ctu-config.h',
-    configuration : config_cdata
-)
-
-config_include = include_directories('.')
-
-gmp = dependency('gmp',fallback : [ 'mini-gmp', 'gmp' ])
+gmp = dependency('gmp', fallback : [ 'mini-gmp', 'gmp' ])
 
 args = []
 lexargs = []
@@ -172,7 +175,24 @@ if afl.found()
     endforeach
 endif
 
-subdir('tools/docs')
+doxygen = find_program('doxygen', required : get_option('doxygen'))
+
+if doxygen.found()
+    cwd = meson.project_source_root()
+    doxy_srcdirs = [ cwd/'interface', cwd/'common', cwd/'cthulhu', cwd/'driver' ]
+
+    doxy_cdata = configuration_data()
+    doxy_cdata.merge_from(config_cdata)
+    doxy_cdata.set('CTU_SOURCES', ';'.join(doxy_srcdirs))
+
+    doxy_cfg = configure_file(
+        input : 'Doxyfile.in',
+        output : 'Doxyfile',
+        configuration : doxy_cdata
+    )
+
+    run_target('docs', command : [ doxygen, doxy_cfg ])
+endif
 
 summary = {
     'Build': {

@@ -15,12 +15,15 @@ endif
 
 libgmp = library('gmp', 'mini-gmp.c',
     include_directories : '.',
-    c_args : c_args
+    c_args : c_args,
+    c_shared_args : '-DMINI_GMP_EXPORTS'
 )
 
 libmpq = library('mpq', 'mini-mpq.c',
+    link_with : libgmp,
     include_directories : '.',
-    c_args : c_args
+    c_args : c_args,
+    c_shared_args : '-DMINI_MPQ_EXPORTS'
 )
 
 gmp = declare_dependency(

@@ -18,7 +18,7 @@ src = [
 ]
 
 ctu = library('ctu', src,
-    dependencies : [ mediator, interop, location, tree, util ],
+    dependencies : [ base, std, mediator, interop, location, tree, util ],
     c_args : args,
     include_directories : [ 'src', 'include' ]
 )

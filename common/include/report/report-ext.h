@@ -11,12 +11,12 @@ typedef struct message_t message_t;
  *
  * @param reports the report sink
  * @param name the name of the shadowed symbol
- * @param prevDefinition the previous symbol definition
- * @param newDefinition the new symbol definition
+ * @param previous the previous symbol definition
+ * @param redefine the new symbol definition
  *
  * @return the message
  */
-message_t *report_shadow(reports_t *reports, const char *name, const node_t *prevDefinition, const node_t *newDefinition);
+message_t *report_shadow(reports_t *reports, const char *name, const node_t *previous, const node_t *redefine);
 
 /**
  * @brief report one or more unknown characters in a file

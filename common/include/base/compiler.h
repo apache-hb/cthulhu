@@ -26,14 +26,14 @@
 #    define NORETURN [[noreturn]] void
 #endif
 
-#if CC_CLANG || CC_GNU
-#    ifndef NORETURN
+#ifndef NORETURN
+#   if CC_CLANG || CC_GNU
 #        define NORETURN __attribute__((noreturn)) void
-#    endif
-#elif CC_MSVC
-#    ifndef NORETURN
+#   elif CC_MSVC
 #        define NORETURN __declspec(noreturn) void
-#    endif
+#   else
+#        define NORETURN void
+#   endif
 #endif
 
 #ifdef OS_WINDOWS

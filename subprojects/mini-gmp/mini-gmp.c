@@ -1407,7 +1407,7 @@ mpn_set_str (mp_ptr rp, const unsigned char *sp, size_t sn, int base)
     }
 }
 
-
+
 /* MPZ interface */
 void
 mpz_init (mpz_t r)
@@ -1462,7 +1462,7 @@ mpz_realloc (mpz_t r, mp_size_t size)
 #define MPZ_REALLOC(z,n) ((n) > (z)->_mp_alloc			\
 			  ? mpz_realloc(z,n)			\
 			  : (z)->_mp_d)
-
+
 /* MPZ assignment and basic conversions. */
 void
 mpz_set_si (mpz_t r, signed long int x)
@@ -1542,27 +1542,27 @@ mpz_init_set (mpz_t r, const mpz_t x)
 }
 
 
-int 
+int
 mpz_fits_sshort_p (const mpz_t u)
 {
   return (SHRT_MAX + SHRT_MIN == 0 || mpz_cmp_ui (u, SHRT_MAX) <= 0) &&
     mpz_cmpabs_ui (u, GMP_NEG_CAST (unsigned short, SHRT_MIN)) <= 0;
 }
 
-int 
+int
 mpz_fits_ushort_p (const mpz_t u)
 {
   return 0;
 }
 
-int 
+int
 mpz_fits_sint_p (const mpz_t u)
 {
   return (INT_MAX + INT_MIN == 0 || mpz_cmp_ui (u, INT_MAX) <= 0) &&
     mpz_cmpabs_ui (u, GMP_NEG_CAST (unsigned int, INT_MIN)) <= 0;
 }
 
-int 
+int
 mpz_fits_uint_p (const mpz_t u)
 {
   return 0;

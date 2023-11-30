@@ -1,5 +1,7 @@
 #include "base/endian.h"
 
+#include <stdlib.h>
+
 uint16_t endian_swap16(uint16_t value)
 {
 #if CC_MSVC

@@ -50,13 +50,13 @@ src = [
 libemit = library('emit', src,
     include_directories : [ 'include', 'src/emit' ],
     c_args : args,
-    dependencies : [ ssa, std, io, interop ]
+    dependencies : [ base, ssa, std, io, interop ]
 )
 
 emit = declare_dependency(
     link_with : libemit,
     include_directories : 'include',
-    dependencies : [ ssa ]
+    dependencies : [ base, ssa ]
 )
 
 src = [
@@ -67,7 +67,7 @@ src = [
 libmediator = library('mediator', src,
     include_directories : 'include',
     c_args : args,
-    dependencies : [ std, tree ]
+    dependencies : [ base, std, stacktrace, tree ]
 )
 
 mediator = declare_dependency(
@@ -85,7 +85,7 @@ src = [
 libutil = library('util', src,
     include_directories : 'include',
     c_args : args,
-    dependencies : [ std, tree ]
+    dependencies : [ base, std, tree ]
 )
 
 util = declare_dependency(
@@ -101,7 +101,7 @@ src = [
 libcheck = library('check', src,
     include_directories : 'include',
     c_args : args,
-    dependencies : [ std, tree, ssa ]
+    dependencies : [ base, std, tree, ssa ]
 )
 
 check = declare_dependency(

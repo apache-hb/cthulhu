@@ -15,12 +15,12 @@ static void *default_global_malloc(alloc_t *alloc, size_t size, const char *name
     return malloc(size);
 }
 
-static void *default_global_realloc(alloc_t *alloc, void *ptr, size_t newSize, size_t oldSize)
+static void *default_global_realloc(alloc_t *alloc, void *ptr, size_t new_size, size_t old_size)
 {
     CTU_UNUSED(alloc);
-    CTU_UNUSED(oldSize);
+    CTU_UNUSED(old_size);
 
-    return realloc(ptr, newSize);
+    return realloc(ptr, new_size);
 }
 
 static void default_global_free(alloc_t *alloc, void *ptr, size_t size)
@@ -33,9 +33,9 @@ static void default_global_free(alloc_t *alloc, void *ptr, size_t size)
 
 alloc_t gDefaultAlloc = {
     .name = "default global allocator",
-    .arenaMalloc = default_global_malloc,
-    .arenaRealloc = default_global_realloc,
-    .arenaFree = default_global_free
+    .arena_malloc = default_global_malloc,
+    .arena_realloc = default_global_realloc,
+    .arena_free = default_global_free
 };
 
 /// global allocator
@@ -49,12 +49,12 @@ void *ctu_malloc(size_t size)
 }
 
 USE_DECL
-void *ctu_realloc(void *ptr, size_t newSize)
+void *ctu_realloc(void *ptr, size_t new_size)
 {
     CTASSERT(ptr != NULL);
-    CTASSERT(newSize > 0);
+    CTASSERT(new_size > 0);
 
-    return arena_realloc(&gDefaultAlloc, ptr, newSize, ALLOC_SIZE_UNKNOWN);
+    return arena_realloc(&gDefaultAlloc, ptr, new_size, ALLOC_SIZE_UNKNOWN);
 }
 
 USE_DECL
@@ -70,15 +70,15 @@ void *arena_malloc(alloc_t *alloc, size_t size, const char *name)
 {
     CTASSERT(alloc != NULL);
 
-    return alloc->arenaMalloc(alloc, size, name);
+    return alloc->arena_malloc(alloc, size, name);
 }
 
 USE_DECL
-void *arena_realloc(alloc_t *alloc, void *ptr, size_t newSize, size_t oldSize)
+void *arena_realloc(alloc_t *alloc, void *ptr, size_t new_size, size_t old_size)
 {
     CTASSERT(alloc != NULL);
 
-    return alloc->arenaRealloc(alloc, ptr, newSize, oldSize);
+    return alloc->arena_realloc(alloc, ptr, new_size, old_size);
 }
 
 USE_DECL
@@ -86,7 +86,7 @@ void arena_free(alloc_t *alloc, void *ptr, size_t size)
 {
     CTASSERT(alloc != NULL);
 
-    alloc->arenaFree(alloc, ptr, size);
+    alloc->arena_free(alloc, ptr, size);
 }
 
 /// gmp arena managment
@@ -98,9 +98,9 @@ static void *ctu_gmp_malloc(size_t size)
     return arena_malloc(gGmpAlloc, size, "gmp-alloc");
 }
 
-static void *ctu_gmp_realloc(void *ptr, size_t oldSize, size_t newSize)
+static void *ctu_gmp_realloc(void *ptr, size_t old_size, size_t new_size)
 {
-    return arena_realloc(gGmpAlloc, ptr, newSize, oldSize);
+    return arena_realloc(gGmpAlloc, ptr, new_size, old_size);
 }
 
 static void ctu_gmp_free(void *ptr, size_t size)

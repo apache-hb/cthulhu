@@ -12,7 +12,7 @@ BEGIN_API
 typedef struct alloc_t alloc_t;
 
 typedef void *(*malloc_t)(alloc_t *self, size_t size, const char *name);
-typedef void *(*realloc_t)(alloc_t *self, void *ptr, size_t newSize, size_t oldSize);
+typedef void *(*realloc_t)(alloc_t *self, void *ptr, size_t new_size, size_t old_size);
 typedef void (*free_t)(alloc_t *self, void *ptr, size_t size);
 
 /**
@@ -21,9 +21,9 @@ typedef void (*free_t)(alloc_t *self, void *ptr, size_t size);
 typedef struct alloc_t
 {
     const char *name;
-    malloc_t arenaMalloc;
-    realloc_t arenaRealloc;
-    free_t arenaFree;
+    malloc_t arena_malloc;
+    realloc_t arena_realloc;
+    free_t arena_free;
 } alloc_t;
 
 extern alloc_t gDefaultAlloc;
@@ -36,7 +36,7 @@ NODISCARD ALLOC(ctu_free)
 void *ctu_malloc(size_t size);
 
 NODISCARD ALLOC(ctu_free)
-void *ctu_realloc(IN_NOTNULL void *ptr, size_t newSize);
+void *ctu_realloc(IN_NOTNULL void *ptr, size_t new_size);
 
 // gmp
 
@@ -50,6 +50,6 @@ NODISCARD ALLOC(arena_free, 2)
 void *arena_malloc(IN_NOTNULL alloc_t *alloc, size_t size, const char *name);
 
 NODISCARD
-void *arena_realloc(IN_NOTNULL alloc_t *alloc, IN_NOTNULL void *ptr, size_t newSize, size_t oldSize);
+void *arena_realloc(IN_NOTNULL alloc_t *alloc, IN_NOTNULL void *ptr, size_t new_size, size_t old_size);
 
 END_API

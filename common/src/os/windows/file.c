@@ -24,10 +24,10 @@ OS_RESULT(os_file_t *) os_file_open(const char *path, os_access_t access)
     CTASSERT(path != NULL);
     CTASSERT(access & (eAccessRead | eAccessWrite));
     DWORD dwAccess = get_access(access);
-    DWORD dwDisposition = (access & eAccessWrite) 
-        ? (OPEN_ALWAYS | TRUNCATE_EXISTING) 
+    DWORD dwDisposition = (access & eAccessWrite)
+        ? (OPEN_ALWAYS | TRUNCATE_EXISTING)
         : OPEN_EXISTING;
-    HANDLE handle = CreateFile(        
+    HANDLE handle = CreateFile(
         /* lpFileName = */ path,
         /* dwDesiredAccess = */ dwAccess,
         /* dwShareMode = */ FILE_SHARE_READ,
@@ -45,7 +45,7 @@ OS_RESULT(os_file_t *) os_file_open(const char *path, os_access_t access)
         .path = path,
         .handle = handle,
     };
-    
+
     return win_result(ERROR_SUCCESS, &fd, sizeof(os_file_t));
 }
 
@@ -59,7 +59,7 @@ OS_RESULT(size_t) os_file_read(os_file_t *file, void *buffer, size_t size)
 {
     CTASSERT(file != NULL);
     CTASSERT(buffer != NULL);
-    CTASSERTF(size > 0 && size <= DWORD_MAX, "size=%zu", size);
+    CTASSERTF(size > 0 && size <= UINT32_MAX, "size=%zu", size);
 
     DWORD readSize = 0;
     BOOL result = ReadFile(file->handle, buffer, (DWORD)size, &readSize, NULL);
@@ -78,7 +78,7 @@ OS_RESULT(size_t) os_file_write(os_file_t *file, const void *buffer, size_t size
 {
     CTASSERT(file != NULL);
     CTASSERT(buffer != NULL);
-    CTASSERT(size > 0 && size <= DWORD_MAX);
+    CTASSERT(size > 0 && size <= UINT32_MAX);
 
     DWORD writtenSize = 0;
     BOOL result = WriteFile(file->handle, buffer, (DWORD)size, &writtenSize, NULL);
@@ -146,7 +146,7 @@ OS_RESULT(size_t) os_file_tell(os_file_t *file)
 OS_RESULT(const void *) os_file_map(os_file_t *file)
 {
     CTASSERT(file != NULL);
-    
+
     // TODO: maybe mapping should be part of os_file_t?
     HANDLE mapping = CreateFileMapping(
         /* hFile = */ file->handle,

@@ -3,7 +3,7 @@
 #include "base/compiler.h"
 
 #if OS_WINDOWS
-#   include <Windows.h>
+#   include "base/win32.h"
 #   define CTU_BIG_ENDIAN REG_DWORD_BIG_ENDIAN
 #   define CTU_LITTLE_ENDIAN REG_DWORD_LITTLE_ENDIAN
 #   define CTU_BYTE_ORDER REG_DWORD
@@ -20,13 +20,15 @@
 
 #include <stdint.h>
 
+BEGIN_API
+
 /**
  * @defgroup Endian Endianess
  * @brief Endianess and byte swapping
  * @{
  */
 
-typedef enum endian_t 
+typedef enum endian_t
 {
 #define ENDIAN(id, name, v) id = (v),
 #include "endian.inc"
@@ -43,3 +45,4 @@ uint32_t native_order32(uint32_t value, endian_t order);
 uint64_t native_order64(uint64_t value, endian_t order);
 
 /** @} */
+END_API

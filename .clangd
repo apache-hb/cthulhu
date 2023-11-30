@@ -4,33 +4,3 @@ InlayHints:
 
 Hover:
   ShowAKA: No
-
-Diagnostics:
-  ClangTidy:
-    Add: [performance*, portability*, bugprone*, clang-analyzer*, cert*, concurrency*, readability-identifier-naming]
-    Remove: [bugprone-easily-swappable-parameters, bugprone-narrowing-conversions]
-    CheckOptions:
-      readability-identifier-naming.VariableCase: lower_case
-      readability-identifier-naming.ParameterCase: lower_case
-      readability-identifier-naming.MemberCase: lower_case
-
-      readability-identifier-naming.UnionCase: lower_case
-      readability-identifier-naming.UnionSuffix: _t
-
-      readability-identifier-naming.StructCase: lower_case
-      readability-identifier-naming.StructSuffix: _t
-
-      readability-identifier-naming.EnumCase: lower_case
-      readability-identifier-naming.EnumSuffix: _t
-
-      readability-identifier-naming.EnumConstantCase: CamelCase
-      readability-identifier-naming.EnumConstantPrefix: e
-
-      readability-identifier-naming.TypedefCase: lower_case
-      readability-identifier-naming.TypedefSuffix: _t
-
-      readability-identifier-naming.GlobalConstantCase: CamelCase
-      readability-identifier-naming.GlobalConstantPrefix: k
-
-      readability-identifier-naming.GlobalVariableCase: CamelCase
-      readability-identifier-naming.GlobalVariablePrefix: g

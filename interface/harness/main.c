@@ -31,7 +31,7 @@
 #include <string.h>
 
 #if OS_WINDOWS
-#   include <windows.h>
+#   include "base/win32.h"
 #   define CWD ".\\"
 #else
 #   include <unistd.h>

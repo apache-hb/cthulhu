@@ -1,8 +1,10 @@
-Checks: 'concurrency,readability-identifier-naming'
+Checks:
+  - 'performance*,portability*,bugprone*,clang-analyzer*,cert*,concurrency*,readability-identifier-naming'
+  - '-bugprone-easily-swappable-parameters'
 CheckOptions:
-  - { key: readability-identifier-naming.VariableCase, value: camelBack }
-  - { key: readability-identifier-naming.ParameterCase, value: camelBack }
-  - { key: readability-identifier-naming.MemberCase, value: camelBack }
+  - { key: readability-identifier-naming.VariableCase, value: lower_case }
+  - { key: readability-identifier-naming.ParameterCase, value: lower_case }
+  - { key: readability-identifier-naming.MemberCase, value: lower_case }
   - { key: readability-identifier-naming.UnionCase, value: lower_case }
   - { key: readability-identifier-naming.UnionSuffix, value: _t }
   - { key: readability-identifier-naming.StructCase, value: lower_case }
