@@ -9,7 +9,7 @@ src = [
 
 pl0 = library('pl0', src,
     dependencies : [ mediator, interop, location, tree, util ],
-    c_args : args,
+    c_args : generated_args,
     include_directories : [ 'src', 'include' ]
 )
 

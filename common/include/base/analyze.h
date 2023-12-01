@@ -15,25 +15,41 @@
 #   endif
 #   define IN_READS(expr) _In_reads_(expr)
 #   define OUT_WRITES(expr) _Out_writes_(expr)
-#   define RET_RANGE(lo, hi) _Ret_range_(lo, hi)
-#   define FIELD_SIZE(of) _Field_size_(of)
+#   define OUT_PTR_INVALID _Post_ptr_invalid_
+
+#   define RET_RANGE(cmp, it) _Ret_range_(cmp, it)
+#   define RET_NOTNULL _Ret_notnull_
+#   define RET_STRING _Ret_z_
 #   define MUST_INSPECT _Must_inspect_result_
+
+#   define FIELD_SIZE(of) _Field_size_(of)
+#   define FIELD_STRING _Field_z_
+#   define FIELD_RANGE(cmp, it) _Field_range_(cmp, it)
+
 #   define IN_NOTNULL _In_
-#   define IN_NULLABLE _In_opt_
 #   define IN_STRING _In_z_
-#   define IN_RANGE(lo, hi) _In_range_(lo, hi)
+#   define IN_STRING_OPT _In_opt_z_
+#   define IN_RANGE(cmp, it) _In_range_(cmp, it)
 #else
 #   define FORMAT_STRING
 #   define USE_DECL
 #   define IN_READS(expr)
 #   define OUT_WRITES(expr)
-#   define RET_RANGE(lo, hi)
-#   define FIELD_SIZE(of)
+#   define OUT_PTR_INVALID
+
+#   define RET_RANGE(cmp, it)
+#   define RET_NOTNULL
+#   define RET_STRING
 #   define MUST_INSPECT
+
+#   define FIELD_SIZE(of)
+#   define FIELD_STRING
+#   define FIELD_RANGE(cmp, it)
+
 #   define IN_NOTNULL
-#   define IN_NULLABLE
 #   define IN_STRING
-#   define IN_RANGE(lo, hi)
+#   define IN_STRING_OPT
+#   define IN_RANGE(cmp, it)
 #endif
 
 #if __GNUC__ >= 11

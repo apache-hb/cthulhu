@@ -106,12 +106,12 @@ static ssa_symbol_t *function_create(ssa_compile_t *ssa, const tree_t *tree)
     for (size_t i = 0; i < locals; i++)
     {
         const tree_t *local = vector_get(tree->locals, i);
-        ssa_storage_t storage = create_storage_type(ssa->types, local);
+        ssa_storage_t type_storage = create_storage_type(ssa->types, local);
         const ssa_type_t *type = ssa_type_create_cached(ssa->types, tree_get_type(local));
         const char *name = tree_get_name(local);
 
         ssa_local_t it = {
-            .storage = storage,
+            .storage = type_storage,
             .name = name,
             .type = type,
         };
@@ -474,7 +474,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
 
     case eTreeDeclGlobal: {
         ssa_symbol_t *symbol = map_get_ptr(ssa->globals, tree);
-        CTASSERTF(symbol != NULL, "symbol table missing `%s` (%p)", tree_to_string(tree), tree);
+        CTASSERTF(symbol != NULL, "symbol table missing `%s` (%p)", tree_to_string(tree), (void*)tree);
 
         add_dep(ssa, ssa->currentSymbol, symbol);
 

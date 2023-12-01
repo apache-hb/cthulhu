@@ -1,7 +1,7 @@
 src = [ 'common.c' ]
 
 libnative = library('native', src,
-    c_args : args,
+    c_args : user_args,
     dependencies : [ common ]
 )
 

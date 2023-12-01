@@ -32,7 +32,7 @@ static tree_t *example_lang_module(lifetime_t *lifetime)
 
 static void ex_config(lifetime_t *lifetime, ap_t *ap)
 {
-    logverbose("ex-config(0x%p, 0x%p)", lifetime, ap);
+    logverbose("ex-config(0x%p, 0x%p)", (void*)lifetime, (void*)ap);
 }
 
 static void ex_create(driver_t *handle)
@@ -45,37 +45,37 @@ static void ex_create(driver_t *handle)
 
     add_context(lifetime, path, ctx);
 
-    logverbose("ex-create(0x%p)", handle);
+    logverbose("ex-create(0x%p)", (void*)handle);
 }
 
 static void ex_destroy(driver_t *handle)
 {
-    logverbose("ex-destroy(0x%p)", handle);
+    logverbose("ex-destroy(0x%p)", (void*)handle);
 }
 
 static void ex_parse(driver_t *handle, scan_t *scan)
 {
-    logverbose("ex-parse(0x%p, %s)", handle, scan_path(scan));
+    logverbose("ex-parse(0x%p, %s)", (void*)handle, scan_path(scan));
 }
 
 static void ex_forward_symbols(context_t *context)
 {
-    logverbose("ex-forward(0x%p)", context);
+    logverbose("ex-forward(0x%p)", (void*)context);
 }
 
 static void ex_compile_imports(context_t *context)
 {
-    logverbose("ex-compile-imports(0x%p)", context);
+    logverbose("ex-compile-imports(0x%p)", (void*)context);
 }
 
 static void ex_compile_types(context_t *context)
 {
-    logverbose("ex-compile-types(0x%p)", context);
+    logverbose("ex-compile-types(0x%p)", (void*)context);
 }
 
 static void ex_compile_symbols(context_t *context)
 {
-    logverbose("ex-compile-symbols(0x%p)", context);
+    logverbose("ex-compile-symbols(0x%p)", (void*)context);
 }
 
 static const char *kLangNames[] = { "e", "example", NULL };

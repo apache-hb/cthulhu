@@ -9,6 +9,7 @@ void stacktrace_init(void)
     SymSetOptions(SYMOPT_LOAD_LINES);
 }
 
+USE_DECL
 const char *stacktrace_backend(void)
 {
     return "win32-dbghelp";
@@ -55,8 +56,12 @@ union disp_t {
     DWORD64 disp64;
 };
 
+USE_DECL
 size_t stacktrace_get(frame_t *frames, size_t size)
 {
+    if (frames == NULL) return 0;
+    if (size == 0) return 0;
+
     char buffer[sizeof(SYMBOL_INFO) + (STACKTRACE_NAME_LENGTH - 1) * sizeof(TCHAR)] = { 0 };
     HANDLE thread = GetCurrentThread();
     HANDLE process = GetCurrentProcess();

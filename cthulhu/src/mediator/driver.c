@@ -51,7 +51,7 @@ context_t *add_context(lifetime_t *lifetime, vector_t *path, context_t *mod)
 
     char *name = path_to_string(path);
 
-    logverbose("add-context (%s: 0x%p)", name, mod);
+    logverbose("add-context (%s: 0x%p)", name, (void*)mod);
 
     context_t *old = map_get(lifetime->modules, name);
     if (old != NULL)
@@ -72,6 +72,7 @@ context_t *get_context(lifetime_t *lifetime, vector_t *path)
     return map_get(lifetime->modules, name);
 }
 
+USE_DECL
 reports_t *lifetime_get_reports(lifetime_t *lifetime)
 {
     CTASSERT(lifetime != NULL);
@@ -79,6 +80,7 @@ reports_t *lifetime_get_reports(lifetime_t *lifetime)
     return lifetime->reports;
 }
 
+USE_DECL
 cookie_t *lifetime_get_cookie(lifetime_t *lifetime)
 {
     CTASSERT(lifetime != NULL);

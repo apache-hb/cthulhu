@@ -219,12 +219,12 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
         }
         case eOpCall: {
             ssa_call_t call = step->call;
-            size_t len = typevec_len(call.args);
-            vector_t *args = vector_of(len);
-            for (size_t i = 0; i < len; i++)
+            size_t args_len = typevec_len(call.args);
+            vector_t *args = vector_of(args_len);
+            for (size_t arg_idx = 0; arg_idx < args_len; arg_idx++)
             {
-                const ssa_operand_t *arg = typevec_offset(call.args, i);
-                vector_set(args, i, (char*)operand_to_string(emit, *arg));
+                const ssa_operand_t *arg = typevec_offset(call.args, arg_idx);
+                vector_set(args, arg_idx, (char*)operand_to_string(emit, *arg));
             }
             write_string(io, "\t%%%s = call %s (%s)\n",
                 get_step_name(&emit->emit, step),

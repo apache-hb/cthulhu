@@ -10,6 +10,6 @@ typedef struct scan_t
     const char *language; ///< the language this file contains
     void *data;           ///< user data pointer
 
-    const char *mapped;
+    FIELD_SIZE(size) const char *mapped;
     size_t size;
 } scan_t;

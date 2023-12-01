@@ -571,17 +571,17 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
 
         case eOpCall: {
             ssa_call_t call = step->call;
-            size_t len = typevec_len(call.args);
+            size_t args_len = typevec_len(call.args);
 
             const ssa_type_t *ty = get_operand_type(emit, call.function);
             ssa_type_closure_t closure = ty->closure;
             const ssa_type_t *result = closure.result;
 
-            vector_t *args = vector_of(len);
-            for (size_t i = 0; i < len; i++)
+            vector_t *args = vector_of(args_len);
+            for (size_t arg_idx = 0; arg_idx < args_len; arg_idx++)
             {
-                const ssa_operand_t *operand = typevec_offset(call.args, i);
-                vector_set(args, i, (char*)c89_format_operand(emit, *operand));
+                const ssa_operand_t *operand = typevec_offset(call.args, arg_idx);
+                vector_set(args, arg_idx, (char*)c89_format_operand(emit, *operand));
             }
 
             write_string(io, "\t");

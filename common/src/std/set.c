@@ -8,18 +8,19 @@
 /**
  * @brief a node in a chain of set entries
  */
-typedef struct item_t {
+typedef struct item_t
+{
     const void *key;     ///< the key to this bucket
     struct item_t *next; ///< the next bucket in the chain
 } item_t;
 
-typedef struct set_t {
-    size_t size;                     ///< the number of buckets
+typedef struct set_t
+{
+    FIELD_RANGE(>, 0) size_t size;                     ///< the number of buckets
     FIELD_SIZE(size) item_t items[]; ///< the buckets
 } set_t;
 
-NODISCARD
-static size_t set_size(size_t size)
+NODISCARD static size_t set_size(size_t size)
 {
     return sizeof(set_t) + (sizeof(item_t) * size);
 }
@@ -218,9 +219,9 @@ void set_reset(set_t *set)
         item_t *item = &set->items[i];
         while (item->next != NULL)
         {
-            item_t *next = item->next;
-            item->next = next->next;
-            ctu_free(next);
+            item_t *chain = item->next;
+            item->next = chain->next;
+            ctu_free(chain);
         }
         item->next = NULL;
         item->key = NULL;

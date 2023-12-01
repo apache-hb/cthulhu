@@ -21,7 +21,7 @@ typedef struct vector_t vector_t;
  *
  * @param vector the vector to release
  */
-void vector_delete(IN_NOTNULL vector_t *vector);
+void vector_delete(IN_NOTNULL OUT_PTR_INVALID vector_t *vector);
 
 /**
  * @brief create a new vector.

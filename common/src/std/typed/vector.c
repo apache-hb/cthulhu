@@ -28,11 +28,13 @@ static typevec_t *typevec_create(size_t type_size, size_t len)
     return vec;
 }
 
+USE_DECL
 typevec_t *typevec_new(size_t size, size_t len)
 {
     return typevec_create(size, len);
 }
 
+USE_DECL
 typevec_t *typevec_of(size_t size, size_t len)
 {
     typevec_t *self = typevec_create(size, len);

@@ -167,7 +167,7 @@ OS_RESULT(os_file_t *) os_file_open(IN_STRING const char *path, os_access_t acce
 /// @brief close a file
 ///
 /// @param file the file to close
-void os_file_close(IN_NOTNULL os_file_t *file);
+void os_file_close(IN_NOTNULL OUT_PTR_INVALID os_file_t *file);
 
 /// @brief read from a file
 ///
@@ -178,7 +178,10 @@ void os_file_close(IN_NOTNULL os_file_t *file);
 /// @return the number of bytes read
 /// @return an error if the file could not be read from
 NODISCARD
-OS_RESULT(size_t) os_file_read(IN_NOTNULL os_file_t *file, OUT_WRITES(size) void *buffer, size_t size);
+OS_RESULT(size_t) os_file_read(
+        IN_NOTNULL os_file_t *file,
+        void *buffer, // OUT_WRITES(os_value(return))
+        IN_RANGE(>, 0) size_t size);
 
 /// @brief write to a file
 ///
@@ -189,7 +192,10 @@ OS_RESULT(size_t) os_file_read(IN_NOTNULL os_file_t *file, OUT_WRITES(size) void
 /// @return the number of bytes written
 /// @return an error if the file could not be written to
 NODISCARD
-OS_RESULT(size_t) os_file_write(IN_NOTNULL os_file_t *file, IN_READS(size) const void *buffer, size_t size);
+OS_RESULT(size_t) os_file_write(
+        IN_NOTNULL os_file_t *file,
+        IN_READS(size) const void *buffer,
+        IN_RANGE(>, 0) size_t size);
 
 /// @brief get the size of a file
 ///

@@ -5,6 +5,7 @@
 #include "report/report.h"
 
 // TODO: this feels janky
+USE_DECL
 OS_RESULT(bool) os_file_create(const char *path)
 {
     HANDLE handle = CreateFile(
@@ -34,6 +35,7 @@ OS_RESULT(bool) os_file_create(const char *path)
     return win_result(ERROR_SUCCESS, &valid, sizeof(bool));
 }
 
+USE_DECL
 OS_RESULT(bool) os_file_delete(const char *path)
 {
     bool result = DeleteFileA(path);
@@ -46,6 +48,7 @@ OS_RESULT(bool) os_file_delete(const char *path)
     return win_result(ERROR_SUCCESS, &result, sizeof(bool));
 }
 
+USE_DECL
 OS_RESULT(bool) os_file_exists(const char *path)
 {
     OS_RESULT(os_dirent_t) type = os_dirent_type(path);
@@ -58,6 +61,7 @@ OS_RESULT(bool) os_file_exists(const char *path)
     return win_result(ERROR_SUCCESS, &result, sizeof(bool));
 }
 
+USE_DECL
 OS_RESULT(bool) os_dir_create(const char *path)
 {
     bool result = CreateDirectoryA(path, NULL);
@@ -75,6 +79,7 @@ OS_RESULT(bool) os_dir_create(const char *path)
     return win_result(ERROR_SUCCESS, &result, sizeof(bool));
 }
 
+USE_DECL
 OS_RESULT(bool) os_dir_delete(const char *path)
 {
     bool result = RemoveDirectoryA(path);
@@ -86,6 +91,7 @@ OS_RESULT(bool) os_dir_delete(const char *path)
     return win_result(ERROR_SUCCESS, &result, sizeof(bool));
 }
 
+USE_DECL
 OS_RESULT(bool) os_dir_exists(const char *path)
 {
     OS_RESULT(os_dirent_t) type = os_dirent_type(path);
@@ -96,6 +102,7 @@ OS_RESULT(bool) os_dir_exists(const char *path)
     return win_result(ERROR_SUCCESS, &result, sizeof(bool));
 }
 
+USE_DECL
 OS_RESULT(os_dirent_t) os_dirent_type(const char *path)
 {
     DWORD attributes = GetFileAttributesA(path);
@@ -124,6 +131,7 @@ OS_RESULT(os_dirent_t) os_dirent_type(const char *path)
     return win_error(error);
 }
 
+USE_DECL
 OS_RESULT(const char *) os_dir_current(void)
 {
     DWORD size = GetCurrentDirectoryA(0, NULL);

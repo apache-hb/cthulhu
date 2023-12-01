@@ -8,7 +8,7 @@ src = [
 
 libhlir = library('tree', src,
     include_directories : 'include',
-    c_args : args,
+    c_args : user_args,
     dependencies : [ std, gmp ]
 )
 
@@ -29,7 +29,7 @@ src = [
 
 libssa = library('ssa', src,
     include_directories : 'include',
-    c_args : args,
+    c_args : user_args,
     dependencies : [ std, gmp, tree ]
 )
 
@@ -49,7 +49,7 @@ src = [
 
 libemit = library('emit', src,
     include_directories : [ 'include', 'src/emit' ],
-    c_args : args,
+    c_args : user_args,
     dependencies : [ base, ssa, std, io, interop ]
 )
 
@@ -66,7 +66,7 @@ src = [
 
 libmediator = library('mediator', src,
     include_directories : 'include',
-    c_args : args,
+    c_args : user_args,
     dependencies : [ base, std, stacktrace, tree ]
 )
 
@@ -84,7 +84,7 @@ src = [
 
 libutil = library('util', src,
     include_directories : 'include',
-    c_args : args,
+    c_args : user_args,
     dependencies : [ base, std, tree ]
 )
 
@@ -100,7 +100,7 @@ src = [
 
 libcheck = library('check', src,
     include_directories : 'include',
-    c_args : args,
+    c_args : user_args,
     dependencies : [ base, std, tree, ssa ]
 )
 

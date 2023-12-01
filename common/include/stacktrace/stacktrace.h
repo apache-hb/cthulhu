@@ -29,6 +29,7 @@ void stacktrace_init(void);
 
 /// @brief get the stacktrace backend name
 /// @return the stacktrace backend name
+RET_STRING
 const char *stacktrace_backend(void);
 
 /// @brief get a stacktrace from the current location
@@ -39,7 +40,10 @@ const char *stacktrace_backend(void);
 /// @param size the size of @a frames
 ///
 /// @return the number of frames filled
-size_t stacktrace_get(OUT_WRITES(size) frame_t *frames, size_t size);
+RET_RANGE(<=, size)
+size_t stacktrace_get(
+        frame_t *frames, // OUT_WRITES(return)
+        IN_RANGE(>, 0) size_t size);
 
 /// @brief print a stacktrace to a file
 /// @note this follows the same precondition as @ref stacktrace_get

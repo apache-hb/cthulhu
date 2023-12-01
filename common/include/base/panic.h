@@ -3,8 +3,6 @@
 #include "base/analyze.h"
 #include "base/macros.h"
 
-#include <ctu-config.h>
-
 #include <stdarg.h>
 #include <stddef.h>
 
@@ -14,13 +12,13 @@ BEGIN_API
 typedef struct
 {
     /// the file the panic occurred in
-    const char *file;
+    FIELD_STRING const char *file;
 
     /// the line the panic occurred on
     size_t line;
 
     /// the function the panic occurred in
-    const char *function;
+    FIELD_STRING const char *function;
 } panic_t;
 
 /// @brief panic handler function

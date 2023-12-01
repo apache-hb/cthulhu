@@ -23,7 +23,10 @@ typedef struct alloc_t alloc_t;
 ///
 /// @return the allocated pointer
 /// @return NULL if the allocation failed
-typedef void *(*malloc_t)(alloc_t *self, size_t size, const char *name);
+typedef void *(*malloc_t)(
+        IN_NOTNULL alloc_t *self,
+        IN_RANGE(!=, 0) size_t size,
+        IN_STRING_OPT const char *name);
 
 /// @brief realloc function pointer
 ///
@@ -34,14 +37,21 @@ typedef void *(*malloc_t)(alloc_t *self, size_t size, const char *name);
 ///
 /// @return the reallocated pointer
 /// @return NULL if the allocation failed
-typedef void *(*realloc_t)(alloc_t *self, void *ptr, size_t new_size, size_t old_size);
+typedef void *(*realloc_t)(
+        IN_NOTNULL alloc_t *self,
+        OUT_PTR_INVALID void *ptr,
+        IN_RANGE(!=, 0) size_t new_size,
+        IN_RANGE(!=, 0) size_t old_size);
 
 /// @brief free function pointer
 ///
 /// @param self associated allocator
 /// @param ptr the pointer to free
 /// @param size the size of the allocation
-typedef void (*free_t)(alloc_t *self, void *ptr, size_t size);
+typedef void (*free_t)(
+        IN_NOTNULL alloc_t *self,
+        OUT_PTR_INVALID void *ptr,
+        IN_RANGE(!=, 0) size_t size);
 
 /// @brief an allocator object
 typedef struct alloc_t
@@ -61,7 +71,7 @@ extern alloc_t gDefaultAlloc;
 /// @note @a gDefaultAlloc must be consistent with the allocator used to allocate @a ptr
 ///
 /// @param ptr the pointer to free, must not be NULL
-void ctu_free(IN_NOTNULL void *ptr);
+void ctu_free(IN_NOTNULL OUT_PTR_INVALID void *ptr);
 
 /// @brief allocate a pointer from the default allocator
 ///
@@ -69,7 +79,7 @@ void ctu_free(IN_NOTNULL void *ptr);
 ///
 /// @return the allocated pointer
 NODISCARD ALLOC(ctu_free)
-void *ctu_malloc(size_t size);
+void *ctu_malloc(IN_RANGE(!=, 0) size_t size);
 
 /// @brief reallocate a pointer from the default allocator
 /// @note @a gDefaultAlloc must be consistent with the allocator used to allocate @a ptr
@@ -79,7 +89,9 @@ void *ctu_malloc(size_t size);
 ///
 /// @return the reallocated pointer
 NODISCARD ALLOC(ctu_free)
-void *ctu_realloc(IN_NOTNULL void *ptr, size_t new_size);
+void *ctu_realloc(
+        IN_NOTNULL OUT_PTR_INVALID void *ptr,
+        IN_RANGE(!=, 0) size_t new_size);
 
 /// @brief initialize gmps allocator to use a custom allocator
 ///
@@ -92,7 +104,10 @@ void init_gmp(IN_NOTNULL alloc_t *alloc);
 /// @param alloc the allocator to use
 /// @param ptr the pointer to free
 /// @param size the size of the allocation
-void arena_free(IN_NOTNULL alloc_t *alloc, IN_NOTNULL void *ptr, size_t size);
+void arena_free(
+    IN_NOTNULL alloc_t *alloc,
+    OUT_PTR_INVALID void *ptr,
+    IN_RANGE(!=, 0) size_t size);
 
 /// @brief allocate memory from a custom allocator
 ///
@@ -102,7 +117,10 @@ void arena_free(IN_NOTNULL alloc_t *alloc, IN_NOTNULL void *ptr, size_t size);
 ///
 /// @return the allocated pointer
 NODISCARD ALLOC(arena_free, 2)
-void *arena_malloc(IN_NOTNULL alloc_t *alloc, size_t size, const char *name);
+void *arena_malloc(
+    IN_NOTNULL alloc_t *alloc,
+    IN_RANGE(!=, 0) size_t size,
+    IN_STRING_OPT const char *name);
 
 /// @brief resize a memory allocation from a custom allocator
 /// @note ensure the allocator is consistent with the allocator used to allocate @a ptr
@@ -114,7 +132,11 @@ void *arena_malloc(IN_NOTNULL alloc_t *alloc, size_t size, const char *name);
 ///
 /// @return the reallocated pointer
 NODISCARD
-void *arena_realloc(IN_NOTNULL alloc_t *alloc, IN_NOTNULL void *ptr, size_t new_size, size_t old_size);
+void *arena_realloc(
+    IN_NOTNULL alloc_t *alloc,
+    OUT_PTR_INVALID void *ptr,
+    IN_RANGE(!=, 0) size_t new_size,
+    IN_RANGE(!=, 0) size_t old_size);
 
 /// @} // Memory Management
 

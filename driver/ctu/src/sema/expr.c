@@ -424,8 +424,8 @@ static tree_t *sema_init(ctu_sema_t *sema, const ctu_t *expr, const tree_t *impl
         }
 
         tree_t *value = ctu_sema_rvalue(sema, init->expr, tree_get_type(field));
-        tree_t *ref = tree_type_reference(init->node, "", tree_get_type(field));
-        tree_t *dst = tree_expr_field(init->node, ref, local, field);
+        tree_t *ref_type = tree_type_reference(init->node, "", tree_get_type(field));
+        tree_t *dst = tree_expr_field(init->node, ref_type, local, field);
         tree_t *assign = tree_stmt_assign(init->node, dst, value);
 
         vector_push(&sema->block, assign);

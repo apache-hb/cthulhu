@@ -94,11 +94,11 @@ static typevec_t *collect_params(map_t *cache, const tree_t *type)
         CTASSERTF(tree_is(param, eTreeDeclParam), "expected param, got %s", tree_to_string(param));
 
         const char *name = tree_get_name(param);
-        const tree_t *type = tree_get_type(param);
+        const tree_t *param_type = tree_get_type(param);
 
         ssa_param_t entry = {
             .name = name,
-            .type = ssa_type_create_cached(cache, type)
+            .type = ssa_type_create_cached(cache, param_type)
         };
 
         typevec_set(result, i, &entry);
@@ -117,11 +117,11 @@ static typevec_t *collect_fields(map_t *cache, const tree_t *type)
         CTASSERTF(tree_is(field, eTreeDeclField), "expected field, got %s", tree_to_string(field));
 
         const char *name = tree_get_name(field);
-        const tree_t *type = tree_get_type(field);
+        const tree_t *field_type = tree_get_type(field);
 
         ssa_field_t entry = {
             .name = name,
-            .type = ssa_type_create_cached(cache, type)
+            .type = ssa_type_create_cached(cache, field_type)
         };
 
         typevec_set(result, i, &entry);

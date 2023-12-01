@@ -32,7 +32,7 @@ static bool is_public(const tree_t *decl)
 
 tree_t *util_search_namespace(tree_t *sema, const util_search_t *search, const node_t *node, vector_t *path, bool *isImported)
 {
-    CTASSERTF(sema != NULL && search != NULL, "(sema = %p, search = %p)", sema, search);
+    CTASSERTF(sema != NULL && search != NULL, "(sema = %p, search = %p)", (void*)sema, (void*)search);
     CTASSERT(vector_len(path) > 0);
     CTASSERT(isImported != NULL);
 
@@ -58,7 +58,7 @@ tree_t *util_search_namespace(tree_t *sema, const util_search_t *search, const n
 
 tree_t *util_search_path(tree_t *sema, const util_search_t *search, const node_t *node, vector_t *path)
 {
-    CTASSERTF(sema != NULL && search != NULL, "(sema = %p, search = %p)", sema, search);
+    CTASSERTF(sema != NULL && search != NULL, "(sema = %p, search = %p)", (void*)sema, (void*)search);
     CTASSERT(vector_len(path) > 0);
 
     bool isImported = false;

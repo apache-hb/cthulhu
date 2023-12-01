@@ -29,7 +29,7 @@ io_t *io_view(const char *name, const void *data, size_t size);
 NODISCARD ALLOC(io_close)
 io_t *io_string(const char *name, const char *string);
 
-size_t io_read(io_t *io, IN_NOTNULL void *dst, size_t size);
+size_t io_read(io_t *io, OUT_WRITES(size) void *dst, size_t size);
 size_t io_write(io_t *io, IN_READS(size) const void *src, size_t size);
 
 NODISCARD

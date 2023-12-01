@@ -7,18 +7,11 @@
 
 #include "std/map.h"
 #include "std/vector.h"
-#include "std/str.h"
 
-#include "io/io.h"
-
-#include "scan/compile.h"
-
-#include "ap-bison.h"
-#include "ap-flex.h"
+#include <string.h>
+#include <stdio.h>
 
 // internals
-
-CTU_CALLBACKS(kCallbacks, ap);
 
 static ap_callback_t *ap_callback_new(ap_event_t event, void *data)
 {
@@ -59,16 +52,6 @@ static void add_arg_callback(ap_t *self, ap_param_t *param, ap_callback_t *cb)
     vector_push(&events, cb);
 
     map_set_ptr(self->eventLookup, param, events);
-}
-
-static char *join_args(int argc, const char **argv)
-{
-    vector_t *vec = vector_of(argc - 1);
-    for (int i = 1; i < argc; i++)
-    {
-        vector_set(vec, i - 1, (char *)argv[i]);
-    }
-    return str_join(" ", vec);
 }
 
 static ap_param_t *add_param(ap_group_t *self, ap_param_type_t type, const char *name, const char *desc, const char **names)
@@ -233,18 +216,6 @@ void ap_error(ap_t *self, ap_error_t callback, void *data)
     CTASSERT(callback != NULL);
 
     vector_push(&self->errorCallbacks, ap_error_new(callback, data));
-}
-
-int ap_parse(ap_t *self, reports_t *reports, int argc, const char **argv)
-{
-    char *args = join_args(argc, argv);
-    io_t *io = io_string("<command-line>", args);
-    scan_t *scan = scan_io(reports, "ap2", io);
-
-    scan_set(scan, self);
-    compile_scanner(scan, &kCallbacks);
-
-    return 0;
 }
 
 USE_DECL

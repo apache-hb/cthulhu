@@ -37,6 +37,8 @@ char *formatv(const char *fmt, va_list args)
     /* get the number of bytes needed to format */
     int len = vsnprintf(NULL, 0, fmt, args) + 1;
 
+    CTASSERTF(len > 0, "formatv failed to format string: %s", fmt);
+
     char *out = ctu_malloc(len);
 
     int result = vsnprintf(out, len, fmt, again);
@@ -196,6 +198,8 @@ char *str_join(const char *sep, vector_t *parts)
             len += seplen;
         }
     }
+
+    CTASSERTF(len > 0, "len = %zu", len);
 
     char *out = ctu_malloc(len + 1);
     size_t idx = 0;
@@ -562,6 +566,8 @@ const char *common_prefix(vector_t *args)
     size_t len = vector_len(args);
     CTASSERT(len > 0);
 
+    const char *result = "";
+
     if (len == 1)
     {
         const char *it = vector_get(args, 0);
@@ -576,7 +582,7 @@ const char *common_prefix(vector_t *args)
     for (size_t i = 0; i < len; i++)
     {
         char *arg = vector_get(args, i);
-        CTASSERT(arg != NULL);
+        CTASSERTF(arg != NULL, "args[%zu] = NULL", i);
 
         size_t find = str_rfind_any(arg, PATH_SEPERATORS) + 1;
         strings[i] = ctu_strndup(arg, find);
@@ -586,7 +592,7 @@ const char *common_prefix(vector_t *args)
 
     if (lower == 0 || lower == SIZE_MAX)
     {
-        return "";
+        goto finish;
     }
 
     for (size_t i = 0; i < lower; i++)
@@ -595,12 +601,26 @@ const char *common_prefix(vector_t *args)
         {
             if (strings[j][i] != strings[0][i])
             {
-                return i == 0 ? "" : ctu_strndup(strings[0], i);
+                result = i == 0 ? "" : ctu_strndup(strings[0], i);
+                goto finish;
             }
         }
     }
 
-    return ctu_strndup(strings[0], lower);
+    result = ctu_strndup(strings[0], lower);
+
+finish:
+    CTASSERT(strings != NULL);
+    for (size_t i = 0; i < len; i++)
+    {
+        CTASSERTF(strings[i] != NULL, "strings[%zu] = NULL", i);
+        ctu_free(strings[i]);
+    }
+
+    ctu_free(strings);
+
+    CTASSERT(result != NULL);
+    return result;
 }
 
 static size_t str_rfind_inner(const char *str, size_t len, const char *sub, size_t sublen)
@@ -733,7 +753,7 @@ char *str_upper(const char *str)
 
     while (*temp)
     {
-        *temp = toupper(*temp);
+        *temp = (char)toupper(*temp);
         temp += 1;
     }
 
@@ -767,7 +787,7 @@ char str_tolower(int c)
 
     if (CHAR_MIN <= c && c <= CHAR_MAX)
     {
-        return c;
+        return (char)c;
     }
 
     return '\0';

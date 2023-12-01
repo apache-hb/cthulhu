@@ -28,6 +28,7 @@ static BOOL find_next(HANDLE handle, WIN32_FIND_DATA *data, DWORD *error)
     return result;
 }
 
+USE_DECL
 OS_RESULT(os_iter_t) os_iter_begin(const char *path)
 {
     CTASSERT(path != NULL);
@@ -68,6 +69,7 @@ OS_RESULT(os_iter_t) os_iter_begin(const char *path)
     return win_result(ERROR_SUCCESS, &iter, sizeof(os_iter_t));
 }
 
+USE_DECL
 void os_iter_end(os_iter_t *iter)
 {
     CTASSERT(iter != NULL);
@@ -75,6 +77,7 @@ void os_iter_end(os_iter_t *iter)
     FindClose(iter->hFind); // TODO: check result
 }
 
+USE_DECL
 OS_RESULT(os_dir_t) os_iter_next(os_iter_t *iter)
 {
     CTASSERT(iter != NULL);
@@ -102,6 +105,7 @@ OS_RESULT(os_dir_t) os_iter_next(os_iter_t *iter)
     return win_result(ERROR_SUCCESS, &dir, sizeof(os_dir_t));
 }
 
+USE_DECL
 const char *os_dir_name(os_dir_t *dir)
 {
     CTASSERT(dir != NULL);

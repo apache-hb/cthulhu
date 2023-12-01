@@ -11,19 +11,22 @@ void *compile_scanner(scan_t *extra, callbacks_t *callbacks)
     reports_t *reports = scan_reports(extra);
     const char *path = scan_path(extra);
 
-    if ((err = callbacks->init(extra, &scanner)))
+    err = callbacks->init(extra, &scanner);
+    if (err != 0)
     {
         ctu_assert(reports, "failed to init parser for %s: %d", path, err);
         return NULL;
     }
 
-    if (!(state = callbacks->scan(scan_text(extra), scan_size(extra), scanner)))
+    state = callbacks->scan(scan_text(extra), scan_size(extra), scanner);
+    if (state == NULL)
     {
         report(reports, eFatal, node_invalid(), "failed to scan %s", path);
         return NULL;
     }
 
-    if ((err = callbacks->parse(scanner, extra)))
+    err = callbacks->parse(scanner, extra);
+    if (err != 0)
     {
         report(reports, eFatal, node_invalid(), "failed to parse %s: %d", path, err);
         return NULL;

@@ -72,6 +72,7 @@ USE_DECL
 size_t scan_read(scan_t *scan, void *dst, size_t size)
 {
     CTASSERT(scan != NULL);
+    CTASSERT(dst != NULL);
 
     return io_read(scan->io, dst, size);
 }

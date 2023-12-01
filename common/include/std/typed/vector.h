@@ -14,7 +14,7 @@ typedef struct typevec_t typevec_t;
 ///
 /// @return the new vector
 NODISCARD
-typevec_t *typevec_new(size_t size, size_t len);
+typevec_t *typevec_new(IN_RANGE(>, 0) size_t size, size_t len);
 
 /// @brief create a new typed vector with an initial size and length
 /// @note it is expected that the user will fill the vector up to @a len using @a typevec_set
@@ -25,7 +25,7 @@ typevec_t *typevec_new(size_t size, size_t len);
 ///
 /// @return the new vector
 NODISCARD
-typevec_t *typevec_of(size_t size, size_t len);
+typevec_t *typevec_of(IN_RANGE(>, 0) size_t size, size_t len);
 
 /// @brief create a new typed vector with an initial first value
 ///
@@ -34,7 +34,7 @@ typevec_t *typevec_of(size_t size, size_t len);
 ///
 /// @return the new vector
 NODISCARD
-typevec_t *typevec_init(size_t size, IN_NOTNULL const void *value);
+typevec_t *typevec_init(IN_RANGE(>, 0) size_t size, IN_NOTNULL const void *value);
 
 /// @brief get the length of a vector
 ///

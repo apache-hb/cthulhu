@@ -98,11 +98,16 @@ static const ssa_value_t *ssa_opt_return(ssa_scope_t *vm, ssa_return_t step)
 
 static bool value_is(const ssa_value_t *value, ssa_kind_t type)
 {
+    CTASSERT(value != NULL);
+    CTASSERT(value->type != NULL);
+
     return value->type->kind == type;
 }
 
 static bool check_init(ssa_scope_t *vm, const ssa_value_t *value)
 {
+    CTASSERT(value != NULL);
+
     if (!value->init)
     {
         report(vm->vm->reports, eFatal, node_invalid(), "use of uninitialized value inside `%s`", vm->symbol->name);

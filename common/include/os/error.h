@@ -27,7 +27,7 @@ typedef size_t os_error_t;
 ///
 /// @return the error code
 NODISCARD
-os_error_t os_error(os_result_t *result);
+os_error_t os_error(IN_NOTNULL os_result_t *result);
 
 /// @brief get the value from a result
 ///
@@ -35,14 +35,14 @@ os_error_t os_error(os_result_t *result);
 ///
 /// @return the value
 NODISCARD
-void *os_value(os_result_t *result);
+void *os_value(IN_NOTNULL os_result_t *result);
 
 /// @brief convert an os error code to a string
 ///
 /// @param error the error code to convert
 ///
 /// @return the string representation of the error code
-NODISCARD
+NODISCARD RET_STRING
 const char *os_error_string(os_error_t error);
 
 /// @def OS_VALUE(TYPE, RESULT)

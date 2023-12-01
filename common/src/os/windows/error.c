@@ -4,6 +4,7 @@
 
 #define FORMAT_FLAGS (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS)
 
+USE_DECL
 const char *os_error_string(os_error_t error)
 {
     char buffer[0x1000] = {0};
@@ -19,9 +20,9 @@ const char *os_error_string(os_error_t error)
 
     if (written == 0)
     {
-        return format("unknown error (0x%08lX)", error);
+        return format("unknown error (0x%08lX)", (DWORD)error);
     }
 
-    char *cleaned = str_erase(buffer, written, "\n\r");
-    return format("%s (0x%08lX)", cleaned, error);
+    char *cleaned = str_erase(buffer, written, "\n\r.");
+    return format("%s (0x%08lX)", cleaned, (DWORD)error);
 }

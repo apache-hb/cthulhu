@@ -16,7 +16,7 @@
 
 void *util_select_decl(tree_t *sema, const size_t *tags, size_t len, const char *name)
 {
-    CTASSERTF(tags != NULL && len > 0, "(tags=%p, len=%zu)", tags, len);
+    CTASSERTF(tags != NULL && len > 0, "(tags=%p, len=%zu)", (void*)tags, len);
 
     for (size_t i = 0; i < len; i++)
     {
@@ -39,7 +39,7 @@ tree_t *util_current_module(tree_t *sema)
 
 void util_set_current_module(tree_t *sema, tree_t *module)
 {
-    CTASSERTF(module != NULL, "(module=%p)", module);
+    CTASSERTF(module != NULL, "(module=%p)", (void*)module);
     tree_set_extra(sema, kCurrentModule, module);
 }
 
@@ -53,13 +53,13 @@ tree_t *util_current_symbol(tree_t *sema)
 
 void util_set_current_symbol(tree_t *sema, tree_t *symbol)
 {
-    CTASSERTF(symbol != NULL, "(symbol=%p)", symbol);
+    CTASSERTF(symbol != NULL, "(symbol=%p)", (void*)symbol);
     tree_set_extra(sema, kCurrentSymbol, symbol);
 }
 
 bool util_types_equal(const tree_t *lhs, const tree_t *rhs)
 {
-    CTASSERTF(lhs != NULL && rhs != NULL, "(lhs=%p, rhs=%p)", lhs, rhs);
+    CTASSERTF(lhs != NULL && rhs != NULL, "(lhs=%p, rhs=%p)", (void*)lhs, (void*)rhs);
 
     if (lhs == rhs) { return true; }
 
@@ -215,7 +215,7 @@ static tree_t *cast_to_bool(const tree_t *dst, tree_t *expr)
 
 tree_t *util_type_cast(const tree_t *dst, tree_t *expr)
 {
-    CTASSERTF(dst != NULL && expr != NULL, "(dst=%p, expr=%p)", dst, expr);
+    CTASSERTF(dst != NULL && expr != NULL, "(dst=%p, expr=%p)", (void*)dst, (void*)expr);
 
     const tree_t *src = tree_get_type(expr);
 

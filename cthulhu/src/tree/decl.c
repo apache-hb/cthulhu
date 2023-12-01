@@ -220,7 +220,7 @@ void tree_set_type(tree_t *self, const tree_t *type)
 
 tree_t *tree_alias(const tree_t *tree, const char *name)
 {
-    CTASSERTF(tree != NULL && name != NULL, "(tree=%p, name=%p)", tree, name);
+    CTASSERTF(tree != NULL && name != NULL, "(tree=%p, name=%p)", (void*)tree, (void*)name);
 
     tree_t *copy = ctu_memdup(tree, sizeof(tree_t));
     copy->name = name;

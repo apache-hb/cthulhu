@@ -31,7 +31,7 @@ option('doxygen', type : 'feature',
 
 option('analyze', type : 'feature',
     description : 'enable static code analysis',
-    value : 'auto'
+    value : 'disabled'
 )
 
 option('afl_fuzzing', type : 'feature',

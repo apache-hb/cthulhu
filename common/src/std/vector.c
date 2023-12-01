@@ -81,12 +81,15 @@ vector_t *vector_clone(vector_t *vector)
     return clone;
 }
 
+USE_DECL
 void vector_delete(vector_t *vector)
 {
     CTASSERT(vector != NULL);
+
     ctu_free(vector);
 }
 
+USE_DECL
 void vector_push(vector_t **vector, void *value)
 {
     CTASSERT(vector != NULL && *vector != NULL);
@@ -95,6 +98,7 @@ void vector_push(vector_t **vector, void *value)
     VEC->data[VEC->used++] = value;
 }
 
+USE_DECL
 void vector_drop(vector_t *vector)
 {
     CTASSERT(vector != NULL);
@@ -102,6 +106,7 @@ void vector_drop(vector_t *vector)
     vector->used -= 1;
 }
 
+USE_DECL
 void vector_set(vector_t *vector, size_t index, void *value)
 {
     CTASSERT(vector != NULL);
@@ -206,6 +211,7 @@ vector_t *vector_join(vector_t *vectors)
     return result;
 }
 
+USE_DECL
 void vector_reset(vector_t *vec)
 {
     CTASSERT(vec != NULL);

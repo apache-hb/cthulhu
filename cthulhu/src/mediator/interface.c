@@ -111,6 +111,7 @@ lifetime_t *lifetime_new(mediator_t *mediator)
     return self;
 }
 
+USE_DECL
 const char *stage_to_string(compile_stage_t stage)
 {
 #define STAGE(ID, STR) case ID: return STR;

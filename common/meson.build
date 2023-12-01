@@ -15,7 +15,7 @@ else
 endif
 
 libstacktrace = library('stacktrace', src,
-    c_args : args,
+    c_args : user_args,
     include_directories : 'include',
     dependencies : stacktrace_deps
 )
@@ -47,7 +47,7 @@ src = [
 ]
 
 libbase = library('base', src,
-    c_args : args,
+    c_args : user_args,
     dependencies : [ gmp, stacktrace ],
     include_directories : [ 'include', config_include ]
 )
@@ -73,7 +73,7 @@ src = [
 ]
 
 libstd = library('std', src,
-    c_args : args,
+    c_args : user_args,
     dependencies : base,
     include_directories : 'include'
 )
@@ -89,7 +89,7 @@ std = declare_dependency(
 src = [ 'src/os/common.c' ]
 
 libcommon = library('common', src,
-    c_args : args,
+    c_args : user_args,
     dependencies : [ std ],
     include_directories : 'include'
 )
@@ -125,7 +125,7 @@ src = [
 ]
 
 libio = library('io', src,
-    c_args : args,
+    c_args : user_args,
     dependencies : [ std, os ],
     include_directories : [ 'include', 'src/io' ]
 )
@@ -146,7 +146,7 @@ src = [
 
 # this is both libreport and libscan as they depend on each other
 liblocation = library('location', src,
-    c_args : args,
+    c_args : user_args,
     dependencies : [ std, io ],
     include_directories : 'include'
 )
@@ -158,7 +158,7 @@ location = declare_dependency(
 )
 
 libinterop = library('interop', [ 'src/interop/flex.c' ],
-    c_args : args,
+    c_args : user_args,
     dependencies : std,
     include_directories : 'include'
 )
@@ -173,18 +173,29 @@ src = [
     'src/argparse/argparse.c',
     'src/argparse/common.c',
     'src/argparse/commands.c',
+]
+
+libargparse_base = library('argparse_base', src,
+    c_args : user_args,
+    dependencies : [ gmp, std, location, interop ],
+    include_directories : [ 'src', 'include' ]
+)
+
+src = [
+    'src/argparse/parse.c',
     lex.process('src/argparse/ap.l'),
     parse.process('src/argparse/ap.y')
 ]
 
 libargparse = library('argparse', src,
-    c_args : args,
+    c_args : generated_args,
+    link_with : libargparse_base,
     dependencies : [ gmp, std, location, interop ],
     include_directories : [ 'src', 'include' ]
 )
 
 argparse = declare_dependency(
-    link_with : libargparse,
+    link_with : [ libargparse_base, libargparse ],
     include_directories : 'include',
     dependencies : [ gmp ]
 )

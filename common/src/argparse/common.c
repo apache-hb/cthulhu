@@ -1,7 +1,5 @@
 #include "common.h"
 
-#include "ap-bison.h"
-
 #include "base/panic.h"
 #include "base/util.h"
 #include "base/memory.h"
@@ -86,30 +84,6 @@ void ap_on_error(scan_t *scan, where_t where, const char *message)
     {
         ap_err_callback_t *cb = vector_get(self->errorCallbacks, i);
         cb->callback(self, node, message, cb->data);
-    }
-}
-
-int ap_get_opt(ap_t *self, const char *name, ap_param_t **param, char **error)
-{
-    CTASSERT(self != NULL);
-    CTASSERT(name != NULL);
-    CTASSERT(param != NULL);
-
-    ap_param_t *result = map_get(self->nameLookup, name);
-    if (result == NULL)
-    {
-        *error = format("unknown option '%s'", name);
-        return AP_ERROR;
-    }
-
-    *param = result;
-
-    switch (result->type)
-    {
-    case eParamBool: return AP_BOOL;
-    case eParamInt: return AP_INT;
-    case eParamString: return AP_STRING;
-    default: return AP_ERROR;
     }
 }
 

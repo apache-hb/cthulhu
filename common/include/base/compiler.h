@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu-config.h>
+
 #if defined(__clang__)
 #   define CC_CLANG 1
 #elif defined(__GNUC__)
@@ -67,7 +69,7 @@
 #endif
 // clang-format on
 
-#if CC_GNU
+#if CC_GNU && CTU_HAS_PRETTY_FUNCTION
 #   define FUNCNAME __PRETTY_FUNCTION__
 #endif
 

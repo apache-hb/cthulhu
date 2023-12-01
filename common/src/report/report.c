@@ -71,11 +71,11 @@ static char *format_location(const char *base, const scan_t *scan, where_t where
     const char *path = scan_path(scan);
     if (is_multiline_report(where))
     {
-        return format("%s source [%s:%lu:%lu-%lu:%lu]", language, path + strlen(base), where.firstLine + 1,
+        return format("%s source [%s:%" PRI_LINE ":%" PRI_COLUMN "-%" PRI_LINE ":%" PRI_COLUMN "]", language, path + strlen(base), where.firstLine + 1,
                       where.firstColumn, where.lastLine + 1, where.lastColumn);
     }
 
-    return format("%s source [%s:%lu:%lu]", language, path + strlen(base), where.firstLine + 1, where.firstColumn);
+    return format("%s source [%s:%" PRI_LINE ":%" PRI_COLUMN "]", language, path + strlen(base), where.firstLine + 1, where.firstColumn);
 }
 
 static void report_scanner(const char *base, const node_t *node)
@@ -137,6 +137,7 @@ static char *extract_line(const scan_t *scan, line_t line)
      * while windows line endings might technically be more correct
      * it doesnt make them any less painful to handle
      */
+    CTASSERT(len != SIZE_MAX); // verify against overflow
     char *str = ctu_malloc(len + 1);
     char *out = str;
     for (size_t i = 0; i < len; i++)
@@ -156,7 +157,11 @@ static char *extract_line(const scan_t *scan, line_t line)
     }
     *out = '\0';
 
-    return str_normalizen(str, (size_t)(out - str));
+    char *result_str = str_normalizen(str, (size_t)(out - str));
+
+    ctu_free(str);
+
+    return result_str;
 }
 
 static bool safe_isspace(int c)
@@ -255,7 +260,7 @@ static size_t longest_line(const scan_t *scan, line_t init, vector_t *parts)
 
 static char *right_align(line_t line, int width)
 {
-    return format("%*ld", width, line);
+    return format("%*" PRI_LINE, width, line);
 }
 
 /**

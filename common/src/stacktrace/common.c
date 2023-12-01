@@ -4,6 +4,7 @@
 
 #define STACK_FRAMES 128
 
+USE_DECL
 void stacktrace_print(FILE *file)
 {
     fprintf(file, COLOUR_CYAN "stacktrace backend:" COLOUR_RESET " %s\n", stacktrace_backend());

@@ -19,6 +19,7 @@ static DWORD get_access(os_access_t access)
     return result;
 }
 
+USE_DECL
 OS_RESULT(os_file_t *) os_file_open(const char *path, os_access_t access)
 {
     CTASSERT(path != NULL);
@@ -50,6 +51,7 @@ OS_RESULT(os_file_t *) os_file_open(const char *path, os_access_t access)
     return win_result(ERROR_SUCCESS, &fd, sizeof(os_file_t));
 }
 
+USE_DECL
 void os_file_close(os_file_t *fd)
 {
     CTASSERT(fd != NULL);
@@ -57,6 +59,7 @@ void os_file_close(os_file_t *fd)
     CloseHandle(fd->handle); // TODO: check result
 }
 
+USE_DECL
 OS_RESULT(size_t) os_file_read(os_file_t *file, void *buffer, size_t size)
 {
     CTASSERT(file != NULL);
@@ -76,6 +79,7 @@ OS_RESULT(size_t) os_file_read(os_file_t *file, void *buffer, size_t size)
     return win_result(ERROR_SUCCESS, &read, sizeof(size_t));
 }
 
+USE_DECL
 OS_RESULT(size_t) os_file_write(os_file_t *file, const void *buffer, size_t size)
 {
     CTASSERT(file != NULL);
@@ -95,6 +99,7 @@ OS_RESULT(size_t) os_file_write(os_file_t *file, const void *buffer, size_t size
     return win_result(ERROR_SUCCESS, &written, sizeof(size_t));
 }
 
+USE_DECL
 OS_RESULT(size_t) os_file_size(os_file_t *file)
 {
     CTASSERT(file != NULL);
@@ -111,6 +116,7 @@ OS_RESULT(size_t) os_file_size(os_file_t *file)
     return win_result(ERROR_SUCCESS, &it, sizeof(size_t));
 }
 
+USE_DECL
 OS_RESULT(size_t) os_file_seek(os_file_t *file, size_t offset)
 {
     CTASSERT(file != NULL);
@@ -128,6 +134,7 @@ OS_RESULT(size_t) os_file_seek(os_file_t *file, size_t offset)
     return win_result(ERROR_SUCCESS, &seek, sizeof(size_t));
 }
 
+USE_DECL
 OS_RESULT(size_t) os_file_tell(os_file_t *file)
 {
     CTASSERT(file != NULL);
@@ -145,6 +152,7 @@ OS_RESULT(size_t) os_file_tell(os_file_t *file)
     return win_result(ERROR_SUCCESS, &it, sizeof(size_t));
 }
 
+USE_DECL
 OS_RESULT(const void *) os_file_map(os_file_t *file)
 {
     CTASSERT(file != NULL);
@@ -178,6 +186,7 @@ OS_RESULT(const void *) os_file_map(os_file_t *file)
     return win_result(ERROR_SUCCESS, &view, sizeof(LPVOID));
 }
 
+USE_DECL
 const char *os_file_name(os_file_t *file)
 {
     CTASSERT(file != NULL);

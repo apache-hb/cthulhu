@@ -110,9 +110,9 @@ static void resolve_proc(tree_t *sema, tree_t *self, void *user)
             .quals = eQualConst
         };
 
-        tree_t *decl = tree_decl_local(local->node, local->name, storage, ref);
-        tree_add_local(self, decl);
-        obr_add_decl(ctx, eObrTagValues, local->name, decl);
+        tree_t *local_decl = tree_decl_local(local->node, local->name, storage, ref);
+        tree_add_local(self, local_decl);
+        obr_add_decl(ctx, eObrTagValues, local->name, local_decl);
     }
 
     for (size_t i = 0; i < nParams; i++)

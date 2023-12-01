@@ -1,8 +1,8 @@
 #pragma once
 
-#include <stdlib.h>
+#include "base/analyze.h"
 
-#include "analyze.h"
+#include <stdlib.h>
 
 BEGIN_API
 
@@ -19,7 +19,7 @@ BEGIN_API
 ///
 /// @return the allocated copy of the string
 NODISCARD
-char *ctu_strdup(const char *str);
+char *ctu_strdup(IN_STRING const char *str);
 
 /// @brief allocate a copy of a string with a maximum length
 ///
@@ -43,7 +43,7 @@ char *ctu_strndup(IN_READS(len) const char *str, size_t len);
 ///
 /// @return the duplicated memory
 NODISCARD
-void *ctu_memdup(IN_READS(size) const void *ptr, size_t size);
+void *ctu_memdup(IN_READS(size) const void *ptr, IN_RANGE(>, 0) size_t size);
 
 /// @}
 

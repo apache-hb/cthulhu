@@ -23,6 +23,7 @@ os_result_t *os_result_new(os_error_t error, const void *data, size_t size)
     return result;
 }
 
+USE_DECL
 os_error_t os_error(os_result_t *result)
 {
     CTASSERT(result != NULL);
@@ -30,6 +31,7 @@ os_error_t os_error(os_result_t *result)
     return result->error;
 }
 
+USE_DECL
 void *os_value(os_result_t *result)
 {
     CTASSERT(result != NULL);
@@ -39,7 +41,7 @@ void *os_value(os_result_t *result)
 
 bool is_special(const char *path)
 {
-    return path == NULL 
-        || str_equal(path, ".") 
+    return path == NULL
+        || str_equal(path, ".")
         || str_equal(path, "..");
 }
