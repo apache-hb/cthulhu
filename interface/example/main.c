@@ -45,7 +45,7 @@ static io_t *make_file(reports_t *reports, const char *path, os_access_t flags)
     if (io_error(io) != 0)
     {
         message_t *id = report(reports, eFatal, NULL, "failed to open `%s`", path);
-        report_note(id, "%s", os_decode(io_error(io)));
+        report_note(id, "%s", os_error_string(io_error(io)));
         return NULL;
     }
 

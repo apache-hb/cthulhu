@@ -13,7 +13,8 @@ typedef struct scan_t scan_t;
 /**
  * scanner function callbacks for flex and bison
  */
-typedef struct callbacks_t {
+typedef struct callbacks_t
+{
     int (*init)(scan_t *extra, void *scanner);                   ///< yylex_init_extra
     int (*parse)(void *scanner, scan_t *extra);                  ///< yyparse
     void *(*scan)(const char *text, size_t size, void *scanner); ///< yy_scan_string
@@ -21,7 +22,7 @@ typedef struct callbacks_t {
     void (*destroy)(void *scanner);                              ///< yylex_destroy
 } callbacks_t;
 
-#define CTU_CALLBACKS(id, prefix)                                                                                       \
+#define CTU_CALLBACKS(id, prefix)                                                                                      \
     static int prefix##_##id##_##init(scan_t *extra, void *scanner)                                                    \
     {                                                                                                                  \
         return prefix##lex_init_extra(extra, scanner);                                                                 \
@@ -32,10 +33,10 @@ typedef struct callbacks_t {
     }                                                                                                                  \
     static void *prefix##_##id##_scan(const char *text, size_t size, void *scanner)                                    \
     {                                                                                                                  \
-        CTASSERTF(size <= INT_MAX, #prefix "-scan (size = %zu > %d, name = %s)", size, INT_MAX, scan_path(scanner));                                                                                     \
+        CTASSERTF(size <= INT_MAX, #prefix "-scan (size = %zu > %d, name = %s)", size, INT_MAX, scan_path(scanner));   \
         return prefix##_scan_bytes(text, (int)size, scanner);                                                          \
     }                                                                                                                  \
-    static void prefix##_##id##_destroyBuffer(void *buffer, void *scanner)                                                    \
+    static void prefix##_##id##_destroyBuffer(void *buffer, void *scanner)                                             \
     {                                                                                                                  \
         prefix##_delete_buffer(buffer, scanner);                                                                       \
     }                                                                                                                  \
@@ -47,7 +48,7 @@ typedef struct callbacks_t {
         .init = prefix##_##id##_##init,                                                                                \
         .parse = prefix##_##id##_parse,                                                                                \
         .scan = prefix##_##id##_scan,                                                                                  \
-        .destroyBuffer = prefix##_##id##_destroyBuffer,                                                                       \
+        .destroyBuffer = prefix##_##id##_destroyBuffer,                                                                \
         .destroy = prefix##_##id##_destroy,                                                                            \
     }
 

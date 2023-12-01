@@ -155,7 +155,7 @@ int main(int argc, const char **argv)
     CHECK_REPORTS(reports, "emitting c89");
 
     OS_RESULT(const char *) cwd = os_dir_current();
-    CTASSERTF(os_error(cwd) == 0, "failed to get cwd %s", os_decode(os_error(cwd)));
+    CTASSERTF(os_error(cwd) == 0, "failed to get cwd %s", os_error_string(os_error(cwd)));
 
     const char *testDir = format("%s" NATIVE_PATH_SEPARATOR "test-out", OS_VALUE(const char*, cwd));
     const char *runDir = format("%s" NATIVE_PATH_SEPARATOR "%s", testDir, argv[1]);
@@ -183,7 +183,7 @@ int main(int argc, const char **argv)
     const char *libDir = format("%s" NATIVE_PATH_SEPARATOR "lib", runDir);
 
     OS_RESULT(bool) create = os_dir_create(libDir);
-    CTASSERTF(os_error(create) == 0, "failed to create dir `%s` %s", libDir, os_decode(os_error(create)));
+    CTASSERTF(os_error(create) == 0, "failed to create dir `%s` %s", libDir, os_error_string(os_error(create)));
 
     int status = system(format("cl /nologo /c %s /I%s\\include /Fo%s\\", str_join(" ", sources), runDir, libDir));
     if (status != 0)

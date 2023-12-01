@@ -5,7 +5,7 @@
 #include <string.h>
 
 USE_DECL
-const char *os_decode(os_error_t error)
+const char *os_error_string(os_error_t error)
 {
     int err = error;
 

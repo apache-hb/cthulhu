@@ -24,7 +24,6 @@ typedef struct reports_t reports_t;
  */
 mediator_t *mediator_new(const char *id, version_info_t version);
 
-
 // lifetime api
 
 /**

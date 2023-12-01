@@ -23,6 +23,7 @@ OS_RESULT(os_file_t *) os_file_open(const char *path, os_access_t access)
 {
     CTASSERT(path != NULL);
     CTASSERT(access & (eAccessRead | eAccessWrite));
+
     DWORD dwAccess = get_access(access);
     DWORD dwDisposition = (access & eAccessWrite)
         ? (OPEN_ALWAYS | TRUNCATE_EXISTING)
@@ -52,6 +53,7 @@ OS_RESULT(os_file_t *) os_file_open(const char *path, os_access_t access)
 void os_file_close(os_file_t *fd)
 {
     CTASSERT(fd != NULL);
+
     CloseHandle(fd->handle); // TODO: check result
 }
 
@@ -179,5 +181,6 @@ OS_RESULT(const void *) os_file_map(os_file_t *file)
 const char *os_file_name(os_file_t *file)
 {
     CTASSERT(file != NULL);
+
     return file->path;
 }

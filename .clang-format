@@ -2,5 +2,15 @@
 Language:        Cpp
 BasedOnStyle:  Microsoft
 IndentPPDirectives: AfterHash
+PPIndentWidth: 3
+BreakAfterAttributes: Always
+AttributeMacros:
+    - FORMAT_ATTRIB
+    - CONSTFN
+    - PUREFN
+    - HOTFN
+    - COLDFN
+    - ALLOC
+    - NODISCARD
+    - USE_DECL
 ...
-

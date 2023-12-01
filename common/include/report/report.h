@@ -60,15 +60,17 @@ typedef int status_t;
 /**
  * @brief part of an error message
  */
-typedef struct part_t {
-    char *message; ///< associated message
-    const node_t *node;   ///< associated node
+typedef struct part_t
+{
+    char *message;      ///< associated message
+    const node_t *node; ///< associated node
 } part_t;
 
 /**
  * @brief an error message
  */
-typedef struct message_t {
+typedef struct message_t
+{
     /* the level of this error */
     level_t level;
 
@@ -93,8 +95,7 @@ typedef struct
 
 #define DEFAULT_REPORT_CONFIG                                                                                          \
     {                                                                                                                  \
-        .limit = SIZE_MAX, \
-        .warningsAreErrors = false, \
+        .limit = SIZE_MAX, .warningsAreErrors = false,                                                                 \
     }
 
 /**
@@ -211,4 +212,5 @@ FORMAT_ATTRIB(1, 2)
 void logverbose(FORMAT_STRING const char *fmt, ...);
 
 /** @} */
+
 END_API

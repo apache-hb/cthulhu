@@ -1,60 +1,60 @@
 #pragma once
 
 #if defined(__clang__)
-#    define CC_CLANG 1
+#   define CC_CLANG 1
 #elif defined(__GNUC__)
-#    define CC_GNU 1
+#   define CC_GNU 1
 #elif defined(_MSC_VER)
-#    define CC_MSVC 1
+#   define CC_MSVC 1
 #else
-#    error "unknown compiler"
+#   error "unknown compiler"
 #endif
 
 #if defined(__linux__)
-#    define OS_LINUX 1
+#   define OS_LINUX 1
 #elif defined(_WIN32)
-#    define OS_WINDOWS 1
+#   define OS_WINDOWS 1
 #elif defined(__APPLE__)
-#    define OS_APPLE 1
+#   define OS_APPLE 1
 #elif defined(__EMSCRIPTEN__)
-#    define OS_WASM 1
+#   define OS_WASM 1
 #else
-#    error "unknown platform"
+#   error "unknown platform"
 #endif
 
 #ifdef __cplusplus
-#    define NORETURN [[noreturn]] void
+#   define NORETURN [[noreturn]] void
 #endif
 
 #ifndef NORETURN
 #   if CC_CLANG || CC_GNU
-#        define NORETURN __attribute__((noreturn)) void
+#      define NORETURN __attribute__((noreturn)) void
 #   elif CC_MSVC
-#        define NORETURN __declspec(noreturn) void
+#      define NORETURN __declspec(noreturn) void
 #   else
-#        define NORETURN void
+#      define NORETURN void
 #   endif
 #endif
 
 #ifdef OS_WINDOWS
-#    define NATIVE_PATH_SEPARATOR "\\"
-#    define PATH_SEPERATORS "\\/"
+#   define NATIVE_PATH_SEPARATOR "\\"
+#   define PATH_SEPERATORS "\\/"
 #else
-#    define NATIVE_PATH_SEPARATOR "/"
-#    define PATH_SEPERATORS "/"
+#   define NATIVE_PATH_SEPARATOR "/"
+#   define PATH_SEPERATORS "/"
 #endif
 
 #ifdef CC_MSVC
-#    define CTU_ASSUME(expr) __assume(expr)
+#   define CTU_ASSUME(expr) __assume(expr)
 #else
-#    define CTU_ASSUME(expr)                                                                                               \
-        do                                                                                                             \
-        {                                                                                                              \
-            if (!(expr))                                                                                               \
-            {                                                                                                          \
-                __builtin_unreachable();                                                                               \
-            }                                                                                                          \
-        } while (0)
+#   define CTU_ASSUME(expr)                                                                                            \
+       do                                                                                                              \
+       {                                                                                                               \
+           if (!(expr))                                                                                                \
+           {                                                                                                           \
+               __builtin_unreachable();                                                                                \
+           }                                                                                                           \
+       } while (0)
 #endif
 
 // clang-format off
@@ -68,9 +68,9 @@
 // clang-format on
 
 #if CC_GNU
-#    define FUNCNAME __PRETTY_FUNCTION__
+#   define FUNCNAME __PRETTY_FUNCTION__
 #endif
 
 #ifndef FUNCNAME
-#    define FUNCNAME __func__
+#   define FUNCNAME __func__
 #endif

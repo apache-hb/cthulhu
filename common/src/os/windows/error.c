@@ -4,7 +4,7 @@
 
 #define FORMAT_FLAGS (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS)
 
-const char *os_decode(os_error_t error)
+const char *os_error_string(os_error_t error)
 {
     char buffer[0x1000] = {0};
 

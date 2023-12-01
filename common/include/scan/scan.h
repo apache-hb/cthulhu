@@ -8,7 +8,8 @@ typedef struct io_t io_t;
 typedef struct scan_t scan_t;
 
 /// @brief a span of text inside a scanner
-typedef struct text_t {
+typedef struct text_t
+{
     size_t size;      ///< the number of bytes in the text
     const char *text; ///< the text itself
 } text_t;

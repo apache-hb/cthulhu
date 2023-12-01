@@ -1,7 +1,7 @@
 #pragma once
 
-#include <stdint.h>
 #include <inttypes.h>
+#include <stdint.h>
 
 #define NEW_VERSION(major, minor, patch) (((major) << 24) | ((minor) << 16) | (patch))
 
@@ -14,16 +14,10 @@ typedef uint_fast32_t version_t;
 #define PRI_VERSION PRIuFAST32
 
 /// @brief version information for a driver/interface/plugin
-typedef struct version_info_t {
-    /// the license of this component
-    const char *license;
-
-    /// a short description of this component
-    const char *desc;
-
-    /// the author of this component
-    const char *author;
-
-    /// the version info for this component
-    version_t version;
+typedef struct version_info_t
+{
+    const char *license; ///< the license of this component
+    const char *desc;    ///< a short description of this component
+    const char *author;  ///< the author of this component
+    version_t version;   ///< the version info for this component
 } version_info_t;

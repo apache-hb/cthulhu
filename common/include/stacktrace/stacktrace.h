@@ -1,16 +1,18 @@
 #pragma once
 
+#include "base/macros.h"
+#include "base/analyze.h"
+
 #include <stdio.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+BEGIN_API
 
 #define STACKTRACE_NAME_LENGTH 256
 #define STACKTRACE_PATH_LENGTH 1024
 
 /// @brief a stacktrace frame
-typedef struct frame_t {
+typedef struct frame_t
+{
     /// the line number this frame might have originated from (0 if unknown)
     size_t line;
 
@@ -37,14 +39,12 @@ const char *stacktrace_backend(void);
 /// @param size the size of @a frames
 ///
 /// @return the number of frames filled
-size_t stacktrace_get(frame_t *frames, size_t size);
+size_t stacktrace_get(OUT_WRITES(size) frame_t *frames, size_t size);
 
 /// @brief print a stacktrace to a file
 /// @note this follows the same precondition as @ref stacktrace_get
 ///
 /// @param file the file to print to
-void stacktrace_print(FILE *file);
+void stacktrace_print(IN_NOTNULL FILE *file);
 
-#ifdef __cplusplus
-}
-#endif
+END_API

@@ -94,7 +94,7 @@ static inode_t *pfs_query_node(fs_t *fs, inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
     OS_RESULT(os_dirent_t) dirent = os_dirent_type(absolute);
-    CTASSERTF(os_error(dirent) == 0, "failed to query dirent (path=%s, err=%s)", absolute, os_decode(os_error(dirent)));
+    CTASSERTF(os_error(dirent) == 0, "failed to query dirent (path=%s, err=%s)", absolute, os_error_string(os_error(dirent)));
 
     const char *relative = get_relative(self, name);
 
@@ -149,7 +149,7 @@ static inode_t *pfs_file_create(fs_t *fs, inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
     OS_RESULT(bool) check = os_file_create(absolute);
-    CTASSERTF(os_error(check) == 0, "failed to create file `%s` %s", absolute, os_decode(os_error(check)));
+    CTASSERTF(os_error(check) == 0, "failed to create file `%s` %s", absolute, os_error_string(os_error(check)));
 
     return physical_file(get_relative(self, name));
 }
@@ -158,7 +158,7 @@ static inode_t *pfs_dir_create(fs_t *fs, inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
     OS_RESULT(bool) create = os_dir_create(absolute);
-    CTASSERTF(os_error(create) == 0, "failed to create dir `%s` %s", absolute, os_decode(os_error(create)));
+    CTASSERTF(os_error(create) == 0, "failed to create dir `%s` %s", absolute, os_error_string(os_error(create)));
 
     return physical_dir(get_relative(self, name));
 }
@@ -197,7 +197,7 @@ fs_t *fs_physical(reports_t *reports, const char *root)
         OS_RESULT(bool) create = mkdir_recursive(root);
 
         // TODO: make this work recursively
-        CTASSERTF(os_error(create) == 0, "error creating root directory: %s. %s", root, os_decode(os_error(create)));
+        CTASSERTF(os_error(create) == 0, "error creating root directory: %s. %s", root, os_error_string(os_error(create)));
 
         if (!OS_VALUE(bool, create))
         {

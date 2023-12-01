@@ -26,6 +26,6 @@ message_t *report_unknown_character(reports_t *reports, const node_t *node, cons
 message_t *report_os(reports_t *reports, const char *msg, os_error_t err)
 {
     message_t *id = report(reports, eFatal, node_invalid(), "%s", msg);
-    report_note(id, "%s", os_decode(err));
+    report_note(id, "%s", os_error_string(err));
     return id;
 }

@@ -4,9 +4,10 @@
 
 #include "scan/scan.h"
 
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <inttypes.h>
+
 
 /**
  * @defgroup LocationTracking AST location tracking
@@ -23,7 +24,8 @@ typedef uint_fast64_t column_t; ///< column number
 /**
  * @brief a location inside a scanner
  */
-typedef struct {
+typedef struct
+{
     line_t firstLine; ///< the first line of the location
     line_t lastLine;  ///< the last line of the location
 

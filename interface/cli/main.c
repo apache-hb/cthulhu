@@ -57,7 +57,7 @@ static void parse_source(lifetime_t *lifetime, const char *path)
     io_t *io = io_file(path, eAccessRead);
     if (io_error(io) != 0)
     {
-        report(reports, eFatal, NULL, "failed to load source `%s`\n%s", path, os_decode(io_error(io)));
+        report(reports, eFatal, NULL, "failed to load source `%s`\n%s", path, os_error_string(io_error(io)));
         return;
     }
 
