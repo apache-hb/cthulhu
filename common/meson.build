@@ -4,7 +4,7 @@
 
 src = [ 'src/stacktrace/common.c' ]
 
-dbghlp = cc.find_library('dbghlp', required : false)
+dbghlp = cc.find_library('dbghelp', required : false)
 
 if dbghlp.found()
     src += [ 'src/stacktrace/stacktrace-dbghlp.c' ]

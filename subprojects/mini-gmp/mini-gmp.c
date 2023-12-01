@@ -370,7 +370,7 @@ gmp_xrealloc_limbs (mp_ptr old, mp_size_t size)
   return (mp_ptr) (*gmp_reallocate_func) (old, 0, size * sizeof (mp_limb_t));
 }
 
-
+
 /* MPN interface */
 
 void

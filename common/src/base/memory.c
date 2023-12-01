@@ -117,7 +117,8 @@ static void *ctu_gmp_realloc(void *ptr, size_t old_size, size_t new_size)
 
 static void ctu_gmp_free(void *ptr, size_t size)
 {
-    arena_free(gGmpAlloc, ptr, size);
+    // mini-gmp doesnt really handle free size and always gives us zero
+    arena_free(gGmpAlloc, ptr, size != 0 ? size : ALLOC_SIZE_UNKNOWN);
 }
 
 USE_DECL
