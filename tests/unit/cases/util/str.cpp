@@ -277,19 +277,19 @@ int main()
     ///
 
     vector_t *one_arg = vector_init((char*)"hello");
-    const char *one_prefix = common_prefix(one_arg);
+    const char *one_prefix = str_common_prefix(one_arg);
 
     vector_t *no_common = vector_of(2);
     vector_set(no_common, 0, (void*)"hello");
     vector_set(no_common, 1, (void*)"world/world2");
 
-    const char *no_common_prefix = common_prefix(no_common);
+    const char *no_common_prefix = str_common_prefix(no_common);
 
     vector_t *common = vector_of(2);
     vector_set(common, 0, (void*)"hello" NATIVE_PATH_SEPARATOR "stuff");
     vector_set(common, 1, (void*)"hello" NATIVE_PATH_SEPARATOR" world");
 
-    const char *some_prefix = common_prefix(common);
+    const char *some_prefix = str_common_prefix(common);
 
     suite.test_group("str_common_prefix")
         .EXPECT_PASS("one arg", str_equal(one_prefix, "hello"))

@@ -506,7 +506,7 @@ static const char *paths_base(vector_t *messages)
         return "";
     }
 
-    return common_prefix(result);
+    return str_common_prefix(result);
 }
 
 USE_DECL

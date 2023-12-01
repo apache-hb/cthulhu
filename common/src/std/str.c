@@ -561,13 +561,16 @@ bool str_equal(const char *lhs, const char *rhs)
  * expects a list of file paths
  */
 USE_DECL
-const char *common_prefix(vector_t *args)
+const char *str_common_prefix(vector_t *args)
 {
+    CTASSERT(args != NULL);
+
     size_t len = vector_len(args);
     CTASSERT(len > 0);
 
     const char *result = "";
 
+    // only one argument, return it
     if (len == 1)
     {
         const char *it = vector_get(args, 0);
@@ -579,17 +582,22 @@ const char *common_prefix(vector_t *args)
 
     size_t lower = SIZE_MAX;
 
+    // find common prefix, we account for path seperators
+    // because this is used to shrink file paths
     for (size_t i = 0; i < len; i++)
     {
         char *arg = vector_get(args, i);
         CTASSERTF(arg != NULL, "args[%zu] = NULL", i);
 
+        // find the last path seperator
+        // we find the common prefix up to the last path seperator
         size_t find = str_rfind_any(arg, PATH_SEPERATORS) + 1;
         strings[i] = ctu_strndup(arg, find);
 
         lower = MIN(lower, find);
     }
 
+    // no common prefix was found
     if (lower == 0 || lower == SIZE_MAX)
     {
         goto finish;
@@ -607,6 +615,7 @@ const char *common_prefix(vector_t *args)
         }
     }
 
+    // if we get here, the common prefix is the shortest string
     result = ctu_strndup(strings[0], lower);
 
 finish:

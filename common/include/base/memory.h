@@ -79,6 +79,7 @@ void ctu_free(IN_NOTNULL OUT_PTR_INVALID void *ptr);
 ///
 /// @return the allocated pointer
 NODISCARD ALLOC(ctu_free)
+RET_NOTNULL
 void *ctu_malloc(IN_RANGE(!=, 0) size_t size);
 
 /// @brief reallocate a pointer from the default allocator
@@ -89,6 +90,7 @@ void *ctu_malloc(IN_RANGE(!=, 0) size_t size);
 ///
 /// @return the reallocated pointer
 NODISCARD ALLOC(ctu_free)
+RET_NOTNULL
 void *ctu_realloc(
         IN_NOTNULL OUT_PTR_INVALID void *ptr,
         IN_RANGE(!=, 0) size_t new_size);
@@ -117,6 +119,7 @@ void arena_free(
 ///
 /// @return the allocated pointer
 NODISCARD ALLOC(arena_free, 2)
+RET_NOTNULL
 void *arena_malloc(
     IN_NOTNULL alloc_t *alloc,
     IN_RANGE(!=, 0) size_t size,
@@ -132,6 +135,7 @@ void *arena_malloc(
 ///
 /// @return the reallocated pointer
 NODISCARD
+RET_NOTNULL
 void *arena_realloc(
     IN_NOTNULL alloc_t *alloc,
     OUT_PTR_INVALID void *ptr,

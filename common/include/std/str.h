@@ -142,8 +142,8 @@ vector_t *str_split(IN_STRING const char *str, IN_STRING const char *sep);
  *
  * @return the common prefix
  */
-NODISCARD
-const char *common_prefix(IN_NOTNULL vector_t *args);
+NODISCARD RET_NOTNULL
+const char *str_common_prefix(IN_NOTNULL vector_t *args);
 
 /**
  * @brief find the last instance of a substring in a string
