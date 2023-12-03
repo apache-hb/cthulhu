@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/analyze.h"
-#include "core/version-def.h"
+#include "core/version_def.h"
 
 #include "argparse/argparse.h"
 

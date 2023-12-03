@@ -39,7 +39,7 @@ see https://www.gnu.org/licenses/.  */
 #include <stdlib.h>
 #include <string.h>
 
-#include "mini-mpq.h"
+#include "mini_mpq.h"
 
 #ifndef GMP_LIMB_HIGHBIT
 /* Define macros and static functions already defined by mini-gmp.c */

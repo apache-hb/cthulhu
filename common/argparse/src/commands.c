@@ -5,7 +5,7 @@
 
 #include "std/vector.h"
 
-#include "ctu-config.h"
+#include <ctu_config.h>
 
 #include <stdio.h>
 

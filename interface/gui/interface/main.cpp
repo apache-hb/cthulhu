@@ -1,6 +1,6 @@
 #include "editor/editor.h"
 
-#include "core/version-def.h"
+#include "core/version_def.h"
 #include "core/macros.h"
 #include "memory/memory.h"
 #include "base/panic.h"

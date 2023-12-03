@@ -79,7 +79,7 @@ config_cdata.set10('CTU_DEBUG', is_debug)
 # which is weird seeing as we specify gnu11, maybe its a gcc bug?
 config_cdata.set10('CTU_HAS_PRETTY_FUNCTION', warning_level < 3)
 
-gmp = dependency('gmp', fallback : [ 'mini-gmp', 'gmp' ])
+gmp = dependency('gmp', fallback : [ 'mini_gmp', 'gmp' ])
 
 lexargs = []
 parseargs = []

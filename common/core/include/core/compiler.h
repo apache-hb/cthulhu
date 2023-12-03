@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ctu-config.h>
+#include <ctu_config.h>
 
 #if defined(__clang__)
 #   define CC_CLANG 1

@@ -33,7 +33,7 @@ see https://www.gnu.org/licenses/.  */
 #ifndef __MINI_MPQ_H__
 #define __MINI_MPQ_H__
 
-#include "mini-gmp.h"
+#include "mini_gmp.h"
 
 #if defined (__cplusplus)
 extern "C" {

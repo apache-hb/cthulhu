@@ -1,5 +1,5 @@
 config_header = configure_file(
-    output : 'ctu-config.h',
+    output : 'ctu_config.h',
     configuration : config_cdata
 )
 
