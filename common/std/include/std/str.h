@@ -12,8 +12,7 @@ typedef struct vector_t vector_t;
 typedef struct map_t map_t;
 
 /**
- * @defgroup StringUtils
- * @brief String manipulation and processing functions
+ * @defgroup StringUtils String manipulation and processing
  * @{
  */
 
@@ -46,8 +45,6 @@ char *formatv(IN_STRING const char *fmt, va_list args);
 /**
  * @brief see if a string starts with a prefix
  *
- * check if a string starts with a substring
- *
  * @param str the string to search
  * @param prefix the prefix to check for
  *
@@ -57,7 +54,7 @@ NODISCARD CONSTFN
 bool str_startswith(IN_STRING const char *str, IN_STRING const char *prefix);
 
 /**
- * check if a string ends with a substring
+ * @brief check if a string ends with a substring
  *
  * @param str the string to search
  * @param suffix the suffix to check for
@@ -96,7 +93,7 @@ char *str_repeat(IN_STRING const char *str, size_t times);
 /**
  * @brief turn a string into a C string literal
  *
- * normalize a string into a valid C string
+ * normalize a string into a valid C string literal
  *
  * @param str the string to normalize
  *
@@ -108,7 +105,7 @@ char *str_normalize(IN_STRING const char *str);
 /**
  * @brief turn a string with length into a C string literal
  *
- * normalize a string with length into a valid C string
+ * normalize a string with length into a valid C string literal
  *
  * @param str the string to normalize
  * @param len the length of the string
@@ -198,14 +195,12 @@ size_t str_count_any(IN_STRING const char *str, IN_STRING const char *chars);
  */
 bool char_is_any_of(char c, const char *chars);
 
-/**
- * @brief check if a string contains a substring
- *
- * @param str the string to search
- * @param search the substring to search for
- *
- * @return if @a sub is found in @a str
- */
+/// @brief check if a string contains a substring
+///
+/// @param str the string to search
+/// @param search the substring to search for
+///
+/// @return if @a sub is found in @a str
 NODISCARD CONSTFN
 bool str_contains(IN_STRING const char *str, IN_STRING const char *search);
 

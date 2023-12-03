@@ -10,9 +10,8 @@
 typedef struct io_t io_t;
 typedef struct scan_t scan_t;
 
-/**
- * scanner function callbacks for flex and bison
- */
+/// @brief scanner function callbacks for flex and bison
+/// @note this should be created via the @a CTU_CALLBACKS macro
 typedef struct callbacks_t
 {
     int (*init)(scan_t *extra, void *scanner);                   ///< yylex_init_extra
@@ -21,6 +20,14 @@ typedef struct callbacks_t
     void (*destroyBuffer)(void *buffer, void *scanner);          ///< yy_delete_buffer
     void (*destroy)(void *scanner);                              ///< yylex_destroy
 } callbacks_t;
+
+/// @def CTU_CALLBACKS(id, prefix)
+/// @brief callback boilerplate macro
+///
+/// generate callback boilerplate for @a compile_scanner
+///
+/// @param id the name of the generated callback object
+/// @param prefix the prefix assigned to flex and bison functions
 
 #define CTU_CALLBACKS(id, prefix)                                                                                      \
     static int prefix##_##id##_##init(scan_t *extra, void *scanner)                                                    \
@@ -52,11 +59,11 @@ typedef struct callbacks_t
         .destroy = prefix##_##id##_destroy,                                                                            \
     }
 
-/**
- * @brief compile a string into a language specific ast
- *
- * @param extra the sanner being used
- * @param callbacks the flex/bison callbacks
- * @return void* a pointer to the compiled ast
- */
+/// @brief parse the contents of a scanner into a language specific ast
+/// @note callbacks should be generated via @a CTU_CALLBACKS
+///
+/// @param extra the sanner being used
+/// @param callbacks the flex/bison callbacks
+///
+/// @return a pointer to the compiled ast
 void *compile_scanner(scan_t *extra, callbacks_t *callbacks);
