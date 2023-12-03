@@ -5,7 +5,7 @@
 
 #include "std/str.h"
 
-#include "base/memory.h"
+#include "memory/memory.h"
 #include "base/panic.h"
 
 static void ensure_block_names_match(scan_t *scan, const node_t *node, const char *type, const char *name, const char *end)

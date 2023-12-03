@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/analyze.h"
+
 #include <stddef.h>
 
 typedef struct reports_t reports_t;

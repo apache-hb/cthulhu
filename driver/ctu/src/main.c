@@ -8,7 +8,8 @@
 #include "std/str.h"
 
 #include "core/macros.h"
-#include "base/util.h"
+
+#include "memory/memory.h"
 
 #include "ctu_bison.h"
 #include "ctu_flex.h"

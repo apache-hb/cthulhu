@@ -11,7 +11,7 @@
 
 #include "std/typed/vector.h"
 
-#include "base/memory.h"
+#include "memory/memory.h"
 #include "base/panic.h"
 
 #include <string.h>

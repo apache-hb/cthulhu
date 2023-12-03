@@ -2,7 +2,8 @@
 
 #include "core/macros.h"
 
-#include "base/memory.h"
+#include "memory/memory.h"
+
 #include "base/util.h"
 
 #include "scan/node.h"

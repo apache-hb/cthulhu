@@ -4,8 +4,9 @@
 
 #include "cthulhu/tree/query.h"
 
+#include "memory/memory.h"
+
 #include "base/panic.h"
-#include "base/memory.h"
 
 #include "std/str.h"
 #include "std/vector.h"

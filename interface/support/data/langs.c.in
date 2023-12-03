@@ -1,6 +1,6 @@
 #include "support/langs.h"
 
-#include "base/util.h"
+#include "memory/memory.h"
 
 @EXTERNS@
 

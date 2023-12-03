@@ -3,7 +3,7 @@
 #include "std/vector.h"
 
 #include "core/macros.h"
-#include "base/memory.h"
+#include "memory/memory.h"
 #include "base/panic.h"
 #include "base/util.h"
 

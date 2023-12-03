@@ -10,7 +10,9 @@
 #include "std/str.h"
 #include "std/vector.h"
 
-#include "base/memory.h"
+#include "core/macros.h"
+
+#include "memory/memory.h"
 #include "base/util.h"
 #include "base/panic.h"
 

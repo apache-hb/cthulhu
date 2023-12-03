@@ -8,7 +8,7 @@
 #   define STATIC_ASSERT(expr, msg) _Static_assert(expr, msg)
 #endif
 
-#if defined(__cplusplus) && __has_attribute(deprecated)
+#if __cplusplus >= 201402L
 #   define DEPRECATED(msg) [[deprecated(msg)]]
 #elif CC_MSVC
 #   define CTU_DEPRECATED(msg) __declspec(deprecated(msg))

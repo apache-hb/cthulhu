@@ -21,9 +21,9 @@ impl = configure_file(
     }
 )
 
-libsupport = library('support', impl, 
+libsupport = library('support', impl,
     include_directories : 'include',
-    dependencies : deps + [ mediator ]
+    dependencies : deps + [ mediator, memory ]
 )
 
 support = declare_dependency(

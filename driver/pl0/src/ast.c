@@ -1,6 +1,6 @@
 #include "pl0/ast.h"
 
-#include "base/memory.h"
+#include "memory/memory.h"
 
 pl0_t *pl0_new(scan_t *scan, where_t where, pl0_type_t type)
 {

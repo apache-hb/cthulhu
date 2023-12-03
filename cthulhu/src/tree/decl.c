@@ -6,10 +6,9 @@
 
 #include "std/vector.h"
 
-#include "base/panic.h"
-#include "base/util.h"
+#include "memory/memory.h"
 
-#include <stdint.h>
+#include "base/panic.h"
 
 static const tree_storage_t kEmptyStorage = {
     .storage = NULL,

@@ -8,7 +8,7 @@
 
 #include "core/macros.h"
 #include "base/util.h"
-#include "base/memory.h"
+#include "memory/memory.h"
 #include "base/panic.h"
 
 #include "std/str.h"

@@ -10,12 +10,12 @@ src = [
 # this is both libreport and libscan as they depend on each other
 liblocation = library('location', src,
     c_args : user_args,
-    dependencies : [ std, io, os ],
+    dependencies : [ memory, std, io, os ],
     include_directories : 'include'
 )
 
 location = declare_dependency(
     link_with : liblocation,
-    dependencies : [ std, io, os ],
+    dependencies : [ core, base, os ],
     include_directories : 'include'
 )

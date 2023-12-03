@@ -7,7 +7,8 @@
 #include "std/vector.h"
 #include "std/str.h"
 
-#include "base/memory.h"
+#include "memory/memory.h"
+
 #include "base/panic.h"
 
 static const tree_attribs_t kDefaultAttrib = {

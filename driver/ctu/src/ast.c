@@ -3,7 +3,7 @@
 
 #include "report/report.h"
 
-#include "base/memory.h"
+#include "memory/memory.h"
 
 static ctu_t *ctu_new(scan_t *scan, where_t where, ctu_kind_t kind)
 {

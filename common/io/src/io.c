@@ -1,6 +1,6 @@
 #include "io/impl.h"
 
-#include "base/memory.h"
+#include "memory/memory.h"
 #include "base/panic.h"
 
 void io_close(io_t *io)

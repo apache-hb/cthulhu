@@ -5,7 +5,7 @@
 #include "std/vector.h"
 
 #include "base/panic.h"
-#include "base/memory.h"
+#include "memory/memory.h"
 
 #define EXPECT_TYPE(TY, KIND) CTASSERTF(TY->kind == KIND, "expected %s, got %s", ssa_type_name(KIND), ssa_type_name(TY->kind))
 

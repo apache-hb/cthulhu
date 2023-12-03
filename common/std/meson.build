@@ -11,7 +11,7 @@ src = [
 
 libstd = library('std', src,
     c_args : user_args,
-    dependencies : base,
+    dependencies : [ memory, base ],
     include_directories : 'include'
 )
 

@@ -6,8 +6,8 @@
 
 #include "report/report.h"
 
-#include "base/util.h"
 #include "base/panic.h"
+#include "memory/memory.h"
 
 static visibility_t remap_visibility(reports_t *reports, const node_t *node, obr_visibility_t vis)
 {

@@ -3,7 +3,7 @@ src = [ 'src/os_common.c' ]
 
 lib_oscommon = library('os_common', src,
     c_args : user_args,
-    dependencies : [ std ],
+    dependencies : [ base, memory, std ],
     include_directories : [ 'include', 'src' ]
 )
 

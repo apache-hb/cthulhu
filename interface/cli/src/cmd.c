@@ -4,8 +4,9 @@
 
 #include "cthulhu/mediator/interface.h"
 
-#include "base/util.h"
 #include "core/macros.h"
+
+#include "memory/memory.h"
 
 #include "io/io.h"
 

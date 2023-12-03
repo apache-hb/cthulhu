@@ -8,7 +8,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-
 /**
  * @defgroup Location
  * @brief AST source position tracking

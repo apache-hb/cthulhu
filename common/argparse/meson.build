@@ -20,12 +20,12 @@ src = [
 libargparse = library('argparse', src,
     c_args : generated_args,
     link_with : libargparse_base,
-    dependencies : [ gmp, std, location, interop ],
+    dependencies : [ gmp, memory, std, location, interop, io ],
     include_directories : [ 'src', 'include' ]
 )
 
 argparse = declare_dependency(
     link_with : [ libargparse_base, libargparse ],
     include_directories : 'include',
-    dependencies : [ gmp, interop ]
+    dependencies : [ gmp, core ]
 )

@@ -1,7 +1,7 @@
 #include "std/set.h"
 #include "std/str.h"
 
-#include "base/memory.h"
+#include "memory/memory.h"
 #include "base/panic.h"
 #include "base/util.h"
 

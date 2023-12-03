@@ -4,7 +4,7 @@
 #include "std/str.h"
 
 #include "base/util.h"
-#include "base/memory.h"
+#include "memory/memory.h"
 #include "base/panic.h"
 
 #include <string.h>

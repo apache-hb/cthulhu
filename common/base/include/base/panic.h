@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/analyze.h"
-#include "core/macros.h"
 
 #include <stdarg.h>
 #include <stddef.h>

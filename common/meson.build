@@ -1,6 +1,7 @@
 subdir('core')
 subdir('stacktrace')
 subdir('base')
+subdir('memory')
 subdir('std')
 subdir('os')
 subdir('io')

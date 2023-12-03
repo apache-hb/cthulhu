@@ -1,8 +1,10 @@
 #include "ap_common.h"
 
+#include "core/macros.h"
+
 #include "base/panic.h"
 #include "base/util.h"
-#include "base/memory.h"
+#include "memory/memory.h"
 
 #include "std/map.h"
 #include "std/vector.h"

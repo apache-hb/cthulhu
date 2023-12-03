@@ -3,7 +3,7 @@
 #include "cthulhu/mediator/interface.h"
 #include "cthulhu/mediator/driver.h"
 
-#include "base/memory.h"
+#include "memory/memory.h"
 #include "base/panic.h"
 
 #include "scan/scan.h"

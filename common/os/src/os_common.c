@@ -1,6 +1,7 @@
 #include "os_common.h"
 
-#include "base/memory.h"
+#include "memory/memory.h"
+
 #include "base/panic.h"
 
 #include "std/str.h"

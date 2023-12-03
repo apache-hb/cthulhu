@@ -1,6 +1,7 @@
 #include "unit/ct-test.hpp"
 
-#include "base/util.h"
+#include "memory/memory.h"
+
 #include "std/str.h"
 #include "std/set.h"
 

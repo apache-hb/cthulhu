@@ -5,7 +5,7 @@
 #include "std/map.h"
 
 #include "base/panic.h"
-#include "base/memory.h"
+#include "memory/memory.h"
 
 #include "report/report.h"
 

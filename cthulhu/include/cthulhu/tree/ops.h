@@ -1,6 +1,5 @@
 #pragma once
 
-
 typedef enum quals_t {
     eQualUnknown = (0 << 0), ///< defer to the inner type for the qualifiers
 

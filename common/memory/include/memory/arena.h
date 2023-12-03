@@ -7,11 +7,16 @@
 
 BEGIN_API
 
-#define ALLOC_SIZE_UNKNOWN SIZE_MAX
-
 /// @defgroup Memory
 /// @brief Global and arena memory management
 /// @{
+
+#define ALLOC_SIZE_UNKNOWN SIZE_MAX
+/// @def ALLOC_SIZE_UNKNOWN
+/// @brief unknown allocation size constant
+/// when freeing or reallocating memory, this can be used as the size
+/// to indicate that the size is unknown. requires allocator support
+
 
 typedef struct alloc_t alloc_t;
 
@@ -61,44 +66,6 @@ typedef struct alloc_t
     realloc_t arena_realloc; ///< the realloc function
     free_t arena_free;       ///< the free function
 } alloc_t;
-
-/// @brief the default allocator
-/// @note this is the default allocator used by @a ctu_malloc, @a ctu_realloc, and @a ctu_free
-/// @note exercise caution swapping this allocator during a compiler run
-extern alloc_t gDefaultAlloc;
-
-/// @brief free a pointer allocated with ctu_malloc or ctu_realloc
-/// @note @a gDefaultAlloc must be consistent with the allocator used to allocate @a ptr
-///
-/// @param ptr the pointer to free, must not be NULL
-void ctu_free(IN_NOTNULL OUT_PTR_INVALID void *ptr);
-
-/// @brief allocate a pointer from the default allocator
-///
-/// @param size the size of the allocation
-///
-/// @return the allocated pointer
-NODISCARD ALLOC(ctu_free)
-RET_NOTNULL
-void *ctu_malloc(IN_RANGE(!=, 0) size_t size);
-
-/// @brief reallocate a pointer from the default allocator
-/// @note @a gDefaultAlloc must be consistent with the allocator used to allocate @a ptr
-///
-/// @param ptr the pointer to reallocate
-/// @param new_size the new size of the allocation
-///
-/// @return the reallocated pointer
-NODISCARD ALLOC(ctu_free)
-RET_NOTNULL
-void *ctu_realloc(
-        IN_NOTNULL OUT_PTR_INVALID void *ptr,
-        IN_RANGE(!=, 0) size_t new_size);
-
-/// @brief initialize gmp with a custom allocator
-///
-/// @param alloc the allocator to use
-void init_gmp(IN_NOTNULL alloc_t *alloc);
 
 /// @brief release memory from a custom allocator
 /// @note ensure the allocator is consistent with the allocator used to allocate @a ptr

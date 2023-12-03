@@ -9,12 +9,12 @@ src = [
 
 libio = library('io', src,
     c_args : user_args,
-    dependencies : [ std, os ],
+    dependencies : [ std, os, memory ],
     include_directories : [ 'include' ]
 )
 
 io = declare_dependency(
     link_with : libio,
-    dependencies : [ std, os ],
+    dependencies : [ core, os ],
     include_directories : 'include'
 )

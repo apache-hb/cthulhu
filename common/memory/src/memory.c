@@ -1,8 +1,11 @@
-#include "base/memory.h"
+#include "memory/memory.h"
+
 #include "core/macros.h"
 #include "base/panic.h"
 
 #include <gmp.h>
+
+#include <string.h>
 #include <stdlib.h>
 
 /// default global allocator
@@ -63,42 +66,38 @@ void ctu_free(void *ptr)
     arena_free(&gDefaultAlloc, ptr, ALLOC_SIZE_UNKNOWN);
 }
 
-/// arena allocator
+/// global string allocation
 
 USE_DECL
-void *arena_malloc(alloc_t *alloc, size_t size, const char *name)
+void *ctu_memdup(const void *ptr, size_t size)
 {
-    CTASSERT(alloc != NULL);
-    CTASSERT(size > 0);
+    CTASSERT(ptr != NULL);
 
-    void *ptr = alloc->arena_malloc(alloc, size, name);
-    CTASSERTF(ptr != NULL, "alloc(%s) failed", name);
-
-    return ptr;
+    void *out = ctu_malloc(size);
+    memcpy(out, ptr, size);
+    return out;
 }
 
 USE_DECL
-void *arena_realloc(alloc_t *alloc, void *ptr, size_t new_size, size_t old_size)
+char *ctu_strdup(const char *str)
 {
-    CTASSERT(alloc != NULL);
-    CTASSERT(ptr != NULL);
-    CTASSERT(new_size > 0);
-    CTASSERT(old_size > 0);
+    CTASSERT(str != NULL);
 
-    void *outptr = alloc->arena_realloc(alloc, ptr, new_size, old_size);
-    CTASSERTF(outptr != NULL, "realloc(%zu) failed", new_size);
-
-    return outptr;
+    size_t len = strlen(str) + 1;
+    char *out = ctu_malloc(len);
+    memcpy(out, str, len);
+    return out;
 }
 
 USE_DECL
-void arena_free(alloc_t *alloc, void *ptr, size_t size)
+char *ctu_strndup(const char *str, size_t len)
 {
-    CTASSERT(alloc != NULL);
-    CTASSERT(ptr != NULL);
-    CTASSERT(size > 0);
+    CTASSERT(str != NULL);
 
-    alloc->arena_free(alloc, ptr, size);
+    char *out = ctu_malloc(len + 1);
+    memcpy(out, str, len);
+    out[len] = '\0';
+    return out;
 }
 
 /// gmp arena managment

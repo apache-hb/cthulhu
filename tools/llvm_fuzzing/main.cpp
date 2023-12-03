@@ -1,6 +1,6 @@
 #include "core/macros.h"
 #include "base/panic.h"
-#include "base/memory.h"
+#include "memory/memory.h"
 
 #include "io/fs.h"
 #include "stacktrace/stacktrace.h"

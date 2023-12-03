@@ -1,9 +1,9 @@
 libunit = library('unit', 'unit/ct-test.cpp',
     include_directories : include_directories('unit'),
-    dependencies : [ std ]
+    dependencies : [ base, std ]
 )
 
-unit = declare_dependency(link_with : libunit, dependencies : [ std ])
+unit = declare_dependency(link_with : libunit, dependencies : [ base ])
 
 cases = [
     'util.str',
@@ -24,7 +24,7 @@ foreach case : cases
     exe = executable(case, path,
         include_directories : '.',
         cpp_args : test_cpp_args,
-        dependencies : [ unit, base ]
+        dependencies : [ unit, memory, std ]
     )
 
     test(case, exe, suite : 'unit')
@@ -43,7 +43,7 @@ test('vfs', vfs_exe, suite : 'unit')
 
 fs_exe = executable('fs', 'cases/io/fs.cpp',
     include_directories : '.',
-    dependencies : [ unit, base, location, fs ]
+    dependencies : [ unit, base, std, location, fs ]
 )
 
 test('fs', fs_exe,
@@ -55,7 +55,7 @@ test('fs', fs_exe,
 
 argparse_exe = executable('argparse.argparse', 'cases/argparse/argparse.cpp',
     include_directories : '.',
-    dependencies : [ unit, base, argparse ]
+    dependencies : [ unit, memory, base, std, location, argparse ]
 )
 
 test('argparse', argparse_exe, suite : 'unit')

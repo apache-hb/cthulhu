@@ -3,7 +3,7 @@
 #include "core/macros.h"
 
 #include "base/panic.h"
-#include "base/memory.h"
+#include "memory/memory.h"
 
 #include "std/map.h"
 

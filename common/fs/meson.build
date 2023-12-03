@@ -7,12 +7,12 @@ src = [
 
 libfs = library('fs', src,
     c_args : user_args,
-    dependencies : [ std, os, io, location ],
+    dependencies : [ memory, std, os, io, location ],
     include_directories : [ 'include', 'src' ]
 )
 
 fs = declare_dependency(
     link_with : libfs,
-    dependencies : [ std, os, io ],
+    dependencies : [ io ],
     include_directories : 'include'
 )

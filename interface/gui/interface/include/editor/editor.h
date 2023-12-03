@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/memory.h"
+#include "memory/memory.h"
 
 #include "cthulhu/interface/interface.h"
 

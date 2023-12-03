@@ -2,7 +2,7 @@
 
 #include "core/version-def.h"
 #include "core/macros.h"
-#include "base/memory.h"
+#include "memory/memory.h"
 #include "base/panic.h"
 
 #include "std/str.h"
