@@ -26,6 +26,7 @@ ctu = library('ctu', src,
 langs += {
     'ctu': {
         'dep': declare_dependency(link_with : ctu),
-        'mod': 'kCtuModule'
+        'mod': 'kCtuModule',
+        'fuzz_corpus': meson.current_source_dir() / 'fuzz_corpus',
     }
 }

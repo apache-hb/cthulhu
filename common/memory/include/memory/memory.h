@@ -4,8 +4,6 @@
 
 BEGIN_API
 
-#define ALLOC_SIZE_UNKNOWN SIZE_MAX
-
 /// @defgroup GlobalMemory Global memory allocation
 /// @ingroup Memory
 /// @brief Default global memory allocator

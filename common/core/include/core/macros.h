@@ -31,7 +31,7 @@
 #define INNER_STR(x) #x
 #define STR(x) INNER_STR(x)
 
-/// @defgroup Colour
+/// @defgroup Colour ANSI Colour macros
 /// @brief ANSI escape string colour macros
 ///
 /// Useful for formatting messages to the console.

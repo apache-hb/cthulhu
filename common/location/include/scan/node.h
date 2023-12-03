@@ -53,13 +53,11 @@ scan_t *get_node_scanner(const node_t *node);
 NODISCARD CONSTFN
 where_t get_node_location(const node_t *node);
 
-/**
- * @brief create a new node in a given file at a given location
- *
- * @param scan the scanner that this node is in
- * @param where the location of this node
- * @return the created node
- */
+/// @brief create a new node in a given file at a given location
+///
+/// @param scan the scanner that this node is in
+/// @param where the location of this node
+/// @return the created node
 NODISCARD CONSTFN
 node_t *node_new(scan_t *scan, where_t where);
 

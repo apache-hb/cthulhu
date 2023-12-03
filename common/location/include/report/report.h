@@ -114,18 +114,15 @@ typedef struct reports_t
 NODISCARD
 reports_t *begin_reports(void);
 
-/**
- * flush a reporting context and return an exit code
- *
- * @param reports the context to flush
- * @param limit the maximum number of errors to report
- * @param name the name of this report
- *
- * @return an exit code.
- *         EXIT_OK if the sink only contains warnings or notes.
- *         EXIT_ERROR if the sink contained any errors.
- *         EXIT_INTERAL if the sink contained an internal error.
- */
+/// @brief flush a reporting context and return an exit code
+///
+/// @param reports the context to flush
+/// @param name the name of this report
+/// @param settings the settings for this report
+///
+/// @retval EXIT_OK if the sink only contains warnings or notes.
+/// @retval EXIT_ERROR if the sink contained any errors.
+/// @retval EXIT_INTERAL if the sink contained an internal error.
 NODISCARD
 status_t end_reports(reports_t *reports, const char *name, report_config_t settings);
 

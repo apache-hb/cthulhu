@@ -44,9 +44,12 @@ ninja -C build test # build and run tests
   * `cli` - command line user interface
   * `gui` - graphical user interface (TODO)
 
-* `common/include` - common code
-  * `argparse` - command line parsing library
-  * `base` - memory allocation library
+* `common` - common code
+  * `core` - header only compiler specific
+  * `stacktrace` - backtrace retrieval
+  * `argparse` - command line parsing
+  * `base` - base utils
+  * `memory` - memory allocation and arenas
   * `interop` - flex & bison helper functions
   * `platform` - platform detail wrappers
   * `io` - file io abstraction
@@ -64,17 +67,11 @@ ninja -C build test # build and run tests
     * `ssa` - tree to ssa transforms, as well as optimizations
 
 * `subprojects` - dependencies
-  * `cjson` - json serialization + deserialization library
   * `mini-gmp` - fallback gmp library if system gmp isnt installed
-  * `glad` - gl loader for gui interface
-  * `glfw` - windowing library for gui interface
-  * `imgui` - ui library for gui interface
 
 * `tests` - tests
   * `lang` - language specific tests
-  * `unit-tests` - compiler code unit tests
-  * `corpus` - afl fuzzing corpus
-  * `fuzzing` - fuzzing interface
+  * `unit` - compiler code unit tests
 
 ## Fuzzing
 Right now only fuzzing with afl++ is supported

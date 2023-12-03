@@ -148,7 +148,7 @@ vector_t *vector_merge(IN_NOTNULL const vector_t *lhs, IN_NOTNULL const vector_t
 /**
  * @brief append a vector to the end of another
  *
- * @param self the vector to append to
+ * @param vector the vector to append to
  * @param other the vector to append
  */
 void vector_append(IN_NOTNULL vector_t **vector, IN_NOTNULL const vector_t *other);
