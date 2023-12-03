@@ -8,10 +8,10 @@
 #   define STATIC_ASSERT(expr, msg) _Static_assert(expr, msg)
 #endif
 
-#if CC_MSVC
+#if defined(__cplusplus) && __has_attribute(deprecated)
+#   define DEPRECATED(msg) [[deprecated(msg)]]
+#elif CC_MSVC
 #   define CTU_DEPRECATED(msg) __declspec(deprecated(msg))
-#elif defined(__cplusplus) && __has_attribute(deprecated)
-#   define CTU_DEPRECATED(msg) [[deprecated(msg)]]
 #elif CC_CLANG || CC_GNU
 #   define CTU_DEPRECATED(msg) __attribute__((deprecated(msg)))
 #else
@@ -47,10 +47,8 @@
 
 /// @}
 
-///
 /// @defgroup ErrorCodes Exit codes that match with GNU standard codes
 /// @{
-///
 
 #define EXIT_OK 0        ///< no user errors or internal errors
 #define EXIT_ERROR 1     ///< the user has made an error
