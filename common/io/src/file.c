@@ -12,7 +12,7 @@ static const io_callbacks_t kFileCallbacks;
 
 static os_file_t *fd_data(io_t *self)
 {
-    io_file_t *file = io_get_data(self, &kFileCallbacks);
+    io_file_t *file = io_data(self, &kFileCallbacks);
     return file->file;
 }
 

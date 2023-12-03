@@ -49,7 +49,7 @@ typedef const void *(*io_map_t)(io_t *self);
 /// destroy an io objects backing data and any associated resources
 ///
 /// @param self the io object
-typedef void (*io_close_t)(io_t *self);
+typedef void (*io_close_t)(OUT_PTR_INVALID io_t *self);
 
 /// @brief io callback interface
 typedef struct io_callbacks_t
@@ -106,7 +106,7 @@ typedef struct io_t
 ///
 /// @return the user data
 PUREFN
-void *io_get_data(IN_NOTNULL io_t *io, const io_callbacks_t *cb);
+void *io_data(IN_NOTNULL io_t *io, const io_callbacks_t *cb);
 
 /// @brief create a new IO object for a given interface
 ///

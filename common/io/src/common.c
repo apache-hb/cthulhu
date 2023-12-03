@@ -5,7 +5,7 @@
 
 #include <string.h>
 
-void *io_get_data(io_t *io, const io_callbacks_t *cb)
+void *io_data(io_t *io, const io_callbacks_t *cb)
 {
     CTASSERT(io != NULL);
     CTASSERT(cb != NULL);

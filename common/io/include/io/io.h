@@ -99,7 +99,7 @@ size_t io_write(io_t *io, IN_READS(size) const void *src, size_t size);
 ///
 /// @return the name of the object
 NODISCARD
-const char *io_name(IN_NOTNULL io_t *io);
+const char *io_name(IN_NOTNULL const io_t *io);
 
 /// @brief get the total size of an io objects contents
 ///
