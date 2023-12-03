@@ -170,7 +170,7 @@ FULL_PATH_NAMES        = YES
 # will be relative from the directory where doxygen is started.
 # This tag requires that the tag FULL_PATH_NAMES is set to YES.
 
-STRIP_FROM_PATH        =
+STRIP_FROM_PATH        = @ROOT_SOURCE_DIR@
 
 # The STRIP_FROM_INC_PATH tag can be used to strip a user-defined part of the
 # path mentioned in the documentation of a class, which tells the reader which
@@ -1533,7 +1533,7 @@ DISABLE_INDEX          = NO
 # The default value is: NO.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-GENERATE_TREEVIEW      = NO
+GENERATE_TREEVIEW      = YES
 
 # The ENUM_VALUES_PER_LINE tag can be used to set the number of enum values that
 # doxygen will group on one line in the generated HTML documentation.
@@ -2193,26 +2193,26 @@ PREDEFINED = OS_RESULT(X)=X \
              FORMAT_STRING= \
              USE_DECL= \
              NODISCARD= \
-             IN_READS(X)= \
-             OUT_WRITES(X)= \
-             OUT_PTR_INVALID \
-             RET_RANGE(X, Y)= \
+             IN_READS()= \
+             OUT_WRITES()= \
+             OUT_PTR_INVALID= \
+             RET_RANGE()= \
              RET_NOTNULL= \
              RET_STRING= \
              MUST_INSPECT= \
-             FIELD_SIZE(X)= \
+             FIELD_SIZE()= \
              FIELD_STRING= \
-             FIELD_RANGE(X, Y)= \
+             FIELD_RANGE()= \
              IN_NOTNULL= \
              IN_STRING= \
              IN_STRING_OPT= \
-             IN_RANGE(X, Y)= \
-             FORMAT_ATTRIB(X, Y)= \
+             IN_RANGE()= \
+             FORMAT_ATTRIB()= \
              CONSTFN= \
              PUREFN= \
              HOTFN= \
              COLDFN= \
-             ALLOC(=X)= \
+             ALLOC()= \
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The

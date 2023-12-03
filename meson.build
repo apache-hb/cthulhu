@@ -230,6 +230,7 @@ if doxygen.found()
     doxy_cdata = configuration_data()
     doxy_cdata.merge_from(config_cdata)
     doxy_cdata.set('CTU_SOURCES', ' '.join(doxy_srcdirs))
+    doxy_cdata.set('ROOT_SOURCE_DIR', cwd)
 
     doxy_cfg = configure_file(
         input : 'data/Doxyfile.in',

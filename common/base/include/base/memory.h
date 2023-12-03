@@ -95,7 +95,7 @@ void *ctu_realloc(
         IN_NOTNULL OUT_PTR_INVALID void *ptr,
         IN_RANGE(!=, 0) size_t new_size);
 
-/// @brief initialize gmps allocator to use a custom allocator
+/// @brief initialize gmp with a custom allocator
 ///
 /// @param alloc the allocator to use
 void init_gmp(IN_NOTNULL alloc_t *alloc);
