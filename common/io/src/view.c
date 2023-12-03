@@ -10,9 +10,16 @@ typedef struct view_t {
     size_t offset;
 } view_t;
 
+static const io_callbacks_t kViewCallbacks;
+
+static view_t *view_data(io_t *self)
+{
+    return io_get_data(self, &kViewCallbacks);
+}
+
 static size_t view_read(io_t *self, void *dst, size_t size)
 {
-    view_t *mem = io_data(self);
+    view_t *mem = view_data(self);
     size_t len = MIN(size, mem->size - mem->offset);
     memcpy(dst, mem->data + mem->offset, len);
     mem->offset += len;
@@ -21,32 +28,32 @@ static size_t view_read(io_t *self, void *dst, size_t size)
 
 static size_t view_size(io_t *self)
 {
-    view_t *mem = io_data(self);
+    view_t *mem = view_data(self);
     return mem->size;
 }
 
 static size_t view_seek(io_t *self, size_t offset)
 {
-    view_t *mem = io_data(self);
+    view_t *mem = view_data(self);
     mem->offset = MIN(offset, mem->size);
     return mem->offset;
 }
 
 static const void *view_map(io_t *self)
 {
-    view_t *mem = io_data(self);
+    view_t *mem = view_data(self);
 
     return mem->data;
 }
 
 static const io_callbacks_t kViewCallbacks = {
-    .fnRead = view_read,
-    .fnWrite = NULL,
+    .fn_read = view_read,
+    .fn_write = NULL,
 
-    .fnGetSize = view_size,
-    .fnSeek = view_seek,
+    .fn_get_size = view_size,
+    .fn_seek = view_seek,
 
-    .fnMap = view_map
+    .fn_map = view_map
 };
 
 USE_DECL

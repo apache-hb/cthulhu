@@ -8,6 +8,16 @@
 #   define STATIC_ASSERT(expr, msg) _Static_assert(expr, msg)
 #endif
 
+#if CC_MSVC
+#   define CTU_DEPRECATED(msg) __declspec(deprecated(msg))
+#elif defined(__cplusplus) && __has_attribute(deprecated)
+#   define CTU_DEPRECATED(msg) [[deprecated(msg)]]
+#elif CC_CLANG || CC_GNU
+#   define CTU_DEPRECATED(msg) __attribute__((deprecated(msg)))
+#else
+#   define CTU_DEPRECATED(msg)
+#endif
+
 /// @def MAX(lhs, rhs)
 /// returns the maximum of @a lhs and @a rhs
 #define MAX(L, R) ((L) > (R) ? (L) : (R))

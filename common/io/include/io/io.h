@@ -12,7 +12,10 @@ BEGIN_API
 /// @defgroup IO Generic IO objects
 /// @{
 
+/// @brief an opaque handle to an IO object
 typedef struct io_t io_t;
+
+/// @brief an io error code
 typedef os_error_t io_error_t;
 
 /// @brief destroy an IO object

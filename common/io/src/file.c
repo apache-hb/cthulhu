@@ -8,9 +8,11 @@ typedef struct io_file_t {
     os_file_t *file;
 } io_file_t;
 
+static const io_callbacks_t kFileCallbacks;
+
 static os_file_t *fd_data(io_t *self)
 {
-    io_file_t *file = io_data(self);
+    io_file_t *file = io_get_data(self, &kFileCallbacks);
     return file->file;
 }
 
@@ -71,14 +73,14 @@ static void fd_close(io_t *self)
 }
 
 static const io_callbacks_t kFileCallbacks = {
-    .fnRead = fd_read,
-    .fnWrite = fd_write,
+    .fn_read = fd_read,
+    .fn_write = fd_write,
 
-    .fnGetSize = fd_size,
-    .fnSeek = fd_seek,
+    .fn_get_size = fd_size,
+    .fn_seek = fd_seek,
 
-    .fnMap = fd_map,
-    .fnClose = fd_close
+    .fn_map = fd_map,
+    .fn_close = fd_close
 };
 
 USE_DECL

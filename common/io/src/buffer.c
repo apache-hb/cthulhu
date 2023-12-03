@@ -14,9 +14,16 @@ typedef struct buffer_t {
     size_t offset; ///< current offset in data
 } buffer_t;
 
+static const io_callbacks_t kBufferCallbacks;
+
+static buffer_t *mem_data(io_t *self)
+{
+    return io_get_data(self, &kBufferCallbacks);
+}
+
 static size_t mem_read(io_t *self, void *dst, size_t size)
 {
-    buffer_t *mem = io_data(self);
+    buffer_t *mem = mem_data(self);
     size_t len = MIN(size, mem->used - mem->offset);
     memcpy(dst, mem->data + mem->offset, len);
     mem->offset += len;
@@ -25,7 +32,7 @@ static size_t mem_read(io_t *self, void *dst, size_t size)
 
 static size_t mem_write(io_t *self, const void *src, size_t size)
 {
-    buffer_t *mem = io_data(self);
+    buffer_t *mem = mem_data(self);
     mem->used = MAX(mem->used, mem->offset + size);
     if (mem->offset + size > mem->total)
     {
@@ -41,20 +48,20 @@ static size_t mem_write(io_t *self, const void *src, size_t size)
 
 static size_t mem_size(io_t *self)
 {
-    buffer_t *mem = io_data(self);
+    buffer_t *mem = mem_data(self);
     return mem->used;
 }
 
 static size_t mem_seek(io_t *self, size_t offset)
 {
-    buffer_t *mem = io_data(self);
+    buffer_t *mem = mem_data(self);
     mem->offset = MIN(offset, mem->used);
     return mem->offset;
 }
 
 static const void *mem_map(io_t *self)
 {
-    buffer_t *mem = io_data(self);
+    buffer_t *mem = mem_data(self);
 
     void *it = ctu_malloc(mem->used);
     memcpy(it, mem->data, mem->used);
@@ -64,19 +71,19 @@ static const void *mem_map(io_t *self)
 
 static void mem_close(io_t *self)
 {
-    buffer_t *mem = io_data(self);
+    buffer_t *mem = mem_data(self);
     ctu_free(mem->data);
 }
 
 static const io_callbacks_t kBufferCallbacks = {
-    .fnRead = mem_read,
-    .fnWrite = mem_write,
+    .fn_read = mem_read,
+    .fn_write = mem_write,
 
-    .fnGetSize = mem_size,
-    .fnSeek = mem_seek,
+    .fn_get_size = mem_size,
+    .fn_seek = mem_seek,
 
-    .fnMap = mem_map,
-    .fnClose = mem_close
+    .fn_map = mem_map,
+    .fn_close = mem_close
 };
 
 USE_DECL

@@ -39,9 +39,16 @@ typedef struct virtual_io_t {
     size_t offset;
 } virtual_io_t;
 
+static const io_callbacks_t kVirtualCallbacks;
+
+static virtual_io_t *vfs_data(io_t *self)
+{
+    return io_get_data(self, &kVirtualCallbacks);
+}
+
 static size_t vfs_read(io_t *self, void *dst, size_t size)
 {
-    virtual_io_t *io = io_data(self);
+    virtual_io_t *io = vfs_data(self);
     size_t len = MIN(size, io->data->used - io->offset);
     memcpy(dst, io->data->data + io->offset, len);
     io->offset += len;
@@ -50,7 +57,7 @@ static size_t vfs_read(io_t *self, void *dst, size_t size)
 
 static size_t vfs_write(io_t *self, const void *src, size_t size)
 {
-    virtual_io_t *io = io_data(self);
+    virtual_io_t *io = vfs_data(self);
     virtual_file_t *data = io->data;
     data->used = MAX(data->used, io->offset + size);
     if (io->offset + size > data->size)
@@ -67,20 +74,20 @@ static size_t vfs_write(io_t *self, const void *src, size_t size)
 
 static size_t vfs_size(io_t *self)
 {
-    virtual_io_t *io = io_data(self);
+    virtual_io_t *io = vfs_data(self);
     return io->data->used;
 }
 
 static size_t vfs_seek(io_t *self, size_t offset)
 {
-    virtual_io_t *io = io_data(self);
+    virtual_io_t *io = vfs_data(self);
     io->offset = MIN(offset, io->data->used);
     return io->offset;
 }
 
 static const void *vfs_map(io_t *self)
 {
-    virtual_io_t *io = io_data(self);
+    virtual_io_t *io = vfs_data(self);
     return io->data->data;
 }
 
@@ -91,14 +98,14 @@ static void vfs_close(io_t *self)
 }
 
 static const io_callbacks_t kVirtualCallbacks = {
-    .fnRead = vfs_read,
-    .fnWrite = vfs_write,
+    .fn_read = vfs_read,
+    .fn_write = vfs_write,
 
-    .fnGetSize = vfs_size,
-    .fnSeek = vfs_seek,
+    .fn_get_size = vfs_size,
+    .fn_seek = vfs_seek,
 
-    .fnMap = vfs_map,
-    .fnClose = vfs_close
+    .fn_map = vfs_map,
+    .fn_close = vfs_close
 };
 
 static io_t *vfs_io(virtual_file_t *file, os_access_t flags)

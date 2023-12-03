@@ -7,9 +7,9 @@ void io_close(io_t *io)
 {
     CTASSERT(io != NULL);
 
-    if (io->cb->fnClose != NULL)
+    if (io->cb->fn_close != NULL)
     {
-        io->cb->fnClose(io);
+        io->cb->fn_close(io);
     }
 
     ctu_free(io);
@@ -21,7 +21,7 @@ size_t io_read(io_t *io, void *dst, size_t size)
     CTASSERT(io != NULL);
     CTASSERTF(io->flags & eAccessRead, "io.read(%s) flags not readable", io_name(io));
 
-    return io->cb->fnRead(io, dst, size);
+    return io->cb->fn_read(io, dst, size);
 }
 
 USE_DECL
@@ -30,7 +30,7 @@ size_t io_write(io_t *io, const void *src, size_t size)
     CTASSERT(io != NULL);
     CTASSERT(io->flags & eAccessWrite);
 
-    return io->cb->fnWrite(io, src, size);
+    return io->cb->fn_write(io, src, size);
 }
 
 USE_DECL
@@ -38,7 +38,7 @@ size_t io_size(io_t *io)
 {
     CTASSERT(io != NULL);
 
-    return io->cb->fnGetSize(io);
+    return io->cb->fn_get_size(io);
 }
 
 USE_DECL
@@ -46,7 +46,7 @@ size_t io_seek(io_t *io, size_t offset)
 {
     CTASSERT(io != NULL);
 
-    return io->cb->fnSeek(io, offset);
+    return io->cb->fn_seek(io, offset);
 }
 
 USE_DECL
@@ -64,7 +64,7 @@ const void *io_map(io_t *io)
 
     if (io_size(io) == 0) { return ""; }
 
-    return io->cb->fnMap(io);
+    return io->cb->fn_map(io);
 }
 
 USE_DECL
