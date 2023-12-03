@@ -7,7 +7,7 @@
 %option prefix="obr"
 
 %{
-#include "obr-bison.h"
+#include "obr_bison.h"
 #include "oberon/scan.h"
 #include "report/report-ext.h"
 #include "interop/flex.h"

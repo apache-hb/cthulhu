@@ -3,12 +3,12 @@
 
 #include "cc/driver.h"
 
-#include "base/macros.h"
+#include "core/macros.h"
 
 #include "report/report.h"
 
-#include "cc-bison.h"
-#include "cc-flex.h"
+#include "cc_bison.h"
+#include "cc_flex.h"
 
 // CTU_CALLBACKS(kCallbacks, cc);
 

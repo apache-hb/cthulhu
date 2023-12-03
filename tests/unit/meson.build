@@ -1,9 +1,9 @@
 libunit = library('unit', 'unit/ct-test.cpp',
     include_directories : include_directories('unit'),
-    dependencies : [ base, std ]
+    dependencies : [ std ]
 )
 
-unit = declare_dependency(link_with : libunit)
+unit = declare_dependency(link_with : libunit, dependencies : [ std ])
 
 cases = [
     'util.str',
@@ -34,7 +34,7 @@ endforeach
 
 vfs_exe = executable('vfs', 'cases/io/vfs.cpp',
     include_directories : '.',
-    dependencies : [ unit, base, location, io ]
+    dependencies : [ unit, base, location, fs ]
 )
 
 test('vfs', vfs_exe, suite : 'unit')
@@ -43,7 +43,7 @@ test('vfs', vfs_exe, suite : 'unit')
 
 fs_exe = executable('fs', 'cases/io/fs.cpp',
     include_directories : '.',
-    dependencies : [ unit, base, location, io ]
+    dependencies : [ unit, base, location, fs ]
 )
 
 test('fs', fs_exe,

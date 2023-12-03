@@ -263,12 +263,6 @@ TAB_SIZE               = 4
 
 ALIASES                =
 
-# This tag can be used to specify a number of word-keyword mappings (TCL only).
-# A mapping has the form "name=value". For example adding "class=itcl::class"
-# will allow you to use the command class in the itcl::class meaning.
-
-TCL_SUBST              =
-
 # Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C sources
 # only. Doxygen will then generate output that is more tailored for C. For
 # instance, some of the names that are used will be different. The list of all
@@ -323,7 +317,7 @@ OPTIMIZE_OUTPUT_SLICE  = NO
 # Note that for custom extensions you also need to set FILE_PATTERNS otherwise
 # the files are not read by doxygen.
 
-EXTENSION_MAPPING      =
+EXTENSION_MAPPING      = inc=C
 
 # If the MARKDOWN_SUPPORT tag is enabled then doxygen pre-processes all comments
 # according to the Markdown format, which allows for more readable
@@ -858,6 +852,7 @@ INPUT_ENCODING         = UTF-8
 
 FILE_PATTERNS          = *.c \
                          *.cc \
+                         *.inc \
                          *.cxx \
                          *.cpp \
                          *.c++ \
@@ -933,7 +928,9 @@ EXCLUDE_SYMLINKS       = NO
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       =
+EXCLUDE_PATTERNS       = */imgui/*
+EXCLUDE_PATTERNS      += */imnodes/*
+EXCLUDE_PATTERNS      += */file-dialog/*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
@@ -1039,7 +1036,7 @@ USE_MDFILE_AS_MAINPAGE =
 # also VERBATIM_HEADERS is set to NO.
 # The default value is: NO.
 
-SOURCE_BROWSER         = NO
+SOURCE_BROWSER         = YES
 
 # Setting the INLINE_SOURCES tag to YES will include the body of functions,
 # classes and enums directly into the documentation.
@@ -1153,13 +1150,6 @@ CLANG_DATABASE_PATH    =
 # The default value is: YES.
 
 ALPHABETICAL_INDEX     = YES
-
-# The COLS_IN_ALPHA_INDEX tag can be used to specify the number of columns in
-# which the alphabetical index list will be split.
-# Minimum value: 1, maximum value: 20, default value: 5.
-# This tag requires that the tag ALPHABETICAL_INDEX is set to YES.
-
-COLS_IN_ALPHA_INDEX    = 5
 
 # In case all classes in a project start with a common prefix, all classes will
 # be put under the same header in the alphabetical index. The IGNORE_PREFIX tag
@@ -2199,7 +2189,30 @@ INCLUDE_FILE_PATTERNS  =
 # recursively expanded use the := operator instead of the = operator.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-PREDEFINED             = ENABLE_TUNING
+PREDEFINED = OS_RESULT(X)=X \
+             FORMAT_STRING= \
+             USE_DECL= \
+             NODISCARD= \
+             IN_READS(X)= \
+             OUT_WRITES(X)= \
+             OUT_PTR_INVALID \
+             RET_RANGE(X, Y)= \
+             RET_NOTNULL= \
+             RET_STRING= \
+             MUST_INSPECT= \
+             FIELD_SIZE(X)= \
+             FIELD_STRING= \
+             FIELD_RANGE(X, Y)= \
+             IN_NOTNULL= \
+             IN_STRING= \
+             IN_STRING_OPT= \
+             IN_RANGE(X, Y)= \
+             FORMAT_ATTRIB(X, Y)= \
+             CONSTFN= \
+             PUREFN= \
+             HOTFN= \
+             COLDFN= \
+             ALLOC(=X)= \
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The

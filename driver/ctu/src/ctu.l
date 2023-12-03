@@ -7,7 +7,7 @@
 %option prefix="ctu"
 
 %{
-#include "ctu-bison.h"
+#include "ctu_bison.h"
 #include "report/report-ext.h"
 #include "interop/flex.h"
 %}

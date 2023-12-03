@@ -7,11 +7,11 @@
 #include "std/vector.h"
 #include "std/str.h"
 
-#include "base/macros.h"
+#include "core/macros.h"
 #include "base/util.h"
 
-#include "ctu-bison.h"
-#include "ctu-flex.h"
+#include "ctu_bison.h"
+#include "ctu_flex.h"
 
 CTU_CALLBACKS(kCallbacks, ctu);
 

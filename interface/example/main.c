@@ -12,8 +12,7 @@
 #include "std/map.h"
 #include "std/vector.h"
 
-#include "io/io.h"
-#include "io/fs.h"
+#include "fs/fs.h"
 
 #include "argparse/argparse.h"
 

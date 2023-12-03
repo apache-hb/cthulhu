@@ -1,7 +1,7 @@
 #include "editor/editor.h"
 
-#include "base/version-def.h"
-#include "base/macros.h"
+#include "core/version-def.h"
+#include "core/macros.h"
 #include "base/memory.h"
 #include "base/panic.h"
 
@@ -38,7 +38,7 @@ struct HlirConnection
     const char *inputSlot = nullptr;
     const char *outputSlot = nullptr;
 
-    bool operator==(const HlirConnection& other) const 
+    bool operator==(const HlirConnection& other) const
     {
         return strcmp(inputSlot, other.inputSlot) == 0
             && strcmp(outputSlot, other.outputSlot) == 0
@@ -46,7 +46,7 @@ struct HlirConnection
             && outputNode == other.outputNode;
     }
 
-    bool operator!=(const HlirConnection& other) const 
+    bool operator!=(const HlirConnection& other) const
     {
         return !(*this == other);
     }
@@ -88,7 +88,7 @@ struct HlirNode
         }
     }
 
-    void drawConnections() 
+    void drawConnections()
     {
         for (const auto& conn : connections)
         {
@@ -138,12 +138,12 @@ void checkNewConnection()
 }
 
 namespace hlir {
-    struct DigitLiteral : HlirNode 
+    struct DigitLiteral : HlirNode
     {
         DigitLiteral(const char *text)
             : HlirNode("Digit Literal", {}, { SlotInfo{"Value", eSlotDigit} })
             , str(text)
-        { 
+        {
             mpz_init_set_str(value, str.c_str(), 10);
         }
 
@@ -159,7 +159,7 @@ namespace hlir {
         mpz_t value;
     };
 
-    struct BoolLiteral : HlirNode 
+    struct BoolLiteral : HlirNode
     {
         BoolLiteral(bool value)
             : HlirNode("Bool Literal", {}, { SlotInfo{"Value", eSlotDigit} })
@@ -176,7 +176,7 @@ namespace hlir {
         bool value;
     };
 
-    struct StringLiteral : HlirNode 
+    struct StringLiteral : HlirNode
     {
         StringLiteral(const char *text)
             : HlirNode("String Literal", {}, { SlotInfo{"Value", eSlotDigit} })
@@ -190,10 +190,10 @@ namespace hlir {
         }
     private:
         std::string str;
-    };  
+    };
 
     #define BINARY_OP(op, name, symbol) name "\0"
-    const char *kBinaryNames = 
+    const char *kBinaryNames =
     #include "cthulhu/hlir/hlir-def.inc"
         "\0\0"
         ;

@@ -5,10 +5,10 @@
 
 #include "std/str.h"
 
-#include "base/macros.h"
+#include "core/macros.h"
 
-#include "pl0-bison.h"
-#include "pl0-flex.h"
+#include "pl0_bison.h"
+#include "pl0_flex.h"
 
 CTU_CALLBACKS(kCallbacks, pl0);
 

@@ -8,7 +8,7 @@
 
 #include "report/report.h"
 
-#include "io/fs.h"
+#include "fs/fs.h"
 
 #include "base/memory.h"
 #include "base/panic.h"

@@ -7,7 +7,7 @@
 %option prefix="pl0"
 
 %{
-#include "pl0-bison.h"
+#include "pl0_bison.h"
 #include "pl0/scan.h"
 #include "report/report-ext.h"
 #include "interop/flex.h"

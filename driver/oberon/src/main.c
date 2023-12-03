@@ -4,10 +4,10 @@
 
 #include "scan/compile.h"
 
-#include "base/macros.h"
+#include "core/macros.h"
 
-#include "obr-bison.h"
-#include "obr-flex.h"
+#include "obr_bison.h"
+#include "obr_flex.h"
 
 CTU_CALLBACKS(kCallbacks, obr);
 

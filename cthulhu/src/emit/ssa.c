@@ -13,7 +13,7 @@
 
 #include "report/report.h"
 
-#include "io/fs.h"
+#include "fs/fs.h"
 
 #include <string.h>
 

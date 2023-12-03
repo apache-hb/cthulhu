@@ -257,6 +257,7 @@ tree_t *tree_type_unit(const node_t *node, const char *name);
  *
  * @param node where this type was defined
  * @param name the name of the type
+ * @param quals the qualifiers of the type
  * @return a bool type
  */
 tree_t *tree_type_bool(const node_t *node, const char *name, quals_t quals);
@@ -277,6 +278,7 @@ tree_t *tree_type_opaque(const node_t *node, const char *name);
  * @param name the name of the type
  * @param digit the width of the digit
  * @param sign the sign of the digit
+ * @param quals the qualifiers of the type
  * @return a digit type
  */
 tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sign_t sign, quals_t quals);
@@ -299,6 +301,7 @@ tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *re
  * @param node where this type was defined
  * @param name the name of the type
  * @param pointer the type that this pointer points to
+ * @param length the optional length of the pointer
  * @return tree_t* the pointer type
  */
 tree_t *tree_type_pointer(const node_t *node, const char *name, const tree_t *pointer, size_t length);
@@ -543,7 +546,7 @@ map_t *tree_module_tag(const tree_t *self, size_t tag);
 /**
  * @brief return a resolution cookie
  *
- * @param self the module
+ * @param sema the module
  * @return the cookie
  */
 cookie_t *tree_get_cookie(tree_t *sema);

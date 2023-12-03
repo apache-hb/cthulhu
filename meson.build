@@ -165,7 +165,7 @@ flex = find_program('flex', 'win_flex', version : '>=2.6')
 bison = find_program('bison', 'win_bison', version : host == 'windows' ? '>=2.6' : '>=3.5')
 
 lex = generator(flex,
-    output : [ '@BASENAME@-flex.c', '@BASENAME@-flex.h' ],
+    output : [ '@BASENAME@_flex.c', '@BASENAME@_flex.h' ],
     arguments : lexargs + [
         '--outfile=@OUTPUT0@',
         '--header-file=@OUTPUT1@',
@@ -174,7 +174,7 @@ lex = generator(flex,
 )
 
 parse = generator(bison,
-    output : [ '@BASENAME@-bison.c', '@BASENAME@-bison.h' ],
+    output : [ '@BASENAME@_bison.c', '@BASENAME@_bison.h' ],
     arguments : parseargs + [
         '-d', '@INPUT@', '-v',
         '--output=@OUTPUT0@',
@@ -220,14 +220,19 @@ doxygen = find_program('doxygen', required : get_option('doxygen'))
 
 if doxygen.found()
     cwd = meson.project_source_root()
-    doxy_srcdirs = [ cwd/'interface', cwd/'common', cwd/'cthulhu', cwd/'driver' ]
+    doxy_srcdirs = [
+        cwd/'interface',
+        cwd/'common',
+        cwd/'cthulhu',
+        cwd/'driver'
+    ]
 
     doxy_cdata = configuration_data()
     doxy_cdata.merge_from(config_cdata)
-    doxy_cdata.set('CTU_SOURCES', ';'.join(doxy_srcdirs))
+    doxy_cdata.set('CTU_SOURCES', ' '.join(doxy_srcdirs))
 
     doxy_cfg = configure_file(
-        input : 'Doxyfile.in',
+        input : 'data/Doxyfile.in',
         output : 'Doxyfile',
         configuration : doxy_cdata
     )

@@ -2,7 +2,7 @@
 
 #include "report/report.h"
 
-#include "base/macros.h"
+#include "core/macros.h"
 #include "base/util.h"
 
 void obrerror(where_t *where, void *state, scan_t *scan, const char *msg)

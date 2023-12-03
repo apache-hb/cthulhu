@@ -2,7 +2,7 @@
 
 #include "report/report.h"
 
-#include "base/macros.h"
+#include "core/macros.h"
 
 void ccerror(where_t *where, void *state, scan_t *scan, const char *msg)
 {

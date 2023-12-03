@@ -10,7 +10,7 @@ typedef struct map_t map_t;
 typedef struct reports_t reports_t;
 
 /**
- * @defgroup mediator Language lifetime mediator
+ * @defgroup Mediator
  * @brief Core of the compiler, manages stages and language agnostic data
  * @{
  */

@@ -7,7 +7,7 @@
 %option prefix="cc"
 
 %{
-#include "cc-bison.h"
+#include "cc_bison.h"
 #include "cc/scan.h"
 #include "report/report-ext.h"
 #include "interop/flex.h"

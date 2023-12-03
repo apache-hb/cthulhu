@@ -5,7 +5,7 @@
 #include "cthulhu/mediator/interface.h"
 
 #include "base/util.h"
-#include "base/macros.h"
+#include "core/macros.h"
 
 #include "io/io.h"
 

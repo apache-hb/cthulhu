@@ -1,6 +1,6 @@
 #include "cthulhu/mediator/driver.h"
 
-#include "base/macros.h"
+#include "core/macros.h"
 
 static void jvm_config(lifetime_t *lifetime, ap_t *ap)
 {

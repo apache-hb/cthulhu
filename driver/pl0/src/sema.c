@@ -6,7 +6,7 @@
 #include "report/report.h"
 #include "report/report-ext.h"
 
-#include "base/macros.h"
+#include "core/macros.h"
 #include "base/util.h"
 #include "base/memory.h"
 #include "base/panic.h"

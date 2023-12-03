@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/macros.h"
+#include "core/macros.h"
 
 #include <stdbool.h>
 
@@ -36,7 +36,8 @@ typedef struct util_search_t {
  * @param search the search options
  * @param node the node to report errors on
  * @param path the path to search
- * @return tree_t*
+ * @param[out] isImported whether the namespace was imported
+ * @return the namespace if found, an error otherwise
  */
 tree_t *util_search_namespace(tree_t *sema, const util_search_t *search, const node_t *node, vector_t *path, bool *isImported);
 

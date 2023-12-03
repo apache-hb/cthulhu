@@ -17,7 +17,7 @@
 #include "std/map.h"
 
 #include "io/io.h"
-#include "io/fs.h"
+#include "fs/fs.h"
 
 #include "argparse/argparse.h"
 
@@ -31,7 +31,7 @@
 #include <string.h>
 
 #if OS_WINDOWS
-#   include "base/win32.h"
+#   include "core/win32.h"
 #   define CWD ".\\"
 #else
 #   include <unistd.h>

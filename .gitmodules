@@ -1,8 +1,0 @@
-[submodule "subprojects/imgui/imgui"]
-	path = subprojects/imgui/imgui
-	url = https://github.com/ocornut/imgui
-	branch = docking
-	
-[submodule "subprojects/glfw/glfw"]
-	path = subprojects/glfw/glfw
-	url = https://github.com/glfw/glfw

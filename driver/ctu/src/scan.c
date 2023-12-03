@@ -1,6 +1,6 @@
 #include "ctu/scan.h"
 
-#include "base/macros.h"
+#include "core/macros.h"
 #include "base/util.h"
 
 #include "report/report.h"

@@ -7,8 +7,7 @@
 #include "argparse/argparse.h"
 #include "argparse/commands.h"
 
-#include "io/io.h"
-#include "io/fs.h"
+#include "fs/fs.h"
 
 #include "base/panic.h"
 

@@ -7,7 +7,7 @@
 #include "std/vector.h"
 #include "std/typed/vector.h"
 
-#include "io/fs.h"
+#include "fs/fs.h"
 
 #include "base/panic.h"
 

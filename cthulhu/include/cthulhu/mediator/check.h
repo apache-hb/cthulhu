@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/macros.h"
+#include "core/macros.h"
 
 BEGIN_API
 

@@ -1,6 +1,6 @@
 #include "pl0/scan.h"
 
-#include "base/macros.h"
+#include "core/macros.h"
 #include "base/util.h"
 #include "report/report.h"
 #include "std/str.h"
