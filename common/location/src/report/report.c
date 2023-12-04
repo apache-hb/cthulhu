@@ -157,11 +157,13 @@ static char *extract_line(const scan_t *scan, line_t line)
     }
     *out = '\0';
 
-    char *result_str = str_normalizen(str, (size_t)(out - str));
+    printf("len: %zu\n", (size_t)(out - str));
+
+    char *norm = str_normalizen(str, (size_t)(out - str));
 
     ctu_free(str);
 
-    return result_str;
+    return norm;
 }
 
 static bool safe_isspace(int c)
@@ -184,9 +186,11 @@ static char *build_underline(const char *source, where_t where, const char *note
     column_t front = where.firstColumn;
     column_t back = where.lastColumn;
 
+    size_t limit = strlen(source);
+
     if (where.firstLine < where.lastLine)
     {
-        back = strlen(source);
+        back = limit;
     }
 
     if (front > back)
@@ -206,7 +210,7 @@ static char *build_underline(const char *source, where_t where, const char *note
     column_t idx = 0;
 
     /* use correct tabs or spaces when underlining */
-    while (front > idx)
+    while (front > idx && idx < limit)
     {
         char c = source[idx];
         str[idx++] = safe_isspace(c) ? c : ' ';
