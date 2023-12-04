@@ -19,14 +19,14 @@ char *format(const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    char *str = formatv(fmt, args);
+    char *str = vformat(fmt, args);
     va_end(args);
 
     return str;
 }
 
 USE_DECL
-char *formatv(const char *fmt, va_list args)
+char *vformat(const char *fmt, va_list args)
 {
     CTASSERT(fmt != NULL);
 
@@ -37,12 +37,12 @@ char *formatv(const char *fmt, va_list args)
     /* get the number of bytes needed to format */
     int len = vsnprintf(NULL, 0, fmt, args) + 1;
 
-    CTASSERTF(len > 0, "formatv failed to format string: %s", fmt);
+    CTASSERTF(len > 0, "vformat failed to format string: %s", fmt);
 
     char *out = ctu_malloc(len);
 
     int result = vsnprintf(out, len, fmt, again);
-    CTASSERTF(result == len - 1, "formatv failed to format string: %s (%d == %d - 1)", fmt, result, len);
+    CTASSERTF(result == len - 1, "vformat failed to format string: %s (%d == %d - 1)", fmt, result, len);
 
     va_end(again);
 

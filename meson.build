@@ -30,29 +30,6 @@ unit_tests.require(add_languages('cpp', native : false, required : unit_tests.en
 cc = meson.get_compiler('c')
 cpp = meson.get_compiler('cpp')
 
-afl_fuzzing = get_option('afl_fuzzing').disable_auto_if(meson.is_subproject())
-llvm_fuzzing = get_option('llvm_fuzzing').disable_auto_if(meson.is_subproject())
-
-if afl_fuzzing.enabled() and llvm_fuzzing.enabled()
-    error('afl_fuzzing and llvm_fuzzing are mutually exclusive')
-endif
-
-# only enable fuzzing if its explicitly enabled
-# as it disables everything else
-if llvm_fuzzing.enabled()
-    # do these checks conservatively
-    llvm_fuzzing = llvm_fuzzing.require(cpp.has_argument('-fsanitize=fuzzer-no-link'))
-
-    if llvm_fuzzing.enabled()
-        add_project_arguments('-fsanitize=fuzzer', language : [ 'c', 'cpp' ])
-        add_project_link_arguments('-fsanitize=fuzzer', language : [ 'c', 'cpp' ])
-    endif
-endif
-
-if afl_fuzzing.enabled()
-    afl_fuzzing = afl_fuzzing.require(cc.get_id().contains('afl'))
-endif
-
 analyze = get_option('analyze')
 
 version = meson.project_version()
@@ -199,24 +176,17 @@ foreach lang : get_option('languages')
     subdir('driver'/lang)
 endforeach
 
-subdir('tools')
+subdir('interface')
 
-# enabling fuzzing needs to disable everything else
-# that has a main function
-if llvm_fuzzing.enabled()
-    subdir('tools/llvm_fuzzing')
-else
-    subdir('interface')
-
-    if unit_tests.allowed()
-        subdir('tests/unit')
-    endif
-
-    if driver_tests.allowed()
-        subdir('interface/harness')
-        subdir('tests/lang')
-    endif
+if unit_tests.allowed()
+    subdir('tests/unit')
 endif
+
+if driver_tests.allowed()
+    subdir('interface/harness')
+    subdir('tests/lang')
+endif
+
 
 doxygen = find_program('doxygen', required : get_option('doxygen'))
 
@@ -261,8 +231,6 @@ summary = {
     'Testing': {
         'Unit tests': unit_tests,
         'Driver tests': driver_tests,
-        'AFL fuzzing': afl_fuzzing,
-        'LLVM fuzzing': llvm_fuzzing,
         'Analyze': analyze,
     },
     'Documentation': {

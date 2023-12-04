@@ -40,7 +40,7 @@ char *format(FORMAT_STRING const char *fmt, ...);
  * @return the formatted string
  */
 NODISCARD
-char *formatv(IN_STRING const char *fmt, va_list args);
+char *vformat(IN_STRING const char *fmt, va_list args);
 
 /**
  * @brief see if a string starts with a prefix

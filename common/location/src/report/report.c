@@ -594,7 +594,7 @@ static message_t *report_push(reports_t *reports, level_t level, const node_t *n
 {
     CTASSERT(reports != NULL);
 
-    char *str = formatv(fmt, args);
+    char *str = vformat(fmt, args);
     message_t *message = ctu_malloc(sizeof(message_t));
 
     message->level = level;
@@ -649,7 +649,7 @@ void report_append(message_t *message, const node_t *node, const char *fmt, ...)
 
     va_list args;
     va_start(args, fmt);
-    char *str = formatv(fmt, args);
+    char *str = vformat(fmt, args);
     va_end(args);
 
     vector_push(&message->parts, part_new(str, node));
@@ -662,7 +662,7 @@ void report_underline(message_t *message, const char *fmt, ...)
 
     va_list args;
     va_start(args, fmt);
-    char *msg = formatv(fmt, args);
+    char *msg = vformat(fmt, args);
     va_end(args);
 
     message->underline = msg;
@@ -675,7 +675,7 @@ void report_note(message_t *message, const char *fmt, ...)
 
     va_list args;
     va_start(args, fmt);
-    char *msg = formatv(fmt, args);
+    char *msg = vformat(fmt, args);
     va_end(args);
 
     message->note = msg;
@@ -691,7 +691,7 @@ void logverbose(const char *fmt, ...)
 
     va_list args;
     va_start(args, fmt);
-    fprintf(stderr, "%s: %s\n", report_level(eInfo), formatv(fmt, args));
+    fprintf(stderr, "%s: %s\n", report_level(eInfo), vformat(fmt, args));
     va_end(args);
 
     fflush(stderr);

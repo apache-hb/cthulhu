@@ -47,7 +47,7 @@ static void test_panic_handler(panic_t panic, const char *fmt, va_list args)
         abort();
     }
 
-    char *msg = formatv(fmt, args);
+    char *msg = vformat(fmt, args);
     test_exception_t ex = { panic, msg };
     throw test_exception_t{ ex };
 }

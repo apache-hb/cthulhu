@@ -61,11 +61,11 @@ typedef struct c89_emit_result_t
     vector_t *sources; ///< vector<string> a list of source files to compile
 } c89_emit_result_t;
 
-/**
- * @brief emit c89 form for compilation in another compiler
- *
- * @param options the options to use
- */
+/// @brief emit c89 form for compilation in another compiler
+///
+/// @param options the options to use
+///
+/// @return the result of the emit
 c89_emit_result_t emit_c89(const c89_emit_options_t *options);
 
 END_API

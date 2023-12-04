@@ -46,11 +46,11 @@ void tree_report(reports_t *reports, const tree_t *error)
     report(reports, eFatal, tree_get_node(error), "%s", error->message);
 }
 
-static tree_t *error_format(const node_t *node, const char *message, va_list args)
+static tree_t *error_vformat(const node_t *node, const char *message, va_list args)
 {
     tree_t *self = tree_new(eTreeError, node, NULL);
     self->type = self;
-    self->message = formatv(message, args);
+    self->message = vformat(message, args);
     return self;
 }
 
@@ -58,7 +58,7 @@ tree_t *tree_error(const node_t *node, const char *message, ...)
 {
     va_list args;
     va_start(args, message);
-    tree_t *self = error_format(node, message, args);
+    tree_t *self = error_vformat(node, message, args);
     va_end(args);
     return self;
 }
@@ -67,7 +67,7 @@ tree_t *tree_raise(const node_t *node, reports_t *reports, const char *message, 
 {
     va_list args;
     va_start(args, message);
-    tree_t *self = error_format(node, message, args);
+    tree_t *self = error_vformat(node, message, args);
     va_end(args);
 
     tree_report(reports, self);
