@@ -9,7 +9,8 @@ SSA_KIND(eTypeDigit, "digit")
 SSA_KIND(eTypeClosure, "closure")
 SSA_KIND(eTypePointer, "pointer")
 SSA_KIND(eTypeOpaque, "opaque")
-SSA_KIND(eTypeRecord, "record")
+SSA_KIND(eTypeStruct, "struct")
+SSA_KIND(eTypeUnion, "union")
 
 #undef SSA_KIND
 

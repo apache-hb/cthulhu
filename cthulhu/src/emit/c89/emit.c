@@ -177,7 +177,7 @@ void c89_proto_type(c89_emit_t *emit, const ssa_module_t *mod, const ssa_type_t 
     c89_source_t *hdr = map_get_ptr(emit->hdrmap, mod);
     switch (type->kind)
     {
-    case eTypeRecord:
+    case eTypeStruct:
         write_string(hdr->io, "struct %s;\n", type->name);
         break;
 
@@ -483,7 +483,7 @@ static void c89_write_member(c89_emit_t *emit, io_t *io, const ssa_step_t *step)
 
     ssa_type_pointer_t ptr = recordPtr->pointer;
     const ssa_type_t *record = ptr.pointer;
-    CTASSERTF(record->kind == eTypeRecord, "expected record type, got %s", type_to_string(record));
+    CTASSERTF(record->kind == eTypeStruct, "expected record type, got %s", type_to_string(record));
 
     ssa_type_record_t recordType = record->record;
     const ssa_field_t *field = typevec_offset(recordType.fields, member.index);
@@ -653,7 +653,7 @@ void c89_define_type(c89_emit_t *emit, const ssa_module_t *mod, const ssa_type_t
     c89_source_t *hdr = map_get_ptr(emit->hdrmap, mod);
     switch (type->kind)
     {
-    case eTypeRecord:
+    case eTypeStruct:
         define_record(emit, hdr->io, type);
         break;
 
@@ -764,7 +764,7 @@ static void define_type_ordererd(c89_emit_t *emit, const ssa_module_t *mod, cons
     set_add_ptr(emit->defined, type);
 
     // TODO: this is probably a touch broken, types may be put into the wrong translation
-    if (type->kind == eTypeRecord)
+    if (type->kind == eTypeStruct)
     {
         ssa_type_record_t record = type->record;
         size_t len = typevec_len(record.fields);

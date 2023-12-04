@@ -166,7 +166,7 @@ const char *type_to_string(const ssa_type_t *type)
     case eTypeDigit: return digit_to_string(type->digit);
     case eTypeClosure: return closure_to_string(type->closure);
     case eTypePointer: return pointer_to_string(type->pointer);
-    case eTypeRecord: return record_to_string(type->record);
+    case eTypeStruct: return record_to_string(type->record);
     default: NEVER("unknown type kind %d", type->kind);
     }
 }

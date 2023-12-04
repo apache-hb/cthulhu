@@ -76,7 +76,15 @@ ssa_type_t *ssa_type_opaque_pointer(const char *name, quals_t quals)
 ssa_type_t *ssa_type_struct(const char *name, quals_t quals, typevec_t *fields)
 {
     ssa_type_record_t it = { .fields = fields };
-    ssa_type_t *type = ssa_type_new(eTypeRecord, name, quals);
+    ssa_type_t *type = ssa_type_new(eTypeStruct, name, quals);
+    type->record = it;
+    return type;
+}
+
+ssa_type_t *ssa_type_union(const char *name, quals_t quals, typevec_t *fields)
+{
+    ssa_type_record_t it = { .fields = fields };
+    ssa_type_t *type = ssa_type_new(eTypeUnion, name, quals);
     type->record = it;
     return type;
 }
@@ -163,6 +171,7 @@ static ssa_type_t *ssa_type_create(map_t *cache, const tree_t *type)
 
     case eTreeTypeEnum: return ssa_type_create(cache, type->underlying);
     case eTreeTypeStruct: return ssa_type_struct(name, quals, collect_fields(cache, type));
+    case eTreeTypeUnion: return ssa_type_union(name, quals, collect_fields(cache, type));
 
     default: NEVER("unexpected type kind: %s", tree_to_string(type));
     }

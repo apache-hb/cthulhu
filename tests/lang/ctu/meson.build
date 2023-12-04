@@ -110,18 +110,18 @@ tests = {
             'use-struct'
         ]
     },
-    # 'types.union': {
-    #     'fail': [
-    #         'discard-union',
-    #         'no-elements',
-    #         'duplicate-element',
-    #         'infinite-size'
-    #     ],
-    #     'pass': [
-    #         'multiple-elements',
-    #         'single-element'
-    #     ]
-    # },
+    'types.union': {
+        'fail': [
+            'discard-union',
+            'no-elements',
+            'duplicate-element',
+            'infinite-size'
+        ],
+        'pass': [
+            'multiple-elements',
+            'single-element'
+        ]
+    },
     'types.closure': {
         'fail': [
             'void-param'

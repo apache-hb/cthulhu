@@ -88,7 +88,7 @@ const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char
     case eTypeClosure: return format_c89_closure(emit, quals, type->closure, name);
     case eTypePointer: return format_c89_pointer(emit, type->pointer, name);
 
-    case eTypeRecord: return (name != NULL)
+    case eTypeStruct: return (name != NULL)
         ? format("%sstruct %s %s", quals, type->name, name)
         : format("%sstruct %s", quals, type->name);
 

@@ -11,6 +11,7 @@
 
 #include "report/report.h"
 
+#include "std/map.h"
 #include "std/vector.h"
 #include "std/str.h"
 
@@ -92,12 +93,13 @@ static void ctu_resolve_type(tree_t *sema, tree_t *self, void *user)
     tree_close_decl(self, temp);
 }
 
-static void ctu_resolve_struct(tree_t *sema, tree_t *self, void *user)
+static vector_t *ctu_collect_fields(tree_t *sema, tree_t *self, ctu_t *decl)
 {
-    ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclStruct);
     ctu_sema_t inner = ctu_sema_init(sema, self, vector_new(0));
-
     size_t len = vector_len(decl->fields);
+
+    map_t *fields = map_optimal(len);
+
     vector_t *items = vector_of(len);
     for (size_t i = 0; i < len; i++)
     {
@@ -106,10 +108,31 @@ static void ctu_resolve_struct(tree_t *sema, tree_t *self, void *user)
         char *name = field->name == NULL ? format("field%zu", i) : field->name;
         tree_t *item = tree_decl_field(field->node, name, type);
 
+        tree_t *prev = map_get(fields, name);
+        if (prev != NULL)
+        {
+            report(sema->reports, eFatal, field->node, "aggregate decl `%s` has duplicate field `%s`", decl->name, name);
+        }
+
         vector_set(items, i, item);
+        map_set(fields, name, item);
     }
 
+    return items;
+}
+
+static void ctu_resolve_struct(tree_t *sema, tree_t *self, void *user)
+{
+    ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclStruct);
+    vector_t *items = ctu_collect_fields(sema, self, decl);
     tree_close_struct(self, items);
+}
+
+static void ctu_resolve_union(tree_t *sema, tree_t *self, void *user)
+{
+    ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclUnion);
+    vector_t *items = ctu_collect_fields(sema, self, decl);
+    tree_close_union(self, items);
 }
 
 static void ctu_resolve_variant(tree_t *sema, tree_t *self, void *user)
@@ -228,6 +251,19 @@ static tree_t *ctu_forward_struct(tree_t *sema, ctu_t *decl)
     return tree_open_struct(decl->node, decl->name, resolve);
 }
 
+static tree_t *ctu_forward_union(tree_t *sema, ctu_t *decl)
+{
+    CTASSERTF(decl->kind == eCtuDeclUnion, "decl %s is not a union", decl->name);
+
+    tree_resolve_info_t resolve = {
+        .sema = sema,
+        .user = decl,
+        .fnResolve = ctu_resolve_union
+    };
+
+    return tree_open_union(decl->node, decl->name, resolve);
+}
+
 static tree_t *ctu_forward_variant(tree_t *sema, ctu_t *decl)
 {
     CTASSERTF(decl->kind == eCtuDeclVariant, "decl %s is not a variant", decl->name);
@@ -263,6 +299,13 @@ static ctu_forward_t forward_decl_inner(tree_t *sema, ctu_t *decl)
         ctu_forward_t fwd = {
             .tag = eCtuTagTypes,
             .decl = ctu_forward_type(sema, decl)
+        };
+        return fwd;
+    }
+    case eCtuDeclUnion: {
+        ctu_forward_t fwd = {
+            .tag = eCtuTagTypes,
+            .decl = ctu_forward_union(sema, decl)
         };
         return fwd;
     }

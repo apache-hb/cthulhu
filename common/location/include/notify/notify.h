@@ -14,7 +14,7 @@ typedef struct message_t message_t;
 
 typedef enum severity_t
 {
-#include "message/message.inc"
+#include "notify/notify.inc"
 
     eSeverityTotal
 } severity_t;
@@ -36,5 +36,7 @@ message_t *msg_diagnostic(reports_t *reports, const diagnostic_t *diagnostic);
 
 message_t *msg_notify(reports_t *reports, const diagnostic_t *diagnostic, const node_t *node, const char *fmt, ...);
 message_t *msg_vnotify(reports_t *reports, const diagnostic_t *diagnostic, const node_t *node, const char *fmt, va_list args);
+
+void msg_append(message_t *message, const node_t *node, const char *fmt, ...);
 
 END_API

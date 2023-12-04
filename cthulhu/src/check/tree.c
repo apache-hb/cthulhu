@@ -331,7 +331,7 @@ static void check_global_recursion(check_t *check, const tree_t *global)
 /// recursive struct checking
 ///
 
-static void check_struct_recursion(check_t *check, const tree_t *type);
+static void check_aggregate_recursion(check_t *check, const tree_t *type);
 
 static void check_struct_type_recursion(check_t *check, const tree_t *type)
 {
@@ -349,14 +349,15 @@ static void check_struct_type_recursion(check_t *check, const tree_t *type)
         break;
 
     case eTreeTypeStruct:
-        check_struct_recursion(check, type);
+    case eTreeTypeUnion:
+        check_aggregate_recursion(check, type);
         break;
 
     default: NEVER("invalid type kind %s (check-type-size)", tree_to_string(type));
     }
 }
 
-static void check_struct_recursion(check_t *check, const tree_t *type)
+static void check_aggregate_recursion(check_t *check, const tree_t *type)
 {
     if (set_contains_ptr(check->checkedTypes, type))
     {
@@ -470,7 +471,10 @@ static void check_any_type_recursion(check_t *check, const tree_t *type)
 {
     switch (type->kind)
     {
-    case eTreeTypeStruct: check_struct_recursion(check, type); break;
+    case eTreeTypeUnion:
+    case eTreeTypeStruct:
+        check_aggregate_recursion(check, type);
+        break;
 
     default: check_type_recursion(check, type); break;
     }

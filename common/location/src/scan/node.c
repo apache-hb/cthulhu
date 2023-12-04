@@ -39,7 +39,7 @@ node_t *node_invalid(void)
 USE_DECL
 bool node_is_valid(const node_t *node)
 {
-    return node != node_invalid() && node != NULL; /* getting null is very bad */
+    return node != node_invalid() && node != NULL;
 }
 
 USE_DECL
@@ -56,6 +56,7 @@ USE_DECL
 scan_t *get_node_scanner(const node_t *node)
 {
     CTASSERT(node_is_valid(node));
+
     return node->scan;
 }
 
@@ -63,5 +64,6 @@ USE_DECL
 where_t get_node_location(const node_t *node)
 {
     CTASSERT(node_is_valid(node));
+
     return node->where;
 }

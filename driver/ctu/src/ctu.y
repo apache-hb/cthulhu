@@ -126,7 +126,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     path modspec
     imports importList
     decls declList
-    structFields
+    recordFields
     stmtList
     fnParamList
     attribArgs
@@ -156,7 +156,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %type<ast>
     import
-    decl innerDecl globalDecl functionDecl structDecl structField typeAliasDecl
+    decl innerDecl globalDecl functionDecl structDecl unionDecl recordField typeAliasDecl
     functionBody
     type
     primary expr
@@ -249,6 +249,7 @@ innerDecl: globalDecl { $$ = $1; }
     | structDecl { $$ = $1; }
     | typeAliasDecl { $$ = $1; }
     | variantDecl { $$ = $1; }
+    | unionDecl { $$ = $1; }
     ;
 
 /* variants/enums */
@@ -326,14 +327,21 @@ typeAliasDecl: exported TYPE IDENT ASSIGN type SEMI { $$ = ctu_decl_typealias(x,
 
 /* structs */
 
-structDecl: exported STRUCT IDENT LBRACE structFields RBRACE { $$ = ctu_decl_struct(x, @$, $1, $3, $5); }
+structDecl: exported STRUCT IDENT LBRACE recordFields RBRACE { $$ = ctu_decl_struct(x, @$, $1, $3, $5); }
     ;
 
-structFields: structField { $$ = vector_init($1); }
-    | structFields structField { vector_push(&$1, $2); $$ = $1; }
+/* unions */
+
+unionDecl: exported UNION IDENT LBRACE recordFields RBRACE { $$ = ctu_decl_union(x, @$, $1, $3, $5); }
     ;
 
-structField: ident COLON type SEMI { $$ = ctu_field(x, @$, $1, $3); }
+/* fields */
+
+recordFields: recordField { $$ = vector_init($1); }
+    | recordFields recordField { vector_push(&$1, $2); $$ = $1; }
+    ;
+
+recordField: ident COLON type SEMI { $$ = ctu_field(x, @$, $1, $3); }
     ;
 
 /* types */
