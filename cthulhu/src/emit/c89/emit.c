@@ -159,7 +159,7 @@ static const char *mangle_symbol_name(const ssa_symbol_t *symbol)
     default: break;
     }
 
-    if (symbol->linkName != NULL) { return symbol->linkName; }
+    if (symbol->link_name != NULL) { return symbol->link_name; }
     return symbol->name;
 }
 
@@ -745,6 +745,9 @@ void c89_define_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_sy
             c89_write_block(emit, src->io, bb);
         }
         write_string(src->io, "}\n");
+
+        map_reset(emit->stepmap);
+        counter_reset(&emit->emit);
     }
 }
 
@@ -800,8 +803,8 @@ c89_emit_result_t emit_c89(const c89_emit_options_t *options)
     c89_emit_t emit = {
         .emit = {
             .reports = opts.reports,
-            .blockNames = names_new(64),
-            .vregNames = names_new(64),
+            .block_names = names_new(64),
+            .vreg_names = names_new(64),
         },
         .modmap = map_optimal(len),
         .srcmap = map_optimal(len),

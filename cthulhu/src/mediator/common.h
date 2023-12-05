@@ -4,7 +4,7 @@
 
 #include "std/map.h"
 
-typedef struct reports_t reports_t;
+typedef struct logger_t reports_t;
 
 /// global level
 

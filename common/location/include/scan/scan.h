@@ -4,7 +4,7 @@
 
 #include <stddef.h>
 
-typedef struct reports_t reports_t;
+typedef struct logger_t reports_t;
 typedef struct io_t io_t;
 typedef struct scan_t scan_t;
 

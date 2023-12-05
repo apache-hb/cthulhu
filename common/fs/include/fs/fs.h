@@ -8,7 +8,7 @@ BEGIN_API
 /// @brief virtual and physical filesystem interface
 /// @{
 
-typedef struct reports_t reports_t;
+typedef struct logger_t reports_t;
 typedef struct fs_t fs_t;
 
 /// @brief create a filesystem interface to a physical location on disk

@@ -72,10 +72,14 @@ typedef struct user_arena_t
 
 static user_ptr_t *get_memory(user_arena_t *arena, size_t size, const char *name)
 {
+    CTU_UNUSED(name);
+
     CTASSERTF(arena->memory_cursor + size + sizeof(user_ptr_t) < arena->memory_end, "out of memory %s", name);
 
+    // TODO: align all allocations to 16 bytes
+
     user_ptr_t *ptr = (user_ptr_t*)arena->memory_cursor;
-    ptr->size = (uint32_t)(size);
+    ptr->size = (uint32_t)size;
     arena->memory_cursor += size + sizeof(user_ptr_t);
 
     arena->alloc_count++;

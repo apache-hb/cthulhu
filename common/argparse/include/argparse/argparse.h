@@ -32,7 +32,7 @@ BEGIN_API
 /// @defgroup ArgParse Command line argument parsing
 /// @{
 
-typedef struct reports_t reports_t;
+typedef struct logger_t reports_t;
 typedef struct node_t node_t;
 typedef struct vector_t vector_t;
 

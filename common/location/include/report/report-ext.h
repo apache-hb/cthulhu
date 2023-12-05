@@ -4,7 +4,7 @@
 
 #include "os/error.h"
 
-typedef struct message_t message_t;
+typedef struct event_t message_t;
 
 BEGIN_API
 

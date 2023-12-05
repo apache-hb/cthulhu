@@ -7,7 +7,7 @@ BEGIN_API
 typedef struct io_t io_t;
 typedef struct vector_t vector_t;
 typedef struct map_t map_t;
-typedef struct reports_t reports_t;
+typedef struct logger_t reports_t;
 
 /**
  * @defgroup Mediator Compiler core interface

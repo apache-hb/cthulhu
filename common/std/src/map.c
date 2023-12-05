@@ -123,6 +123,17 @@ vector_t *map_entries(map_t *map)
 }
 
 USE_DECL
+size_t map_count(map_t *map)
+{
+    CTASSERT(map != NULL);
+
+    size_t count = 0;
+    MAP_FOREACH_APPLY(map, entry, { count++; });
+
+    return count;
+}
+
+USE_DECL
 bool map_empty(map_t *map)
 {
     CTASSERT(map != NULL);

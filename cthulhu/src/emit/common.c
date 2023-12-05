@@ -61,8 +61,8 @@ names_t names_new(size_t size)
 
 void counter_reset(emit_t *emit)
 {
-    names_reset(&emit->vregNames);
-    names_reset(&emit->blockNames);
+    names_reset(&emit->vreg_names);
+    names_reset(&emit->block_names);
 }
 
 static char *name_increment(names_t *names, const void *obj, char *existing)
@@ -83,12 +83,12 @@ static char *name_increment(names_t *names, const void *obj, char *existing)
 
 char *get_step_name(emit_t *emit, const ssa_step_t *step)
 {
-    return name_increment(&emit->vregNames, step, NULL);
+    return name_increment(&emit->vreg_names, step, NULL);
 }
 
 char *get_block_name(emit_t *emit, const ssa_block_t *block)
 {
-    return name_increment(&emit->blockNames, block, (char*)block->name);
+    return name_increment(&emit->block_names, block, (char*)block->name);
 }
 
 char *get_step_from_block(emit_t *emit, const ssa_block_t *block, size_t index)

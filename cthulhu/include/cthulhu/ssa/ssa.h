@@ -9,7 +9,7 @@
 
 BEGIN_API
 
-typedef struct reports_t reports_t;
+typedef struct logger_t reports_t;
 typedef struct vector_t vector_t;
 typedef struct typevec_t typevec_t;
 typedef struct map_t map_t;
@@ -254,16 +254,18 @@ typedef struct ssa_step_t {
     };
 } ssa_step_t;
 
-typedef struct ssa_block_t {
+typedef struct ssa_block_t
+{
     const char *name;
     typevec_t *steps;
 } ssa_block_t;
 
-typedef struct ssa_symbol_t {
+typedef struct ssa_symbol_t
+{
     tree_link_t linkage;
     visibility_t visibility;
 
-    const char *linkName; ///< external name
+    const char *link_name; ///< external name
 
     const char *name; ///< internal name
     const ssa_type_t *type; ///< the public facing type of this symbol

@@ -96,6 +96,14 @@ vector_t *map_values(IN_NOTNULL map_t *map);
 NODISCARD
 vector_t *map_entries(IN_NOTNULL map_t *map);
 
+/// @brief get the number of key-value pairs in a map
+///
+/// @param map the map to get the size of
+///
+/// @return the number of key-value pairs in the map
+NODISCARD
+size_t map_count(IN_NOTNULL map_t *map);
+
 NODISCARD CONSTFN
 bool map_empty(IN_NOTNULL map_t *map);
 

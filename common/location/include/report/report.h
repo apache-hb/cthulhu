@@ -71,7 +71,7 @@ typedef struct part_t
 /**
  * @brief an error message
  */
-typedef struct message_t
+typedef struct event_t
 {
     /* the level of this error */
     level_t level;
@@ -103,7 +103,7 @@ typedef struct
 /**
  * @brief an error reporting sink
  */
-typedef struct reports_t
+typedef struct logger_t
 {
     vector_t *messages; ///< all messages in the sink
 } reports_t;

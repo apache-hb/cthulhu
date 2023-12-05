@@ -5,7 +5,7 @@
 BEGIN_API
 
 typedef struct ssa_module_t ssa_module_t;
-typedef struct reports_t reports_t;
+typedef struct logger_t reports_t;
 
 typedef struct io_t io_t;
 typedef struct fs_t fs_t;

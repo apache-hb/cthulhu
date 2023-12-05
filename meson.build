@@ -197,7 +197,6 @@ endif
 
 summary = {
     'Build': {
-        'Compiler': cc.get_id(),
         'Debug': is_debug,
         'Interfaces': ', '.join(get_option('interfaces')),
         'Languages': ', '.join(get_option('languages')),

@@ -44,9 +44,9 @@ static vector_t *join_attribs(const ssa_symbol_t *symbol)
 {
     vector_t *attribs = vector_new(2);
 
-    if (symbol->linkName != NULL)
+    if (symbol->link_name != NULL)
     {
-        vector_push(&attribs, format("extern = `%s`", symbol->linkName));
+        vector_push(&attribs, format("extern = `%s`", symbol->link_name));
     }
 
     vector_push(&attribs, format("linkage = %s", link_name(symbol->linkage)));
@@ -381,8 +381,8 @@ ssa_emit_result_t emit_ssa(const ssa_emit_options_t *options)
     ssa_emit_t emit = {
         .emit = {
             .reports = opts.reports,
-            .blockNames = names_new(64),
-            .vregNames = names_new(64),
+            .block_names = names_new(64),
+            .vreg_names = names_new(64),
         },
         .fs = opts.fs,
         .deps = opts.deps

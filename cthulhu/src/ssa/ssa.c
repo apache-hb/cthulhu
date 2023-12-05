@@ -17,41 +17,74 @@
 
 #include <string.h>
 
-typedef struct ssa_compile_t {
+/// @brief the ssa compilation context
+typedef struct ssa_compile_t
+{
     /// result data
 
-    vector_t *modules; ///< vector<ssa_module>
+    /// @brief all modules in the program
+    /// vector<ssa_module>
+    vector_t *modules;
 
-    map_t *deps;
+    /// @brief direct dependencies between symbols
+    /// dependecies are a cyclic graph, this is a map of the edges
+    /// map<ssa_symbol, set<ssa_symbol>>
+    map_t *symbol_deps;
 
     /// internal data
 
-    map_t *globals; ///< map<tree, ssa_symbol>
-    map_t *functions; ///< map<tree, ssa_symbol>
-    map_t *types; ///< map<tree, ssa_type>
+    /// @brief all globals in the program
+    /// map<tree, ssa_symbol>
+    map_t *globals;
 
-    map_t *locals; ///< map<tree, ssa_symbol>
-    map_t *loops; ///< map<tree, ssa_loop>
+    /// @brief all functions in the program
+    /// map<tree, ssa_symbol>
+    map_t *functions;
 
-    ssa_block_t *currentBlock;
-    ssa_symbol_t *currentSymbol;
-    ssa_module_t *currentModule;
+    /// @brief all types in the program
+    /// map<tree, ssa_type>
+    map_t *types;
 
+    /// @brief all locals in the current symbol
+    /// map<tree, size_t>
+    map_t *symbol_locals;
+
+    /// @brief all loops in the current symbol
+    /// map<tree, ssa_loop>
+    map_t *symbol_loops;
+
+    /// @brief the current block being compiled
+    ssa_block_t *current_block;
+
+    /// @brief the current symbol being compiled
+    /// can be a function or a global
+    ssa_symbol_t *current_symbol;
+
+    /// @brief the current module being compiled
+    ssa_module_t *current_sodule;
+
+    /// @brief the path to the current module
+    /// used for name mangling. vector<const char *>
     vector_t *path;
 } ssa_compile_t;
 
-typedef struct ssa_loop_t {
-    ssa_block_t *enterLoop;
-    ssa_block_t *exitLoop;
+/// @brief loop jump context
+typedef struct ssa_loop_t
+{
+    /// @brief the block to jump to when continuing the loop
+    ssa_block_t *enter_loop;
+
+    /// @brief the block to jump to when exiting the loop
+    ssa_block_t *exit_loop;
 } ssa_loop_t;
 
 static void add_dep(ssa_compile_t *ssa, const ssa_symbol_t *symbol, const ssa_symbol_t *dep)
 {
-    set_t *set = map_get_ptr(ssa->deps, symbol);
+    set_t *set = map_get_ptr(ssa->symbol_deps, symbol);
     if (set == NULL)
     {
         set = set_new(8);
-        map_set_ptr(ssa->deps, symbol, set);
+        map_set_ptr(ssa->symbol_deps, symbol, set);
     }
 
     set_add_ptr(set, dep);
@@ -68,7 +101,7 @@ static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const tree_t *tree, ssa_s
     ssa_symbol_t *symbol = ctu_malloc(sizeof(ssa_symbol_t));
     symbol->linkage = attrib->link;
     symbol->visibility = attrib->visibility;
-    symbol->linkName = attrib->mangle;
+    symbol->link_name = attrib->mangle;
     symbol->storage = storage;
 
     symbol->locals = NULL;
@@ -118,7 +151,7 @@ static ssa_symbol_t *function_create(ssa_compile_t *ssa, const tree_t *tree)
         };
 
         typevec_set(self->locals, i, &it);
-        map_set_ptr(ssa->locals, local, (void*)(uintptr_t)i);
+        map_set_ptr(ssa->symbol_locals, local, (void*)(uintptr_t)i);
     }
 
     size_t params = vector_len(tree->params);
@@ -135,7 +168,7 @@ static ssa_symbol_t *function_create(ssa_compile_t *ssa, const tree_t *tree)
         };
 
         typevec_set(self->params, i, &it);
-        map_set_ptr(ssa->locals, param, (void*)(uintptr_t)i);
+        map_set_ptr(ssa->symbol_locals, param, (void*)(uintptr_t)i);
     }
 
     return self;
@@ -158,8 +191,8 @@ static ssa_module_t *module_create(ssa_compile_t *ssa, const char *name)
 
 static ssa_operand_t add_const(ssa_compile_t *ssa, ssa_value_t *value)
 {
-    ssa_symbol_t *symbol = ssa->currentSymbol;
-    size_t index = vector_len(ssa->currentSymbol->consts);
+    ssa_symbol_t *symbol = ssa->current_symbol;
+    size_t index = vector_len(ssa->current_symbol->consts);
     vector_push(&symbol->consts, value);
 
     ssa_operand_t operand = {
@@ -204,7 +237,7 @@ static ssa_operand_t operand_bb(ssa_block_t *bb)
 
 static ssa_operand_t add_step(ssa_compile_t *ssa, ssa_step_t step)
 {
-    return bb_add_step(ssa->currentBlock, step);
+    return bb_add_step(ssa->current_block, step);
 }
 
 static ssa_block_t *ssa_block_create(ssa_symbol_t *symbol, const char *name, size_t size)
@@ -222,11 +255,11 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree);
 static ssa_operand_t compile_branch(ssa_compile_t *ssa, const tree_t *branch)
 {
     ssa_operand_t cond = compile_tree(ssa, branch->cond);
-    ssa_block_t *current = ssa->currentBlock;
+    ssa_block_t *current = ssa->current_block;
 
-    ssa_block_t *tailBlock = ssa_block_create(ssa->currentSymbol, "tail", 0);
-    ssa_block_t *thenBlock = ssa_block_create(ssa->currentSymbol, "then", 0);
-    ssa_block_t *elseBlock = branch->other != NULL ? ssa_block_create(ssa->currentSymbol, "other", 0) : NULL;
+    ssa_block_t *tailBlock = ssa_block_create(ssa->current_symbol, "tail", 0);
+    ssa_block_t *thenBlock = ssa_block_create(ssa->current_symbol, "then", 0);
+    ssa_block_t *elseBlock = branch->other != NULL ? ssa_block_create(ssa->current_symbol, "other", 0) : NULL;
 
     ssa_step_t step = {
         .opcode = eOpBranch,
@@ -248,21 +281,21 @@ static ssa_operand_t compile_branch(ssa_compile_t *ssa, const tree_t *branch)
         }
     };
 
-    ssa->currentBlock = thenBlock;
+    ssa->current_block = thenBlock;
     compile_tree(ssa, branch->then);
     bb_add_step(thenBlock, jumpToTail);
 
     if (branch->other != NULL)
     {
-        ssa->currentBlock = elseBlock;
+        ssa->current_block = elseBlock;
         compile_tree(ssa, branch->other);
         bb_add_step(elseBlock, jumpToTail);
     }
 
-    ssa->currentBlock = current;
+    ssa->current_block = current;
     add_step(ssa, step);
 
-    ssa->currentBlock = tailBlock;
+    ssa->current_block = tailBlock;
 
     return tail;
 }
@@ -281,14 +314,14 @@ static ssa_operand_t compile_loop(ssa_compile_t *ssa, const tree_t *tree)
     * .tail:
     *
     */
-    ssa_block_t *loopBlock = ssa_block_create(ssa->currentSymbol, NULL, 0);
-    ssa_block_t *bodyBlock = ssa_block_create(ssa->currentSymbol, NULL, 0);
-    ssa_block_t *tailBlock = ssa_block_create(ssa->currentSymbol, NULL, 0);
+    ssa_block_t *loopBlock = ssa_block_create(ssa->current_symbol, NULL, 0);
+    ssa_block_t *bodyBlock = ssa_block_create(ssa->current_symbol, NULL, 0);
+    ssa_block_t *tailBlock = ssa_block_create(ssa->current_symbol, NULL, 0);
 
     ssa_loop_t *save = ctu_malloc(sizeof(ssa_loop_t));
-    save->enterLoop = bodyBlock;
-    save->exitLoop = tailBlock;
-    map_set_ptr(ssa->loops, tree, save);
+    save->enter_loop = bodyBlock;
+    save->exit_loop = tailBlock;
+    map_set_ptr(ssa->symbol_loops, tree, save);
 
     ssa_operand_t loop = {
         .kind = eOperandBlock,
@@ -308,7 +341,7 @@ static ssa_operand_t compile_loop(ssa_compile_t *ssa, const tree_t *tree)
     };
     add_step(ssa, enterLoop);
 
-    ssa->currentBlock = loopBlock;
+    ssa->current_block = loopBlock;
     ssa_operand_t cond = compile_tree(ssa, tree->cond);
     ssa_step_t cmp = {
         .opcode = eOpBranch,
@@ -320,7 +353,7 @@ static ssa_operand_t compile_loop(ssa_compile_t *ssa, const tree_t *tree)
     };
     add_step(ssa, cmp);
 
-    ssa->currentBlock = bodyBlock;
+    ssa->current_block = bodyBlock;
     compile_tree(ssa, tree->then);
 
     ssa_step_t repeatLoop = {
@@ -331,7 +364,7 @@ static ssa_operand_t compile_loop(ssa_compile_t *ssa, const tree_t *tree)
     };
     add_step(ssa, repeatLoop);
 
-    ssa->currentBlock = tailBlock;
+    ssa->current_block = tailBlock;
     return loop;
 }
 
@@ -343,7 +376,7 @@ static ssa_operand_t add_jump(ssa_compile_t *ssa, ssa_loop_t *loop, tree_jump_t 
         ssa_step_t step = {
             .opcode = eOpJump,
             .jump = {
-                .target = operand_bb(loop->exitLoop)
+                .target = operand_bb(loop->exit_loop)
             }
         };
         return add_step(ssa, step);
@@ -352,7 +385,7 @@ static ssa_operand_t add_jump(ssa_compile_t *ssa, ssa_loop_t *loop, tree_jump_t 
         ssa_step_t step = {
             .opcode = eOpJump,
             .jump = {
-                .target = operand_bb(loop->enterLoop)
+                .target = operand_bb(loop->enter_loop)
             }
         };
         return add_step(ssa, step);
@@ -477,7 +510,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
         ssa_symbol_t *symbol = map_get_ptr(ssa->globals, tree);
         CTASSERTF(symbol != NULL, "symbol table missing `%s` (%p)", tree_to_string(tree), (void*)tree);
 
-        add_dep(ssa, ssa->currentSymbol, symbol);
+        add_dep(ssa, ssa->current_symbol, symbol);
 
         ssa_operand_t operand = {
             .kind = eOperandGlobal,
@@ -499,7 +532,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
     }
 
     case eTreeStmtJump: {
-        ssa_loop_t *target = map_get_ptr(ssa->loops, tree->label);
+        ssa_loop_t *target = map_get_ptr(ssa->symbol_loops, tree->label);
         CTASSERTF(target != NULL, "loop not found");
 
         return add_jump(ssa, target, tree->jump);
@@ -543,7 +576,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
     }
 
     case eTreeDeclLocal: {
-        size_t idx = (uintptr_t)map_get_default_ptr(ssa->locals, tree, (void*)UINTPTR_MAX);
+        size_t idx = (uintptr_t)map_get_default_ptr(ssa->symbol_locals, tree, (void*)UINTPTR_MAX);
         CTASSERTF(idx != UINTPTR_MAX, "local `%s` not found", tree_get_name(tree));
 
         ssa_operand_t local = {
@@ -554,7 +587,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
     }
 
     case eTreeDeclParam: {
-        size_t idx = (uintptr_t)map_get_default_ptr(ssa->locals, tree, (void*)UINTPTR_MAX);
+        size_t idx = (uintptr_t)map_get_default_ptr(ssa->symbol_locals, tree, (void*)UINTPTR_MAX);
         CTASSERTF(idx != UINTPTR_MAX, "param `%s` not found", tree_get_name(tree));
 
         ssa_operand_t param = {
@@ -601,7 +634,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
         ssa_symbol_t *fn = map_get_ptr(ssa->functions, tree);
         CTASSERT(fn != NULL);
 
-        add_dep(ssa, ssa->currentSymbol, fn);
+        add_dep(ssa, ssa->current_symbol, fn);
         ssa_operand_t operand = {
             .kind = eOperandFunction,
             .function = fn
@@ -712,22 +745,95 @@ static void begin_compile(ssa_compile_t *ssa, ssa_symbol_t *symbol)
     ssa_block_t *bb = ssa_block_create(symbol, "entry", 4);
 
     symbol->entry = bb;
-    ssa->currentBlock = bb;
-    ssa->currentSymbol = symbol;
+    ssa->current_block = bb;
+    ssa->current_symbol = symbol;
+}
+
+// static void reset_local_maps(ssa_compile_t *ssa)
+// {
+//     map_reset(ssa->locals);
+//     map_reset(ssa->loops);
+// }
+
+/// @brief a prediction of how many items will be in each map
+/// this is not a hard limit, but a hint to the allocator
+typedef struct ssa_map_sizes_t
+{
+    /// @brief the number of modules in the program
+    size_t modules;
+
+    /// @brief the number of dependencies between symbols
+    size_t deps;
+
+    /// @brief the number of globals in the program
+    size_t globals;
+
+    /// @brief the number of functions in the program
+    size_t functions;
+
+    /// @brief the number of types in the program
+    size_t types;
+} ssa_map_sizes_t;
+
+void count_modules(ssa_map_sizes_t *sizes, const tree_t *tree)
+{
+    CTASSERT(tree_is(tree, eTreeDeclModule));
+
+    sizes->modules += 1;
+
+    sizes->globals += map_count(tree_module_tag(tree, eSemaValues));
+    sizes->functions += map_count(tree_module_tag(tree, eSemaProcs));
+    sizes->types += map_count(tree_module_tag(tree, eSemaTypes));
+
+    // count all child modules
+    map_iter_t iter = map_iter(tree_module_tag(tree, eSemaModules));
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+        count_modules(sizes, entry.value);
+    }
+}
+
+ssa_map_sizes_t predict_maps(map_t *mods)
+{
+    // initialize will small sizes just in case something
+    // returns 0
+    ssa_map_sizes_t sizes = {
+        .modules = 4,
+        .deps = 4,
+
+        .globals = 32,
+        .functions = 32,
+        .types = 32,
+    };
+
+    map_iter_t iter = map_iter(mods);
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+        count_modules(&sizes, entry.value);
+    }
+
+    sizes.deps = sizes.functions + sizes.globals;
+
+    return sizes;
 }
 
 ssa_result_t ssa_compile(map_t *mods)
 {
+    ssa_map_sizes_t sizes = predict_maps(mods);
+
     ssa_compile_t ssa = {
-        .modules = vector_new(4),
-        .deps = map_optimal(64),
+        .modules = vector_new(sizes.modules),
+        .symbol_deps = map_optimal(sizes.deps),
 
-        .globals = map_optimal(32),
-        .functions = map_optimal(32),
-        .types = map_optimal(32),
+        .globals = map_optimal(sizes.globals),
+        .functions = map_optimal(sizes.functions),
+        .types = map_optimal(sizes.types),
 
-        .locals = map_optimal(32),
-        .loops = map_optimal(32),
+        // TODO: these should be per symbol rather than persistent global
+        .symbol_locals = map_optimal(sizes.deps * 4),
+        .symbol_loops = map_optimal(32),
     };
 
     map_iter_t iter = map_iter(mods);
@@ -772,6 +878,8 @@ ssa_result_t ssa_compile(map_t *mods)
             };
             add_step(&ssa, ret);
         }
+
+        map_reset(ssa.symbol_loops);
     }
 
     map_iter_t functions = map_iter(ssa.functions);
@@ -797,11 +905,13 @@ ssa_result_t ssa_compile(map_t *mods)
                 symbol->name, link_name(symbol->linkage)
             );
         }
+
+        map_reset(ssa.symbol_loops);
     }
 
     ssa_result_t result = {
         .modules = ssa.modules,
-        .deps = ssa.deps
+        .deps = ssa.symbol_deps
     };
 
     return result;

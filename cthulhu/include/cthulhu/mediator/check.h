@@ -4,7 +4,7 @@
 
 BEGIN_API
 
-typedef struct reports_t reports_t;
+typedef struct logger_t reports_t;
 typedef struct lifetime_t lifetime_t;
 
 /**

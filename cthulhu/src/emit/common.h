@@ -13,8 +13,8 @@ typedef struct names_t {
 typedef struct emit_t {
     reports_t *reports;
 
-    names_t blockNames;
-    names_t vregNames;
+    names_t block_names;
+    names_t vreg_names;
 } emit_t;
 
 char *begin_module(emit_t *emit, fs_t *fs, const ssa_module_t *mod);

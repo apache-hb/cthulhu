@@ -202,12 +202,19 @@ static void check_func_body(check_t *check, const tree_t *returnType, const tree
 
 static bool will_always_return(const tree_t *stmt)
 {
+    CTASSERT(stmt != NULL);
+
     switch (stmt->kind)
     {
     case eTreeStmtReturn:
         return true;
-    case eTreeStmtBranch:
-        return will_always_return(stmt->then) && will_always_return(stmt->other);
+
+    case eTreeStmtBranch: {
+        // if the other branch is null then this branch may not always return
+        bool other_returns = stmt->other != NULL && will_always_return(stmt->other);
+        return will_always_return(stmt->then) && other_returns;
+    }
+
     case eTreeStmtLoop:
         return will_always_return(stmt->then);
 
@@ -281,6 +288,10 @@ static void check_expr_recursion(check_t *check, const tree_t *tree)
 
     case eTreeExprUnary:
         check_expr_recursion(check, tree->operand);
+        break;
+
+    case eTreeExprCast:
+        check_expr_recursion(check, tree->cast);
         break;
 
     case eTreeExprCompare:

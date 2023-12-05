@@ -26,6 +26,10 @@
 /// returns the minimum of @a lhs and @a rhs
 #define MIN(L, R) ((L) < (R) ? (L) : (R))
 
+/// @def ALIGN_POW2(x, align)
+/// aligns @a x to the next power of 2 of @a align
+#define ALIGN_POW2(X, ALIGN) (((X) + (ALIGN)-1) & ~((ALIGN)-1))
+
 #define CTU_UNUSED(x) ((void)(x))
 
 #define INNER_STR(x) #x

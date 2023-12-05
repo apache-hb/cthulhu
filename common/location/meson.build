@@ -2,6 +2,8 @@ src = [
     'src/report/report.c',
     'src/report/report-ext.c',
 
+    'src/notify/notify.c',
+
     'src/scan/node.c',
     'src/scan/scan.c',
     'src/scan/compile.c'
