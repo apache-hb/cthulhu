@@ -1,6 +1,7 @@
 #include "cthulhu/mediator/interface.h"
 #include "cthulhu/mediator/check.h"
 
+#include "memory/memory.h"
 #include "support/langs.h"
 
 #include "cthulhu/check/check.h"
@@ -52,10 +53,112 @@ static io_t *make_file(const char *path, os_access_t flags)
     return io;
 }
 
-int main(int argc, const char **argv)
+typedef struct user_ptr_t
 {
-    verbose = true;
+    uint32_t size;
+    FIELD_SIZE(size) char data[];
+} user_ptr_t;
 
+typedef struct user_arena_t
+{
+    char *memory_start;
+    char *memory_cursor;
+    char *memory_end;
+
+    size_t alloc_count;
+    size_t realloc_count;
+    size_t free_count;
+} user_arena_t;
+
+static user_ptr_t *get_memory(user_arena_t *arena, size_t size, const char *name)
+{
+    CTASSERTF(arena->memory_cursor + size + sizeof(user_ptr_t) < arena->memory_end, "out of memory %s", name);
+
+    user_ptr_t *ptr = (user_ptr_t*)arena->memory_cursor;
+    ptr->size = (uint32_t)(size);
+    arena->memory_cursor += size + sizeof(user_ptr_t);
+
+    arena->alloc_count++;
+
+    return ptr;
+}
+
+static user_ptr_t *get_ptr(void *ptr)
+{
+    char *data = (char*)ptr;
+    return (user_ptr_t*)(data - sizeof(user_ptr_t));
+}
+
+static void *user_malloc(alloc_t *alloc, size_t size, const char *name)
+{
+    user_arena_t *user = (user_arena_t*)alloc->user;
+
+    user_ptr_t *ptr = get_memory(user, size, name);
+    return ptr->data;
+}
+
+static void *user_realloc(alloc_t *alloc, void *ptr, size_t new_size, size_t old_size)
+{
+    CTU_UNUSED(old_size);
+
+    user_arena_t *user = (user_arena_t*)alloc->user;
+
+    user_ptr_t *old = get_ptr(ptr);
+
+    if (old->size >= new_size)
+        return old->data;
+
+    user_ptr_t *new = get_memory(user, new_size, "realloc");
+    memcpy(new->data, old->data, old->size);
+
+    user->realloc_count++;
+
+    return new->data;
+}
+
+static void user_free(alloc_t *alloc, void *ptr, size_t size)
+{
+    CTU_UNUSED(size);
+    CTU_UNUSED(ptr);
+
+    user_arena_t *user = (user_arena_t*)alloc->user;
+
+    user->free_count++;
+}
+
+static user_arena_t new_user_arena(size_t size)
+{
+    char *memory = malloc(size);
+    CTASSERT(memory != NULL);
+
+    user_arena_t arena = {
+        .memory_start = memory,
+        .memory_cursor = memory,
+        .memory_end = memory + size,
+
+        .alloc_count = 0,
+        .realloc_count = 0,
+        .free_count = 0,
+    };
+
+    return arena;
+}
+
+static alloc_t new_alloc(user_arena_t *arena)
+{
+    alloc_t alloc = {
+        .name = "user",
+        .arena_malloc = user_malloc,
+        .arena_realloc = user_realloc,
+        .arena_free = user_free,
+        .user = arena,
+    };
+
+    return alloc;
+}
+
+int run_test_harness(int argc, const char **argv)
+{
     mediator_t *mediator = mediator_new("example", kVersion);
     lifetime_t *lifetime = lifetime_new(mediator);
     ap_t *ap = ap_new("example", NEW_VERSION(1, 0, 0));
@@ -187,5 +290,23 @@ int main(int argc, const char **argv)
 
     CHECK_REPORTS(reports, "compiling");
 
+    return 0;
+}
+
+int main(int argc, const char **argv)
+{
+    size_t size = 1024 * 1024 * 64;
+    user_arena_t arena = new_user_arena(size);
+    alloc_t alloc = new_alloc(&arena);
+    gDefaultAlloc = alloc;
+
+    verbose = true;
+
+    int result = run_test_harness(argc, argv);
+
     logverbose("done");
+
+    free(arena.memory_start);
+
+    return result;
 }
