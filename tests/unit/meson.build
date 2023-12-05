@@ -3,7 +3,11 @@ libunit = library('unit', 'unit/ct-test.c',
     dependencies : [ stacktrace, base, std ]
 )
 
-unit = declare_dependency(link_with : libunit, dependencies : [ base, std ])
+unit = declare_dependency(
+    compile_args : cc.get_supported_arguments('-Wno-unused-result'),
+    link_with : libunit,
+    dependencies : [ base, std ]
+)
 
 cases = [
     'util.str',
