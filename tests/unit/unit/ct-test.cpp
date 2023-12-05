@@ -34,6 +34,8 @@ static int get_test_result_code(test_error_t result)
 }
 
 static bool gExpectingPanic = false;
+jmp_buf test_suite_t::gPanicJump = {};
+test_exception_t test_suite_t::gPanicException = {};
 
 static void test_panic_handler(panic_t panic, const char *fmt, va_list args)
 {
@@ -49,7 +51,8 @@ static void test_panic_handler(panic_t panic, const char *fmt, va_list args)
 
     char *msg = vformat(fmt, args);
     test_exception_t ex = { panic, msg };
-    throw test_exception_t{ ex };
+    test_suite_t::gPanicException = ex;
+    longjmp(test_suite_t::gPanicJump, 1);
 }
 
 void test_suite_t::install_panic_handler()

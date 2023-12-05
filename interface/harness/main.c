@@ -22,21 +22,8 @@
 #include "argparse/argparse.h"
 
 #include <stdio.h>
-
-// just kill me already
-#define MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS 0
-
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#if OS_WINDOWS
-#   include "core/win32.h"
-#   define CWD ".\\"
-#else
-#   include <unistd.h>
-#   define CWD "./"
-#endif
 
 #define CHECK_REPORTS(reports, msg) \
     do { \

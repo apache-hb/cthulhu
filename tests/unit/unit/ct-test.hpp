@@ -3,6 +3,7 @@
 #include "base/panic.h"
 
 #include <vector>
+#include <setjmp.h>
 
 class test_suite_t;
 class test_group_t;
@@ -101,6 +102,9 @@ public:
     /// @brief end expecting a panic
     static void end_expect_panic();
 
+    static jmp_buf gPanicJump;
+    static test_exception_t gPanicException;
+
     /// @brief initialize the test suite
     /// @param suite the name of the test suite
     test_suite_t(const char *suite)
@@ -139,15 +143,16 @@ public:
         static_assert(std::is_same<decltype(func()), bool>::value, "test function must return bool");
 
         test_suite_t::begin_expect_panic();
-        try
+        if (setjmp(test_suite_t::gPanicJump))
         {
-            bool result = func();
-            suite.notify_result(result, name, msg);
+            suite.notify_exception(test_suite_t::gPanicException, name, msg);
+            test_suite_t::end_expect_panic();
+            return *this;
         }
-        catch (const test_exception_t& ex)
-        {
-            suite.notify_exception(ex, name, msg);
-        }
+
+        bool result = func();
+        suite.notify_result(result, name, msg);
+
         test_suite_t::end_expect_panic();
 
         return *this;
@@ -162,15 +167,16 @@ public:
         static_assert(std::is_same<decltype(func()), bool>::value, "test function must return bool");
 
         test_suite_t::begin_expect_panic();
-        try
+        if (setjmp(test_suite_t::gPanicJump))
         {
-            bool result = func();
-            suite.notify_result(!result, name, msg);
+            suite.notify_exception(test_suite_t::gPanicException, name, msg);
+            test_suite_t::end_expect_panic();
+            return *this;
         }
-        catch (const test_exception_t& ex)
-        {
-            suite.notify_exception(ex, name, msg);
-        }
+
+        bool result = func();
+        suite.notify_result(!result, name, msg);
+
         test_suite_t::end_expect_panic();
 
         return *this;
@@ -184,15 +190,15 @@ public:
     {
         test_suite_t::begin_expect_panic();
 
-        try
-        {
-            func();
-            suite.notify_failure(name, msg);
-        }
-        catch (const test_exception_t&)
+        if (setjmp(test_suite_t::gPanicJump))
         {
             suite.notify_success(name, msg);
+            test_suite_t::end_expect_panic();
+            return *this;
         }
+
+        func();
+        suite.notify_failure(name, msg);
 
         test_suite_t::end_expect_panic();
 

@@ -25,8 +25,7 @@ is_debug = buildtype.contains('debug')
 is_release = buildtype.contains('release')
 
 # disable unit tests if we are a subproject or release build
-# we disable in release as unit testing requires c++ exception support in C code
-unit_tests = get_option('unit_tests').disable_auto_if(meson.is_subproject() or is_release)
+unit_tests = get_option('unit_tests').disable_auto_if(meson.is_subproject())
 driver_tests = get_option('driver_tests').disable_auto_if(meson.is_subproject())
 
 # not sure if theres a better way to do this
@@ -73,14 +72,6 @@ args = cc.get_supported_arguments(
     '-fno-keep-static-consts',
     '-fmerge-all-constants'
 )
-
-if unit_tests.allowed()
-    if cc.get_id() == 'clang-cl'
-        args += cc.get_supported_arguments('/EHsc-')
-    elif cc.get_id() == 'gcc'
-        args += cc.get_supported_arguments('-fexceptions')
-    endif
-endif
 
 # args for handwritten code
 user_args = []

@@ -62,9 +62,12 @@ typedef void (*free_t)(
 typedef struct alloc_t
 {
     const char *name;        ///< the name of the allocator
+
     malloc_t arena_malloc;   ///< the malloc function
     realloc_t arena_realloc; ///< the realloc function
     free_t arena_free;       ///< the free function
+
+    void *user; ///< user data
 } alloc_t;
 
 /// @brief release memory from a custom allocator
