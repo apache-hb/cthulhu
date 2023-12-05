@@ -304,6 +304,9 @@ int main(int argc, const char **argv)
 
     int result = run_test_harness(argc, argv);
 
+    logverbose("allocations: %zu", arena.alloc_count);
+    logverbose("reallocations: %zu", arena.realloc_count);
+    logverbose("frees: %zu", arena.free_count);
     logverbose("done");
 
     free(arena.memory_start);
