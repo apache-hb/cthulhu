@@ -14,11 +14,9 @@ typedef struct buffer_t {
     size_t offset; ///< current offset in data
 } buffer_t;
 
-static const io_callbacks_t kBufferCallbacks;
-
 static buffer_t *mem_data(io_t *self)
 {
-    return io_data(self, &kBufferCallbacks);
+    return io_data(self);
 }
 
 static size_t mem_read(io_t *self, void *dst, size_t size)

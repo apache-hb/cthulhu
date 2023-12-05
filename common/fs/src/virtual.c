@@ -39,11 +39,9 @@ typedef struct virtual_io_t {
     size_t offset;
 } virtual_io_t;
 
-static const io_callbacks_t kVirtualCallbacks;
-
 static virtual_io_t *vfs_data(io_t *self)
 {
-    return io_data(self, &kVirtualCallbacks);
+    return io_data(self);
 }
 
 static size_t vfs_read(io_t *self, void *dst, size_t size)

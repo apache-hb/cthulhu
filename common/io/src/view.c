@@ -10,11 +10,9 @@ typedef struct view_t {
     size_t offset;
 } view_t;
 
-static const io_callbacks_t kViewCallbacks;
-
 static view_t *view_data(io_t *self)
 {
-    return io_data(self, &kViewCallbacks);
+    return io_data(self);
 }
 
 static size_t view_read(io_t *self, void *dst, size_t size)

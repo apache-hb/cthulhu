@@ -5,11 +5,9 @@
 
 #include <string.h>
 
-void *io_data(io_t *io, const io_callbacks_t *cb)
+void *io_data(io_t *io)
 {
     CTASSERT(io != NULL);
-    CTASSERT(cb != NULL);
-    CTASSERTF(io->cb == cb, "io type mismatch in %s", io->name);
 
     return io->data;
 }

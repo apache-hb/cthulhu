@@ -6,9 +6,7 @@ project('cthulhu', 'c',
         # gcc is picky about POSIX stdlib extensions
         'c_std=gnu11,c11',
 
-        'cpp_std=c++20',
-
-        'warning_level=2',
+        'warning_level=3',
         'werror=true',
 
         # currently meson doesnt forward `declare_dependency:sources` between dependencies
@@ -27,7 +25,6 @@ unit_tests = get_option('unit_tests').disable_auto_if(meson.is_subproject())
 driver_tests = get_option('driver_tests').disable_auto_if(meson.is_subproject())
 
 cc = meson.get_compiler('c')
-cpp = meson.get_compiler('cpp')
 
 analyze = get_option('analyze')
 

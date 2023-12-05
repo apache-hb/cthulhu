@@ -1,18 +1,14 @@
 #include "io/impl.h"
 
-#include "base/panic.h"
-
 #include <stdint.h>
 
 typedef struct io_file_t {
     os_file_t *file;
 } io_file_t;
 
-static const io_callbacks_t kFileCallbacks;
-
 static os_file_t *fd_data(io_t *self)
 {
-    io_file_t *file = io_data(self, &kFileCallbacks);
+    io_file_t *file = io_data(self);
     return file->file;
 }
 

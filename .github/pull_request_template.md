@@ -11,8 +11,6 @@ Fixes #(issue)
 if any of these are not done the PR will not be accepted
 
 - [ ] Run the full test suite available through meson
-- [ ] fuzzed all default drivers for a minimum of 1 hour of CPU time. see scripts/build-for-fuzzing.sh and scripts/run-fuzzer.sh
-- [ ] run clang-format on all changed files. see scripts/run-clang-format.sh
 
 ## Test configuration
 

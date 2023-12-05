@@ -99,14 +99,13 @@ typedef struct io_t
 } io_t;
 
 /// @brief get the user data from an io object
-/// @note get the user data back from an object, asserts if the wrong user data is found
+/// @warning does not perform any validation
 ///
 /// @param io the io object
-/// @param cb the same callbacks provided to @a io_new. used to ensure the correct type is retrieved
 ///
 /// @return the user data
 PUREFN
-void *io_data(IN_NOTNULL io_t *io, const io_callbacks_t *cb);
+void *io_data(IN_NOTNULL io_t *io);
 
 /// @brief create a new IO object for a given interface
 ///
