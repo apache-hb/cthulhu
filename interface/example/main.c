@@ -3,7 +3,6 @@
 #include "cthulhu/ssa/ssa.h"
 #include "cthulhu/emit/emit.h"
 
-#include "stacktrace/stacktrace.h"
 #include "support/langs.h"
 
 #include "report/report.h"
@@ -11,6 +10,8 @@
 #include "std/str.h"
 #include "std/map.h"
 #include "std/vector.h"
+
+#include "core/macros.h"
 
 #include "fs/fs.h"
 

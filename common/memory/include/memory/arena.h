@@ -24,14 +24,16 @@ typedef struct alloc_t alloc_t;
 ///
 /// @param self associated allocator
 /// @param size the size of the allocation
-/// @param name the name of the allocation
+/// @param name the optional name of the allocation
+/// @param parent the optional parent of the allocation
 ///
 /// @return the allocated pointer
 /// @return NULL if the allocation failed
 typedef void *(*malloc_t)(
         IN_NOTNULL alloc_t *self,
         IN_RANGE(!=, 0) size_t size,
-        IN_STRING_OPT const char *name);
+        IN_STRING_OPT const char *name,
+        const void *parent);
 
 /// @brief realloc function pointer
 ///
@@ -93,7 +95,8 @@ RET_NOTNULL
 void *arena_malloc(
     IN_NOTNULL alloc_t *alloc,
     IN_RANGE(!=, 0) size_t size,
-    IN_STRING_OPT const char *name);
+    IN_STRING_OPT const char *name,
+    const void *parent);
 
 /// @brief resize a memory allocation from a custom allocator
 /// @note ensure the allocator is consistent with the allocator used to allocate @a ptr

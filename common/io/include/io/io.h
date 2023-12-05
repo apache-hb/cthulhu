@@ -3,7 +3,6 @@
 #include "os/os.h"
 
 #include "core/analyze.h"
-#include "core/macros.h"
 
 #include <stddef.h>
 

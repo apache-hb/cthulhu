@@ -5,11 +5,8 @@
 #include "std/map.h"
 
 #include "argparse/argparse.h"
-#include "argparse/commands.h"
 
 #include "fs/fs.h"
-
-#include "base/panic.h"
 
 #include "report/report.h"
 
@@ -17,7 +14,7 @@
 
 #include "cthulhu/emit/emit.h"
 
-#include "support/langs.h"
+#include "core/macros.h"
 
 static const version_info_t kVersionInfo = {
     .license = "GPLv3",

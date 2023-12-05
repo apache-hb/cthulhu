@@ -78,17 +78,13 @@ generated_args = cc.get_supported_arguments(
 
     # bison generates some unreachable code
     '/wd4702',
-)
 
-if host == 'darwin'
     # flex generates iffy code on mac
-    generated_args += cc.get_supported_arguments('-Wno-sign-compare')
-endif
+    '-Wno-sign-compare',
 
-# mingw needs this define for flex/bison to work
-if host == 'windows' and cc.get_id() != 'msvc'
-    generated_args += '-D__USE_MINGW_ANSI_STDIO=1'
-endif
+    # mingw needs this define for flex/bison to work
+    '-D__USE_MINGW_ANSI_STDIO=1'
+)
 
 analyze_user_args = [
     # msvc analyze args
@@ -98,11 +94,6 @@ analyze_user_args = [
     # gcc analyze args
     '-fanalyzer',
 
-    # i dont know how to tell gcc our malloc will never return null
-    # so we have to disable this for now
-    '-Wno-analyzer-possible-null-dereference',
-    '-Wno-analyzer-possible-null-argument',
-
     # gcc is a bit too aggressive with these
     '-Wno-analyzer-malloc-leak',
 
@@ -110,16 +101,8 @@ analyze_user_args = [
     '-Wno-analyzer-double-free'
 ]
 
-analyze_generated_args = [
-    # bison does some strange stuff that gcc analyzer doesnt like
-    '-Wno-analyzer-free-of-non-heap',
-    '-Wno-analyzer-malloc-leak',
-    '-Wno-analyzer-null-dereference',
-]
-
 if analyze.enabled()
     user_args += cc.get_supported_arguments(analyze_user_args)
-    generated_args += cc.get_supported_arguments(analyze_generated_args)
 endif
 
 add_project_arguments(args, language : [ 'c' ])

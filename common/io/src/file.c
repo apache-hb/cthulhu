@@ -2,8 +2,10 @@
 
 #include <stdint.h>
 
-typedef struct io_file_t {
-    os_file_t *file;
+/// @brief a wrapper around an os file
+typedef struct io_file_t
+{
+    os_file_t *file; ///< the file
 } io_file_t;
 
 static os_file_t *fd_data(io_t *self)

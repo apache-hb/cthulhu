@@ -10,10 +10,11 @@
 
 /// default global allocator
 
-static void *default_global_malloc(alloc_t *alloc, size_t size, const char *name)
+static void *default_global_malloc(alloc_t *alloc, size_t size, const char *name, const void *parent)
 {
     CTU_UNUSED(alloc);
     CTU_UNUSED(name);
+    CTU_UNUSED(parent);
 
     return malloc(size);
 }
@@ -48,7 +49,7 @@ void *ctu_malloc(size_t size)
 {
     CTASSERT(size > 0);
 
-    return arena_malloc(&gDefaultAlloc, size, "");
+    return arena_malloc(&gDefaultAlloc, size, "", NULL);
 }
 
 USE_DECL
@@ -106,7 +107,7 @@ static alloc_t *gGmpAlloc = NULL;
 
 static void *ctu_gmp_malloc(size_t size)
 {
-    return arena_malloc(gGmpAlloc, size, "gmp-alloc");
+    return arena_malloc(gGmpAlloc, size, "gmp-alloc", NULL);
 }
 
 static void *ctu_gmp_realloc(void *ptr, size_t old_size, size_t new_size)

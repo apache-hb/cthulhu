@@ -4,7 +4,7 @@ libunit = library('unit', 'unit/ct-test.c',
 )
 
 unit = declare_dependency(
-    compile_args : cc.get_supported_arguments('-Wno-unused-result'),
+    compile_args : cc.get_supported_arguments('-Wno-unused-result', '-Wno-unused-value'),
     link_with : libunit,
     dependencies : [ base, std ]
 )
@@ -15,23 +15,12 @@ cases = [
     'util.set'
 ]
 
-# gcc doesnt let me cast to void to suppress unused result warnings
-if cc.get_id() == 'gcc'
-    test_cpp_args = cpp.get_supported_arguments(
-        '-Wno-unused-result',
-        '-Wno-unused-value'
-    )
-else
-    test_cpp_args = []
-endif
-
 foreach case : cases
     name = case.replace('.', '/')
     path = 'cases'/name + '.c'
 
     exe = executable(case, path,
         include_directories : '.',
-        cpp_args : test_cpp_args,
         dependencies : [ unit, memory, std ]
     )
 

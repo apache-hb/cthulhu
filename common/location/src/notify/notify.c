@@ -9,7 +9,7 @@ typedef struct reports_t
 
 reports_t *msg_new(alloc_t *alloc)
 {
-    reports_t *reports = arena_malloc(alloc, sizeof(reports_t), "reports");
+    reports_t *reports = arena_malloc(alloc, sizeof(reports_t), "reports", NULL);
     reports->alloc = alloc;
     return reports;
 }

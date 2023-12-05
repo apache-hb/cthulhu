@@ -5,12 +5,12 @@
 /// arena allocator
 
 USE_DECL
-void *arena_malloc(alloc_t *alloc, size_t size, const char *name)
+void *arena_malloc(alloc_t *alloc, size_t size, const char *name, const void *parent)
 {
     CTASSERT(alloc != NULL);
     CTASSERT(size > 0);
 
-    void *ptr = alloc->arena_malloc(alloc, size, name);
+    void *ptr = alloc->arena_malloc(alloc, size, name, parent);
     CTASSERTF(ptr != NULL, "alloc(%s) failed", name);
 
     return ptr;

@@ -344,8 +344,8 @@ static void sync_file(fs_t *dst, fs_t *src, inode_t *dstNode, inode_t *srcNode)
         io_write(dstIo, data, read);
     }
 
-    io_close(srcIo);
     io_close(dstIo);
+    io_close(srcIo);
 }
 
 static void sync_dir(fs_t *dst, fs_t *src, inode_t *dstNode, inode_t *srcNode)

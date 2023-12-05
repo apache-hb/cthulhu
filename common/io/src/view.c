@@ -4,10 +4,12 @@
 
 #include <string.h>
 
-typedef struct view_t {
-    const char *data;
-    size_t size;
-    size_t offset;
+/// @brief a non-owning, read only view of data
+typedef struct view_t
+{
+    const char *data;   ///< pointer to data
+    size_t size;        ///< size of data
+    size_t offset;      ///< current offset in data
 } view_t;
 
 static view_t *view_data(io_t *self)
@@ -59,7 +61,11 @@ io_t *io_view(const char *name, const void *data, size_t size)
 {
     os_access_t flags = eAccessRead;
 
-    view_t view = {.data = data, .size = size, .offset = 0};
+    view_t view = {
+        .data = data,
+        .size = size,
+        .offset = 0
+    };
 
     return io_new(&kViewCallbacks, flags, name, &view, sizeof(view_t));
 }

@@ -11,6 +11,8 @@
 
 #include "base/panic.h"
 
+#include "core/macros.h"
+
 #include <stdarg.h>
 #include <string.h>
 

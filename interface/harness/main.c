@@ -89,8 +89,10 @@ static user_ptr_t *get_ptr(void *ptr)
     return (user_ptr_t*)(data - sizeof(user_ptr_t));
 }
 
-static void *user_malloc(alloc_t *alloc, size_t size, const char *name)
+static void *user_malloc(alloc_t *alloc, size_t size, const char *name, const void *parent)
 {
+    CTU_UNUSED(parent);
+
     user_arena_t *user = (user_arena_t*)alloc->user;
 
     user_ptr_t *ptr = get_memory(user, size, name);

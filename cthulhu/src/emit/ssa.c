@@ -11,6 +11,8 @@
 
 #include "base/panic.h"
 
+#include "core/macros.h"
+
 #include "report/report.h"
 
 #include "fs/fs.h"

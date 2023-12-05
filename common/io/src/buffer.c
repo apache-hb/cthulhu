@@ -6,7 +6,9 @@
 
 #include <string.h>
 
-typedef struct buffer_t {
+/// @brief a read/write in memory file
+typedef struct buffer_t
+{
     char *data;   ///< stored data
     size_t used;  ///< used data
     size_t total; ///< total size of data
@@ -89,7 +91,12 @@ io_t *io_memory(const char *name, const void *data, size_t size, os_access_t fla
 {
     CTASSERT(data != NULL);
 
-    buffer_t buffer = {.data = ctu_malloc(size), .total = size, .used = size, .offset = 0};
+    buffer_t buffer = {
+        .data = ctu_malloc(size),
+        .total = size,
+        .used = size,
+        .offset = 0
+    };
 
     memcpy(buffer.data, data, size);
 
