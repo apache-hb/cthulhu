@@ -1,4 +1,4 @@
-#include "unit/ct-test.hpp"
+#include "unit/ct-test.h"
 
 #include "std/vector.h"
 #include "std/map.h"
@@ -58,12 +58,12 @@ int main()
 
     {
         test_group_t group = test_group(&suite, "default value");
-        group_will_pass(&group, "default value", [] {
+        GROUP_EXPECT_PASS2(group, "default value", {
             map_t *map = map_new(64);
             char world[] = "world";
 
             /* pointer equality is on purpose */
-            return map_get_default(map, "hello", world) == world;
+            CTASSERT(map_get_default(map, "hello", world) == world);
         });
     }
 

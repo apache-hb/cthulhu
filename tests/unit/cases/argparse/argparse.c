@@ -1,4 +1,4 @@
-#include "unit/ct-test.hpp"
+#include "unit/ct-test.h"
 
 #include "core/macros.h"
 

@@ -1,4 +1,4 @@
-libunit = library('unit', 'unit/ct-test.cpp',
+libunit = library('unit', 'unit/ct-test.c',
     include_directories : include_directories('unit'),
     dependencies : [ stacktrace, base, std ]
 )
@@ -23,7 +23,7 @@ endif
 
 foreach case : cases
     name = case.replace('.', '/')
-    path = 'cases'/name + '.cpp'
+    path = 'cases'/name + '.c'
 
     exe = executable(case, path,
         include_directories : '.',
@@ -36,7 +36,7 @@ endforeach
 
 # vfs
 
-vfs_exe = executable('vfs', 'cases/io/vfs.cpp',
+vfs_exe = executable('vfs', 'cases/io/vfs.c',
     include_directories : '.',
     dependencies : [ unit, base, location, fs ]
 )
@@ -45,7 +45,7 @@ test('vfs', vfs_exe, suite : 'unit')
 
 # fs
 
-fs_exe = executable('fs', 'cases/io/fs.cpp',
+fs_exe = executable('fs', 'cases/io/fs.c',
     include_directories : '.',
     dependencies : [ unit, base, std, location, fs ]
 )
@@ -57,7 +57,7 @@ test('fs', fs_exe,
 
 # argparse
 
-argparse_exe = executable('argparse.argparse', 'cases/argparse/argparse.cpp',
+argparse_exe = executable('argparse.argparse', 'cases/argparse/argparse.c',
     include_directories : '.',
     dependencies : [ unit, memory, base, std, location, argparse ]
 )

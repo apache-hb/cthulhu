@@ -1,4 +1,4 @@
-#include "unit/ct-test.hpp"
+#include "unit/ct-test.h"
 
 #include "std/map.h"
 #include "std/str.h"
@@ -13,8 +13,13 @@ typedef struct pair_t
 } pair_t;
 
 static pair_t kEscapes[] = {
-    pair_t{"\n", "\\n"},  pair_t{"\r", "\\r"},  pair_t{"\t", "\\t"},  pair_t{"\v", "\\x0b"},
-    pair_t{"\\", "\\\\"}, pair_t{"\'", "\\\'"}, pair_t{"\"", "\\\""},
+    {"\n", "\\n"},
+    {"\r", "\\r"},
+    {"\t", "\\t"},
+    {"\v", "\\x0b"},
+    {"\\", "\\\\"},
+    {"\'", "\\\'"},
+    {"\"", "\\\""},
 };
 
 #define ESCAPES_LEN (sizeof(kEscapes) / sizeof(pair_t))
@@ -89,17 +94,17 @@ int main()
     }
     {
         test_group_t group = test_group(&suite, "str_replace");
-        group_will_pass(&group, "replace one", [] {
+        GROUP_EXPECT_PASS2(group, "replace one", {
             char *result = str_replace("hello world!", "world", "universe");
-            return str_equal(result, "hello universe!");
+            CTASSERT( str_equal(result, "hello universe!"));
         });
-        group_will_pass(&group, "replace none", [] {
+        GROUP_EXPECT_PASS2(group, "replace none", {
             char *result = str_replace("hello world!", "universe", "world");
-            return str_equal(result, "hello world!");
+            CTASSERT( str_equal(result, "hello world!"));
         });
-        group_will_pass(&group, "replace empty", [] {
+        GROUP_EXPECT_PASS2(group, "replace empty", {
             char *result = str_replace("hello world!", "", "universe");
-            return str_equal(result, "hello world!");
+            CTASSERT( str_equal(result, "hello world!"));
         });
         GROUP_EXPECT_PANIC(group, "null str", (void)str_replace(NULL, "world", "universe"));
         GROUP_EXPECT_PANIC(group, "null old", (void)str_replace("hello world!", NULL, "universe"));
@@ -108,7 +113,7 @@ int main()
     }
     {
         test_group_t group = test_group(&suite, "str_replace_many");
-        group_will_pass(&group, "replace many", [] {
+        GROUP_EXPECT_PASS2(group, "replace many", {
             map_t *entries = map_optimal(64);
             map_set(entries, "hello", (void *)"world");
             map_set(entries, "world", (void *)"hello");
@@ -116,7 +121,7 @@ int main()
             map_set(entries, " ", (void *)"___");
 
             char *result = str_replace_many("hello world!", entries);
-            return str_equal(result, "world___hello?");
+            CTASSERT( str_equal(result, "world___hello?"));
         });
         GROUP_EXPECT_PANIC(group, "null entry", {
             map_t *entries = map_optimal(64);
@@ -137,19 +142,19 @@ int main()
 
     {
         test_group_t group = test_group(&suite, "str_join");
-        group_will_pass(&group, "joined equals", [parts] {
+        GROUP_EXPECT_PASS2(group, "joined equals", {
             char *joined = str_join(" ", parts);
-            return str_equal(joined, "zero one two three four five six seven eight nine");
+            CTASSERT( str_equal(joined, "zero one two three four five six seven eight nine"));
         });
-        group_will_pass(&group, "joined empty", [] {
+        GROUP_EXPECT_PASS2(group, "joined empty", {
             vector_t *empty = vector_of(0);
             char *joined = str_join(" ", empty);
-            return str_equal(joined, "");
+            CTASSERT( str_equal(joined, ""));
         });
-        group_will_pass(&group, "joined one", [] {
+        GROUP_EXPECT_PASS2(group, "joined one", {
             vector_t *one = vector_init((char *)"hello");
             char *joined = str_join(" ", one);
-            return str_equal(joined, "hello");
+            CTASSERT( str_equal(joined, "hello"));
         });
         GROUP_EXPECT_PANIC(group, "null sep", (void)str_join(NULL, vector_of(0)));
         GROUP_EXPECT_PANIC(group, "null parts", (void)str_join(" ", NULL));
@@ -158,21 +163,21 @@ int main()
     }
     {
         test_group_t group = test_group(&suite, "str_repeat");
-        group_will_pass(&group, "repeat equals", [] {
+        GROUP_EXPECT_PASS2(group, "repeat equals", {
             char *repeated = str_repeat("hello", 3);
-            return str_equal(repeated, "hellohellohello");
+            CTASSERT(str_equal(repeated, "hellohellohello"));
         });
-        group_will_pass(&group, "repeat empty", [] {
+        GROUP_EXPECT_PASS2(group, "repeat empty", {
             char *repeated = str_repeat("", 3);
-            return str_equal(repeated, "");
+            CTASSERT( str_equal(repeated, ""));
         });
-        group_will_pass(&group, "repeat none", [] {
+        GROUP_EXPECT_PASS2(group, "repeat none", {
             char *repeated = str_repeat("hello", 0);
-            return str_equal(repeated, "");
+            CTASSERT( str_equal(repeated, ""));
         });
-        group_will_pass(&group, "repeat one", [] {
+        GROUP_EXPECT_PASS2(group, "repeat one", {
             char *repeated = str_repeat("hello", 1);
-            return str_equal(repeated, "hello");
+            CTASSERT( str_equal(repeated, "hello"));
         });
     }
     ///
@@ -237,28 +242,28 @@ int main()
     ///
 
     test_group_t normalize_group = test_group(&suite, "str_normalize");
-    group_will_pass(&normalize_group, "normalize equals", [] {
+    GROUP_EXPECT_PASS2(normalize_group, "normalize equals", {
         char *normalized = str_normalize("hello world!");
-        return str_equal(normalized, "hello world!");
+        CTASSERT(str_equal(normalized, "hello world!"));
     });
-    group_will_pass(&normalize_group, "normalize empty", [] {
+    GROUP_EXPECT_PASS2(normalize_group, "normalize empty", {
         char *normalized = str_normalize("");
-        return str_equal(normalized, "");
+        CTASSERT(str_equal(normalized, ""));
     });
-    group_will_pass(&normalize_group, "normalize newline", [] {
+    GROUP_EXPECT_PASS2(normalize_group, "normalize newline", {
         char *result = str_normalize("hello\n world!");
-        return str_equal(result, "hello\\n world!");
+        CTASSERT(str_equal(result, "hello\\n world!"));
     });
     GROUP_EXPECT_PANIC(normalize_group, "normalize null", (void)str_normalize(NULL));
 
     test_group_t normalizen_group = test_group(&suite, "str_normalizen");
-    group_will_pass(&normalizen_group, "normalizen equals", [] {
+    GROUP_EXPECT_PASS2(normalizen_group, "normalizen equals", {
         char *normalized = str_normalizen("hello world!", 12);
-        return str_equal(normalized, "hello world!");
+        CTASSERT(str_equal(normalized, "hello world!"));
     });
-    group_will_pass(&normalizen_group, "normalizen empty", [] {
+    GROUP_EXPECT_PASS2(normalizen_group, "normalizen empty", {
         char *normalized = str_normalizen("", 0);
-        return str_equal(normalized, "");
+        CTASSERT(str_equal(normalized, ""));
     });
     GROUP_EXPECT_PANIC(normalizen_group, "normalizen null", (void)str_normalizen(NULL, 0));
 

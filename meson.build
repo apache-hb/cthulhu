@@ -26,10 +26,6 @@ is_release = buildtype.contains('release')
 unit_tests = get_option('unit_tests').disable_auto_if(meson.is_subproject())
 driver_tests = get_option('driver_tests').disable_auto_if(meson.is_subproject())
 
-# not sure if theres a better way to do this
-# https://github.com/mesonbuild/meson/issues/12570
-unit_tests.require(add_languages('cpp', native : false, required : unit_tests.enabled()))
-
 cc = meson.get_compiler('c')
 cpp = meson.get_compiler('cpp')
 
@@ -129,7 +125,7 @@ if analyze.enabled()
     generated_args += cc.get_supported_arguments(analyze_generated_args)
 endif
 
-add_project_arguments(args, language : [ 'c', 'cpp' ])
+add_project_arguments(args, language : [ 'c' ])
 
 # setup required flex/bison args
 if host == 'windows'

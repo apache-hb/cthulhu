@@ -1,8 +1,7 @@
-#include "ct-test.hpp"
+#include "ct-test.h"
 
 #include "stacktrace/stacktrace.h"
 
-#include "base/panic.h"
 #include "std/str.h"
 
 #include <stdio.h>
@@ -92,9 +91,9 @@ static test_result_t test_result_exception(const char *group_name, const char *t
 }
 
 static bool gExpectingPanic = false;
-static test_exception_t gPanicException = {};
+static test_exception_t gPanicException = { 0 };
 
-jmp_buf gPanicJump = {};
+jmp_buf gPanicJump = { 0 };
 
 static void test_panic_handler(panic_t panic, const char *fmt, va_list args)
 {
