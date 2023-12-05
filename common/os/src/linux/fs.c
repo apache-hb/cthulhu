@@ -2,8 +2,6 @@
 
 #include "base/panic.h"
 
-#include "report/report.h"
-
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdio.h>

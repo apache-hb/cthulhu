@@ -20,7 +20,13 @@ project('cthulhu', 'c',
     ]
 )
 
-unit_tests = get_option('unit_tests').disable_auto_if(meson.is_subproject())
+buildtype = get_option('buildtype')
+is_debug = buildtype.contains('debug')
+is_release = buildtype.contains('release')
+
+# disable unit tests if we are a subproject or release build
+# we disable in release as unit testing requires c++ exception support in C code
+unit_tests = get_option('unit_tests').disable_auto_if(meson.is_subproject() or is_release)
 driver_tests = get_option('driver_tests').disable_auto_if(meson.is_subproject())
 
 # not sure if theres a better way to do this
@@ -35,11 +41,6 @@ analyze = get_option('analyze')
 version = meson.project_version()
 target = target_machine.system()
 host = host_machine.system()
-buildtype = get_option('buildtype')
-
-is_debug = buildtype.contains('debug')
-is_release = buildtype.contains('release')
-
 parts = version.split('.')
 
 warning_level = get_option('warning_level').to_int()
@@ -72,6 +73,14 @@ args = cc.get_supported_arguments(
     '-fno-keep-static-consts',
     '-fmerge-all-constants'
 )
+
+if unit_tests.allowed()
+    if cc.get_id() == 'clang-cl'
+        args += cc.get_supported_arguments('/EHsc-')
+    elif cc.get_id() == 'gcc'
+        args += cc.get_supported_arguments('-fexceptions')
+    endif
+endif
 
 # args for handwritten code
 user_args = []
@@ -131,7 +140,7 @@ if analyze.enabled()
     generated_args += cc.get_supported_arguments(analyze_generated_args)
 endif
 
-add_project_arguments(args, language : 'c')
+add_project_arguments(args, language : [ 'c', 'cpp' ])
 
 # setup required flex/bison args
 if host == 'windows'

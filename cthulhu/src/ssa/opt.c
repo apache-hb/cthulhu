@@ -181,9 +181,19 @@ static const ssa_value_t *ssa_opt_binary(ssa_scope_t *vm, ssa_binary_t step)
         mpz_mul(result, lhs->digitValue, rhs->digitValue);
         break;
     case eBinaryDiv:
+        if (mpz_cmp_ui(rhs->digitValue, 0) == 0)
+        {
+            report(vm->vm->reports, eFatal, node_invalid(), "division by zero inside `%s`", vm->symbol->name);
+            return lhs;
+        }
         mpz_divexact(result, lhs->digitValue, rhs->digitValue);
         break;
     case eBinaryRem:
+        if (mpz_cmp_ui(rhs->digitValue, 0) == 0)
+        {
+            report(vm->vm->reports, eFatal, node_invalid(), "modulo by zero inside `%s`", vm->symbol->name);
+            return lhs;
+        }
         mpz_mod(result, lhs->digitValue, rhs->digitValue);
         break;
 

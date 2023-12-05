@@ -3,12 +3,13 @@ src = [ 'src/os_common.c' ]
 
 lib_oscommon = library('os_common', src,
     c_args : user_args,
-    dependencies : [ base, memory, std ],
+    dependencies : [ core, base, memory, std ],
     include_directories : [ 'include', 'src' ]
 )
 
 os_common = declare_dependency(
     link_with : lib_oscommon,
+    dependencies : [ core ],
     include_directories : [ 'include', 'src' ]
 )
 

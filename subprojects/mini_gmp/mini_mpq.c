@@ -470,7 +470,6 @@ mpq_get_d (const mpq_t u)
   return ret;
 }
 
-
 /* MPQ and strings/streams. */
 char *
 mpq_get_str (char *sp, int base, const mpq_t q)

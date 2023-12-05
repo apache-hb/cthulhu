@@ -5,12 +5,12 @@ IndentPPDirectives: AfterHash
 PPIndentWidth: 3
 BreakAfterAttributes: Always
 AttributeMacros:
-    - FORMAT_ATTRIB
+    - CT_PRINTF
     - CONSTFN
     - PUREFN
     - HOTFN
     - COLDFN
-    - ALLOC
+    - CT_ALLOC
     - NODISCARD
     - USE_DECL
 ...

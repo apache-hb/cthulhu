@@ -2,11 +2,7 @@
 #include "ctu/ast.h"
 
 #include "ctu/sema/sema.h"
-#include "ctu/sema/type.h"
 #include "ctu/sema/decl.h"
-#include "ctu/sema/expr.h"
-
-#include "base/util.h"
 
 #include "cthulhu/mediator/driver.h"
 
@@ -20,8 +16,9 @@
 #include "std/map.h"
 #include "std/str.h"
 
-#include "memory/memory.h"
 #include "base/panic.h"
+
+#include "core/macros.h"
 
 #include <ctype.h>
 #include <string.h>

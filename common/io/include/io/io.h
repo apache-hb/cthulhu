@@ -29,7 +29,7 @@ void io_close(OUT_PTR_INVALID io_t *io);
 /// @param mode the access mode of the file
 ///
 /// @return the io object, or NULL on error
-NODISCARD ALLOC(io_close)
+NODISCARD CT_ALLOC(io_close)
 io_t *io_file(const char *path, os_access_t mode);
 
 /// @brief create an IO object from an initial view of memory
@@ -41,7 +41,7 @@ io_t *io_file(const char *path, os_access_t mode);
 /// @param flags the access mode of the file
 ///
 /// @return the io object
-NODISCARD ALLOC(io_close)
+NODISCARD CT_ALLOC(io_close)
 io_t *io_memory(const char *name, const void *data, size_t size, os_access_t flags);
 
 /// @brief create an IO object in memory of a given size
@@ -51,7 +51,7 @@ io_t *io_memory(const char *name, const void *data, size_t size, os_access_t fla
 /// @param flags the access mode
 ///
 /// @return the io object
-NODISCARD ALLOC(io_close)
+NODISCARD CT_ALLOC(io_close)
 io_t *io_blob(const char *name, size_t size, os_access_t flags);
 
 /// @brief create a readonly IO object for a given view of memory
@@ -61,7 +61,7 @@ io_t *io_blob(const char *name, size_t size, os_access_t flags);
 /// @param size the size of the data
 ///
 /// @return the IO view
-NODISCARD ALLOC(io_close)
+NODISCARD CT_ALLOC(io_close)
 io_t *io_view(const char *name, const void *data, size_t size);
 
 /// @brief create an IO view of a string
@@ -70,7 +70,7 @@ io_t *io_view(const char *name, const void *data, size_t size);
 /// @param string the backing string view
 ///
 /// @return the io object
-NODISCARD ALLOC(io_close)
+NODISCARD CT_ALLOC(io_close)
 io_t *io_string(const char *name, const char *string);
 
 /// @brief read from an io object

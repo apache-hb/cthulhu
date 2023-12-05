@@ -16,18 +16,20 @@
 #include "std/str.h"
 
 #include "base/panic.h"
+#include "core/macros.h"
 
-typedef struct check_t {
+typedef struct check_t
+{
     reports_t *reports;
 
-    const tree_t *cliEntryPoint;
-    const tree_t *guiEntryPoint;
+    const tree_t *cli_entry;
+    const tree_t *gui_entry;
 
-    vector_t *exprStack;
-    vector_t *typeStack;
+    vector_t *expr_stack;
+    vector_t *type_stack;
 
-    set_t *checkedExprs;
-    set_t *checkedTypes;
+    set_t *checked_exprs;
+    set_t *checked_types;
 } check_t;
 
 // check for a valid name and a type being set
@@ -125,30 +127,30 @@ static void check_func_attribs(check_t *check, const tree_t *fn)
 
     case eLinkEntryCli:
         check_func_has_body(check, fn);
-        if (check->cliEntryPoint != NULL)
+        if (check->cli_entry != NULL)
         {
             message_t *id = report(check->reports, eFatal, tree_get_node(fn),
                 "multiple CLI entry points defined"
             );
-            report_append(id, tree_get_node(check->cliEntryPoint), "previous entry point defined here");
+            report_append(id, tree_get_node(check->cli_entry), "previous entry point defined here");
         }
         else
         {
-            check->cliEntryPoint = fn;
+            check->cli_entry = fn;
         }
         break;
     case eLinkEntryGui:
         check_func_has_body(check, fn);
-        if (check->guiEntryPoint != NULL)
+        if (check->gui_entry != NULL)
         {
             message_t *id = report(check->reports, eFatal, tree_get_node(fn),
                 "multiple GUI entry points defined"
             );
-            report_append(id, tree_get_node(check->guiEntryPoint), "previous entry point defined here");
+            report_append(id, tree_get_node(check->gui_entry), "previous entry point defined here");
         }
         else
         {
-            check->guiEntryPoint = fn;
+            check->gui_entry = fn;
         }
         break;
 
@@ -295,19 +297,19 @@ static void check_expr_recursion(check_t *check, const tree_t *tree)
 
 static void check_global_recursion(check_t *check, const tree_t *global)
 {
-    if (set_contains_ptr(check->checkedExprs, global))
+    if (set_contains_ptr(check->checked_exprs, global))
     {
         return;
     }
 
-    size_t idx = vector_find(check->exprStack, global);
+    size_t idx = vector_find(check->expr_stack, global);
     if (idx == SIZE_MAX)
     {
         if (global->initial != NULL)
         {
-            vector_push(&check->exprStack, (tree_t*)global);
+            vector_push(&check->expr_stack, (tree_t*)global);
             check_expr_recursion(check, global->initial);
-            vector_drop(check->exprStack);
+            vector_drop(check->expr_stack);
         }
     }
     else
@@ -316,15 +318,15 @@ static void check_global_recursion(check_t *check, const tree_t *global)
             "evaluation of `%s` may be infinite",
             tree_get_name(global)
         );
-        size_t len = vector_len(check->exprStack);
+        size_t len = vector_len(check->expr_stack);
         for (size_t i = 0; i < len; i++)
         {
-            const tree_t *decl = vector_get(check->exprStack, i);
+            const tree_t *decl = vector_get(check->expr_stack, i);
             report_append(id, tree_get_node(decl), "call to `%s`", tree_get_name(decl));
         }
     }
 
-    set_add_ptr(check->checkedExprs, global);
+    set_add_ptr(check->checked_exprs, global);
 }
 
 ///
@@ -359,22 +361,22 @@ static void check_struct_type_recursion(check_t *check, const tree_t *type)
 
 static void check_aggregate_recursion(check_t *check, const tree_t *type)
 {
-    if (set_contains_ptr(check->checkedTypes, type))
+    if (set_contains_ptr(check->checked_types, type))
     {
         return;
     }
 
-    size_t idx = vector_find(check->typeStack, type);
+    size_t idx = vector_find(check->type_stack, type);
     if (idx == SIZE_MAX)
     {
-        vector_push(&check->typeStack, (tree_t*)type);
+        vector_push(&check->type_stack, (tree_t*)type);
         size_t len = vector_len(type->fields);
         for (size_t i = 0; i < len; i++)
         {
             const tree_t *field = vector_get(type->fields, i);
             check_struct_type_recursion(check, field->type);
         }
-        vector_drop(check->typeStack);
+        vector_drop(check->type_stack);
     }
     else
     {
@@ -382,15 +384,15 @@ static void check_aggregate_recursion(check_t *check, const tree_t *type)
             "size of type `%s` may be infinite",
             tree_get_name(type)
         );
-        size_t len = vector_len(check->typeStack);
+        size_t len = vector_len(check->type_stack);
         for (size_t i = 0; i < len; i++)
         {
-            const tree_t *decl = vector_get(check->typeStack, i);
+            const tree_t *decl = vector_get(check->type_stack, i);
             report_append(id, tree_get_node(decl), "call to `%s`", tree_get_name(decl));
         }
     }
 
-    set_add_ptr(check->checkedTypes, type);
+    set_add_ptr(check->checked_types, type);
 }
 
 ///
@@ -438,17 +440,17 @@ static void check_inner_type_recursion(check_t *check, const tree_t *type)
 
 static void check_type_recursion(check_t *check, const tree_t *type)
 {
-    if (set_contains_ptr(check->checkedTypes, type))
+    if (set_contains_ptr(check->checked_types, type))
     {
         return;
     }
 
-    size_t idx = vector_find(check->typeStack, type);
+    size_t idx = vector_find(check->type_stack, type);
     if (idx == SIZE_MAX)
     {
-        vector_push(&check->typeStack, (tree_t*)type);
+        vector_push(&check->type_stack, (tree_t*)type);
         check_inner_type_recursion(check, type);
-        vector_drop(check->typeStack);
+        vector_drop(check->type_stack);
     }
     else
     {
@@ -456,15 +458,15 @@ static void check_type_recursion(check_t *check, const tree_t *type)
             "type `%s` contains an impossible type",
             tree_get_name(type)
         );
-        size_t len = vector_len(check->typeStack);
+        size_t len = vector_len(check->type_stack);
         for (size_t i = 0; i < len; i++)
         {
-            const tree_t *decl = vector_get(check->typeStack, i);
+            const tree_t *decl = vector_get(check->type_stack, i);
             report_append(id, tree_get_node(decl), "call to `%s`", tree_get_name(decl));
         }
     }
 
-    set_add_ptr(check->checkedTypes, type);
+    set_add_ptr(check->checked_types, type);
 }
 
 static void check_any_type_recursion(check_t *check, const tree_t *type)
@@ -536,11 +538,11 @@ void check_tree(reports_t *reports, map_t *mods)
     check_t check = {
         .reports = reports,
 
-        .exprStack = vector_new(64),
-        .typeStack = vector_new(64),
+        .expr_stack = vector_new(64),
+        .type_stack = vector_new(64),
 
-        .checkedExprs = set_new(64),
-        .checkedTypes = set_new(64)
+        .checked_exprs = set_new(64),
+        .checked_types = set_new(64)
     };
 
     map_iter_t iter = map_iter(mods);

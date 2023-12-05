@@ -1,5 +1,7 @@
 #include "base/util.h"
 
+#include <stdint.h>
+
 USE_DECL
 size_t ptrhash(const void *ptr)
 {

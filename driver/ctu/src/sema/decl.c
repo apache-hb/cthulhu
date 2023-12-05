@@ -85,11 +85,11 @@ static void ctu_resolve_global(tree_t *sema, tree_t *self, void *user)
 static void ctu_resolve_type(tree_t *sema, tree_t *self, void *user)
 {
     ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclTypeAlias);
-    CTASSERTF(decl->type != NULL, "decl %s has no type", decl->name);
+    CTASSERTF(decl->type_alias != NULL, "decl %s has no type", decl->name);
 
     ctu_sema_t inner = ctu_sema_init(sema, self, vector_new(0));
 
-    const tree_t *temp = tree_resolve(tree_get_cookie(sema), ctu_sema_type(&inner, decl->typeAlias)); // TODO: doesnt support newtypes, also feels icky
+    const tree_t *temp = tree_resolve(tree_get_cookie(sema), ctu_sema_type(&inner, decl->type_alias)); // TODO: doesnt support newtypes, also feels icky
     tree_close_decl(self, temp);
 }
 

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "core/macros.h"
 #include "core/version_def.h"
+#include "core/compiler.h"
+#include "core/analyze.h"
 
 BEGIN_API
 

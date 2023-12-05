@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/compiler.h"
 #include "core/analyze.h"
 
 #include <stdarg.h>
@@ -42,7 +43,7 @@ extern panic_handler_t gPanicHandler;
 /// @param panic the panic information
 /// @param msg the message to panic with
 /// @param ... the arguments to format
-FORMAT_ATTRIB(2, 3)
+CT_PRINTF(2, 3)
 NORETURN ctpanic(panic_t panic, FORMAT_STRING const char *msg, ...);
 
 /// @def CTU_PANIC(...)

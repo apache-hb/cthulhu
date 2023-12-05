@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/analyze.h"
+#include "core/compiler.h"
 
 #include <stdbool.h>
 #include <stddef.h>

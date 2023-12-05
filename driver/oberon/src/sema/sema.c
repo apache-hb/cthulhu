@@ -1,14 +1,14 @@
-#include "oberon/sema/decl.h"
+#include "oberon/sema/sema.h"
 
 #include "cthulhu/mediator/driver.h"
-
-#include "cthulhu/tree/sema.h"
 
 #include "cthulhu/util/util.h"
 
 #include "report/report-ext.h"
 
 #include "base/panic.h"
+
+#include "core/macros.h"
 
 tree_t *obr_get_type(tree_t *sema, const char *name)
 {

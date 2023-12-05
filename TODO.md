@@ -13,11 +13,13 @@
 * error registry like msvc
 
 * rewrite location tracking
-
+* fix linking to ucrt with clang-cl causing issues
 * more docs
 
 ## important
 
+* build as shared libraries nicely on windows
+* validate full tree form inside check
 * memory arenas
 
 * ssa backend

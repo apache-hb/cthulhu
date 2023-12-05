@@ -2,8 +2,6 @@
 
 #include "scan/scan.h"
 
-#include "core/analyze.h"
-
 #include "base/panic.h"
 
 #include <limits.h>

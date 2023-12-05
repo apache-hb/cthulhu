@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/compiler.h"
+
 #include "cthulhu/mediator/common.h"
 
 #include <stddef.h>

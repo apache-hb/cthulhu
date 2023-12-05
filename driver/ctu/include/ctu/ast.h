@@ -107,7 +107,7 @@ typedef struct ctu_t {
                 /* eCtuDeclTypeAlias */
                 struct {
                     bool newtype;
-                    ctu_t *typeAlias;
+                    ctu_t *type_alias;
                 };
 
                 /* eCtuDeclStruct|eCtuDeclUnion */

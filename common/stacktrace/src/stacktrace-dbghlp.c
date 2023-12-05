@@ -12,7 +12,7 @@ void stacktrace_init(void)
 USE_DECL
 const char *stacktrace_backend(void)
 {
-    return "win32-dbghelp";
+    return "dbghelp";
 }
 
 static BOOL get_frame(STACKFRAME *frame, CONTEXT *ctx, HANDLE process, HANDLE thread)

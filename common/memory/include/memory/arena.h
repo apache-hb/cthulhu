@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/analyze.h"
+#include "core/compiler.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -16,7 +17,6 @@ BEGIN_API
 /// @brief unknown allocation size constant
 /// when freeing or reallocating memory, this can be used as the size
 /// to indicate that the size is unknown. requires allocator support
-
 
 typedef struct alloc_t alloc_t;
 
@@ -85,7 +85,7 @@ void arena_free(
 /// @param name the name of the allocation
 ///
 /// @return the allocated pointer
-NODISCARD ALLOC(arena_free, 2)
+NODISCARD CT_ALLOC(arena_free, 2)
 RET_NOTNULL
 void *arena_malloc(
     IN_NOTNULL alloc_t *alloc,

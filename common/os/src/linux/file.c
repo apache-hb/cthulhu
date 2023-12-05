@@ -2,8 +2,6 @@
 
 #include "base/panic.h"
 
-#include "report/report.h"
-
 #include <stdio.h>
 #include <errno.h>
 

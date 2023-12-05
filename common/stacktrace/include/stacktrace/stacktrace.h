@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/macros.h"
+#include "core/compiler.h"
 #include "core/analyze.h"
 
 #include <stdio.h>

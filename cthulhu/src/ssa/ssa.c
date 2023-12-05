@@ -13,6 +13,7 @@
 
 #include "memory/memory.h"
 #include "base/panic.h"
+#include "core/macros.h"
 
 #include <string.h>
 

@@ -1,7 +1,5 @@
 #include "common.h"
 
-#include "base/panic.h"
-
 #include <objbase.h>
 
 void os_init(void)

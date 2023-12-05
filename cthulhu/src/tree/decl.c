@@ -10,6 +10,8 @@
 
 #include "base/panic.h"
 
+#include <stdio.h>
+
 static const tree_storage_t kEmptyStorage = {
     .storage = NULL,
     .size = SIZE_MAX,

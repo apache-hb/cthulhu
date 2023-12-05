@@ -15,6 +15,8 @@
 
 #include "base/panic.h"
 
+#include "core/macros.h"
+
 ///
 /// get decls
 ///
@@ -184,13 +186,34 @@ static tree_t *sema_binary(ctu_sema_t *sema, const ctu_t *expr, const tree_t *im
     return tree_expr_binary(expr->node, commonType, expr->binary, left, right);
 }
 
-static tree_t *sema_unary(ctu_sema_t *sema, const ctu_t *expr, const tree_t *implicitType)
+static tree_t *sema_unary(ctu_sema_t *sema, const ctu_t *expr, const tree_t *implicit_type)
 {
-    tree_t *inner = ctu_sema_rvalue(sema, expr->expr, implicitType);
+    tree_t *inner = ctu_sema_rvalue(sema, expr->expr, implicit_type);
 
     if (tree_is(inner, eTreeError))
     {
         return tree_error(expr->node, "invalid unary");
+    }
+
+    switch (expr->unary)
+    {
+    case eUnaryAbs:
+    case eUnaryNeg:
+    case eUnaryFlip:
+        if (!tree_is(tree_get_type(inner), eTreeTypeDigit))
+        {
+            return tree_raise(expr->node, ctu_sema_reports(sema), "cannot apply unary `%s` to non-digit type `%s`", unary_name(expr->unary), tree_to_string(tree_get_type(inner)));
+        }
+        break;
+
+    case eUnaryNot:
+        if (!tree_is(tree_get_type(inner), eTreeTypeBool))
+        {
+            return tree_raise(expr->node, ctu_sema_reports(sema), "cannot apply unary `%s` to non-bool type `%s`", unary_name(expr->unary), tree_to_string(tree_get_type(inner)));
+        }
+        break;
+
+    default: NEVER("invalid unary %d", expr->unary);
     }
 
     return tree_expr_unary(expr->node, expr->unary, inner);

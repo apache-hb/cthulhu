@@ -1,7 +1,6 @@
 #include "oberon/driver.h"
 #include "oberon/ast.h"
 
-#include "oberon/sema/type.h"
 #include "oberon/sema/decl.h"
 
 #include "cthulhu/mediator/driver.h"
@@ -15,6 +14,8 @@
 #include "std/str.h"
 
 #include "base/panic.h"
+
+#include "core/macros.h"
 
 static tree_t *gRuntime = NULL;
 

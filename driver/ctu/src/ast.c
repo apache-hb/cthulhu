@@ -296,7 +296,7 @@ ctu_t *ctu_decl_typealias(scan_t *scan, where_t where, bool exported, char *name
 {
     ctu_t *ast = ctu_decl(scan, where, eCtuDeclTypeAlias, name, exported);
     ast->newtype = newtype;
-    ast->typeAlias = type;
+    ast->type_alias = type;
     return ast;
 }
 

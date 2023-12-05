@@ -1,9 +1,8 @@
 #include "common.h"
 
 #include "base/panic.h"
-#include "base/util.h"
 
-#include "report/report.h"
+#include "memory/memory.h"
 
 #include <dirent.h>
 #include <errno.h>
@@ -30,7 +29,7 @@ OS_RESULT(os_iter_t *) os_iter_begin(const char *path)
         {
             return NULL;
         }
-        
+
         return linux_error(errno);
     }
 

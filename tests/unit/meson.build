@@ -12,10 +12,14 @@ cases = [
 ]
 
 # gcc doesnt let me cast to void to suppress unused result warnings
-test_cpp_args = cpp.get_supported_arguments(
-    '-Wno-unused-result',
-    '-Wno-unused-value'
-)
+if cc.get_id() == 'gcc'
+    test_cpp_args = cpp.get_supported_arguments(
+        '-Wno-unused-result',
+        '-Wno-unused-value'
+    )
+else
+    test_cpp_args = []
+endif
 
 foreach case : cases
     name = case.replace('.', '/')

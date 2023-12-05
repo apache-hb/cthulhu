@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/analyze.h"
+#include "core/compiler.h"
 
 #ifdef __cplusplus
 #   define STATIC_ASSERT(expr, msg) static_assert(expr, msg)

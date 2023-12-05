@@ -1,5 +1,7 @@
 #include "base/panic.h"
 
+#include "core/macros.h"
+
 #include "stacktrace/stacktrace.h"
 
 #include <stdio.h>

@@ -2,6 +2,8 @@ src = [ 'src/common.c' ]
 
 dbghlp = cc.find_library('dbghelp', required : false)
 
+# TODO: libunwind support, maybe needs addr2line for symbol resolution
+
 if dbghlp.found()
     src += [ 'src/stacktrace-dbghlp.c' ]
     stacktrace_deps = [ dbghlp ]

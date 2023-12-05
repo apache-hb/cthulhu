@@ -3,7 +3,6 @@
 #include "core/macros.h"
 #include "memory/memory.h"
 #include "base/panic.h"
-#include "base/util.h"
 
 #include "std/str.h"
 #include "std/vector.h"
@@ -156,8 +155,6 @@ static char *extract_line(const scan_t *scan, line_t line)
         *out++ = c;
     }
     *out = '\0';
-
-    printf("len: %zu\n", (size_t)(out - str));
 
     char *norm = str_normalizen(str, (size_t)(out - str));
 

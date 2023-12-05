@@ -7,6 +7,8 @@
 
 #include "cthulhu/mediator/driver.h"
 
+#include "core/macros.h"
+
 static const tree_attribs_t kExportAttribs = {
     .visibility = eVisiblePublic
 };

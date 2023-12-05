@@ -1,5 +1,4 @@
 #include "oberon/sema/expr.h"
-#include "oberon/sema/type.h"
 
 #include "cthulhu/util/util.h"
 #include "cthulhu/util/type.h"
@@ -7,6 +6,8 @@
 #include "std/str.h"
 
 #include "base/panic.h"
+
+#include "core/macros.h"
 
 ///
 /// rvalues

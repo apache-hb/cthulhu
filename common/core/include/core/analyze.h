@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/compiler.h"
+#include <ctu_config.h>
 
 #if __cplusplus >= 201703L
 #   define NODISCARD [[nodiscard]]
@@ -38,11 +38,9 @@
 #   define OUT_PTR_INVALID
 
 #   define RET_RANGE(cmp, it)
-#   define RET_NOTNULL
 #   define RET_STRING
 #   define MUST_INSPECT
 
-#   define FIELD_SIZE(of)
 #   define FIELD_STRING
 #   define FIELD_RANGE(cmp, it)
 
@@ -52,22 +50,64 @@
 #   define IN_RANGE(cmp, it)
 #endif
 
+#if __clang__ >= 10
+#   define CT_PRINTF(a, b) __attribute__((__format__(__printf__, a, b)))
+#elif __GNUC__ >= 11
+#   define CT_PRINTF(a, b) __attribute__((format(printf, a, b)))
+#else
+#   define CT_PRINTF(a, b)
+#endif
+
 #if __GNUC__ >= 11
 #   define GNU_ATTRIB(...) __attribute__((__VA_ARGS__))
+#   define CTU_ATTRIB(...) __attribute__((__VA_ARGS__))
+#elif __clang__ >= 10
+#   define CLANG_ATTRIB(...) __attribute__((__VA_ARGS__))
+#   define CTU_ATTRIB(...) __attribute__((__VA_ARGS__))
 #else
+#   define CTU_ATTRIB(...)
+#endif
+
+/// @def GNU_ATTRIB(...)
+/// @brief gcc only attributes
+/// @def CLANG_ATTRIB(...)
+/// @brief clang only attributes
+/// @def CTU_ATTRIB(...)
+/// @brief any attribute that both gcc and clang support
+
+#ifndef CLANG_ATTRIB
+#   define CLANG_ATTRIB(...)
+#endif
+
+#ifndef GNU_ATTRIB
 #   define GNU_ATTRIB(...)
 #endif
 
 #ifndef NODISCARD
-#   define NODISCARD GNU_ATTRIB(warn_unused_result)
+#   define NODISCARD CTU_ATTRIB(warn_unused_result)
 #endif
 
-#define FORMAT_ATTRIB(a, b) GNU_ATTRIB(format(printf, a, b))
-#define CONSTFN GNU_ATTRIB(const)
-#define PUREFN GNU_ATTRIB(pure)
-#define HOTFN GNU_ATTRIB(hot)
-#define COLDFN GNU_ATTRIB(cold)
-#define ALLOC(...) GNU_ATTRIB(malloc, malloc(__VA_ARGS__))
+#if CTU_DEBUG
+#   define CONSTFN
+#   define PUREFN
+#else
+#   define CONSTFN CTU_ATTRIB(const)
+#   define PUREFN CTU_ATTRIB(pure)
+#endif
+
+#define HOTFN CTU_ATTRIB(hot)
+#define COLDFN CTU_ATTRIB(cold)
+
+#define CT_ALLOC(...) CTU_ATTRIB(malloc, malloc(__VA_ARGS__))
+#define CT_ALLOC_SIZE(...) CTU_ATTRIB(alloc_size(__VA_ARGS__))
+
+#ifndef RET_NOTNULL
+#   define RET_NOTNULL CTU_ATTRIB(returns_nonnull)
+#endif
+
+#ifndef FIELD_SIZE
+#   define FIELD_SIZE(of) CLANG_ATTRIB(counted_by(of))
+#endif
 
 #ifndef NODISCARD
 #   define NODISCARD

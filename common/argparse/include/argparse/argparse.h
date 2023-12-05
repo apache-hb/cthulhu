@@ -2,6 +2,7 @@
 
 #include "core/analyze.h"
 #include "core/version_def.h"
+#include "core/compiler.h"
 
 #include "argparse/argparse.h"
 
