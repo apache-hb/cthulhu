@@ -3,7 +3,7 @@ libunit = library('unit', 'unit/ct-test.cpp',
     dependencies : [ stacktrace, base, std ]
 )
 
-unit = declare_dependency(link_with : libunit, dependencies : [ base ])
+unit = declare_dependency(link_with : libunit, dependencies : [ base, std ])
 
 cases = [
     'util.str',

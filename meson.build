@@ -6,9 +6,7 @@ project('cthulhu', 'c',
         # gcc is picky about POSIX stdlib extensions
         'c_std=gnu11,c11',
 
-        # msvc doesnt support c++11 so specify c++14 first
-        # we only need c++11
-        'cpp_std=c++14,c++11',
+        'cpp_std=c++20',
 
         'warning_level=2',
         'werror=true',

@@ -1,7 +1,6 @@
 #include "unit/ct-test.hpp"
 
 #include "core/macros.h"
-#include "memory/memory.h"
 
 #include "argparse/argparse.h"
 #include "argparse/commands.h"
@@ -10,7 +9,6 @@
 
 #include "std/vector.h"
 #include "std/str.h"
-
 #include <stdlib.h>
 
 typedef struct sources_t
@@ -78,13 +76,13 @@ static AP_EVENT(count_error, ap, node, message, data)
 
 int main()
 {
-    test_suite_t::install_panic_handler();
+    test_install_panic_handler();
 
-    test_suite_t suite("argparse");
+    test_suite_t suite = test_suite_new("argparse");
 
     // posargs
     {
-        test_group_t group = suite.test_group("posargs");
+        test_group_t group = test_group(&suite, "posargs");
         reports_t *reports = begin_reports();
         sources_t sources = { vector_new(4) };
         errors_t errors = { vector_new(4) };
@@ -97,14 +95,14 @@ int main()
 
         ap_parse(ap, reports, 3, argv);
 
-        group.EXPECT_PASS("has 1 error", vector_len(errors.errors) == 1);
-        group.EXPECT_PASS("has 1 file", vector_len(sources.files) == 1);
-        group.EXPECT_PASS("file is file.txt", str_equal((char*)vector_get(sources.files, 0), "file.txt"));
+        GROUP_EXPECT_PASS(group, "has 1 error", vector_len(errors.errors) == 1);
+        GROUP_EXPECT_PASS(group, "has 1 file", vector_len(sources.files) == 1);
+        GROUP_EXPECT_PASS(group, "file is file.txt", str_equal((char*)vector_get(sources.files, 0), "file.txt"));
     }
 
     // error stack
     {
-        test_group_t group = suite.test_group("error stack");
+        test_group_t group = test_group(&suite, "error stack");
         reports_t *reports = begin_reports();
         error_stack_t errors = { 0 };
 
@@ -124,11 +122,11 @@ int main()
 
         ap_parse(ap, reports, 5, argv);
 
-        group.EXPECT_PASS("level 1 has 1 error", errors.levels[1] == 1);
-        group.EXPECT_PASS("level 2 has 1 error", errors.levels[2] == 1);
-        group.EXPECT_PASS("level 3 has 1 error", errors.levels[3] == 1);
-        group.EXPECT_PASS("level 4 has 1 error", errors.levels[4] == 1);
+        GROUP_EXPECT_PASS(group, "level 1 has 1 error", errors.levels[1] == 1);
+        GROUP_EXPECT_PASS(group, "level 2 has 1 error", errors.levels[2] == 1);
+        GROUP_EXPECT_PASS(group, "level 3 has 1 error", errors.levels[3] == 1);
+        GROUP_EXPECT_PASS(group, "level 4 has 1 error", errors.levels[4] == 1);
     }
 
-    return suite.finish_suite();
+    return test_suite_finish(&suite);
 }

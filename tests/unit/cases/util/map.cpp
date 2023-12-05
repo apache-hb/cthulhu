@@ -13,62 +13,66 @@ static const char *const kSetItems[] = {
     "4", "5", "6", "7", "8", "9"
 };
 
-static const size_t kSetItemsCount = sizeof(kSetItems) / sizeof(kSetItems[0]);
+#define SET_ITEMS_COUNT sizeof(kSetItems) / sizeof(char*)
 
 int main()
 {
-    test_suite_t::install_panic_handler();
+    test_install_panic_handler();
 
-    test_suite_t suite("map");
+    test_suite_t suite = test_suite_new("map");
 
-    suite.test_group("construction")
-        .EXPECT_PASS("not null", map_new(3) != NULL);
+    {
+        test_group_t group = test_group(&suite, "construction");
+        GROUP_EXPECT_PASS(group, "not null", map_new(3) != NULL);
+    }
 
     // insert string
     {
-        test_group_t group = suite.test_group("insert_str");
+        test_group_t group = test_group(&suite, "insert_str");
 
         map_t *map = map_new(64);
-        for (size_t i = 0; i < kSetItemsCount; i++) {
+        for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
             map_set(map, kSetItems[i], (char*)kSetItems[i]);
         }
 
-        for (size_t i = 0; i < kSetItemsCount; i++) {
+        for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
             char *name = format("%s in map", kSetItems[i]);
-            group.EXPECT_PASS(name, map_get(map, kSetItems[i]) != NULL);
+            GROUP_EXPECT_PASS(group, name, map_get(map, kSetItems[i]) != NULL);
         }
     }
 
     // insert ptr
     {
-        test_group_t group = suite.test_group("insert_ptr");
+        test_group_t group = test_group(&suite, "insert_ptr");
         map_t *map = map_new(64);
 
-        for (size_t i = 0; i < kSetItemsCount; i++) {
+        for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
             map_set_ptr(map, kSetItems[i], (char*)kSetItems[i]);
         }
 
-        for (size_t i = 0; i < kSetItemsCount; i++) {
+        for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
             char *name = format("%s in map", kSetItems[i]);
-            group.EXPECT_PASS(name, map_get_ptr(map, kSetItems[i]) != NULL);
+            GROUP_EXPECT_PASS(group, name, map_get_ptr(map, kSetItems[i]) != NULL);
         }
     }
 
-    suite.test_group("default value")
-        .will_pass("default value", [] {
+    {
+        test_group_t group = test_group(&suite, "default value");
+        group_will_pass(&group, "default value", [] {
             map_t *map = map_new(64);
             char world[] = "world";
 
             /* pointer equality is on purpose */
             return map_get_default(map, "hello", world) == world;
         });
+    }
 
     // iter
     {
-        test_group_t group = suite.test_group("iter");
+        test_group_t group = test_group(&suite, "iter");
         map_t *map = map_new(64);
 
-        for (size_t i = 0; i < kSetItemsCount; i++)
+        for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
         {
             map_set_ptr(map, kSetItems[i], (char*)kSetItems[i]);
         }
@@ -81,57 +85,57 @@ int main()
         {
             map_entry_t entry = map_next(&iter);
 
-            group.EXPECT_PASS("map has item", entry.key != NULL);
-            group.EXPECT_PASS("map has item", entry.value != NULL);
+            GROUP_EXPECT_PASS(group, "map has item", entry.key != NULL);
+            GROUP_EXPECT_PASS(group, "map has item", entry.value != NULL);
             items++;
         }
 
-        group.EXPECT_PASS("map has all items", items == kSetItemsCount);
+        GROUP_EXPECT_PASS(group, "map has all items", items == SET_ITEMS_COUNT);
     }
 
     // get
     {
-        test_group_t group = suite.test_group("get");
+        test_group_t group = test_group(&suite, "get");
         map_t *map = map_new(64);
-        for (size_t i = 0; i < kSetItemsCount; i++)
+        for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
         {
             map_set(map, kSetItems[i], (char*)kSetItems[i]);
         }
 
         vector_t *entries = map_entries(map);
 
-        group.EXPECT_PASS("correct entry count", vector_len(entries) == kSetItemsCount);
+        GROUP_EXPECT_PASS(group, "correct entry count", vector_len(entries) == SET_ITEMS_COUNT);
 
         for (size_t i = 0; i < vector_len(entries); i++)
         {
             map_entry_t *entry = (map_entry_t*)vector_get(entries, i);
-            group.EXPECT_PASS("map entry correct", str_equal((const char*)entry->key, (const char*)entry->value));
+            GROUP_EXPECT_PASS(group, "map entry correct", str_equal((const char*)entry->key, (const char*)entry->value));
         }
     }
 
     // delete
     {
-        test_group_t group = suite.test_group("delete");
+        test_group_t group = test_group(&suite, "delete");
         map_t *map = map_new(64);
-        for (size_t i = 0; i < kSetItemsCount; i++)
+        for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
         {
             map_set(map, kSetItems[i], (char*)kSetItems[i]);
         }
 
-        for (size_t i = 0; i < kSetItemsCount; i++)
+        for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
         {
             map_delete(map, kSetItems[i]);
         }
 
         vector_t *entries = map_entries(map);
 
-        group.EXPECT_PASS("correct entry count", vector_len(entries) == 0);
+        GROUP_EXPECT_PASS(group, "correct entry count", vector_len(entries) == 0);
 
-        for (size_t i = 0; i < kSetItemsCount; i++)
+        for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
         {
-            group.EXPECT_PASS("map entry correct", map_get(map, kSetItems[i]) == NULL);
+            GROUP_EXPECT_PASS(group, "map entry correct", map_get(map, kSetItems[i]) == NULL);
         }
     }
 
-    return suite.finish_suite();
+    return test_suite_finish(&suite);
 }

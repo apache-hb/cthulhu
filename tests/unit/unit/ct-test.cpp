@@ -1,13 +1,44 @@
 #include "ct-test.hpp"
 
-#include <stdio.h>
-
 #include "stacktrace/stacktrace.h"
 
 #include "base/panic.h"
 #include "std/str.h"
 
+#include <stdio.h>
 #include <stdlib.h>
+
+typedef enum test_error_t
+{
+    eTestPassed,
+    eTestFailed,
+    eTestSkipped,
+    eTestException,
+
+    eTestTotal
+} test_error_t;
+
+typedef struct test_exception_t
+{
+    panic_t panic;
+    char *msg;
+} test_exception_t;
+
+typedef struct test_result_t
+{
+    /// the name of the test case that generated the result
+    const char *group_name;
+
+    /// test case message
+    const char *test_msg;
+
+    /// the result of the test
+    test_error_t result;
+
+    /// exception information
+    bool has_exception;
+    test_exception_t ex;
+} test_result_t;
 
 static const char *get_test_result_id(test_error_t result)
 {
@@ -33,9 +64,37 @@ static int get_test_result_code(test_error_t result)
     }
 }
 
+/// test result
+
+static test_result_t test_result_status(const char *group_name, const char *test_msg, test_error_t result)
+{
+    test_result_t res = {
+        .group_name = group_name,
+        .test_msg = test_msg,
+        .result = result,
+        .has_exception = false
+    };
+
+    return res;
+}
+
+static test_result_t test_result_exception(const char *group_name, const char *test_msg, test_exception_t ex)
+{
+    test_result_t res = {
+        .group_name = group_name,
+        .test_msg = test_msg,
+        .result = eTestException,
+        .has_exception = true,
+        .ex = ex
+    };
+
+    return res;
+}
+
 static bool gExpectingPanic = false;
-jmp_buf test_suite_t::gPanicJump = {};
-test_exception_t test_suite_t::gPanicException = {};
+static test_exception_t gPanicException = {};
+
+jmp_buf gPanicJump = {};
 
 static void test_panic_handler(panic_t panic, const char *fmt, va_list args)
 {
@@ -51,33 +110,46 @@ static void test_panic_handler(panic_t panic, const char *fmt, va_list args)
 
     char *msg = vformat(fmt, args);
     test_exception_t ex = { panic, msg };
-    test_suite_t::gPanicException = ex;
-    longjmp(test_suite_t::gPanicJump, 1);
+    gPanicException = ex;
+    longjmp(gPanicJump, 1);
 }
 
-void test_suite_t::install_panic_handler()
+void test_install_panic_handler()
 {
     stacktrace_init();
     gPanicHandler = test_panic_handler;
 }
 
-void test_suite_t::begin_expect_panic()
+void test_begin_expect_panic()
 {
     gExpectingPanic = true;
 }
 
-void test_suite_t::end_expect_panic()
+static void test_end_expect_panic()
 {
     gExpectingPanic = false;
 }
 
-int test_suite_t::finish_suite()
+test_suite_t test_suite_new(const char *suite)
 {
-    printf("test suite %s\n", m_suite);
+    test_suite_t s = {
+        .suite_name = suite,
+        .results = typevec_new(sizeof(test_result_t), 64)
+    };
+
+    return s;
+}
+
+int test_suite_finish(test_suite_t *suite)
+{
+    printf("test suite %s\n", suite->suite_name);
     printf("status, name, message, exception\n");
     int result = 0;
-    for (test_result_t res : m_results)
+
+    test_result_t res;
+    for (size_t i = 0; i < typevec_len(suite->results); i++)
     {
+        typevec_get(suite->results, i, &res);
         printf("%s, %s, %s", get_test_result_id(res.result), res.group_name, res.test_msg);
         if (res.has_exception)
         {
@@ -87,46 +159,48 @@ int test_suite_t::finish_suite()
         int code = get_test_result_code(res.result);
         result = (code > result) ? code : result;
     }
-    printf("test suite %s %s (exit %d)\n", m_suite, (result == 0) ? "PASSED" : "FAILED", result);
+    printf("test suite %s %s (exit %d)\n", suite->suite_name, (result == 0) ? "PASSED" : "FAILED", result);
     return result;
 }
 
-test_group_t test_suite_t::test_group(const char *name)
+test_group_t test_group(test_suite_t *suite, const char *name)
 {
-    return test_group_t{ *this, name };
+    test_group_t group = {
+        .suite = suite,
+        .name = name
+    };
+    return group;
 }
 
-void test_suite_t::add_result(test_result_t result)
-{
-    m_results.push_back(result);
-}
-
-void test_suite_t::notify_result(bool result, const char *case_name, const char *msg)
+void group_notify_result(test_group_t *group, bool result, const char *msg)
 {
     if (result)
     {
-        notify_success(case_name, msg);
+        group_notify_success(group, msg);
     }
     else
     {
-        notify_failure(case_name, msg);
+        group_notify_failure(group, msg);
     }
 }
 
-void test_suite_t::notify_success(const char *case_name, const char *msg)
+void group_notify_success(test_group_t *group, const char *msg)
 {
-    test_result_t result{ case_name, msg, eTestPassed };
-    add_result(result);
+    test_result_t result = test_result_status(group->name, msg, eTestPassed);
+    typevec_push(group->suite->results, &result);
+    test_end_expect_panic();
 }
 
-void test_suite_t::notify_failure(const char *case_name, const char *msg)
+void group_notify_failure(test_group_t *group, const char *msg)
 {
-    test_result_t result{ case_name, msg, eTestFailed };
-    add_result(result);
+    test_result_t result = test_result_status(group->name, msg, eTestFailed);
+    typevec_push(group->suite->results, &result);
+    test_end_expect_panic();
 }
 
-void test_suite_t::notify_exception(test_exception_t ex, const char *case_name, const char *msg)
+void group_notify_exception(test_group_t *group, const char *msg)
 {
-    test_result_t result{ case_name, msg, ex };
-    add_result(result);
+    test_result_t result = test_result_exception(group->name, msg, gPanicException);
+    typevec_push(group->suite->results, &result);
+    test_end_expect_panic();
 }

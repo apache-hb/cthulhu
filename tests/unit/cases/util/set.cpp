@@ -14,15 +14,15 @@ static const char *const kSetItems[] = {
     "4", "5", "6", "7", "8", "9"
 };
 
-static const size_t kSetItemsCount = sizeof(kSetItems) / sizeof(kSetItems[0]);
+#define SET_ITEMS_COUNT sizeof(kSetItems) / sizeof(char*)
 
 int main()
 {
-    test_suite_t::install_panic_handler();
+    test_install_panic_handler();
 
-    test_suite_t suite("set");
+    test_suite_t suite = test_suite_new("set");
 
-    test_group_t set_dedup_group = suite.test_group("deduplicates");
+    test_group_t set_dedup_group = test_group(&suite, "deduplicates");
 
     set_t *dedup_set = set_new(3);
     const char *item = set_add(dedup_set, "duplicate");
@@ -31,19 +31,19 @@ int main()
         const char *it = set_add(dedup_set, element);
 
         /* pointer equality is on purpose */
-        set_dedup_group.EXPECT_PASS("items deduplicated", it == item);
+        GROUP_EXPECT_PASS(set_dedup_group, "items deduplicated", it == item);
     }
 
-    test_group_t set_clash_group = suite.test_group("clashes");
+    test_group_t set_clash_group = test_group(&suite, "clashes");
     set_t *set = set_new(3);
-    for (size_t i = 0; i < kSetItemsCount; i++) {
+    for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
         set_add(set, kSetItems[i]);
     }
 
-    for (size_t i = 0; i < kSetItemsCount; i++) {
+    for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
         char *name = format("%s in set", kSetItems[i]);
-        set_clash_group.EXPECT_PASS(name, set_contains(set, kSetItems[i]));
+        GROUP_EXPECT_PASS(set_clash_group, name, set_contains(set, kSetItems[i]));
     }
 
-    return suite.finish_suite();
+    return test_suite_finish(&suite);
 }
