@@ -274,7 +274,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             WaitForLastSubmittedFrame();
             CleanupRenderTarget();
             HRESULT result = g_pSwapChain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT);
-            assert(SUCCEEDED(result) && "Failed to resize swapchain.");
+            CTASSERT(SUCCEEDED(result) && "Failed to resize swapchain.");
             CreateRenderTarget();
         }
         return 0;

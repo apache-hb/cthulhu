@@ -32,9 +32,13 @@ ninja -C build test # build and run tests
 ## Structure
 
 * `data` - various data files
+  * `meson` - cross files for various platforms
+  * `scripts` - automation for arduous setup tasks
+  * `docs` - documentation
 
 * `driver` - language frontends
   * `pl0` - pl0 frontend, good for referencing how to use the common framework
+  * `oberon` - oberon-2 frontend (WIP)
   * `ctu` - cthulhu language frontend (WIP)
   * `jvm` - jvm classfile consumer (TODO)
   * `cc` - C11 frontend (TODO)

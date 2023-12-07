@@ -6,6 +6,8 @@ project('cthulhu', 'c',
         # gcc is picky about POSIX stdlib extensions
         'c_std=gnu11,c11',
 
+        'cpp_std=c++20',
+
         'warning_level=3',
         'werror=true',
 
@@ -184,10 +186,10 @@ doxygen = find_program('doxygen', required : get_option('doxygen'))
 if doxygen.found()
     cwd = meson.project_source_root()
     doxy_srcdirs = [
-        cwd/'interface',
-        cwd/'common',
-        cwd/'cthulhu',
-        cwd/'driver'
+        cwd / 'interface',
+        cwd / 'common',
+        cwd / 'cthulhu',
+        cwd / 'driver'
     ]
 
     data_dir = cwd / 'data'
@@ -217,6 +219,10 @@ summary = {
         'Debug': is_debug,
         'Interfaces': ', '.join(get_option('interfaces')),
         'Languages': ', '.join(get_option('languages')),
+    },
+    'Graphical Interface': {
+        'Enabled': build_gui.allowed(),
+        'Backend': 'd3d12+win32'
     },
     'Testing': {
         'Unit tests': unit_tests,

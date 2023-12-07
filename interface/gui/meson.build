@@ -19,13 +19,13 @@ deps = [ cpp.find_library('d3d12'), cpp.find_library('dxgi') ]
 
 libimgui = library('imgui', src,
     include_directories : [ 'imgui', 'imgui/backends' ],
-    dependencies : deps
+    dependencies : [ deps, base ]
 )
 
 imgui = declare_dependency(
     link_with : libimgui,
     include_directories : [ 'imgui', 'imgui/backends' ],
-    dependencies : [ deps ]
+    dependencies : [ deps, base ]
 )
 
 ###
@@ -34,10 +34,11 @@ imgui = declare_dependency(
 
 src = [
     'src/draw.cpp',
+    'src/alloc.cpp',
     'main.cpp'
 ]
 
 executable('gui', src,
     include_directories : 'include',
-    dependencies : [ imgui, core ]
+    dependencies : [ imgui, core, os, memory, config ]
 )
