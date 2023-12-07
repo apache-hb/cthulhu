@@ -34,13 +34,15 @@
     * nested modules support
     * requires name mangling
 
-* deprecate C hlir backend
-    * blocked by ssa backend
-
-* add newtypes to hlir
+* add newtypes to tree
 
 * C frontend
     * perhaps support a small subset of C++ so we can use it internally
+
+## backlog
+
+* properly prefix the entire compiler
+  * will make writing plugins easier in the future
 
 * unit tests for everything in `/common/`
 * driver specific config support
@@ -54,7 +56,6 @@
     * use dynamic libraries rather than static linking
 
 * fix tuning
-* fix sal support
 * rewrite gui frontend
 * add language server support
 * move to incremental compilation
