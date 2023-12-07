@@ -193,9 +193,239 @@ struct CompileRun
         cfg_flags = config_flags(test_group, &test_flags_info, test_flags_config);
     }
 
+    static const ImGuiTableFlags kTableFlags
+        = ImGuiTableFlags_BordersV
+        | ImGuiTableFlags_BordersOuterH
+        | ImGuiTableFlags_Resizable
+        | ImGuiTableFlags_RowBg
+        | ImGuiTableFlags_NoHostExtendX
+        | ImGuiTableFlags_NoBordersInBody;
+
+    static const ImGuiTreeNodeFlags kGroupNodeFlags
+        = ImGuiTreeNodeFlags_SpanAllColumns
+        | ImGuiTreeNodeFlags_AllowOverlap;
+
+    static const ImGuiTreeNodeFlags kValueNodeFlags
+        = kGroupNodeFlags
+        | ImGuiTreeNodeFlags_Leaf
+        | ImGuiTreeNodeFlags_Bullet
+        | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+
+    const char *get_name(const cfg_field_t *field)
+    {
+        const cfg_info_t *info = cfg_get_info(field);
+        return info->name;
+    }
+
+    void get_label(char *buf, size_t size, const cfg_field_t *field)
+    {
+        snprintf(buf, size, "##%s", get_name(field));
+    }
+
+    void draw_info(const cfg_info_t *info)
+    {
+        ImGui::TextDisabled("%s", info->name);
+        if (ImGui::BeginItemTooltip())
+        {
+            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.f);
+            const char *brief = info->brief != nullptr ? info->brief : "no brief";
+            ImGui::Text("brief: %s", brief);
+
+            if (info->description != nullptr)
+            {
+                ImGui::Separator();
+                ImGui::Text("description: %s", info->description);
+            }
+
+            if (info->arg_long != nullptr && info->arg_short != nullptr)
+            {
+                ImGui::Separator();
+                ImGui::Text("args: %s / %s", info->arg_long, info->arg_short);
+            }
+            else if (info->arg_long != nullptr)
+            {
+                ImGui::Separator();
+                ImGui::Text("long: %s", info->arg_long);
+            }
+            else if (info->arg_short != nullptr)
+            {
+                ImGui::Separator();
+                ImGui::Text("short: %s", info->arg_short);
+            }
+
+            ImGui::PopTextWrapPos();
+            ImGui::EndTooltip();
+        }
+    }
+
+    void draw_bool(cfg_field_t *field)
+    {
+        char label[64];
+        get_label(label, std::size(label), field);
+
+        bool value = cfg_bool_value(field);
+        if (ImGui::Checkbox(label, &value))
+        {
+            cfg_set_bool(cfg_bool, value);
+        }
+    }
+
+    void draw_int(const cfg_field_t *field)
+    {
+        char label[64];
+        get_label(label, std::size(label), field);
+
+        const cfg_int_t *cfg = cfg_int_info(field);
+        int value = cfg_int_value(field);
+        if (ImGui::DragInt(label, &value, 1.f, cfg->min, cfg->max))
+        {
+            cfg_set_int(cfg_int, value);
+        }
+    }
+
+    void draw_string(const cfg_field_t *field)
+    {
+        char label[64];
+        get_label(label, std::size(label), field);
+
+        const char *value = cfg_string_value(field);
+        char buffer[256] = { 0 };
+        strncpy_s(buffer, value, std::size(buffer));
+        if (ImGui::InputText(label, buffer, std::size(buffer)))
+        {
+            cfg_set_string(cfg_string, buffer);
+        }
+    }
+
+    void draw_value(cfg_field_t *field)
+    {
+        cfg_type_t type = cfg_get_type(field);
+        switch (type)
+        {
+        case eConfigBool:
+            draw_bool(field);
+            break;
+
+        case eConfigInt:
+            draw_int(field);
+            break;
+
+        case eConfigString:
+            draw_string(field);
+            break;
+
+        default:
+            ImGui::TextDisabled("Unknown type");
+            break;
+        }
+    }
+
+    void draw_int_constraints(const cfg_field_t *field)
+    {
+        const cfg_int_t *cfg = cfg_int_info(field);
+        ImGui::Text("(%d, %d)", cfg->min, cfg->max);
+    }
+
+    void draw_constraints(const cfg_field_t *field)
+    {
+        cfg_type_t type = cfg_get_type(field);
+        switch (type)
+        {
+        case eConfigBool:
+            break;
+        case eConfigInt:
+            draw_int_constraints(field);
+            break;
+        case eConfigString:
+            break;
+        default:
+            ImGui::TextDisabled("Unknown type");
+            break;
+        }
+    }
+
+    void draw_config_entry(cfg_field_t *field)
+    {
+        const cfg_info_t *info = cfg_get_info(field);
+        cfg_type_t type = cfg_get_type(field);
+
+        ImGui::TableNextColumn();
+        ImGui::AlignTextToFramePadding();
+        ImGui::TreeNodeEx(info->name, kValueNodeFlags);
+
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted(cfg_type_name(type));
+
+        ImGui::TableNextColumn();
+        draw_value(field);
+
+        ImGui::TableNextColumn();
+        draw_constraints(field);
+
+        ImGui::TableNextColumn();
+        draw_info(info);
+    }
+
+    void draw_config_group(const config_t *group)
+    {
+        ImGui::PushID(group);
+
+        ImGui::TableNextColumn();
+
+        const cfg_info_t *info = cfg_group_info(group);
+        bool is_group_open = ImGui::TreeNodeEx(info->name, kGroupNodeFlags);
+
+        ImGui::TableNextColumn();
+        ImGui::TextDisabled("--");
+
+        ImGui::TableNextColumn();
+        ImGui::TableNextColumn();
+        ImGui::TableNextColumn();
+        draw_info(info);
+
+        if (is_group_open)
+        {
+            vector_t *children = cfg_get_groups(group);
+            size_t child_count = vector_len(children);
+            for (size_t i = 0; i < child_count; ++i)
+            {
+                ImGui::TableNextRow();
+                config_t *child = reinterpret_cast<config_t*>(vector_get(children, i));
+                draw_config_group(child);
+            }
+
+            vector_t *fields = cfg_get_fields(group);
+            size_t field_count = vector_len(fields);
+            for (size_t i = 0; i < field_count; ++i)
+            {
+                ImGui::TableNextRow();
+                cfg_field_t *field = reinterpret_cast<cfg_field_t*>(vector_get(fields, i));
+                draw_config_entry(field);
+            }
+
+            ImGui::TreePop();
+        }
+
+        ImGui::PopID();
+    }
+
     void draw_config()
     {
+        if (ImGui::BeginTable("Config", 5, kTableFlags))
+        {
+            ImGui::TableSetupColumn("Name");
+            ImGui::TableSetupColumn("Type");
+            ImGui::TableSetupColumn("Value");
+            ImGui::TableSetupColumn("Constraints");
+            ImGui::TableSetupColumn("Info");
 
+            ImGui::TableHeadersRow();
+
+            ImGui::TableNextRow();
+            draw_config_group(config);
+
+            ImGui::EndTable();
+        }
     }
 
     void draw_window()
