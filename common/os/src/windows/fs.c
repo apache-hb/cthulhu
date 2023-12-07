@@ -1,5 +1,7 @@
 #include "common.h"
 
+#include "os/os.h"
+
 #include "memory/memory.h"
 
 // TODO: this feels janky

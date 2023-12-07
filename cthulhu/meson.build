@@ -9,7 +9,7 @@ src = [
 libhlir = library('tree', src,
     include_directories : 'include',
     c_args : user_args,
-    dependencies : [ memory, std, gmp, location ]
+    dependencies : [ memory, std, gmp, scan, report ]
 )
 
 tree = declare_dependency(
@@ -30,7 +30,7 @@ src = [
 libssa = library('ssa', src,
     include_directories : 'include',
     c_args : user_args,
-    dependencies : [ memory, std, tree, location ]
+    dependencies : [ memory, std, tree, scan, report ]
 )
 
 ssa = declare_dependency(
@@ -50,7 +50,7 @@ src = [
 libemit = library('emit', src,
     include_directories : [ 'include', 'src/emit' ],
     c_args : user_args,
-    dependencies : [ memory, base, ssa, std, io, fs, location, interop ]
+    dependencies : [ memory, base, ssa, std, io, fs, scan, report, interop ]
 )
 
 emit = declare_dependency(
@@ -67,7 +67,7 @@ src = [
 libmediator = library('mediator', src,
     include_directories : 'include',
     c_args : user_args,
-    dependencies : [ memory, base, std, stacktrace, location, tree ]
+    dependencies : [ memory, base, std, stacktrace, scan, report, tree ]
 )
 
 mediator = declare_dependency(
@@ -85,7 +85,7 @@ src = [
 libutil = library('util', src,
     include_directories : 'include',
     c_args : user_args,
-    dependencies : [ memory, base, std, location, tree ]
+    dependencies : [ memory, base, std, scan, report, tree ]
 )
 
 util = declare_dependency(
@@ -101,7 +101,7 @@ src = [
 libcheck = library('check', src,
     include_directories : 'include',
     c_args : user_args,
-    dependencies : [ memory, base, std, tree, ssa, location ]
+    dependencies : [ memory, base, std, tree, ssa, scan, report ]
 )
 
 check = declare_dependency(

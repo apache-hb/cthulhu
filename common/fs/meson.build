@@ -7,7 +7,7 @@ src = [
 
 libfs = library('fs', src,
     c_args : user_args,
-    dependencies : [ memory, std, os, io, location ],
+    dependencies : [ memory, std, os, io, scan, report ],
     include_directories : [ 'include', 'src' ]
 )
 

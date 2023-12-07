@@ -1,10 +1,10 @@
 #pragma once
 
-#include "core/macros.h"
+#include "core/compiler.h"
 
 BEGIN_API
 
-typedef struct logger_t reports_t;
+typedef struct reports_t reports_t;
 typedef struct lifetime_t lifetime_t;
 
 /**

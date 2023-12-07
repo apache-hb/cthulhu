@@ -2,10 +2,6 @@
 
 #include "core/macros.h"
 
-#include "memory/memory.h"
-
-#include "base/util.h"
-
 #include "scan/node.h"
 
 /// @defgroup FlexBisonMacros Helpers for flex and bison driver frontends

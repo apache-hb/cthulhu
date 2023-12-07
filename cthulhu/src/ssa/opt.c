@@ -8,7 +8,7 @@
 
 #include "report/report.h"
 
-#include "core/macros.h"
+#include "scan/node.h"
 #include "base/panic.h"
 
 typedef struct ssa_vm_t {

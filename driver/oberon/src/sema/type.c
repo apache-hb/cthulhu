@@ -1,5 +1,5 @@
 #include "oberon/sema/type.h"
-#include "oberon/sema/decl.h"
+#include "oberon/sema/sema.h"
 
 #include "cthulhu/util/util.h"
 

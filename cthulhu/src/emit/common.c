@@ -15,6 +15,7 @@
 
 #include <stdarg.h>
 #include <string.h>
+#include <stdint.h>
 
 static bool check_root_mod(vector_t *path, const char *id)
 {

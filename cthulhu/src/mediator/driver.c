@@ -8,6 +8,8 @@
 
 #include "base/panic.h"
 
+#include "scan/node.h"
+
 #include "std/str.h"
 #include "std/vector.h"
 

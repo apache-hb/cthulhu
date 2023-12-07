@@ -10,6 +10,7 @@
 !*.inc
 !*.[ch].in
 !data/**/*
+!*.mm
 
 # dont ignore flex and bison files
 !*.y
@@ -33,6 +34,9 @@
 !.clang-format
 !.github/workflows/*.yml
 !*.xml
+
+# dont ignore licenses
+!LICENSE.txt
 
 # dont ignore scripts
 !*.py

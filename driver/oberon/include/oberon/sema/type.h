@@ -1,6 +1,8 @@
 #pragma once
 
-#include "oberon/sema/sema.h"
+#include "oberon/ast.h"
+
+#include "cthulhu/tree/tree.h"
 
 tree_t *obr_sema_type(tree_t *sema, obr_t *type, const char *name);
 

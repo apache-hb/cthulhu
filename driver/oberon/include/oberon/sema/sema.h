@@ -1,7 +1,5 @@
 #pragma once
 
-#include "oberon/ast.h"
-
 #include "cthulhu/tree/query.h"
 
 typedef struct lifetime_t lifetime_t;

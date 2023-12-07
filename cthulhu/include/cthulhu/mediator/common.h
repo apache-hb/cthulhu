@@ -17,7 +17,7 @@ typedef struct ap_t ap_t;
 typedef struct tree_t tree_t;
 typedef struct cookie_t cookie_t;
 typedef struct scan_t scan_t;
-typedef struct logger_t reports_t;
+typedef struct reports_t reports_t;
 
 ///
 /// drivers

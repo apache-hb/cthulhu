@@ -1,8 +1,8 @@
 #pragma once
 
-#include "core/win32.h"
-
 #include "os_common.h"
+
+#include "core/win32.h"
 
 #include <stdint.h>
 

@@ -12,6 +12,7 @@
 #include "report/report.h"
 
 #include "base/panic.h"
+#include "core/macros.h"
 
 #include "std/str.h"
 #include "std/vector.h"

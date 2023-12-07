@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cthulhu/mediator/driver.h"
+#include "cthulhu/mediator/common.h"
 
 #include "cthulhu/tree/tree.h"
 

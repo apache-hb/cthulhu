@@ -5,9 +5,11 @@
 #include "report/report.h"
 #include "std/str.h"
 
+#include <stdint.h>
+
 static const report_config_t kConfig = {
-    SIZE_MAX,
-    true
+    .limit = SIZE_MAX,
+    .warningsAreErrors = true
 };
 
 int main()

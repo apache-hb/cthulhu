@@ -44,7 +44,6 @@
 #   define FIELD_STRING
 #   define FIELD_RANGE(cmp, it)
 
-#   define IN_NOTNULL
 #   define IN_STRING
 #   define IN_STRING_OPT
 #   define IN_RANGE(cmp, it)
@@ -60,12 +59,18 @@
 
 #if __GNUC__ >= 11
 #   define GNU_ATTRIB(...) __attribute__((__VA_ARGS__))
+#   define CLANG_ATTRIB(...)
 #   define CTU_ATTRIB(...) __attribute__((__VA_ARGS__))
 #elif __clang__ >= 10
+#   define GNU_ATTRIB(...)
 #   define CLANG_ATTRIB(...) __attribute__((__VA_ARGS__))
 #   define CTU_ATTRIB(...) __attribute__((__VA_ARGS__))
 #else
 #   define CTU_ATTRIB(...)
+#endif
+
+#ifndef IN_NOTNULL
+#   define IN_NOTNULL CLANG_ATTRIB(nonnull)
 #endif
 
 /// @def GNU_ATTRIB(...)
@@ -87,7 +92,7 @@
 #   define NODISCARD CTU_ATTRIB(warn_unused_result)
 #endif
 
-#if CTU_DEBUG
+#if CTU_DISABLE_FN_PURITY
 #   define CONSTFN
 #   define PUREFN
 #else

@@ -9,7 +9,7 @@
 
 BEGIN_API
 
-typedef struct logger_t reports_t;
+typedef struct reports_t reports_t;
 typedef struct vector_t vector_t;
 typedef struct typevec_t typevec_t;
 typedef struct map_t map_t;

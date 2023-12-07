@@ -7,10 +7,10 @@
 #include "base/panic.h"
 
 #include "scan/scan.h"
+#include "scan/node.h"
 
 #include "std/vector.h"
 #include "std/str.h"
-#include "std/set.h"
 
 #include "report/report.h"
 

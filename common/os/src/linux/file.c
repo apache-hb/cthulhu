@@ -2,6 +2,8 @@
 
 #include "base/panic.h"
 
+#include "os/os.h"
+
 #include <stdio.h>
 #include <errno.h>
 

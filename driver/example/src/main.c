@@ -6,6 +6,8 @@
 
 #include "report/report.h"
 
+#include "scan/node.h"
+
 static vector_t *example_lang_path(void)
 {
     vector_t *path = vector_new(2);

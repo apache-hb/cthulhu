@@ -3,12 +3,11 @@
 
 #include "cthulhu/util/util.h"
 
+#include "cthulhu/mediator/driver.h"
+
 #include "report/report.h"
 #include "report/report-ext.h"
 
-#include "core/macros.h"
-#include "base/util.h"
-#include "memory/memory.h"
 #include "base/panic.h"
 
 #include "std/str.h"

@@ -8,6 +8,10 @@
 
 #include "base/panic.h"
 
+#include "std/vector.h"
+
+#include "scan/node.h"
+
 #include "core/macros.h"
 
 tree_t *obr_get_type(tree_t *sema, const char *name)

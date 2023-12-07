@@ -6,8 +6,15 @@ option('languages', type : 'array',
 
 option('interfaces', type : 'array',
     description : 'select which frontend interfaces to enable',
-    choices : [ 'cli', 'gui', 'browser', 'example' ],
+    choices : [ 'cli', 'browser', 'example' ],
     value : [ 'cli', 'example' ]
+)
+
+# gui interface
+
+option('build_gui', type : 'feature',
+    description : 'build gui interface (requires c++ compiler)',
+    value : 'auto'
 )
 
 # testing options

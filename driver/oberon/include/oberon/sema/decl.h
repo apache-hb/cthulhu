@@ -1,5 +1,7 @@
 #pragma once
 
+#include "oberon/ast.h"
+
 #include "oberon/sema/sema.h"
 
 typedef struct obr_forward_t {

@@ -31,7 +31,7 @@ endforeach
 
 vfs_exe = executable('vfs', 'cases/io/vfs.c',
     include_directories : '.',
-    dependencies : [ unit, base, location, fs ]
+    dependencies : [ unit, base, scan, report, fs ]
 )
 
 test('vfs', vfs_exe, suite : 'unit')
@@ -40,7 +40,7 @@ test('vfs', vfs_exe, suite : 'unit')
 
 fs_exe = executable('fs', 'cases/io/fs.c',
     include_directories : '.',
-    dependencies : [ unit, base, std, location, fs ]
+    dependencies : [ unit, base, std, scan, report, fs ]
 )
 
 test('fs', fs_exe,
@@ -52,7 +52,7 @@ test('fs', fs_exe,
 
 argparse_exe = executable('argparse.argparse', 'cases/argparse/argparse.c',
     include_directories : '.',
-    dependencies : [ unit, memory, base, std, location, argparse ]
+    dependencies : [ unit, memory, base, std, scan, report, argparse ]
 )
 
 test('argparse', argparse_exe, suite : 'unit')

@@ -1,6 +1,8 @@
-#include "common.h"
+#include "os/error.h"
 
 #include "std/str.h"
+
+#include "core/win32.h"
 
 #define FORMAT_FLAGS (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS)
 

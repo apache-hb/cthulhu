@@ -11,6 +11,7 @@
 #include "oberon/scan.h"
 #include "report/report-ext.h"
 #include "interop/flex.h"
+#include "memory/memory.h"
 %}
 
 %x COMMENT

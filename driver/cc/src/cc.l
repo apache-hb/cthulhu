@@ -11,6 +11,7 @@
 #include "cc/scan.h"
 #include "report/report-ext.h"
 #include "interop/flex.h"
+#include "memory/memory.h"
 %}
 
 ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))

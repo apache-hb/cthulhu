@@ -5,7 +5,6 @@
 #include "core/macros.h"
 #include "memory/memory.h"
 #include "base/panic.h"
-#include "base/util.h"
 
 #include <ctype.h>
 #include <limits.h>
@@ -229,6 +228,11 @@ USE_DECL
 char *str_repeat(const char *str, size_t times)
 {
     CTASSERT(str != NULL);
+
+    if (times == 0)
+    {
+        return ctu_strdup("");
+    }
 
     size_t len = strlen(str);
     size_t outlen = len * times;

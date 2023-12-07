@@ -2,7 +2,7 @@
 
 #include "oberon/driver.h"
 
-#include "scan/compile.h"
+#include "interop/compile.h"
 
 #include "core/macros.h"
 

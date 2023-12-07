@@ -1,7 +1,9 @@
 #include "pl0/sema.h"
 #include "pl0/ast.h"
 
-#include "scan/compile.h"
+#include "cthulhu/mediator/driver.h"
+
+#include "interop/compile.h"
 
 #include "std/str.h"
 

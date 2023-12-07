@@ -1,6 +1,8 @@
 #pragma once
 
-#include "os/os.h"
+#include "os/error.h"
+
+#include <stdbool.h>
 
 typedef struct os_result_t
 {

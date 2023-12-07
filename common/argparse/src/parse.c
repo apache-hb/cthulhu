@@ -6,7 +6,7 @@
 
 #include "io/io.h"
 
-#include "scan/compile.h"
+#include "interop/compile.h"
 
 #include "ap_bison.h"
 #include "ap_flex.h"

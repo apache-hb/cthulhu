@@ -2,7 +2,7 @@
 
 #include "cthulhu/mediator/driver.h"
 
-#include "scan/compile.h"
+#include "interop/compile.h"
 
 #include "std/vector.h"
 #include "std/str.h"

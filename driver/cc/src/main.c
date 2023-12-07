@@ -1,5 +1,5 @@
 #include "cthulhu/mediator/driver.h"
-#include "scan/compile.h"
+#include "interop/compile.h"
 
 #include "cc/driver.h"
 

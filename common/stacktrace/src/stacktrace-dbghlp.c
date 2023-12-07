@@ -1,6 +1,7 @@
 #include "stacktrace/stacktrace.h"
 
-#include <windows.h>
+#include "core/win32.h"
+
 #include <dbghelp.h>
 
 void stacktrace_init(void)
