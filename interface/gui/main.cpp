@@ -5,10 +5,15 @@
 #include "imgui.h"
 
 static const ImGuiDockNodeFlags kDockFlags = ImGuiDockNodeFlags_PassthruCentralNode;
-static const ImGuiWindowFlags kWindowFlags =
-    ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
-    ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoBringToFrontOnFocus |
-    ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoDocking;
+static const ImGuiWindowFlags kDockWindowFlags = ImGuiWindowFlags_MenuBar
+                                           | ImGuiWindowFlags_NoCollapse
+                                           | ImGuiWindowFlags_NoMove
+                                           | ImGuiWindowFlags_NoResize
+                                           | ImGuiWindowFlags_NoTitleBar
+                                           | ImGuiWindowFlags_NoBackground
+                                           | ImGuiWindowFlags_NoBringToFrontOnFocus
+                                           | ImGuiWindowFlags_NoNavFocus
+                                           | ImGuiWindowFlags_NoDocking;
 
 struct EditorUi
 {
@@ -16,15 +21,15 @@ struct EditorUi
 
     void dock_space()
     {
-        const ImGuiViewport *pViewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(pViewport->WorkPos);
-        ImGui::SetNextWindowSize(pViewport->WorkSize);
-        ImGui::SetNextWindowViewport(pViewport->ID);
+        const ImGuiViewport *viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
+        ImGui::SetNextWindowViewport(viewport->ID);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
 
-        ImGui::Begin("Editor", nullptr, kWindowFlags);
+        ImGui::Begin("Editor", nullptr, kDockWindowFlags);
 
         ImGui::PopStyleVar(3);
 
