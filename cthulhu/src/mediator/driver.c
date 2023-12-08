@@ -4,7 +4,7 @@
 
 #include "cthulhu/tree/query.h"
 
-#include "memory/memory.h"
+#include "memory/arena.h"
 
 #include "base/panic.h"
 
@@ -26,9 +26,11 @@ static char *path_to_string(vector_t *path)
 static context_t *context_inner_new(driver_t *handle, const char *name, void *ast, tree_t *root)
 {
     CTASSERT(handle != NULL);
-    context_t *self = ctu_malloc(sizeof(context_t));
 
-    self->parent = handle->parent;
+    lifetime_t *lifetime = handle->parent;
+    context_t *self = arena_malloc(lifetime->alloc, sizeof(context_t), "context", lifetime);
+
+    self->parent = lifetime;
     self->lang = handle->lang;
     self->name = name;
     self->ast = ast;

@@ -471,7 +471,7 @@ static bool report_send(const char *base, message_t *message)
 USE_DECL
 reports_t *begin_reports(void)
 {
-    reports_t *reports = ctu_malloc(sizeof(reports_t));
+    reports_t *reports = ctu_malloc_info(sizeof(reports_t), "reports", NULL);
     reports->messages = vector_new(32);
     return reports;
 }
@@ -596,7 +596,7 @@ static message_t *report_push(reports_t *reports, level_t level, const node_t *n
     CTASSERT(reports != NULL);
 
     char *str = vformat(fmt, args);
-    message_t *message = ctu_malloc(sizeof(message_t));
+    message_t *message = ctu_malloc_info(sizeof(message_t), "message", reports);
 
     message->level = level;
     message->parts = vector_new(1);

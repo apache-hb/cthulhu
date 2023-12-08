@@ -29,6 +29,13 @@ NODISCARD CT_ALLOC(ctu_free)
 RET_NOTNULL
 void *ctu_malloc(IN_RANGE(!=, 0) size_t size);
 
+NODISCARD CT_ALLOC(ctu_free)
+RET_NOTNULL
+void *ctu_malloc_info(
+        IN_RANGE(!=, 0) size_t size,
+        const char *name,
+        const void *parent);
+
 /// @brief reallocate a pointer from the default allocator
 /// @note @a gDefaultAlloc must be consistent with the allocator used to allocate @a ptr
 ///

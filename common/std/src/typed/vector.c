@@ -22,11 +22,11 @@ static typevec_t *typevec_create(size_t type_size, size_t len)
 
     size_t size = MAX(len, 1);
 
-    typevec_t *vec = ctu_malloc(sizeof(typevec_t));
+    typevec_t *vec = ctu_malloc_info(sizeof(typevec_t), "typevec", NULL);
     vec->size = size;
     vec->used = 0;
     vec->type_size = type_size;
-    vec->data = ctu_malloc(type_size * (size + 1));
+    vec->data = ctu_malloc_info(type_size * (size + 1), "typevec_data", vec);
     return vec;
 }
 

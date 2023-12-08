@@ -1,6 +1,5 @@
 #include "unit/ct-test.h"
 
-#include "std/vector.h"
 #include "std/map.h"
 #include "std/str.h"
 
@@ -102,13 +101,13 @@ int main()
             map_set(map, kSetItems[i], (char*)kSetItems[i]);
         }
 
-        vector_t *entries = map_entries(map);
+        typevec_t *entries = map_entries(map);
 
-        GROUP_EXPECT_PASS(group, "correct entry count", vector_len(entries) == SET_ITEMS_COUNT);
+        GROUP_EXPECT_PASS(group, "correct entry count", typevec_len(entries) == SET_ITEMS_COUNT);
 
-        for (size_t i = 0; i < vector_len(entries); i++)
+        for (size_t i = 0; i < typevec_len(entries); i++)
         {
-            map_entry_t *entry = (map_entry_t*)vector_get(entries, i);
+            map_entry_t *entry = (map_entry_t*)typevec_offset(entries, i);
             GROUP_EXPECT_PASS(group, "map entry correct", str_equal((const char*)entry->key, (const char*)entry->value));
         }
     }
@@ -127,9 +126,9 @@ int main()
             map_delete(map, kSetItems[i]);
         }
 
-        vector_t *entries = map_entries(map);
+        typevec_t *entries = map_entries(map);
 
-        GROUP_EXPECT_PASS(group, "correct entry count", vector_len(entries) == 0);
+        GROUP_EXPECT_PASS(group, "correct entry count", typevec_len(entries) == 0);
 
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
         {

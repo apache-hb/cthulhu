@@ -10,42 +10,50 @@
 
 /// default global allocator
 
-static void *default_global_malloc(const mem_t *mem, malloc_event_t event)
+static void *default_global_malloc(const mem_t *mem, size_t size)
 {
     CTU_UNUSED(mem);
 
-    return malloc(event.size);
+    return malloc(size);
 }
 
-static void *default_global_realloc(const mem_t *mem, realloc_event_t event)
+static void *default_global_realloc(const mem_t *mem, void *ptr, size_t new_size, size_t old_size)
 {
     CTU_UNUSED(mem);
+    CTU_UNUSED(old_size);
 
-    return realloc(event.ptr, event.new_size);
+    return realloc(ptr, new_size);
 }
 
-static void default_global_free(const mem_t *mem, free_event_t event)
+static void default_global_free(const mem_t *mem, void *ptr, size_t size)
 {
     CTU_UNUSED(mem);
+    CTU_UNUSED(size);
 
-    free(event.ptr);
+    free(ptr);
 }
 
 alloc_t gDefaultAlloc = {
     .name = "default global allocator",
-    .arena_malloc = default_global_malloc,
-    .arena_realloc = default_global_realloc,
-    .arena_free = default_global_free
+    .fn_malloc = default_global_malloc,
+    .fn_realloc = default_global_realloc,
+    .fn_free = default_global_free
 };
 
 /// global allocator
 
 USE_DECL
-void *ctu_malloc(size_t size)
+void *ctu_malloc_info(size_t size, const char *name, const void *parent)
 {
     CTASSERT(size > 0);
 
-    return arena_malloc(&gDefaultAlloc, size, "", NULL);
+    return arena_malloc(&gDefaultAlloc, size, name, parent);
+}
+
+USE_DECL
+void *ctu_malloc(size_t size)
+{
+    return ctu_malloc_info(size, "malloc", &gDefaultAlloc);
 }
 
 USE_DECL

@@ -16,7 +16,7 @@ typedef struct callbacks_t
     int (*init)(scan_t *extra, void *scanner);                   ///< yylex_init_extra
     int (*parse)(void *scanner, scan_t *extra);                  ///< yyparse
     void *(*scan)(const char *text, size_t size, void *scanner); ///< yy_scan_string
-    void (*destroyBuffer)(void *buffer, void *scanner);          ///< yy_delete_buffer
+    void (*destroy_buffer)(void *buffer, void *scanner);          ///< yy_delete_buffer
     void (*destroy)(void *scanner);                              ///< yylex_destroy
 } callbacks_t;
 
@@ -54,7 +54,7 @@ typedef struct callbacks_t
         .init = prefix##_##id##_##init,                                                                                \
         .parse = prefix##_##id##_parse,                                                                                \
         .scan = prefix##_##id##_scan,                                                                                  \
-        .destroyBuffer = prefix##_##id##_destroyBuffer,                                                                \
+        .destroy_buffer = prefix##_##id##_destroyBuffer,                                                                \
         .destroy = prefix##_##id##_destroy,                                                                            \
     }
 

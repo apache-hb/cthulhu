@@ -23,46 +23,13 @@ typedef struct alloc_t alloc_t;
 
 typedef struct mem_t mem_t;
 
-typedef struct malloc_event_t
-{
-    // required params
-    size_t size;
-
-    /// @brief the name of the allocation
-    const char *name;
-
-    /// @brief the parent ptr of the allocation
-    const void *parent;
-} malloc_event_t;
-
-typedef struct realloc_event_t
-{
-    // required params
-    void *ptr;
-    size_t new_size;
-
-    /// @brief the old size of the allocation
-    /// @note may be @ref ALLOC_SIZE_UNKNOWN
-    size_t old_size;
-} realloc_event_t;
-
-typedef struct free_event_t
-{
-    // required params
-    void *ptr;
-
-    /// @brief the size of the allocation
-    /// @note may be @ref ALLOC_SIZE_UNKNOWN
-    size_t size;
-} free_event_t;
-
 /// @brief malloc function pointer
 ///
 /// @param event associated event
 ///
 /// @return the allocated pointer
 /// @return NULL if the allocation failed
-typedef void *(*fn_malloc_t)(const mem_t *header, malloc_event_t event);
+typedef void *(*mem_alloc_t)(const mem_t *header, size_t size);
 
 /// @brief realloc function pointer
 ///
@@ -70,21 +37,27 @@ typedef void *(*fn_malloc_t)(const mem_t *header, malloc_event_t event);
 ///
 /// @return the reallocated pointer
 /// @return NULL if the allocation failed
-typedef void *(*fn_realloc_t)(const mem_t *header, realloc_event_t event);
+typedef void *(*mem_resize_t)(const mem_t *header, void *ptr, size_t new_size, size_t old_size);
 
 /// @brief free function pointer
 ///
 /// @param event associated event
-typedef void (*fn_free_t)(const mem_t *header, free_event_t event);
+typedef void (*mem_release_t)(const mem_t *header, void *ptr, size_t size);
+
+typedef void (*mem_rename_t)(const mem_t *header, const void *ptr, const char *name);
+typedef void (*mem_reparent_t)(const mem_t *header, const void *ptr, const void *parent);
 
 /// @brief an allocator object
 typedef struct alloc_t
 {
     const char *name;        ///< the name of the allocator
 
-    fn_malloc_t arena_malloc;   ///< the malloc function
-    fn_realloc_t arena_realloc; ///< the realloc function
-    fn_free_t arena_free;       ///< the free function
+    mem_alloc_t      fn_malloc;   ///< the malloc function
+    mem_resize_t     fn_realloc; ///< the realloc function
+    mem_release_t    fn_free;       ///< the free function
+
+    mem_rename_t     fn_rename;
+    mem_reparent_t   fn_reparent;
 
     void *user; ///< user data
 } alloc_t;
@@ -133,6 +106,9 @@ void *arena_realloc(
     OUT_PTR_INVALID void *ptr,
     IN_RANGE(!=, 0) size_t new_size,
     IN_RANGE(!=, 0) size_t old_size);
+
+void arena_rename(IN_NOTNULL alloc_t *alloc, IN_NOTNULL const void *ptr, IN_STRING const char *name);
+void arena_reparent(IN_NOTNULL alloc_t *alloc, IN_NOTNULL const void *ptr, const void *parent);
 
 /// @} // Memory Management
 

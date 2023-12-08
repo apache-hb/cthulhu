@@ -21,9 +21,9 @@
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"
 
-static cookie_t *cookie_new(reports_t *reports)
+static cookie_t *cookie_new(lifetime_t *lifetime, reports_t *reports)
 {
-    cookie_t *self = ctu_malloc(sizeof(cookie_t));
+    cookie_t *self = arena_malloc(lifetime->alloc, sizeof(cookie_t), "cookie", lifetime);
     self->reports = reports;
     self->stack = vector_new(16);
     return self;
@@ -59,7 +59,7 @@ static driver_t *handle_new(lifetime_t *lifetime, const language_t *lang)
     CTASSERT(lifetime != NULL);
     CTASSERT(lang != NULL);
 
-    driver_t *self = ctu_malloc(sizeof(driver_t));
+    driver_t *self = arena_malloc(lifetime->alloc, sizeof(driver_t), lang->id, lifetime);
 
     self->parent = lifetime;
     self->lang = lang;
@@ -113,7 +113,7 @@ lifetime_t *lifetime_new(mediator_t *mediator, alloc_t *alloc)
     self->extensions = map_new(16);
     self->modules = map_new(64);
 
-    self->cookie = cookie_new(self->reports);
+    self->cookie = cookie_new(self, self->reports);
 
     return self;
 }

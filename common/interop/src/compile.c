@@ -34,7 +34,7 @@ void *compile_scanner(scan_t *extra, callbacks_t *callbacks)
         return NULL;
     }
 
-    callbacks->destroyBuffer(state, scanner);
+    callbacks->destroy_buffer(state, scanner);
     callbacks->destroy(scanner);
 
     return scan_get(extra);

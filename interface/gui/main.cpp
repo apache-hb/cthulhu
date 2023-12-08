@@ -41,13 +41,13 @@ struct TraceAlloc final : public ed::IAlloc
 {
     using IAlloc::IAlloc;
 
-    void *malloc(size_t size, const char *id, const void *parent) override
+    void *malloc(size_t size) override
     {
         malloc_calls += 1;
 
         void *ptr = ::malloc(size);
 
-        add_alloc(ptr, AllocInfo { size, id, parent });
+        update_alloc(ptr, size);
 
         return ptr;
     }
@@ -58,16 +58,8 @@ struct TraceAlloc final : public ed::IAlloc
 
         void *new_ptr = ::realloc(ptr, new_size);
 
-        if (auto it = allocs.find(ptr); it != allocs.end())
-        {
-            AllocInfo info = it->second;
-
-            peak_usage -= info.size;
-            info.size = new_size;
-
-            add_alloc(new_ptr, info);
-            remove_alloc(it);
-        }
+        update_alloc(new_ptr, new_size);
+        remove_alloc(ptr);
 
         return new_ptr;
     }
@@ -76,12 +68,19 @@ struct TraceAlloc final : public ed::IAlloc
     {
         free_calls += 1;
 
-        if (auto it = allocs.find(ptr); it != allocs.end())
-        {
-            remove_alloc(it);
-        }
+        remove_alloc(ptr);
 
         ::free(ptr);
+    }
+
+    void set_name(const void *ptr, const char *new_name) override
+    {
+        update_name(ptr, new_name);
+    }
+
+    void set_parent(const void *ptr, const void *parent) override
+    {
+        update_parent(ptr, parent);
     }
 
     void draw_info()
@@ -109,19 +108,62 @@ private:
     // tree of allocations
     AllocTree tree = {};
 
-    void add_alloc(const void *ptr, AllocInfo info)
+    void update_alloc(const void *ptr, size_t size)
     {
-        peak_usage += info.size;
-        allocs.emplace(ptr, info);
+        peak_usage += size;
+        allocs[ptr].size = size;
+    }
 
-        if (info.parent)
+    void update_parent(const void *ptr, const void *parent)
+    {
+        remove_parents(ptr);
+
+        // try and figure out if this points into an existing allocation
+        auto it = allocs.lower_bound(parent);
+        if (it == allocs.end() || it == allocs.begin())
         {
-            tree[info.parent].push_back(ptr);
+            // this is a new parent
+            tree[parent].push_back(ptr);
+        }
+        else
+        {
+            --it;
+            // this may be a child
+            const uint8_t *possible_parent = reinterpret_cast<const uint8_t*>(it->first);
+            AllocInfo parent_info = it->second;
+            if (possible_parent <= parent && possible_parent + parent_info.size >= parent)
+            {
+                // this is a child
+                tree[possible_parent].push_back(ptr);
+            }
+            else
+            {
+                // this is a new parent
+                tree[parent].push_back(ptr);
+            }
         }
     }
 
-    void remove_alloc(AllocMapIter iter)
+    void update_name(const void *ptr, const char *new_name)
     {
+        allocs[ptr].name = new_name;
+    }
+
+    void remove_alloc(const void *ptr)
+    {
+        remove_parents(ptr);
+
+        auto iter = allocs.find(ptr);
+        if (iter == allocs.end()) return;
+
+        allocs.erase(iter);
+    }
+
+    void remove_parents(const void *ptr)
+    {
+        auto iter = allocs.find(ptr);
+        if (iter == allocs.end()) return;
+
         for (auto& [parent, children] : tree)
         {
             auto it = std::find(children.begin(), children.end(), iter->first);
@@ -131,8 +173,6 @@ private:
                 break;
             }
         }
-
-        allocs.erase(iter);
     }
 
     bool has_children(const void *ptr) const
@@ -236,6 +276,12 @@ private:
 
         ImGui::TableNextColumn();
         draw_name(info.name);
+
+        if (ImGui::BeginItemTooltip())
+        {
+            ImGui::Text("parent: %p", info.parent);
+            ImGui::EndTooltip();
+        }
     }
 
     void draw_tree_group(const void *ptr, const AllocInfo& info) const
@@ -247,6 +293,12 @@ private:
 
         ImGui::TableNextColumn();
         draw_name(info.name);
+
+        if (ImGui::BeginItemTooltip())
+        {
+            ImGui::Text("parent: %p", info.parent);
+            ImGui::EndTooltip();
+        }
 
         if (is_open)
         {
@@ -308,7 +360,7 @@ private:
                     draw_tree_node(root);
                 }
 
-                if (is_external(root))
+                if (is_external(root) && !has_parent(root))
                 {
                     AllocInfo info = {
                         .name = "extern"

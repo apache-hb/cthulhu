@@ -1,11 +1,10 @@
 #include "oberon/ast.h"
-#include "oberon/scan.h"
 
 #include "report/report.h"
 
 #include "std/str.h"
 
-#include "memory/memory.h"
+#include "memory/arena.h"
 #include "base/panic.h"
 
 static void ensure_block_names_match(scan_t *scan, const node_t *node, const char *type, const char *name, const char *end)
@@ -26,7 +25,8 @@ static obr_t *obr_new(scan_t *scan, where_t where, obr_kind_t kind)
 {
     CTASSERT(scan != NULL);
 
-    obr_t *self = ctu_malloc(sizeof(obr_t));
+    alloc_t *alloc = scan_alloc(scan);
+    obr_t *self = arena_malloc(alloc, sizeof(obr_t), "obr", scan);
     self->kind = kind;
     self->node = node_new(scan, where);
     return self;
@@ -298,7 +298,8 @@ obr_t *obr_receiver(scan_t *scan, where_t where, bool mut, char *name, char *typ
 
 obr_symbol_t *obr_symbol(scan_t *scan, where_t where, char *name, obr_visibility_t visibility)
 {
-    obr_symbol_t *self = ctu_malloc(sizeof(obr_symbol_t));
+    alloc_t *alloc = scan_alloc(scan);
+    obr_symbol_t *self = arena_malloc(alloc, sizeof(obr_symbol_t), "obr_symbol", scan);
     self->scan = scan;
     self->where = where;
     self->name = name;

@@ -10,6 +10,7 @@
 BEGIN_API
 
 typedef struct vector_t vector_t;
+typedef struct typevec_t typevec_t;
 typedef struct bucket_t bucket_t;
 typedef struct map_t map_t;
 
@@ -94,7 +95,7 @@ NODISCARD
 vector_t *map_values(IN_NOTNULL map_t *map);
 
 NODISCARD
-vector_t *map_entries(IN_NOTNULL map_t *map);
+typevec_t *map_entries(IN_NOTNULL map_t *map);
 
 /// @brief get the number of key-value pairs in a map
 ///

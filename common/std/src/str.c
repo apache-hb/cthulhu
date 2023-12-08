@@ -1,5 +1,6 @@
 #include "std/str.h"
 #include "std/map.h"
+#include "std/typed/vector.h"
 #include "std/vector.h"
 
 #include "core/macros.h"
@@ -38,7 +39,7 @@ char *vformat(const char *fmt, va_list args)
 
     CTASSERTF(len > 0, "vformat failed to format string: %s", fmt);
 
-    char *out = ctu_malloc(len);
+    char *out = ctu_malloc_info(len, "vformat", NULL);
 
     int result = vsnprintf(out, len, fmt, again);
     CTASSERTF(result == len - 1, "vformat failed to format string: %s (%d == %d - 1)", fmt, result, len);
@@ -482,11 +483,11 @@ char *str_replace(const char *str, const char *search, const char *repl)
     return str_join(repl, split);
 }
 
-static const map_entry_t *find_matching_key(vector_t *pairs, const char *str)
+static const map_entry_t *find_matching_key(typevec_t *pairs, const char *str)
 {
-    for (size_t i = 0; i < vector_len(pairs); i++)
+    for (size_t i = 0; i < typevec_len(pairs); i++)
     {
-        const map_entry_t *entry = vector_get(pairs, i);
+        const map_entry_t *entry = typevec_offset(pairs, i);
         CTASSERT(entry != NULL);
         CTASSERT(entry->key != NULL);
         CTASSERT(entry->value != NULL);
@@ -507,7 +508,7 @@ char *str_replace_many(const char *str, map_t *repl)
     CTASSERT(repl != NULL);
 
     size_t len = 0;
-    vector_t *pairs = map_entries(repl);
+    typevec_t *pairs = map_entries(repl);
 
     const char *iter = str;
     while (*iter)

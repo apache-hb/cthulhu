@@ -71,11 +71,9 @@ typedef struct user_arena_t
     size_t free_count;
 } user_arena_t;
 
-static user_ptr_t *get_memory(user_arena_t *arena, size_t size, const char *name)
+static user_ptr_t *get_memory(user_arena_t *arena, size_t size)
 {
-    CTU_UNUSED(name);
-
-    CTASSERTF(arena->memory_cursor + size + sizeof(user_ptr_t) < arena->memory_end, "out of memory %s", name);
+    CTASSERTF(arena->memory_cursor + size + sizeof(user_ptr_t) < arena->memory_end, "out of memory");
 
     // TODO: align all allocations to 16 bytes
 
@@ -94,26 +92,28 @@ static user_ptr_t *get_ptr(void *ptr)
     return (user_ptr_t*)(data - sizeof(user_ptr_t));
 }
 
-static void *user_malloc(const mem_t *mem, malloc_event_t event)
+static void *user_malloc(const mem_t *mem, size_t size)
 {
     alloc_t *alloc = mem_arena(mem);
     user_arena_t *user = (user_arena_t*)alloc->user;
 
-    user_ptr_t *ptr = get_memory(user, event.size, event.name);
+    user_ptr_t *ptr = get_memory(user, size);
     return ptr->data;
 }
 
-static void *user_realloc(const mem_t *mem, realloc_event_t event)
+static void *user_realloc(const mem_t *mem, void *ptr, size_t new_size, size_t old_size)
 {
+    CTU_UNUSED(old_size);
+
     alloc_t *alloc = mem_arena(mem);
     user_arena_t *user = (user_arena_t*)alloc->user;
 
-    user_ptr_t *old = get_ptr(event.ptr);
+    user_ptr_t *old = get_ptr(ptr);
 
-    if (old->size >= event.new_size)
+    if (old->size >= new_size)
         return old->data;
 
-    user_ptr_t *new = get_memory(user, event.new_size, "realloc");
+    user_ptr_t *new = get_memory(user, new_size);
     memcpy(new->data, old->data, old->size);
 
     user->realloc_count++;
@@ -121,9 +121,10 @@ static void *user_realloc(const mem_t *mem, realloc_event_t event)
     return new->data;
 }
 
-static void user_free(const mem_t *mem, free_event_t event)
+static void user_free(const mem_t *mem, void *ptr, size_t size)
 {
-    CTU_UNUSED(event);
+    CTU_UNUSED(ptr);
+    CTU_UNUSED(size);
 
     alloc_t *alloc = mem_arena(mem);
 
@@ -154,9 +155,9 @@ static alloc_t new_alloc(user_arena_t *arena)
 {
     alloc_t alloc = {
         .name = "user",
-        .arena_malloc = user_malloc,
-        .arena_realloc = user_realloc,
-        .arena_free = user_free,
+        .fn_malloc = user_malloc,
+        .fn_realloc = user_realloc,
+        .fn_free = user_free,
         .user = arena,
     };
 

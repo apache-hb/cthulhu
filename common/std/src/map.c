@@ -4,6 +4,7 @@
 #include "base/util.h"
 
 #include "std/str.h"
+#include "std/typed/vector.h"
 #include "std/vector.h"
 
 /**
@@ -35,9 +36,9 @@ static size_t sizeof_map(size_t size)
     return sizeof(map_t) + (size * sizeof(bucket_t));
 }
 
-static bucket_t *bucket_new(const void *key, void *value)
+static bucket_t *bucket_new(const void *parent, const void *key, void *value)
 {
-    bucket_t *entry = ctu_malloc(sizeof(bucket_t));
+    bucket_t *entry = ctu_malloc_info(sizeof(bucket_t), "bucket", parent);
     entry->key = key;
     entry->value = value;
     entry->next = NULL;
@@ -65,7 +66,7 @@ map_t *map_new(size_t size)
 {
     CTASSERT(size > 0);
 
-    map_t *map = ctu_malloc(sizeof_map(size));
+    map_t *map = ctu_malloc_info(sizeof_map(size), "map", NULL);
 
     map->size = size;
 
@@ -100,23 +101,26 @@ vector_t *map_values(map_t *map)
     return result;
 }
 
-static map_entry_t *map_entry_new(const char *key, void *value)
+static map_entry_t map_entry_new(const char *key, void *value)
 {
-    map_entry_t *entry = ctu_malloc(sizeof(map_entry_t));
-    entry->key = key;
-    entry->value = value;
+    map_entry_t entry = {
+        .key = key,
+        .value = value,
+    };
+
     return entry;
 }
 
 USE_DECL
-vector_t *map_entries(map_t *map)
+typevec_t *map_entries(map_t *map)
 {
     CTASSERT(map != NULL);
 
-    vector_t *result = vector_new(map->size);
+    typevec_t *result = typevec_new(sizeof(map_entry_t), map->size);
 
     MAP_FOREACH_APPLY(map, entry, {
-        vector_push(&result, map_entry_new(entry->key, entry->value));
+        map_entry_t item = map_entry_new(entry->key, entry->value);
+        typevec_push(result, &item);
     });
 
     return result;
@@ -214,7 +218,7 @@ void map_set(map_t *map, const char *key, void *value)
 
         if (entry->next == NULL)
         {
-            entry->next = bucket_new(key, value);
+            entry->next = bucket_new(entry, key, value);
             break;
         }
 
@@ -283,7 +287,7 @@ void map_set_ptr(map_t *map, const void *key, void *value)
 
         if (entry->next == NULL)
         {
-            entry->next = bucket_new(key, value);
+            entry->next = bucket_new(entry, key, value);
             break;
         }
 
