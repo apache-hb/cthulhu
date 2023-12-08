@@ -51,7 +51,10 @@ IAlloc::IAlloc(const char *alloc_name)
 
 void IAlloc::install()
 {
-    alloc_t self = *this;
-    gDefaultAlloc = self;
-    init_gmp(&gDefaultAlloc);
+    init_global_alloc(this);
+}
+
+void IAlloc::install_gmp()
+{
+    init_gmp_alloc(this);
 }

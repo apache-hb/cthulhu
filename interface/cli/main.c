@@ -64,7 +64,7 @@ static void parse_source(lifetime_t *lifetime, const char *path)
 int main(int argc, const char **argv)
 {
     mediator_t *mediator = mediator_new("cli", kVersionInfo);
-    lifetime_t *lifetime = lifetime_new(mediator, &gDefaultAlloc);
+    lifetime_t *lifetime = lifetime_new(mediator, ctu_default_alloc());
     reports_t *reports = lifetime_get_reports(lifetime);
 
     runtime_t rt = cmd_parse(reports, mediator, lifetime, argc, argv);

@@ -305,7 +305,8 @@ int main(int argc, const char **argv)
     size_t size = 1024 * 1024 * 64;
     user_arena_t arena = new_user_arena(size);
     alloc_t alloc = new_alloc(&arena);
-    gDefaultAlloc = alloc;
+    init_global_alloc(&alloc);
+    init_gmp_alloc(&alloc);
 
     verbose = true;
 

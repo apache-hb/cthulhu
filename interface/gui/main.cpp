@@ -108,6 +108,8 @@ private:
     // tree of allocations
     AllocTree tree = {};
 
+    // TODO: allocation parent tracking is broken
+
     void update_alloc(const void *ptr, size_t size)
     {
         peak_usage += size;
@@ -117,6 +119,7 @@ private:
     void update_parent(const void *ptr, const void *parent)
     {
         remove_parents(ptr);
+        allocs[ptr].parent = parent;
 
         // try and figure out if this points into an existing allocation
         auto it = allocs.lower_bound(parent);
@@ -431,7 +434,6 @@ struct CompileRun
 {
     CompileRun(const char *id, mediator_t *instance)
         : name(_strdup(id))
-        , alloc(name)
     {
         init_config();
 
@@ -443,6 +445,7 @@ struct CompileRun
     void lifetime_configure()
     {
         alloc.install();
+        gmp_alloc.install_gmp();
 
         lifetime = lifetime_new(mediator, &alloc);
 
@@ -457,7 +460,8 @@ struct CompileRun
     const char *name;
     bool show = true;
 
-    TraceAlloc alloc;
+    TraceAlloc alloc{"default"};
+    TraceAlloc gmp_alloc{"gmp"};
 
     config_t *config = nullptr;
 
@@ -686,9 +690,21 @@ struct CompileRun
                 ed::draw_config_panel(config);
             }
 
-            if (ImGui::CollapsingHeader("Memory", ImGuiTreeNodeFlags_DefaultOpen))
+            if (ImGui::BeginTabBar("Memory", ImGuiTabBarFlags_None))
             {
-                alloc.draw_info();
+                if (ImGui::BeginTabItem("Default"))
+                {
+                    alloc.draw_info();
+                    ImGui::EndTabItem();
+                }
+
+                if (ImGui::BeginTabItem("GMP"))
+                {
+                    gmp_alloc.draw_info();
+                    ImGui::EndTabItem();
+                }
+
+                ImGui::EndTabBar();
             }
         }
 

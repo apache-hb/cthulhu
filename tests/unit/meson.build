@@ -1,6 +1,6 @@
 libunit = library('unit', 'unit/ct-test.c',
     include_directories : include_directories('unit'),
-    dependencies : [ stacktrace, base, std ]
+    dependencies : [ stacktrace, base, std, memory ]
 )
 
 unit = declare_dependency(

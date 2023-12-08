@@ -28,7 +28,7 @@ int ap_parse(ap_t *self, reports_t *reports, int argc, const char **argv)
 {
     char *args = join_args(argc, argv);
     io_t *io = io_string("<command-line>", args);
-    scan_t *scan = scan_io(reports, "ap2", io, &gDefaultAlloc);
+    scan_t *scan = scan_io(reports, "ap2", io, ctu_default_alloc());
 
     scan_set(scan, self);
     compile_scanner(scan, &kCallbacks);

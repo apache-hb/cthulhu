@@ -57,9 +57,8 @@ static io_t *make_file(reports_t *reports, const char *path, os_access_t flags)
 int main(int argc, const char **argv)
 {
     verbose = true;
-
     mediator_t *mediator = mediator_new("example", kVersion);
-    lifetime_t *lifetime = lifetime_new(mediator, &gDefaultAlloc);
+    lifetime_t *lifetime = lifetime_new(mediator, ctu_default_alloc());
     reports_t *reports = lifetime_get_reports(lifetime);
 
     ap_t *ap = ap_new("example", NEW_VERSION(1, 0, 0));

@@ -4,6 +4,8 @@
 
 #include "std/str.h"
 
+#include "memory/memory.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -115,6 +117,7 @@ static void test_panic_handler(panic_t panic, const char *fmt, va_list args)
 
 void test_install_panic_handler()
 {
+    init_global_alloc(ctu_default_alloc());
     stacktrace_init();
     gPanicHandler = test_panic_handler;
 }

@@ -27,5 +27,6 @@ namespace ed
         }
 
         void install();
+        void install_gmp();
     };
 } // namespace ed

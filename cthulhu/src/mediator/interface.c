@@ -35,7 +35,9 @@ static void runtime_init(void)
 
     os_init();
     stacktrace_init();
-    init_gmp(&gDefaultAlloc);
+
+    init_global_alloc(ctu_default_alloc());
+    init_gmp_alloc(ctu_default_alloc());
 }
 
 static const language_t *add_language_extension(lifetime_t *lifetime, const char *ext, const language_t *lang)

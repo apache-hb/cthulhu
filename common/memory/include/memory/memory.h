@@ -9,10 +9,7 @@ BEGIN_API
 /// @brief Default global memory allocator
 /// @{
 
-/// @brief the default allocator
-/// @note this is the default allocator used by @a ctu_malloc, @a ctu_realloc, and @a ctu_free
-/// @note exercise caution swapping this allocator during a compiler run
-extern alloc_t gDefaultAlloc;
+alloc_t *ctu_default_alloc(void);
 
 /// @brief free a pointer allocated with ctu_malloc or ctu_realloc
 /// @note @a gDefaultAlloc must be consistent with the allocator used to allocate @a ptr
@@ -88,11 +85,22 @@ void *ctu_memdup(IN_READS(size) const void *ptr, IN_RANGE(>, 0) size_t size);
 /// @brief initialize gmp with a custom allocator
 ///
 /// @param alloc the allocator to use
-void init_gmp(IN_NOTNULL alloc_t *alloc);
+void init_gmp_alloc(IN_NOTNULL alloc_t *alloc);
+
+/// @brief initialize global allocator
+/// @warning this function must be called before any other memory allocation function
+///
+/// @param alloc the allocator to use
+void init_global_alloc(IN_NOTNULL alloc_t *alloc);
+
+alloc_t *get_global_alloc(void);
 
 #define BOX(name) ctu_memdup(&(name), sizeof(name))
 /// @def BOX(name)
 /// @brief box a value on the stack
+
+void ctu_mem_rename(IN_NOTNULL const void *ptr, IN_STRING const char *name);
+void ctu_mem_reparent(IN_NOTNULL const void *ptr, const void *parent);
 
 /// @} // GlobalMemory
 
