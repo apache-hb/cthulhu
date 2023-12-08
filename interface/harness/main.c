@@ -94,28 +94,26 @@ static user_ptr_t *get_ptr(void *ptr)
     return (user_ptr_t*)(data - sizeof(user_ptr_t));
 }
 
-static void *user_malloc(alloc_t *alloc, size_t size, const char *name, const void *parent)
+static void *user_malloc(malloc_event_t event)
 {
-    CTU_UNUSED(parent);
-
+    alloc_t *alloc = event.alloc;
     user_arena_t *user = (user_arena_t*)alloc->user;
 
-    user_ptr_t *ptr = get_memory(user, size, name);
+    user_ptr_t *ptr = get_memory(user, event.size, event.name);
     return ptr->data;
 }
 
-static void *user_realloc(alloc_t *alloc, void *ptr, size_t new_size, size_t old_size)
+static void *user_realloc(realloc_event_t event)
 {
-    CTU_UNUSED(old_size);
-
+    alloc_t *alloc = event.alloc;
     user_arena_t *user = (user_arena_t*)alloc->user;
 
-    user_ptr_t *old = get_ptr(ptr);
+    user_ptr_t *old = get_ptr(event.ptr);
 
-    if (old->size >= new_size)
+    if (old->size >= event.new_size)
         return old->data;
 
-    user_ptr_t *new = get_memory(user, new_size, "realloc");
+    user_ptr_t *new = get_memory(user, event.new_size, "realloc");
     memcpy(new->data, old->data, old->size);
 
     user->realloc_count++;
@@ -123,10 +121,9 @@ static void *user_realloc(alloc_t *alloc, void *ptr, size_t new_size, size_t old
     return new->data;
 }
 
-static void user_free(alloc_t *alloc, void *ptr, size_t size)
+static void user_free(free_event_t event)
 {
-    CTU_UNUSED(size);
-    CTU_UNUSED(ptr);
+    alloc_t *alloc = event.alloc;
 
     user_arena_t *user = (user_arena_t*)alloc->user;
 

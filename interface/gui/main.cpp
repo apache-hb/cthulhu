@@ -1,5 +1,6 @@
-#include "editor/draw.h"
-#include "editor/alloc.h"
+#include "editor/draw.hpp"
+#include "editor/arena.hpp"
+#include "editor/config.hpp"
 
 #include "core/macros.h"
 
@@ -8,7 +9,9 @@
 #include "config/config.h"
 
 #include "imgui.h"
+
 #include "stacktrace/stacktrace.h"
+#include "std/str.h"
 #include "std/vector.h"
 
 #include <map>
@@ -21,33 +24,36 @@ struct AllocInfo
     const void *parent;
 };
 
-struct TraceAlloc : public IAlloc
+struct TraceAlloc final : public ed::IAlloc
 {
     using IAlloc::IAlloc;
 
-    std::map<const void*, AllocInfo> allocs = {};
-
     void *malloc(size_t size, const char *id, const void *parent) override
     {
+        malloc_calls += 1;
+
         void *ptr = ::malloc(size);
 
-        allocs.emplace(ptr, AllocInfo { size, id, parent });
+        add_alloc(ptr, AllocInfo { size, id, parent });
 
         return ptr;
     }
 
     void *realloc(void *ptr, size_t new_size, size_t) override
     {
+        realloc_calls += 1;
+
         void *new_ptr = ::realloc(ptr, new_size);
 
-        auto it = allocs.find(ptr);
-
-        if (it != allocs.end())
+        if (auto it = allocs.find(ptr); it != allocs.end())
         {
             AllocInfo info = it->second;
+
+            peak_usage -= info.size;
             info.size = new_size;
-            allocs.emplace(new_ptr, info);
-            allocs.erase(it);
+
+            add_alloc(new_ptr, info);
+            remove_alloc(it);
         }
 
         return new_ptr;
@@ -55,21 +61,265 @@ struct TraceAlloc : public IAlloc
 
     void free(void *ptr, size_t) override
     {
-        auto it = allocs.find(ptr);
+        free_calls += 1;
 
-        if (it != allocs.end())
+        if (auto it = allocs.find(ptr); it != allocs.end())
         {
-            allocs.erase(it);
+            remove_alloc(it);
         }
 
         ::free(ptr);
+    }
+
+    void draw_info()
+    {
+        draw_usage();
+        draw_body();
+    }
+
+private:
+    // number of calls to each function
+    size_t malloc_calls = 0;
+    size_t realloc_calls = 0;
+    size_t free_calls = 0;
+
+    // peak memory usage
+    size_t peak_usage = 0;
+
+    using AllocMap = std::map<const void*, AllocInfo>;
+    using AllocTree = std::map<const void*, std::vector<const void*>>;
+    using AllocMapIter = AllocMap::iterator;
+
+    // all live allocations
+    AllocMap allocs = {};
+
+    // tree of allocations
+    AllocTree tree = {};
+
+    void add_alloc(const void *ptr, AllocInfo info)
+    {
+        peak_usage += info.size;
+        allocs.emplace(ptr, info);
+
+        if (info.parent)
+        {
+            tree[info.parent].push_back(ptr);
+        }
+    }
+
+    void remove_alloc(AllocMapIter iter)
+    {
+        allocs.erase(iter);
+
+        for (auto& [parent, children] : tree)
+        {
+            auto it = std::find(children.begin(), children.end(), iter->first);
+            if (it != children.end())
+            {
+                children.erase(it);
+                break;
+            }
+        }
+    }
+
+    bool has_children(const void *ptr) const
+    {
+        if (auto it = tree.find(ptr); it != tree.end())
+        {
+            return it->second.size() > 0;
+        }
+
+        return false;
+    }
+
+    bool has_parent(const void *ptr) const
+    {
+        if (auto it = allocs.find(ptr); it != allocs.end())
+        {
+            return it->second.parent != nullptr;
+        }
+
+        return false;
+    }
+
+private:
+    void draw_usage() const
+    {
+        ImGui::Text("malloc: %zu", malloc_calls);
+        ImGui::Text("realloc: %zu", realloc_calls);
+        ImGui::Text("free: %zu", free_calls);
+        ImGui::Text("peak usage: %zu", peak_usage);
+    }
+
+    enum : int { eDrawTree, eDrawFlat };
+    int draw_mode = eDrawTree;
+
+    void draw_body()
+    {
+        ImGui::RadioButton("Tree", &draw_mode, eDrawTree);
+        ImGui::SameLine();
+        ImGui::RadioButton("Flat", &draw_mode, eDrawFlat);
+
+        if (draw_mode == eDrawTree)
+        {
+            draw_tree();
+        }
+        else
+        {
+            draw_flat();
+        }
+    }
+
+    static void draw_name(const char *name)
+    {
+        if (name)
+        {
+            ImGui::Text("%s", name);
+        }
+        else
+        {
+            ImGui::TextDisabled("---");
+        }
+    }
+
+    static const ImGuiTreeNodeFlags kGroupNodeFlags
+        = ImGuiTreeNodeFlags_SpanAllColumns
+        | ImGuiTreeNodeFlags_AllowOverlap;
+
+    static const ImGuiTreeNodeFlags kValueNodeFlags
+        = kGroupNodeFlags
+        | ImGuiTreeNodeFlags_Leaf
+        | ImGuiTreeNodeFlags_Bullet
+        | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+
+    void draw_tree_child(const void *ptr, const AllocInfo& info) const
+    {
+        ImGui::TreeNodeEx(ptr, kValueNodeFlags, "%p", ptr);
+
+        ImGui::TableNextColumn();
+        ImGui::Text("%zu", info.size);
+
+        ImGui::TableNextColumn();
+        draw_name(info.name);
+    }
+
+    void draw_tree_group(const void *ptr, const AllocInfo& info) const
+    {
+        bool is_open = ImGui::TreeNodeEx(ptr, kGroupNodeFlags, "%p", ptr);
+
+        ImGui::TableNextColumn();
+        ImGui::Text("%zu", info.size);
+
+        ImGui::TableNextColumn();
+        draw_name(info.name);
+
+        if (is_open)
+        {
+            for (const void *child : tree.at(ptr))
+            {
+                draw_tree_node(child);
+            }
+
+            ImGui::TreePop();
+        }
+    }
+
+    void draw_tree_node(const void *ptr) const
+    {
+        if (auto it = allocs.find(ptr); it != allocs.end())
+        {
+            const AllocInfo& info = it->second;
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            if (has_children(ptr))
+            {
+                draw_tree_group(ptr, info);
+            }
+            else
+            {
+                draw_tree_child(ptr, info);
+            }
+        }
+    }
+
+    void draw_tree() const
+    {
+        ImGui::SeparatorText("Memory tree view");
+
+        if (ImGui::BeginTable("Allocations", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+        {
+            ImGui::TableSetupColumn("Address");
+            ImGui::TableSetupColumn("Size");
+            ImGui::TableSetupColumn("Name");
+            ImGui::TableHeadersRow();
+
+            // first draw all nodes that dont have parents but have children
+            for (auto& [ptr, children] : tree)
+            {
+                if (has_children(ptr) && !has_parent(ptr))
+                {
+                    draw_tree_node(ptr);
+                }
+            }
+
+            // draw all nodes that don't have parents and don't have children
+            for (auto& [ptr, info] : allocs)
+            {
+                if (info.parent != nullptr || has_children(ptr)) continue;
+
+                draw_tree_node(ptr);
+            }
+
+            ImGui::EndTable();
+        }
+    }
+
+    void draw_flat() const
+    {
+        ImGui::SeparatorText("Memory view");
+
+        if (ImGui::BeginTable("Allocations", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+        {
+            ImGui::TableSetupColumn("Address");
+            ImGui::TableSetupColumn("Size");
+            ImGui::TableSetupColumn("Name");
+            ImGui::TableSetupColumn("Parent");
+            ImGui::TableHeadersRow();
+
+            for (auto& [ptr, info] : allocs)
+            {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+
+                ImGui::Text("%p", ptr);
+
+                ImGui::TableNextColumn();
+                ImGui::Text("%zu", info.size);
+
+                ImGui::TableNextColumn();
+                draw_name(info.name);
+
+                ImGui::TableNextColumn();
+                if (info.parent)
+                {
+                    ImGui::Text("%p", info.parent);
+                }
+                else
+                {
+                    ImGui::TextDisabled("null");
+                }
+            }
+
+            ImGui::EndTable();
+        }
     }
 };
 
 struct CompileRun
 {
-    CompileRun(const char *name)
-        : name(name)
+    CompileRun(const char *id)
+        : name(_strdup(id))
         , alloc(name)
     {
         init_config();
@@ -140,8 +390,7 @@ struct CompileRun
         .name = "test_enum",
         .brief = "Test enum",
         .description = "This is a test enum",
-        .arg_long = "test-enum",
-        .arg_short = "e"
+        .arg_short = "num"
     };
 
     cfg_choice_t test_enum_choices[3] = {
@@ -160,8 +409,7 @@ struct CompileRun
         .name = "test_flags",
         .brief = "Test flags",
         .description = "This is a test flags",
-        .arg_long = "test-flags",
-        .arg_short = "f"
+        .arg_long = "vegetables"
     };
 
     cfg_choice_t test_flags_choices[3] = {
@@ -183,249 +431,10 @@ struct CompileRun
         config_t *test_group = config_group(config, &test_group_info);
 
         cfg_int = config_int(test_group, &test_int_info, test_int_config);
-
         cfg_bool = config_bool(test_group, &test_bool_info, test_bool_config);
-
         cfg_string = config_string(test_group, &test_string_info, test_string_config);
-
         cfg_enum = config_enum(test_group, &test_enum_info, test_enum_config);
-
         cfg_flags = config_flags(test_group, &test_flags_info, test_flags_config);
-    }
-
-    static const ImGuiTableFlags kTableFlags
-        = ImGuiTableFlags_BordersV
-        | ImGuiTableFlags_BordersOuterH
-        | ImGuiTableFlags_Resizable
-        | ImGuiTableFlags_RowBg
-        | ImGuiTableFlags_NoHostExtendX
-        | ImGuiTableFlags_NoBordersInBody;
-
-    static const ImGuiTreeNodeFlags kGroupNodeFlags
-        = ImGuiTreeNodeFlags_SpanAllColumns
-        | ImGuiTreeNodeFlags_AllowOverlap;
-
-    static const ImGuiTreeNodeFlags kValueNodeFlags
-        = kGroupNodeFlags
-        | ImGuiTreeNodeFlags_Leaf
-        | ImGuiTreeNodeFlags_Bullet
-        | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-
-    const char *get_name(const cfg_field_t *field)
-    {
-        const cfg_info_t *info = cfg_get_info(field);
-        return info->name;
-    }
-
-    void get_label(char *buf, size_t size, const cfg_field_t *field)
-    {
-        snprintf(buf, size, "##%s", get_name(field));
-    }
-
-    void draw_info(const cfg_info_t *info)
-    {
-        ImGui::TextDisabled("%s", info->name);
-        if (ImGui::BeginItemTooltip())
-        {
-            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.f);
-            const char *brief = info->brief != nullptr ? info->brief : "no brief";
-            ImGui::Text("brief: %s", brief);
-
-            if (info->description != nullptr)
-            {
-                ImGui::Separator();
-                ImGui::Text("description: %s", info->description);
-            }
-
-            if (info->arg_long != nullptr && info->arg_short != nullptr)
-            {
-                ImGui::Separator();
-                ImGui::Text("args: %s / %s", info->arg_long, info->arg_short);
-            }
-            else if (info->arg_long != nullptr)
-            {
-                ImGui::Separator();
-                ImGui::Text("long: %s", info->arg_long);
-            }
-            else if (info->arg_short != nullptr)
-            {
-                ImGui::Separator();
-                ImGui::Text("short: %s", info->arg_short);
-            }
-
-            ImGui::PopTextWrapPos();
-            ImGui::EndTooltip();
-        }
-    }
-
-    void draw_bool(cfg_field_t *field)
-    {
-        char label[64];
-        get_label(label, std::size(label), field);
-
-        bool value = cfg_bool_value(field);
-        if (ImGui::Checkbox(label, &value))
-        {
-            cfg_set_bool(cfg_bool, value);
-        }
-    }
-
-    void draw_int(const cfg_field_t *field)
-    {
-        char label[64];
-        get_label(label, std::size(label), field);
-
-        const cfg_int_t *cfg = cfg_int_info(field);
-        int value = cfg_int_value(field);
-        if (ImGui::DragInt(label, &value, 1.f, cfg->min, cfg->max))
-        {
-            cfg_set_int(cfg_int, value);
-        }
-    }
-
-    void draw_string(const cfg_field_t *field)
-    {
-        char label[64];
-        get_label(label, std::size(label), field);
-
-        const char *value = cfg_string_value(field);
-        char buffer[256] = { 0 };
-        strncpy_s(buffer, value, std::size(buffer));
-        if (ImGui::InputText(label, buffer, std::size(buffer)))
-        {
-            cfg_set_string(cfg_string, buffer);
-        }
-    }
-
-    void draw_value(cfg_field_t *field)
-    {
-        cfg_type_t type = cfg_get_type(field);
-        switch (type)
-        {
-        case eConfigBool:
-            draw_bool(field);
-            break;
-
-        case eConfigInt:
-            draw_int(field);
-            break;
-
-        case eConfigString:
-            draw_string(field);
-            break;
-
-        default:
-            ImGui::TextDisabled("Unknown type");
-            break;
-        }
-    }
-
-    void draw_int_constraints(const cfg_field_t *field)
-    {
-        const cfg_int_t *cfg = cfg_int_info(field);
-        ImGui::Text("(%d, %d)", cfg->min, cfg->max);
-    }
-
-    void draw_constraints(const cfg_field_t *field)
-    {
-        cfg_type_t type = cfg_get_type(field);
-        switch (type)
-        {
-        case eConfigBool:
-            break;
-        case eConfigInt:
-            draw_int_constraints(field);
-            break;
-        case eConfigString:
-            break;
-        default:
-            ImGui::TextDisabled("Unknown type");
-            break;
-        }
-    }
-
-    void draw_config_entry(cfg_field_t *field)
-    {
-        const cfg_info_t *info = cfg_get_info(field);
-        cfg_type_t type = cfg_get_type(field);
-
-        ImGui::TableNextColumn();
-        ImGui::AlignTextToFramePadding();
-        ImGui::TreeNodeEx(info->name, kValueNodeFlags);
-
-        ImGui::TableNextColumn();
-        ImGui::TextUnformatted(cfg_type_name(type));
-
-        ImGui::TableNextColumn();
-        draw_value(field);
-
-        ImGui::TableNextColumn();
-        draw_constraints(field);
-
-        ImGui::TableNextColumn();
-        draw_info(info);
-    }
-
-    void draw_config_group(const config_t *group)
-    {
-        ImGui::PushID(group);
-
-        ImGui::TableNextColumn();
-
-        const cfg_info_t *info = cfg_group_info(group);
-        bool is_group_open = ImGui::TreeNodeEx(info->name, kGroupNodeFlags);
-
-        ImGui::TableNextColumn();
-        ImGui::TextDisabled("--");
-
-        ImGui::TableNextColumn();
-        ImGui::TableNextColumn();
-        ImGui::TableNextColumn();
-        draw_info(info);
-
-        if (is_group_open)
-        {
-            vector_t *children = cfg_get_groups(group);
-            size_t child_count = vector_len(children);
-            for (size_t i = 0; i < child_count; ++i)
-            {
-                ImGui::TableNextRow();
-                config_t *child = reinterpret_cast<config_t*>(vector_get(children, i));
-                draw_config_group(child);
-            }
-
-            vector_t *fields = cfg_get_fields(group);
-            size_t field_count = vector_len(fields);
-            for (size_t i = 0; i < field_count; ++i)
-            {
-                ImGui::TableNextRow();
-                cfg_field_t *field = reinterpret_cast<cfg_field_t*>(vector_get(fields, i));
-                draw_config_entry(field);
-            }
-
-            ImGui::TreePop();
-        }
-
-        ImGui::PopID();
-    }
-
-    void draw_config()
-    {
-        if (ImGui::BeginTable("Config", 5, kTableFlags))
-        {
-            ImGui::TableSetupColumn("Name");
-            ImGui::TableSetupColumn("Type");
-            ImGui::TableSetupColumn("Value");
-            ImGui::TableSetupColumn("Constraints");
-            ImGui::TableSetupColumn("Info");
-
-            ImGui::TableHeadersRow();
-
-            ImGui::TableNextRow();
-            draw_config_group(config);
-
-            ImGui::EndTable();
-        }
     }
 
     void draw_window()
@@ -434,7 +443,15 @@ struct CompileRun
 
         if (ImGui::Begin(name, &show))
         {
-            draw_config();
+            if (ImGui::CollapsingHeader("Config", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ed::draw_config_panel(config);
+            }
+
+            if (ImGui::CollapsingHeader("Memory", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                alloc.draw_info();
+            }
         }
 
         ImGui::End();
@@ -531,33 +548,64 @@ struct EditorUi
         }
     }
 
-    // init everything that needs to be setup only once
-    void init_global()
-    {
-        os_init();
-        stacktrace_init();
-    }
-
     char compile_name[256] = { 0 };
 
-    const char *compile_popup_id = "Compile Run Popup";
+    bool compile_run_exists(const char *id) const
+    {
+        for (const CompileRun& run : compile_runs)
+        {
+            if (str_equal(run.name, id))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    const char *duplicate_compile_name_popup = "Duplicate Name";
+    const char *empty_compile_name_popup = "Empty Name";
 
     void setup_window()
     {
         if (ImGui::Begin("Setup"))
         {
-            if (ImGui::Button("Add Compile Run"))
-            {
-                ImGui::OpenPopup(compile_popup_id);
-            }
+            ImGui::InputText("Name", compile_name, std::size(compile_name));
 
-            if (ImGui::BeginPopup(compile_popup_id))
+            if (ImGui::Button("Add"))
             {
-                ImGui::InputText("Name", compile_name, std::size(compile_name));
-
-                if (ImGui::Button("Add"))
+                if (strlen(compile_name) == 0)
+                {
+                    ImGui::OpenPopup(empty_compile_name_popup);
+                }
+                else if (compile_run_exists(compile_name))
+                {
+                    ImGui::OpenPopup(duplicate_compile_name_popup);
+                }
+                else
                 {
                     compile_runs.emplace_back(compile_name);
+                }
+            }
+
+            if (ImGui::BeginPopupModal(duplicate_compile_name_popup, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+            {
+                ImGui::Text("Compile run with name '%s' already exists", compile_name);
+
+                if (ImGui::Button("OK", ImVec2(120, 0)))
+                {
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::EndPopup();
+            }
+
+            if (ImGui::BeginPopupModal(empty_compile_name_popup, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+            {
+                ImGui::Text("Compile run name cannot be empty");
+
+                if (ImGui::Button("OK", ImVec2(120, 0)))
+                {
                     ImGui::CloseCurrentPopup();
                 }
 
@@ -577,19 +625,26 @@ struct EditorUi
     }
 };
 
+// init everything that needs to be setup only once
+void init_global()
+{
+    os_init();
+    stacktrace_init();
+}
+
 int main(int argc, const char **argv)
 {
     CTU_UNUSED(argc);
     CTU_UNUSED(argv);
 
-    if (!draw::create())
+    if (!draw::create(L"Editor"))
     {
         return 1;
     }
 
-    EditorUi ui;
+    init_global();
 
-    ui.init_global();
+    EditorUi ui;
 
     while (draw::begin_frame())
     {

@@ -34,7 +34,9 @@ imgui = declare_dependency(
 
 src = [
     'src/draw.cpp',
-    'src/alloc.cpp',
+    'src/arena.cpp',
+    'src/config.cpp',
+
     'main.cpp'
 ]
 

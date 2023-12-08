@@ -1,6 +1,5 @@
 #include "memory/memory.h"
 
-#include "core/macros.h"
 #include "base/panic.h"
 
 #include <gmp.h>
@@ -10,29 +9,19 @@
 
 /// default global allocator
 
-static void *default_global_malloc(alloc_t *alloc, size_t size, const char *name, const void *parent)
+static void *default_global_malloc(malloc_event_t event)
 {
-    CTU_UNUSED(alloc);
-    CTU_UNUSED(name);
-    CTU_UNUSED(parent);
-
-    return malloc(size);
+    return malloc(event.size);
 }
 
-static void *default_global_realloc(alloc_t *alloc, void *ptr, size_t new_size, size_t old_size)
+static void *default_global_realloc(realloc_event_t event)
 {
-    CTU_UNUSED(alloc);
-    CTU_UNUSED(old_size);
-
-    return realloc(ptr, new_size);
+    return realloc(event.ptr, event.new_size);
 }
 
-static void default_global_free(alloc_t *alloc, void *ptr, size_t size)
+static void default_global_free(free_event_t event)
 {
-    CTU_UNUSED(alloc);
-    CTU_UNUSED(size);
-
-    free(ptr);
+    free(event.ptr);
 }
 
 alloc_t gDefaultAlloc = {

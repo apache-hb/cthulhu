@@ -20,45 +20,62 @@ BEGIN_API
 
 typedef struct alloc_t alloc_t;
 
+typedef struct malloc_event_t
+{
+    // required params
+    alloc_t *alloc;
+    size_t size;
+
+    /// @brief the name of the allocation
+    const char *name;
+
+    /// @brief the parent ptr of the allocation
+    const void *parent;
+} malloc_event_t;
+
+typedef struct realloc_event_t
+{
+    // required params
+    alloc_t *alloc;
+    void *ptr;
+    size_t new_size;
+
+    /// @brief the old size of the allocation
+    /// @note may be @ref ALLOC_SIZE_UNKNOWN
+    size_t old_size;
+} realloc_event_t;
+
+typedef struct free_event_t
+{
+    // required params
+    alloc_t *alloc;
+    void *ptr;
+
+    /// @brief the size of the allocation
+    /// @note may be @ref ALLOC_SIZE_UNKNOWN
+    size_t size;
+} free_event_t;
+
 /// @brief malloc function pointer
 ///
-/// @param self associated allocator
-/// @param size the size of the allocation
-/// @param name the optional name of the allocation
-/// @param parent the optional parent of the allocation
+/// @param event associated event
 ///
 /// @return the allocated pointer
 /// @return NULL if the allocation failed
-typedef void *(*malloc_t)(
-        IN_NOTNULL alloc_t *self,
-        IN_RANGE(!=, 0) size_t size,
-        IN_STRING_OPT const char *name,
-        const void *parent);
+typedef void *(*malloc_t)(malloc_event_t event);
 
 /// @brief realloc function pointer
 ///
-/// @param self associated allocator
-/// @param ptr the pointer to reallocate
-/// @param new_size the new size of the allocation
-/// @param old_size the old size of the allocation
+/// @param event associated event
 ///
 /// @return the reallocated pointer
 /// @return NULL if the allocation failed
-typedef void *(*realloc_t)(
-        IN_NOTNULL alloc_t *self,
-        OUT_PTR_INVALID void *ptr,
-        IN_RANGE(!=, 0) size_t new_size,
-        IN_RANGE(!=, 0) size_t old_size);
+typedef void *(*realloc_t)(realloc_event_t event);
 
 /// @brief free function pointer
 ///
-/// @param self associated allocator
-/// @param ptr the pointer to free
-/// @param size the size of the allocation
-typedef void (*free_t)(
-        IN_NOTNULL alloc_t *self,
-        OUT_PTR_INVALID void *ptr,
-        IN_RANGE(!=, 0) size_t size);
+/// @param event associated event
+typedef void (*free_t)(free_event_t event);
 
 /// @brief an allocator object
 typedef struct alloc_t

@@ -2,7 +2,7 @@
 
 namespace draw
 {
-    bool create();
+    bool create(const wchar_t *title);
     void destroy();
 
     bool begin_frame();

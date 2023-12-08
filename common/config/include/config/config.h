@@ -142,10 +142,13 @@ size_t cfg_flags_value(const cfg_field_t *field);
 // update api
 
 bool cfg_set_int(cfg_field_t *field, int value);
-bool cfg_set_bool(cfg_field_t *field, bool value);
-bool cfg_set_string(cfg_field_t *field, const char *value);
-bool cfg_set_enum(cfg_field_t *field, const char *choice);
+void cfg_set_bool(cfg_field_t *field, bool value);
+void cfg_set_string(cfg_field_t *field, const char *value);
 
-bool cfg_set_flag(cfg_field_t *field, const char *choice, bool value);
+bool cfg_set_enum(cfg_field_t *field, const char *choice);
+void cfg_set_enum_value(cfg_field_t *field, size_t value);
+
+bool cfg_set_flag(cfg_field_t *field, const char *choice, bool set);
+void cfg_set_flag_value(cfg_field_t *field, size_t value);
 
 END_API
