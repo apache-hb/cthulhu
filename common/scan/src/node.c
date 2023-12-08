@@ -3,7 +3,7 @@
 #include "common.h"
 
 #include "base/panic.h"
-#include "memory/memory.h"
+#include "memory/arena.h"
 
 #include <limits.h>
 
@@ -44,7 +44,10 @@ bool node_is_valid(const node_t *node)
 USE_DECL
 node_t *node_new(scan_t *scan, where_t where)
 {
-    node_t *node = ctu_malloc(sizeof(node_t));
+    CTASSERT(scan != NULL);
+
+    alloc_t *alloc = scan_alloc(scan);
+    node_t *node = arena_malloc(alloc, sizeof(node_t), "node", scan);
     node->scan = scan;
     node->where = where;
 

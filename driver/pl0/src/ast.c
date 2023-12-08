@@ -1,10 +1,11 @@
 #include "pl0/ast.h"
 
-#include "memory/memory.h"
+#include "memory/arena.h"
 
 pl0_t *pl0_new(scan_t *scan, where_t where, pl0_type_t type)
 {
-    pl0_t *node = ctu_malloc(sizeof(pl0_t));
+    alloc_t *alloc = scan_alloc(scan);
+    pl0_t *node = arena_malloc(alloc, sizeof(pl0_t), "pl0", scan);
     node->node = node_new(scan, where);
     node->type = type;
     return node;

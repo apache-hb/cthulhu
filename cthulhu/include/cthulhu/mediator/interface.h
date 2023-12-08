@@ -24,15 +24,24 @@ typedef struct reports_t reports_t;
  */
 mediator_t *mediator_new(const char *id, version_info_t version);
 
+/// @brief create a new mediator object without initializing the global runtime
+///
+/// @param id the name of the mediator
+/// @param version the version of the mediator
+///
+/// @return the mediator object
+mediator_t *mediator_new_noinit(const char *id, version_info_t version);
+
 // lifetime api
 
 /**
  * @brief create a new lifetime object
  *
  * @param mediator the global object
+ * @param alloc the allocator to use
  * @return lifetime_t* the lifetime object
  */
-lifetime_t *lifetime_new(mediator_t *mediator);
+lifetime_t *lifetime_new(mediator_t *mediator, alloc_t *alloc);
 
 /**
  * @brief configure a language for the current lifetime

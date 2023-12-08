@@ -94,18 +94,18 @@ static user_ptr_t *get_ptr(void *ptr)
     return (user_ptr_t*)(data - sizeof(user_ptr_t));
 }
 
-static void *user_malloc(malloc_event_t event)
+static void *user_malloc(const mem_t *mem, malloc_event_t event)
 {
-    alloc_t *alloc = event.alloc;
+    alloc_t *alloc = mem_arena(mem);
     user_arena_t *user = (user_arena_t*)alloc->user;
 
     user_ptr_t *ptr = get_memory(user, event.size, event.name);
     return ptr->data;
 }
 
-static void *user_realloc(realloc_event_t event)
+static void *user_realloc(const mem_t *mem, realloc_event_t event)
 {
-    alloc_t *alloc = event.alloc;
+    alloc_t *alloc = mem_arena(mem);
     user_arena_t *user = (user_arena_t*)alloc->user;
 
     user_ptr_t *old = get_ptr(event.ptr);
@@ -121,9 +121,11 @@ static void *user_realloc(realloc_event_t event)
     return new->data;
 }
 
-static void user_free(free_event_t event)
+static void user_free(const mem_t *mem, free_event_t event)
 {
-    alloc_t *alloc = event.alloc;
+    CTU_UNUSED(event);
+
+    alloc_t *alloc = mem_arena(mem);
 
     user_arena_t *user = (user_arena_t*)alloc->user;
 
@@ -161,10 +163,10 @@ static alloc_t new_alloc(user_arena_t *arena)
     return alloc;
 }
 
-int run_test_harness(int argc, const char **argv)
+int run_test_harness(int argc, const char **argv, alloc_t *alloc)
 {
     mediator_t *mediator = mediator_new("example", kVersion);
-    lifetime_t *lifetime = lifetime_new(mediator);
+    lifetime_t *lifetime = lifetime_new(mediator, alloc);
     ap_t *ap = ap_new("example", NEW_VERSION(1, 0, 0));
 
     langs_t langs = get_langs();
@@ -306,7 +308,7 @@ int main(int argc, const char **argv)
 
     verbose = true;
 
-    int result = run_test_harness(argc, argv);
+    int result = run_test_harness(argc, argv, &alloc);
 
     logverbose("allocations: %zu", arena.alloc_count);
     logverbose("reallocations: %zu", arena.realloc_count);

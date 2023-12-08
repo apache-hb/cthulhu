@@ -42,5 +42,5 @@ src = [
 
 executable('gui', src,
     include_directories : 'include',
-    dependencies : [ imgui, core, os, memory, config ]
+    dependencies : [ imgui, core, os, memory, config, io, mediator, support ]
 )

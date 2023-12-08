@@ -3,8 +3,14 @@
 #include "editor/config.hpp"
 
 #include "core/macros.h"
+#include "core/version_def.h"
+
+#include "cthulhu/mediator/interface.h"
+
+#include "support/langs.h"
 
 #include "os/os.h"
+#include "io/io.h"
 
 #include "config/config.h"
 
@@ -16,6 +22,13 @@
 
 #include <map>
 #include <vector>
+
+static const version_info_t kVersionInfo = {
+    .license = "GPLv3",
+    .desc = "Cthulhu Compiler Collection GUI",
+    .author = "Elliot Haisley",
+    .version = NEW_VERSION(0, 0, 1)
+};
 
 struct AllocInfo
 {
@@ -109,8 +122,6 @@ private:
 
     void remove_alloc(AllocMapIter iter)
     {
-        allocs.erase(iter);
-
         for (auto& [parent, children] : tree)
         {
             auto it = std::find(children.begin(), children.end(), iter->first);
@@ -120,6 +131,8 @@ private:
                 break;
             }
         }
+
+        allocs.erase(iter);
     }
 
     bool has_children(const void *ptr) const
@@ -140,6 +153,16 @@ private:
         }
 
         return false;
+    }
+
+    /// @brief check if the given pointer was not allocated by this allocator
+    ///
+    /// @param ptr the pointer to check
+    ///
+    /// @return if the pointer was not allocated by this allocator
+    bool is_external(const void *ptr) const
+    {
+        return allocs.find(ptr) == allocs.end();
     }
 
 private:
@@ -179,6 +202,18 @@ private:
         else
         {
             ImGui::TextDisabled("---");
+        }
+    }
+
+    void draw_extern_name(const void *ptr) const
+    {
+        if (auto it = allocs.find(ptr); it != allocs.end())
+        {
+            draw_name(it->second.name);
+        }
+        else
+        {
+            ImGui::TextDisabled("external");
         }
     }
 
@@ -224,30 +259,41 @@ private:
         }
     }
 
+    void draw_tree_node_info(const void *ptr, const AllocInfo& info) const
+    {
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        if (has_children(ptr))
+        {
+            draw_tree_group(ptr, info);
+        }
+        else
+        {
+            draw_tree_child(ptr, info);
+        }
+    }
+
     void draw_tree_node(const void *ptr) const
     {
         if (auto it = allocs.find(ptr); it != allocs.end())
         {
-            const AllocInfo& info = it->second;
-
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            if (has_children(ptr))
-            {
-                draw_tree_group(ptr, info);
-            }
-            else
-            {
-                draw_tree_child(ptr, info);
-            }
+            draw_tree_node_info(ptr, it->second);
         }
     }
+
+    static const ImGuiTableFlags kTableFlags
+        = ImGuiTableFlags_BordersV
+        | ImGuiTableFlags_BordersOuterH
+        | ImGuiTableFlags_Resizable
+        | ImGuiTableFlags_RowBg
+        | ImGuiTableFlags_NoHostExtendX
+        | ImGuiTableFlags_NoBordersInBody;
 
     void draw_tree() const
     {
         ImGui::SeparatorText("Memory tree view");
 
-        if (ImGui::BeginTable("Allocations", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+        if (ImGui::BeginTable("Allocations", 3, kTableFlags))
         {
             ImGui::TableSetupColumn("Address");
             ImGui::TableSetupColumn("Size");
@@ -255,11 +301,19 @@ private:
             ImGui::TableHeadersRow();
 
             // first draw all nodes that dont have parents but have children
-            for (auto& [ptr, children] : tree)
+            for (auto& [root, children] : tree)
             {
-                if (has_children(ptr) && !has_parent(ptr))
+                if (has_children(root) && !has_parent(root))
                 {
-                    draw_tree_node(ptr);
+                    draw_tree_node(root);
+                }
+
+                if (is_external(root))
+                {
+                    AllocInfo info = {
+                        .name = "extern"
+                    };
+                    draw_tree_node_info(root, info);
                 }
             }
 
@@ -279,7 +333,7 @@ private:
     {
         ImGui::SeparatorText("Memory view");
 
-        if (ImGui::BeginTable("Allocations", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+        if (ImGui::BeginTable("Allocations", 4, kTableFlags))
         {
             ImGui::TableSetupColumn("Address");
             ImGui::TableSetupColumn("Size");
@@ -304,6 +358,11 @@ private:
                 if (info.parent)
                 {
                     ImGui::Text("%p", info.parent);
+                    if (ImGui::BeginItemTooltip())
+                    {
+                        draw_extern_name(info.parent);
+                        ImGui::EndTooltip();
+                    }
                 }
                 else
                 {
@@ -318,11 +377,29 @@ private:
 
 struct CompileRun
 {
-    CompileRun(const char *id)
+    CompileRun(const char *id, mediator_t *instance)
         : name(_strdup(id))
         , alloc(name)
     {
         init_config();
+
+        mediator = instance;
+    }
+
+    mediator_t *mediator = nullptr;
+
+    void lifetime_configure()
+    {
+        alloc.install();
+
+        lifetime = lifetime_new(mediator, &alloc);
+
+        langs_t langs = get_langs();
+        // TODO: configure languages as well
+        for (size_t i = 0; i < langs.size; i++)
+        {
+            lifetime_add_language(lifetime, langs.langs + i);
+        }
     }
 
     const char *name;
@@ -437,12 +514,121 @@ struct CompileRun
         cfg_flags = config_flags(test_group, &test_flags_info, test_flags_config);
     }
 
+    std::vector<char*> sources;
+
+    char source_path[512] = { 0 };
+
+    void draw_sources()
+    {
+        bool has_new_path = ImGui::InputText("Source", source_path, std::size(source_path), ImGuiInputTextFlags_EnterReturnsTrue);
+
+        if (has_new_path)
+        {
+            sources.push_back(_strdup(source_path));
+            memset(source_path, 0, std::size(source_path));
+        }
+
+        size_t remove_index = SIZE_MAX;
+
+        for (size_t i = 0; i < sources.size(); i++)
+        {
+            ImGui::BulletText("%s", sources[i]);
+            ImGui::SameLine();
+            if (ImGui::Button("Remove"))
+            {
+                remove_index = i;
+            }
+        }
+
+        if (remove_index != SIZE_MAX)
+        {
+            free(sources[remove_index]);
+            sources.erase(sources.begin() + remove_index);
+        }
+    }
+
+    lifetime_t *lifetime = nullptr;
+    reports_t *reports = nullptr;
+
+    char *compile_preinit_error = nullptr;
+
+    bool parse_file(const char *path)
+    {
+        const char *ext = str_ext(path);
+        if (ext == nullptr)
+        {
+            compile_preinit_error = format("could not determine file extension for '%s'", path);
+            return false;
+        }
+
+        const language_t *lang = lifetime_get_language(lifetime, ext);
+        if (lang == nullptr)
+        {
+            const char *basepath = str_filename(path);
+            compile_preinit_error = format("could not find language for `%s` by extension `%s`", basepath, ext);
+            return false;
+        }
+
+        io_t *io = io_file(path, eAccessRead);
+        if (os_error_t err = io_error(io); err != 0)
+        {
+            compile_preinit_error = format("could not open file '%s' (os error: %s)", path, os_error_string(err));
+            return false;
+        }
+
+        lifetime_parse(lifetime, lang, io);
+        return true;
+    }
+
+    void do_compile()
+    {
+        lifetime_configure();
+        reports = lifetime_get_reports(lifetime);
+
+        for (size_t i = 0; i < sources.size(); i++)
+        {
+            if (!parse_file(sources[i]))
+            {
+                break;
+            }
+        }
+    }
+
+    void draw_compile()
+    {
+        bool can_compile = true;
+        if (sources.size() == 0)
+        {
+            can_compile = false;
+            ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "No sources");
+        }
+
+        ImGui::BeginDisabled(!can_compile);
+        if (ImGui::Button("Compile"))
+        {
+            do_compile();
+        }
+        ImGui::EndDisabled();
+
+        if (compile_preinit_error)
+        {
+            ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "%s", compile_preinit_error);
+        }
+    }
+
     void draw_window()
     {
         if (!show) return;
 
         if (ImGui::Begin(name, &show))
         {
+            draw_compile();
+
+            if (ImGui::CollapsingHeader("Sources", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                draw_sources();
+            }
+
             if (ImGui::CollapsingHeader("Config", ImGuiTreeNodeFlags_DefaultOpen))
             {
                 ed::draw_config_panel(config);
@@ -461,8 +647,14 @@ struct CompileRun
 struct EditorUi
 {
     bool show_demo_window = false;
-    config_t *config = nullptr;
     std::vector<CompileRun> compile_runs;
+
+    mediator_t *mediator = nullptr;
+
+    void init_mediator()
+    {
+        mediator = mediator_new_noinit("editor", kVersionInfo);
+    }
 
     static const ImGuiDockNodeFlags kDockFlags
         = ImGuiDockNodeFlags_PassthruCentralNode;
@@ -584,7 +776,7 @@ struct EditorUi
                 }
                 else
                 {
-                    compile_runs.emplace_back(compile_name);
+                    compile_runs.emplace_back(compile_name, mediator);
                 }
             }
 
@@ -645,6 +837,8 @@ int main(int argc, const char **argv)
     init_global();
 
     EditorUi ui;
+
+    ui.init_mediator();
 
     while (draw::begin_frame())
     {

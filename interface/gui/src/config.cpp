@@ -44,7 +44,6 @@ void get_label(char *buf, size_t size, const cfg_field_t *field)
 
 void draw_info_preamble(const cfg_info_t *info)
 {
-    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.f);
     const char *brief = info->brief != nullptr ? info->brief : "no brief";
     ImGui::Text("brief: %s", brief);
 
@@ -61,6 +60,7 @@ void draw_field_info(const cfg_field_t *field)
     ImGui::TextDisabled("%s", info->name);
     if (ImGui::BeginItemTooltip())
     {
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.f);
         draw_info_preamble(info);
 
         if (info->arg_long != nullptr && info->arg_short != nullptr)
@@ -91,6 +91,7 @@ void draw_group_info(const config_t *group)
     ImGui::TextDisabled("%s", info->name);
     if (ImGui::BeginItemTooltip())
     {
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.f);
         draw_info_preamble(info);
 
         vector_t *child_groups = cfg_get_groups(group);

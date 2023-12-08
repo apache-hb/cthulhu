@@ -1,5 +1,6 @@
 #include "ap_common.h"
 
+#include "memory/memory.h"
 #include "std/vector.h"
 #include "std/str.h"
 #include "std/map.h"
@@ -27,7 +28,7 @@ int ap_parse(ap_t *self, reports_t *reports, int argc, const char **argv)
 {
     char *args = join_args(argc, argv);
     io_t *io = io_string("<command-line>", args);
-    scan_t *scan = scan_io(reports, "ap2", io);
+    scan_t *scan = scan_io(reports, "ap2", io, &gDefaultAlloc);
 
     scan_set(scan, self);
     compile_scanner(scan, &kCallbacks);

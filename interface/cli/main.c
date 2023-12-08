@@ -1,5 +1,6 @@
 #include "cmd.h"
 
+#include "memory/memory.h"
 #include "std/vector.h"
 #include "std/str.h"
 #include "std/map.h"
@@ -63,7 +64,7 @@ static void parse_source(lifetime_t *lifetime, const char *path)
 int main(int argc, const char **argv)
 {
     mediator_t *mediator = mediator_new("cli", kVersionInfo);
-    lifetime_t *lifetime = lifetime_new(mediator);
+    lifetime_t *lifetime = lifetime_new(mediator, &gDefaultAlloc);
     reports_t *reports = lifetime_get_reports(lifetime);
 
     runtime_t rt = cmd_parse(reports, mediator, lifetime, argc, argv);

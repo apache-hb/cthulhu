@@ -1,8 +1,8 @@
 #pragma once
 
-#include "core/macros.h"
-
 #include "scan/node.h"
+
+#include "memory/arena.h"
 
 /// @defgroup FlexBisonMacros Helpers for flex and bison driver frontends
 /// @{
@@ -56,22 +56,23 @@ void flex_update(where_t *where, where_t *offsets, int steps);
 #define FLEX_MEMORY(alloc, resize, release)                                                                            \
     inline void *alloc(size_t size, yyscan_t scanner)                                                                  \
     {                                                                                                                  \
-        CTU_UNUSED(scanner);                                                                                           \
-        return ctu_malloc(size);                                                                                       \
+        scan_t *scan = yyget_extra(scanner);                                                                           \
+        alloc_t *alloc = scan_alloc(scan);                                                                             \
+        return arena_malloc(alloc, size, "yyalloc", scan);                                                             \
     }                                                                                                                  \
     inline void *resize(void *ptr, size_t bytes, yyscan_t scanner)                                                     \
     {                                                                                                                  \
-        CTU_UNUSED(scanner);                                                                                           \
-        return ctu_realloc(ptr, bytes);                                                                                \
+        alloc_t *alloc = scan_alloc(yyget_extra(scanner));                                                             \
+        return arena_realloc(alloc, ptr, bytes, ALLOC_SIZE_UNKNOWN);                                                   \
     }                                                                                                                  \
     inline void release(void *ptr, yyscan_t scanner)                                                                   \
     {                                                                                                                  \
-        CTU_UNUSED(scanner);                                                                                           \
+        alloc_t *alloc = scan_alloc(yyget_extra(scanner));                                                             \
         if (ptr == NULL)                                                                                               \
         {                                                                                                              \
             return;                                                                                                    \
         }                                                                                                              \
-        ctu_free(ptr);                                                                                                 \
+        arena_free(alloc, ptr, ALLOC_SIZE_UNKNOWN);                                                                    \
     }
 
 /// @}

@@ -1,6 +1,7 @@
 #include "memory/memory.h"
 
 #include "base/panic.h"
+#include "core/macros.h"
 
 #include <gmp.h>
 
@@ -9,18 +10,24 @@
 
 /// default global allocator
 
-static void *default_global_malloc(malloc_event_t event)
+static void *default_global_malloc(const mem_t *mem, malloc_event_t event)
 {
+    CTU_UNUSED(mem);
+
     return malloc(event.size);
 }
 
-static void *default_global_realloc(realloc_event_t event)
+static void *default_global_realloc(const mem_t *mem, realloc_event_t event)
 {
+    CTU_UNUSED(mem);
+
     return realloc(event.ptr, event.new_size);
 }
 
-static void default_global_free(free_event_t event)
+static void default_global_free(const mem_t *mem, free_event_t event)
 {
+    CTU_UNUSED(mem);
+
     free(event.ptr);
 }
 
@@ -96,7 +103,7 @@ static alloc_t *gGmpAlloc = NULL;
 
 static void *ctu_gmp_malloc(size_t size)
 {
-    return arena_malloc(gGmpAlloc, size, "gmp-alloc", NULL);
+    return arena_malloc(gGmpAlloc, size, "gmp", gGmpAlloc);
 }
 
 static void *ctu_gmp_realloc(void *ptr, size_t old_size, size_t new_size)

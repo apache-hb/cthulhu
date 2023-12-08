@@ -11,6 +11,7 @@ typedef struct lifetime_t lifetime_t;
 typedef struct driver_t driver_t;
 typedef struct plugin_t plugin_t;
 typedef struct context_t context_t;
+typedef struct alloc_t alloc_t;
 
 typedef struct vector_t vector_t;
 typedef struct ap_t ap_t;
@@ -23,7 +24,7 @@ typedef struct reports_t reports_t;
 /// drivers
 ///
 
-typedef void (*config_t)(lifetime_t *, ap_t *);
+typedef void (*driver_config_t)(lifetime_t *, ap_t *);
 
 typedef void (*driver_create_t)(driver_t *);
 typedef void (*driver_destroy_t)(driver_t *);
@@ -49,7 +50,7 @@ typedef struct language_t
 
     const char **exts; ///< null terminated list of file extensions
 
-    config_t fnConfig;
+    driver_config_t fnConfig;
 
     driver_create_t fnCreate;   ///< called at startup
     driver_destroy_t fnDestroy; ///< called at shutdown

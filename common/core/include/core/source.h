@@ -9,4 +9,4 @@ typedef struct source_t
     const char *file;
 } source_t;
 
-#define CTU_HERE() (source_t){ .line = __LINE__, .function = FUNCNAME, .file = __FILE__ }
+#define CTU_SOURCE() (source_t) { .line = __LINE__, .function = FUNCNAME, .file = __FILE__ }

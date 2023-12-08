@@ -5,6 +5,8 @@
 
 #include "support/langs.h"
 
+#include "memory/memory.h"
+
 #include "report/report.h"
 
 #include "std/str.h"
@@ -57,7 +59,7 @@ int main(int argc, const char **argv)
     verbose = true;
 
     mediator_t *mediator = mediator_new("example", kVersion);
-    lifetime_t *lifetime = lifetime_new(mediator);
+    lifetime_t *lifetime = lifetime_new(mediator, &gDefaultAlloc);
     reports_t *reports = lifetime_get_reports(lifetime);
 
     ap_t *ap = ap_new("example", NEW_VERSION(1, 0, 0));

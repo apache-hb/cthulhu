@@ -79,11 +79,9 @@ lifetime_t *handle_get_lifetime(driver_t *handle)
     return handle->parent;
 }
 
-mediator_t *mediator_new(const char *id, version_info_t version)
+mediator_t *mediator_new_noinit(const char *id, version_info_t version)
 {
     CTASSERT(id != NULL);
-
-    runtime_init();
 
     mediator_t *self = ctu_malloc(sizeof(mediator_t));
 
@@ -93,15 +91,24 @@ mediator_t *mediator_new(const char *id, version_info_t version)
     return self;
 }
 
-lifetime_t *lifetime_new(mediator_t *mediator)
+mediator_t *mediator_new(const char *id, version_info_t version)
+{
+    runtime_init();
+
+    return mediator_new_noinit(id, version);
+}
+
+lifetime_t *lifetime_new(mediator_t *mediator, alloc_t *alloc)
 {
     CTASSERT(mediator != NULL);
+    CTASSERT(alloc != NULL);
 
-    lifetime_t *self = ctu_malloc(sizeof(lifetime_t));
+    lifetime_t *self = arena_malloc(alloc, sizeof(lifetime_t), "lifetime", mediator);
 
     self->parent = mediator;
 
     self->reports = begin_reports();
+    self->alloc = alloc;
 
     self->extensions = map_new(16);
     self->modules = map_new(64);
@@ -176,7 +183,7 @@ void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io)
 
     CTASSERT(lang->fnParse != NULL);
 
-    scan_t *scan = scan_io(lifetime->reports, lang->id, io);
+    scan_t *scan = scan_io(lifetime->reports, lang->id, io, lifetime->alloc);
     driver_t *handle = handle_new(lifetime, lang);
 
     lang->fnParse(handle, scan);

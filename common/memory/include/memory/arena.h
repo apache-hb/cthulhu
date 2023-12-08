@@ -5,6 +5,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 BEGIN_API
 
@@ -20,10 +21,11 @@ BEGIN_API
 
 typedef struct alloc_t alloc_t;
 
+typedef struct mem_t mem_t;
+
 typedef struct malloc_event_t
 {
     // required params
-    alloc_t *alloc;
     size_t size;
 
     /// @brief the name of the allocation
@@ -36,7 +38,6 @@ typedef struct malloc_event_t
 typedef struct realloc_event_t
 {
     // required params
-    alloc_t *alloc;
     void *ptr;
     size_t new_size;
 
@@ -48,7 +49,6 @@ typedef struct realloc_event_t
 typedef struct free_event_t
 {
     // required params
-    alloc_t *alloc;
     void *ptr;
 
     /// @brief the size of the allocation
@@ -62,7 +62,7 @@ typedef struct free_event_t
 ///
 /// @return the allocated pointer
 /// @return NULL if the allocation failed
-typedef void *(*malloc_t)(malloc_event_t event);
+typedef void *(*fn_malloc_t)(const mem_t *header, malloc_event_t event);
 
 /// @brief realloc function pointer
 ///
@@ -70,24 +70,26 @@ typedef void *(*malloc_t)(malloc_event_t event);
 ///
 /// @return the reallocated pointer
 /// @return NULL if the allocation failed
-typedef void *(*realloc_t)(realloc_event_t event);
+typedef void *(*fn_realloc_t)(const mem_t *header, realloc_event_t event);
 
 /// @brief free function pointer
 ///
 /// @param event associated event
-typedef void (*free_t)(free_event_t event);
+typedef void (*fn_free_t)(const mem_t *header, free_event_t event);
 
 /// @brief an allocator object
 typedef struct alloc_t
 {
     const char *name;        ///< the name of the allocator
 
-    malloc_t arena_malloc;   ///< the malloc function
-    realloc_t arena_realloc; ///< the realloc function
-    free_t arena_free;       ///< the free function
+    fn_malloc_t arena_malloc;   ///< the malloc function
+    fn_realloc_t arena_realloc; ///< the realloc function
+    fn_free_t arena_free;       ///< the free function
 
     void *user; ///< user data
 } alloc_t;
+
+alloc_t *mem_arena(IN_NOTNULL const mem_t *event);
 
 /// @brief release memory from a custom allocator
 /// @note ensure the allocator is consistent with the allocator used to allocate @a ptr
