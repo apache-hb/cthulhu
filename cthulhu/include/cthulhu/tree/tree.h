@@ -227,6 +227,7 @@ typedef struct tree_t {
 ///
 
 tree_t *tree_error(const node_t *node, const char *message, ...);
+tree_t *tree_pick_error(const node_t *node, const tree_t *lhs, const tree_t *rhs);
 tree_t *tree_raise(const node_t *node, reports_t *reports, const char *message, ...);
 void tree_report(reports_t *reports, const tree_t *error);
 

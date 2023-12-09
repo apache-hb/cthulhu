@@ -138,6 +138,13 @@ void ctu_mem_reparent(const void *ptr, const void *parent)
     arena_reparent(gGlobalAlloc, ptr, parent);
 }
 
+USE_DECL
+void ctu_mem_identify(const void *ptr, const char *name, const void *parent)
+{
+    arena_rename(gGlobalAlloc, ptr, name);
+    arena_reparent(gGlobalAlloc, ptr, parent);
+}
+
 /// gmp arena managment
 
 static alloc_t *gGmpAlloc = NULL;

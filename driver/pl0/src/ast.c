@@ -5,9 +5,12 @@
 pl0_t *pl0_new(scan_t *scan, where_t where, pl0_type_t type)
 {
     alloc_t *alloc = scan_alloc(scan);
-    pl0_t *node = arena_malloc(alloc, sizeof(pl0_t), "pl0", scan);
+    pl0_t *node = ARENA_MALLOC(alloc, sizeof(pl0_t), "pl0", scan);
     node->node = node_new(scan, where);
     node->type = type;
+
+    ARENA_IDENTIFY(alloc, node->node, "node", node);
+
     return node;
 }
 

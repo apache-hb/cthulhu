@@ -39,7 +39,7 @@ char *vformat(const char *fmt, va_list args)
 
     CTASSERTF(len > 0, "vformat failed to format string: %s", fmt);
 
-    char *out = ctu_malloc_info(len, "vformat", NULL);
+    char *out = MEM_ALLOC(len, "vformat", NULL);
 
     int result = vsnprintf(out, len, fmt, again);
     CTASSERTF(result == len - 1, "vformat failed to format string: %s (%d == %d - 1)", fmt, result, len);

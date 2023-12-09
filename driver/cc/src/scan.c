@@ -1,4 +1,4 @@
-#include "cc/scan.h"
+#include "scan/node.h"
 
 #include "report/report.h"
 

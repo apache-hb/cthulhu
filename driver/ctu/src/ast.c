@@ -7,9 +7,12 @@
 static ctu_t *ctu_new(scan_t *scan, where_t where, ctu_kind_t kind)
 {
     alloc_t *alloc = scan_alloc(scan);
-    ctu_t *self = arena_malloc(alloc, sizeof(ctu_t), "ctu", scan);
+    ctu_t *self = ARENA_MALLOC(alloc, sizeof(ctu_t), "ctu", scan);
     self->kind = kind;
     self->node = node_new(scan, where);
+
+    ARENA_IDENTIFY(alloc, self->node, "node", self);
+
     return self;
 }
 

@@ -39,7 +39,7 @@ static void vector_ensure(vector_t **vector, size_t size)
 
 static vector_t *vector_init_inner(size_t size, size_t used)
 {
-    vector_t *vector = ctu_malloc_info(vector_size(size), "vector", NULL);
+    vector_t *vector = MEM_ALLOC(vector_size(size), "vector", NULL);
 
     vector->size = size;
     vector->used = used;

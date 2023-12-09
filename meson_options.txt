@@ -17,6 +17,13 @@ option('build_gui', type : 'feature',
     value : 'auto'
 )
 
+# trace options
+
+option('trace_memory', type : 'feature',
+    description : 'enable memory allocation tracing',
+    value : 'auto'
+)
+
 # testing options
 
 option('unit_tests', type : 'feature',

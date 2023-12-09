@@ -1,9 +1,7 @@
 #include "common.h"
 
-#include "std/vector.h"
 #include "std/str.h"
 
-#include "base/util.h"
 #include "memory/memory.h"
 #include "base/panic.h"
 
@@ -19,7 +17,7 @@ static inode_t *inode_new(inode_type_t type, const void *data, size_t size)
 {
     CTASSERT(type < eNodeTotal);
 
-    inode_t *inode = ctu_malloc(sizeof(inode_t) + size);
+    inode_t *inode = MEM_ALLOC(sizeof(inode_t) + size, "inode", NULL);
     inode->type = type;
     memcpy(inode->data, data, size);
     return inode;
@@ -74,7 +72,7 @@ fs_t *fs_new(reports_t *reports, inode_t *root, const fs_callbacks_t *cb, const 
     CTASSERT(reports != NULL);
     CTASSERT(cb != NULL);
 
-    fs_t *fs = ctu_malloc(sizeof(fs_t) + size);
+    fs_t *fs = MEM_ALLOC(sizeof(fs_t) + size, "fs", cb);
     fs->reports = reports;
     fs->cb = cb;
     fs->root = root;
@@ -87,5 +85,6 @@ fs_t *fs_new(reports_t *reports, inode_t *root, const fs_callbacks_t *cb, const 
 void *fs_data(fs_t *fs)
 {
     CTASSERT(fs != NULL);
+
     return fs->data;
 }

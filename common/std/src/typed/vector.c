@@ -7,12 +7,19 @@
 
 #include <string.h>
 
-typedef struct typevec_t {
+/// @brief A vector with a fixed type size.
+typedef struct typevec_t
+{
+    /// @brief The number of elements allocated.
     size_t size;
+
+    /// @brief The number of elements used.
     size_t used;
 
+    /// @brief The size of each element.
     size_t type_size;
 
+    /// @brief The data of the vector.
     void *data;
 } typevec_t;
 
@@ -22,11 +29,11 @@ static typevec_t *typevec_create(size_t type_size, size_t len)
 
     size_t size = MAX(len, 1);
 
-    typevec_t *vec = ctu_malloc_info(sizeof(typevec_t), "typevec", NULL);
+    typevec_t *vec = MEM_ALLOC(sizeof(typevec_t), "typevec", NULL);
     vec->size = size;
     vec->used = 0;
     vec->type_size = type_size;
-    vec->data = ctu_malloc_info(type_size * (size + 1), "typevec_data", vec);
+    vec->data = MEM_ALLOC(type_size * (size + 1), "typevec_data", vec);
     return vec;
 }
 

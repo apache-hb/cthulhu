@@ -112,8 +112,8 @@ lifetime_t *lifetime_new(mediator_t *mediator, alloc_t *alloc)
     self->reports = begin_reports();
     self->alloc = alloc;
 
-    self->extensions = map_new(16);
-    self->modules = map_new(64);
+    self->extensions = map_optimal(16);
+    self->modules = map_optimal(64);
 
     self->cookie = cookie_new(self, self->reports);
 
@@ -264,6 +264,7 @@ map_t *lifetime_get_modules(lifetime_t *lifetime)
     CTASSERT(lifetime != NULL);
 
     map_t *mods = map_optimal(64);
+    MEM_IDENTIFY(mods, "modules", lifetime);
 
     map_iter_t iter = map_iter(lifetime->modules);
     while (map_has_next(&iter))

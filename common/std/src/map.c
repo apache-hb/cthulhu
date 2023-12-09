@@ -36,9 +36,9 @@ static size_t sizeof_map(size_t size)
     return sizeof(map_t) + (size * sizeof(bucket_t));
 }
 
-static bucket_t *bucket_new(const void *parent, const void *key, void *value)
+static bucket_t *bucket_new(const void *key, void *value)
 {
-    bucket_t *entry = ctu_malloc_info(sizeof(bucket_t), "bucket", parent);
+    bucket_t *entry = MEM_ALLOC(sizeof(bucket_t), "bucket", NULL);
     entry->key = key;
     entry->value = value;
     entry->next = NULL;
@@ -66,7 +66,7 @@ map_t *map_new(size_t size)
 {
     CTASSERT(size > 0);
 
-    map_t *map = ctu_malloc_info(sizeof_map(size), "map", NULL);
+    map_t *map = MEM_ALLOC(sizeof_map(size), "map", NULL);
 
     map->size = size;
 
@@ -218,7 +218,8 @@ void map_set(map_t *map, const char *key, void *value)
 
         if (entry->next == NULL)
         {
-            entry->next = bucket_new(entry, key, value);
+            entry->next = bucket_new(key, value);
+            MEM_REPARENT(entry->next, entry);
             break;
         }
 
@@ -287,7 +288,8 @@ void map_set_ptr(map_t *map, const void *key, void *value)
 
         if (entry->next == NULL)
         {
-            entry->next = bucket_new(entry, key, value);
+            entry->next = bucket_new(key, value);
+            MEM_REPARENT(entry->next, entry);
             break;
         }
 

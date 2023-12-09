@@ -1,5 +1,6 @@
 #include "common/common.h"
 
+#include "memory/memory.h"
 #include "std/set.h"
 #include "std/map.h"
 #include "std/vector.h"
@@ -11,7 +12,8 @@
 #include "scan/node.h"
 #include "base/panic.h"
 
-typedef struct ssa_vm_t {
+typedef struct ssa_vm_t
+{
     // externally provided values
     reports_t *reports;
     map_t *deps;
@@ -20,14 +22,15 @@ typedef struct ssa_vm_t {
     set_t *globals;
 } ssa_vm_t;
 
-typedef struct ssa_scope_t {
+typedef struct ssa_scope_t
+{
     ssa_vm_t *vm;
 
     typevec_t *locals;
 
     const ssa_symbol_t *symbol;
-    const ssa_value_t *returnValue;
-    map_t *stepValues;
+    const ssa_value_t *return_value;
+    map_t *step_values;
 } ssa_scope_t;
 
 static void add_global(ssa_vm_t *vm, ssa_symbol_t *global)
@@ -60,7 +63,7 @@ static const ssa_value_t *ssa_opt_operand(ssa_scope_t *vm, ssa_operand_t operand
     {
     case eOperandEmpty: return NULL;
     case eOperandImm: return operand.value;
-    case eOperandReg: return map_get_ptr(vm->stepValues, get_step_indexed(operand.vregContext, operand.vregIndex));
+    case eOperandReg: return map_get_ptr(vm->step_values, get_step_indexed(operand.vregContext, operand.vregIndex));
     case eOperandConst: return vector_get(vm->symbol->consts, operand.constant);
     case eOperandGlobal: {
         const ssa_symbol_t *global = operand.global;
@@ -92,7 +95,7 @@ static const ssa_value_t *ssa_opt_load(ssa_scope_t *vm, ssa_load_t step)
 static const ssa_value_t *ssa_opt_return(ssa_scope_t *vm, ssa_return_t step)
 {
     const ssa_value_t *value = ssa_opt_operand(vm, step.value);
-    vm->returnValue = value;
+    vm->return_value = value;
     return value;
 }
 
@@ -265,9 +268,9 @@ static void ssa_opt_block(ssa_scope_t *vm, const ssa_block_t *block)
     {
         const ssa_step_t *step = typevec_offset(block->steps, i);
         const ssa_value_t *value = ssa_opt_step(vm, step);
-        map_set_ptr(vm->stepValues, step, (void*)value);
+        map_set_ptr(vm->step_values, step, (void*)value);
 
-        if (vm->returnValue != NULL) { return; }
+        if (vm->return_value != NULL) { return; }
     }
 }
 
@@ -283,14 +286,16 @@ static void ssa_opt_global(ssa_vm_t *vm, ssa_symbol_t *global)
     ssa_scope_t scope = {
         .vm = vm,
         .symbol = global,
-        .returnValue = NULL,
-        .stepValues = map_new(64)
+        .return_value = NULL,
+        .step_values = map_optimal(64)
     };
 
-    ssa_opt_block(&scope, global->entry);
-    CTASSERTF(scope.returnValue != NULL, "global %s failed to evaluate", global->name);
+    MEM_RENAME(scope.step_values, "step_values");
 
-    global->value = scope.returnValue;
+    ssa_opt_block(&scope, global->entry);
+    CTASSERTF(scope.return_value != NULL, "global %s failed to evaluate", global->name);
+
+    global->value = scope.return_value;
 }
 
 void ssa_opt(reports_t *reports, ssa_result_t result)
@@ -301,6 +306,8 @@ void ssa_opt(reports_t *reports, ssa_result_t result)
 
         .globals = set_new(64),
     };
+
+    MEM_RENAME(vm.globals, "globals");
 
     size_t len = vector_len(result.modules);
     for (size_t i = 0; i < len; i++)

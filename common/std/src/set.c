@@ -26,9 +26,9 @@ static size_t set_size(size_t size)
     return sizeof(set_t) + (sizeof(item_t) * size);
 }
 
-static item_t *item_new(const void *parent, const char *key)
+static item_t *item_new(const char *key)
 {
-    item_t *item = ctu_malloc_info(sizeof(item_t), "item", parent);
+    item_t *item = MEM_ALLOC(sizeof(item_t), "item", NULL);
     item->key = key;
     item->next = NULL;
     return item;
@@ -57,7 +57,7 @@ set_t *set_new(size_t size)
 {
     CTASSERT(size > 0);
 
-    set_t *set = ctu_malloc_info(set_size(size), "set", NULL);
+    set_t *set = MEM_ALLOC(set_size(size), "set", NULL);
     set->size = size;
 
     for (size_t i = 0; i < size; i++)
@@ -96,7 +96,8 @@ const char *set_add(set_t *set, const char *key)
         }
         else
         {
-            item->next = item_new(item, key);
+            item->next = item_new(key);
+            MEM_REPARENT(item->next, item);
             return key;
         }
     }
@@ -159,7 +160,8 @@ const void *set_add_ptr(set_t *set, const void *key)
         }
         else
         {
-            item->next = item_new(item, key);
+            item->next = item_new(key);
+            MEM_REPARENT(item->next, item);
             return key;
         }
     }

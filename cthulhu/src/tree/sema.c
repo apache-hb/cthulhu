@@ -23,11 +23,15 @@ static tree_t *tree_module_new(const node_t *node, const char *name,
     self->cookie = cookie;
     self->reports = reports;
     self->extra = extra;
+    MEM_IDENTIFY(self->extra, "module_extra", self);
+
     self->tags = vector_of(decls);
+    MEM_IDENTIFY(self->tags, "module_tags", self);
 
     for (size_t i = 0; i < decls; i++)
     {
         map_t *map = map_optimal(sizes[i]);
+        MEM_IDENTIFY(map, "module_tag", self);
         vector_set(self->tags, i, map);
     }
 

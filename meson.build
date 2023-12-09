@@ -43,6 +43,8 @@ parts = version.split('.')
 
 warning_level = get_option('warning_level').to_int()
 
+trace_memory = get_option('trace_memory').disable_auto_if(is_release)
+
 config_cdata = configuration_data({
     'CTU_MAJOR': parts[0].to_int(),
     'CTU_MINOR': parts[1].to_int(),
@@ -59,6 +61,8 @@ config_cdata.set10('CTU_DISABLE_FN_PURITY', unit_tests.allowed() and cc.get_id()
 # gcc warns about __PRETY_FUNCTION__ not being ISO C when on warning level 3
 # which is weird seeing as we specify gnu11, maybe its a gcc bug?
 config_cdata.set10('CTU_HAS_PRETTY_FUNCTION', warning_level < 3)
+
+config_cdata.set10('CTU_TRACE_MEMORY', trace_memory.allowed())
 
 gmp = dependency('gmp', fallback : [ 'mini_gmp', 'gmp' ])
 
@@ -163,7 +167,7 @@ interfaces = {}
 plugins = {}
 
 foreach lang : get_option('languages')
-    subdir('driver'/lang)
+    subdir('driver' / lang)
 endforeach
 
 subdir('interface')
@@ -219,6 +223,7 @@ summary = {
         'Debug': is_debug,
         'Interfaces': ', '.join(get_option('interfaces')),
         'Languages': ', '.join(get_option('languages')),
+        'Memory tracing': trace_memory.allowed()
     },
     'Graphical Interface': {
         'Enabled': build_gui.allowed(),
@@ -227,10 +232,10 @@ summary = {
     'Testing': {
         'Unit tests': unit_tests,
         'Driver tests': driver_tests,
-        'Analyze': analyze,
+        'Analyze': analyze
     },
     'Documentation': {
-        'Doxygen': doxygen,
+        'Doxygen': doxygen
     }
 }
 

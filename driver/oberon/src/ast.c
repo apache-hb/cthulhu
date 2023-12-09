@@ -26,9 +26,12 @@ static obr_t *obr_new(scan_t *scan, where_t where, obr_kind_t kind)
     CTASSERT(scan != NULL);
 
     alloc_t *alloc = scan_alloc(scan);
-    obr_t *self = arena_malloc(alloc, sizeof(obr_t), "obr", scan);
+    obr_t *self = ARENA_MALLOC(alloc, sizeof(obr_t), "obr", scan);
     self->kind = kind;
     self->node = node_new(scan, where);
+
+    ARENA_IDENTIFY(alloc, self->node, "node", self);
+
     return self;
 }
 

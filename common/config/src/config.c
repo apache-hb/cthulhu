@@ -46,7 +46,7 @@ static void options_validate(const cfg_choice_t *options, size_t count)
 
 static cfg_field_t *add_field(config_t *config, const cfg_info_t *info, cfg_type_t type)
 {
-    cfg_field_t *field = arena_malloc(config->alloc, sizeof(cfg_field_t), info->name, config);
+    cfg_field_t *field = ARENA_MALLOC(config->alloc, sizeof(cfg_field_t), info->name, config);
     field->info = info;
     field->type = type;
 
@@ -55,24 +55,27 @@ static cfg_field_t *add_field(config_t *config, const cfg_info_t *info, cfg_type
     return field;
 }
 
-static config_t *alloc_config(alloc_t *alloc, const cfg_info_t *info, const char *name, const void *parent)
+static config_t *alloc_config(alloc_t *alloc, const cfg_info_t *info, const char *name)
 {
     CTASSERT(alloc != NULL);
     ASSERT_INFO_VALID_GROUP(info);
 
-    config_t *config = arena_malloc(alloc, sizeof(config_t), name, parent);
+    config_t *config = ARENA_MALLOC(alloc, sizeof(config_t), name, NULL);
     config->alloc = alloc;
     config->info = info;
 
     config->groups = vector_new(4);
     config->fields = vector_new(4);
 
+    ARENA_IDENTIFY(alloc, config->groups, "groups", config);
+    ARENA_IDENTIFY(alloc, config->fields, "fields", config);
+
     return config;
 }
 
 config_t *config_new(alloc_t *alloc, const cfg_info_t *info)
 {
-    return alloc_config(alloc, info, "config", NULL);
+    return alloc_config(alloc, info, "config");
 }
 
 cfg_field_t *config_int(config_t *group, const cfg_info_t *info, cfg_int_t cfg)
@@ -142,7 +145,8 @@ config_t *config_group(config_t *group, const cfg_info_t *info)
 {
     CTASSERT(group != NULL);
 
-    config_t *config = alloc_config(group->alloc, info, info->name, group);
+    config_t *config = alloc_config(group->alloc, info, info->name);
+    ARENA_REPARENT(group->alloc, config, group);
     vector_push(&group->groups, config);
 
     return config;

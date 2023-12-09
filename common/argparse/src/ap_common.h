@@ -51,22 +51,22 @@ typedef struct ap_t {
     version_t version;
 
     // name -> ap_param_t lookup
-    map_t *nameLookup;
+    map_t *name_lookup;
 
     // param -> vector<ap_event_t> lookup
-    map_t *eventLookup;
+    map_t *event_lookup;
 
     // param -> void* lookup
-    map_t *paramValues;
+    map_t *param_values;
 
     // all groups
     vector_t *groups;
 
     // vector<ap_callback_t> for positional arguments
-    vector_t *posArgCallbacks;
+    vector_t *posarg_callbacks;
 
     // vector<ap_err_callback_t> for error callbacks
-    vector_t *errorCallbacks;
+    vector_t *error_callbacks;
 } ap_t;
 
 void ap_on_string(scan_t *scan, where_t where, const ap_param_t *param, const char *value);

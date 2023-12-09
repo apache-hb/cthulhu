@@ -15,7 +15,7 @@ alloc_t *ctu_default_alloc(void);
 /// @note @a gDefaultAlloc must be consistent with the allocator used to allocate @a ptr
 ///
 /// @param ptr the pointer to free, must not be NULL
-void ctu_free(IN_NOTNULL OUT_PTR_INVALID void *ptr);
+void ctu_free(OUT_PTR_INVALID void *ptr);
 
 /// @brief allocate a pointer from the default allocator
 ///
@@ -29,9 +29,9 @@ void *ctu_malloc(IN_RANGE(!=, 0) size_t size);
 NODISCARD CT_ALLOC(ctu_free)
 RET_NOTNULL
 void *ctu_malloc_info(
-        IN_RANGE(!=, 0) size_t size,
-        const char *name,
-        const void *parent);
+    IN_RANGE(!=, 0) size_t size,
+    const char *name,
+    const void *parent);
 
 /// @brief reallocate a pointer from the default allocator
 /// @note @a gDefaultAlloc must be consistent with the allocator used to allocate @a ptr
@@ -43,8 +43,8 @@ void *ctu_malloc_info(
 NODISCARD CT_ALLOC(ctu_free)
 RET_NOTNULL
 void *ctu_realloc(
-        IN_NOTNULL OUT_PTR_INVALID void *ptr,
-        IN_RANGE(!=, 0) size_t new_size);
+    IN_NOTNULL OUT_PTR_INVALID void *ptr,
+    IN_RANGE(!=, 0) size_t new_size);
 
 ///
 /// @brief allocate a copy of a string
@@ -99,8 +99,30 @@ alloc_t *get_global_alloc(void);
 /// @def BOX(name)
 /// @brief box a value on the stack
 
-void ctu_mem_rename(IN_NOTNULL const void *ptr, IN_STRING const char *name);
-void ctu_mem_reparent(IN_NOTNULL const void *ptr, const void *parent);
+void ctu_mem_rename(
+    IN_NOTNULL const void *ptr,
+    IN_STRING const char *name);
+
+void ctu_mem_reparent(
+    IN_NOTNULL const void *ptr,
+    const void *parent);
+
+void ctu_mem_identify(
+    IN_NOTNULL const void *ptr,
+    IN_STRING const char *name,
+    const void *parent);
+
+#if CTU_TRACE_MEMORY
+#   define MEM_RENAME(ptr, name) ctu_mem_rename(ptr, name)
+#   define MEM_REPARENT(ptr, parent) ctu_mem_reparent(ptr, parent)
+#   define MEM_IDENTIFY(ptr, name, parent) ctu_mem_identify(ptr, name, parent)
+#   define MEM_ALLOC(size, name, parent) ctu_malloc_info(size, name, parent)
+#else
+#   define MEM_RENAME(ptr, name)
+#   define MEM_REPARENT(ptr, parent)
+#   define MEM_IDENTIFY(ptr, name, parent)
+#   define MEM_ALLOC(size, name, parent) ctu_malloc(size)
+#endif
 
 /// @} // GlobalMemory
 

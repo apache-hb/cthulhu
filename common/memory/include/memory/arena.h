@@ -110,6 +110,22 @@ void *arena_realloc(
 void arena_rename(IN_NOTNULL alloc_t *alloc, IN_NOTNULL const void *ptr, IN_STRING const char *name);
 void arena_reparent(IN_NOTNULL alloc_t *alloc, IN_NOTNULL const void *ptr, const void *parent);
 
+#if CTU_TRACE_MEMORY
+#   define ARENA_RENAME(alloc, ptr, name) arena_rename(alloc, ptr, name)
+#   define ARENA_REPARENT(alloc, ptr, parent) arena_reparent(alloc, ptr, parent)
+#   define ARENA_MALLOC(alloc, size, name, parent) arena_malloc(alloc, size, name, parent)
+#else
+#   define ARENA_RENAME(alloc, ptr, name)
+#   define ARENA_REPARENT(alloc, ptr, parent)
+#   define ARENA_MALLOC(alloc, size, name, parent) arena_malloc(alloc, size, NULL, NULL)
+#endif
+
+#define ARENA_IDENTIFY(alloc, ptr, name, parent) \
+    do { \
+        ARENA_RENAME(alloc, ptr, name); \
+        ARENA_REPARENT(alloc, ptr, parent); \
+    } while (0)
+
 /// @} // Memory Management
 
 END_API

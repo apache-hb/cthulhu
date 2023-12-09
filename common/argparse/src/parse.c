@@ -42,7 +42,7 @@ int ap_get_opt(ap_t *self, const char *name, ap_param_t **param, char **error)
     CTASSERT(name != NULL);
     CTASSERT(param != NULL);
 
-    ap_param_t *result = map_get(self->nameLookup, name);
+    ap_param_t *result = map_get(self->name_lookup, name);
     if (result == NULL)
     {
         *error = format("unknown option '%s'", name);

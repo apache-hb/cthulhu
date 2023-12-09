@@ -289,7 +289,7 @@ static tree_t *sema_call(tree_t *sema, pl0_t *node)
     if (proc == NULL)
     {
         report_pl0_unresolved(sema->reports, node->node, node->procedure);
-        return tree_error(node->node, "unresolved procedure");
+        return tree_error(node->node, "unresolved procedure %s", node->procedure);
     }
 
     vector_t *args = vector_new(0);
@@ -313,7 +313,7 @@ static tree_t *sema_assign(tree_t *sema, pl0_t *node)
     if (dst == NULL)
     {
         report_pl0_unresolved(sema->reports, node->node, node->dst);
-        return tree_error(node->node, "unresolved variable");
+        return tree_error(node->node, "unresolved destination variable %s", node->dst);
     }
 
     const tree_t *dstType = tree_get_type(dst);

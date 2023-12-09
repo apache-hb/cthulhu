@@ -47,7 +47,7 @@ node_t *node_new(scan_t *scan, where_t where)
     CTASSERT(scan != NULL);
 
     alloc_t *alloc = scan_alloc(scan);
-    node_t *node = arena_malloc(alloc, sizeof(node_t), "node", scan);
+    node_t *node = ARENA_MALLOC(alloc, sizeof(node_t), "node", scan);
     node->scan = scan;
     node->where = where;
 

@@ -7,6 +7,7 @@
 
 #include "cthulhu/mediator/interface.h"
 
+#include "memory/memory.h"
 #include "support/langs.h"
 
 #include "os/os.h"
@@ -39,7 +40,20 @@ struct AllocInfo
 
 struct TraceAlloc final : public ed::IAlloc
 {
-    using IAlloc::IAlloc;
+    /// @brief the draw mode for the gui view of this allocator
+    enum DrawType : int
+    {
+        /// @brief draw the allocations as a tree using parent data
+        eDrawTree,
+
+        /// @brief draw the allocations as a flat list
+        eDrawFlat
+    };
+
+    TraceAlloc(const char *alloc_name, DrawType default_mode = eDrawTree)
+        : IAlloc(alloc_name)
+        , draw_mode(default_mode)
+    { }
 
     void *malloc(size_t size) override
     {
@@ -217,8 +231,7 @@ private:
         ImGui::Text("peak usage: %zu", peak_usage);
     }
 
-    enum : int { eDrawTree, eDrawFlat };
-    int draw_mode = eDrawTree;
+    int draw_mode;
 
     void draw_body()
     {
@@ -252,7 +265,15 @@ private:
     {
         if (auto it = allocs.find(ptr); it != allocs.end())
         {
-            draw_name(it->second.name);
+            const char *id = it->second.name;
+            if (id != nullptr)
+            {
+                ImGui::Text("%s (external)", id);
+            }
+            else
+            {
+                ImGui::TextDisabled("external");
+            }
         }
         else
         {
@@ -460,8 +481,8 @@ struct CompileRun
     const char *name;
     bool show = true;
 
-    TraceAlloc alloc{"default"};
-    TraceAlloc gmp_alloc{"gmp"};
+    TraceAlloc alloc{"default", TraceAlloc::eDrawTree};
+    TraceAlloc gmp_alloc{"gmp", TraceAlloc::eDrawFlat};
 
     config_t *config = nullptr;
 
@@ -906,6 +927,7 @@ int main(int argc, const char **argv)
 
     EditorUi ui;
 
+    init_global_alloc(ctu_default_alloc());
     ui.init_mediator();
 
     while (draw::begin_frame())
