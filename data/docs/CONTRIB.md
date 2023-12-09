@@ -1,0 +1,49 @@
+# Contributing {#contributing}
+
+## Source tree structure
+
+* `data` - various data files
+  * `meson` - cross files for various platforms
+  * `scripts` - automation for arduous setup tasks
+  * `docs` - documentation
+
+* `driver` - language frontends
+  * `pl0` - pl0 frontend, good for referencing how to use the common framework
+  * `oberon` - oberon-2 frontend (WIP)
+  * `ctu` - cthulhu language frontend (WIP)
+  * `jvm` - jvm classfile consumer (TODO)
+  * `cc` - C11 frontend (TODO)
+  * `example` - example frontend
+
+* `interface` - user facing components used to interact with drivers and the collection
+  * `cli` - command line user interface
+  * `gui` - graphical user interface (TODO)
+
+* `common` - common code
+  * `core` - header only compiler specific
+  * `stacktrace` - backtrace retrieval
+  * `argparse` - command line parsing
+  * `base` - base utils
+  * `memory` - memory allocation and arenas
+  * `interop` - flex & bison helper functions
+  * `platform` - platform detail wrappers
+  * `io` - file io abstraction
+  * `report` - error reporting tools
+  * `scan` - flex & bison scanning tools
+  * `std` - collections and data structures
+
+* `cthulhu` - compiler framework library
+  * `include/cthulhu` - public interface
+    * `emit` - ssa emitter
+    * `tree` - common typed ast
+    * `util` - common utilities
+    * `mediator` - code required to orchestrate communication between languages, the framework, and frontends
+    * `check` - validates state for various structures
+    * `ssa` - tree to ssa transforms, as well as optimizations
+
+* `subprojects` - dependencies
+  * `mini-gmp` - fallback gmp library if system gmp isnt installed
+
+* `tests` - tests
+  * `lang` - language specific tests
+  * `unit` - compiler code unit tests

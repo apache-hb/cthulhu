@@ -8,11 +8,11 @@
 #include <limits.h>
 
 BEGIN_API
-/**
- * @defgroup Set
- * @brief Simple unordered set
- * @{
- */
+
+/// @defgroup Set Unordered set
+/// @ingroup Standard
+/// @brief Hash set
+/// @{
 
 typedef struct set_t set_t;
 typedef struct item_t item_t;
@@ -120,6 +120,6 @@ const void *set_next(IN_NOTNULL set_iter_t *iter);
 NODISCARD CONSTFN
 bool set_has_next(IN_NOTNULL set_iter_t *iter);
 
-/** @} */
+/// @}
 
 END_API

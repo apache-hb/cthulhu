@@ -12,7 +12,7 @@ typedef struct vector_t vector_t;
 typedef struct node_t node_t;
 
 /**
- * @defgroup Reports
+ * @defgroup Reports Error reporting
  * @brief Error reporting sink api
  *
  * an error reporting sink should be used in any code that has a chance of
@@ -191,7 +191,7 @@ void report_note(message_t *message, FORMAT_STRING const char *fmt, ...);
 /** @} */
 
 /**
- * @defgroup Verbose
+ * @defgroup Verbose Verbose output
  * @brief Verbose output
  * @{
  */

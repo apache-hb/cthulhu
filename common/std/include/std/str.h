@@ -12,10 +12,10 @@ BEGIN_API
 typedef struct vector_t vector_t;
 typedef struct map_t map_t;
 
-/**
- * @defgroup StringUtils String manipulation and processing
- * @{
- */
+/// @defgroup StringUtils String manipulation and processing
+/// @ingroup Standard
+/// @brief String manipulation and processing
+/// @{
 
 /**
  * @brief format a string
@@ -336,6 +336,6 @@ char str_tolower(int c);
 
 #define STR_WHITESPACE " \t\r\v\n\f" ///< all whitespace charaters
 
-/** @} */
+/// @}
 
 END_API

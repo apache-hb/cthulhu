@@ -7,6 +7,11 @@
 
 BEGIN_API
 
+/// @defgroup TypedVector Typed vector
+/// @ingroup Standard
+/// @brief Generic vector of typed values
+/// @{
+
 typedef struct typevec_t typevec_t;
 
 /// @brief create a new typed vector
@@ -95,5 +100,7 @@ void *typevec_offset(IN_NOTNULL typevec_t *vec, size_t index);
 /// @return void* a pointer to the data
 NODISCARD
 void *typevec_data(IN_NOTNULL typevec_t *vec);
+
+/// @}
 
 END_API

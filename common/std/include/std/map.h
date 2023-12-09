@@ -9,6 +9,11 @@
 
 BEGIN_API
 
+/// @defgroup Map Unordered map
+/// @ingroup Standard
+/// @brief Hash map
+/// @{
+
 typedef struct vector_t vector_t;
 typedef struct typevec_t typevec_t;
 typedef struct bucket_t bucket_t;
@@ -133,5 +138,7 @@ NODISCARD CONSTFN
 bool map_has_next(IN_NOTNULL map_iter_t *iter);
 
 void map_reset(IN_NOTNULL map_t *map);
+
+/// @}
 
 END_API

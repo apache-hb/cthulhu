@@ -149,7 +149,7 @@ void msg_vappend(
 /// @param[in, out] event the event to append to
 /// @param node the node to attach to the message
 /// @param fmt the format string
-/// @param args the format arguments
+/// @param ... the format arguments
 CT_PRINTF(3, 4)
 void msg_underline(
     IN_NOTNULL event_t *event,

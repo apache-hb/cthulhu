@@ -7,6 +7,11 @@
 
 BEGIN_API
 
+/// @defgroup Vector Generic vector
+/// @ingroup Standard
+/// @brief Generic vector of pointers
+/// @{
+
 /**
  * a vector of non-owning pointers
  *
@@ -175,5 +180,7 @@ size_t vector_find(IN_NOTNULL vector_t *vector, const void *element);
  * @param vec the vector to clear
  */
 void vector_reset(IN_NOTNULL vector_t *vec);
+
+/// @}
 
 END_API

@@ -189,25 +189,36 @@ doxygen = find_program('doxygen', required : get_option('doxygen'))
 
 if doxygen.found()
     cwd = meson.project_source_root()
-    doxy_srcdirs = [
+    data_dir = cwd / 'data'
+
+    doxy_sources = [
         cwd / 'interface',
         cwd / 'common',
         cwd / 'cthulhu',
-        cwd / 'driver'
-    ]
+        cwd / 'driver',
 
-    data_dir = cwd / 'data'
+        data_dir / 'docs'
+    ]
 
     stylesheets = [
         data_dir / 'doxygen-awesome.css',
         data_dir / 'doxygen-awesome-sidebar-only.css'
     ]
 
+    doxy_includes = [
+        cwd / 'cthulhu' / 'include'
+    ]
+
     doxy_cdata = configuration_data()
     doxy_cdata.merge_from(config_cdata)
-    doxy_cdata.set('CTU_SOURCES', ' '.join(doxy_srcdirs))
+    doxy_cdata.set('CTU_SOURCES', ' '.join(doxy_sources))
     doxy_cdata.set('ROOT_SOURCE_DIR', cwd)
+    doxy_cdata.set('INCLUDE_PATHS', ' '.join(doxy_includes))
     doxy_cdata.set('EXTRA_STYLESHEET', ' '.join(stylesheets))
+    doxy_cdata.set('CLANG_DATABASE', meson.global_build_root() / 'compile_commands.json')
+    doxy_cdata.set('ENABLE_LIBCLANG', get_option('doxygen_libclang'))
+    doxy_cdata.set('GENERATE_LATEX', get_option('doxygen_latex'))
+    doxy_cdata.set('GENERATE_HTML', get_option('doxygen_html'))
 
     doxy_cfg = configure_file(
         input : 'data/Doxyfile.in',

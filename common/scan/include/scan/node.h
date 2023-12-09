@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 /**
- * @defgroup Location
+ * @defgroup Location Source location tracking
  * @brief AST source position tracking
  * @{
  */

@@ -29,6 +29,7 @@
 
 # dont ignore config files
 !Doxyfile.in
+!*.dox
 !.clangd
 !.clang-tidy
 !.clang-format
