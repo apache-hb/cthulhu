@@ -19,7 +19,7 @@ typedef struct lifetime_t {
     mediator_t *parent;
 
     reports_t *reports;
-    alloc_t *alloc;
+    arena_t *alloc;
 
     map_t *extensions;
     map_t *modules;

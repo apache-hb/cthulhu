@@ -33,7 +33,7 @@ io_t *io_new(const io_callbacks_t *cb,
     CTASSERTF(cb->fn_seek, "%s provided no `fn_seek`", name);
     CTASSERTF(cb->fn_map, "%s provided no `fn_map`", name);
 
-    io_t *io = ctu_malloc(sizeof(io_t) + size);
+    io_t *io = MEM_ALLOC(sizeof(io_t) + size, name, NULL);
 
     memcpy(io->data, data, size);
 

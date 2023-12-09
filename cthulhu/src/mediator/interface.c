@@ -23,7 +23,7 @@
 
 static cookie_t *cookie_new(lifetime_t *lifetime, reports_t *reports)
 {
-    cookie_t *self = arena_malloc(lifetime->alloc, sizeof(cookie_t), "cookie", lifetime);
+    cookie_t *self = ARENA_MALLOC(lifetime->alloc, sizeof(cookie_t), "cookie", lifetime);
     self->reports = reports;
     self->stack = vector_new(16);
     return self;
@@ -61,7 +61,7 @@ static driver_t *handle_new(lifetime_t *lifetime, const language_t *lang)
     CTASSERT(lifetime != NULL);
     CTASSERT(lang != NULL);
 
-    driver_t *self = arena_malloc(lifetime->alloc, sizeof(driver_t), lang->id, lifetime);
+    driver_t *self = ARENA_MALLOC(lifetime->alloc, sizeof(driver_t), lang->id, lifetime);
 
     self->parent = lifetime;
     self->lang = lang;
@@ -85,7 +85,7 @@ mediator_t *mediator_new_noinit(const char *id, version_info_t version)
 {
     CTASSERT(id != NULL);
 
-    mediator_t *self = ctu_malloc(sizeof(mediator_t));
+    mediator_t *self = MEM_ALLOC(sizeof(mediator_t), id, NULL);
 
     self->id = id;
     self->version = version;
@@ -100,12 +100,12 @@ mediator_t *mediator_new(const char *id, version_info_t version)
     return mediator_new_noinit(id, version);
 }
 
-lifetime_t *lifetime_new(mediator_t *mediator, alloc_t *alloc)
+lifetime_t *lifetime_new(mediator_t *mediator, arena_t *alloc)
 {
     CTASSERT(mediator != NULL);
     CTASSERT(alloc != NULL);
 
-    lifetime_t *self = arena_malloc(alloc, sizeof(lifetime_t), "lifetime", mediator);
+    lifetime_t *self = ARENA_MALLOC(alloc, sizeof(lifetime_t), "lifetime", mediator);
 
     self->parent = mediator;
 

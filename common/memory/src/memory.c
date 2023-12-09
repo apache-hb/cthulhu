@@ -33,22 +33,22 @@ static void default_free(const mem_t *mem, void *ptr, size_t size)
     free(ptr);
 }
 
-static alloc_t gDefaultAlloc = {
+static arena_t gDefaultAlloc = {
     .name = "default global allocator",
     .fn_malloc = default_malloc,
     .fn_realloc = default_realloc,
     .fn_free = default_free
 };
 
-alloc_t *ctu_default_alloc(void)
+arena_t *ctu_default_alloc(void)
 {
     return &gDefaultAlloc;
 }
 
-static alloc_t *gGlobalAlloc = NULL;
+static arena_t *gGlobalAlloc = NULL;
 
 USE_DECL
-void init_global_alloc(alloc_t *alloc)
+void init_global_alloc(arena_t *alloc)
 {
     CTASSERT(alloc != NULL);
 
@@ -56,7 +56,7 @@ void init_global_alloc(alloc_t *alloc)
     arena_rename(alloc, gGlobalAlloc, "global");
 }
 
-alloc_t *ctu_global_alloc(void)
+arena_t *ctu_global_alloc(void)
 {
     return gGlobalAlloc;
 }
@@ -99,7 +99,7 @@ void *ctu_memdup(const void *ptr, size_t size)
 {
     CTASSERT(ptr != NULL);
 
-    void *out = ctu_malloc(size);
+    void *out = MEM_ALLOC(size, "memdup", gGlobalAlloc);
     memcpy(out, ptr, size);
     return out;
 }
@@ -110,7 +110,7 @@ char *ctu_strdup(const char *str)
     CTASSERT(str != NULL);
 
     size_t len = strlen(str) + 1;
-    char *out = ctu_malloc(len);
+    char *out = MEM_ALLOC(len, "strdup", gGlobalAlloc);
     memcpy(out, str, len);
     return out;
 }
@@ -120,7 +120,7 @@ char *ctu_strndup(const char *str, size_t len)
 {
     CTASSERT(str != NULL);
 
-    char *out = ctu_malloc(len + 1);
+    char *out = MEM_ALLOC(len + 1, "strndup", gGlobalAlloc);
     memcpy(out, str, len);
     out[len] = '\0';
     return out;
@@ -138,16 +138,9 @@ void ctu_mem_reparent(const void *ptr, const void *parent)
     arena_reparent(gGlobalAlloc, ptr, parent);
 }
 
-USE_DECL
-void ctu_mem_identify(const void *ptr, const char *name, const void *parent)
-{
-    arena_rename(gGlobalAlloc, ptr, name);
-    arena_reparent(gGlobalAlloc, ptr, parent);
-}
-
 /// gmp arena managment
 
-static alloc_t *gGmpAlloc = NULL;
+static arena_t *gGmpAlloc = NULL;
 
 static void *ctu_gmp_malloc(size_t size)
 {
@@ -166,7 +159,7 @@ static void ctu_gmp_free(void *ptr, size_t size)
 }
 
 USE_DECL
-void init_gmp_alloc(alloc_t *alloc)
+void init_gmp_alloc(arena_t *alloc)
 {
     CTASSERT(alloc != NULL);
 

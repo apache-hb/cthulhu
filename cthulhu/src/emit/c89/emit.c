@@ -19,7 +19,7 @@
 
 static c89_source_t *source_new(io_t *io, const char *path)
 {
-    c89_source_t *source = ctu_malloc(sizeof(c89_source_t));
+    c89_source_t *source = MEM_ALLOC(sizeof(c89_source_t), path, io);
     source->io = io;
     source->path = path;
     return source;

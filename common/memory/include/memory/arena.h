@@ -19,7 +19,7 @@ BEGIN_API
 /// when freeing or reallocating memory, this can be used as the size
 /// to indicate that the size is unknown. requires allocator support
 
-typedef struct alloc_t alloc_t;
+typedef struct arena_t arena_t;
 
 typedef struct mem_t mem_t;
 
@@ -48,7 +48,7 @@ typedef void (*mem_rename_t)(const mem_t *header, const void *ptr, const char *n
 typedef void (*mem_reparent_t)(const mem_t *header, const void *ptr, const void *parent);
 
 /// @brief an allocator object
-typedef struct alloc_t
+typedef struct arena_t
 {
     const char *name;        ///< the name of the allocator
 
@@ -60,9 +60,9 @@ typedef struct alloc_t
     mem_reparent_t   fn_reparent;
 
     void *user; ///< user data
-} alloc_t;
+} arena_t;
 
-alloc_t *mem_arena(IN_NOTNULL const mem_t *event);
+arena_t *mem_arena(IN_NOTNULL const mem_t *event);
 
 /// @brief release memory from a custom allocator
 /// @note ensure the allocator is consistent with the allocator used to allocate @a ptr
@@ -71,7 +71,7 @@ alloc_t *mem_arena(IN_NOTNULL const mem_t *event);
 /// @param ptr the pointer to free
 /// @param size the size of the allocation
 void arena_free(
-    IN_NOTNULL alloc_t *alloc,
+    IN_NOTNULL arena_t *alloc,
     OUT_PTR_INVALID void *ptr,
     IN_RANGE(!=, 0) size_t size);
 
@@ -85,7 +85,7 @@ void arena_free(
 NODISCARD CT_ALLOC(arena_free, 2)
 RET_NOTNULL
 void *arena_malloc(
-    IN_NOTNULL alloc_t *alloc,
+    IN_NOTNULL arena_t *alloc,
     IN_RANGE(!=, 0) size_t size,
     IN_STRING_OPT const char *name,
     const void *parent);
@@ -102,13 +102,13 @@ void *arena_malloc(
 NODISCARD
 RET_NOTNULL
 void *arena_realloc(
-    IN_NOTNULL alloc_t *alloc,
+    IN_NOTNULL arena_t *alloc,
     OUT_PTR_INVALID void *ptr,
     IN_RANGE(!=, 0) size_t new_size,
     IN_RANGE(!=, 0) size_t old_size);
 
-void arena_rename(IN_NOTNULL alloc_t *alloc, IN_NOTNULL const void *ptr, IN_STRING const char *name);
-void arena_reparent(IN_NOTNULL alloc_t *alloc, IN_NOTNULL const void *ptr, const void *parent);
+void arena_rename(IN_NOTNULL arena_t *alloc, IN_NOTNULL const void *ptr, IN_STRING const char *name);
+void arena_reparent(IN_NOTNULL arena_t *alloc, IN_NOTNULL const void *ptr, const void *parent);
 
 #if CTU_TRACE_MEMORY
 #   define ARENA_RENAME(alloc, ptr, name) arena_rename(alloc, ptr, name)

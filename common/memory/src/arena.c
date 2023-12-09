@@ -4,10 +4,10 @@
 
 typedef struct mem_t
 {
-    alloc_t *alloc;
+    arena_t *alloc;
 } mem_t;
 
-static mem_t event_new(alloc_t *alloc)
+static mem_t event_new(arena_t *alloc)
 {
     CTASSERT(alloc != NULL);
 
@@ -18,7 +18,7 @@ static mem_t event_new(alloc_t *alloc)
     return event;
 }
 
-alloc_t *mem_arena(const mem_t *event)
+arena_t *mem_arena(const mem_t *event)
 {
     CTASSERT(event != NULL);
 
@@ -28,7 +28,7 @@ alloc_t *mem_arena(const mem_t *event)
 /// arena allocator
 
 USE_DECL
-void *arena_malloc(alloc_t *alloc, size_t size, const char *name, const void *parent)
+void *arena_malloc(arena_t *alloc, size_t size, const char *name, const void *parent)
 {
     CTASSERT(alloc != NULL);
     CTASSERT(size > 0);
@@ -52,7 +52,7 @@ void *arena_malloc(alloc_t *alloc, size_t size, const char *name, const void *pa
 }
 
 USE_DECL
-void *arena_realloc(alloc_t *alloc, void *ptr, size_t new_size, size_t old_size)
+void *arena_realloc(arena_t *alloc, void *ptr, size_t new_size, size_t old_size)
 {
     CTASSERT(alloc != NULL);
     CTASSERT(ptr != NULL);
@@ -68,7 +68,7 @@ void *arena_realloc(alloc_t *alloc, void *ptr, size_t new_size, size_t old_size)
 }
 
 USE_DECL
-void arena_free(alloc_t *alloc, void *ptr, size_t size)
+void arena_free(arena_t *alloc, void *ptr, size_t size)
 {
     CTASSERT(alloc != NULL);
     CTASSERT(ptr != NULL);
@@ -80,7 +80,7 @@ void arena_free(alloc_t *alloc, void *ptr, size_t size)
 }
 
 USE_DECL
-void arena_rename(alloc_t *alloc, const void *ptr, const char *name)
+void arena_rename(arena_t *alloc, const void *ptr, const char *name)
 {
     CTASSERT(alloc != NULL);
     CTASSERT(ptr != NULL);
@@ -95,7 +95,7 @@ void arena_rename(alloc_t *alloc, const void *ptr, const char *name)
 }
 
 USE_DECL
-void arena_reparent(alloc_t *alloc, const void *ptr, const void *parent)
+void arena_reparent(arena_t *alloc, const void *ptr, const void *parent)
 {
     CTASSERT(alloc != NULL);
     CTASSERT(ptr != NULL);

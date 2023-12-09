@@ -135,7 +135,7 @@ USE_DECL
 OS_RESULT(const char *) os_dir_current(void)
 {
     DWORD size = GetCurrentDirectoryA(0, NULL);
-    char *buffer = ctu_malloc(size + 1);
+    char *buffer = MEM_ALLOC(size + 1, "os_dir_current", NULL);
 
     if (GetCurrentDirectoryA(size, buffer) == 0)
     {

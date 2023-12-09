@@ -13,7 +13,7 @@
 
 ssa_type_t *ssa_type_new(ssa_kind_t kind, const char *name, quals_t quals)
 {
-    ssa_type_t *type = ctu_malloc(sizeof(ssa_type_t));
+    ssa_type_t *type = MEM_ALLOC(sizeof(ssa_type_t), name, NULL);
     type->kind = kind;
     type->quals = quals;
     type->name = name;

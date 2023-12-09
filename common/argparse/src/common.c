@@ -61,7 +61,7 @@ void ap_on_int(scan_t *scan, where_t where, const ap_param_t *param, mpz_t value
 {
     ap_t *self = scan_get(scan);
 
-    void *it = ctu_malloc(sizeof(mpz_t));
+    void *it = MEM_ALLOC(sizeof(mpz_t), param->name, self);
     memcpy(it, value, sizeof(mpz_t));
     add_value(self, param, it);
 

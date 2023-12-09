@@ -11,7 +11,7 @@
 
 ssa_value_t *ssa_value_new(const ssa_type_t *type, bool init)
 {
-    ssa_value_t *self = ctu_malloc(sizeof(ssa_value_t));
+    ssa_value_t *self = MEM_ALLOC(sizeof(ssa_value_t), "ssa_value", NULL);
     self->type = type;
     self->init = init;
     return self;

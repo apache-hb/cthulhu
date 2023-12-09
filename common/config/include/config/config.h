@@ -6,7 +6,7 @@
 
 BEGIN_API
 
-typedef struct alloc_t alloc_t;
+typedef struct arena_t arena_t;
 typedef struct vector_t vector_t;
 
 /// @brief the type of a configuration field
@@ -102,7 +102,7 @@ typedef struct cfg_flags_t
     size_t initial;
 } cfg_flags_t;
 
-config_t *config_new(alloc_t *alloc, const cfg_info_t *info);
+config_t *config_new(arena_t *alloc, const cfg_info_t *info);
 
 // construction api
 

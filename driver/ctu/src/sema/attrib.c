@@ -1,10 +1,10 @@
 #include "ctu/sema/attrib.h"
-#include "ctu/sema/decl.h"
 
 #include "ctu/ast.h"
 
 #include "cthulhu/tree/query.h"
 
+#include "ctu/sema/sema.h"
 #include "report/report.h"
 
 #include "std/str.h"
@@ -13,7 +13,6 @@
 #include "core/macros.h"
 
 #include "memory/memory.h"
-#include "base/util.h"
 #include "base/panic.h"
 
 static const char *attrib_name(vector_t *path)
@@ -34,7 +33,7 @@ static ctu_attrib_t *attrib_create(const char *name, ctu_attrib_apply_t fnApply)
     CTASSERT(name != NULL);
     CTASSERT(fnApply != NULL);
 
-    ctu_attrib_t *it = ctu_malloc(sizeof(ctu_attrib_t));
+    ctu_attrib_t *it = MEM_ALLOC(sizeof(ctu_attrib_t), name, NULL);
     it->name = name;
     it->fnApply = fnApply;
     return it;

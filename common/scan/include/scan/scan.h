@@ -7,7 +7,7 @@
 typedef struct reports_t reports_t;
 typedef struct io_t io_t;
 typedef struct scan_t scan_t;
-typedef struct alloc_t alloc_t;
+typedef struct arena_t arena_t;
 
 /// @brief a span of text inside a scanner
 typedef struct text_t
@@ -87,7 +87,7 @@ NODISCARD CONSTFN
 io_t *scan_src(IN_NOTNULL scan_t *scan);
 
 NODISCARD CONSTFN
-alloc_t *scan_alloc(IN_NOTNULL scan_t *scan);
+arena_t *scan_alloc(IN_NOTNULL scan_t *scan);
 
 /// @brief get an invalid scanner
 ///
@@ -118,4 +118,4 @@ scan_t *scan_io(
     IN_NOTNULL reports_t *reports,
     IN_STRING const char *language,
     IN_NOTNULL io_t *io,
-    IN_NOTNULL alloc_t *alloc);
+    IN_NOTNULL arena_t *alloc);

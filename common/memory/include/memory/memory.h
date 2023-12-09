@@ -9,7 +9,10 @@ BEGIN_API
 /// @brief Default global memory allocator
 /// @{
 
-alloc_t *ctu_default_alloc(void);
+/// @brief get the default allocator
+///
+/// @return the default allocator
+arena_t *ctu_default_alloc(void);
 
 /// @brief free a pointer allocated with ctu_malloc or ctu_realloc
 /// @note @a gDefaultAlloc must be consistent with the allocator used to allocate @a ptr
@@ -28,10 +31,7 @@ void *ctu_malloc(IN_RANGE(!=, 0) size_t size);
 
 NODISCARD CT_ALLOC(ctu_free)
 RET_NOTNULL
-void *ctu_malloc_info(
-    IN_RANGE(!=, 0) size_t size,
-    const char *name,
-    const void *parent);
+void *ctu_malloc_info(IN_RANGE(!=, 0) size_t size, const char *name, const void *parent);
 
 /// @brief reallocate a pointer from the default allocator
 /// @note @a gDefaultAlloc must be consistent with the allocator used to allocate @a ptr
@@ -42,9 +42,7 @@ void *ctu_malloc_info(
 /// @return the reallocated pointer
 NODISCARD CT_ALLOC(ctu_free)
 RET_NOTNULL
-void *ctu_realloc(
-    IN_NOTNULL OUT_PTR_INVALID void *ptr,
-    IN_RANGE(!=, 0) size_t new_size);
+void *ctu_realloc(IN_NOTNULL OUT_PTR_INVALID void *ptr, IN_RANGE(!=, 0) size_t new_size);
 
 ///
 /// @brief allocate a copy of a string
@@ -85,44 +83,46 @@ void *ctu_memdup(IN_READS(size) const void *ptr, IN_RANGE(>, 0) size_t size);
 /// @brief initialize gmp with a custom allocator
 ///
 /// @param alloc the allocator to use
-void init_gmp_alloc(IN_NOTNULL alloc_t *alloc);
+void init_gmp_alloc(IN_NOTNULL arena_t *alloc);
 
 /// @brief initialize global allocator
 /// @warning this function must be called before any other memory allocation function
 ///
 /// @param alloc the allocator to use
-void init_global_alloc(IN_NOTNULL alloc_t *alloc);
+void init_global_alloc(IN_NOTNULL arena_t *alloc);
 
-alloc_t *get_global_alloc(void);
-
-#define BOX(name) ctu_memdup(&(name), sizeof(name))
 /// @def BOX(name)
 /// @brief box a value on the stack
+#define BOX(name) ctu_memdup(&(name), sizeof(name))
 
-void ctu_mem_rename(
-    IN_NOTNULL const void *ptr,
-    IN_STRING const char *name);
+/// @brief rename a memory allocation
+///
+/// @param ptr the pointer to rename
+/// @param name the new name of the allocation
+void ctu_mem_rename(IN_NOTNULL const void *ptr, IN_STRING const char *name);
 
-void ctu_mem_reparent(
-    IN_NOTNULL const void *ptr,
-    const void *parent);
-
-void ctu_mem_identify(
-    IN_NOTNULL const void *ptr,
-    IN_STRING const char *name,
-    const void *parent);
+/// @brief reparent a memory allocation
+///
+/// @param ptr the pointer to reparent
+/// @param parent the new parent of the allocation
+void ctu_mem_reparent(IN_NOTNULL const void *ptr, const void *parent);
 
 #if CTU_TRACE_MEMORY
 #   define MEM_RENAME(ptr, name) ctu_mem_rename(ptr, name)
 #   define MEM_REPARENT(ptr, parent) ctu_mem_reparent(ptr, parent)
-#   define MEM_IDENTIFY(ptr, name, parent) ctu_mem_identify(ptr, name, parent)
 #   define MEM_ALLOC(size, name, parent) ctu_malloc_info(size, name, parent)
 #else
 #   define MEM_RENAME(ptr, name)
 #   define MEM_REPARENT(ptr, parent)
-#   define MEM_IDENTIFY(ptr, name, parent)
 #   define MEM_ALLOC(size, name, parent) ctu_malloc(size)
 #endif
+
+#define MEM_IDENTIFY(ptr, name, parent)                                                                                \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        MEM_RENAME(ptr, name);                                                                                         \
+        MEM_REPARENT(ptr, parent);                                                                                     \
+    } while (0)
 
 /// @} // GlobalMemory
 

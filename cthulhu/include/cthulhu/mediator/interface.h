@@ -41,7 +41,7 @@ mediator_t *mediator_new_noinit(const char *id, version_info_t version);
  * @param alloc the allocator to use
  * @return lifetime_t* the lifetime object
  */
-lifetime_t *lifetime_new(mediator_t *mediator, alloc_t *alloc);
+lifetime_t *lifetime_new(mediator_t *mediator, arena_t *alloc);
 
 /**
  * @brief configure a language for the current lifetime

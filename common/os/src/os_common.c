@@ -10,7 +10,7 @@
 
 os_result_t *os_result_new(os_error_t error, const void *data, size_t size)
 {
-    os_result_t *result = ctu_malloc(sizeof(os_result_t) + size);
+    os_result_t *result = MEM_ALLOC(sizeof(os_result_t) + size, "os_result", NULL);
     result->error = error;
 
     if (size > 0)

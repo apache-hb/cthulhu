@@ -94,7 +94,7 @@ static user_ptr_t *get_ptr(void *ptr)
 
 static void *user_malloc(const mem_t *mem, size_t size)
 {
-    alloc_t *alloc = mem_arena(mem);
+    arena_t *alloc = mem_arena(mem);
     user_arena_t *user = (user_arena_t*)alloc->user;
 
     user_ptr_t *ptr = get_memory(user, size);
@@ -105,7 +105,7 @@ static void *user_realloc(const mem_t *mem, void *ptr, size_t new_size, size_t o
 {
     CTU_UNUSED(old_size);
 
-    alloc_t *alloc = mem_arena(mem);
+    arena_t *alloc = mem_arena(mem);
     user_arena_t *user = (user_arena_t*)alloc->user;
 
     user_ptr_t *old = get_ptr(ptr);
@@ -126,7 +126,7 @@ static void user_free(const mem_t *mem, void *ptr, size_t size)
     CTU_UNUSED(ptr);
     CTU_UNUSED(size);
 
-    alloc_t *alloc = mem_arena(mem);
+    arena_t *alloc = mem_arena(mem);
 
     user_arena_t *user = (user_arena_t*)alloc->user;
 
@@ -151,9 +151,9 @@ static user_arena_t new_user_arena(size_t size)
     return arena;
 }
 
-static alloc_t new_alloc(user_arena_t *arena)
+static arena_t new_alloc(user_arena_t *arena)
 {
-    alloc_t alloc = {
+    arena_t alloc = {
         .name = "user",
         .fn_malloc = user_malloc,
         .fn_realloc = user_realloc,
@@ -164,7 +164,7 @@ static alloc_t new_alloc(user_arena_t *arena)
     return alloc;
 }
 
-int run_test_harness(int argc, const char **argv, alloc_t *alloc)
+int run_test_harness(int argc, const char **argv, arena_t *alloc)
 {
     mediator_t *mediator = mediator_new("example", kVersion);
     lifetime_t *lifetime = lifetime_new(mediator, alloc);
@@ -304,7 +304,7 @@ int main(int argc, const char **argv)
 {
     size_t size = 1024 * 1024 * 64;
     user_arena_t arena = new_user_arena(size);
-    alloc_t alloc = new_alloc(&arena);
+    arena_t alloc = new_alloc(&arena);
     init_global_alloc(&alloc);
     init_gmp_alloc(&alloc);
 

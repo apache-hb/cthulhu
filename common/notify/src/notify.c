@@ -14,7 +14,7 @@ typedef struct logger_t
 USE_DECL
 logger_t *log_new(void)
 {
-    logger_t *logs = ctu_malloc(sizeof(logger_t));
+    logger_t *logs = MEM_ALLOC(sizeof(logger_t), "logger", NULL);
     logs->messages = vector_new(4);
     return logs;
 }

@@ -38,7 +38,7 @@ struct AllocInfo
     const void *parent;
 };
 
-struct TraceAlloc final : public ed::IAlloc
+struct TraceArena final : public ed::IArena
 {
     /// @brief the draw mode for the gui view of this allocator
     enum DrawType : int
@@ -50,8 +50,8 @@ struct TraceAlloc final : public ed::IAlloc
         eDrawFlat
     };
 
-    TraceAlloc(const char *alloc_name, DrawType default_mode = eDrawTree)
-        : IAlloc(alloc_name)
+    TraceArena(const char *alloc_name, DrawType default_mode = eDrawTree)
+        : IArena(alloc_name)
         , draw_mode(default_mode)
     { }
 
@@ -481,8 +481,8 @@ struct CompileRun
     const char *name;
     bool show = true;
 
-    TraceAlloc alloc{"default", TraceAlloc::eDrawTree};
-    TraceAlloc gmp_alloc{"gmp", TraceAlloc::eDrawFlat};
+    TraceArena alloc{"default", TraceArena::eDrawTree};
+    TraceArena gmp_alloc{"gmp", TraceArena::eDrawFlat};
 
     config_t *config = nullptr;
 

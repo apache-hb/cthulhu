@@ -9,7 +9,7 @@ BEGIN_API
 
 typedef struct node_t node_t;
 typedef struct vector_t vector_t;
-typedef struct alloc_t alloc_t;
+typedef struct arena_t arena_t;
 
 typedef struct logger_t logger_t;
 typedef struct event_t event_t;

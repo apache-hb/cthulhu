@@ -25,7 +25,7 @@ static obr_t *obr_new(scan_t *scan, where_t where, obr_kind_t kind)
 {
     CTASSERT(scan != NULL);
 
-    alloc_t *alloc = scan_alloc(scan);
+    arena_t *alloc = scan_alloc(scan);
     obr_t *self = ARENA_MALLOC(alloc, sizeof(obr_t), "obr", scan);
     self->kind = kind;
     self->node = node_new(scan, where);
@@ -54,9 +54,13 @@ static obr_t *obr_decl_symbol_location(const obr_symbol_t *symbol, obr_kind_t ki
 }
 
 obr_t *obr_module(
-    scan_t *scan, where_t where, char *name, char *end,
-    vector_t *imports, vector_t *decls, vector_t *init
-)
+    scan_t *scan,
+    where_t where,
+    char *name,
+    char *end,
+    vector_t *imports,
+    vector_t *decls,
+    vector_t *init)
 {
     obr_t *self = obr_decl(scan, where, eObrModule, name, eObrVisPublic);
     self->imports = imports;
@@ -301,8 +305,8 @@ obr_t *obr_receiver(scan_t *scan, where_t where, bool mut, char *name, char *typ
 
 obr_symbol_t *obr_symbol(scan_t *scan, where_t where, char *name, obr_visibility_t visibility)
 {
-    alloc_t *alloc = scan_alloc(scan);
-    obr_symbol_t *self = arena_malloc(alloc, sizeof(obr_symbol_t), "obr_symbol", scan);
+    arena_t *alloc = scan_alloc(scan);
+    obr_symbol_t *self = ARENA_MALLOC(alloc, sizeof(obr_symbol_t), "obr_symbol", scan);
     self->scan = scan;
     self->where = where;
     self->name = name;

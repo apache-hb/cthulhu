@@ -178,7 +178,7 @@ static inode_t *vfs_create_file(fs_t *fs, inode_t *self, const char *name)
     virtual_file_t file = {
         .name = name,
 
-        .data = ctu_malloc(0x1000),
+        .data = MEM_ALLOC(0x1000, "virtual_file", self),
         .used = 0,
         .size = 0x1000
     };

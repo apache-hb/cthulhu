@@ -11,7 +11,7 @@ typedef struct lifetime_t lifetime_t;
 typedef struct driver_t driver_t;
 typedef struct plugin_t plugin_t;
 typedef struct context_t context_t;
-typedef struct alloc_t alloc_t;
+typedef struct arena_t arena_t;
 
 typedef struct vector_t vector_t;
 typedef struct ap_t ap_t;

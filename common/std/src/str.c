@@ -201,7 +201,7 @@ char *str_join(const char *sep, vector_t *parts)
 
     CTASSERTF(len > 0, "len = %zu", len);
 
-    char *out = ctu_malloc(len + 1);
+    char *out = MEM_ALLOC(len + 1, "str_join", NULL);
     size_t idx = 0;
 
     size_t remaining = len;
@@ -237,7 +237,7 @@ char *str_repeat(const char *str, size_t times)
 
     size_t len = strlen(str);
     size_t outlen = len * times;
-    char *out = ctu_malloc(outlen + 1);
+    char *out = MEM_ALLOC(outlen + 1, "str_repeat", NULL);
     size_t remaining = outlen;
     for (size_t i = 0; i < times; i++)
     {
@@ -354,7 +354,7 @@ char *str_normalize(const char *input)
     }
 
     const char *repl_iter = input;
-    char *buf = ctu_malloc(result_length + 1);
+    char *buf = MEM_ALLOC(result_length + 1, "str_normalize", NULL);
     char *result = buf;
     while (*repl_iter != '\0')
     {
@@ -382,7 +382,7 @@ char *str_normalizen(const char *str, size_t len)
         return ctu_strndup(str, len);
     }
 
-    char *buf = ctu_malloc(length + 1);
+    char *buf = MEM_ALLOC(length + 1, "str_normalizen", NULL);
     size_t offset = 0;
     for (size_t i = 0; i < len; i++)
     {
@@ -406,7 +406,7 @@ vector_t *str_split(const char *str, const char *sep)
         vector_t *result = vector_new(strlen(str));
         for (size_t i = 0; i < strlen(str); i++)
         {
-            char *c = ctu_malloc(2);
+            char *c = MEM_ALLOC(2, "str_split", NULL);
             c[0] = str[i];
             c[1] = '\0';
             vector_push(&result, c);
@@ -526,7 +526,7 @@ char *str_replace_many(const char *str, map_t *repl)
         }
     }
 
-    char *out = ctu_malloc(len + 1);
+    char *out = MEM_ALLOC(len + 1, "str_replace_many", NULL);
 
     size_t offset = 0; // offset into input string
     for (size_t i = 0; i < len;)
@@ -583,7 +583,7 @@ const char *str_common_prefix(vector_t *args)
         return it;
     }
 
-    char **strings = ctu_malloc(len * sizeof(char *));
+    char **strings = MEM_ALLOC(len * sizeof(char *), "str_common_prefix", NULL);
 
     size_t lower = SIZE_MAX;
 

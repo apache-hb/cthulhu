@@ -98,7 +98,7 @@ static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const tree_t *tree, ssa_s
     const ssa_type_t *type = ssa_type_create_cached(ssa->types, tree_get_type(tree));
     const tree_attribs_t *attrib = tree_get_attrib(tree);
 
-    ssa_symbol_t *symbol = ctu_malloc(sizeof(ssa_symbol_t));
+    ssa_symbol_t *symbol = MEM_ALLOC(sizeof(ssa_symbol_t), name, NULL);
     symbol->linkage = attrib->link;
     symbol->visibility = attrib->visibility;
     symbol->link_name = attrib->mangle;
@@ -178,7 +178,7 @@ static ssa_module_t *module_create(ssa_compile_t *ssa, const char *name)
 {
     vector_t *path = vector_clone(ssa->path);
 
-    ssa_module_t *mod = ctu_malloc(sizeof(ssa_module_t));
+    ssa_module_t *mod = MEM_ALLOC(sizeof(ssa_module_t), name, NULL);
     mod->name = name;
     mod->path = path;
 
@@ -242,7 +242,7 @@ static ssa_operand_t add_step(ssa_compile_t *ssa, ssa_step_t step)
 
 static ssa_block_t *ssa_block_create(ssa_symbol_t *symbol, const char *name, size_t size)
 {
-    ssa_block_t *bb = ctu_malloc(sizeof(ssa_block_t));
+    ssa_block_t *bb = MEM_ALLOC(sizeof(ssa_block_t), name, symbol);
     bb->name = name;
     bb->steps = typevec_new(sizeof(ssa_step_t), size);
     vector_push(&symbol->blocks, bb);
@@ -314,23 +314,23 @@ static ssa_operand_t compile_loop(ssa_compile_t *ssa, const tree_t *tree)
     * .tail:
     *
     */
-    ssa_block_t *loopBlock = ssa_block_create(ssa->current_symbol, NULL, 0);
-    ssa_block_t *bodyBlock = ssa_block_create(ssa->current_symbol, NULL, 0);
-    ssa_block_t *tailBlock = ssa_block_create(ssa->current_symbol, NULL, 0);
+    ssa_block_t *loop_block = ssa_block_create(ssa->current_symbol, NULL, 0);
+    ssa_block_t *body_block = ssa_block_create(ssa->current_symbol, NULL, 0);
+    ssa_block_t *tail_block = ssa_block_create(ssa->current_symbol, NULL, 0);
 
-    ssa_loop_t *save = ctu_malloc(sizeof(ssa_loop_t));
-    save->enter_loop = bodyBlock;
-    save->exit_loop = tailBlock;
+    ssa_loop_t *save = MEM_ALLOC(sizeof(ssa_loop_t), "ssa_loop", NULL);
+    save->enter_loop = body_block;
+    save->exit_loop = tail_block;
     map_set_ptr(ssa->symbol_loops, tree, save);
 
     ssa_operand_t loop = {
         .kind = eOperandBlock,
-        .bb = loopBlock
+        .bb = loop_block
     };
 
     ssa_operand_t tail = {
         .kind = eOperandBlock,
-        .bb = tailBlock
+        .bb = tail_block
     };
 
     ssa_step_t enterLoop = {
@@ -341,19 +341,19 @@ static ssa_operand_t compile_loop(ssa_compile_t *ssa, const tree_t *tree)
     };
     add_step(ssa, enterLoop);
 
-    ssa->current_block = loopBlock;
+    ssa->current_block = loop_block;
     ssa_operand_t cond = compile_tree(ssa, tree->cond);
     ssa_step_t cmp = {
         .opcode = eOpBranch,
         .branch = {
             .cond = cond,
-            .then = operand_bb(bodyBlock),
+            .then = operand_bb(body_block),
             .other = tail
         }
     };
     add_step(ssa, cmp);
 
-    ssa->current_block = bodyBlock;
+    ssa->current_block = body_block;
     compile_tree(ssa, tree->then);
 
     ssa_step_t repeatLoop = {
@@ -364,7 +364,7 @@ static ssa_operand_t compile_loop(ssa_compile_t *ssa, const tree_t *tree)
     };
     add_step(ssa, repeatLoop);
 
-    ssa->current_block = tailBlock;
+    ssa->current_block = tail_block;
     return loop;
 }
 

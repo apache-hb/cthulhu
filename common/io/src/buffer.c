@@ -63,7 +63,7 @@ static const void *mem_map(io_t *self)
 {
     buffer_t *mem = mem_data(self);
 
-    void *it = ctu_malloc(mem->used);
+    void *it = MEM_ALLOC(mem->used, "mem_map", self);
     memcpy(it, mem->data, mem->used);
 
     return it;
@@ -92,7 +92,7 @@ io_t *io_memory(const char *name, const void *data, size_t size, os_access_t fla
     CTASSERT(data != NULL);
 
     buffer_t buffer = {
-        .data = ctu_malloc(size),
+        .data = MEM_ALLOC(size, "memory", NULL),
         .total = size,
         .used = size,
         .offset = 0
@@ -100,18 +100,22 @@ io_t *io_memory(const char *name, const void *data, size_t size, os_access_t fla
 
     memcpy(buffer.data, data, size);
 
-    return io_new(&kBufferCallbacks, flags, name, &buffer, sizeof(buffer_t));
+    io_t *io = io_new(&kBufferCallbacks, flags, name, &buffer, sizeof(buffer_t));
+    MEM_REPARENT(buffer.data, io);
+    return io;
 }
 
 USE_DECL
 io_t *io_blob(const char *name, size_t size, os_access_t flags)
 {
     buffer_t buffer = {
-        .data = ctu_malloc(size),
+        .data = MEM_ALLOC(size, "blob", NULL),
         .total = size,
         .used = 0,
         .offset = 0
     };
 
-    return io_new(&kBufferCallbacks, flags, name, &buffer, sizeof(buffer_t));
+    io_t *io = io_new(&kBufferCallbacks, flags, name, &buffer, sizeof(buffer_t));
+    MEM_REPARENT(buffer.data, io);
+    return io;
 }

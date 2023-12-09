@@ -83,7 +83,7 @@ reports_t *scan_reports(scan_t *scan)
 }
 
 USE_DECL
-alloc_t *scan_alloc(scan_t *scan)
+arena_t *scan_alloc(scan_t *scan)
 {
     CTASSERT(scan != NULL);
 
@@ -105,7 +105,7 @@ scan_t *scan_invalid(void)
 }
 
 USE_DECL
-scan_t *scan_io(reports_t *reports, const char *language, io_t *io, alloc_t *alloc)
+scan_t *scan_io(reports_t *reports, const char *language, io_t *io, arena_t *alloc)
 {
     CTASSERT(reports != NULL);
     CTASSERT(language != NULL);
@@ -113,7 +113,7 @@ scan_t *scan_io(reports_t *reports, const char *language, io_t *io, alloc_t *all
     CTASSERTF(io_error(io) == 0, "io-error(%s) = %zu", io_name(io), io_error(io));
     CTASSERT(alloc != NULL);
 
-    scan_t *self = arena_malloc(alloc, sizeof(scan_t), io_name(io), NULL);
+    scan_t *self = ARENA_MALLOC(alloc, sizeof(scan_t), io_name(io), NULL);
 
     self->language = language;
     self->reports = reports;

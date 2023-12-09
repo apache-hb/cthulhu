@@ -55,7 +55,7 @@ static cfg_field_t *add_field(config_t *config, const cfg_info_t *info, cfg_type
     return field;
 }
 
-static config_t *alloc_config(alloc_t *alloc, const cfg_info_t *info, const char *name)
+static config_t *alloc_config(arena_t *alloc, const cfg_info_t *info, const char *name)
 {
     CTASSERT(alloc != NULL);
     ASSERT_INFO_VALID_GROUP(info);
@@ -73,7 +73,7 @@ static config_t *alloc_config(alloc_t *alloc, const cfg_info_t *info, const char
     return config;
 }
 
-config_t *config_new(alloc_t *alloc, const cfg_info_t *info)
+config_t *config_new(arena_t *alloc, const cfg_info_t *info)
 {
     return alloc_config(alloc, info, "config");
 }

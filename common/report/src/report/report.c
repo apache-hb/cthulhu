@@ -24,7 +24,7 @@ static bool is_valid_node(const node_t *node)
 
 static part_t *part_new(char *message, const node_t *node)
 {
-    part_t *part = ctu_malloc(sizeof(part_t));
+    part_t *part = MEM_ALLOC(sizeof(part_t), "part", NULL);
     part->message = message;
     part->node = node;
     return part;
@@ -98,7 +98,7 @@ static void report_header(const char *base, message_t *message)
 
 static char *padding(size_t len)
 {
-    char *str = ctu_malloc(len + 1);
+    char *str = MEM_ALLOC(len + 1, "padding", NULL);
     memset(str, ' ', len);
     str[len] = '\0';
     return str;
@@ -137,7 +137,7 @@ static char *extract_line(const scan_t *scan, line_t line)
      * it doesnt make them any less painful to handle
      */
     CTASSERT(len != SIZE_MAX); // verify against overflow
-    char *str = ctu_malloc(len + 1);
+    char *str = MEM_ALLOC(len + 1, "extract_line", NULL);
     char *out = str;
     for (size_t i = 0; i < len; i++)
     {
@@ -202,7 +202,7 @@ static char *build_underline(const char *source, where_t where, const char *note
     // allocate space for the underline
     // +1 for the space
     // +1 for the null terminator
-    char *str = ctu_malloc(back + width + len + 2);
+    char *str = MEM_ALLOC(back + width + len + 2, "underline", NULL);
 
     column_t idx = 0;
 

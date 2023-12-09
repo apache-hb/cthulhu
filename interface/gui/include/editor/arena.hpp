@@ -6,9 +6,9 @@
 
 namespace ed
 {
-    struct IAlloc : public alloc_t
+    struct IArena : public arena_t
     {
-        IAlloc(const char *alloc_name);
+        IArena(const char *alloc_name);
 
         virtual void *malloc(size_t size) = 0;
         virtual void *realloc(void *ptr, size_t new_size, size_t old_size) = 0;
