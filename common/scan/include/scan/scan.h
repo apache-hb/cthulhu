@@ -9,6 +9,9 @@ typedef struct io_t io_t;
 typedef struct scan_t scan_t;
 typedef struct arena_t arena_t;
 
+/// @ingroup Location
+/// @{
+
 /// @brief a span of text inside a scanner
 typedef struct text_t
 {
@@ -119,3 +122,5 @@ scan_t *scan_io(
     IN_STRING const char *language,
     IN_NOTNULL io_t *io,
     IN_NOTNULL arena_t *alloc);
+
+/// @}

@@ -12,6 +12,7 @@ typedef struct reports_t reports_t;
 /**
  * @defgroup Mediator Compiler core interface
  * @brief Core of the compiler, manages stages and language agnostic data
+ * @ingroup Runtime
  * @{
  */
 

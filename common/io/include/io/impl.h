@@ -2,6 +2,9 @@
 
 #include "io/io.h"
 
+/// @ingroup IO
+/// @{
+
 /// @brief io object read callback
 ///
 /// @param self the invoked io object
@@ -123,3 +126,5 @@ io_t *io_new(
     IN_STRING const char *name,
     IN_READS(size) const void *data,
     IN_RANGE(>, 0) size_t size);
+
+/// @}

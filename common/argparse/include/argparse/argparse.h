@@ -30,6 +30,8 @@ BEGIN_API
  */
 
 /// @defgroup ArgParse Command line argument parsing
+/// @brief Command line argument parsing
+/// @ingroup Common
 /// @{
 
 typedef struct reports_t reports_t;

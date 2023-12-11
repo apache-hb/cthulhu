@@ -9,6 +9,7 @@
 BEGIN_API
 
 /// @defgroup Panic Assertions and panic handling
+/// @ingroup Base
 /// @{
 
 /// @brief panic location information

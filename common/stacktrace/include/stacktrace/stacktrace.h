@@ -7,6 +7,11 @@
 
 BEGIN_API
 
+/// @defgroup Stacktrace Stacktrace library
+/// @brief Stacktrace library
+/// @ingroup Common
+/// @{
+
 #define STACKTRACE_NAME_LENGTH 256
 #define STACKTRACE_PATH_LENGTH 1024
 
@@ -50,5 +55,7 @@ size_t stacktrace_get(
 ///
 /// @param file the file to print to
 void stacktrace_print(IN_NOTNULL FILE *file);
+
+/// @}
 
 END_API

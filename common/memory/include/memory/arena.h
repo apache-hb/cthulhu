@@ -11,6 +11,7 @@ BEGIN_API
 
 /// @defgroup Memory Arena memory allocation
 /// @brief Global and arena memory management
+/// @ingroup Common
 /// @{
 
 #ifdef WITH_DOXYGEN

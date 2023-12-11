@@ -6,7 +6,8 @@
 
 BEGIN_API
 
-/// @defgroup Filesystem Platform independent filesystem api
+/// @defgroup OS Platform independent OS api
+/// @ingroup Common
 /// @{
 
 /// @brief file handle

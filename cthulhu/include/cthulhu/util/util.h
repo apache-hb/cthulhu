@@ -12,6 +12,11 @@ typedef struct node_t node_t;
 
 BEGIN_API
 
+/// @defgroup RuntimeUtil Driver utility functions
+/// @brief Utility functions for the runtime
+/// @ingroup Runtime
+/// @{
+
 ///
 /// query helpers
 ///
@@ -94,5 +99,7 @@ tree_t *util_create_call(tree_t *sema, const node_t *node, const tree_t *fn, vec
 
 bool util_length_bounded(size_t length);
 const char *util_length_name(size_t length);
+
+/// @}
 
 END_API

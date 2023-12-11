@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 /// @defgroup Endian Endianess and byte swapping
+/// @ingroup Base
 /// @{
 
 /// @def CTU_BIG_ENDIAN

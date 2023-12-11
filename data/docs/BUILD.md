@@ -1,6 +1,6 @@
-# Build guide {#building}
+## Build guide {#building}
 
-## Prerequisites
+### Prerequisites
 
 Configuring and building Cthulhu requires the following tools:
     - <a href="https://mesonbuild.com/Getting-meson.html">Meson</a>
@@ -20,7 +20,7 @@ Cthulhu can optional use the following tools to enable additional features:
 Cthulhus current runtime dependencies are:
     - <a href="https://gmp.org/">GMP</a>; only if the compiler is built with GMP support.
 
-## Configuration
+### Configuration
 
 ```sh
 meson setup build

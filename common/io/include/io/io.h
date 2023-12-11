@@ -9,6 +9,7 @@
 BEGIN_API
 
 /// @defgroup IO Generic IO objects
+/// @ingroup Common
 /// @{
 
 /// @brief an opaque handle to an IO object

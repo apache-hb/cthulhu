@@ -9,6 +9,11 @@
 
 BEGIN_API
 
+/// @defgroup SSA SSA form IR
+/// @brief SSA form IR
+/// @ingroup Runtime
+/// @{
+
 typedef struct reports_t reports_t;
 typedef struct vector_t vector_t;
 typedef struct typevec_t typevec_t;
@@ -325,5 +330,7 @@ ssa_type_t *ssa_type_pointer(const char *name, quals_t quals, ssa_type_t *pointe
 const char *ssa_type_name(ssa_kind_t kind);
 const char *ssa_opkind_name(ssa_opkind_t kind);
 const char *ssa_opcode_name(ssa_opcode_t opcode);
+
+/// @}
 
 END_API

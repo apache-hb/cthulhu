@@ -1,0 +1,7 @@
+/**
+
+@defgroup Base Base features
+@brief Basic features required by all other modules
+@ingroup Common
+
+*/

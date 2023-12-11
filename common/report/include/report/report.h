@@ -14,6 +14,7 @@ typedef struct node_t node_t;
 /**
  * @defgroup Reports Error reporting
  * @brief Error reporting sink api
+ * @ingroup Common
  *
  * an error reporting sink should be used in any code that has a chance of
  * failing. when an error occurs, an error should be pushed into the sink, and a
@@ -193,6 +194,7 @@ void report_note(message_t *message, FORMAT_STRING const char *fmt, ...);
 /**
  * @defgroup Verbose Verbose output
  * @brief Verbose output
+ * @ingroup Common
  * @{
  */
 

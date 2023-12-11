@@ -2,6 +2,11 @@
 
 #include <ctu_config.h>
 
+/// @defgroup Compiler Compiler specific macros
+/// @brief Compiler detection macros and compiler specific functionality
+/// @ingroup Core
+/// @{
+
 #if defined(__clang__)
 #   define CC_CLANG 1
 #elif defined(__GNUC__)
@@ -86,3 +91,5 @@
 #ifndef FUNCNAME
 #   define FUNCNAME __func__
 #endif
+
+/// @}

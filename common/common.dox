@@ -1,0 +1,6 @@
+/**
+
+@defgroup Common Common library shared by all the other components
+@brief Collection of common types and functions
+
+*/

@@ -29,6 +29,6 @@ As alot of code can be shared, adding a feature for one language may often requi
 
 ## More information
 
-[BUILD.md](BUILD.md) contains build instructions.
+[Build instructions](@ref building).
 
-[CONTRIB.md](CONTRIB.md) contains contribution guidelines.
+[Contribution guide](@ref contributing).

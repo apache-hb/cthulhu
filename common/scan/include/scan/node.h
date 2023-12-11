@@ -10,6 +10,7 @@
 
 /// @defgroup Location Source location tracking
 /// @brief AST source position tracking
+/// @ingroup Common
 /// @{
 
 typedef uint_fast64_t line_t;   ///< line number

@@ -4,6 +4,11 @@
 
 BEGIN_API
 
+/// @defgroup Emit SSA emitter
+/// @brief Emitter for SSA form
+/// @ingroup Runtime
+/// @{
+
 typedef struct ssa_module_t ssa_module_t;
 typedef struct reports_t reports_t;
 
@@ -67,5 +72,7 @@ typedef struct c89_emit_result_t
 ///
 /// @return the result of the emit
 c89_emit_result_t emit_c89(const c89_emit_options_t *options);
+
+/// @}
 
 END_API

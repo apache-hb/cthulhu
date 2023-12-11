@@ -5,6 +5,7 @@
 #include "memory/arena.h"
 
 /// @defgroup FlexBisonMacros Helpers for flex and bison driver frontends
+/// @ingroup Interop
 /// @{
 
 /// @brief tracks the current source position

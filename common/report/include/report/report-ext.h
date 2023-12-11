@@ -8,6 +8,9 @@ typedef struct node_t node_t;
 
 BEGIN_API
 
+/// @ingroup Report
+/// @{
+
 /**
  * @brief report a shadowing error
  *
@@ -31,6 +34,15 @@ message_t *report_shadow(reports_t *reports, const char *name, const node_t *pre
  */
 message_t *report_unknown_character(reports_t *reports, const node_t *node, const char *str);
 
+/// @brief report an os error
+///
+/// @param reports the report sink
+/// @param msg the message to report
+/// @param err the os error
+///
+/// @return the message
 message_t *report_os(reports_t *reports, const char *msg, os_error_t err);
+
+/// @}
 
 END_API

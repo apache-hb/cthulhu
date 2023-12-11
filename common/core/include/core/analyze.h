@@ -2,6 +2,11 @@
 
 #include <ctu_config.h>
 
+/// @defgroup Analyze Static analysis decorators
+/// @brief Decorators for static analysis tools
+/// @ingroup Core
+/// @{
+
 #if __cplusplus >= 201703L
 #   define NODISCARD [[nodiscard]]
 #endif
@@ -117,3 +122,5 @@
 #ifndef NODISCARD
 #   define NODISCARD
 #endif
+
+/// @}

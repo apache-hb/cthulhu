@@ -6,6 +6,7 @@ BEGIN_API
 
 /// @defgroup FS Filesystem abstraction
 /// @brief virtual and physical filesystem interface
+/// @ingroup Common
 /// @{
 
 typedef struct reports_t reports_t;

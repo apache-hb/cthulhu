@@ -8,6 +8,7 @@
 BEGIN_API
 
 /// @defgroup Result OS error handling and result types
+/// @ingroup OS
 /// @{
 
 /// @brief result type

@@ -9,6 +9,11 @@
 typedef struct io_t io_t;
 typedef struct scan_t scan_t;
 
+/// @defgroup Interop flex/bison interop utils
+/// @brief flex/bison interop utils
+/// @ingroup Common
+/// @{
+
 /// @brief scanner function callbacks for flex and bison
 /// @note this should be created via the @a CTU_CALLBACKS macro
 typedef struct callbacks_t
@@ -66,3 +71,5 @@ typedef struct callbacks_t
 ///
 /// @return a pointer to the compiled ast
 void *compile_scanner(scan_t *extra, callbacks_t *callbacks);
+
+/// @}
