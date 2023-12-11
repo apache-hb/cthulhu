@@ -29,6 +29,8 @@ As alot of code can be shared, adding a feature for one language may often requi
 
 ## More information
 
-[Build instructions](@ref building).
+@subpage building
 
-[Contribution guide](@ref contributing).
+@subpage contributing
+
+@subpage todo

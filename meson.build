@@ -51,7 +51,7 @@ config_cdata = configuration_data({
     'CTU_PATCH': parts[2].to_int()
 })
 
-config_cdata.set10('CTU_DEBUG', is_debug)
+config_cdata.set10('CTU_ENABLE_PANIC', is_debug)
 
 # we use `__attribute__((const|pure))` heavily, but during unit tests we
 # violate function preconditions to test assertions.

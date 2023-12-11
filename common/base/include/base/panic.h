@@ -12,6 +12,14 @@ BEGIN_API
 /// @ingroup Base
 /// @{
 
+#ifdef WITH_DOXYGEN
+#   define CTU_ENABLE_PANIC 1
+#endif
+
+/// @def CTU_ENABLE_PANIC
+/// @brief enable panic handling
+/// @note this is only enabled in debug builds, see [The build guide](@ref building) for more information
+
 /// @brief panic location information
 typedef struct
 {
@@ -34,7 +42,8 @@ typedef struct
 /// @note this function should not return
 typedef void (*panic_handler_t)(panic_t panic, const char *fmt, va_list args);
 
-/// @brief the global panic handler
+/// @brief the global panic handler.
+///
 /// by default this prints a stacktrace and aborts
 /// it can be overridden for testing purposes or to add more functionality
 extern panic_handler_t gPanicHandler;
@@ -81,7 +90,7 @@ NORETURN ctpanic(panic_t panic, FORMAT_STRING const char *msg, ...);
 /// @param expr the condition to assert
 /// @param ... the format string and optional arguments to format
 
-#if CTU_DEBUG
+#if CTU_ENABLE_PANIC
 #   define CTASSERTF(expr, ...) CTU_ALWAYS_ASSERTF(expr, __VA_ARGS__)
 #else
 #   define CTASSERTF(expr, ...) CTU_ASSUME(expr)
