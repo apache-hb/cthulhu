@@ -20,7 +20,7 @@ typedef struct text_t
 ///
 /// @param scan the scanner to get the language of
 ///
-/// @return the language of @a scan
+/// @return the language of @p scan
 NODISCARD CONSTFN
 const char *scan_language(IN_NOTNULL const scan_t *scan);
 
@@ -28,7 +28,7 @@ const char *scan_language(IN_NOTNULL const scan_t *scan);
 ///
 /// @param scan the scanner to get the path of
 ///
-/// @return the path of @a scan
+/// @return the path of @p scan
 NODISCARD CONSTFN
 const char *scan_path(IN_NOTNULL const scan_t *scan);
 
@@ -36,7 +36,7 @@ const char *scan_path(IN_NOTNULL const scan_t *scan);
 ///
 /// @param scan the scanner to get the user data of
 ///
-/// @return the user data of @a scan
+/// @return the user data of @p scan
 NODISCARD CONSTFN
 void *scan_get(IN_NOTNULL scan_t *scan);
 
@@ -50,7 +50,7 @@ void scan_set(IN_NOTNULL scan_t *scan, void *value);
 ///
 /// @param scan the scanner to get the text pointer of
 ///
-/// @return the text pointer of @a scan
+/// @return the text pointer of @p scan
 NODISCARD CONSTFN
 const char *scan_text(IN_NOTNULL const scan_t *scan);
 
@@ -58,7 +58,7 @@ const char *scan_text(IN_NOTNULL const scan_t *scan);
 ///
 /// @param scan the scanner to get the text size of
 ///
-/// @return the text size of @a scan
+/// @return the text size of @p scan
 NODISCARD CONSTFN
 size_t scan_size(IN_NOTNULL const scan_t *scan);
 
@@ -66,7 +66,7 @@ size_t scan_size(IN_NOTNULL const scan_t *scan);
 ///
 /// @param scan the scanner to get the text of
 ///
-/// @return the text of @a scan
+/// @return the text of @p scan
 NODISCARD CONSTFN
 text_t scan_source(IN_NOTNULL const scan_t *scan);
 
@@ -74,7 +74,7 @@ text_t scan_source(IN_NOTNULL const scan_t *scan);
 ///
 /// @param scan the scanner to get the report sink of
 ///
-/// @return the report sink of @a scan
+/// @return the report sink of @p scan
 NODISCARD CONSTFN
 reports_t *scan_reports(IN_NOTNULL scan_t *scan);
 
@@ -82,7 +82,7 @@ reports_t *scan_reports(IN_NOTNULL scan_t *scan);
 ///
 /// @param scan the scanner to get the io source of
 ///
-/// @return the io source of @a scan
+/// @return the io source of @p scan
 NODISCARD CONSTFN
 io_t *scan_src(IN_NOTNULL scan_t *scan);
 
@@ -98,7 +98,7 @@ scan_t *scan_invalid(void);
 /// @brief read data from a scanner
 ///
 /// @param scan the scanner to read from
-/// @param dst the destination to read into, must be at least @a size bytes
+/// @param dst the destination to read into, must be at least @p size bytes
 /// @param size the number of bytes to read
 ///
 /// @return the number of bytes read

@@ -32,7 +32,7 @@ NODISCARD CT_ALLOC(io_close)
 io_t *io_file(const char *path, os_access_t mode);
 
 /// @brief create an IO object from an initial view of memory
-/// @note this copies @arg size bytes from @arg data into a new buffer
+/// @note this copies @p size bytes from @p data into a new buffer
 ///
 /// @param name the name of the io block
 /// @param data the data to copy into the initial buffer
@@ -44,6 +44,7 @@ NODISCARD CT_ALLOC(io_close)
 io_t *io_memory(const char *name, const void *data, size_t size, os_access_t flags);
 
 /// @brief create an IO object in memory of a given size
+/// @p size specifies the initial internal buffer size, the file seek position starts at 0
 ///
 /// @param name the name of the io object
 /// @param size the starting size of the buffer
@@ -54,6 +55,7 @@ NODISCARD CT_ALLOC(io_close)
 io_t *io_blob(const char *name, size_t size, os_access_t flags);
 
 /// @brief create a readonly IO object for a given view of memory
+/// @pre @p data must point to a valid memory region of @p size bytes
 ///
 /// @param name the name of the IO view
 /// @param data the data to provide in the view
@@ -64,6 +66,7 @@ NODISCARD CT_ALLOC(io_close)
 io_t *io_view(const char *name, const void *data, size_t size);
 
 /// @brief create an IO view of a string
+/// create a readonly IO view of a string
 ///
 /// @param name the name of the IO view
 /// @param string the backing string view
@@ -73,7 +76,7 @@ NODISCARD CT_ALLOC(io_close)
 io_t *io_string(const char *name, const char *string);
 
 /// @brief read from an io object
-/// @note the io object must have been created with the @a eAccessRead flag
+/// @pre the io object must have been created with the @a eAccessRead flag
 ///
 /// @param io the io object
 /// @param dst the dst buffer to read into
@@ -83,7 +86,7 @@ io_t *io_string(const char *name, const char *string);
 size_t io_read(io_t *io, OUT_WRITES(size) void *dst, size_t size);
 
 /// @brief write to an io object
-/// @note the io object must have been created with the @a eAccessWrite flag
+/// @pre the io object must have been created with the @a eAccessWrite flag
 ///
 /// @param io the io object
 /// @param src the source buffer to copy from

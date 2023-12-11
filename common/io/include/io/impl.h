@@ -85,16 +85,16 @@ typedef struct io_t
     /// @brief callback struct
     const io_callbacks_t *cb;
 
-    /// the last error set on this object
+    /// @brief the last error set on this object
     io_error_t error;
 
-    /// the access flags for this object
+    /// @brief the access flags for this object
     os_access_t flags;
 
-    /// the name of this object
+    /// @brief the name of this object
     const char *name;
 
-    /// user data space
+    /// @brief user data space
     char data[];
 } io_t;
 
@@ -108,6 +108,7 @@ PUREFN
 void *io_data(IN_NOTNULL io_t *io);
 
 /// @brief create a new IO object for a given interface
+/// @pre @p data must point to a valid memory region of @p size bytes
 ///
 /// @param cb the callback set
 /// @param flags the access flags for this object

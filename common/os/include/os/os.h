@@ -166,7 +166,7 @@ OS_RESULT(os_file_t *) os_file_open(IN_STRING const char *path, os_access_t acce
 /// @brief close a file
 ///
 /// @param file the file to close
-void os_file_close(IN_NOTNULL OUT_PTR_INVALID os_file_t *file);
+void os_file_close(OUT_PTR_INVALID os_file_t *file);
 
 /// @brief read from a file
 ///
@@ -241,6 +241,6 @@ OS_RESULT(const void *) os_file_map(IN_NOTNULL os_file_t *file);
 NODISCARD
 const char *os_file_name(IN_NOTNULL os_file_t *file);
 
-/// @} // OS API
+/// @}
 
 END_API

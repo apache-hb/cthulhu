@@ -48,7 +48,7 @@ const char *os_error_string(os_error_t error);
 /// @def OS_VALUE(TYPE, RESULT)
 /// @brief get the value from a result
 /// @note always ensure the result is not an error before using this macro
-/// @warning this macro does not have validation if @arg TYPE is not the correct type
+/// @warning this macro does not have validation if @p TYPE is not the correct type
 ///
 /// @param TYPE the type of the value
 /// @param RESULT the result to get the value from
@@ -56,7 +56,7 @@ const char *os_error_string(os_error_t error);
 
 /// @def OS_VALUE_OR(TYPE, RESULT, OTHER)
 /// @brief get the value from a result or return a default value
-/// @warning this macro does not have validation if @arg TYPE is not the correct type
+/// @warning this macro does not have validation if @p TYPE is not the correct type
 ///
 /// @param TYPE the type of the value
 /// @param RESULT the result to get the value from

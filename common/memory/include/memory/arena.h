@@ -31,7 +31,7 @@ typedef struct arena_t arena_t;
 typedef struct mem_t mem_t;
 
 /// @brief arena malloc callback
-/// @pre @p size must be greater than 0
+/// @pre @p size must be greater than 0.
 ///
 /// @param header associated event
 /// @param size the size of the allocation
@@ -42,8 +42,8 @@ typedef void *(*mem_alloc_t)(const mem_t *header, size_t size);
 
 /// @brief arena realloc callback
 /// @pre @p old_size must be either @ref ALLOC_SIZE_UNKNOWN or the size of the allocation.
-/// @pre @p new_size must be greater than 0
-/// @pre @p ptr must not be NULL
+/// @pre @p new_size must be greater than 0.
+/// @pre @p ptr must not be NULL.
 ///
 /// @param header associated event
 /// @param ptr the pointer to reallocate
@@ -104,7 +104,7 @@ typedef struct arena_t
 } arena_t;
 
 /// @brief acquire the arena of an event header
-/// @pre @p event must not be NULL
+/// @pre @p event must not be NULL.
 ///
 /// @param event the event header
 ///
