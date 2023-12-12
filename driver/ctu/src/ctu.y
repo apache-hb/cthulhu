@@ -24,7 +24,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %union {
     char *ident;
-    util_text_t string;
+    text_t string;
     ctu_digit_t digit;
     bool boolean;
 
@@ -433,7 +433,7 @@ exprList: expr { $$ = vector_init($1); }
 primary: LPAREN expr RPAREN { $$ = $2; }
     | INTEGER { $$ = ctu_expr_int(x, @$, $1.value); }
     | BOOLEAN { $$ = ctu_expr_bool(x, @$, $1); }
-    | STRING { $$ = ctu_expr_string(x, @$, $1.text, $1.length); }
+    | STRING { $$ = ctu_expr_string(x, @$, $1.text, $1.size); }
     | path { $$ = ctu_expr_name(x, @$, $1); }
     | AS LT type GT LPAREN primary RPAREN { $$ = ctu_expr_cast(x, @$, $6, $3); }
     | init { $$ = $1; }

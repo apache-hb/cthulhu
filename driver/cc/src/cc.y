@@ -25,7 +25,7 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %union {
     char *ident;
 
-    util_text_t text;
+    text_t text;
 
     mpz_t mpz;
 

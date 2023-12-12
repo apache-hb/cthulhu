@@ -16,7 +16,8 @@
 
 void *util_select_decl(tree_t *sema, const size_t *tags, size_t len, const char *name)
 {
-    CTASSERTF(tags != NULL && len > 0, "(tags=%p, len=%zu)", (void*)tags, len);
+    CTASSERT(tags != NULL);
+    CTASSERT(len > 0);
 
     for (size_t i = 0; i < len; i++)
     {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/analyze.h"
+#include "core/text.h"
 
 #include <stddef.h>
 
@@ -11,13 +12,6 @@ typedef struct arena_t arena_t;
 
 /// @ingroup Location
 /// @{
-
-/// @brief a span of text inside a scanner
-typedef struct text_t
-{
-    size_t size;      ///< the number of bytes in the text
-    const char *text; ///< the text itself
-} text_t;
 
 /// @brief get the source language of a scanner
 ///
@@ -71,7 +65,7 @@ size_t scan_size(IN_NOTNULL const scan_t *scan);
 ///
 /// @return the text of @p scan
 NODISCARD CONSTFN
-text_t scan_source(IN_NOTNULL const scan_t *scan);
+text_view_t scan_source(IN_NOTNULL const scan_t *scan);
 
 /// @brief get the scanners report sink
 ///

@@ -107,7 +107,7 @@ static char *padding(size_t len)
 static char *extract_line(const scan_t *scan, line_t line)
 {
     size_t start = 0;
-    text_t source = scan_source(scan);
+    text_view_t source = scan_source(scan);
     while (start < source.size && line > 0)
     {
         char c = source.text[start++];

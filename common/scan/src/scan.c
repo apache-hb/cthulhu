@@ -49,11 +49,15 @@ const char *scan_text(const scan_t *scan)
 }
 
 USE_DECL
-text_t scan_source(const scan_t *scan)
+text_view_t scan_source(const scan_t *scan)
 {
     CTASSERT(scan != NULL);
 
-    text_t text = {scan->size, scan->mapped};
+    text_view_t text = {
+        .text = scan->mapped,
+        .size = scan->size
+    };
+
     return text;
 }
 

@@ -11,7 +11,7 @@ static const size_t kLocalModuleTags[] = { eObrTagModules };
 static const size_t kGlobalModuleTags[] = { eObrTagImports };
 static const size_t kDeclTags[] = { eObrTagTypes };
 
-static const util_search_t kSearchDecl = {
+static const decl_search_t kSearchDecl = {
     .localScopeTags = kLocalModuleTags,
     .localScopeTagsLen = sizeof(kLocalModuleTags) / sizeof(size_t),
 

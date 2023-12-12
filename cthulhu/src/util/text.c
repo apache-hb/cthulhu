@@ -44,7 +44,7 @@ static escape_t consume_text(reports_t *reports, const node_t *node, const char 
     }
 }
 
-util_text_t util_text_escape(reports_t *reports, const node_t *node, const char *text, size_t length)
+text_t util_text_escape(reports_t *reports, const node_t *node, const char *text, size_t length)
 {
     typevec_t *vec = typevec_new(sizeof(char), length);
 
@@ -58,9 +58,9 @@ util_text_t util_text_escape(reports_t *reports, const node_t *node, const char 
     char zero = '\0';
     typevec_push(vec, &zero);
 
-    util_text_t result = {
+    text_t result = {
         .text = typevec_data(vec),
-        .length = typevec_len(vec)
+        .size = typevec_len(vec)
     };
 
     return result;

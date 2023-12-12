@@ -22,7 +22,7 @@ static const size_t kLocalModuleTags[] = { eCtuTagModules };
 static const size_t kGlobalModuleTags[] = { eCtuTagImports };
 static const size_t kDeclTags[] = { eCtuTagTypes };
 
-static const util_search_t kSearchType = {
+static const decl_search_t kSearchType = {
     .localScopeTags = kLocalModuleTags,
     .localScopeTagsLen = sizeof(kLocalModuleTags) / sizeof(size_t),
 

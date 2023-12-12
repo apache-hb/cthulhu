@@ -1,30 +1,57 @@
 #pragma once
 
+#include "core/compiler.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 
 typedef struct tree_t tree_t;
 
-///
-/// type helpers
-///
+BEGIN_API
 
+/// @ingroup RuntimeUtil
+/// @{
+
+/// @brief compare two types for strict equality
+/// compares two types for exact equality, does not follow typedefs
+///
+/// @param lhs the left hand side type
+/// @param rhs the right hand side type
+///
+/// @return true if the types are equal, false otherwise
 bool util_types_equal(const tree_t *lhs, const tree_t *rhs);
 
+/// @brief query two types for comparability in binary logic operations
+///
+/// @param lhs the left hand side type
+/// @param rhs the right hand side type
+///
+/// @return true if the types are comparable, false otherwise
 bool util_types_comparable(const tree_t *lhs, const tree_t *rhs);
 
-/**
- * @brief attempt to convert the expr @arg expr to a type of @arg dst
- *
- * @param dst the desired type
- * @param expr the expression to try and cast
- * @return tree_t* the casted expression or @a tree_error if the cast could not be done
- */
+/// @brief attempt to cast an expression to a type
+///
+/// @param dst the desired type
+/// @param expr the expression to try and cast
+///
+/// @return tree_t* the casted expression or @a tree_error if the cast could not be done
 tree_t *util_type_cast(const tree_t *dst, tree_t *expr);
 
+/// @brief check if the length of an array is bounded
 ///
-/// length helpers
+/// @param length the length of the array
 ///
-
+/// @return true if the length is bounded, false otherwise
 bool util_length_bounded(size_t length);
+
+/// @brief get the pretty name of a length
+/// return either the length as a string or "unbounded" if the length is unbounded
+///
+/// @param length the length to get the name of
+///
+/// @return the name of the length
 const char *util_length_name(size_t length);
+
+/// @}
+
+END_API

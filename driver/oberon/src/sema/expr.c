@@ -14,12 +14,15 @@
 /// rvalues
 ///
 
-static tree_t *sema_digit(tree_t *sema, obr_t *expr, const tree_t *implicitType)
+static tree_t *sema_digit(tree_t *sema, obr_t *expr, const tree_t *implicit_type)
 {
     CTU_UNUSED(sema);
 
     // TODO: get correct digit size
-    const tree_t *type = implicitType != NULL ? implicitType : obr_get_digit_type(eDigitInt, eSignSigned);
+    const tree_t *type = implicit_type == NULL
+        ? obr_get_digit_type(eDigitInt, eSignSigned)
+        : implicit_type;
+
     return tree_expr_digit(expr->node, type, expr->digit);
 }
 
@@ -28,21 +31,21 @@ static tree_t *sema_string(tree_t *sema, obr_t *expr)
     return util_create_string(sema, expr->node, obr_get_char_type(), expr->text, expr->length);
 }
 
-static tree_t *sema_unary(tree_t *sema, obr_t *expr, const tree_t *implicitType)
+static tree_t *sema_unary(tree_t *sema, obr_t *expr, const tree_t *implicit_type)
 {
-    tree_t *operand = obr_sema_rvalue(sema, expr->expr, implicitType);
+    tree_t *operand = obr_sema_rvalue(sema, expr->expr, implicit_type);
     return tree_expr_unary(expr->node, expr->unary, operand);
 }
 
-static tree_t *sema_binary(tree_t *sema, obr_t *expr, const tree_t *implicitType)
+static tree_t *sema_binary(tree_t *sema, obr_t *expr, const tree_t *implicit_type)
 {
     // TODO: get common type
-    const tree_t *type = implicitType == NULL
+    const tree_t *type = implicit_type == NULL
         ? obr_get_digit_type(eDigitInt, eSignSigned)
-        : implicitType;
+        : implicit_type;
 
-    tree_t *lhs = obr_sema_rvalue(sema, expr->lhs, implicitType);
-    tree_t *rhs = obr_sema_rvalue(sema, expr->rhs, implicitType);
+    tree_t *lhs = obr_sema_rvalue(sema, expr->lhs, implicit_type);
+    tree_t *rhs = obr_sema_rvalue(sema, expr->rhs, implicit_type);
 
     return tree_expr_binary(expr->node, type, expr->binary, lhs, rhs);
 }

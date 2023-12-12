@@ -32,7 +32,7 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
     char *ident;
     mpz_t number;
     bool boolean;
-    util_text_t string;
+    text_t string;
 }
 
 %type<vector>
@@ -305,7 +305,7 @@ designator: IDENT { $$ = obr_expr_name(x, @$, $1); } /* this deviates from the o
 factor: designator { $$ = $1; }
     | designator LPAREN optExprList RPAREN { $$ = obr_expr_call(x, @$, $1, $3); }
     | NUMBER { $$ = obr_expr_digit(x, @$, $1); }
-    | STRING { $$ = obr_expr_string(x, @$, $1.text, $1.length); }
+    | STRING { $$ = obr_expr_string(x, @$, $1.text, $1.size); }
     | LPAREN expr RPAREN { $$ = $2; }
     ;
 

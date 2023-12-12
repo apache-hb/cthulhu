@@ -22,13 +22,22 @@ typedef struct map_t map_t;
 /// common api
 ///
 
+/// @brief common code emitter options
 typedef struct emit_options_t
 {
+    /// @brief reporting sink
     reports_t *reports;
+
+    /// @brief the filesystem to use
     fs_t *fs;
 
-    vector_t *modules; // vector<ssa_module>
-    map_t *deps;       // map<ssa_symbol, set<ssa_symbol>>
+    /// @brief all modules to emit
+    /// vector_t<ssa_module_t>
+    vector_t *modules;
+
+    /// @brief the dependency graph
+    /// map_t<ssa_symbol_t, set<ssa_symbol_t>>
+    map_t *deps;
 } emit_options_t;
 
 ///
@@ -45,11 +54,11 @@ typedef struct ssa_emit_result_t
     void *stub;
 } ssa_emit_result_t;
 
-/**
- * @brief emit ssa form for debugging
- *
- * @param options the options to use
- */
+/// @brief emit ssa form for debugging
+///
+/// @param options the options to use
+///
+/// @return the result of the emit
 ssa_emit_result_t emit_ssa(const ssa_emit_options_t *options);
 
 ///

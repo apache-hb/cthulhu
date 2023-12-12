@@ -102,7 +102,7 @@ typedef struct io_t
 } io_t;
 
 /// @brief get the user data from an io object
-/// @warning does not perform any validation
+/// @warning does not perform any validation on the type of the user data
 ///
 /// @param io the io object
 ///
@@ -112,6 +112,7 @@ void *io_data(IN_NOTNULL io_t *io);
 
 /// @brief create a new IO object for a given interface
 /// @pre @p data must point to a valid memory region of @p size bytes
+/// @pre @p cb must point to a valid callback set
 ///
 /// @param cb the callback set
 /// @param flags the access flags for this object
