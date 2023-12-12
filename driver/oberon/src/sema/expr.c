@@ -105,7 +105,7 @@ static tree_t *sema_call(tree_t *sema, obr_t *expr)
         vector_set(args, i, arg);
     }
 
-    return util_create_call(sema, expr->node, callee, args);
+    return tree_expr_call(expr->node, callee, args);
 }
 
 static tree_t *sema_field(tree_t *sema, obr_t *expr)

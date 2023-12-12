@@ -243,7 +243,7 @@ static tree_t *sema_call(ctu_sema_t *sema, const ctu_t *expr)
         vector_set(result, i, arg);
     }
 
-    return util_create_call(sema->sema, expr->node, callee, result);
+    return tree_expr_call(expr->node, callee, result);
 }
 
 static tree_t *sema_deref_lvalue(ctu_sema_t *sema, const ctu_t *expr)

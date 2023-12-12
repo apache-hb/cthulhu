@@ -294,7 +294,7 @@ static tree_t *sema_call(tree_t *sema, pl0_t *node)
 
     vector_t *args = vector_new(0);
 
-    return util_create_call(sema, node->node, proc, args);
+    return tree_expr_call(node->node, proc, args);
 }
 
 static tree_t *sema_branch(tree_t *sema, pl0_t *node)

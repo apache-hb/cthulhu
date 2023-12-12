@@ -340,16 +340,12 @@ bool cfg_set_int(cfg_field_t *field, int value);
 ///
 /// @param field the field to set the value of
 /// @param value the new value
-///
-/// @return true if the value was valid, false otherwise
 void cfg_set_bool(cfg_field_t *field, bool value);
 
 /// @brief set the current value of a string field
 ///
 /// @param field the field to set the value of
 /// @param value the new value
-///
-/// @return true if the value was valid, false otherwise
 void cfg_set_string(cfg_field_t *field, const char *value);
 
 /// @brief set the current value of an enum field

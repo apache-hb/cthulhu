@@ -92,10 +92,7 @@ void util_set_current_symbol(tree_t *sema, tree_t *symbol);
 /// @return true if the expression was evaluated, false otherwise
 bool util_eval_digit(mpz_t value, const tree_t *expr);
 
-
 tree_t *util_create_string(tree_t *sema, const node_t *node, tree_t *letter, const char *text, size_t length);
-
-tree_t *util_create_call(tree_t *sema, const node_t *node, const tree_t *fn, vector_t *args);
 
 ///
 /// length helpers

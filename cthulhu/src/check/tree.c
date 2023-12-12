@@ -169,6 +169,23 @@ static void check_func_return_equal(check_t *check, const tree_t *returnType, co
     );
 }
 
+static void check_deprecated_call(check_t *check, const tree_t *expr)
+{
+    const tree_t *fn = expr->callee;
+    // cant check if the callee is an indirect call
+    if (!tree_is(fn, eTreeDeclFunction)) { return; }
+
+    const tree_attribs_t *attribs = tree_get_attrib(fn);
+
+    if (attribs->deprecated == NULL) { return; }
+
+    message_t *id = report(check->reports, eWarn, tree_get_node(expr),
+        "call to deprecated function `%s`",
+        tree_get_name(fn)
+    );
+    report_note(id, "deprecated: %s", attribs->deprecated);
+}
+
 static void check_func_body(check_t *check, const tree_t *returnType, const tree_t *stmt)
 {
     switch (stmt->kind)
@@ -192,8 +209,11 @@ static void check_func_body(check_t *check, const tree_t *returnType, const tree
     case eTreeExprCompare:
     case eTreeExprBinary:
     case eTreeExprLoad:
-    case eTreeExprCall:
         break; // TODO: check
+
+    case eTreeExprCall:
+        check_deprecated_call(check, stmt);
+        break;
 
     default:
         NEVER("invalid statement kind %s (check-func-body)", tree_to_string(stmt));
@@ -237,14 +257,14 @@ static void check_func_return(check_t *check, const tree_t *fn)
 {
     if (fn->body == NULL) { return; }
 
-    const tree_t *fnType = tree_get_type(fn);
-    const tree_t *returnType = fnType->result;
+    const tree_t *fn_type = tree_get_type(fn);
+    const tree_t *return_type = fn_type->result;
 
-    check_func_body(check, returnType, fn->body);
+    check_func_body(check, return_type, fn->body);
 
     if (!will_always_return(fn->body))
     {
-        if (tree_is(returnType, eTreeTypeUnit)) { return; }
+        if (tree_is(return_type, eTreeTypeUnit)) { return; }
 
         report(check->reports, eFatal, tree_get_node(fn),
             "function `%s` may not return a value",
