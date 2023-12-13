@@ -152,7 +152,7 @@ const char *str_common_prefix(IN_NOTNULL vector_t *args);
  * @return the index of the last instance of @a sub in @a str, or SIZE_MAX if
  * sub is not found
  */
-MUST_INSPECT CONSTFN
+RET_INSPECT CONSTFN
 size_t str_rfind(IN_STRING const char *str, IN_STRING const char *sub);
 
 /**
@@ -163,7 +163,7 @@ size_t str_rfind(IN_STRING const char *str, IN_STRING const char *sub);
  * @param sub the substring to search for
  * @return the index of the last instance of @a sub in @a str, or SIZE_MAX
  */
-MUST_INSPECT CONSTFN
+RET_INSPECT CONSTFN
 size_t str_rfindn(IN_READS(len) const char *str, size_t len, IN_STRING const char *sub);
 
 /**
@@ -173,7 +173,7 @@ size_t str_rfindn(IN_READS(len) const char *str, size_t len, IN_STRING const cha
  * @param sub the substring to search for
  * @return the index of the first instance of @a sub in @a str, or SIZE_MAX if @a sub is not found
  */
-MUST_INSPECT CONSTFN
+RET_INSPECT CONSTFN
 size_t str_find(IN_STRING const char *str, IN_STRING const char *sub);
 
 /**
@@ -183,7 +183,7 @@ size_t str_find(IN_STRING const char *str, IN_STRING const char *sub);
  * @param chars the characters to search for
  * @return the number of times any of @a chars appears in @a str
  */
-MUST_INSPECT CONSTFN
+RET_INSPECT CONSTFN
 size_t str_count_any(IN_STRING const char *str, IN_STRING const char *chars);
 
 /**

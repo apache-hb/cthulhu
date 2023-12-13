@@ -67,6 +67,18 @@ OS_RESULT(bool) mkdir_recursive(const char *path)
 
 // fs api
 
+void fs_delete(fs_t *fs)
+{
+    CTASSERT(fs != NULL);
+
+    if (fs->cb->pfn_delete != NULL)
+    {
+        fs->cb->pfn_delete(fs);
+    }
+
+    ctu_free(fs);
+}
+
 fs_t *fs_new(reports_t *reports, inode_t *root, const fs_callbacks_t *cb, const void *data, size_t size)
 {
     CTASSERT(reports != NULL);

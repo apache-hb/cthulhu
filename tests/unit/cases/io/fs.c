@@ -73,5 +73,8 @@ int main()
         GROUP_EXPECT_PASS(group, "end_reports() should return 0", err == 0);
     }
 
+    // cleanup the physical test directory
+    os_dir_delete("test");
+
     return test_suite_finish(&suite);
 }

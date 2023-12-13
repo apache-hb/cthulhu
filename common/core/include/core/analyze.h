@@ -7,6 +7,70 @@
 /// @ingroup Core
 /// @{
 
+/// @def NODISCARD
+/// @brief mark a function as returning a value that must be used
+
+/// @def FORMAT_STRING
+/// @brief mark a function parameter as a printf format string
+
+/// @def USE_DECL
+/// @brief sal2 annotation on function implementations to copy annotations from the declaration
+
+/// @def IN_READS(expr)
+/// @brief annotate a parameter as reading @p expr elements
+///
+/// @param expr the number of elements read
+
+/// @def OUT_WRITES(expr)
+/// @brief annotate a parameter as writing @p expr elements
+///
+/// @param expr the number of elements written
+
+/// @def OUT_PTR_INVALID
+/// @brief annotate a pointer as invalid after the function returns
+
+/// @def RET_RANGE(cmp, it)
+/// @brief annotate the return value as being bounded by the expression of @p cmp and @p it
+/// RET_RANGE(!=, 0) means the returned value will never be 0
+///
+/// @param cmp the comparison operator
+/// @param it the expression to compare against
+
+/// @def RET_NOTNULL
+/// @brief annotate the return value as not being null
+
+/// @def RET_STRING
+/// @brief annotate the return value as a null terminated string
+
+/// @def RET_INSPECT
+/// @brief annotate the return value as needing to be inspected
+/// this is the same as NODISCARD but implies that the return value must be checked
+/// for errors
+
+/// @def FIELD_SIZE(of)
+/// @brief annotate a field as being an array of @p of elements
+///
+/// @param of the number of elements in the array
+
+/// @def FIELD_STRING
+/// @brief annotate a field as being a null terminated string
+
+/// @def FIELD_RANGE(cmp, it)
+/// @brief annotate a field as being bounded by the expression of @p cmp and @p it
+/// FIELD_RANGE(!=, 0) means the field will never be 0
+///
+/// @param cmp the comparison operator
+/// @param it the expression to compare against
+
+/// @def IN_NOTNULL
+/// @brief annotate a parameter as not being null
+
+/// @def IN_STRING
+/// @brief annotate a parameter as being a null terminated string
+
+/// @def IN_RANGE(cmp, it)
+/// @brief annotate a parameter as being bounded by the expression of @p cmp and @p it
+
 #if __cplusplus >= 201703L
 #   define NODISCARD [[nodiscard]]
 #endif
@@ -25,7 +89,7 @@
 #   define RET_RANGE(cmp, it) _Ret_range_(cmp, it)
 #   define RET_NOTNULL _Ret_notnull_
 #   define RET_STRING _Ret_z_
-#   define MUST_INSPECT _Must_inspect_result_
+#   define RET_INSPECT _Must_inspect_result_
 
 #   define FIELD_SIZE(of) _Field_size_(of)
 #   define FIELD_STRING _Field_z_
@@ -33,7 +97,6 @@
 
 #   define IN_NOTNULL _In_
 #   define IN_STRING _In_z_
-#   define IN_STRING_OPT _In_opt_z_
 #   define IN_RANGE(cmp, it) _In_range_(cmp, it)
 #else
 #   define FORMAT_STRING
@@ -44,15 +107,20 @@
 
 #   define RET_RANGE(cmp, it)
 #   define RET_STRING
-#   define MUST_INSPECT
+#   define RET_INSPECT
 
 #   define FIELD_STRING
 #   define FIELD_RANGE(cmp, it)
 
 #   define IN_STRING
-#   define IN_STRING_OPT
 #   define IN_RANGE(cmp, it)
 #endif
+
+/// @def CT_PRINTF(a, b)
+/// @brief mark a function as a printf style function
+///
+/// @param a the index of the format string parameter
+/// @param b the index of the first variadic parameter
 
 #if __clang__ >= 10
 #   define CT_PRINTF(a, b) __attribute__((__format__(__printf__, a, b)))
@@ -97,6 +165,11 @@
 #   define NODISCARD CTU_ATTRIB(warn_unused_result)
 #endif
 
+/// @def CONSTFN
+/// @brief mark a function as const, always returns the same value for the same arguments
+/// @def PUREFN
+/// @brief mark a function as pure, has no side effects and always returns the same value for the same arguments
+
 #if CTU_DISABLE_FN_PURITY
 #   define CONSTFN
 #   define PUREFN
@@ -105,8 +178,18 @@
 #   define PUREFN CTU_ATTRIB(pure)
 #endif
 
+/// @def HOTFN
+/// @brief mark a function as hot, it is likely to be called often
+/// @def COLDFN
+/// @brief mark a function as cold, it is unlikely to be called often
+
 #define HOTFN CTU_ATTRIB(hot)
 #define COLDFN CTU_ATTRIB(cold)
+
+/// @def CT_ALLOC
+/// @brief mark a function as allocating memory
+/// @def CT_ALLOC_SIZE
+/// @brief mark a function as allocating memory with a specific size
 
 #define CT_ALLOC(...) CTU_ATTRIB(malloc, malloc(__VA_ARGS__))
 #define CT_ALLOC_SIZE(...) CTU_ATTRIB(alloc_size(__VA_ARGS__))

@@ -31,27 +31,6 @@ static BOOL get_frame(STACKFRAME *frame, CONTEXT *ctx, HANDLE process, HANDLE th
     );
 }
 
-static void demangle_symbol(HANDLE process, CHAR *name, DWORD size, DWORD64 offset, SYMBOL_INFO *symbol, DWORD disp)
-{
-    DWORD64 disp2 = disp;
-    if (SymFromAddr(process, offset, &disp2, symbol))
-    {
-        DWORD len = UnDecorateSymbolName(symbol->Name, name, size, UNDNAME_COMPLETE);
-        if (len > 0)
-        {
-            strcpy_s(name, STACKTRACE_NAME_LENGTH, name);
-        }
-        else
-        {
-            strcpy_s(name, STACKTRACE_NAME_LENGTH, symbol->Name);
-        }
-    }
-    else
-    {
-        sprintf_s(name, STACKTRACE_NAME_LENGTH, "0x%llX", offset);
-    }
-}
-
 union disp_t {
     DWORD disp;
     DWORD64 disp64;
@@ -63,21 +42,11 @@ size_t stacktrace_get(frame_t *frames, size_t size)
     if (frames == NULL) return 0;
     if (size == 0) return 0;
 
-    char buffer[sizeof(SYMBOL_INFO) + (STACKTRACE_NAME_LENGTH - 1) * sizeof(TCHAR)] = { 0 };
     HANDLE thread = GetCurrentThread();
     HANDLE process = GetCurrentProcess();
 
-    // allocate a symbol from the stack rather than the heap
-    PSYMBOL_INFO symbol = (PSYMBOL_INFO)buffer;
-    symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
-    symbol->MaxNameLen = STACKTRACE_NAME_LENGTH;
-
-    IMAGEHLP_LINE64 line = { 0 };
-
     CONTEXT ctx = { 0 };
     RtlCaptureContext(&ctx);
-
-    union disp_t disp = { 0 };
 
     STACKFRAME frame = {
         .AddrPC = {
@@ -98,19 +67,8 @@ size_t stacktrace_get(frame_t *frames, size_t size)
     while (get_frame(&frame, &ctx, process, thread) && used < size)
     {
         frame_t result_frame = {
-            .line = 0,
-            .name = { 0 },
-            .path = { 0 }
+            .address = frame.AddrPC.Offset,
         };
-
-        BOOL has_line = SymGetLineFromAddr64(process, frame.AddrPC.Offset, &disp.disp, &line);
-        if (has_line)
-        {
-            result_frame.line = line.LineNumber;
-            strcpy_s(result_frame.path, STACKTRACE_PATH_LENGTH, line.FileName);
-        }
-
-        demangle_symbol(process, result_frame.name, STACKTRACE_NAME_LENGTH, frame.AddrPC.Offset, symbol, disp.disp);
 
         frames[used] = result_frame;
 
@@ -118,4 +76,45 @@ size_t stacktrace_get(frame_t *frames, size_t size)
     }
 
     return used;
+}
+
+void frame_resolve(const frame_t *frame, symbol_t *symbol)
+{
+    if (frame == NULL) return;
+    if (symbol == NULL) return;
+
+    union disp_t disp = { 0 };
+    IMAGEHLP_LINE64 line = { 0 };
+    HANDLE process = GetCurrentProcess();
+
+    symbol->line = 0;
+    strcpy_s(symbol->name, STACKTRACE_NAME_LENGTH, "<unknown>");
+
+    char buffer[sizeof(SYMBOL_INFO) + (STACKTRACE_NAME_LENGTH - 1) * sizeof(TCHAR)] = { 0 };
+    PSYMBOL_INFO info = (PSYMBOL_INFO)buffer;
+    info->SizeOfStruct = sizeof(SYMBOL_INFO);
+    info->MaxNameLen = STACKTRACE_NAME_LENGTH;
+
+    BOOL has_symbol = SymFromAddr(process, frame->address, &disp.disp64, info);
+    if (has_symbol)
+    {
+        BOOL has_line = SymGetLineFromAddr64(process, frame->address, &disp.disp, &line);
+        if (has_line)
+        {
+            symbol->line = line.LineNumber;
+            strcpy_s(symbol->file, STACKTRACE_PATH_LENGTH, line.FileName);
+        }
+        else
+        {
+            symbol->line = 0;
+            strcpy_s(symbol->file, STACKTRACE_PATH_LENGTH, "<unknown>");
+        }
+
+        UnDecorateSymbolName(info->Name, symbol->name, STACKTRACE_NAME_LENGTH, UNDNAME_COMPLETE);
+    }
+    else
+    {
+        strcpy_s(symbol->file, STACKTRACE_PATH_LENGTH, "<unknown>");
+        sprintf_s(symbol->name, STACKTRACE_NAME_LENGTH, "0x%llX", frame->address);
+    }
 }

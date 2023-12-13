@@ -135,7 +135,7 @@ const void *io_map(IN_NOTNULL io_t *io);
 /// @param io the io object
 ///
 /// @return the last set error
-NODISCARD MUST_INSPECT
+NODISCARD RET_INSPECT
 io_error_t io_error(IN_NOTNULL const io_t *io);
 
 /// @} // IO

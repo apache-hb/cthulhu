@@ -128,12 +128,12 @@ void arena_free(IN_NOTNULL arena_t *alloc, OUT_PTR_INVALID void *ptr, IN_RANGE(!
 /// @param parent the parent of the allocation
 ///
 /// @return the allocated pointer
-NODISCARD CT_ALLOC(arena_free, 2)
+NODISCARD CT_ALLOC(arena_free, 2) CT_ALLOC_SIZE(2)
 RET_NOTNULL
 void *arena_malloc(
     IN_NOTNULL arena_t *alloc,
     IN_RANGE(!=, 0) size_t size,
-    IN_STRING_OPT const char *name,
+    const char *name,
     const void *parent);
 
 /// @brief resize a memory allocation from a custom allocator

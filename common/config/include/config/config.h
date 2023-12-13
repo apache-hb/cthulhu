@@ -137,7 +137,7 @@ typedef struct cfg_flags_t
 /// @return the new configuration group
 config_t *config_new(arena_t *alloc, const cfg_info_t *info);
 
-/// @defgroup ConfigAdd Configuration construction
+/// @defgroup ConfigAdd Construction
 /// @brief Configuration construction API
 /// @ingroup Config
 /// @{
@@ -197,7 +197,7 @@ config_t *config_group(config_t *group, const cfg_info_t *info);
 
 /// @} // ConfigAdd
 
-/// @defgroup ConfigReflect Configuration reflection
+/// @defgroup ConfigReflect Reflection
 /// @brief Reflection API for configuration
 /// @ingroup Config
 /// @{
@@ -281,7 +281,7 @@ vector_t *cfg_get_fields(const config_t *config);
 
 /// @} // ConfigReflect
 
-/// @defgroup ConfigRead Configuration reading
+/// @defgroup ConfigRead Reading
 /// @brief Reading API for configuration
 /// @ingroup Config
 /// @{
@@ -323,7 +323,7 @@ size_t cfg_flags_value(const cfg_field_t *field);
 
 /// @} // ConfigRead
 
-/// @defgroup ConfigWrite Configuration writing
+/// @defgroup ConfigWrite Writing
 /// @brief Writing API for configuration
 /// @ingroup Config
 /// @{

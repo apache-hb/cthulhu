@@ -29,7 +29,7 @@ NODISCARD CT_ALLOC(ctu_free)
 RET_NOTNULL
 void *ctu_malloc(IN_RANGE(!=, 0) size_t size);
 
-NODISCARD CT_ALLOC(ctu_free)
+NODISCARD CT_ALLOC(ctu_free) CT_ALLOC_SIZE(2)
 RET_NOTNULL
 void *ctu_malloc_info(IN_RANGE(!=, 0) size_t size, const char *name, const void *parent);
 
@@ -40,7 +40,7 @@ void *ctu_malloc_info(IN_RANGE(!=, 0) size_t size, const char *name, const void 
 /// @param new_size the new size of the allocation
 ///
 /// @return the reallocated pointer
-NODISCARD CT_ALLOC(ctu_free)
+NODISCARD CT_ALLOC(ctu_free) CT_ALLOC_SIZE(2)
 RET_NOTNULL
 void *ctu_realloc(IN_NOTNULL OUT_PTR_INVALID void *ptr, IN_RANGE(!=, 0) size_t new_size);
 

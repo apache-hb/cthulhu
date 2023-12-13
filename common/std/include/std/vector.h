@@ -171,7 +171,7 @@ vector_t *vector_join(IN_NOTNULL vector_t *vectors);
  * @param element the element to search for
  * @return the index of the element of @a SIZE_MAX if not found
  */
-MUST_INSPECT CONSTFN
+RET_INSPECT CONSTFN
 size_t vector_find(IN_NOTNULL vector_t *vector, const void *element);
 
 /**

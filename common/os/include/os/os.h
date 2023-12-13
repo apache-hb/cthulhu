@@ -50,7 +50,7 @@ void os_init(void);
 ///
 /// @return true if the file was created, false if it already exists
 /// @return an error if the file could not be created
-MUST_INSPECT
+RET_INSPECT
 OS_RESULT(bool) os_file_create(IN_STRING const char *path);
 
 /// @brief delete a file
@@ -59,7 +59,7 @@ OS_RESULT(bool) os_file_create(IN_STRING const char *path);
 ///
 /// @return true if the file was deleted, false if it did not exist
 /// @return an error if the file could not be deleted
-MUST_INSPECT
+RET_INSPECT
 OS_RESULT(bool) os_file_delete(IN_STRING const char *path);
 
 /// @brief check if a file exists
@@ -68,7 +68,7 @@ OS_RESULT(bool) os_file_delete(IN_STRING const char *path);
 ///
 /// @return true if the file exists, false otherwise
 /// @return an error if the file could not be checked
-MUST_INSPECT
+RET_INSPECT
 OS_RESULT(bool) os_file_exists(IN_STRING const char *path);
 
 /// @brief check if a directory exists
@@ -77,7 +77,7 @@ OS_RESULT(bool) os_file_exists(IN_STRING const char *path);
 ///
 /// @return true if the directory exists, false otherwise
 /// @return an error if the directory could not be checked
-MUST_INSPECT
+RET_INSPECT
 OS_RESULT(bool) os_dir_create(IN_STRING const char *path);
 
 /// @brief delete a directory
@@ -86,7 +86,7 @@ OS_RESULT(bool) os_dir_create(IN_STRING const char *path);
 ///
 /// @return true if the directory was deleted, false if it did not exist
 /// @return an error if the directory could not be deleted
-MUST_INSPECT
+RET_INSPECT
 OS_RESULT(bool) os_dir_delete(IN_STRING const char *path);
 
 /// @brief check if a directory exists
@@ -95,7 +95,7 @@ OS_RESULT(bool) os_dir_delete(IN_STRING const char *path);
 ///
 /// @return true if the directory exists, false otherwise
 /// @return an error if the directory could not be checked
-MUST_INSPECT
+RET_INSPECT
 OS_RESULT(bool) os_dir_exists(IN_STRING const char *path);
 
 /// @brief check if an inode exists

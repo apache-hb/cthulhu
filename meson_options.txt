@@ -64,3 +64,10 @@ option('analyze', type : 'feature',
     description : 'enable static code analysis',
     value : 'disabled'
 )
+
+# tools
+
+option('tool_tracetest', type : 'feature',
+    description : 'build tracetest tool',
+    value : 'auto'
+)

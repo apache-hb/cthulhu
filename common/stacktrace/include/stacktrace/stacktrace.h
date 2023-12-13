@@ -4,6 +4,7 @@
 #include "core/analyze.h"
 
 #include <stdio.h>
+#include <stdbool.h>
 
 BEGIN_API
 
@@ -15,17 +16,17 @@ BEGIN_API
 #define STACKTRACE_NAME_LENGTH 256
 #define STACKTRACE_PATH_LENGTH 1024
 
+typedef struct symbol_t
+{
+    size_t line;
+    char name[STACKTRACE_NAME_LENGTH];
+    char file[STACKTRACE_PATH_LENGTH];
+} symbol_t;
+
 /// @brief a stacktrace frame
 typedef struct frame_t
 {
-    /// the line number this frame might have originated from (0 if unknown)
-    size_t line;
-
-    /// the function name this frame might have originated from (empty if unknown)
-    char name[STACKTRACE_NAME_LENGTH];
-
-    /// the path this frame might have originated from (empty if unknown)
-    char path[STACKTRACE_PATH_LENGTH];
+    size_t address;
 } frame_t;
 
 /// @brief initialize the stacktrace backend
@@ -49,6 +50,10 @@ RET_RANGE(<=, size)
 size_t stacktrace_get(
         frame_t *frames, // OUT_WRITES(return)
         IN_RANGE(>, 0) size_t size);
+
+void frame_resolve(
+        IN_NOTNULL const frame_t *frame,
+        symbol_t *symbol);
 
 /// @brief print a stacktrace to a file
 /// @note this follows the same precondition as @ref stacktrace_get

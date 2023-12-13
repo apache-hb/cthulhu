@@ -32,7 +32,7 @@ if build_gui.allowed()
 endif
 
 # disable unit tests if we are a subproject or release build
-unit_tests = get_option('unit_tests').disable_auto_if(meson.is_subproject() or is_release)
+unit_tests = get_option('unit_tests').disable_auto_if(is_release or meson.is_subproject())
 driver_tests = get_option('driver_tests').disable_auto_if(meson.is_subproject())
 
 analyze = get_option('analyze')
@@ -44,6 +44,7 @@ parts = version.split('.')
 warning_level = get_option('warning_level').to_int()
 
 trace_memory = get_option('trace_memory').disable_auto_if(is_release)
+trace_test = get_option('tool_tracetest').disable_auto_if(is_release or meson.is_subproject())
 
 config_cdata = configuration_data({
     'CTU_MAJOR': parts[0].to_int(),
@@ -244,6 +245,9 @@ summary = {
         'Unit tests': unit_tests,
         'Driver tests': driver_tests,
         'Analyze': analyze
+    },
+    'Tools': {
+        'Trace test': trace_test.allowed()
     },
     'Documentation': {
         'Doxygen': doxygen

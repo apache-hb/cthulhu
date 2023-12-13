@@ -16,7 +16,7 @@ typedef struct item_t
 
 typedef struct set_t
 {
-    FIELD_RANGE(>, 0) size_t size;                     ///< the number of buckets
+    FIELD_RANGE(>, 0) size_t size;   ///< the number of buckets
     FIELD_SIZE(size) item_t items[]; ///< the buckets
 } set_t;
 
@@ -221,12 +221,6 @@ void set_reset(set_t *set)
     for (size_t i = 0; i < set->size; i++)
     {
         item_t *item = &set->items[i];
-        while (item->next != NULL)
-        {
-            item_t *chain = item->next;
-            item->next = chain->next;
-            ctu_free(chain);
-        }
         item->next = NULL;
         item->key = NULL;
     }

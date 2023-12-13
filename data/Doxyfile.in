@@ -2134,13 +2134,12 @@ PREDEFINED = OS_RESULT(X)=X \
              RET_RANGE()= \
              RET_NOTNULL= \
              RET_STRING= \
-             MUST_INSPECT= \
+             RET_INSPECT= \
              FIELD_SIZE()= \
              FIELD_STRING= \
              FIELD_RANGE()= \
              IN_NOTNULL= \
              IN_STRING= \
-             IN_STRING_OPT= \
              IN_RANGE()= \
              CT_PRINTF()= \
              CONSTFN= \
