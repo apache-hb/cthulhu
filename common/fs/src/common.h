@@ -32,6 +32,11 @@ typedef inode_t *(*fs_file_create_t)(fs_t *fs, inode_t *node, const char *name);
 typedef void (*fs_dir_delete_t)(fs_t *fs, inode_t *node, const char *name);
 typedef void (*fs_file_delete_t)(fs_t *fs, inode_t *node, const char *name);
 
+/// @brief fs callback to delete the fs
+///
+/// @param fs the fs to delete
+typedef void (*fs_delete_t)(fs_t *fs);
+
 typedef struct fs_callbacks_t {
     fs_query_node_t pfn_query_node;
     fs_query_dirents_t pfn_query_dirents;
@@ -42,6 +47,11 @@ typedef struct fs_callbacks_t {
 
     fs_file_create_t pfn_create_file;
     fs_file_delete_t pfn_delete_file;
+
+    /// @brief delete the fs
+    /// optional callback if the fs needs extra cleanup.
+    /// eg, releasing locks or other resources
+    fs_delete_t pfn_delete;
 } fs_callbacks_t;
 
 typedef struct fs_t {

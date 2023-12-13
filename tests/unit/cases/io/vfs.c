@@ -61,5 +61,8 @@ int main()
         GROUP_EXPECT_PASS(group, "fs_sync() should sync directories", fs_dir_exists(dst, "testdir/foo/bar"));
     }
 
+    // cleanup the physical test directory
+    os_dir_delete("test");
+
     return test_suite_finish(&suite);
 }

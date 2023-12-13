@@ -15,6 +15,6 @@ libio = library('io', src,
 
 io = declare_dependency(
     link_with : libio,
-    dependencies : [ core, os ],
+    dependencies : [ os ],
     include_directories : 'include'
 )

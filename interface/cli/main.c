@@ -7,6 +7,8 @@
 
 #include "argparse/argparse.h"
 
+#include "io/io.h"
+
 #include "fs/fs.h"
 
 #include "report/report.h"

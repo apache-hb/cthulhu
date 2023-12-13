@@ -16,6 +16,7 @@
 #include "core/macros.h"
 
 #include "fs/fs.h"
+#include "io/io.h"
 
 #include "argparse/argparse.h"
 

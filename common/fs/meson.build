@@ -13,6 +13,6 @@ libfs = library('fs', src,
 
 fs = declare_dependency(
     link_with : libfs,
-    dependencies : [ io ],
+    dependencies : [ os ],
     include_directories : 'include'
 )

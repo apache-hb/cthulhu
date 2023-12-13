@@ -1,6 +1,6 @@
 #pragma once
 
-#include "io/io.h"
+#include "os/os.h"
 
 BEGIN_API
 
@@ -11,6 +11,12 @@ BEGIN_API
 
 typedef struct reports_t reports_t;
 typedef struct fs_t fs_t;
+typedef struct io_t io_t;
+
+/// @brief delete a filesystem interface
+///
+/// @param fs the filesystem to delete
+void fs_delete(fs_t *fs);
 
 /// @brief create a filesystem interface to a physical location on disk
 ///
@@ -18,6 +24,7 @@ typedef struct fs_t fs_t;
 /// @param root the root directory to mount this filesystem on
 ///
 /// @return a filesystem interface, or NULL if the filesystem failed to mount
+NODISCARD CT_ALLOC(fs_delete)
 fs_t *fs_physical(reports_t *reports, const char *root);
 
 /// @brief create a virtual filesystem interface
@@ -26,6 +33,7 @@ fs_t *fs_physical(reports_t *reports, const char *root);
 /// @param name the name of the vfs
 ///
 /// @return a filesystem interface to an in-memory fs
+NODISCARD CT_ALLOC(fs_delete)
 fs_t *fs_virtual(reports_t *reports, const char *name);
 
 /// @brief create a directory
@@ -52,6 +60,7 @@ void fs_file_create(fs_t *fs, const char *path);
 /// @param flags the access modifiers to use when opening the file
 ///
 /// @return an io object representing the file on disk, or NULL on failure
+NODISCARD
 io_t *fs_open(fs_t *fs, const char *path, os_access_t flags);
 
 /// @brief query if a directory exists
@@ -60,6 +69,7 @@ io_t *fs_open(fs_t *fs, const char *path, os_access_t flags);
 /// @param path the path of the directory
 ///
 /// @return true if it exists, false otherwise
+NODISCARD
 bool fs_dir_exists(fs_t *fs, const char *path);
 
 /// @brief query if a file exists
@@ -68,6 +78,7 @@ bool fs_dir_exists(fs_t *fs, const char *path);
 /// @param path the path of the file
 ///
 /// @return true if it exists, false otherwise
+NODISCARD
 bool fs_file_exists(fs_t *fs, const char *path);
 
 /// @brief delete a directory

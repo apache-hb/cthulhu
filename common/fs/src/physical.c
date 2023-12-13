@@ -3,6 +3,8 @@
 #include "std/str.h"
 #include "std/map.h"
 
+#include "io/io.h"
+
 #include "base/panic.h"
 
 #include "report/report.h"

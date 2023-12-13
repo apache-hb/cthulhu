@@ -94,13 +94,6 @@ bool util_eval_digit(mpz_t value, const tree_t *expr);
 
 tree_t *util_create_string(tree_t *sema, const node_t *node, tree_t *letter, const char *text, size_t length);
 
-///
-/// length helpers
-///
-
-bool util_length_bounded(size_t length);
-const char *util_length_name(size_t length);
-
 /// @}
 
 END_API
