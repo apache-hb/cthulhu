@@ -23,13 +23,9 @@ is_debug = buildtype.contains('debug')
 is_release = buildtype.contains('release')
 cc = meson.get_compiler('c')
 target = target_machine.system()
+wants_cpp = false
 
 build_gui = get_option('build_gui').require(target == 'windows')
-
-if build_gui.allowed()
-    has_cpp = add_languages('cpp', native : false, required : build_gui.enabled())
-    build_gui = build_gui.require(has_cpp)
-endif
 
 # disable unit tests if we are a subproject or release build
 unit_tests = get_option('unit_tests').disable_auto_if(is_release or meson.is_subproject())
@@ -37,14 +33,26 @@ driver_tests = get_option('driver_tests').disable_auto_if(meson.is_subproject())
 
 analyze = get_option('analyze')
 
+warning_level = get_option('warning_level').to_int()
+
+trace_memory = get_option('trace_memory').disable_auto_if(is_release)
+tool_stacktrace = get_option('tool_stacktrace').disable_auto_if(is_release or meson.is_subproject())
+
+if build_gui.allowed() or tool_stacktrace.allowed()
+    wants_cpp = true
+endif
+
+if wants_cpp
+    has_cpp = add_languages('cpp', native : false, required : build_gui.enabled())
+    build_gui = build_gui.require(has_cpp)
+    tool_stacktrace = tool_stacktrace.require(has_cpp)
+endif
+
 version = meson.project_version()
 host = host_machine.system()
 parts = version.split('.')
 
-warning_level = get_option('warning_level').to_int()
-
-trace_memory = get_option('trace_memory').disable_auto_if(is_release)
-trace_test = get_option('tool_tracetest').disable_auto_if(is_release or meson.is_subproject())
+source_root = meson.project_source_root()
 
 config_cdata = configuration_data({
     'CTU_MAJOR': parts[0].to_int(),
@@ -53,6 +61,8 @@ config_cdata = configuration_data({
 })
 
 config_cdata.set10('CTU_ENABLE_PANIC', is_debug)
+
+config_cdata.set_quoted('CTU_SOURCE_ROOT', source_root.replace('\\', '\\\\'))
 
 # we use `__attribute__((const|pure))` heavily, but during unit tests we
 # violate function preconditions to test assertions.
@@ -186,17 +196,20 @@ if driver_tests.allowed()
     subdir('tests/lang')
 endif
 
+if tool_stacktrace.allowed()
+    subdir('tools/stacktrace')
+endif
+
 doxygen = find_program('doxygen', required : get_option('doxygen'))
 
 if doxygen.found()
-    cwd = meson.project_source_root()
-    data_dir = cwd / 'data'
+    data_dir = source_root / 'data'
 
     doxy_sources = [
-        cwd / 'interface',
-        cwd / 'common',
-        cwd / 'cthulhu',
-        cwd / 'driver',
+        source_root / 'interface',
+        source_root / 'common',
+        source_root / 'cthulhu',
+        source_root / 'driver',
 
         data_dir / 'docs'
     ]
@@ -207,13 +220,13 @@ if doxygen.found()
     ]
 
     doxy_includes = [
-        cwd / 'cthulhu' / 'include'
+        source_root / 'cthulhu' / 'include'
     ]
 
     doxy_cdata = configuration_data()
     doxy_cdata.merge_from(config_cdata)
     doxy_cdata.set('CTU_SOURCES', ' '.join(doxy_sources))
-    doxy_cdata.set('ROOT_SOURCE_DIR', cwd)
+    doxy_cdata.set('ROOT_SOURCE_DIR', source_root)
     doxy_cdata.set('INCLUDE_PATHS', ' '.join(doxy_includes))
     doxy_cdata.set('EXTRA_STYLESHEET', ' '.join(stylesheets))
     doxy_cdata.set('CLANG_DATABASE', meson.global_build_root() / 'compile_commands.json')
@@ -247,7 +260,7 @@ summary = {
         'Analyze': analyze
     },
     'Tools': {
-        'Trace test': trace_test.allowed()
+        'Stacktrace': tool_stacktrace.allowed()
     },
     'Documentation': {
         'Doxygen': doxygen

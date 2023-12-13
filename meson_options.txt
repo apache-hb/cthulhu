@@ -67,7 +67,7 @@ option('analyze', type : 'feature',
 
 # tools
 
-option('tool_tracetest', type : 'feature',
-    description : 'build tracetest tool',
+option('tool_stacktrace', type : 'feature',
+    description : 'build stacktrace test tool',
     value : 'auto'
 )

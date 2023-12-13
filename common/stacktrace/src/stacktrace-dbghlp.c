@@ -78,7 +78,7 @@ size_t stacktrace_get(frame_t *frames, size_t size)
     return used;
 }
 
-void frame_resolve(const frame_t *frame, symbol_t *symbol)
+void frame_resolve_inner(const frame_t *frame, symbol_t *symbol)
 {
     if (frame == NULL) return;
     if (symbol == NULL) return;
