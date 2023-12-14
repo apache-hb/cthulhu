@@ -11,13 +11,6 @@ void frame_resolve(const frame_t *frame, symbol_t *symbol)
     if (symbol == NULL) return;
 
     frame_resolve_inner(frame, symbol);
-
-    const size_t len = sizeof(CTU_SOURCE_ROOT);
-
-    if (strncmp(symbol->file, CTU_SOURCE_ROOT, len - 1) == 0)
-    {
-        strcpy_s(symbol->file, STACKTRACE_PATH_LENGTH, symbol->file + len);
-    }
 }
 
 USE_DECL

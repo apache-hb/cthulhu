@@ -16,16 +16,23 @@ BEGIN_API
 #define STACKTRACE_NAME_LENGTH 256
 #define STACKTRACE_PATH_LENGTH 1024
 
+/// @brief a symbol
 typedef struct symbol_t
 {
+    /// @brief the line number
     size_t line;
+
+    /// @brief the symbol name
     char name[STACKTRACE_NAME_LENGTH];
+
+    /// @brief the file path
     char file[STACKTRACE_PATH_LENGTH];
 } symbol_t;
 
 /// @brief a stacktrace frame
 typedef struct frame_t
 {
+    /// @brief the frame address
     size_t address;
 } frame_t;
 
@@ -43,7 +50,7 @@ const char *stacktrace_backend(void);
 /// @note @ref stacktrace_init must be called before calling this function
 ///
 /// @param frames the frames to fill
-/// @param size the size of @a frames
+/// @param size the number of frames @p frames can hold
 ///
 /// @return the number of frames filled
 RET_RANGE(<=, size)
@@ -51,6 +58,12 @@ size_t stacktrace_get(
         frame_t *frames, // OUT_WRITES(return)
         IN_RANGE(>, 0) size_t size);
 
+/// @brief resolve a frame to a symbol
+///
+/// @note @ref stacktrace_init must be called before calling this function
+///
+/// @param frame the frame to resolve
+/// @param symbol the symbol to fill
 void frame_resolve(
         IN_NOTNULL const frame_t *frame,
         symbol_t *symbol);

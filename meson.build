@@ -62,8 +62,6 @@ config_cdata = configuration_data({
 
 config_cdata.set10('CTU_ENABLE_PANIC', is_debug)
 
-config_cdata.set_quoted('CTU_SOURCE_ROOT', source_root.replace('\\', '\\\\'))
-
 # we use `__attribute__((const|pure))` heavily, but during unit tests we
 # violate function preconditions to test assertions.
 # msvc and clang dont mind, but gcc does. so we disable the attributes for gcc
