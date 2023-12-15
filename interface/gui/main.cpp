@@ -1,7 +1,7 @@
+#include "editor/compile.hpp"
 #include "editor/draw.hpp"
 #include "editor/sources.hpp"
 #include "editor/trace.hpp"
-#include "editor/config.hpp"
 
 #include "core/macros.h"
 #include "core/version_def.h"
@@ -11,6 +11,8 @@
 #include "editor/panic.hpp"
 #include "memory/memory.h"
 #include "support/langs.h"
+
+#include "report/report.h"
 
 #include "os/os.h"
 #include "io/io.h"
@@ -32,250 +34,15 @@ static const version_info_t kVersionInfo = {
     .version = NEW_VERSION(0, 0, 1)
 };
 
-static std::jmp_buf gPanicJmp;
-static ed::PanicInfo gPanicInfo = {};
-
-static void install_panic_handler()
+struct CompileRun : ed::CompileInfo
 {
-    gPanicHandler = [](panic_t panic, const char *fmt, va_list args) {
-        gPanicInfo.capture_trace(panic, fmt, args);
-        std::longjmp(gPanicJmp, 1);
-    };
-}
+    using Super = ed::CompileInfo;
+    using Super::Super;
 
-struct CompileRun
-{
-    CompileRun(const char *id, mediator_t *instance)
-        : name(id)
-    {
-        init_config();
-
-        mediator = instance;
-    }
-
-    mediator_t *mediator = nullptr;
-
-    void lifetime_configure()
-    {
-        alloc.install();
-        gmp_alloc.install_gmp();
-
-        lifetime = lifetime_new(mediator, &alloc);
-
-        langs_t langs = get_langs();
-        // TODO: configure languages as well
-        for (size_t i = 0; i < langs.size; i++)
-        {
-            lifetime_add_language(lifetime, langs.langs + i);
-        }
-    }
-
-    std::string name;
     bool show = true;
+    ed::CompileError error = {};
 
-    ed::TraceArena alloc{"default", ed::TraceArena::eDrawTree};
-    ed::TraceArena gmp_alloc{"gmp", ed::TraceArena::eDrawFlat};
-
-    config_t *config = nullptr;
-
-    cfg_field_t *cfg_int = nullptr;
-    cfg_field_t *cfg_bool = nullptr;
-    cfg_field_t *cfg_string = nullptr;
-    cfg_field_t *cfg_enum = nullptr;
-    cfg_field_t *cfg_flags = nullptr;
-
-    cfg_info_t root_info = {
-        .name = name.c_str(),
-        .brief = "Compile run configuration"
-    };
-
-    cfg_info_t test_group_info = {
-        .name = "test_group",
-        .brief = "Test group to demonstrate config"
-    };
-
-    cfg_info_t test_int_info = {
-        .name = "test_int",
-        .brief = "Test integer",
-        .description = "This is a test integer",
-        .arg_long = "test-int",
-        .arg_short = "i"
-    };
-
-    cfg_int_t test_int_config = {
-        .initial = 4,
-        .min = 3,
-        .max = 99
-    };
-
-    cfg_info_t test_bool_info = {
-        .name = "test_bool",
-        .brief = "Test boolean",
-        .description = "This is a test boolean",
-        .arg_long = "test-bool",
-        .arg_short = "b"
-    };
-
-    cfg_bool_t test_bool_config = {
-        .initial = true
-    };
-
-    cfg_info_t test_string_info = {
-        .name = "test_string",
-        .brief = "Test string",
-        .description = "This is a test string",
-        .arg_long = "test-string",
-        .arg_short = "s"
-    };
-
-    cfg_string_t test_string_config = {
-        .initial = "hello"
-    };
-
-    cfg_info_t test_enum_info = {
-        .name = "test_enum",
-        .brief = "Test enum",
-        .description = "This is a test enum",
-        .arg_short = "num"
-    };
-
-    cfg_choice_t test_enum_choices[3] = {
-        { "one", 1 },
-        { "two", 2 },
-        { "three", 3 }
-    };
-
-    cfg_enum_t test_enum_config = {
-        .options = test_enum_choices,
-        .count = std::size(test_enum_choices),
-        .initial = 2
-    };
-
-    cfg_info_t test_flags_info = {
-        .name = "test_flags",
-        .brief = "Test flags",
-        .description = "This is a test flags",
-        .arg_long = "vegetables"
-    };
-
-    cfg_choice_t test_flags_choices[3] = {
-        { "bibble", (1 << 0) },
-        { "bojangles", (1 << 1) },
-        { "lettuce", (1 << 2) }
-    };
-
-    cfg_flags_t test_flags_config = {
-        .options = test_flags_choices,
-        .count = std::size(test_flags_choices),
-        .initial = (1 << 0) | (1 << 2)
-    };
-
-    void init_config()
-    {
-        config = config_new(&alloc, &root_info);
-
-        config_t *test_group = config_group(config, &test_group_info);
-
-        cfg_int = config_int(test_group, &test_int_info, test_int_config);
-        cfg_bool = config_bool(test_group, &test_bool_info, test_bool_config);
-        cfg_string = config_string(test_group, &test_string_info, test_string_config);
-        cfg_enum = config_enum(test_group, &test_enum_info, test_enum_config);
-        cfg_flags = config_flags(test_group, &test_flags_info, test_flags_config);
-    }
-
-    ed::SourceList sources;
-
-    lifetime_t *lifetime = nullptr;
-    reports_t *reports = nullptr;
-
-    char *compile_preinit_error = nullptr;
-
-    bool parse_file(const char *path)
-    {
-        const char *ext = str_ext(path);
-        if (ext == nullptr)
-        {
-            compile_preinit_error = format("could not determine file extension for '%s'", path);
-            return false;
-        }
-
-        const language_t *lang = lifetime_get_language(lifetime, ext);
-        if (lang == nullptr)
-        {
-            const char *basepath = str_filename(path);
-            compile_preinit_error = format("could not find language for `%s` by extension `%s`", basepath, ext);
-            return false;
-        }
-
-        io_t *io = io_file(path, eAccessRead);
-        if (os_error_t err = io_error(io); err != 0)
-        {
-            compile_preinit_error = format("could not open file '%s' (os error: %s)", path, os_error_string(err));
-            return false;
-        }
-
-        lifetime_parse(lifetime, lang, io);
-        return true;
-    }
-
-    ed::PanicInfo panic_info = {};
-
-    bool do_compile()
-    {
-        if (std::setjmp(gPanicJmp))
-        {
-            return false;
-        }
-
-        lifetime_configure();
-        reports = lifetime_get_reports(lifetime);
-
-        for (size_t i = 0; i < sources.count(); i++)
-        {
-            if (!parse_file(sources.get(i)))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    void draw_compile()
-    {
-        bool can_compile = true;
-        if (sources.is_empty())
-        {
-            can_compile = false;
-            ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "No sources");
-        }
-
-        ImGui::BeginDisabled(!can_compile || panic_info.has_info());
-        if (ImGui::Button("Compile"))
-        {
-            bool ok = do_compile();
-
-            // do this here instead of in do_compile
-            // because setjmp does not agree with copy constructors
-            if (!ok && gPanicInfo.has_info())
-            {
-                panic_info = gPanicInfo;
-                gPanicInfo.reset();
-            }
-        }
-        ImGui::EndDisabled();
-
-        if (panic_info.has_info())
-        {
-            panic_info.draw();
-        }
-        else if (compile_preinit_error)
-        {
-            ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "%s", compile_preinit_error);
-        }
-    }
-
-    void draw_window()
+    void draw()
     {
         if (!show) return;
 
@@ -288,22 +55,22 @@ struct CompileRun
                 sources.draw();
             }
 
-            if (ImGui::CollapsingHeader("Config", ImGuiTreeNodeFlags_DefaultOpen))
-            {
-                ed::draw_config_panel(config);
-            }
+            // if (ImGui::CollapsingHeader("Config", ImGuiTreeNodeFlags_DefaultOpen))
+            // {
+            //     ed::draw_config_panel(run.config);
+            // }
 
             if (ImGui::BeginTabBar("Memory", ImGuiTabBarFlags_None))
             {
                 if (ImGui::BeginTabItem("Default"))
                 {
-                    alloc.draw_info();
+                    global.draw_info();
                     ImGui::EndTabItem();
                 }
 
                 if (ImGui::BeginTabItem("GMP"))
                 {
-                    gmp_alloc.draw_info();
+                    gmp.draw_info();
                     ImGui::EndTabItem();
                 }
 
@@ -312,6 +79,39 @@ struct CompileRun
         }
 
         ImGui::End();
+    }
+
+private:
+    void draw_compile()
+    {
+        bool can_compile = true;
+        if (sources.is_empty())
+        {
+            can_compile = false;
+            ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "No sources");
+        }
+
+        ImGui::BeginDisabled(!can_compile || error.has_error());
+        if (ImGui::Button("Compile"))
+        {
+            error = ed::run_compile(*this);
+        }
+        ImGui::EndDisabled();
+
+        switch (error.code)
+        {
+        case ed::eCompilePanic:
+            ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "Panic");
+            error.panic.draw();
+            break;
+
+        case ed::eCompileError:
+            ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "Error: %s", error.error.c_str());
+            break;
+
+        default:
+            break;
+        }
     }
 };
 
@@ -447,7 +247,7 @@ struct EditorUi
                 }
                 else
                 {
-                    compile_runs.emplace_back(compile_name, mediator);
+                    compile_runs.emplace_back(mediator, compile_name);
                 }
             }
 
@@ -483,7 +283,7 @@ struct EditorUi
     {
         for (CompileRun& run : compile_runs)
         {
-            run.draw_window();
+            run.draw();
         }
     }
 };
@@ -491,7 +291,7 @@ struct EditorUi
 // init everything that needs to be setup only once
 void init_global()
 {
-    install_panic_handler();
+    ed::install_panic_handler();
 
     os_init();
     stacktrace_init();

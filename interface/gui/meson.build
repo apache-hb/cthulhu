@@ -4,9 +4,7 @@
 
 cpp = meson.get_compiler('cpp')
 
-gui_args = [
-    '-D_HAS_EXCEPTIONS=0'
-]
+gui_args = cpp.get_supported_arguments('/wd4611', '-D_HAS_EXCEPTIONS=0')
 
 src = [
     'imgui/imgui.cpp',
@@ -44,6 +42,7 @@ src = [
     'src/config.cpp',
     'src/panic.cpp',
     'src/sources.cpp',
+    'src/compile.cpp',
 
     'main.cpp'
 ]
@@ -51,5 +50,5 @@ src = [
 executable('gui', src,
     cpp_args : gui_args,
     include_directories : 'include',
-    dependencies : [ imgui, core, os, memory, config, io, mediator, support ]
+    dependencies : [ imgui, core, os, memory, report, config, io, mediator, support ]
 )

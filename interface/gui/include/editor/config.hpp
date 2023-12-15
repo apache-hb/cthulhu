@@ -14,10 +14,7 @@ namespace ed
 
     struct ConfigGroup
     {
-        ConfigGroup(config_t *parent, const cfg_info_t *info)
-        {
-            group = config_group(parent, info);
-        }
+        ConfigGroup(config_t *parent, const cfg_info_t *info);
 
         config_t *group = nullptr;
     };

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "editor/compile.hpp"
+
 #include "base/panic.h"
 
 #include <memory>
@@ -10,6 +12,8 @@ typedef struct frame_t frame_t;
 
 namespace ed
 {
+    void install_panic_handler();
+
     struct StackFrame
     {
         uintptr_t address;
@@ -32,4 +36,25 @@ namespace ed
         void capture_trace(panic_t panic, const char *fmt, va_list args);
         void draw();
     };
+
+    enum CompileCode
+    {
+        eCompileOk,
+        eCompileError,
+        eCompilePanic,
+
+        eCompileTotal
+    };
+
+    struct CompileError
+    {
+        bool has_error() const { return code != eCompileOk; }
+
+        CompileCode code = eCompileOk;
+
+        ed::PanicInfo panic;
+        std::string error;
+    };
+
+    CompileError run_compile(CompileInfo& info);
 }

@@ -11,6 +11,8 @@
 
 #include <stdio.h>
 
+using namespace ed;
+
 /// drawing
 
 static const ImGuiTableFlags kTableFlags

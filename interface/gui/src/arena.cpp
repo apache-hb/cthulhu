@@ -49,7 +49,7 @@ IArena::IArena(const char *alloc_name)
     fn_reparent = wrap_reparent;
 }
 
-void IArena::install()
+void IArena::install_global()
 {
     init_global_alloc(this);
 }
