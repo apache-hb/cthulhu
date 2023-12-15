@@ -8,14 +8,22 @@
 BEGIN_API
 
 typedef struct node_t node_t;
+typedef struct typevec_t typevec_t;
 typedef struct vector_t vector_t;
 typedef struct arena_t arena_t;
 
 typedef struct logger_t logger_t;
 typedef struct event_t event_t;
+typedef struct segment_t segment_t;
+
+/// @defgroup Notify Compiler message notification
+/// @ingroup Common
+/// @brief Compiler message logging and error registration
+/// @{
 
 typedef enum severity_t
 {
+#define SEVERITY(ID, NAME) ID,
 #include "notify/notify.inc"
 
     eSeverityTotal
@@ -30,21 +38,22 @@ typedef struct diagnostic_t
     const char *description;
 } diagnostic_t;
 
+typedef struct event_t
+{
+    const diagnostic_t *diagnostic;
+    const node_t *node;
+    char *message;
+    char *underline;
+
+    typevec_t *segments;
+    vector_t *notes;
+} event_t;
+
 typedef struct segment_t
 {
     const node_t *node;
     char *message;
 } segment_t;
-
-typedef struct report_t
-{
-    const diagnostic_t *diagnostic;
-    const node_t *node;
-
-    char *message;
-    char *note;
-    char *underline;
-} report_t;
 
 /// @brief create a new logger
 ///
@@ -58,15 +67,7 @@ logger_t *log_new(void);
 /// @param logs the logger to destroy
 void log_delete(OUT_PTR_INVALID logger_t *logs);
 
-/// @brief get all pending log messages
-/// get all log messages from a logger and reset the logger
-///
-/// @param logs the logger
-///
-/// @return all pending log messages
-RET_NOTNULL
-NODISCARD
-vector_t *log_reset(IN_NOTNULL logger_t *logs);
+vector_t *log_events(IN_NOTNULL logger_t *logs);
 
 /// @brief register a new diagnostic
 ///
@@ -86,13 +87,12 @@ void msg_diagnostic(
 /// @param ... the format arguments
 ///
 /// @return the new event
-CT_PRINTF(4, 5)
 RET_NOTNULL
 event_t *msg_panic(
     IN_NOTNULL logger_t *logs,
     IN_NOTNULL const diagnostic_t *diagnostic,
     const node_t *node,
-    FORMAT_STRING const char *fmt, ...);
+    FMT_STRING const char *fmt, ...) CT_PRINTF(4, 5);
 
 /// @brief notify the logger of a new message
 ///
@@ -103,13 +103,12 @@ event_t *msg_panic(
 /// @param ... the format arguments
 ///
 /// @return the new event
-CT_PRINTF(4, 5)
 RET_NOTNULL
 event_t *msg_notify(
     IN_NOTNULL logger_t *logs,
     const diagnostic_t *diagnostic,
     const node_t *node,
-    const char *fmt, ...);
+    const char *fmt, ...) CT_PRINTF(4, 5);
 
 /// @brief notify the logger of a new message
 ///
@@ -133,11 +132,10 @@ event_t *msg_vnotify(
 /// @param node the node to attach to the message
 /// @param fmt the format string
 /// @param ... the format arguments
-CT_PRINTF(3, 4)
 void msg_append(
     IN_NOTNULL event_t *event,
     const node_t *node,
-    FORMAT_STRING const char *fmt, ...);
+    FMT_STRING const char *fmt, ...) CT_PRINTF(3, 4);
 
 void msg_vappend(
     IN_NOTNULL event_t *event,
@@ -147,18 +145,14 @@ void msg_vappend(
 /// @brief add an underline message and range to an existing message
 ///
 /// @param[in, out] event the event to append to
-/// @param node the node to attach to the message
 /// @param fmt the format string
 /// @param ... the format arguments
-CT_PRINTF(3, 4)
 void msg_underline(
     IN_NOTNULL event_t *event,
-    const node_t *node,
-    FORMAT_STRING const char *fmt, ...);
+    FMT_STRING const char *fmt, ...) CT_PRINTF(2, 3);
 
 void msg_vunderline(
     IN_NOTNULL event_t *event,
-    const node_t *node,
     const char *fmt, va_list args);
 
 /// @brief add a note to an existing message
@@ -166,13 +160,14 @@ void msg_vunderline(
 /// @param[in, out] event the event to append to
 /// @param fmt the format string
 /// @param ... the format arguments
-CT_PRINTF(2, 3)
 void msg_note(
     IN_NOTNULL event_t *event,
-    FORMAT_STRING const char *fmt, ...);
+    FMT_STRING const char *fmt, ...) CT_PRINTF(2, 3);
 
 void msg_vnote(
     IN_NOTNULL event_t *event,
     const char *fmt, va_list args);
+
+/// @}
 
 END_API

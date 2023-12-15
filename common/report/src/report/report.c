@@ -19,7 +19,7 @@ bool verbose = false;
 
 static bool is_valid_node(const node_t *node)
 {
-    return node_is_valid(node) && node != node_builtin();
+    return node_has_scanner(node) && node != node_builtin();
 }
 
 static part_t *part_new(char *message, const node_t *node)
@@ -37,8 +37,8 @@ typedef struct
 } level_format_t;
 
 static level_format_t kFormats[eLevelTotal] = {
-    [eSorry] = { "sorry", COLOUR_PURPLE "sorry" COLOUR_RESET },
-    [eInternal] = {"internal", COLOUR_CYAN "ice" COLOUR_RESET},
+    [eReportSorry] = { "sorry", COLOUR_PURPLE "sorry" COLOUR_RESET },
+    [eReportInternal] = {"internal", COLOUR_CYAN "ice" COLOUR_RESET},
     [eFatal] = {"error", COLOUR_RED "error" COLOUR_RESET},
     [eWarn] = {"warning", COLOUR_YELLOW "warning" COLOUR_RESET},
     [eInfo] = {"note", COLOUR_GREEN "note" COLOUR_RESET},
@@ -56,12 +56,12 @@ static const char *report_level(level_t level)
 
 static bool is_multiline_report(where_t where)
 {
-    return where.lastLine > where.firstLine;
+    return where.last_line > where.first_line;
 }
 
 static size_t total_lines(where_t where)
 {
-    return where.lastLine - where.firstLine;
+    return where.last_line - where.first_line;
 }
 
 static char *format_location(const char *base, const scan_t *scan, where_t where)
@@ -70,17 +70,17 @@ static char *format_location(const char *base, const scan_t *scan, where_t where
     const char *path = scan_path(scan);
     if (is_multiline_report(where))
     {
-        return format("%s source [%s:%" PRI_LINE ":%" PRI_COLUMN "-%" PRI_LINE ":%" PRI_COLUMN "]", language, path + strlen(base), where.firstLine + 1,
-                      where.firstColumn, where.lastLine + 1, where.lastColumn);
+        return format("%s source [%s:%" PRI_LINE ":%" PRI_COLUMN "-%" PRI_LINE ":%" PRI_COLUMN "]", language, path + strlen(base), where.first_line + 1,
+                      where.first_column, where.last_line + 1, where.last_column);
     }
 
-    return format("%s source [%s:%" PRI_LINE ":%" PRI_COLUMN "]", language, path + strlen(base), where.firstLine + 1, where.firstColumn);
+    return format("%s source [%s:%" PRI_LINE ":%" PRI_COLUMN "]", language, path + strlen(base), where.first_line + 1, where.first_column);
 }
 
 static void report_scanner(const char *base, const node_t *node)
 {
-    scan_t *scan = get_node_scanner(node);
-    where_t where = get_node_location(node);
+    scan_t *scan = node_get_scan(node);
+    where_t where = node_get_location(node);
     fprintf(stderr, " => %s\n", format_location(base, scan, where));
 }
 
@@ -180,12 +180,12 @@ static bool safe_isspace(int c)
 
 static char *build_underline(const char *source, where_t where, const char *note)
 {
-    column_t front = where.firstColumn;
-    column_t back = where.lastColumn;
+    column_t front = where.first_column;
+    column_t back = where.last_column;
 
     size_t limit = strlen(source);
 
-    if (where.firstLine < where.lastLine)
+    if (where.first_line < where.last_line)
     {
         back = limit;
     }
@@ -245,15 +245,15 @@ static size_t longest_line(const scan_t *scan, line_t init, vector_t *parts)
     {
         part_t *part = vector_get(parts, i);
 
-        const scan_t *self = get_node_scanner(part->node);
+        const scan_t *self = node_get_scan(part->node);
 
         if (self != scan)
         {
             continue;
         }
 
-        where_t where = get_node_location(part->node);
-        len = MAX(len, base10_length(where.firstLine + 1));
+        where_t where = node_get_location(part->node);
+        len = MAX(len, base10_length(where.first_line + 1));
     }
 
     return len;
@@ -273,16 +273,16 @@ static char *right_align(line_t line, int width)
  */
 static char *format_single(const node_t *node, const char *underline)
 {
-    where_t where = get_node_location(node);
-    const scan_t *scan = get_node_scanner(node);
+    where_t where = node_get_location(node);
+    const scan_t *scan = node_get_scan(node);
 
-    line_t firstLine = where.firstLine + 1;
-    int align = base10_length(firstLine);
+    line_t first_line = where.first_line + 1;
+    int align = base10_length(first_line);
 
     char *pad = padding(align);
-    char *digit = right_align(firstLine, align);
+    char *digit = right_align(first_line, align);
 
-    char *firstLineOfSource = extract_line(scan, where.firstLine);
+    char *firstLineOfSource = extract_line(scan, where.first_line);
 
     return format(" %s|\n"
                   " %s| %s\n"
@@ -301,17 +301,17 @@ static char *format_single(const node_t *node, const char *underline)
  */
 static char *format_medium2(const node_t *node, const char *underline)
 {
-    where_t where = get_node_location(node);
-    const scan_t *scan = get_node_scanner(node);
+    where_t where = node_get_location(node);
+    const scan_t *scan = node_get_scan(node);
 
-    line_t firstLine = where.firstLine + 1;
-    int align = base10_length(firstLine);
+    line_t first_line = where.first_line + 1;
+    int align = base10_length(first_line);
 
     char *pad = padding(align);
-    char *digit = right_align(firstLine, align);
+    char *digit = right_align(first_line, align);
 
-    char *firstLineOfSource = extract_line(scan, where.firstLine);
-    char *lastLineOfSource = extract_line(scan, where.lastLine);
+    char *firstLineOfSource = extract_line(scan, where.first_line);
+    char *lastLineOfSource = extract_line(scan, where.last_line);
 
     return format(" %s|\n"
                   " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
@@ -332,18 +332,18 @@ static char *format_medium2(const node_t *node, const char *underline)
  */
 static char *format_medium3(const node_t *node, const char *underline)
 {
-    where_t where = get_node_location(node);
-    const scan_t *scan = get_node_scanner(node);
+    where_t where = node_get_location(node);
+    const scan_t *scan = node_get_scan(node);
 
-    line_t firstLine = where.firstLine + 1;
-    int align = base10_length(firstLine);
+    line_t first_line = where.first_line + 1;
+    int align = base10_length(first_line);
 
     char *pad = padding(align);
-    char *digit = right_align(firstLine, align);
+    char *digit = right_align(first_line, align);
 
-    char *firstLineOfSource = extract_line(scan, where.firstLine);
-    char *secondLineOfSource = extract_line(scan, where.firstLine + 1);
-    char *lastLineOfSource = extract_line(scan, where.lastLine);
+    char *firstLineOfSource = extract_line(scan, where.first_line);
+    char *secondLineOfSource = extract_line(scan, where.first_line + 1);
+    char *lastLineOfSource = extract_line(scan, where.last_line);
 
     return format(" %s|\n"
                   " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
@@ -364,19 +364,19 @@ static char *format_medium3(const node_t *node, const char *underline)
  */
 static char *format_large(const node_t *node, const char *underline)
 {
-    where_t where = get_node_location(node);
-    const scan_t *scan = get_node_scanner(node);
+    where_t where = node_get_location(node);
+    const scan_t *scan = node_get_scan(node);
 
-    line_t firstLine = where.firstLine + 1;
-    line_t lastLine = where.lastLine + 1;
-    int align = MAX(base10_length(firstLine), base10_length(lastLine)) + 1;
+    line_t first_line = where.first_line + 1;
+    line_t last_line = where.last_line + 1;
+    int align = MAX(base10_length(first_line), base10_length(last_line)) + 1;
 
     char *pad = padding(align);
-    char *alignedFirstDigit = right_align(firstLine, align);
-    char *alignedLastDigit = right_align(lastLine, align);
+    char *alignedFirstDigit = right_align(first_line, align);
+    char *alignedLastDigit = right_align(last_line, align);
 
-    char *firstSourceLine = extract_line(scan, where.firstLine);
-    char *lastSourceLine = extract_line(scan, where.lastLine);
+    char *firstSourceLine = extract_line(scan, where.first_line);
+    char *lastSourceLine = extract_line(scan, where.last_line);
 
     return format(" %s|\n"
                   " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET " %s>" COLOUR_PURPLE " ...\n" COLOUR_RESET
@@ -387,7 +387,7 @@ static char *format_large(const node_t *node, const char *underline)
 
 static char *format_source(const node_t *node, const char *underline)
 {
-    switch (total_lines(get_node_location(node)))
+    switch (total_lines(node_get_location(node)))
     {
     case 0:
         return format_single(node, underline);
@@ -416,15 +416,15 @@ static void report_part(const char *base, message_t *message, part_t *part)
     char *msg = part->message;
 
     const node_t *node = part->node;
-    const scan_t *scan = get_node_scanner(node);
-    where_t where = get_node_location(node);
+    const scan_t *scan = node_get_scan(node);
+    where_t where = node_get_location(node);
 
-    line_t start = where.firstLine;
+    line_t start = where.first_line;
 
     size_t longest = longest_line(scan, start + 1, message->parts);
     char *pad = padding(longest);
 
-    if (get_node_scanner(message->node) != scan)
+    if (node_get_scan(message->node) != scan)
     {
         report_scanner(base, part->node);
     }
@@ -486,7 +486,7 @@ static const char *paths_base(vector_t *messages)
         message_t *message = vector_get(messages, i);
         if (is_valid_node(message->node))
         {
-            const scan_t *scan = get_node_scanner(message->node);
+            const scan_t *scan = node_get_scan(message->node);
             vector_push(&result, (char *)scan_path(scan));
         }
 
@@ -496,7 +496,7 @@ static const char *paths_base(vector_t *messages)
             part_t *part = vector_get(parts, j);
             if (is_valid_node(part->node))
             {
-                const scan_t *scan = get_node_scanner(message->node);
+                const scan_t *scan = node_get_scan(message->node);
                 vector_push(&result, (char *)scan_path(scan));
             }
         }
@@ -540,7 +540,7 @@ status_t end_reports(reports_t *reports, const char *name, report_config_t setti
 
         switch (message->level)
         {
-        case eInternal:
+        case eReportInternal:
             internal += 1;
             break;
         case eFatal:
@@ -550,7 +550,7 @@ status_t end_reports(reports_t *reports, const char *name, report_config_t setti
             break;
         }
 
-        if (i > total && message->level != eInternal)
+        if (i > total && message->level != eReportInternal)
         {
             switch (message->level)
             {
@@ -607,7 +607,7 @@ static message_t *report_push(reports_t *reports, level_t level, const node_t *n
 
     message->note = NULL;
 
-    if (level == eInternal)
+    if (level == eReportInternal)
     {
         report_send("internal error", message);
         stacktrace_print(stderr);
@@ -624,7 +624,7 @@ message_t *ctu_assert(reports_t *reports, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    message_t *message = report_push(reports, eInternal, node_invalid(), fmt, args);
+    message_t *message = report_push(reports, eReportInternal, node_invalid(), fmt, args);
     va_end(args);
 
     return message;

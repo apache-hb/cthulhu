@@ -2,11 +2,11 @@
 #   define SEVERITY(ID, NAME)
 #endif
 
-SEVERITY(eSorry, "sorry")
-SEVERITY(eInternal, "internal")
-SEVERITY(eFatal, "fatal")
-SEVERITY(eWarn, "warn")
-SEVERITY(eInfo, "info")
-SEVERITY(eDebug, "debug")
+SEVERITY(eSeveritySorry, "sorry")
+SEVERITY(eSeverityInternal, "internal")
+SEVERITY(eSeverityFatal, "fatal")
+SEVERITY(eSeverityWarn, "warn")
+SEVERITY(eSeverityInfo, "info")
+SEVERITY(eSeverityDebug, "debug")
 
 #undef SEVERITY

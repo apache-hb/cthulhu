@@ -5,6 +5,7 @@
 #include "core/analyze.h"
 
 #include <stddef.h>
+#include <stdarg.h>
 
 BEGIN_API
 
@@ -95,6 +96,9 @@ size_t io_read(io_t *io, OUT_WRITES(size) void *dst, size_t size);
 ///
 /// @return the number of bytes actually written
 size_t io_write(io_t *io, IN_READS(size) const void *src, size_t size);
+
+size_t io_printf(io_t *io, FMT_STRING const char *fmt, ...) CT_PRINTF(2, 3);
+size_t io_vprintf(io_t *io, const char *fmt, va_list args);
 
 /// @brief get the name of an io object
 ///

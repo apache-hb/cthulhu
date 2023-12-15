@@ -18,7 +18,7 @@ namespace ed
     struct TraceArena final : public IArena
     {
         /// @brief the draw mode for the gui view of this allocator
-        enum DrawType : int
+        enum DrawMode : int
         {
             /// @brief draw the allocations as a tree using parent data
             eDrawTree,
@@ -27,7 +27,7 @@ namespace ed
             eDrawFlat
         };
 
-        TraceArena(const char *alloc_name, DrawType default_mode);
+        TraceArena(const char *alloc_name, DrawMode default_mode);
 
         // IArena
         void *malloc(size_t size) override;

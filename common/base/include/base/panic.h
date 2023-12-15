@@ -53,8 +53,7 @@ extern panic_handler_t gPanicHandler;
 /// @param panic the panic information
 /// @param msg the message to panic with
 /// @param ... the arguments to format
-CT_PRINTF(2, 3)
-NORETURN ctpanic(panic_t panic, FORMAT_STRING const char *msg, ...);
+NORETURN ctpanic(panic_t panic, FMT_STRING const char *msg, ...) CT_PRINTF(2, 3);
 
 /// @def CTU_PANIC(...)
 /// @brief panic with a message and optional format arguments

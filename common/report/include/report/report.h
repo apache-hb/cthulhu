@@ -52,8 +52,8 @@ typedef struct node_t node_t;
  */
 typedef enum
 {
-    eSorry,    ///< unimplemented feature has been hit
-    eInternal, ///< an invalid state has been reached internally
+    eReportSorry,    ///< unimplemented feature has been hit
+    eReportInternal, ///< an invalid state has been reached internally
     eFatal,    ///< a user issue that prevents the program from continuing
     eWarn,     ///< a user issue that may be resolved
     eInfo,     ///< a notification for logging
@@ -141,8 +141,9 @@ status_t end_reports(reports_t *reports, const char *name, report_config_t setti
  *
  * @return a message object to attach extra data to
  */
-CT_PRINTF(2, 3)
-message_t *ctu_assert(reports_t *reports, FORMAT_STRING const char *fmt, ...);
+message_t *ctu_assert(
+    reports_t *reports,
+    FMT_STRING const char *fmt, ...) CT_PRINTF(2, 3);
 
 /**
  * push a compiler message into a reporting context
@@ -155,8 +156,11 @@ message_t *ctu_assert(reports_t *reports, FORMAT_STRING const char *fmt, ...);
  *
  * @return a message object to attach extra data to
  */
-CT_PRINTF(4, 5)
-message_t *report(reports_t *reports, level_t level, const node_t *node, FORMAT_STRING const char *fmt, ...);
+message_t *report(
+    reports_t *reports,
+    level_t level,
+    const node_t *node,
+    FMT_STRING const char *fmt, ...) CT_PRINTF(4, 5);
 
 /**
  * add another part to a message
@@ -166,8 +170,10 @@ message_t *report(reports_t *reports, level_t level, const node_t *node, FORMAT_
  * @param fmt the format string
  * @param ... the arguments to the format string
  */
-CT_PRINTF(3, 4)
-void report_append(message_t *message, const node_t *node, FORMAT_STRING const char *fmt, ...);
+void report_append(
+    message_t *message,
+    const node_t *node,
+    FMT_STRING const char *fmt, ...) CT_PRINTF(3, 4);
 
 /**
  * add an underline message to an existing message
@@ -176,8 +182,9 @@ void report_append(message_t *message, const node_t *node, FORMAT_STRING const c
  * @param fmt the format string
  * @param ... the arguments to the format string
  */
-CT_PRINTF(2, 3)
-void report_underline(message_t *message, FORMAT_STRING const char *fmt, ...);
+void report_underline(
+    message_t *message,
+    FMT_STRING const char *fmt, ...) CT_PRINTF(2, 3);
 
 /**
  * add a note to an existing message
@@ -186,8 +193,9 @@ void report_underline(message_t *message, FORMAT_STRING const char *fmt, ...);
  * @param fmt the format string
  * @param ... the arguments to the format string
  */
-CT_PRINTF(2, 3)
-void report_note(message_t *message, FORMAT_STRING const char *fmt, ...);
+void report_note(
+    message_t *message,
+    FMT_STRING const char *fmt, ...) CT_PRINTF(2, 3);
 
 /** @} */
 
@@ -212,8 +220,7 @@ extern bool verbose;
  * @param fmt format string
  * @param ... arguments
  */
-CT_PRINTF(1, 2)
-void logverbose(FORMAT_STRING const char *fmt, ...);
+void logverbose(FMT_STRING const char *fmt, ...) CT_PRINTF(1, 2);
 
 /** @} */
 

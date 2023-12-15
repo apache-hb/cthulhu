@@ -17,9 +17,9 @@ message_t *report_shadow(reports_t *reports, const char *name, const node_t *pre
 
 message_t *report_unknown_character(reports_t *reports, const node_t *node, const char *str)
 {
-    where_t where = get_node_location(node);
+    where_t where = node_get_location(node);
 
-    column_t width = where.lastColumn - where.firstColumn;
+    column_t width = where.last_column - where.first_column;
     char *normal = str_normalizen(str, MAX(width, 1));
     message_t *id = report(reports, eFatal, node, "unknown character `%s`", normal);
 

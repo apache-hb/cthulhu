@@ -28,7 +28,7 @@ typedef struct map_t map_t;
  * @return the formatted string
  */
 NODISCARD CT_PRINTF(1, 2)
-char *format(FORMAT_STRING const char *fmt, ...);
+char *format(FMT_STRING const char *fmt, ...);
 
 /**
  * @brief format a string with a @a va_list

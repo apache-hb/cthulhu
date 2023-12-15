@@ -296,7 +296,7 @@ bool util_eval_digit(mpz_t value, const tree_t *expr)
 tree_t *util_create_string(tree_t *sema, const node_t *node, tree_t *letter, const char *text, size_t length)
 {
     // get basic info
-    where_t where = get_node_location(node);
+    where_t where = node_get_location(node);
 
     // get current context
     tree_t *mod = util_current_module(sema);
@@ -309,7 +309,7 @@ tree_t *util_create_string(tree_t *sema, const node_t *node, tree_t *letter, con
         .size = length + 1,
         .quals = eQualConst
     };
-    const char *id = format("%s$%" PRI_LINE "$%" PRI_COLUMN, tree_get_name(symbol), where.firstLine, where.firstColumn);
+    const char *id = format("%s$%" PRI_LINE "$%" PRI_COLUMN, tree_get_name(symbol), where.first_line, where.first_column);
     tree_t *str = tree_expr_string(node, type, text, length);
     tree_t *decl = tree_decl_global(node, id, storage, type, str);
 

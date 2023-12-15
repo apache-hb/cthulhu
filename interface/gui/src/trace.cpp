@@ -4,7 +4,7 @@
 
 using namespace ed;
 
-TraceArena::TraceArena(const char *alloc_name, DrawType default_mode)
+TraceArena::TraceArena(const char *alloc_name, DrawMode default_mode)
     : IArena(alloc_name)
     , draw_mode(default_mode)
 { }

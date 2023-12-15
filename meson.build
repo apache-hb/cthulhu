@@ -43,6 +43,7 @@ warning_level = get_option('warning_level').to_int()
 
 trace_memory = get_option('trace_memory').disable_auto_if(is_release or meson.is_subproject())
 tool_stacktrace = get_option('tool_stacktrace').disable_auto_if(is_release or meson.is_subproject())
+tool_notify = get_option('tool_notify').disable_auto_if(is_release or meson.is_subproject())
 
 wants_cpp = compiler_gui.allowed() or tool_stacktrace.allowed()
 needs_cpp = compiler_gui.enabled() or tool_stacktrace.enabled()
@@ -208,6 +209,10 @@ if tool_stacktrace.allowed()
     subdir('tools/stacktrace')
 endif
 
+if tool_notify.allowed()
+    subdir('tools/notify')
+endif
+
 doxygen = find_program('doxygen', required : get_option('doxygen'))
 
 if doxygen.found()
@@ -265,7 +270,8 @@ summary = {
         'Analyze': analyze
     },
     'Tools': {
-        'Stacktrace': tool_stacktrace.allowed()
+        'Stacktrace': tool_stacktrace.allowed(),
+        'Notify': tool_notify.allowed()
     },
     'Documentation': {
         'Doxygen': doxygen

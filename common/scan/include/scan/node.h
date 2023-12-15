@@ -22,11 +22,11 @@ typedef uint_fast64_t column_t; ///< column number
 /// @brief a location inside a scanner
 typedef struct
 {
-    line_t firstLine; ///< the first line of the location
-    line_t lastLine;  ///< the last line of the location
+    line_t first_line; ///< the first line of the location
+    line_t last_line;  ///< the last line of the location
 
-    column_t firstColumn; ///< the first column of the location
-    column_t lastColumn;  ///< the last column of the location
+    column_t first_column; ///< the first column of the location
+    column_t last_column;  ///< the last column of the location
 } where_t;
 
 /// @brief a position in a source file
@@ -38,7 +38,7 @@ typedef struct node_t node_t;
 ///
 /// @return the source file of @p node
 NODISCARD CONSTFN
-scan_t *get_node_scanner(const node_t *node);
+scan_t *node_get_scan(const node_t *node);
 
 /// @brief get the location of a node inside its source file
 ///
@@ -46,7 +46,7 @@ scan_t *get_node_scanner(const node_t *node);
 ///
 /// @return the location of @p node
 NODISCARD CONSTFN
-where_t get_node_location(const node_t *node);
+where_t node_get_location(const node_t *node);
 
 /// @brief create a new node in a given file at a given location
 ///
@@ -77,6 +77,12 @@ node_t *node_invalid(void);
 ///
 /// @return if @p node can have its location queried
 NODISCARD CONSTFN
-bool node_is_valid(const node_t *node);
+bool node_has_scanner(const node_t *node);
+
+NODISCARD CONSTFN
+bool node_is_invalid(const node_t *node);
+
+NODISCARD CONSTFN
+bool node_is_builtin(const node_t *node);
 
 /// @}

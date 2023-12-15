@@ -2125,7 +2125,7 @@ INCLUDE_FILE_PATTERNS  =
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
 PREDEFINED = OS_RESULT(X)=X \
-             FORMAT_STRING= \
+             FMT_STRING= \
              USE_DECL= \
              NODISCARD= \
              IN_READS()= \

@@ -5,6 +5,15 @@
 
 #include <stdbool.h>
 
+/// message without source
+///
+/// severity [id]: main message
+/// note: note message
+
+/// the = in the => arrow is aligned with the | pipe
+/// the : in the note: is aligned with the | pipe
+/// all line numbers are right aligned
+
 /// small message format
 ///
 /// severity [id]: main message
@@ -14,7 +23,7 @@
 ///      |        ^~~~ underline message
 ///  note: note message
 
-/// medium 1 message format
+/// 2 line message format
 ///
 /// severity [id]: main message
 ///       => lang [path:line:col]
@@ -25,7 +34,7 @@
 ///       |
 ///   note: note message
 
-/// medium 2 message format
+/// 3 line message format
 ///
 /// severity [id]: main message
 ///       => lang [path:line:col]
@@ -49,6 +58,15 @@
 ///       |
 ///   note: note message
 
+/// appended messages
+/// these are shown after the main message but before the note
+/// lang is only shown if the message is from a different language
+///
+///       => lang [path:line:col]
+///       |
+///  line > source code
+///       |        ^~~~ underline message
+
 typedef struct io_t io_t;
 typedef struct event_t event_t;
 
@@ -56,8 +74,14 @@ BEGIN_API
 
 typedef struct text_config_t
 {
-    io_t *io;
+    // is the first line of a source file the zeroth line or the first line
+    bool zero_line;
+
+    // should the error message be coloured
     bool colour;
+
+    // the io object to write to
+    io_t *io;
 } text_config_t;
 
 void text_report(

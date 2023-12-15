@@ -36,9 +36,21 @@ node_t *node_invalid(void)
 }
 
 USE_DECL
-bool node_is_valid(const node_t *node)
+bool node_has_scanner(const node_t *node)
 {
-    return node != node_invalid() && node != NULL;
+    return node != NULL && node->scan != NULL;
+}
+
+USE_DECL
+bool node_is_invalid(const node_t *node)
+{
+    return node == node_invalid();
+}
+
+USE_DECL
+bool node_is_builtin(const node_t *node)
+{
+    return node == node_builtin();
 }
 
 USE_DECL
@@ -55,17 +67,17 @@ node_t *node_new(scan_t *scan, where_t where)
 }
 
 USE_DECL
-scan_t *get_node_scanner(const node_t *node)
+scan_t *node_get_scan(const node_t *node)
 {
-    CTASSERT(node_is_valid(node));
+    CTASSERT(node_has_scanner(node));
 
     return node->scan;
 }
 
 USE_DECL
-where_t get_node_location(const node_t *node)
+where_t node_get_location(const node_t *node)
 {
-    CTASSERT(node_is_valid(node));
+    CTASSERT(node_has_scanner(node));
 
     return node->where;
 }

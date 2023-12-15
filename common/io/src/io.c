@@ -2,6 +2,8 @@
 
 #include "memory/memory.h"
 #include "base/panic.h"
+#include "std/str.h"
+#include <string.h>
 
 void io_close(io_t *io)
 {
@@ -33,6 +35,30 @@ size_t io_write(io_t *io, const void *src, size_t size)
     CTASSERTF(io->cb->fn_write, "fn_write invalid for `%s`", io->name);
 
     return io->cb->fn_write(io, src, size);
+}
+
+USE_DECL
+size_t io_printf(io_t *io, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+
+    size_t size = io_vprintf(io, fmt, args);
+
+    va_end(args);
+
+    return size;
+}
+
+size_t io_vprintf(io_t *io, const char *fmt, va_list args)
+{
+    char *buffer = vformat(fmt, args);
+
+    size_t size = io_write(io, buffer, strlen(buffer));
+
+    ctu_free(buffer);
+
+    return size;
 }
 
 USE_DECL

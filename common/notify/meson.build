@@ -1,10 +1,11 @@
 src = [
-    'src/notify.c'
+    'src/notify.c',
+    'src/text.c'
 ]
 
 libnotify = library('notify', src,
     c_args : user_args,
-    dependencies : [ scan, std, memory ],
+    dependencies : [ scan, std, memory, io ],
     include_directories : 'include'
 )
 

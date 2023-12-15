@@ -155,22 +155,12 @@ struct CompileRun : ed::CompileInfo
     bool show_config = false;
     bool show_memory = false;
 
-    void config_window_name(char *buf, size_t size) const
-    {
-        snprintf(buf, size, "%s Config", name.c_str());
-    }
-
-    void memory_window_name(char *buf, size_t size, const char *extra) const
-    {
-        snprintf(buf, size, "%s %s Memory", name.c_str(), extra);
-    }
-
     void draw_config()
     {
         if (!show_config) return;
 
         char label[128] = {};
-        config_window_name(label, std::size(label));
+        snprintf(label, std::size(label), "%s Config", name.c_str());
 
         if (ImGui::Begin(label, &show_config))
         {
@@ -185,14 +175,14 @@ struct CompileRun : ed::CompileInfo
 
         char label[128] = {};
 
-        memory_window_name(label, std::size(label), "Default");
+        snprintf(label, std::size(label), "%s Global memory", name.c_str());
         if (ImGui::Begin(label, &show_memory))
         {
             global.draw_info();
         }
         ImGui::End();
 
-        memory_window_name(label, std::size(label), "GMP");
+        snprintf(label, std::size(label), "%s GMP memory", name.c_str());
         if (ImGui::Begin(label, &show_memory))
         {
             gmp.draw_info();
