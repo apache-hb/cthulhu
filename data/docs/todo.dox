@@ -18,9 +18,11 @@ GFI = good first issue
 
 - rewrite location tracking
 - fix linking to ucrt with clang-cl causing issues (GFI)
-- more docs (GFI)
 
-### important
+- support for feeding sources directly into compilers
+    - the intermediate step is annoying to users
+
+<h3>Important</h3>
 
 - build as shared libraries nicely on windows
     - at least get mini gmp working (GFI)
@@ -45,7 +47,9 @@ GFI = good first issue
 - C frontend
     - perhaps support a small subset of C++ so we can use it internally
 
-### backlog
+- more docs (GFI)
+
+<h3>Backlog</h3>
 
 - properly prefix the entire compiler (GFI)
   - will make writing plugins easier in the future
@@ -56,7 +60,7 @@ GFI = good first issue
 - profile startup time (GFI)
     - something is afoot since commit `c64ef228a2a4edd01bd7eb1544e1a2cc05274e1b`
 
-### bikeshedding
+<h3>Bikeshedding</h3>
 
 - generic interface compilation option
     - use dynamic libraries rather than static linking
@@ -67,8 +71,8 @@ GFI = good first issue
 - move to incremental compilation
 - more frontend tests
 - continued code cleanup
-- add plugin support back in
-- add binary module support back in
+- add plugin support
+- add binary module support
 - support [ifc](https://github.com/microsoft/ifc-spec) modules
 - build time option for internal compiler timing
 - better code coverage with tests

@@ -16,7 +16,7 @@ const char *stacktrace_backend(void)
     return "dbghelp";
 }
 
-static BOOL get_frame(STACKFRAME *frame, CONTEXT *ctx, HANDLE process, HANDLE thread)
+static BOOL walk_stack(STACKFRAME *frame, CONTEXT *ctx, HANDLE process, HANDLE thread)
 {
     return StackWalk(
         /* MachineType = */ IMAGE_FILE_MACHINE_AMD64,
@@ -36,19 +36,15 @@ union disp_t {
     DWORD64 disp64;
 };
 
-USE_DECL
-size_t stacktrace_get(frame_t *frames, size_t size)
+void stacktrace_read_inner(bt_frame_t callback, void *user)
 {
-    if (frames == NULL) return 0;
-    if (size == 0) return 0;
-
     HANDLE thread = GetCurrentThread();
     HANDLE process = GetCurrentProcess();
 
     CONTEXT ctx = { 0 };
     RtlCaptureContext(&ctx);
 
-    STACKFRAME frame = {
+    STACKFRAME stackframe = {
         .AddrPC = {
             .Offset = ctx.Rip,
             .Mode = AddrModeFlat
@@ -63,19 +59,14 @@ size_t stacktrace_get(frame_t *frames, size_t size)
         }
     };
 
-    size_t used = 0;
-    while (get_frame(&frame, &ctx, process, thread) && used < size)
+    while (walk_stack(&stackframe, &ctx, process, thread))
     {
-        frame_t result_frame = {
-            .address = frame.AddrPC.Offset,
+        frame_t frame = {
+            .address = stackframe.AddrPC.Offset,
         };
 
-        frames[used] = result_frame;
-
-        used += 1;
+        callback(user, &frame);
     }
-
-    return used;
 }
 
 void frame_resolve_inner(const frame_t *frame, symbol_t *symbol)

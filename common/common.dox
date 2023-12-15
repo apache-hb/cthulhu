@@ -3,7 +3,7 @@
 @defgroup Common Common library
 @brief Collection of common types and functions shared by all other components
 
-Common contains useful helpers that arent reliant on the compiler library.
-It is recommended to use helpers here when implementing new components or tools.
+This contains helpers that arent reliant on the compiler library.
+It is recommended to use these when implementing new components or tools.
 
 */

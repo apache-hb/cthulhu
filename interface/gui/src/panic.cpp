@@ -8,35 +8,53 @@
 
 using namespace ed;
 
-void RuntimePanic::init(size_t frame_count)
+struct TraceCapture
 {
-    bt_count = frame_count;
-    bt_data = std::make_unique<frame_t[]>(frame_count);
-}
-
-void RuntimePanic::capture_trace(panic_t info, const char *fmt, va_list args)
-{
-    size_t bt_capture = stacktrace_get(bt_data.get(), bt_count);
     symbol_t symbol = {};
-    for (size_t i = 0; i < bt_capture; i++)
-    {
-        frame_resolve(&bt_data[i], &symbol);
+    PanicInfo *info = nullptr;
+};
 
-        StackFrame frame = {
-            .address = bt_data[i].address,
-            .line = symbol.line,
-            .symbol = symbol.name,
-            .file = symbol.file,
-        };
+static void trace_callback(void *user, const frame_t *frame)
+{
+    auto& [symbol, info] = *reinterpret_cast<TraceCapture*>(user);
 
-        frames.push_back(frame);
-    }
+    frame_resolve(frame, &symbol);
 
-    panic = info;
-    message = vformat(fmt, args);
+    StackFrame stack_frame = {
+        .address = frame->address,
+        .line = symbol.line,
+        .symbol = symbol.name,
+        .file = symbol.file,
+    };
+
+    info->frames.push_back(stack_frame);
 }
 
-void RuntimePanic::draw_error()
+void PanicInfo::capture_trace(panic_t panic, const char *fmt, va_list args)
+{
+    TraceCapture capture = {
+        .info = this,
+    };
+
+    frames.clear();
+    frames.reserve(64);
+
+    stacktrace_read(trace_callback, &capture);
+
+    info = panic;
+    message = vformat(fmt, args);
+    has_error = true;
+}
+
+void PanicInfo::reset()
+{
+    has_error = false;
+    info = {};
+    message.clear();
+    frames.clear();
+}
+
+void PanicInfo::draw()
 {
     if (ImGui::BeginTable("Backtrace", 4))
     {

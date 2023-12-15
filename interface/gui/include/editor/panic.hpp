@@ -18,19 +18,18 @@ namespace ed
         std::string file;
     };
 
-    struct RuntimePanic
+    struct PanicInfo
     {
-        void init(size_t frame_count);
+        bool has_error = false;
 
-        void capture_trace(panic_t info, const char *fmt, va_list args);
-        void draw_error();
-
-    private:
-        size_t bt_count;
-        std::unique_ptr<frame_t[]> bt_data;
-
-        panic_t panic;
+        panic_t info = {};
         std::string message;
         std::vector<StackFrame> frames;
+
+        bool has_info() const { return has_error; }
+        void reset();
+
+        void capture_trace(panic_t panic, const char *fmt, va_list args);
+        void draw();
     };
 }

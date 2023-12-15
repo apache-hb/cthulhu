@@ -36,6 +36,8 @@ typedef struct frame_t
     uintptr_t address;
 } frame_t;
 
+typedef void (*bt_frame_t)(void *user, const frame_t *frame);
+
 /// @brief initialize the stacktrace backend
 /// @note this function must be called before any other stacktrace function
 void stacktrace_init(void);
@@ -57,6 +59,14 @@ RET_RANGE(<=, size)
 size_t stacktrace_get(
         frame_t *frames, // OUT_WRITES(return)
         IN_RANGE(>, 0) size_t size);
+
+/// @brief get a stacktrace from the current location using a callback
+/// @note this function is not thread safe
+/// @note @ref stacktrace_init must be called before calling this function
+///
+/// @param callback the callback to call for each frame
+/// @param user the user data to pass to the callback
+void stacktrace_read(bt_frame_t callback, void *user);
 
 /// @brief resolve a frame to a symbol
 ///

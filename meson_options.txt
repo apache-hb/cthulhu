@@ -12,7 +12,7 @@ option('interfaces', type : 'array',
 
 # gui interface
 
-option('build_gui', type : 'feature',
+option('compiler_gui', type : 'feature',
     description : 'build gui interface (requires c++ compiler)',
     value : 'auto'
 )
@@ -27,7 +27,7 @@ option('trace_memory', type : 'feature',
 # testing options
 
 option('unit_tests', type : 'feature',
-    description : 'enable unit tests (requires c++ compiler)',
+    description : 'enable unit tests',
     value : 'auto'
 )
 
@@ -41,21 +41,6 @@ option('driver_tests', type : 'feature',
 option('doxygen', type : 'feature',
     description : 'build doxygen docs',
     value : 'auto'
-)
-
-option('doxygen_libclang', type : 'combo',
-    description : 'use libclang to parse c++ headers',
-    choices : [ 'NO', 'YES' ]
-)
-
-option('doxygen_latex', type : 'combo',
-    description : 'build latex docs',
-    choices : [ 'YES', 'NO' ]
-)
-
-option('doxygen_html', type : 'combo',
-    description : 'build html docs',
-    choices : [ 'YES', 'NO' ]
 )
 
 # static analysis options

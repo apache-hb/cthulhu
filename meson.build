@@ -8,6 +8,13 @@ project('cthulhu', 'c',
 
         'cpp_std=c++20',
 
+        # we use setjmp/longjmp for error handling
+        # on msvc c++ exceptions do not work with setjmp/longjmp
+        'cpp_eh=none',
+
+        # we dont use rtti
+        'cpp_rtti=false',
+
         'warning_level=3',
         'werror=true',
 
@@ -23,9 +30,8 @@ is_debug = buildtype.contains('debug')
 is_release = buildtype.contains('release')
 cc = meson.get_compiler('c')
 target = target_machine.system()
-wants_cpp = false
 
-build_gui = get_option('build_gui').require(target == 'windows')
+compiler_gui = get_option('compiler_gui').require(target == 'windows')
 
 # disable unit tests if we are a subproject or release build
 unit_tests = get_option('unit_tests').disable_auto_if(is_release or meson.is_subproject())
@@ -35,17 +41,21 @@ analyze = get_option('analyze')
 
 warning_level = get_option('warning_level').to_int()
 
-trace_memory = get_option('trace_memory').disable_auto_if(is_release)
+trace_memory = get_option('trace_memory').disable_auto_if(is_release or meson.is_subproject())
 tool_stacktrace = get_option('tool_stacktrace').disable_auto_if(is_release or meson.is_subproject())
 
-if build_gui.allowed() or tool_stacktrace.allowed()
-    wants_cpp = true
-endif
+wants_cpp = compiler_gui.allowed() or tool_stacktrace.allowed()
+needs_cpp = compiler_gui.enabled() or tool_stacktrace.enabled()
 
 if wants_cpp
-    has_cpp = add_languages('cpp', native : false, required : build_gui.enabled())
-    build_gui = build_gui.require(has_cpp)
+    has_cpp = add_languages('cpp', native : false, required : needs_cpp)
+
+    compiler_gui = compiler_gui.require(has_cpp)
     tool_stacktrace = tool_stacktrace.require(has_cpp)
+endif
+
+if unit_tests.enabled() and is_release and cc.get_id() == 'gcc'
+    warning('enabling unit tests in release mode with gcc will result in degraded performance')
 endif
 
 version = meson.project_version()
@@ -181,7 +191,7 @@ endforeach
 
 subdir('interface')
 
-if build_gui.allowed()
+if compiler_gui.allowed()
     subdir('interface/gui')
 endif
 
@@ -228,9 +238,6 @@ if doxygen.found()
     doxy_cdata.set('INCLUDE_PATHS', ' '.join(doxy_includes))
     doxy_cdata.set('EXTRA_STYLESHEET', ' '.join(stylesheets))
     doxy_cdata.set('CLANG_DATABASE', meson.global_build_root() / 'compile_commands.json')
-    doxy_cdata.set('ENABLE_LIBCLANG', get_option('doxygen_libclang'))
-    doxy_cdata.set('GENERATE_LATEX', get_option('doxygen_latex'))
-    doxy_cdata.set('GENERATE_HTML', get_option('doxygen_html'))
 
     doxy_cfg = configure_file(
         input : 'data/Doxyfile.in',
@@ -249,7 +256,7 @@ summary = {
         'Memory tracing': trace_memory.allowed()
     },
     'Graphical Interface': {
-        'Enabled': build_gui.allowed(),
+        'Enabled': compiler_gui.allowed(),
         'Backend': 'd3d12+win32'
     },
     'Testing': {
