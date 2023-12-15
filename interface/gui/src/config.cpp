@@ -395,3 +395,18 @@ void ed::draw_config_panel(config_t *config)
         ImGui::EndTable();
     }
 }
+
+/// logic
+
+ConfigGroup::ConfigGroup(config_t *parent, const cfg_info_t *info)
+    : group(config_group(parent, info))
+{ }
+
+static const cfg_info_t kReportInfo = {
+    .name = "Report",
+    .description = "Report settings"
+};
+
+ReportConfig::ReportConfig(config_t *parent)
+    : ConfigGroup(parent, &kReportInfo)
+{ }

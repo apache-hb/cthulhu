@@ -1,4 +1,5 @@
 #include "editor/compile.hpp"
+#include "editor/config.hpp"
 #include "editor/draw.hpp"
 #include "editor/sources.hpp"
 #include "editor/trace.hpp"
@@ -36,49 +37,202 @@ static const version_info_t kVersionInfo = {
 
 struct CompileRun : ed::CompileInfo
 {
-    using Super = ed::CompileInfo;
-    using Super::Super;
+    CompileRun(mediator_t *mediator, const char *name)
+        : CompileInfo(mediator, name)
+    {
+        init_config();
+    }
 
     bool show = true;
     ed::CompileError error = {};
+
+    config_t *config = nullptr;
+    cfg_field_t *cfg_int = nullptr;
+    cfg_field_t *cfg_bool = nullptr;
+    cfg_field_t *cfg_string = nullptr;
+    cfg_field_t *cfg_enum = nullptr;
+    cfg_field_t *cfg_flags = nullptr;
+
+    cfg_info_t root_info = {
+        .name = name.c_str(),
+        .brief = "Compile run configuration"
+    };
+
+    cfg_info_t test_group_info = {
+        .name = "test_group",
+        .brief = "Test group to demonstrate config"
+    };
+
+    cfg_info_t test_int_info = {
+        .name = "test_int",
+        .brief = "Test integer",
+        .description = "This is a test integer",
+        .arg_long = "test-int",
+        .arg_short = "i"
+    };
+
+    cfg_int_t test_int_config = {
+        .initial = 4,
+        .min = 3,
+        .max = 99
+    };
+
+    cfg_info_t test_bool_info = {
+        .name = "test_bool",
+        .brief = "Test boolean",
+        .description = "This is a test boolean",
+        .arg_long = "test-bool",
+        .arg_short = "b"
+    };
+
+    cfg_bool_t test_bool_config = {
+        .initial = true
+    };
+
+    cfg_info_t test_string_info = {
+        .name = "test_string",
+        .brief = "Test string",
+        .description = "This is a test string",
+        .arg_long = "test-string",
+        .arg_short = "s"
+    };
+
+    cfg_string_t test_string_config = {
+        .initial = "hello"
+    };
+
+    cfg_info_t test_enum_info = {
+        .name = "test_enum",
+        .brief = "Test enum",
+        .description = "This is a test enum",
+        .arg_short = "num"
+    };
+
+    cfg_choice_t test_enum_choices[3] = {
+        { "one", 1 },
+        { "two", 2 },
+        { "three", 3 }
+    };
+
+    cfg_enum_t test_enum_config = {
+        .options = test_enum_choices,
+        .count = std::size(test_enum_choices),
+        .initial = 2
+    };
+
+    cfg_info_t test_flags_info = {
+        .name = "test_flags",
+        .brief = "Test flags",
+        .description = "This is a test flags",
+        .arg_long = "vegetables"
+    };
+
+    cfg_choice_t test_flags_choices[3] = {
+        { "bibble", (1 << 0) },
+        { "bojangles", (1 << 1) },
+        { "lettuce", (1 << 2) }
+    };
+
+    cfg_flags_t test_flags_config = {
+        .options = test_flags_choices,
+        .count = std::size(test_flags_choices),
+        .initial = (1 << 0) | (1 << 2)
+    };
+
+    void init_config()
+    {
+        config = config_new(&global, &root_info);
+
+        config_t *test_group = config_group(config, &test_group_info);
+
+        cfg_int = config_int(test_group, &test_int_info, test_int_config);
+        cfg_bool = config_bool(test_group, &test_bool_info, test_bool_config);
+        cfg_string = config_string(test_group, &test_string_info, test_string_config);
+        cfg_enum = config_enum(test_group, &test_enum_info, test_enum_config);
+        cfg_flags = config_flags(test_group, &test_flags_info, test_flags_config);
+    }
+
+    bool show_config = false;
+    bool show_memory = false;
+
+    void config_window_name(char *buf, size_t size) const
+    {
+        snprintf(buf, size, "%s Config", name.c_str());
+    }
+
+    void memory_window_name(char *buf, size_t size, const char *extra) const
+    {
+        snprintf(buf, size, "%s %s Memory", name.c_str(), extra);
+    }
+
+    void draw_config()
+    {
+        if (!show_config) return;
+
+        char label[128] = {};
+        config_window_name(label, std::size(label));
+
+        if (ImGui::Begin(label, &show_config))
+        {
+            ed::draw_config_panel(config);
+        }
+        ImGui::End();
+    }
+
+    void draw_memory()
+    {
+        if (!show_memory) return;
+
+        char label[128] = {};
+
+        memory_window_name(label, std::size(label), "Default");
+        if (ImGui::Begin(label, &show_memory))
+        {
+            global.draw_info();
+        }
+        ImGui::End();
+
+        memory_window_name(label, std::size(label), "GMP");
+        if (ImGui::Begin(label, &show_memory))
+        {
+            gmp.draw_info();
+        }
+        ImGui::End();
+    }
 
     void draw()
     {
         if (!show) return;
 
-        if (ImGui::Begin(name.c_str(), &show))
+        if (ImGui::Begin(name.c_str(), &show, ImGuiWindowFlags_MenuBar))
         {
+            if (ImGui::BeginMenuBar())
+            {
+                ImGui::TextUnformatted(name.c_str());
+                ImGui::Separator();
+
+                if (ImGui::BeginMenu("View"))
+                {
+                    ImGui::MenuItem("Config", nullptr, &show_config);
+                    ImGui::MenuItem("Memory", nullptr, &show_memory);
+                    ImGui::EndMenu();
+                }
+
+                ImGui::EndMenuBar();
+            }
+
             draw_compile();
 
             if (ImGui::CollapsingHeader("Sources", ImGuiTreeNodeFlags_DefaultOpen))
             {
                 sources.draw();
             }
-
-            // if (ImGui::CollapsingHeader("Config", ImGuiTreeNodeFlags_DefaultOpen))
-            // {
-            //     ed::draw_config_panel(run.config);
-            // }
-
-            if (ImGui::BeginTabBar("Memory", ImGuiTabBarFlags_None))
-            {
-                if (ImGui::BeginTabItem("Default"))
-                {
-                    global.draw_info();
-                    ImGui::EndTabItem();
-                }
-
-                if (ImGui::BeginTabItem("GMP"))
-                {
-                    gmp.draw_info();
-                    ImGui::EndTabItem();
-                }
-
-                ImGui::EndTabBar();
-            }
         }
 
         ImGui::End();
+
+        draw_config();
+        draw_memory();
     }
 
 private:
@@ -90,14 +244,24 @@ private:
             can_compile = false;
             ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "No sources");
         }
+        else if (error.has_error())
+        {
+            can_compile = false;
+            ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "Error");
+        }
 
-        ImGui::BeginDisabled(!can_compile || error.has_error());
+        ImGui::BeginDisabled(!can_compile);
         if (ImGui::Button("Compile"))
         {
             error = ed::run_compile(*this);
         }
         ImGui::EndDisabled();
 
+        draw_error();
+    }
+
+    void draw_error()
+    {
         switch (error.code)
         {
         case ed::eCompilePanic:

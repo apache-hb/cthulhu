@@ -20,6 +20,7 @@ namespace ed
         std::string name;
 
         // api objects
+        bool setup = false;
         mediator_t *mediator = nullptr;
         lifetime_t *lifetime = nullptr;
         reports_t *reports = nullptr;
@@ -37,14 +38,17 @@ namespace ed
         /// @return nullptr on success, otherwise an error message
         char *parse_source(size_t index);
 
-        void init_alloc();
-        void init_lifetime();
-        void init_reports();
+        void init();
 
         /// @brief check if there are any reports
         ///
         /// @retval true if there are no reports
         /// @retval false if there are reports
         bool check_reports() const;
+
+    private:
+        void init_alloc();
+        void init_lifetime();
+        void init_reports();
     };
 }

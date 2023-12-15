@@ -68,6 +68,16 @@ void CompileInfo::init_reports()
     reports = lifetime_get_reports(lifetime);
 }
 
+void CompileInfo::init()
+{
+    if (setup) return;
+    setup = true;
+
+    init_alloc();
+    init_lifetime();
+    init_reports();
+}
+
 /// @brief check if there are any reports
 ///
 /// @retval true if there are no reports

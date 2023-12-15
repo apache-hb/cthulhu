@@ -3,6 +3,7 @@
 #include "editor/arena.hpp"
 
 #include <map>
+#include <unordered_set>
 #include <vector>
 
 namespace ed
@@ -38,8 +39,11 @@ namespace ed
 
         // TraceArena
         void draw_info();
+        void reset();
 
     private:
+        // DrawType
+        // stored as an int for direct use with imgui
         int draw_mode;
 
         // number of calls to each function
@@ -54,6 +58,8 @@ namespace ed
         using AllocTree = std::map<const void*, std::vector<const void*>>;
         using AllocMapIter = AllocMap::iterator;
 
+        std::unordered_set<void *> live_allocs;
+
         // all live allocations
         AllocMap allocs = {};
 
@@ -61,10 +67,11 @@ namespace ed
         AllocTree tree = {};
 
         // allocation tracking
-        void update_alloc(const void *ptr, size_t size);
+        void create_alloc(void *ptr, size_t size);
+        void delete_alloc(void *ptr);
+
         void update_parent(const void *ptr, const void *parent);
         void update_name(const void *ptr, const char *new_name);
-        void remove_alloc(const void *ptr);
         void remove_parents(const void *ptr);
 
         // internal queries

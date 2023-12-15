@@ -34,9 +34,7 @@ CompileError ed::run_compile(CompileInfo& info)
         return error;
     }
 
-    info.init_alloc();
-    info.init_lifetime();
-    info.init_reports();
+    info.init();
 
     if (!info.check_reports())
     {

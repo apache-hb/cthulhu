@@ -15,7 +15,7 @@ void *TraceArena::malloc(size_t size)
 
     void *ptr = ::malloc(size);
 
-    update_alloc(ptr, size);
+    create_alloc(ptr, size);
 
     return ptr;
 }
@@ -24,10 +24,14 @@ void *TraceArena::realloc(void *ptr, size_t new_size, size_t)
 {
     realloc_calls += 1;
 
+    size_t old_size = allocs[ptr].size;
+    if (old_size < new_size)
+        peak_usage += (new_size - old_size);
+
     void *new_ptr = ::realloc(ptr, new_size);
 
-    update_alloc(new_ptr, new_size);
-    remove_alloc(ptr);
+    create_alloc(new_ptr, new_size);
+    delete_alloc(ptr);
 
     return new_ptr;
 }
@@ -36,7 +40,7 @@ void TraceArena::free(void *ptr, size_t)
 {
     free_calls += 1;
 
-    remove_alloc(ptr);
+    delete_alloc(ptr);
 
     ::free(ptr);
 }
@@ -51,6 +55,24 @@ void TraceArena::set_parent(const void *ptr, const void *parent)
     update_parent(ptr, parent);
 }
 
+void TraceArena::reset()
+{
+    malloc_calls = 0;
+    realloc_calls = 0;
+    free_calls = 0;
+    peak_usage = 0;
+
+    // free all allocations
+    for (void *ptr : live_allocs)
+    {
+        ::free(ptr);
+    }
+
+    live_allocs.clear();
+    tree.clear();
+    allocs.clear();
+}
+
 void TraceArena::draw_info()
 {
     // usage
@@ -58,6 +80,11 @@ void TraceArena::draw_info()
     ImGui::Text("realloc: %zu", realloc_calls);
     ImGui::Text("free: %zu", free_calls);
     ImGui::Text("peak usage: %zu", peak_usage);
+
+    if (ImGui::Button("Reset"))
+    {
+        reset();
+    }
 
     // body
     ImGui::RadioButton("Tree", &draw_mode, eDrawTree);
@@ -74,10 +101,23 @@ void TraceArena::draw_info()
     }
 }
 
-void TraceArena::update_alloc(const void *ptr, size_t size)
+void TraceArena::create_alloc(void *ptr, size_t size)
 {
     peak_usage += size;
     allocs[ptr].size = size;
+
+    live_allocs.insert(ptr);
+}
+
+void TraceArena::delete_alloc(void *ptr)
+{
+    remove_parents(ptr);
+
+    auto iter = allocs.find(ptr);
+    if (iter == allocs.end()) return;
+
+    allocs.erase(iter);
+    live_allocs.erase(ptr);
 }
 
 void TraceArena::update_parent(const void *ptr, const void *parent)
@@ -114,16 +154,6 @@ void TraceArena::update_parent(const void *ptr, const void *parent)
 void TraceArena::update_name(const void *ptr, const char *new_name)
 {
     allocs[ptr].name = new_name;
-}
-
-void TraceArena::remove_alloc(const void *ptr)
-{
-    remove_parents(ptr);
-
-    auto iter = allocs.find(ptr);
-    if (iter == allocs.end()) return;
-
-    allocs.erase(iter);
 }
 
 void TraceArena::remove_parents(const void *ptr)
@@ -309,9 +339,7 @@ void TraceArena::draw_tree() const
 
             if (is_external(root) && !has_parent(root))
             {
-                AllocInfo info = {
-                    .name = "extern"
-                };
+                AllocInfo info = { .name = "extern" };
                 draw_tree_node_info(root, info);
             }
         }
