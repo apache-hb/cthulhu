@@ -24,8 +24,6 @@ typedef struct reports_t reports_t;
 /// drivers
 ///
 
-typedef void (*driver_config_t)(lifetime_t *, ap_t *);
-
 typedef void (*driver_create_t)(driver_t *);
 typedef void (*driver_destroy_t)(driver_t *);
 
@@ -49,8 +47,6 @@ typedef struct language_t
     version_info_t version; ///< version info for the frontend
 
     const char **exts; ///< null terminated list of file extensions
-
-    driver_config_t fnConfig;
 
     driver_create_t fnCreate;   ///< called at startup
     driver_destroy_t fnDestroy; ///< called at shutdown

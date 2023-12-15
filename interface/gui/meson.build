@@ -36,6 +36,7 @@ src = [
     'src/draw.cpp',
     'src/arena.cpp',
     'src/config.cpp',
+    'src/panic.cpp',
 
     'main.cpp'
 ]

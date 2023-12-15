@@ -34,9 +34,6 @@ const language_t kExampleModule = {
     /// default extensions
     .exts = kLangNames,
 
-    /// preinit configuration
-    .fnConfig = ex_config,
-
     /// first time creation function, initialize from gathered config
     .fnCreate = ex_create,
 

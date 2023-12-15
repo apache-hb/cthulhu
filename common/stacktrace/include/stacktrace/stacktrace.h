@@ -33,7 +33,7 @@ typedef struct symbol_t
 typedef struct frame_t
 {
     /// @brief the frame address
-    size_t address;
+    uintptr_t address;
 } frame_t;
 
 /// @brief initialize the stacktrace backend

@@ -45,15 +45,6 @@ mediator_t *mediator_new_noinit(const char *id, version_info_t version);
 lifetime_t *lifetime_new(mediator_t *mediator, arena_t *alloc);
 
 /**
- * @brief configure a language for the current lifetime
- *
- * @param lifetime the lifetime object
- * @param ap the argument parser
- * @param lang the language object
- */
-void lifetime_config_language(lifetime_t *lifetime, ap_t *ap, const language_t *lang);
-
-/**
  * @brief add a new language to the lifetime object
  *
  * @param lifetime the lifetime object

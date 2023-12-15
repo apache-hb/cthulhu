@@ -32,11 +32,6 @@ static tree_t *example_lang_module(lifetime_t *lifetime)
     return tree_module_root(reports, cookie, node, "runtime", eSemaTotal, sizes);
 }
 
-static void ex_config(lifetime_t *lifetime, ap_t *ap)
-{
-    logverbose("ex-config(0x%p, 0x%p)", (void*)lifetime, (void*)ap);
-}
-
 static void ex_create(driver_t *handle)
 {
     lifetime_t *lifetime = handle_get_lifetime(handle);
@@ -93,8 +88,6 @@ const language_t kExampleModule = {
     },
 
     .exts = kLangNames,
-
-    .fnConfig = ex_config,
 
     .fnCreate = ex_create,
     .fnDestroy = ex_destroy,

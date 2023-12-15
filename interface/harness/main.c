@@ -168,18 +168,10 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
 {
     mediator_t *mediator = mediator_new("example", kVersion);
     lifetime_t *lifetime = lifetime_new(mediator, alloc);
-    ap_t *ap = ap_new("example", NEW_VERSION(1, 0, 0));
 
     langs_t langs = get_langs();
 
     reports_t *reports = lifetime_get_reports(lifetime);
-
-    for (size_t i = 0; i < langs.size; i++)
-    {
-        const language_t *lang = langs.langs + i;
-        lifetime_config_language(lifetime, ap, lang);
-    }
-
     for (size_t i = 0; i < langs.size; i++)
     {
         const language_t *lang = langs.langs + i;

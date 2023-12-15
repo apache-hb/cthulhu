@@ -33,12 +33,6 @@ static void pl0_parse(driver_t *handle, scan_t *scan)
     add_context(lifetime, path, ctx);
 }
 
-static void pl0_config(lifetime_t *lifetime, ap_t *ap)
-{
-    CTU_UNUSED(lifetime);
-    CTU_UNUSED(ap);
-}
-
 static const char *kLangNames[] = { "pl", "pl0", NULL };
 
 const language_t kPl0Module = {
@@ -53,7 +47,6 @@ const language_t kPl0Module = {
 
     .exts = kLangNames,
 
-    .fnConfig = pl0_config,
     .fnCreate = pl0_init,
 
     .fnParse = pl0_parse,

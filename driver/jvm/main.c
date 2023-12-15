@@ -2,12 +2,6 @@
 
 #include "core/macros.h"
 
-static void jvm_config(lifetime_t *lifetime, ap_t *ap)
-{
-    CTU_UNUSED(lifetime);
-    CTU_UNUSED(ap);
-}
-
 static void jvm_create(driver_t *handle)
 {
     CTU_UNUSED(handle);
@@ -31,8 +25,6 @@ const language_t kJvmModule = {
     },
 
     .exts = kLangNames,
-
-    .fnConfig = jvm_config,
 
     .fnCreate = jvm_create,
     .fnDestroy = jvm_destroy

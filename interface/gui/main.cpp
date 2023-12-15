@@ -7,6 +7,7 @@
 
 #include "cthulhu/mediator/interface.h"
 
+#include "editor/panic.hpp"
 #include "memory/memory.h"
 #include "support/langs.h"
 
@@ -21,7 +22,10 @@
 #include "std/str.h"
 #include "std/vector.h"
 
+#include <setjmp.h>
+
 #include <map>
+#include <string>
 #include <vector>
 
 static const version_info_t kVersionInfo = {
@@ -30,6 +34,17 @@ static const version_info_t kVersionInfo = {
     .author = "Elliot Haisley",
     .version = NEW_VERSION(0, 0, 1)
 };
+
+static jmp_buf gPanicJmp;
+static ed::RuntimePanic gPanicInfo;
+
+static void install_panic_handler()
+{
+    gPanicHandler = [](panic_t panic, const char *fmt, va_list args) {
+        gPanicInfo.capture_trace(panic, fmt, args);
+        longjmp(gPanicJmp, 1);
+    };
+}
 
 struct AllocInfo
 {
@@ -50,7 +65,7 @@ struct TraceArena final : public ed::IArena
         eDrawFlat
     };
 
-    TraceArena(const char *alloc_name, DrawType default_mode = eDrawTree)
+    TraceArena(const char *alloc_name, DrawType default_mode)
         : IArena(alloc_name)
         , draw_mode(default_mode)
     { }
@@ -657,7 +672,10 @@ struct CompileRun
         return true;
     }
 
-    void do_compile()
+    bool execution_error = false;
+    ed::RuntimePanic panic_info = {};
+
+    bool do_compile()
     {
         lifetime_configure();
         reports = lifetime_get_reports(lifetime);
@@ -666,9 +684,11 @@ struct CompileRun
         {
             if (!parse_file(sources[i]))
             {
-                break;
+                return false;
             }
         }
+
+        return true;
     }
 
     void draw_compile()
@@ -680,7 +700,7 @@ struct CompileRun
             ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "No sources");
         }
 
-        ImGui::BeginDisabled(!can_compile);
+        ImGui::BeginDisabled(!can_compile || execution_error);
         if (ImGui::Button("Compile"))
         {
             do_compile();
@@ -909,6 +929,7 @@ struct EditorUi
 // init everything that needs to be setup only once
 void init_global()
 {
+    install_panic_handler();
     os_init();
     stacktrace_init();
 }

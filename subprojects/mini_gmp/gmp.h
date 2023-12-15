@@ -1,4 +1,4 @@
 #pragma once
 
-#include "mini_gmp.h"
-#include "mini_mpq.h"
+#include "mini_gmp.h" // IWYU pragma: export
+#include "mini_mpq.h" // IWYU pragma: export

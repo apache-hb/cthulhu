@@ -62,15 +62,7 @@ int main(int argc, const char **argv)
     lifetime_t *lifetime = lifetime_new(mediator, ctu_default_alloc());
     reports_t *reports = lifetime_get_reports(lifetime);
 
-    ap_t *ap = ap_new("example", NEW_VERSION(1, 0, 0));
     langs_t langs = get_langs();
-
-    for (size_t i = 0; i < langs.size; i++)
-    {
-        const language_t *lang = langs.langs + i;
-        lifetime_config_language(lifetime, ap, lang);
-    }
-
     for (size_t i = 0; i < langs.size; i++)
     {
         const language_t *lang = langs.langs + i;

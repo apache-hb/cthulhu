@@ -7,70 +7,6 @@
 /// @ingroup Core
 /// @{
 
-/// @def NODISCARD
-/// @brief mark a function as returning a value that must be used
-
-/// @def FORMAT_STRING
-/// @brief mark a function parameter as a printf format string
-
-/// @def USE_DECL
-/// @brief sal2 annotation on function implementations to copy annotations from the declaration
-
-/// @def IN_READS(expr)
-/// @brief annotate a parameter as reading @p expr elements
-///
-/// @param expr the number of elements read
-
-/// @def OUT_WRITES(expr)
-/// @brief annotate a parameter as writing @p expr elements
-///
-/// @param expr the number of elements written
-
-/// @def OUT_PTR_INVALID
-/// @brief annotate a pointer as invalid after the function returns
-
-/// @def RET_RANGE(cmp, it)
-/// @brief annotate the return value as being bounded by the expression of @p cmp and @p it
-/// RET_RANGE(!=, 0) means the returned value will never be 0
-///
-/// @param cmp the comparison operator
-/// @param it the expression to compare against
-
-/// @def RET_NOTNULL
-/// @brief annotate the return value as not being null
-
-/// @def RET_STRING
-/// @brief annotate the return value as a null terminated string
-
-/// @def RET_INSPECT
-/// @brief annotate the return value as needing to be inspected
-/// this is the same as NODISCARD but implies that the return value must be checked
-/// for errors
-
-/// @def FIELD_SIZE(of)
-/// @brief annotate a field as being an array of @p of elements
-///
-/// @param of the number of elements in the array
-
-/// @def FIELD_STRING
-/// @brief annotate a field as being a null terminated string
-
-/// @def FIELD_RANGE(cmp, it)
-/// @brief annotate a field as being bounded by the expression of @p cmp and @p it
-/// FIELD_RANGE(!=, 0) means the field will never be 0
-///
-/// @param cmp the comparison operator
-/// @param it the expression to compare against
-
-/// @def IN_NOTNULL
-/// @brief annotate a parameter as not being null
-
-/// @def IN_STRING
-/// @brief annotate a parameter as being a null terminated string
-
-/// @def IN_RANGE(cmp, it)
-/// @brief annotate a parameter as being bounded by the expression of @p cmp and @p it
-
 #if __cplusplus >= 201703L
 #   define NODISCARD [[nodiscard]]
 #endif
@@ -205,5 +141,76 @@
 #ifndef NODISCARD
 #   define NODISCARD
 #endif
+
+#ifdef WITH_DOXYGEN
+#   define NODISCARD 0
+#   define RET_NOTNULL 0
+#   define FIELD_SIZE(of) 0
+#   define IN_NOTNULL 0
+#endif
+
+/// @def NODISCARD
+/// @brief mark a function as returning a value that must be used
+
+/// @def FORMAT_STRING
+/// @brief mark a function parameter as a printf format string
+
+/// @def USE_DECL
+/// @brief sal2 annotation on function implementations to copy annotations from the declaration
+
+/// @def IN_READS(expr)
+/// @brief annotate a parameter as reading @p expr elements
+///
+/// @param expr the number of elements read
+
+/// @def OUT_WRITES(expr)
+/// @brief annotate a parameter as writing @p expr elements
+///
+/// @param expr the number of elements written
+
+/// @def OUT_PTR_INVALID
+/// @brief annotate a pointer as invalid after the function returns
+
+/// @def RET_RANGE(cmp, it)
+/// @brief annotate the return value as being bounded by the expression of @p cmp and @p it
+/// RET_RANGE(!=, 0) means the returned value will never be 0
+///
+/// @param cmp the comparison operator
+/// @param it the expression to compare against
+
+/// @def RET_NOTNULL
+/// @brief annotate the return value as not being null
+
+/// @def RET_STRING
+/// @brief annotate the return value as a null terminated string
+
+/// @def RET_INSPECT
+/// @brief annotate the return value as needing to be inspected
+/// this is the same as NODISCARD but implies that the return value must be checked
+/// for errors
+
+/// @def FIELD_SIZE(of)
+/// @brief annotate a field as being an array of @p of elements
+///
+/// @param of the number of elements in the array
+
+/// @def FIELD_STRING
+/// @brief annotate a field as being a null terminated string
+
+/// @def FIELD_RANGE(cmp, it)
+/// @brief annotate a field as being bounded by the expression of @p cmp and @p it
+/// FIELD_RANGE(!=, 0) means the field will never be 0
+///
+/// @param cmp the comparison operator
+/// @param it the expression to compare against
+
+/// @def IN_NOTNULL
+/// @brief annotate a parameter as not being null
+
+/// @def IN_STRING
+/// @brief annotate a parameter as being a null terminated string
+
+/// @def IN_RANGE(cmp, it)
+/// @brief annotate a parameter as being bounded by the expression of @p cmp and @p it
 
 /// @}

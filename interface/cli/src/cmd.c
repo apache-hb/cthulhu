@@ -226,11 +226,6 @@ runtime_t cmd_parse(reports_t *reports, mediator_t *mediator, lifetime_t *lifeti
     langs_t langs = get_langs();
     for (size_t i = 0; i < langs.size; i++)
     {
-        lifetime_config_language(lifetime, ap, langs.langs + i);
-    }
-
-    for (size_t i = 0; i < langs.size; i++)
-    {
         lifetime_add_language(lifetime, langs.langs + i);
     }
 

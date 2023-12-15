@@ -7,20 +7,12 @@
 #include "std/vector.h"
 #include "std/str.h"
 
-#include "core/macros.h"
-
 #include "memory/memory.h"
 
 #include "ctu_bison.h"
 #include "ctu_flex.h"
 
 CTU_CALLBACKS(kCallbacks, ctu);
-
-static void ctu_config(lifetime_t *lifetime, ap_t *args)
-{
-    CTU_UNUSED(lifetime);
-    CTU_UNUSED(args);
-}
 
 static vector_t *find_mod_path(ctu_t *ast, char *fp)
 {
@@ -65,7 +57,6 @@ const language_t kCtuModule = {
 
     .exts = kLangNames,
 
-    .fnConfig = ctu_config,
     .fnCreate = ctu_init,
 
     .fnParse = ctu_parse_file,

@@ -27,12 +27,6 @@ static void obr_parse(driver_t *handle, scan_t *scan)
     }
 }
 
-static void obr_config(lifetime_t *lifetime, ap_t *ap)
-{
-    CTU_UNUSED(lifetime);
-    CTU_UNUSED(ap);
-}
-
 static void obr_destroy(driver_t *handle) { CTU_UNUSED(handle); }
 
 static const char *kLangNames[] = { "m", "mod", "obr", "oberon", NULL };
@@ -48,8 +42,6 @@ const language_t kOberonModule = {
     },
 
     .exts = kLangNames,
-
-    .fnConfig = obr_config,
 
     .fnCreate = obr_create,
     .fnDestroy = obr_destroy,

@@ -131,17 +131,6 @@ const char *stage_to_string(compile_stage_t stage)
     }
 }
 
-void lifetime_config_language(lifetime_t *lifetime, ap_t *ap, const language_t *lang)
-{
-    CTASSERT(lifetime != NULL);
-    CTASSERT(ap != NULL);
-    CTASSERT(lang != NULL);
-
-    if (lang->fnConfig == NULL) { return; }
-
-    EXEC(lang, fnConfig, lifetime, ap);
-}
-
 void lifetime_add_language(lifetime_t *lifetime, const language_t *lang)
 {
     CTASSERT(lifetime != NULL);
