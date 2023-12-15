@@ -40,12 +40,17 @@ typedef struct diagnostic_t
 
 typedef struct event_t
 {
+    // related diagnostic
     const diagnostic_t *diagnostic;
+
+    // the primary node that this event is attached to
     const node_t *node;
     char *message;
-    char *underline;
 
+    // extra nodes that this event is attached to
     typevec_t *segments;
+
+    // notes attached to this event
     vector_t *notes;
 } event_t;
 
@@ -140,19 +145,6 @@ void msg_append(
 void msg_vappend(
     IN_NOTNULL event_t *event,
     const node_t *node,
-    const char *fmt, va_list args);
-
-/// @brief add an underline message and range to an existing message
-///
-/// @param[in, out] event the event to append to
-/// @param fmt the format string
-/// @param ... the format arguments
-void msg_underline(
-    IN_NOTNULL event_t *event,
-    FMT_STRING const char *fmt, ...) CT_PRINTF(2, 3);
-
-void msg_vunderline(
-    IN_NOTNULL event_t *event,
     const char *fmt, va_list args);
 
 /// @brief add a note to an existing message

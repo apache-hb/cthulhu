@@ -62,6 +62,15 @@ static const diagnostic_t kUnresolvedImport = {
         "The module must be visible in the current scope.\n"
 };
 
+static const diagnostic_t kReservedName = {
+    .severity = eSeverityFatal,
+    .id = "G0003",
+    .brief = "Reserved name",
+    .description =
+        "A reserved name cannot be used as an identifier.\n"
+        "Reserved names are keywords and builtin names.\n"
+};
+
 void event_simple(logger_t *logs)
 {
     event_t *event = msg_notify(logs, &kInfoDiagnostic, node_builtin(), "test");
@@ -74,14 +83,14 @@ void event_missing_call(logger_t *logs, scan_t *scan)
         .first_line = 11,
         .last_line = 11,
         .first_column = 4,
-        .last_column = 12
+        .last_column = 4 + 8
     };
 
     node_t *node = node_new(scan, where);
 
     event_t *event = msg_notify(logs, &kUndefinedFunctionName, node, "undefined function name `%s`", "lhs");
     msg_note(event, "did you mean `%s`?", "rhs");
-    msg_underline(event, "function called here");
+    msg_append(event, node, "function called here");
 }
 
 void event_invalid_import(logger_t *logs, scan_t *scan)
@@ -98,7 +107,23 @@ void event_invalid_import(logger_t *logs, scan_t *scan)
     event_t *event = msg_notify(logs, &kUnresolvedImport, node, "unresolved import `%s`", "multi.lhs");
     msg_note(event, "did you mean `%s`?", "multi.rhs");
     msg_note(event, "did you mean `%s`?", "multi.rhx");
-    msg_underline(event, "import statement here");
+    msg_append(event, node, "import statement here");
+}
+
+void event_invalid_function(logger_t *logs, scan_t *scan)
+{
+    where_t where = {
+        .first_line = 8,
+        .last_line = 13,
+        .first_column = 0,
+        .last_column = 4
+    };
+
+    node_t *node = node_new(scan, where);
+
+    event_t *event = msg_notify(logs, &kReservedName, node, "reserved name `%s`", "entry");
+    msg_append(event, node, "procedure declaration here");
+    msg_note(event, "did you mean `%s`?", "main");
 }
 
 int main()
@@ -110,6 +135,7 @@ int main()
     msg_diagnostic(logs, &kInfoDiagnostic);
     msg_diagnostic(logs, &kUndefinedFunctionName);
     msg_diagnostic(logs, &kUnresolvedImport);
+    msg_diagnostic(logs, &kReservedName);
 
     reports_t *reports = begin_reports();
 
@@ -119,11 +145,12 @@ int main()
     event_simple(logs);
     event_missing_call(logs, scan);
     event_invalid_import(logs, scan);
+    event_invalid_function(logs, scan);
 
     io_t *io = io_blob("test", 0x1000, eAccessWrite);
 
     text_config_t config = {
-        .zero_line = true,
+        .zeroth_line = false,
         .colour = true,
         .io = io
     };

@@ -141,28 +141,6 @@ void msg_vappend(event_t *event, const node_t *node, const char *fmt, va_list ar
 }
 
 USE_DECL
-void msg_underline(event_t *event, const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-
-    msg_vunderline(event, fmt, args);
-
-    va_end(args);
-}
-
-USE_DECL
-void msg_vunderline(event_t *event, const char *fmt, va_list args)
-{
-    CTASSERT(event != NULL);
-    CTASSERT(fmt != NULL);
-
-    char *msg = vformat(fmt, args);
-
-    event->underline = msg;
-}
-
-USE_DECL
 void msg_note(event_t *event, const char *fmt, ...)
 {
     va_list args;
