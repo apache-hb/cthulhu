@@ -1,7 +1,7 @@
 #include "stacktrace/stacktrace.h"
 
 #define UNW_LOCAL_ONLY
-#include <libunwind.h>
+#include <unwind.h>
 
 static unw_context_t gContext;
 

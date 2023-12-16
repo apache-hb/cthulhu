@@ -3,6 +3,8 @@
 #include "notify/notify.h"
 #include "notify/format.h"
 
+#include <stddef.h>
+
 typedef struct map_t map_t;
 
 const char *get_severity_name(severity_t severity);
