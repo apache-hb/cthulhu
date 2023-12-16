@@ -11,12 +11,18 @@
 
 #include "io/io.h"
 
+#include "std/list.h"
 #include "std/str.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
 
 #include <stdlib.h>
 #include <string.h>
+
+typedef struct rich_text_t
+{
+    list_t *lines;
+} rich_text_t;
 
 void print_file_contents(text_config_t config, sparse_text_t *text)
 {
