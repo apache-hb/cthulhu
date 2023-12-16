@@ -82,11 +82,15 @@ void *ctu_memdup(IN_READS(size) const void *ptr, IN_RANGE(>, 0) size_t size);
 /// @param alloc the allocator to use
 void init_gmp_alloc(IN_NOTNULL arena_t *alloc);
 
+arena_t *get_gmp_alloc(void);
+
 /// @brief initialize global allocator
 /// @warning this function must be called before any other memory allocation function
 ///
 /// @param alloc the allocator to use
 void init_global_alloc(IN_NOTNULL arena_t *alloc);
+
+arena_t *get_global_alloc(void);
 
 /// @def BOX(name)
 /// @brief box a value on the stack

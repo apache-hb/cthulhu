@@ -52,8 +52,8 @@ typedef struct node_t node_t;
  */
 typedef enum
 {
-    eReportSorry,    ///< unimplemented feature has been hit
-    eReportInternal, ///< an invalid state has been reached internally
+    eSorry,    ///< unimplemented feature has been hit
+    eInternal, ///< an invalid state has been reached internally
     eFatal,    ///< a user issue that prevents the program from continuing
     eWarn,     ///< a user issue that may be resolved
     eInfo,     ///< a notification for logging
@@ -131,19 +131,6 @@ reports_t *begin_reports(void);
 /// @retval EXIT_INTERAL if the sink contained an internal error.
 NODISCARD
 status_t end_reports(reports_t *reports, const char *name, report_config_t settings);
-
-/**
- * @brief push an internal compiler error into a reporting context
- *
- * @param reports the reporting context
- * @param fmt the format string
- * @param ... the arguments to the format string
- *
- * @return a message object to attach extra data to
- */
-message_t *ctu_assert(
-    reports_t *reports,
-    FMT_STRING const char *fmt, ...) CT_PRINTF(2, 3);
 
 /**
  * push a compiler message into a reporting context

@@ -15,6 +15,8 @@
 
 #include "report/report.h"
 
+#include "scan/node.h"
+
 #include "os/os.h"
 #include "io/io.h"
 
@@ -449,6 +451,7 @@ void init_global()
 
     os_init();
     stacktrace_init();
+    scan_init();
 }
 
 int main(int argc, const char **argv)

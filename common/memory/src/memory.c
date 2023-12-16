@@ -47,6 +47,11 @@ arena_t *ctu_default_alloc(void)
 
 static arena_t *gGlobalAlloc = NULL;
 
+arena_t *get_global_alloc(void)
+{
+    return gGlobalAlloc;
+}
+
 USE_DECL
 void init_global_alloc(arena_t *alloc)
 {
@@ -141,6 +146,11 @@ void ctu_mem_reparent(const void *ptr, const void *parent)
 /// gmp arena managment
 
 static arena_t *gGmpAlloc = NULL;
+
+arena_t *get_gmp_alloc(void)
+{
+    return gGmpAlloc;
+}
 
 static void *ctu_gmp_malloc(size_t size)
 {

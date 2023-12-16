@@ -143,7 +143,6 @@ void event_missing_call(logger_t *logs, scan_t *scan_main, scan_t *scan_lhs)
     msg_append(event, node3, "foo bar");
 
     msg_append(event, node_builtin(), "builtin node");
-    msg_append(event, node_invalid(), "invalid node");
 }
 
 void event_invalid_import(logger_t *logs, scan_t *scan, scan_t *scan_rhs)
@@ -199,6 +198,8 @@ int main()
 {
     stacktrace_init();
     os_init();
+    scan_init();
+
     init_global_alloc(ctu_default_alloc());
     init_gmp_alloc(ctu_default_alloc());
 

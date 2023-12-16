@@ -8,6 +8,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+BEGIN_API
+
 /// @defgroup Location Source location tracking
 /// @brief AST source position tracking
 /// @ingroup Common
@@ -31,6 +33,8 @@ typedef struct
 
 /// @brief a position in a source file
 typedef struct node_t node_t;
+
+void scan_init(void);
 
 /// @brief get the associated source file of a node
 ///
@@ -80,9 +84,8 @@ NODISCARD CONSTFN
 bool node_has_scanner(const node_t *node);
 
 NODISCARD CONSTFN
-bool node_is_invalid(const node_t *node);
-
-NODISCARD CONSTFN
 bool node_is_builtin(const node_t *node);
 
 /// @}
+
+END_API

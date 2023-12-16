@@ -1,7 +1,5 @@
 #include "scan/node.h"
 
-#include "common.h"
-
 #include "base/panic.h"
 #include "memory/arena.h"
 
@@ -18,10 +16,10 @@ static node_t kBuiltinNode = {
     .where = { 0, 0, 0, 0 }
 };
 
-static node_t kInvalidNode = {
-    .scan = NULL,
-    .where = { UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX }
-};
+void scan_init(void)
+{
+    kBuiltinNode.scan = scan_builtin();
+}
 
 USE_DECL
 node_t *node_builtin(void)
@@ -30,21 +28,9 @@ node_t *node_builtin(void)
 }
 
 USE_DECL
-node_t *node_invalid(void)
-{
-    return &kInvalidNode;
-}
-
-USE_DECL
 bool node_has_scanner(const node_t *node)
 {
     return node != NULL && node->scan != NULL;
-}
-
-USE_DECL
-bool node_is_invalid(const node_t *node)
-{
-    return node == node_invalid();
 }
 
 USE_DECL

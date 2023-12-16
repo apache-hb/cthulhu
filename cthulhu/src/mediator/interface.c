@@ -35,6 +35,7 @@ static void runtime_init(void)
 
     os_init();
     stacktrace_init();
+    scan_init();
 
     init_global_alloc(ctu_default_alloc());
     init_gmp_alloc(ctu_default_alloc());
@@ -146,7 +147,7 @@ void lifetime_add_language(lifetime_t *lifetime, const language_t *lang)
             continue;
         }
 
-        report(lifetime->reports, eReportInternal, node_invalid(), "language `%s` registered under extension `%s` clashes with previously registered language `%s`", lang->id, lang->exts[i], old->id); // TODO: handle this
+        report(lifetime->reports, eInternal, node_builtin(), "language `%s` registered under extension `%s` clashes with previously registered language `%s`", lang->id, lang->exts[i], old->id); // TODO: handle this
     }
 
     driver_t *handle = handle_new(lifetime, lang);

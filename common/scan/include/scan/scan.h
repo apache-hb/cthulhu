@@ -1,14 +1,18 @@
 #pragma once
 
 #include "core/analyze.h"
+#include "core/compiler.h"
 #include "core/text.h"
 
 #include <stddef.h>
+#include <stdbool.h>
 
 typedef struct reports_t reports_t;
 typedef struct io_t io_t;
 typedef struct scan_t scan_t;
 typedef struct arena_t arena_t;
+
+BEGIN_API
 
 /// @ingroup Location
 /// @{
@@ -117,4 +121,12 @@ scan_t *scan_io(
     IN_NOTNULL io_t *io,
     IN_NOTNULL arena_t *alloc);
 
+NODISCARD CONSTFN
+scan_t *scan_builtin(void);
+
+NODISCARD CONSTFN
+bool scan_is_builtin(const scan_t *scan);
+
 /// @}
+
+END_API

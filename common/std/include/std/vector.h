@@ -162,6 +162,8 @@ void vector_append(IN_NOTNULL vector_t **vector, IN_NOTNULL const vector_t *othe
 NODISCARD
 vector_t *vector_join(IN_NOTNULL vector_t *vectors);
 
+void vector_sort(IN_NOTNULL vector_t *vector, IN_NOTNULL int (*cmp)(const void *, const void *));
+
 /**
  * @brief find an element in a vector
  *

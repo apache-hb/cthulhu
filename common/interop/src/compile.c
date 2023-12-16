@@ -16,21 +16,21 @@ void *compile_scanner(scan_t *extra, callbacks_t *callbacks)
     err = callbacks->init(extra, &scanner);
     if (err != 0)
     {
-        ctu_assert(reports, "failed to init parser for %s: %d", path, err);
+        report(reports, eInternal, node_builtin(), "failed to init parser for %s: %d", path, err);
         return NULL;
     }
 
     state = callbacks->scan(scan_text(extra), scan_size(extra), scanner);
     if (state == NULL)
     {
-        report(reports, eFatal, node_invalid(), "failed to scan %s", path);
+        report(reports, eFatal, node_builtin(), "failed to scan %s", path);
         return NULL;
     }
 
     err = callbacks->parse(scanner, extra);
     if (err != 0)
     {
-        report(reports, eFatal, node_invalid(), "failed to parse %s: %d", path, err);
+        report(reports, eFatal, node_builtin(), "failed to parse %s: %d", path, err);
         return NULL;
     }
 

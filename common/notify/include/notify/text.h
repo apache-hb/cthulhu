@@ -19,7 +19,7 @@
 ///     * are sorted by line number
 ///     * pipes in the same file are all aligned together
 
-/// message format
+/// rich message format
 ///
 /// severity [id]: main message
 ///      => lang [path:line]

@@ -3,6 +3,7 @@
 #include "base/panic.h"
 
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 /**
@@ -24,6 +25,10 @@ static size_t vector_size(size_t size)
 {
     return sizeof(vector_t) + (size * sizeof(void *));
 }
+
+#define CHECK_VECTOR(vector) \
+    CTASSERT(vector != NULL); \
+    CTASSERT(*vector != NULL);
 
 #define VEC (*vector)
 
@@ -91,7 +96,7 @@ void vector_delete(vector_t *vector)
 USE_DECL
 void vector_push(vector_t **vector, void *value)
 {
-    CTASSERT(vector != NULL && *vector != NULL);
+    CHECK_VECTOR(vector);
 
     vector_ensure(vector, VEC->used + 1);
     VEC->data[VEC->used++] = value;
@@ -176,6 +181,8 @@ vector_t *vector_merge(const vector_t *lhs, const vector_t *rhs)
 USE_DECL
 void vector_append(vector_t **vector, const vector_t *other)
 {
+    CHECK_VECTOR(vector);
+
     size_t len = vector_len(other);
 
     vector_ensure(vector, VEC->used + len);
@@ -186,19 +193,21 @@ void vector_append(vector_t **vector, const vector_t *other)
 USE_DECL
 vector_t *vector_join(vector_t *vectors)
 {
-    // find the total length for less memory allocations
-    size_t totalLen = 0;
-    size_t vecLength = vector_len(vectors);
+    CTASSERT(vectors != NULL);
 
-    for (size_t i = 0; i < vecLength; i++)
+    // find the total length for less memory allocations
+    size_t total_len = 0;
+    size_t len = vector_len(vectors);
+
+    for (size_t i = 0; i < len; i++)
     {
-        totalLen += vector_len(vector_get(vectors, i));
+        total_len += vector_len(vector_get(vectors, i));
     }
 
-    vector_t *result = vector_of(totalLen);
+    vector_t *result = vector_of(total_len);
     size_t offset = 0;
 
-    for (size_t i = 0; i < vecLength; i++)
+    for (size_t i = 0; i < len; i++)
     {
         vector_t *vector = vector_get(vectors, i);
         size_t innerLen = vector_len(vector);
@@ -208,6 +217,29 @@ vector_t *vector_join(vector_t *vectors)
     }
 
     return result;
+}
+
+typedef int(*sort_cmp_t)(const void *, const void *);
+
+// unwrap the lhs and rhs pointers and pass them to the cmp function
+// they are actually void** pointers
+static int vector_cmp(void *cmp, const void *lhs, const void *rhs)
+{
+    sort_cmp_t fn = (sort_cmp_t)cmp;
+    void *l = *(void **)lhs;
+    void *r = *(void **)rhs;
+
+    return fn(l, r);
+}
+
+USE_DECL
+void vector_sort(vector_t *vector, int (*cmp)(const void *, const void *))
+{
+    CTASSERT(vector != NULL);
+    CTASSERT(cmp != NULL);
+
+    void *fn = (void *)cmp;
+    qsort_s(vector->data, vector_len(vector), sizeof(void *), vector_cmp, fn);
 }
 
 USE_DECL

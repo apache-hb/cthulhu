@@ -10,10 +10,6 @@ export variant Node = opaque;
 @extern("node_builtin")
 export def builtinNode: Node;
 
-@extern("node_invalid")
-export def invalidNode: Node;
-
-
 
 // reporting
 

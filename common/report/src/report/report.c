@@ -37,8 +37,8 @@ typedef struct
 } level_format_t;
 
 static level_format_t kFormats[eLevelTotal] = {
-    [eReportSorry] = { "sorry", ANSI_MAGENTA "sorry" ANSI_RESET },
-    [eReportInternal] = {"internal", ANSI_CYAN "ice" ANSI_RESET},
+    [eSorry] = { "sorry", ANSI_MAGENTA "sorry" ANSI_RESET },
+    [eInternal] = {"internal", ANSI_CYAN "ice" ANSI_RESET},
     [eFatal] = {"error", ANSI_RED "error" ANSI_RESET},
     [eWarn] = {"warning", ANSI_YELLOW "warning" ANSI_RESET},
     [eInfo] = {"note", ANSI_GREEN "note" ANSI_RESET},
@@ -540,7 +540,7 @@ status_t end_reports(reports_t *reports, const char *name, report_config_t setti
 
         switch (message->level)
         {
-        case eReportInternal:
+        case eInternal:
             internal += 1;
             break;
         case eFatal:
@@ -550,7 +550,7 @@ status_t end_reports(reports_t *reports, const char *name, report_config_t setti
             break;
         }
 
-        if (i > total && message->level != eReportInternal)
+        if (i > total && message->level != eInternal)
         {
             switch (message->level)
             {
@@ -607,7 +607,7 @@ static message_t *report_push(reports_t *reports, level_t level, const node_t *n
 
     message->note = NULL;
 
-    if (level == eReportInternal)
+    if (level == eInternal)
     {
         report_send("internal error", message);
         stacktrace_print(stderr);
@@ -616,17 +616,6 @@ static message_t *report_push(reports_t *reports, level_t level, const node_t *n
     {
         vector_push(&reports->messages, message);
     }
-    return message;
-}
-
-USE_DECL
-message_t *ctu_assert(reports_t *reports, const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    message_t *message = report_push(reports, eReportInternal, node_invalid(), fmt, args);
-    va_end(args);
-
     return message;
 }
 

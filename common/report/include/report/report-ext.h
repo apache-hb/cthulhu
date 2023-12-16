@@ -41,7 +41,7 @@ message_t *report_unknown_character(reports_t *reports, const node_t *node, cons
 /// @param err the os error
 ///
 /// @return the message
-message_t *report_os(reports_t *reports, const char *msg, os_error_t err);
+// message_t *report_os(reports_t *reports, const char *msg, os_error_t err);
 
 /// @}
 

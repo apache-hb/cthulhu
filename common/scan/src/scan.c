@@ -1,12 +1,52 @@
-#include "common.h"
-
 #include "base/panic.h"
 
+#include "core/text.h"
 #include "io/io.h"
 #include "memory/arena.h"
 
 #include <limits.h>
 #include <string.h>
+
+typedef struct reports_t reports_t;
+
+typedef struct scan_t
+{
+    reports_t *reports; ///< the reporting sink for this file
+    io_t *io;           ///< file itself
+    arena_t *alloc;     ///< allocator to use everything involving this file
+
+    const char *language; ///< the language this file contains
+    const char *path;     ///< the path to this file
+    void *data;           ///< user data pointer
+
+    const char *mapped;
+    size_t size;
+} scan_t;
+
+static scan_t kBuiltinScan = {
+    .reports = NULL,
+    .io = NULL,
+    .alloc = NULL,
+
+    .language = "builtin",
+    .path = "builtin",
+    .data = NULL,
+
+    .mapped = "",
+    .size = 0
+};
+
+USE_DECL
+scan_t *scan_builtin(void)
+{
+    return &kBuiltinScan;
+}
+
+USE_DECL
+bool scan_is_builtin(const scan_t *scan)
+{
+    return scan == scan_builtin();
+}
 
 USE_DECL
 const char *scan_language(const scan_t *scan)
@@ -21,7 +61,7 @@ const char *scan_path(const scan_t *scan)
 {
     CTASSERT(scan != NULL);
 
-    return io_name(scan->io);
+    return scan->path;
 }
 
 USE_DECL
@@ -66,7 +106,7 @@ size_t scan_size(const scan_t *scan)
 {
     CTASSERT(scan != NULL);
 
-    return io_size(scan->io);
+    return scan->size;
 }
 
 USE_DECL
@@ -103,12 +143,6 @@ io_t *scan_src(scan_t *scan)
 }
 
 USE_DECL
-scan_t *scan_invalid(void)
-{
-    return NULL;
-}
-
-USE_DECL
 scan_t *scan_io(reports_t *reports, const char *language, io_t *io, arena_t *alloc)
 {
     CTASSERT(reports != NULL);
@@ -122,7 +156,10 @@ scan_t *scan_io(reports_t *reports, const char *language, io_t *io, arena_t *all
     self->language = language;
     self->reports = reports;
     self->io = io;
+    self->path = io_name(io);
     self->alloc = alloc;
+
+    self->data = NULL;
 
     self->mapped = io_map(io);
     self->size = io_size(io);
