@@ -3,7 +3,12 @@
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
 
-void stacktrace_init(void) { }
+static unw_context_t gContext;
+
+void stacktrace_init(void)
+{
+    unw_getcontext(&gContext);
+}
 
 USE_DECL
 const char *stacktrace_backend(void)
@@ -14,11 +19,9 @@ const char *stacktrace_backend(void)
 void stacktrace_read_inner(bt_frame_t callback, void *user)
 {
     unw_cursor_t cursor;
-    unw_context_t ctx;
     unw_word_t ip, sp;
 
-    unw_getcontext(&ctx);
-    unw_init_local(&cursor, &ctx);
+    unw_init_local(&cursor, &gContext);
 
     while (unw_step(&cursor) > 0)
     {
