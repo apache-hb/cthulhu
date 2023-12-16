@@ -12,7 +12,8 @@ unit = declare_dependency(
 cases = [
     'util.str',
     'util.map',
-    'util.set'
+    'util.set',
+    'util.list'
 ]
 
 foreach case : cases

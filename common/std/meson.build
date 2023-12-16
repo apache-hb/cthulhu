@@ -5,6 +5,7 @@ src = [
     'src/set.c',
     'src/str.c',
     'src/vector.c',
+    'src/list.c',
 
     'src/typed/vector.c'
 ]
