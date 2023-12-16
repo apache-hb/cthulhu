@@ -36,7 +36,7 @@ void *arena_malloc(arena_t *alloc, size_t size, const char *name, const void *pa
     mem_t mem = event_new(alloc);
 
     void *ptr = alloc->fn_malloc(&mem, size);
-    CTASSERTF(ptr != NULL, "alloc(%s) failed", name);
+    CTASSERTF(ptr != NULL, "alloc `%s` of %zu bytes failed", name, size);
 
     if (name != NULL)
     {

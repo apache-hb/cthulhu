@@ -2,13 +2,18 @@ src = [ 'src/common.c' ]
 
 dbghlp = cc.find_library('dbghelp', required : false)
 
+unwind = cc.find_library('unwind', required : false)
+
 # TODO: libunwind support, maybe needs addr2line for symbol resolution
 
 if dbghlp.found()
-    src += [ 'src/stacktrace-dbghlp.c' ]
+    src += [ 'src/bt_dbghlp.c' ]
     stacktrace_deps = [ dbghlp ]
+elif unwind.found()
+    src += [ 'src/bt_unwind.c' ]
+    stacktrace_deps = [ unwind ]
 else
-    src += [ 'src/stacktrace-null.c' ]
+    src += [ 'src/bt_null.c' ]
     stacktrace_deps = [ ]
 endif
 
