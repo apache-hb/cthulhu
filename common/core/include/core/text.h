@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stddef.h>
+
 /// @ingroup Core
 /// @brief a range of text
 typedef struct text_t

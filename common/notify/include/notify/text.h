@@ -32,19 +32,37 @@ typedef struct event_t event_t;
 
 BEGIN_API
 
+typedef struct text_colour_t
+{
+    const char *red;
+    const char *green;
+    const char *yellow;
+    const char *blue;
+    const char *magenta;
+    const char *cyan;
+
+    const char *reset;
+} text_colour_t;
+
+extern const text_colour_t kDisabledColour;
+extern const text_colour_t kDefaultColour;
+
 typedef struct text_config_t
 {
     // is the first line of a source file the zeroth line or the first line
     bool zeroth_line;
 
-    // should the error message be coloured
-    bool colour;
+    text_colour_t colours;
 
     // the io object to write to
     io_t *io;
 } text_config_t;
 
-void text_report(
+void text_report_rich(
+    text_config_t config,
+    IN_NOTNULL const event_t *event);
+
+void text_report_simple(
     text_config_t config,
     IN_NOTNULL const event_t *event);
 

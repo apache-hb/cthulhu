@@ -1,6 +1,8 @@
 src = [
     'src/notify.c',
-    'src/text.c'
+    'src/common.c',
+    'src/text_rich.c',
+    'src/text_simple.c',
 ]
 
 libnotify = library('notify', src,

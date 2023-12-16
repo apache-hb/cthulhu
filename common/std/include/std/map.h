@@ -82,7 +82,10 @@ void *map_get_default(IN_NOTNULL map_t *map, IN_STRING const char *key, void *ot
 NODISCARD CONSTFN
 void *map_get_default_ptr(IN_NOTNULL map_t *map, const void *key, void *other);
 
+NODISCARD CONSTFN
 bool map_contains(IN_NOTNULL map_t *map, IN_STRING const char *key);
+
+NODISCARD CONSTFN
 bool map_contains_ptr(IN_NOTNULL map_t *map, const void *key);
 
 void map_delete(IN_NOTNULL map_t *map, IN_STRING const char *key);

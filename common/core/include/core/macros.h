@@ -51,7 +51,7 @@
 #define COLOUR_GREEN "\x1B[1;32m"  ///< ANSI green
 #define COLOUR_YELLOW "\x1B[1;33m" ///< ANSI yellow
 #define COLOUR_BLUE "\x1B[1;34m"   ///< ANSI blue
-#define COLOUR_PURPLE "\x1B[1;35m" ///< ANSI purple
+#define COLOUR_MAGENTA "\x1B[1;35m" ///< ANSI magenta
 #define COLOUR_CYAN "\x1B[1;36m"   ///< ANSI cyan
 #define COLOUR_RESET "\x1B[0m"     ///< ANSI reset
 

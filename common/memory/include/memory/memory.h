@@ -29,7 +29,7 @@ NODISCARD CT_ALLOC(ctu_free)
 RET_NOTNULL
 void *ctu_malloc(IN_RANGE(!=, 0) size_t size);
 
-NODISCARD CT_ALLOC(ctu_free) CT_ALLOC_SIZE(2)
+NODISCARD CT_ALLOC(ctu_free) CT_ALLOC_SIZE(1)
 RET_NOTNULL
 void *ctu_malloc_info(IN_RANGE(!=, 0) size_t size, const char *name, const void *parent);
 

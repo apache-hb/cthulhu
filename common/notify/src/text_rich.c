@@ -1,4 +1,4 @@
-#include "notify/text.h"
+#include "common.h"
 
 #include "base/panic.h"
 
@@ -41,39 +41,6 @@ static report_type_t get_report_type(const event_t *event)
     case 3: return eReport3Line;
     default: return eReportManyLine;
     }
-}
-
-static const char *get_severity_name(severity_t severity)
-{
-    switch (severity)
-    {
-    case eSeveritySorry: return "unimplemented";
-    case eSeverityInternal: return "internal";
-    case eSeverityFatal: return "error";
-    case eSeverityWarn: return "warning";
-    case eSeverityInfo: return "info";
-    case eSeverityDebug: return "debug";
-    default: return "unknown";
-    }
-}
-
-static const char *get_severity_colour(severity_t severity)
-{
-    switch (severity)
-    {
-    case eSeveritySorry: return COLOUR_PURPLE;
-    case eSeverityInternal: return COLOUR_RED;
-    case eSeverityFatal: return COLOUR_RED;
-    case eSeverityWarn: return COLOUR_YELLOW;
-    case eSeverityInfo: return COLOUR_GREEN;
-    case eSeverityDebug: return COLOUR_CYAN;
-    default: return "";
-    }
-}
-
-static const char *colour(text_config_t config, const char *colour)
-{
-    return config.colour ? colour : "";
 }
 
 // static const char *coloured(text_config_t config, const char *text, const char *colour)
@@ -136,9 +103,9 @@ static void print_header(text_config_t config, const event_t *event)
 {
     const diagnostic_t *diagnostic = event->diagnostic;
     const char *sev = get_severity_name(diagnostic->severity);
-    const char *col = get_severity_colour(diagnostic->severity);
+    const char *col = get_severity_colour(config.colours, diagnostic->severity);
 
-    io_printf(config.io, "%s%s[%s]%s: %s\n", colour(config, col), sev, diagnostic->id, colour(config, COLOUR_RESET), event->message);
+    io_printf(config.io, "%s%s[%s]%s: %s\n", col, sev, diagnostic->id, config.colours.reset, event->message);
 }
 
 typedef struct print_result_t
@@ -156,14 +123,6 @@ static size_t number_width(line_t number)
     }
 
     return width;
-}
-
-static const char *get_scan_name(const node_t *node)
-{
-    if (node_is_builtin(node)) return "internal";
-
-    const scan_t *scan = node_get_scan(node);
-    return scan_path(scan);
 }
 
 static void print_location(text_config_t config, where_t where, const char *lang, size_t col_align)
@@ -222,6 +181,7 @@ static size_t get_line(text_config_t config, size_t line)
 static typevec_t *collect_space(const char *text, size_t col)
 {
     typevec_t *spacing = typevec_new(sizeof(char), col);
+
     for (size_t i = 0; i < col; i++)
     {
         char c = text[i];
@@ -270,8 +230,10 @@ static void print_segment(text_config_t config, const node_t *node, const char *
     char *line = align_number_right(get_line(config, where.first_line), col_align);
     char *space = str_repeat(" ", col_align);
 
+    char *spacestr = typevec_data(spacing);
+
     io_printf(config.io, " %s |%s\n", space, text);
-    io_printf(config.io, " %s |%s%s\n", line, typevec_data(spacing), message);
+    io_printf(config.io, " %s |%s%s\n", line, spacestr, message);
     io_printf(config.io, " %s |\n", space);
 }
 
@@ -376,7 +338,7 @@ static void print_notes(text_config_t config, vector_t *notes, size_t col_align)
     // print the first note with the `note:` heading
     const char *first = vector_get(notes, 0);
 
-    io_printf(config.io, "%s%snote:%s %s\n", padding, colour(config, COLOUR_YELLOW), colour(config, COLOUR_RESET), first);
+    io_printf(config.io, "%s%snote:%s %s\n", padding, config.colours.yellow, config.colours.reset, first);
 
     // print the rest of the notes without the heading
     size_t count = vector_len(notes);
@@ -387,7 +349,7 @@ static void print_notes(text_config_t config, vector_t *notes, size_t col_align)
     }
 }
 
-void text_report(text_config_t config, const event_t *event)
+void text_report_rich(text_config_t config, const event_t *event)
 {
     CTASSERT(config.io != NULL);
     CTASSERT(event != NULL);

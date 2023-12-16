@@ -77,7 +77,7 @@ scan_t *node_get_scan(const node_t *node)
 USE_DECL
 where_t node_get_location(const node_t *node)
 {
-    CTASSERT(node_has_scanner(node));
+    CTASSERT(node != NULL);
 
     return node->where;
 }

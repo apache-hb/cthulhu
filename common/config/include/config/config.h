@@ -3,6 +3,7 @@
 #include "core/compiler.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 
 BEGIN_API
 

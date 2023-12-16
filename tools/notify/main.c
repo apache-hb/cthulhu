@@ -8,6 +8,7 @@
 #include "report/report.h"
 
 #include "scan/node.h"
+#include "stacktrace/stacktrace.h"
 #include "std/vector.h"
 #include <stdio.h>
 
@@ -128,6 +129,8 @@ void event_invalid_function(logger_t *logs, scan_t *scan)
 
 int main()
 {
+    stacktrace_init();
+    os_init();
     init_global_alloc(ctu_default_alloc());
     init_gmp_alloc(ctu_default_alloc());
 
@@ -147,12 +150,19 @@ int main()
     event_invalid_import(logs, scan);
     event_invalid_function(logs, scan);
 
-    io_t *io = io_blob("test", 0x1000, eAccessWrite);
+    io_t *io_rich = io_blob("rich_test", 0x1000, eAccessWrite);
+    io_t *io_simple = io_blob("simple_test", 0x1000, eAccessWrite);
 
     text_config_t config = {
         .zeroth_line = false,
-        .colour = true,
-        .io = io
+        .colours = kDefaultColour,
+        .io = io_rich
+    };
+
+    text_config_t config2 = {
+        .zeroth_line = false,
+        .colours = kDisabledColour,
+        .io = io_simple
     };
 
     vector_t *events = log_events(logs);
@@ -161,11 +171,19 @@ int main()
     for (size_t i = 0; i < count; i++)
     {
         event_t *event = vector_get(events, i);
-        text_report(config, event);
+        text_report_rich(config, event);
+        text_report_simple(config2, event);
     }
 
-    const void *data = io_map(io);
-    size_t size = io_size(io);
+    const void *data1 = io_map(io_rich);
+    size_t size1 = io_size(io_rich);
 
-    fwrite(data, size, 1, stdout);
+    fwrite(data1, size1, 1, stdout);
+
+    fprintf(stdout, "\n\n");
+
+    const void *data2 = io_map(io_simple);
+    size_t size2 = io_size(io_simple);
+
+    fwrite(data2, size2, 1, stdout);
 }
