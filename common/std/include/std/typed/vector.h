@@ -48,7 +48,7 @@ typevec_t *typevec_init(IN_RANGE(>, 0) size_t size, IN_NOTNULL const void *value
 /// @param vec the vector to get the length of
 /// @return the length of the vector
 NODISCARD
-size_t typevec_len(IN_NOTNULL typevec_t *vec);
+size_t typevec_len(IN_NOTNULL const typevec_t *vec);
 
 /// @brief set an element in the vector
 ///
@@ -62,13 +62,13 @@ void typevec_set(IN_NOTNULL typevec_t *vec, size_t index, IN_NOTNULL const void 
 /// @param vec the vector to get the value from
 /// @param index the index to get the value from
 /// @param dst the destination to copy the value to
-void typevec_get(IN_NOTNULL typevec_t *vec, size_t index, IN_NOTNULL void *dst);
+void typevec_get(IN_NOTNULL const typevec_t *vec, size_t index, IN_NOTNULL void *dst);
 
 /// @brief get the last element from the vector
 ///
 /// @param vec the vector to get the value from
 /// @param dst the destination to copy the value to
-void typevec_tail(IN_NOTNULL typevec_t *vec, IN_NOTNULL void *dst);
+void typevec_tail(IN_NOTNULL const typevec_t *vec, IN_NOTNULL void *dst);
 
 /// @brief push a value onto the vector
 ///
@@ -90,7 +90,7 @@ void typevec_pop(IN_NOTNULL typevec_t *vec, IN_NOTNULL void *dst);
 /// @param index the index to get the value from
 /// @return void* a pointer to the value
 NODISCARD
-void *typevec_offset(IN_NOTNULL typevec_t *vec, size_t index);
+void *typevec_offset(IN_NOTNULL const typevec_t *vec, size_t index);
 
 /// @brief get a pointer to the underlying data
 ///
@@ -99,7 +99,9 @@ void *typevec_offset(IN_NOTNULL typevec_t *vec, size_t index);
 /// @param vec the vector to get the data from
 /// @return void* a pointer to the data
 NODISCARD
-void *typevec_data(IN_NOTNULL typevec_t *vec);
+void *typevec_data(IN_NOTNULL const typevec_t *vec);
+
+void typevec_sort(IN_NOTNULL typevec_t *vec, int (*cmp)(const void *, const void *));
 
 /// @}
 

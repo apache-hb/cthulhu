@@ -3,6 +3,8 @@
 #include "core/analyze.h"
 #include "core/compiler.h"
 
+#include "notify/format.h"
+
 #include <stdbool.h>
 
 /// message without source
@@ -32,25 +34,10 @@ typedef struct event_t event_t;
 
 BEGIN_API
 
-typedef struct text_colour_t
-{
-    const char *red;
-    const char *green;
-    const char *yellow;
-    const char *blue;
-    const char *magenta;
-    const char *cyan;
-
-    const char *reset;
-} text_colour_t;
-
-extern const text_colour_t kDisabledColour;
-extern const text_colour_t kDefaultColour;
-
 typedef struct text_config_t
 {
     // is the first line of a source file the zeroth line or the first line
-    bool zeroth_line;
+    file_config_t config;
 
     text_colour_t colours;
 

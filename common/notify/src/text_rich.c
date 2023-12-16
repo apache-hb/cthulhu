@@ -1,5 +1,7 @@
 #include "common.h"
 
+#include "notify/text.h"
+
 #include "base/panic.h"
 
 #include "core/macros.h"
@@ -47,7 +49,7 @@ static report_type_t get_report_type(const event_t *event)
 // {
 //     if (!config.colour) return text;
 
-//     return format("%s%s%s", colour, text, COLOUR_RESET);
+//     return format("%s%s%s", colour, text, ANSI_RESET);
 // }
 
 /// @brief order segments by their location in the source file
@@ -103,9 +105,10 @@ static void print_header(text_config_t config, const event_t *event)
 {
     const diagnostic_t *diagnostic = event->diagnostic;
     const char *sev = get_severity_name(diagnostic->severity);
-    const char *col = get_severity_colour(config.colours, diagnostic->severity);
+    colour_t col = get_severity_colour(diagnostic->severity);
+    const char *it = config.colours.colours[col];
 
-    io_printf(config.io, "%s%s[%s]%s: %s\n", col, sev, diagnostic->id, config.colours.reset, event->message);
+    io_printf(config.io, "%s%s[%s]%s: %s\n", it, sev, diagnostic->id, config.colours.reset, event->message);
 }
 
 typedef struct print_result_t
@@ -171,7 +174,7 @@ static const char *extract_line(const scan_t *scan, size_t line)
     return ctu_strndup(text + start, end - start - 1);
 }
 
-static size_t get_line(text_config_t config, size_t line)
+static size_t get_line(file_config_t config, size_t line)
 {
     if (config.zeroth_line) return line;
 
@@ -227,7 +230,7 @@ static void print_segment(text_config_t config, const node_t *node, const char *
 
     typevec_t *spacing = collect_space(text, where.first_column);
 
-    char *line = align_number_right(get_line(config, where.first_line), col_align);
+    char *line = align_number_right(get_line(config.config, where.first_line), col_align);
     char *space = str_repeat(" ", col_align);
 
     char *spacestr = typevec_data(spacing);
@@ -242,7 +245,7 @@ static print_result_t print_single_line(text_config_t config, const event_t *eve
     const scan_t *scan = node_get_scan(event->node);
     const char *name = get_scan_name(event->node);
     where_t where = node_get_location(event->node);
-    line_t primary_line = get_line(config, where.first_line);
+    line_t primary_line = get_line(config.config, where.first_line);
 
     typevec_t *parts = order_segments(event->segments, scan);
     size_t len = typevec_len(parts);
@@ -253,7 +256,7 @@ static print_result_t print_single_line(text_config_t config, const event_t *eve
     {
         const segment_t *segment = typevec_offset(parts, i);
         where_t segment_where = node_get_location(segment->node);
-        line_t line = get_line(config, segment_where.first_line);
+        line_t line = get_line(config.config, segment_where.first_line);
         size_t width = number_width(line);
         col_align = MAX(col_align, width);
     }
@@ -292,8 +295,8 @@ static print_result_t print_many_line(text_config_t config, const event_t *event
     const scan_t *scan = node_get_scan(event->node);
     const char *name = get_scan_name(event->node);
     where_t where = node_get_location(event->node);
-    size_t first_line = get_line(config, where.first_line);
-    size_t last_line = get_line(config, where.last_line);
+    size_t first_line = get_line(config.config, where.first_line);
+    size_t last_line = get_line(config.config, where.last_line);
     size_t first_col_align = number_width(first_line);
     size_t last_col_align = number_width(last_line);
 
@@ -338,7 +341,9 @@ static void print_notes(text_config_t config, vector_t *notes, size_t col_align)
     // print the first note with the `note:` heading
     const char *first = vector_get(notes, 0);
 
-    io_printf(config.io, "%s%snote:%s %s\n", padding, config.colours.yellow, config.colours.reset, first);
+    const char *heading = fmt_coloured(config.colours, eColourYellow, "note:");
+
+    io_printf(config.io, "%s%s %s\n", padding, heading, first);
 
     // print the rest of the notes without the heading
     size_t count = vector_len(notes);

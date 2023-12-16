@@ -47,13 +47,15 @@
 /// Useful for formatting messages to the console.
 /// @{
 
-#define COLOUR_RED "\x1B[1;31m"    ///< ANSI red
-#define COLOUR_GREEN "\x1B[1;32m"  ///< ANSI green
-#define COLOUR_YELLOW "\x1B[1;33m" ///< ANSI yellow
-#define COLOUR_BLUE "\x1B[1;34m"   ///< ANSI blue
-#define COLOUR_MAGENTA "\x1B[1;35m" ///< ANSI magenta
-#define COLOUR_CYAN "\x1B[1;36m"   ///< ANSI cyan
-#define COLOUR_RESET "\x1B[0m"     ///< ANSI reset
+#define ANSI_RED "\x1B[1;31m"    ///< ANSI red
+#define ANSI_GREEN "\x1B[1;32m"  ///< ANSI green
+#define ANSI_YELLOW "\x1B[1;33m" ///< ANSI yellow
+#define ANSI_BLUE "\x1B[1;34m"   ///< ANSI blue
+#define ANSI_MAGENTA "\x1B[1;35m" ///< ANSI magenta
+#define ANSI_CYAN "\x1B[1;36m"   ///< ANSI cyan
+#define ANSI_WHITE "\x1B[1;37m"  ///< ANSI white
+#define ANSI_DEFAULT "\x1B[0m"   ///< ANSI default
+#define ANSI_RESET "\x1B[0m"     ///< ANSI reset
 
 /// @}
 

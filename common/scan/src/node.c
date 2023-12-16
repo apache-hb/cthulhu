@@ -69,7 +69,7 @@ node_t *node_new(scan_t *scan, where_t where)
 USE_DECL
 scan_t *node_get_scan(const node_t *node)
 {
-    CTASSERT(node_has_scanner(node));
+    CTASSERT(node != NULL);
 
     return node->scan;
 }

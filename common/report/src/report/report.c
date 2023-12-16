@@ -37,11 +37,11 @@ typedef struct
 } level_format_t;
 
 static level_format_t kFormats[eLevelTotal] = {
-    [eReportSorry] = { "sorry", COLOUR_MAGENTA "sorry" COLOUR_RESET },
-    [eReportInternal] = {"internal", COLOUR_CYAN "ice" COLOUR_RESET},
-    [eFatal] = {"error", COLOUR_RED "error" COLOUR_RESET},
-    [eWarn] = {"warning", COLOUR_YELLOW "warning" COLOUR_RESET},
-    [eInfo] = {"note", COLOUR_GREEN "note" COLOUR_RESET},
+    [eReportSorry] = { "sorry", ANSI_MAGENTA "sorry" ANSI_RESET },
+    [eReportInternal] = {"internal", ANSI_CYAN "ice" ANSI_RESET},
+    [eFatal] = {"error", ANSI_RED "error" ANSI_RESET},
+    [eWarn] = {"warning", ANSI_YELLOW "warning" ANSI_RESET},
+    [eInfo] = {"note", ANSI_GREEN "note" ANSI_RESET},
 };
 
 static const char *report_level_str(level_t level)
@@ -286,7 +286,7 @@ static char *format_single(const node_t *node, const char *underline)
 
     return format(" %s|\n"
                   " %s| %s\n"
-                  " %s|" COLOUR_MAGENTA " %s\n" COLOUR_RESET,
+                  " %s|" ANSI_MAGENTA " %s\n" ANSI_RESET,
                   pad, digit, firstLineOfSource, pad, build_underline(firstLineOfSource, where, underline));
 }
 
@@ -314,8 +314,8 @@ static char *format_medium2(const node_t *node, const char *underline)
     char *lastLineOfSource = extract_line(scan, where.last_line);
 
     return format(" %s|\n"
-                  " %s>" COLOUR_MAGENTA " %s\n" COLOUR_RESET " %s>" COLOUR_MAGENTA " %s\n" COLOUR_RESET
-                  " %s|" COLOUR_MAGENTA " %s\n" COLOUR_RESET,
+                  " %s>" ANSI_MAGENTA " %s\n" ANSI_RESET " %s>" ANSI_MAGENTA " %s\n" ANSI_RESET
+                  " %s|" ANSI_MAGENTA " %s\n" ANSI_RESET,
                   pad, digit, firstLineOfSource, pad, lastLineOfSource, pad,
                   build_underline(lastLineOfSource, where, underline));
 }
@@ -346,8 +346,8 @@ static char *format_medium3(const node_t *node, const char *underline)
     char *lastLineOfSource = extract_line(scan, where.last_line);
 
     return format(" %s|\n"
-                  " %s>" COLOUR_MAGENTA " %s\n" COLOUR_RESET " %s>" COLOUR_MAGENTA " %s\n" COLOUR_RESET
-                  " %s>" COLOUR_MAGENTA " %s\n" COLOUR_RESET " %s|" COLOUR_MAGENTA " %s\n" COLOUR_RESET,
+                  " %s>" ANSI_MAGENTA " %s\n" ANSI_RESET " %s>" ANSI_MAGENTA " %s\n" ANSI_RESET
+                  " %s>" ANSI_MAGENTA " %s\n" ANSI_RESET " %s|" ANSI_MAGENTA " %s\n" ANSI_RESET,
                   pad, digit, firstLineOfSource, pad, secondLineOfSource, pad, lastLineOfSource, pad,
                   build_underline(lastLineOfSource, where, underline));
 }
@@ -379,8 +379,8 @@ static char *format_large(const node_t *node, const char *underline)
     char *lastSourceLine = extract_line(scan, where.last_line);
 
     return format(" %s|\n"
-                  " %s>" COLOUR_MAGENTA " %s\n" COLOUR_RESET " %s>" COLOUR_MAGENTA " ...\n" COLOUR_RESET
-                  " %s>" COLOUR_MAGENTA " %s\n" COLOUR_RESET " %s|" COLOUR_MAGENTA " %s\n" COLOUR_RESET,
+                  " %s>" ANSI_MAGENTA " %s\n" ANSI_RESET " %s>" ANSI_MAGENTA " ...\n" ANSI_RESET
+                  " %s>" ANSI_MAGENTA " %s\n" ANSI_RESET " %s|" ANSI_MAGENTA " %s\n" ANSI_RESET,
                   pad, alignedFirstDigit, firstSourceLine, pad, alignedLastDigit, lastSourceLine, pad,
                   build_underline(lastSourceLine, where, underline));
 }

@@ -12,7 +12,35 @@
 #include "std/vector.h"
 #include <stdio.h>
 
-const char *kSampleSource =
+const char *kSampleSourceLhs =
+    "module multi.lhs;\n"   // 1
+    "\n"                    // 2
+    "import multi.rhs,\n"   // 3
+    "       main;\n"        // 4
+    "\n"                    // 5
+    "procedure lhs;\n"      // 3
+    "begin\n"               // 4
+    "    x := x + 1;\n"     // 5
+    "    if x < LIMIT then\n" // 6
+    "        call rhs\n"    // 7
+    "end;\n"                // 8
+    ".\n";                  // 9
+
+const char *kSampleSourceRhs =
+    "module multi.rhs;\n"   // 1
+    "\n"                    // 2
+    "import multi.lhs,\n"   // 3
+    "       main;\n"        // 4
+    "\n"                    // 5
+    "procedure rhs;\n"      // 6
+    "begin\n"               // 7
+    "    x := x + 1;\n"     // 8
+    "    if x < LIMIT then\n" // 9
+    "        call lhs\n"    // 10
+    "end;\n"                // 11
+    ".\n";                  // 12
+
+const char *kSampleSourceMain =
     "module main;\n"        // 1
     "\n"                    // 2
     "import multi.lhs,\n"   // 3
@@ -78,7 +106,7 @@ void event_simple(logger_t *logs)
     msg_append(event, node_builtin(), "hello %s", "world");
 }
 
-void event_missing_call(logger_t *logs, scan_t *scan)
+void event_missing_call(logger_t *logs, scan_t *scan_main, scan_t *scan_lhs)
 {
     where_t where = {
         .first_line = 11,
@@ -87,14 +115,38 @@ void event_missing_call(logger_t *logs, scan_t *scan)
         .last_column = 4 + 8
     };
 
-    node_t *node = node_new(scan, where);
+    node_t *node = node_new(scan_main, where);
+
+    where_t where2 = {
+        .first_line = 8,
+        .last_line = 8,
+        .first_column = 4,
+        .last_column = 4 + 8
+    };
+
+    node_t *node2 = node_new(scan_lhs, where2);
+
+    where_t where3 = {
+        .first_line = 12,
+        .last_line = 12,
+        .first_column = 8,
+        .last_column = 8 + 3
+    };
+
+    node_t *node3 = node_new(scan_lhs, where3);
 
     event_t *event = msg_notify(logs, &kUndefinedFunctionName, node, "undefined function name `%s`", "lhs");
     msg_note(event, "did you mean `%s`?", "rhs");
     msg_append(event, node, "function called here");
+    msg_append(event, node, "function called here but with a different message");
+    msg_append(event, node2, "function defined here");
+    msg_append(event, node3, "foo bar");
+
+    msg_append(event, node_builtin(), "builtin node");
+    msg_append(event, node_invalid(), "invalid node");
 }
 
-void event_invalid_import(logger_t *logs, scan_t *scan)
+void event_invalid_import(logger_t *logs, scan_t *scan, scan_t *scan_rhs)
 {
     where_t where = {
         .first_line = 2,
@@ -105,10 +157,20 @@ void event_invalid_import(logger_t *logs, scan_t *scan)
 
     node_t *node = node_new(scan, where);
 
+    where_t where2 = {
+        .first_line = 3,
+        .last_line = 3,
+        .first_column = 7,
+        .last_column = 7 + 9
+    };
+
+    node_t *node2 = node_new(scan_rhs, where2);
+
     event_t *event = msg_notify(logs, &kUnresolvedImport, node, "unresolved import `%s`", "multi.lhs");
     msg_note(event, "did you mean `%s`?", "multi.rhs");
     msg_note(event, "did you mean `%s`?", "multi.rhx");
     msg_append(event, node, "import statement here");
+    msg_append(event, node2, "module declaration here");
 }
 
 void event_invalid_function(logger_t *logs, scan_t *scan)
@@ -127,6 +189,12 @@ void event_invalid_function(logger_t *logs, scan_t *scan)
     msg_note(event, "did you mean `%s`?", "main");
 }
 
+static scan_t *scan_string(const char *name, const char *lang, const char *source)
+{
+    io_t *io = io_string(name, source);
+    return scan_io(begin_reports(), lang, io, ctu_default_alloc());
+}
+
 int main()
 {
     stacktrace_init();
@@ -140,28 +208,31 @@ int main()
     msg_diagnostic(logs, &kUnresolvedImport);
     msg_diagnostic(logs, &kReservedName);
 
-    reports_t *reports = begin_reports();
-
-    io_t *source = io_string("sample.pl0", kSampleSource);
-    scan_t *scan = scan_io(reports, "PL/0", source, ctu_default_alloc());
+    scan_t *scan_main = scan_string("sample.pl0", "PL/0", kSampleSourceMain);
+    scan_t *scan_lhs = scan_string("lhs.mod", "Oberon-2", kSampleSourceLhs);
+    scan_t *scan_rhs = scan_string("rhs.ctu", "Cthulhu", kSampleSourceRhs);
 
     event_simple(logs);
-    event_missing_call(logs, scan);
-    event_invalid_import(logs, scan);
-    event_invalid_function(logs, scan);
+    event_missing_call(logs, scan_main, scan_lhs);
+    event_invalid_import(logs, scan_main, scan_rhs);
+    event_invalid_function(logs, scan_main);
 
     io_t *io_rich = io_blob("rich_test", 0x1000, eAccessWrite);
     io_t *io_simple = io_blob("simple_test", 0x1000, eAccessWrite);
 
     text_config_t config = {
-        .zeroth_line = false,
+        .config = {
+            .zeroth_line = false,
+        },
         .colours = kDefaultColour,
         .io = io_rich
     };
 
     text_config_t config2 = {
-        .zeroth_line = false,
-        .colours = kDisabledColour,
+        .config = {
+            .zeroth_line = false,
+        },
+        .colours = kDefaultColour,
         .io = io_simple
     };
 
@@ -173,6 +244,12 @@ int main()
         event_t *event = vector_get(events, i);
         text_report_rich(config, event);
         text_report_simple(config2, event);
+
+        if (i != count - 1)
+        {
+            io_printf(io_rich, "\n");
+            io_printf(io_simple, "\n");
+        }
     }
 
     const void *data1 = io_map(io_rich);

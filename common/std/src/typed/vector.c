@@ -5,6 +5,7 @@
 #include "memory/memory.h"
 #include "base/panic.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 /// @brief A vector with a fixed type size.
@@ -60,7 +61,7 @@ typevec_t *typevec_init(size_t size, const void *value)
 }
 
 USE_DECL
-size_t typevec_len(typevec_t *vec)
+size_t typevec_len(const typevec_t *vec)
 {
     CTASSERT(vec != NULL);
 
@@ -78,7 +79,7 @@ void typevec_set(typevec_t *vec, size_t index, const void *src)
 }
 
 USE_DECL
-void typevec_get(typevec_t *vec, size_t index, void *dst)
+void typevec_get(const typevec_t *vec, size_t index, void *dst)
 {
     CTASSERT(vec != NULL);
     CTASSERT(dst != NULL);
@@ -88,7 +89,7 @@ void typevec_get(typevec_t *vec, size_t index, void *dst)
 }
 
 USE_DECL
-void typevec_tail(typevec_t *vec, void *dst)
+void typevec_tail(const typevec_t *vec, void *dst)
 {
     CTASSERT(typevec_len(vec) > 0);
 
@@ -120,7 +121,7 @@ void typevec_pop(typevec_t *vec, void *dst)
 }
 
 USE_DECL
-void *typevec_offset(typevec_t *vec, size_t index)
+void *typevec_offset(const typevec_t *vec, size_t index)
 {
     CTASSERTF(index < typevec_len(vec), "index %zu out of bounds %zu", index, typevec_len(vec));
 
@@ -128,9 +129,19 @@ void *typevec_offset(typevec_t *vec, size_t index)
 }
 
 USE_DECL
-void *typevec_data(typevec_t *vec)
+void *typevec_data(const typevec_t *vec)
 {
     CTASSERT(vec != NULL);
 
     return vec->data;
+}
+
+void typevec_sort(IN_NOTNULL typevec_t *vec, int (*cmp)(const void *, const void *))
+{
+    CTASSERT(vec != NULL);
+    CTASSERT(cmp != NULL);
+
+    // TODO: should we rely on qsort existing?
+
+    qsort(vec->data, vec->used, vec->type_size, cmp);
 }

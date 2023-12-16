@@ -4,6 +4,7 @@ BasedOnStyle:  Microsoft
 IndentPPDirectives: AfterHash
 PPIndentWidth: 3
 BreakAfterAttributes: Always
+ColumnLimit: 100
 AttributeMacros:
     - CT_PRINTF
     - CONSTFN
