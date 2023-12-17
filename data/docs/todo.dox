@@ -34,6 +34,9 @@ GFI = good first issue
     - wasm
     - x64
 
+- detect mutually recursive functions in stacktrace collection
+    - this is a bit tricky since we need to detect cycles in the call graph
+
 - valist forwarding
 - enum consts
 - full C and fixed width types
