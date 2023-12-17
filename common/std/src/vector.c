@@ -241,8 +241,8 @@ void vector_sort(vector_t *vector, int (*cmp)(const void *, const void *))
 
     CTU_UNUSED(vector_cmp);
 
-    //void *fn = (void *)cmp;
-    //qsort_s(vector->data, vector_len(vector), sizeof(void *), vector_cmp, fn);
+    void *fn = (void *)cmp;
+    qsort_s(vector->data, vector_len(vector), sizeof(void *), vector_cmp, fn);
 }
 
 USE_DECL

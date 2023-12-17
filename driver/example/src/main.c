@@ -21,7 +21,7 @@ static tree_t *example_lang_module(lifetime_t *lifetime)
     reports_t *reports = lifetime_get_reports(lifetime);
     cookie_t *cookie = lifetime_get_cookie(lifetime);
 
-    node_t *node = node_builtin();
+    const node_t *node = node_builtin();
     size_t sizes[eSemaTotal] = {
         [eSemaValues] = 1,
         [eSemaTypes] = 1,

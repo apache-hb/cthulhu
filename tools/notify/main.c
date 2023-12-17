@@ -194,6 +194,54 @@ static scan_t *scan_string(const char *name, const char *lang, const char *sourc
     return scan_io(begin_reports(), lang, io, ctu_default_alloc());
 }
 
+typedef struct frame_print_t
+{
+    text_config_t config;
+    size_t index;
+} frame_print_t;
+
+static void print_frame(void *user, const frame_t *frame)
+{
+    frame_print_t *config = user;
+
+    text_report_stacktrace(config->config, config->index++, frame);
+}
+
+void print_backtrace(void)
+{
+    io_t *io = io_blob("backtrace", 0x1000, eAccessWrite | eAccessText);
+    text_config_t config = {
+        .config = {
+            .zeroth_line = false
+        },
+        .colours = kDefaultColour,
+        .io = io
+    };
+
+    frame_print_t it = {
+        .config = config,
+        .index = 0
+    };
+
+    stacktrace_read(print_frame, &it);
+
+    const void *data = io_map(io);
+    size_t size = io_size(io);
+
+    fwrite(data, size, 1, stdout);
+}
+
+int recurse(int x)
+{
+    if (x == 0)
+    {
+        print_backtrace();
+        return 0;
+    }
+
+    return recurse(x - 1);
+}
+
 int main()
 {
     stacktrace_init();
@@ -256,12 +304,18 @@ int main()
     const void *data1 = io_map(io_rich);
     size_t size1 = io_size(io_rich);
 
+    fprintf(stdout, "=== rich text ===\n\n");
+
     fwrite(data1, size1, 1, stdout);
 
-    fprintf(stdout, "\n\n");
+    fprintf(stdout, "\n=== simple text ===\n\n");
 
     const void *data2 = io_map(io_simple);
     size_t size2 = io_size(io_simple);
 
     fwrite(data2, size2, 1, stdout);
+
+    fprintf(stdout, "\n=== backtrace ===\n\n");
+
+    recurse(15);
 }

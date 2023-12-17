@@ -69,11 +69,8 @@ void stacktrace_read_inner(bt_frame_t callback, void *user)
     }
 }
 
-void frame_resolve_inner(const frame_t *frame, symbol_t *symbol)
+frame_resolve_t frame_resolve_inner(const frame_t *frame, symbol_t *symbol)
 {
-    if (frame == NULL) return;
-    if (symbol == NULL) return;
-
     union disp_t disp = { 0 };
     IMAGEHLP_LINE64 line = { 0 };
     HANDLE process = GetCurrentProcess();
@@ -86,26 +83,25 @@ void frame_resolve_inner(const frame_t *frame, symbol_t *symbol)
     info->SizeOfStruct = sizeof(SYMBOL_INFO);
     info->MaxNameLen = STACKTRACE_NAME_LENGTH;
 
-    BOOL has_symbol = SymFromAddr(process, frame->address, &disp.disp64, info);
-    if (has_symbol)
+    frame_resolve_t resolve = eResolveNothing;
+
+    if (SymFromAddr(process, frame->address, &disp.disp64, info))
     {
-        BOOL has_line = SymGetLineFromAddr64(process, frame->address, &disp.disp, &line);
-        if (has_line)
+        resolve |= eResolveName;
+
+        if (SymGetLineFromAddr64(process, frame->address, &disp.disp, &line))
         {
             symbol->line = line.LineNumber;
             strcpy_s(symbol->file, STACKTRACE_PATH_LENGTH, line.FileName);
-        }
-        else
-        {
-            symbol->line = 0;
-            strcpy_s(symbol->file, STACKTRACE_PATH_LENGTH, "<unknown>");
+
+            resolve |= eResolveLine | eResolveFile;
         }
 
-        UnDecorateSymbolName(info->Name, symbol->name, STACKTRACE_NAME_LENGTH, UNDNAME_COMPLETE);
+        if (UnDecorateSymbolName(info->Name, symbol->name, STACKTRACE_NAME_LENGTH, UNDNAME_COMPLETE))
+        {
+            resolve |= eResolveDemangledName;
+        }
     }
-    else
-    {
-        strcpy_s(symbol->file, STACKTRACE_PATH_LENGTH, "<unknown>");
-        sprintf_s(symbol->name, STACKTRACE_NAME_LENGTH, "0x%llX", frame->address);
-    }
+
+    return resolve;
 }

@@ -38,6 +38,28 @@ typedef struct frame_t
     uintptr_t address;
 } frame_t;
 
+typedef enum frame_resolve_t
+{
+    /// @brief nothing was resolved
+    eResolveNothing         = (0),
+
+    /// @brief the line number was found
+    /// @note this does not imply that the file was found
+    eResolveLine            = (1 << 0),
+
+    /// @brief the symbol name was found
+    /// @note this does not imply it was demangled
+    eResolveName            = (1 << 1),
+
+    /// @brief the symbol name was demangled
+    eResolveDemangledName   = (1 << 2),
+
+    /// @brief the file path was found
+    eResolveFile            = (1 << 3),
+
+    eResolveCount
+} frame_resolve_t;
+
 typedef void (*bt_frame_t)(void *user, const frame_t *frame);
 
 /// @brief initialize the stacktrace backend
@@ -76,9 +98,7 @@ void stacktrace_read(bt_frame_t callback, void *user);
 ///
 /// @param frame the frame to resolve
 /// @param symbol the symbol to fill
-void frame_resolve(
-        IN_NOTNULL const frame_t *frame,
-        symbol_t *symbol);
+frame_resolve_t frame_resolve(IN_NOTNULL const frame_t *frame, symbol_t *symbol);
 
 /// @brief print a stacktrace to a file
 /// @note this follows the same precondition as @ref stacktrace_get

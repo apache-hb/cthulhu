@@ -82,40 +82,6 @@ void *map_get_default(IN_NOTNULL map_t *map, IN_STRING const char *key, void *ot
 NODISCARD CONSTFN
 void *map_get_default_ptr(IN_NOTNULL map_t *map, const void *key, void *other);
 
-/// @def MAP_TRY_EMPLACE(MAP, KEY, VALUE)
-/// @brief set a value in a map if the key is not already present
-/// @note this macro is not atomic, it is a pair of map_get and map_set
-/// @warning @p VALUE is lazily evaluated, it will only be evaluated if the key is not present
-///
-/// @param MAP the map to set the value in
-/// @param KEY the key to set the value for
-/// @param VALUE the value to set
-
-#define MAP_TRY_EMPLACE(MAP, KEY, VALUE) \
-    do { \
-        void *temp = map_get(MAP, KEY); \
-        if (temp == NULL) { \
-            map_set(MAP, KEY, VALUE); \
-        } \
-    } while (0)
-
-/// @def MAP_TRY_EMPLACE_PTR(MAP, KEY, VALUE)
-/// @brief set a value in a map if the key is not already present
-/// @note this macro is not atomic, it is a pair of map_get and map_set
-/// @warning @p VALUE is lazily evaluated, it will only be evaluated if the key is not present
-///
-/// @param MAP the map to set the value in
-/// @param KEY the key to set the value for
-/// @param VALUE the value to set
-
-#define MAP_TRY_EMPLACE_PTR(MAP, KEY, VALUE) \
-    do { \
-        void *temp = map_get_ptr(MAP, KEY); \
-        if (temp == NULL) { \
-            map_set_ptr(MAP, KEY, VALUE); \
-        } \
-    } while (0)
-
 NODISCARD CONSTFN
 bool map_contains(IN_NOTNULL map_t *map, IN_STRING const char *key);
 

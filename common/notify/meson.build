@@ -3,6 +3,7 @@ src = [
     'src/common.c',
     'src/text_rich.c',
     'src/text_simple.c',
+    'src/text_stacktrace.c'
 ]
 
 libnotify = library('notify', src,

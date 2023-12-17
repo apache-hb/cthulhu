@@ -6,6 +6,7 @@
 #include <stddef.h>
 
 typedef struct map_t map_t;
+typedef struct scan_t scan_t;
 
 const char *get_severity_name(severity_t severity);
 colour_t get_severity_colour(severity_t severity);
@@ -21,7 +22,9 @@ char *fmt_coloured(text_colour_t colours, colour_t idx, const char *fmt, ...);
 size_t get_line_number(file_config_t config, const node_t *node);
 
 
+#if 0
 /// sparse reports are an efficient and easy to manipulate in-memory representation of a report
+/// and its associated source code.
 
 typedef struct sparse_text_t sparse_text_t;
 typedef struct sparse_report_t sparse_report_t;
@@ -42,3 +45,8 @@ sparse_report_t *sparse_report_new(const event_t *event);
 ///
 /// @return the source files in @p report
 vector_t *sparse_report_get_files(const sparse_report_t *report);
+
+size_t sparse_text_count(const sparse_text_t *text);
+
+const scan_t *sparse_get_scan(const sparse_text_t *text);
+#endif

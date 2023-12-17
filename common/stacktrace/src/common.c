@@ -5,12 +5,12 @@
 
 #define STACK_FRAMES 128
 
-void frame_resolve(const frame_t *frame, symbol_t *symbol)
+frame_resolve_t frame_resolve(const frame_t *frame, symbol_t *symbol)
 {
-    if (frame == NULL) return;
-    if (symbol == NULL) return;
+    if (frame == NULL) return false;
+    if (symbol == NULL) return false;
 
-    frame_resolve_inner(frame, symbol);
+    return frame_resolve_inner(frame, symbol);
 }
 
 typedef struct bt_info_t

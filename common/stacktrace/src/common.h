@@ -2,6 +2,6 @@
 
 #include "stacktrace/stacktrace.h"
 
-void frame_resolve_inner(const frame_t *frame, symbol_t *symbol);
+frame_resolve_t frame_resolve_inner(const frame_t *frame, symbol_t *symbol);
 
 void stacktrace_read_inner(bt_frame_t callback, void *user);

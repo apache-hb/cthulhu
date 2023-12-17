@@ -140,7 +140,7 @@ static vector_t *make_runtime_path(void)
 
 static tree_t *get_string_type(size_t size)
 {
-    node_t *node = node_builtin();
+    const node_t *node = node_builtin();
     return tree_type_pointer(node, "string", tree_type_digit(node, "$", eDigitChar, eSignSigned, eQualConst), size);
 }
 
@@ -168,7 +168,7 @@ static tree_storage_t get_mutable_storage(void)
 
 void pl0_init(driver_t *handle)
 {
-    node_t *node = node_builtin();
+    const node_t *node = node_builtin();
     lifetime_t *lifetime = handle_get_lifetime(handle);
 
     gIntType = tree_type_digit(node, "integer", eDigitInt, eSignSigned, eQualUnknown);

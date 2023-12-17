@@ -11,26 +11,20 @@ typedef struct node_t
     where_t where; ///< the location of this node in the source file
 } node_t;
 
-static node_t kBuiltinNode = {
+static node_t gBuiltinNode = {
     .scan = NULL,
     .where = { 0, 0, 0, 0 }
 };
 
 void scan_init(void)
 {
-    kBuiltinNode.scan = scan_builtin();
+    gBuiltinNode.scan = scan_builtin();
 }
 
 USE_DECL
-node_t *node_builtin(void)
+const node_t *node_builtin(void)
 {
-    return &kBuiltinNode;
-}
-
-USE_DECL
-bool node_has_scanner(const node_t *node)
-{
-    return node != NULL && node->scan != NULL;
+    return &gBuiltinNode;
 }
 
 USE_DECL

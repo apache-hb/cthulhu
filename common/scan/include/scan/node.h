@@ -66,22 +66,7 @@ node_t *node_new(scan_t *scan, where_t where);
 ///
 /// @return the builtin node
 NODISCARD CONSTFN
-node_t *node_builtin(void);
-
-/// @brief get the invalid node
-/// node used for positions that cannot be represented by a node
-///
-/// @return the invalid node
-NODISCARD CONSTFN
-node_t *node_invalid(void);
-
-/// @brief check if a node can have its location queried
-///
-/// @param node the node to check
-///
-/// @return if @p node can have its location queried
-NODISCARD CONSTFN
-bool node_has_scanner(const node_t *node);
+const node_t *node_builtin(void);
 
 NODISCARD CONSTFN
 bool node_is_builtin(const node_t *node);

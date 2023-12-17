@@ -58,7 +58,7 @@
 /// @param a the index of the format string parameter
 /// @param b the index of the first variadic parameter
 
-#if __clang__ >= 3
+#if __clang_major__ >= 3
 #   define CT_PRINTF(a, b) __attribute__((__format__(__printf__, a, b)))
 #elif __GNUC__ >= 4
 #   define CT_PRINTF(a, b) __attribute__((format(printf, a, b)))

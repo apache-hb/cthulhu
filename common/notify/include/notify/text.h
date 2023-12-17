@@ -30,6 +30,7 @@
 ///  note: note message
 
 typedef struct io_t io_t;
+typedef struct frame_t frame_t;
 typedef struct event_t event_t;
 
 BEGIN_API
@@ -52,5 +53,10 @@ void text_report_rich(
 void text_report_simple(
     text_config_t config,
     IN_NOTNULL const event_t *event);
+
+void text_report_stacktrace(
+    text_config_t config,
+    size_t index,
+    const frame_t *frame);
 
 END_API

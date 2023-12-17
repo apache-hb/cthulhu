@@ -23,7 +23,7 @@ static vector_t *cc_lang_path(void)
 
 static void add_digit(tree_t *mod, const char *name, digit_t digit, sign_t sign)
 {
-    node_t *node = node_builtin();
+    const node_t *node = node_builtin();
     tree_t *it = tree_type_digit(node, name, digit, sign, eQualUnknown);
     tree_set_attrib(it, &kExportAttribs);
     tree_module_set(mod, eCTagTypes, name, it);
@@ -34,7 +34,7 @@ static tree_t *cc_lang_module(lifetime_t *lifetime)
     reports_t *reports = lifetime_get_reports(lifetime);
     cookie_t *cookie = lifetime_get_cookie(lifetime);
 
-    node_t *node = node_builtin();
+    const node_t *node = node_builtin();
     size_t sizes[eSemaTotal] = {
         [eCTagValues] = 1,
         [eCTagTypes] = 1,

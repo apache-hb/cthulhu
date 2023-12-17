@@ -19,7 +19,7 @@ bool verbose = false;
 
 static bool is_valid_node(const node_t *node)
 {
-    return node_has_scanner(node) && node != node_builtin();
+    return !node_is_builtin(node);
 }
 
 static part_t *part_new(char *message, const node_t *node)

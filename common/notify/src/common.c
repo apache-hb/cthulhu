@@ -76,8 +76,6 @@ const char *get_scan_name(const node_t *node)
 {
     if (node_is_builtin(node)) return "builtin";
 
-    if (!node_has_scanner(node)) return "unknown";
-
     const scan_t *scan = node_get_scan(node);
     return scan_path(scan);
 }
@@ -141,7 +139,7 @@ char *fmt_node(file_config_t config, const node_t *node)
     where_t where = node_get_location(node);
     const char *path = get_scan_name(node);
 
-    if (node_has_scanner(node))
+    if (!node_is_builtin(node))
     {
         line_t first_line = get_line_number(config, node);
 
@@ -233,16 +231,6 @@ static void load_lineinfo(sparse_text_t *text)
 
 static text_view_t get_source(const node_t *node)
 {
-    if (!node_has_scanner(node))
-    {
-        text_view_t empty = {
-            .text = "",
-            .size = 0,
-        };
-
-        return empty;
-    }
-
     const scan_t *scan = node_get_scan(node);
     const char *text = scan_text(scan);
     size_t size = scan_size(scan);
@@ -397,6 +385,14 @@ vector_t *sparse_report_get_files(const sparse_report_t *report)
 
     vector_t *values = map_values(report->files);
     vector_sort(values, filename_cmp);
+    vector_append(&files, values);
 
     return files;
+}
+
+size_t sparse_text_count(const sparse_text_t *text)
+{
+    CTASSERT(text != NULL);
+
+    return map_count(text->line_cache);
 }
