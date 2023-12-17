@@ -24,6 +24,12 @@ GFI = good first issue
 
 <h3>Important</h3>
 
+- use SetUnhandledExceptionFilter on windows
+    - this will allow us to get stack traces on unhandled exceptions
+
+- sigaction on linux
+    - not sure how the async signal saftey will go
+
 - build as shared libraries nicely on windows
     - at least get mini gmp working (GFI)
 
