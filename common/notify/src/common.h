@@ -21,6 +21,10 @@ char *fmt_coloured(text_colour_t colours, colour_t idx, const char *fmt, ...);
 
 size_t get_line_number(file_config_t config, const node_t *node);
 
+/// @brief get the width of a number if it were printed as base10
+size_t get_num_width(size_t num);
+
+char *fmt_align(size_t width, const char *fmt, ...);
 
 #if 0
 /// sparse reports are an efficient and easy to manipulate in-memory representation of a report

@@ -54,9 +54,19 @@ void text_report_simple(
     text_config_t config,
     IN_NOTNULL const event_t *event);
 
-void text_report_stacktrace(
+
+// backtrace reporting
+
+typedef struct bt_report_t bt_report_t;
+
+bt_report_t *bt_report_new(void);
+
+void bt_report_add(
+    IN_NOTNULL bt_report_t *report,
+    IN_NOTNULL const frame_t *frame);
+
+void bt_report_finish(
     text_config_t config,
-    size_t index,
-    const frame_t *frame);
+    IN_NOTNULL bt_report_t *report);
 
 END_API

@@ -170,6 +170,40 @@ line_t get_line_number(file_config_t config, const node_t *node)
     return where.first_line + 1;
 }
 
+size_t get_num_width(size_t num)
+{
+    size_t width = 0;
+
+    while (num > 0)
+    {
+        num /= 10;
+        width++;
+    }
+
+    return width;
+}
+
+char *fmt_align(size_t width, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    char *msg = vformat(fmt, args);
+    va_end(args);
+
+    size_t len = strlen(msg);
+    if (len >= width) return msg;
+
+    char *result = ctu_malloc(width + 1);
+    memset(result, ' ', width);
+    memcpy(result, msg, len);
+
+    result[width] = '\0';
+
+    ctu_free(msg);
+
+    return result;
+}
+
 typedef struct lineinfo_t
 {
     size_t offset;

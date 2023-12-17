@@ -101,6 +101,11 @@ frame_resolve_t frame_resolve_inner(const frame_t *frame, symbol_t *symbol)
         {
             resolve |= eResolveDemangledName;
         }
+        else
+        {
+            // copy the mangled name if we can't demangle it
+            strcpy_s(symbol->name, STACKTRACE_NAME_LENGTH, info->Name);
+        }
     }
 
     return resolve;

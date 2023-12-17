@@ -196,15 +196,14 @@ static scan_t *scan_string(const char *name, const char *lang, const char *sourc
 
 typedef struct frame_print_t
 {
-    text_config_t config;
-    size_t index;
+    bt_report_t *report;
 } frame_print_t;
 
 static void print_frame(void *user, const frame_t *frame)
 {
     frame_print_t *config = user;
 
-    text_report_stacktrace(config->config, config->index++, frame);
+    bt_report_add(config->report, frame);
 }
 
 void print_backtrace(void)
@@ -219,11 +218,12 @@ void print_backtrace(void)
     };
 
     frame_print_t it = {
-        .config = config,
-        .index = 0
+        .report = bt_report_new()
     };
 
     stacktrace_read(print_frame, &it);
+
+    bt_report_finish(config, it.report);
 
     const void *data = io_map(io);
     size_t size = io_size(io);
@@ -318,4 +318,5 @@ int main()
     fprintf(stdout, "\n=== backtrace ===\n\n");
 
     recurse(15);
+    recurse(1000);
 }
