@@ -104,7 +104,7 @@ static void print_frame(text_config_t config, size_t align, const bt_entry_t *en
 static void print_simple(text_config_t config, size_t align, const bt_entry_t *entry)
 {
     const char *line = (entry->info & eResolveLine)
-        ? format(":%zu", entry->line)
+        ? format(":%zu", get_offset_line(config.config, entry->line))
         : format(" @ %s", fmt_coloured(config.colours, eColourRed, "0x%p", entry->address));
 
     // right align the symbol
@@ -176,6 +176,20 @@ bt_report_t *bt_report_new(void)
     report->max_consecutive_frames = 0;
     report->total_frames = 0;
     report->last_consecutive_index = 0;
+
+    return report;
+}
+
+static void read_stacktrace_frame(void *user, const frame_t *frame)
+{
+    bt_report_add(user, frame);
+}
+
+bt_report_t *bt_report_collect(void)
+{
+    bt_report_t *report = bt_report_new();
+
+    stacktrace_read(read_stacktrace_frame, report);
 
     return report;
 }

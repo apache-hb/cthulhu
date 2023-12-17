@@ -54,12 +54,13 @@ void text_report_simple(
     text_config_t config,
     IN_NOTNULL const event_t *event);
 
-
 // backtrace reporting
 
 typedef struct bt_report_t bt_report_t;
 
 bt_report_t *bt_report_new(void);
+
+bt_report_t *bt_report_collect(void);
 
 void bt_report_add(
     IN_NOTNULL bt_report_t *report,

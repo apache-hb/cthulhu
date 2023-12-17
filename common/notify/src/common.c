@@ -170,6 +170,13 @@ line_t get_line_number(file_config_t config, const node_t *node)
     return where.first_line + 1;
 }
 
+size_t get_offset_line(file_config_t config, size_t line)
+{
+    if (config.zeroth_line) return line;
+
+    return line - 1;
+}
+
 size_t get_num_width(size_t num)
 {
     size_t width = 0;

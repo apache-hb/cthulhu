@@ -20,6 +20,7 @@ char *fmt_node(file_config_t config, const node_t *node);
 char *fmt_coloured(text_colour_t colours, colour_t idx, const char *fmt, ...);
 
 size_t get_line_number(file_config_t config, const node_t *node);
+size_t get_offset_line(file_config_t config, size_t line);
 
 /// @brief get the width of a number if it were printed as base10
 size_t get_num_width(size_t num);

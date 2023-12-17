@@ -194,18 +194,6 @@ static scan_t *scan_string(const char *name, const char *lang, const char *sourc
     return scan_io(begin_reports(), lang, io, ctu_default_alloc());
 }
 
-typedef struct frame_print_t
-{
-    bt_report_t *report;
-} frame_print_t;
-
-static void print_frame(void *user, const frame_t *frame)
-{
-    frame_print_t *config = user;
-
-    bt_report_add(config->report, frame);
-}
-
 void print_backtrace(void)
 {
     io_t *io = io_blob("backtrace", 0x1000, eAccessWrite | eAccessText);
@@ -217,13 +205,9 @@ void print_backtrace(void)
         .io = io
     };
 
-    frame_print_t it = {
-        .report = bt_report_new()
-    };
+    bt_report_t *report = bt_report_collect();
 
-    stacktrace_read(print_frame, &it);
-
-    bt_report_finish(config, it.report);
+    bt_report_finish(config, report);
 
     const void *data = io_map(io);
     size_t size = io_size(io);
