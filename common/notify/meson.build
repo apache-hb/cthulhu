@@ -1,6 +1,8 @@
 src = [
     'src/notify.c',
+    'src/colour.c',
     'src/common.c',
+
     'src/text_rich.c',
     'src/text_simple.c',
     'src/text_stacktrace.c'

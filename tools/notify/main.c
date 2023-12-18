@@ -2,6 +2,7 @@
 
 #include "memory/memory.h"
 
+#include "notify/colour.h"
 #include "notify/notify.h"
 #include "notify/text.h"
 
@@ -201,7 +202,7 @@ void print_backtrace(void)
         .config = {
             .zeroth_line = false
         },
-        .colours = kDefaultColour,
+        .colours = &kDefaultColour,
         .io = io
     };
 
@@ -257,7 +258,7 @@ int main()
         .config = {
             .zeroth_line = false,
         },
-        .colours = kDefaultColour,
+        .colours = &kDefaultColour,
         .io = io_rich
     };
 
@@ -265,7 +266,7 @@ int main()
         .config = {
             .zeroth_line = false,
         },
-        .colours = kDefaultColour,
+        .colours = &kDefaultColour,
         .io = io_simple
     };
 

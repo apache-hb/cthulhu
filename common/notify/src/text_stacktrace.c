@@ -83,12 +83,12 @@ static size_t get_symbol_padding(size_t align, const bt_entry_t *entry)
     return pad;
 }
 
-static const char *fmt_recurse(const bt_entry_t *entry)
+static const char *fmt_recurse(const text_colour_t *colour, const bt_entry_t *entry)
 {
     if (entry->recurse == 0)
         return "";
 
-    char *fmt = fmt_coloured(kDefaultColour, eColourYellow, "%zu", entry->recurse);
+    char *fmt = fmt_coloured(colour, eColourYellow, "%zu", entry->recurse);
 
     return format(" x %s", fmt);
 }
@@ -98,7 +98,7 @@ static void print_frame(text_config_t config, size_t align, const bt_entry_t *en
     // right align the address
     char *addr = fmt_align(align, "0x%p", entry->address);
     char *coloured = fmt_coloured(config.colours, eColourRed, "%s", addr);
-    io_printf(config.io, "+%s%s\n", coloured, fmt_recurse(entry));
+    io_printf(config.io, "+%s%s\n", coloured, fmt_recurse(config.colours, entry));
 }
 
 static void print_simple(text_config_t config, size_t align, const bt_entry_t *entry)
@@ -113,7 +113,7 @@ static void print_simple(text_config_t config, size_t align, const bt_entry_t *e
 
     char *symbol = fmt_coloured(config.colours, eColourBlue, "%s", entry->symbol);
 
-    const char *recurse = fmt_recurse(entry);
+    const char *recurse = fmt_recurse(config.colours, entry);
 
     if (entry->info & eResolveFile)
     {

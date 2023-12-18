@@ -140,11 +140,14 @@ USE_DECL void text_report_simple(text_config_t config, const event_t *event)
     const char *sev = get_severity_name(diagnostic->severity);
     colour_t col = get_severity_colour(diagnostic->severity);
 
+    where_t where = node_get_location(event->node);
     const char *path = fmt_node(config.config, event->node);
-    const char *lvl = fmt_coloured(config.colours, col, "%s:", sev);
-    const char *path_coloured = fmt_coloured(config.colours, eColourBlue, "%s:", path);
+    const char *lvl = fmt_coloured(config.colours, col, "%s %s:", sev, diagnostic->id);
+    size_t line = get_offset_line(config.config, where.first_line);
 
-    io_printf(config.io, "=== %s %s %s [%s] ===\n", path_coloured, lvl, event->message, diagnostic->id);
+    const char *path_coloured = fmt_coloured(config.colours, eColourBlue, "%s(%zu):", path, line);
+
+    io_printf(config.io, "%s %s %s:\n", path_coloured, lvl, event->message);
 
     print_segments(config, event);
 

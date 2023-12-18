@@ -1,7 +1,6 @@
 #include "common.h"
 
 #include "memory/memory.h"
-#include "notify/format.h"
 
 #include "base/panic.h"
 #include "core/macros.h"
@@ -152,14 +151,14 @@ char *fmt_node(file_config_t config, const node_t *node)
     }
 }
 
-char *fmt_coloured(text_colour_t colours, colour_t idx, const char *fmt, ...)
+char *fmt_coloured(const text_colour_t *colours, colour_t idx, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
     char *msg = vformat(fmt, args);
     va_end(args);
 
-    return format("%s%s%s", colours.colours[idx], msg, colours.reset);
+    return format("%s%s%s", colour_get(colours, idx), msg, colour_reset(colours));
 }
 
 line_t get_line_number(file_config_t config, const node_t *node)

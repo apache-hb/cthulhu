@@ -1,7 +1,8 @@
 #pragma once
 
+#include "notify/text.h"
 #include "notify/notify.h"
-#include "notify/format.h"
+#include "notify/colour.h"
 
 #include <stddef.h>
 
@@ -17,7 +18,7 @@ typevec_t *all_segments_in_scan(const typevec_t *segments, const node_t *node);
 void segments_sort(typevec_t *segments);
 
 char *fmt_node(file_config_t config, const node_t *node);
-char *fmt_coloured(text_colour_t colours, colour_t idx, const char *fmt, ...);
+char *fmt_coloured(const text_colour_t *colours, colour_t idx, const char *fmt, ...);
 
 size_t get_line_number(file_config_t config, const node_t *node);
 size_t get_offset_line(file_config_t config, size_t line);

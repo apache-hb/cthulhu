@@ -20,6 +20,8 @@ typedef enum colour_t
     eColourCount
 } colour_t;
 
+// TODO: rework colours to be more flexible
+
 /// @brief a colour pallete
 typedef struct text_colour_t
 {
@@ -30,14 +32,10 @@ typedef struct text_colour_t
     const char *reset;
 } text_colour_t;
 
-/// @brief the configuration for a file
-typedef struct file_config_t
-{
-    /// @brief the zeroth line of a file is the first line
-    bool zeroth_line;
-} file_config_t;
-
 extern const text_colour_t kDisabledColour;
 extern const text_colour_t kDefaultColour;
+
+const char *colour_get(const text_colour_t *colours, colour_t idx);
+const char *colour_reset(const text_colour_t *colours);
 
 END_API
