@@ -60,6 +60,10 @@ GFI = good first issue
 
 <h3>Backlog</h3>
 
+- make backtrace formats prettier
+    - fix the frame index formatting
+    - figure out the off by one errors in line numbers
+
 - properly prefix the entire compiler (GFI)
   - will make writing plugins easier in the future
 

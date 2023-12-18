@@ -1,5 +1,6 @@
 #include "common.h"
 
+#include "io/io.h"
 #include "memory/memory.h"
 
 #include "base/panic.h"
@@ -191,7 +192,7 @@ typedef struct lineinfo_t
 
 typedef struct text_cache_t
 {
-    const scan_t *scan;
+    io_t *io;
     text_view_t source;
 
     typevec_t *line_info;
@@ -222,31 +223,42 @@ static void load_lineinfo(text_cache_t *text)
     }
 }
 
-text_cache_t *text_cache_new(const scan_t *scan)
+text_cache_t *text_cache_new(io_t *io)
 {
-    CTASSERT(scan != NULL);
+    CTASSERT(io != NULL);
 
     text_view_t view = {
-        .text = scan_text(scan),
-        .size = scan_size(scan),
+        .text = io_map(io),
+        .size = io_size(io)
     };
 
     text_cache_t *cache = ctu_malloc(sizeof(text_cache_t));
-    cache->scan = scan;
+    cache->io = io;
     cache->source = view;
     cache->line_info = typevec_new(sizeof(lineinfo_t), 32);
 
-    load_lineinfo(cache);
+    if (io_error(io) == 0)
+        load_lineinfo(cache);
 
     return cache;
+}
+
+void text_cache_delete(text_cache_t *cache)
+{
+    CTASSERT(cache != NULL);
+
+    io_close(cache->io);
+    typevec_delete(cache->line_info);
+    ctu_free(cache);
 }
 
 text_view_t cache_get_line(text_cache_t *cache, size_t line)
 {
     CTASSERT(cache != NULL);
 
-    size_t len = typevec_len(cache->line_info);
-    if (len <= line)
+    bool has_line = typevec_len(cache->line_info) > line;
+
+    if (!has_line)
     {
         text_view_t view = {
             .text = "",
@@ -264,6 +276,20 @@ text_view_t cache_get_line(text_cache_t *cache, size_t line)
     };
 
     return view;
+}
+
+size_t cache_count_lines(text_cache_t *cache)
+{
+    CTASSERT(cache != NULL);
+
+    return typevec_len(cache->line_info);
+}
+
+bool cache_io_valid(text_cache_t *cache)
+{
+    CTASSERT(cache != NULL);
+
+    return io_error(cache->io) == 0;
 }
 
 #if 0

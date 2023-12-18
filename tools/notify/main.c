@@ -195,17 +195,12 @@ static scan_t *scan_string(const char *name, const char *lang, const char *sourc
     return scan_io(begin_reports(), lang, io, ctu_default_alloc());
 }
 
-void print_backtrace(void)
+static void print_backtrace(text_config_t base_config)
 {
     io_t *io = io_blob("backtrace", 0x1000, eAccessWrite | eAccessText);
-    text_config_t config = {
-        .config = {
-            .zeroth_line = false,
-            .print_source = true
-        },
-        .colours = colour_get_default(),
-        .io = io
-    };
+
+    text_config_t config = base_config;
+    config.io = io;
 
     bt_report_t *report = bt_report_collect();
 
@@ -217,15 +212,15 @@ void print_backtrace(void)
     fwrite(data, size, 1, stdout);
 }
 
-int recurse(int x)
+int recurse(int x, text_config_t base_config)
 {
     if (x == 0)
     {
-        print_backtrace();
+        print_backtrace(base_config);
         return 0;
     }
 
-    return recurse(x - 1);
+    return recurse(x - 1, base_config);
 }
 
 int main()
@@ -303,6 +298,22 @@ int main()
 
     fprintf(stdout, "\n=== backtrace ===\n\n");
 
-    recurse(15);
-    recurse(1000);
+    text_config_t bt_config1 = {
+        .config = {
+            .zeroth_line = false,
+            .print_source = true
+        },
+        .colours = colour_get_default()
+    };
+
+    text_config_t bt_config2 = {
+        .config = {
+            .zeroth_line = false,
+            .print_source = false
+        },
+        .colours = colour_get_disabled()
+    };
+
+    recurse(15, bt_config1);
+    recurse(1000, bt_config2);
 }

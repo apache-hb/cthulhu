@@ -35,7 +35,7 @@ typedef struct symbol_t
 typedef struct frame_t
 {
     /// @brief the frame address
-    uintptr_t address;
+    uint_least64_t address;
 } frame_t;
 
 typedef enum frame_resolve_t

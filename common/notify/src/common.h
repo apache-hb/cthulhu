@@ -31,10 +31,11 @@ size_t get_num_width(size_t num);
 
 char *fmt_align(size_t width, const char *fmt, ...);
 
-
-
 typedef struct text_cache_t text_cache_t;
 
-text_cache_t *text_cache_new(const scan_t *scan);
+text_cache_t *text_cache_new(io_t *io);
+void text_cache_delete(text_cache_t *cache);
 
 text_view_t cache_get_line(text_cache_t *cache, size_t line);
+size_t cache_count_lines(text_cache_t *cache);
+bool cache_io_valid(text_cache_t *cache);

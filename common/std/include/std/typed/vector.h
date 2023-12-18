@@ -14,13 +14,15 @@ BEGIN_API
 
 typedef struct typevec_t typevec_t;
 
+void typevec_delete(OUT_PTR_INVALID typevec_t *vec);
+
 /// @brief create a new typed vector
 ///
 /// @param size the size of the type
 /// @param len the initial length of the vector
 ///
 /// @return the new vector
-NODISCARD
+NODISCARD CT_ALLOC(typevec_delete)
 typevec_t *typevec_new(IN_RANGE(>, 0) size_t size, size_t len);
 
 /// @brief create a new typed vector with an initial size and length
@@ -31,7 +33,7 @@ typevec_t *typevec_new(IN_RANGE(>, 0) size_t size, size_t len);
 /// @param len the initial length of the vector
 ///
 /// @return the new vector
-NODISCARD
+NODISCARD CT_ALLOC(typevec_delete)
 typevec_t *typevec_of(IN_RANGE(>, 0) size_t size, size_t len);
 
 /// @brief create a new typed vector with an initial first value
@@ -40,7 +42,7 @@ typevec_t *typevec_of(IN_RANGE(>, 0) size_t size, size_t len);
 /// @param value the initial value
 ///
 /// @return the new vector
-NODISCARD
+NODISCARD CT_ALLOC(typevec_delete)
 typevec_t *typevec_init(IN_RANGE(>, 0) size_t size, IN_NOTNULL const void *value);
 
 /// @brief get the length of a vector

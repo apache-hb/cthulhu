@@ -38,6 +38,14 @@ static typevec_t *typevec_create(size_t type_size, size_t len)
     return vec;
 }
 
+void typevec_delete(typevec_t *vec)
+{
+    CTASSERT(vec != NULL);
+
+    ctu_free(vec->data);
+    ctu_free(vec);
+}
+
 USE_DECL
 typevec_t *typevec_new(size_t size, size_t len)
 {

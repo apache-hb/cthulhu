@@ -8,8 +8,10 @@
 
 #include "stacktrace/stacktrace.h"
 
+#include "std/map.h"
 #include "std/str.h"
 #include "std/typed/vector.h"
+#include <ctype.h>
 #include <string.h>
 
 typedef struct bt_entry_t
@@ -48,9 +50,7 @@ static size_t get_max_symbol_width(const bt_report_t *report)
     CTASSERT(report != NULL);
 
     if (report->max_consecutive_frames == 0)
-    {
         return report->longest_symbol;
-    }
 
     // +3 for the ` x ` suffix
     return report->longest_symbol + 3 + get_num_width(report->max_consecutive_frames);
@@ -65,7 +65,6 @@ static size_t get_max_line_width(const bt_report_t *report)
     if (report->max_consecutive_frames == 0)
         return width;
 
-
     size_t span = get_num_width(report->last_consecutive_index - report->max_consecutive_frames) + 2 + get_num_width(report->last_consecutive_index);
 
     return span;
@@ -73,6 +72,8 @@ static size_t get_max_line_width(const bt_report_t *report)
 
 static size_t get_symbol_padding(size_t align, const bt_entry_t *entry)
 {
+    if (align == 0) return 0;
+
     size_t pad = align - strlen(entry->symbol);
 
     if (entry->recurse == 0)
@@ -93,27 +94,79 @@ static const char *fmt_recurse(const text_colour_t *colour, const bt_entry_t *en
     return format(" x %s", fmt);
 }
 
-static void print_frame(text_config_t config, size_t align, const bt_entry_t *entry)
+// state for a backtrace format run
+typedef struct bt_format_t
 {
+    /// symbol name right align width
+    size_t symbol_align;
+
+    size_t line_align;
+
+    /// formatting config
+    text_config_t config;
+
+    /// the file cache
+    /// map_t<const char*, text_cache_t*>
+    map_t *file_cache;
+
+    /// current frame index
+    size_t index;
+} bt_format_t;
+
+static void print_frame_index(bt_format_t *pass, const bt_entry_t *entry, size_t width)
+{
+    text_config_t config = pass->config;
+    if (entry->recurse == 0)
+    {
+        char *line = fmt_align(width, "%zu", pass->index);
+        char *idx = fmt_coloured(config.colours, eColourCyan, "[%s]", line);
+
+        io_printf(config.io, "%s ", idx);
+
+        pass->index += 1;
+    }
+    else
+    {
+        char *start = fmt_align(width, "%zu..%zu", pass->index, pass->index + entry->recurse);
+        char *idx = fmt_coloured(config.colours, eColourCyan, "[%s]", start);
+
+        io_printf(config.io, "%s ", idx);
+
+        pass->index += entry->recurse + 1;
+    }
+}
+
+// print a symbol with no extra info
+static void print_frame(bt_format_t *pass, const bt_entry_t *entry)
+{
+    text_config_t config = pass->config;
+
+    print_frame_index(pass, entry, pass->line_align);
+
     // right align the address
-    char *addr = fmt_align(align, "0x%p", entry->address);
+    char *addr = fmt_align(pass->symbol_align, "0x%p", entry->address);
     char *coloured = fmt_coloured(config.colours, eColourRed, "%s", addr);
     io_printf(config.io, "+%s%s\n", coloured, fmt_recurse(config.colours, entry));
 }
 
-static void print_simple(text_config_t config, size_t align, const bt_entry_t *entry)
+// we know symbol info but not file info
+static void print_simple(bt_format_t *pass, const bt_entry_t *entry)
 {
+    text_config_t config = pass->config;
+
     const char *line = (entry->info & eResolveLine)
         ? format(":%zu", get_offset_line(config.config, entry->line))
         : format(" @ %s", fmt_coloured(config.colours, eColourRed, "0x%p", entry->address));
 
     // right align the symbol
-    size_t pad = get_symbol_padding(align, entry);
+    size_t pad = get_symbol_padding(pass->symbol_align, entry);
     char *padding = str_repeat(" ", pad);
 
     char *symbol = fmt_coloured(config.colours, eColourBlue, "%s", entry->symbol);
 
     const char *recurse = fmt_recurse(config.colours, entry);
+
+    print_frame_index(pass, entry, pass->line_align);
 
     if (entry->info & eResolveFile)
     {
@@ -125,26 +178,164 @@ static void print_simple(text_config_t config, size_t align, const bt_entry_t *e
     }
 }
 
-static void print_source(text_config_t config, size_t align, const bt_entry_t *entry)
+static text_cache_t *get_file(bt_format_t *format, const char *path)
 {
+    CTASSERT(format != NULL);
+    CTASSERT(path != NULL);
+
+    file_config_t config = format->config.config;
+    if (!config.print_source) return NULL;
+
+    text_cache_t *cache = map_get(format->file_cache, path);
+    if (cache != NULL && cache_io_valid(cache)) return cache;
+
+    io_t *result = io_file(path, eAccessRead | eAccessText);
+    text_cache_t *text = text_cache_new(result);
+
+    // always insert the cache, even if it is invalid
+    // this way we avoid trying to open the file again
+    map_set(format->file_cache, path, text);
+    if (cache_io_valid(text))
+        return text;
+
+    return NULL;
+}
+
+static bool is_text_empty(const text_view_t *view)
+{
+    for (size_t i = 0; i < view->size; i++)
+        if (!isspace(view->text[i]))
+            return false;
+
+    return true;
+}
+
+static bool is_line_empty(text_cache_t *cache, size_t line)
+{
+    text_view_t view = cache_get_line(cache, line);
+    return is_text_empty(&view);
+}
+
+static bool print_single_line(text_config_t config, text_cache_t *cache, size_t data_line, size_t align, bool always_print)
+{
+    text_view_t text = cache_get_line(cache, data_line);
+    if (!always_print && is_text_empty(&text))
+        return false;
+
+    char *line_padding = str_repeat(" ", align + 1);
+    io_printf(config.io, "%s | %.*s\n", line_padding, (int)text.size, text.text);
+
+    return true;
+}
+
+static void print_with_source(bt_format_t *format, const bt_entry_t *entry, text_cache_t *cache)
+{
+    text_config_t config = format->config;
+
+    size_t line = get_offset_line(config.config, entry->line);
+    size_t data_line = entry->line - 2;
+
+    size_t align = get_num_width(line + 2);
+
+    print_frame_index(format, entry, 0);
+
+    io_printf(config.io, "%s\n", fmt_coloured(config.colours, eColourBlue, "%s", entry->symbol));
+    io_printf(config.io, "%s => %s:%zu\n", str_repeat(" ", align - 2), entry->file, line);
+
+    // if this line is not empty, we need to print the next line unconditionally
+    bool was_empty = false;
+    if (data_line > 2)
+    {
+        was_empty = print_single_line(config, cache, data_line - 2, align, false);
+    }
+
+    // if there is 1 line before the line we are printing
+    if (data_line > 1)
+    {
+        print_single_line(config, cache, data_line - 1, align, was_empty);
+    }
+
+    text_view_t view = cache_get_line(cache, data_line);
+    char *line_num = fmt_align(align, "%zu", line);
+    char *line_fmt = fmt_coloured(config.colours, eColourWhite, " %s > %.*s\n", line_num, (int)view.size, view.text);
+    io_printf(config.io, "%s", line_fmt);
+
+    size_t len = cache_count_lines(cache);
+    bool print_after = (data_line + 2 < len) && !is_line_empty(cache, data_line + 2);
+
+    if (data_line + 1 < len)
+    {
+        print_single_line(config, cache, data_line + 1, align, print_after);
+    }
+
+    if (data_line + 2 < len)
+    {
+        // the final line is always optional
+        print_single_line(config, cache, data_line + 2, align, false);
+    }
+}
+
+// we may have source information
+static void print_source(bt_format_t *pass, const bt_entry_t *entry)
+{
+    // we found the file for this entry
     if (entry->info & eResolveFile)
     {
-        io_t *io = io_file(entry->file, eAccessRead | eAccessText);
-        if (io_error(io) != 0)
+        text_cache_t *cache = get_file(pass, entry->file);
+        if (cache == NULL)
         {
-            print_simple(config, align, entry);
+            // we know the file but we dont have it on disk
+            print_simple(pass, entry);
         }
         else
         {
-            // TODO: print actual source text
-            print_simple(config, align, entry);
+            // we have the file on disk
+            print_with_source(pass, entry, cache);
         }
-
-        io_close(io);
     }
     else
     {
-        print_simple(config, align, entry);
+        // no file found, just print the symbol
+        print_simple(pass, entry);
+    }
+}
+
+USE_DECL
+void bt_report_finish(text_config_t config, bt_report_t *report)
+{
+    CTASSERT(report != NULL);
+
+    bt_format_t pass = {
+        .symbol_align = get_max_symbol_width(report),
+        .line_align = get_max_line_width(report),
+        .config = config,
+        .file_cache = map_optimal(report->total_frames),
+        .index = 0,
+    };
+
+    size_t len = typevec_len(report->entries);
+    for (size_t i = 0; i < len; i++)
+    {
+        bt_entry_t *entry = typevec_offset(report->entries, i);
+        CTASSERT(entry != NULL);
+
+        if (entry->info == eResolveNothing)
+        {
+            print_frame(&pass, entry);
+        }
+        else
+        {
+            print_source(&pass, entry);
+        }
+    }
+
+    // close all the files
+    map_t *cache = pass.file_cache;
+    map_iter_t iter = map_iter(cache);
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+        text_cache_delete(entry.value);
     }
 }
 
@@ -224,50 +415,4 @@ void bt_report_add(bt_report_t *report, const frame_t *frame)
     report->longest_symbol = MAX(report->longest_symbol, symbol_len);
 
     typevec_push(report->entries, &entry);
-}
-
-USE_DECL
-void bt_report_finish(text_config_t config, bt_report_t *report)
-{
-    CTASSERT(report != NULL);
-
-    size_t width = get_max_line_width(report);
-
-    size_t symbol_align = get_max_symbol_width(report);
-
-    size_t index = 0;
-    size_t len = typevec_len(report->entries);
-    for (size_t i = 0; i < len; i++)
-    {
-        bt_entry_t *entry = typevec_offset(report->entries, i);
-        CTASSERT(entry != NULL);
-
-        if (entry->recurse == 0)
-        {
-            char *line = fmt_align(width, "%zu", index);
-            char *idx = fmt_coloured(config.colours, eColourCyan, "[%s]", line);
-
-            io_printf(config.io, "%s ", idx);
-
-            index += 1;
-        }
-        else
-        {
-            char *start = fmt_align(width, "%zu..%zu", index, index + entry->recurse);
-            char *idx = fmt_coloured(config.colours, eColourCyan, "[%s]", start);
-
-            io_printf(config.io, "%s ", idx);
-
-            index += entry->recurse + 1;
-        }
-
-        if (entry->info == eResolveNothing)
-        {
-            print_frame(config, symbol_align, entry);
-        }
-        else
-        {
-            print_source(config, symbol_align, entry);
-        }
-    }
 }
