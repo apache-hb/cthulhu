@@ -21,6 +21,11 @@ static void default_panic_handler(panic_t panic, const char *fmt, va_list args)
 #endif
 }
 
+panic_handler_t ctu_default_panic(void)
+{
+    return default_panic_handler;
+}
+
 panic_handler_t gPanicHandler = default_panic_handler;
 
 USE_DECL

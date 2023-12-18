@@ -91,7 +91,8 @@ frame_resolve_t frame_resolve_inner(const frame_t *frame, symbol_t *symbol)
 
         if (SymGetLineFromAddr64(process, frame->address, &disp.disp, &line))
         {
-            symbol->line = line.LineNumber;
+            // subtract 1 from the line number because dbghelp is 1-indexed
+            symbol->line = line.LineNumber - 1;
             strcpy_s(symbol->file, STACKTRACE_PATH_LENGTH, line.FileName);
 
             resolve |= eResolveLine | eResolveFile;

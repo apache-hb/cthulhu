@@ -228,19 +228,24 @@ static bool print_single_line(text_config_t config, text_cache_t *cache, size_t 
     return true;
 }
 
-static void print_with_source(bt_format_t *format, const bt_entry_t *entry, text_cache_t *cache)
+static void print_with_source(bt_format_t *pass, const bt_entry_t *entry, text_cache_t *cache)
 {
-    text_config_t config = format->config;
+    text_config_t config = pass->config;
 
     size_t line = get_offset_line(config.config, entry->line);
-    size_t data_line = entry->line - 2;
+    size_t data_line = entry->line - 1;
 
     size_t align = get_num_width(line + 2);
 
-    print_frame_index(format, entry, 0);
+    print_frame_index(pass, entry, 0);
 
-    io_printf(config.io, "%s\n", fmt_coloured(config.colours, eColourBlue, "%s", entry->symbol));
-    io_printf(config.io, "%s => %s:%zu\n", str_repeat(" ", align - 2), entry->file, line);
+    const char *recurse = fmt_recurse(config.colours, entry);
+    const char *fn = fmt_coloured(config.colours, eColourBlue, "%s", entry->symbol);
+
+    io_printf(config.io, "inside symbol %s%s\n", fn, recurse);
+
+    char *header = format("%s => %s:%zu", str_repeat(" ", align - 2), entry->file, line);
+    io_printf(config.io, "%s\n", header);
 
     // if this line is not empty, we need to print the next line unconditionally
     bool was_empty = false;
@@ -312,6 +317,12 @@ void bt_report_finish(text_config_t config, bt_report_t *report)
         .file_cache = map_optimal(report->total_frames),
         .index = 0,
     };
+
+    // print the header
+    if (config.config.print_header)
+    {
+        io_printf(config.io, " === backtrace (%zu frames) ===\n", report->total_frames);
+    }
 
     size_t len = typevec_len(report->entries);
     for (size_t i = 0; i < len; i++)

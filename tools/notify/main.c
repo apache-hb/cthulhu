@@ -10,6 +10,7 @@
 
 #include "scan/node.h"
 #include "stacktrace/stacktrace.h"
+#include "std/str.h"
 #include "std/vector.h"
 #include <stdio.h>
 
@@ -223,8 +224,72 @@ int recurse(int x, text_config_t base_config)
     return recurse(x - 1, base_config);
 }
 
-int main()
+static int rec3(int x, text_config_t base_config)
 {
+    if (x == 0)
+    {
+        print_backtrace(base_config);
+        return 0;
+    }
+
+    return recurse(x - 1, base_config);
+}
+
+static int inner(int x, text_config_t base_config)
+{
+    return rec3(x, base_config);
+}
+
+static int rec2(int x, int y, text_config_t base_config)
+{
+    if (x == 0)
+    {
+        return inner(y, base_config);
+    }
+
+    return rec2(x - 1, y, base_config);
+}
+
+static void do_backtrace(void)
+{
+    fprintf(stdout, "\n=== backtrace ===\n\n");
+
+    text_config_t bt_config2 = {
+        .config = {
+            .zeroth_line = false,
+            .print_source = true,
+            .print_header = true
+        },
+        .colours = colour_get_default()
+    };
+
+    text_config_t bt_config1 = {
+        .config = {
+            .zeroth_line = false,
+            .print_source = false,
+            .print_header = true
+        },
+        .colours = colour_get_default()
+    };
+
+    recurse(15, bt_config1);
+    recurse(1000, bt_config2);
+
+    rec2(200, 100, bt_config1);
+    rec2(5, 100, bt_config2);
+}
+
+int main(int argc, const char **argv)
+{
+    bool backtraces = false;
+    for (int i = 1; i < argc; i++)
+    {
+        if (str_equal(argv[i], "-bt"))
+        {
+            backtraces = true;
+        }
+    }
+
     stacktrace_init();
     os_init();
     scan_init();
@@ -296,24 +361,6 @@ int main()
 
     fwrite(data2, size2, 1, stdout);
 
-    fprintf(stdout, "\n=== backtrace ===\n\n");
-
-    text_config_t bt_config1 = {
-        .config = {
-            .zeroth_line = false,
-            .print_source = true
-        },
-        .colours = colour_get_default()
-    };
-
-    text_config_t bt_config2 = {
-        .config = {
-            .zeroth_line = false,
-            .print_source = false
-        },
-        .colours = colour_get_disabled()
-    };
-
-    recurse(15, bt_config1);
-    recurse(1000, bt_config2);
+    if (backtraces)
+        do_backtrace();
 }

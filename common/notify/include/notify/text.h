@@ -43,6 +43,10 @@ typedef struct file_config_t
 
     /// @brief should the source code be loaded and printed
     bool print_source;
+
+    /// @brief should the backtrace header be printed
+    /// @note this only applies to @a bt_report_finish
+    bool print_header;
 } file_config_t;
 
 typedef struct text_config_t

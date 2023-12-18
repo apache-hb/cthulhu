@@ -145,8 +145,10 @@ bool node_has_line(const node_t *node)
 
 size_t get_offset_line(file_config_t config, size_t line)
 {
+    // if the first line is 0, then we don't need to do anything
     if (config.zeroth_line) return line;
 
+    // otherwise, we need to subtract 1 from the line number
     return line == 0 ? line : line - 1;
 }
 
