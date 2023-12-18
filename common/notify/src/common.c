@@ -3,45 +3,13 @@
 #include "memory/memory.h"
 
 #include "base/panic.h"
-#include "core/macros.h"
 #include "scan/node.h"
 #include "std/map.h"
 #include "std/str.h"
+
 #include "std/typed/vector.h"
-#include "std/vector.h"
 
 #include <string.h>
-
-const text_colour_t kDisabledColour = {
-    .colours = {
-        [eColourRed] = "",
-        [eColourGreen] = "",
-        [eColourYellow] = "",
-        [eColourBlue] = "",
-        [eColourMagenta] = "",
-        [eColourCyan] = "",
-        [eColourWhite] = "",
-        [eColourDefault] = "",
-    },
-
-    .reset = "",
-};
-
-const text_colour_t kDefaultColour = {
-    .colours = {
-        [eColourRed] = ANSI_RED,
-        [eColourGreen] = ANSI_GREEN,
-        [eColourYellow] = ANSI_YELLOW,
-        [eColourBlue] = ANSI_BLUE,
-        [eColourMagenta] = ANSI_MAGENTA,
-        [eColourCyan] = ANSI_CYAN,
-        [eColourWhite] = ANSI_WHITE,
-        [eColourDefault] = ANSI_DEFAULT,
-    },
-
-    .reset = ANSI_RESET,
-};
-
 
 const char *get_severity_name(severity_t severity)
 {
@@ -88,7 +56,8 @@ static int segment_cmp(const void *lhs, const void *rhs)
     const scan_t *scan_lhs = node_get_scan(seg_lhs->node);
     const scan_t *scan_rhs = node_get_scan(seg_rhs->node);
 
-    CTASSERTF(scan_lhs == scan_rhs, "segments must be in the same scan (%s and %s)", scan_path(scan_lhs), scan_path(scan_rhs));
+    CTASSERTF(scan_lhs == scan_rhs, "segments must be in the same scan (%s and %s)",
+              scan_path(scan_lhs), scan_path(scan_rhs));
 
     where_t where_lhs = node_get_location(seg_lhs->node);
     where_t where_rhs = node_get_location(seg_rhs->node);
@@ -142,8 +111,7 @@ char *fmt_node(file_config_t config, const node_t *node)
     {
         line_t first_line = get_line_number(config, node);
 
-        return format("%s:%" PRI_LINE ":%" PRI_COLUMN "", path, first_line,
-                      where.first_column);
+        return format("%s:%" PRI_LINE ":%" PRI_COLUMN "", path, first_line, where.first_column);
     }
     else
     {
@@ -169,11 +137,16 @@ line_t get_line_number(file_config_t config, const node_t *node)
     return where.first_line + 1;
 }
 
+bool node_has_line(const node_t *node)
+{
+    return !node_is_builtin(node);
+}
+
 size_t get_offset_line(file_config_t config, size_t line)
 {
     if (config.zeroth_line) return line;
 
-    return line - 1;
+    return line == 0 ? line : line - 1;
 }
 
 size_t get_num_width(size_t num)
@@ -209,6 +182,91 @@ char *fmt_align(size_t width, const char *fmt, ...)
 
     return result;
 }
+
+typedef struct lineinfo_t
+{
+    size_t offset;
+    size_t length;
+} lineinfo_t;
+
+typedef struct text_cache_t
+{
+    const scan_t *scan;
+    text_view_t source;
+
+    typevec_t *line_info;
+} text_cache_t;
+
+// load the start and length of each line in the file
+static void load_lineinfo(text_cache_t *text)
+{
+    size_t offset = 0;
+
+    const char *start = text->source.text;
+    const char *end = start + text->source.size;
+
+    while (start < end)
+    {
+        const char *next = strchr(start, '\n');
+        if (next == NULL) next = end;
+
+        lineinfo_t info = {
+            .offset = offset,
+            .length = next - start,
+        };
+
+        typevec_push(text->line_info, &info);
+
+        offset += info.length + 1;
+        start = next + 1;
+    }
+}
+
+text_cache_t *text_cache_new(const scan_t *scan)
+{
+    CTASSERT(scan != NULL);
+
+    text_view_t view = {
+        .text = scan_text(scan),
+        .size = scan_size(scan),
+    };
+
+    text_cache_t *cache = ctu_malloc(sizeof(text_cache_t));
+    cache->scan = scan;
+    cache->source = view;
+    cache->line_info = typevec_new(sizeof(lineinfo_t), 32);
+
+    load_lineinfo(cache);
+
+    return cache;
+}
+
+text_view_t cache_get_line(text_cache_t *cache, size_t line)
+{
+    CTASSERT(cache != NULL);
+
+    size_t len = typevec_len(cache->line_info);
+    if (len <= line)
+    {
+        text_view_t view = {
+            .text = "",
+            .size = 0
+        };
+
+        return view; // line is out of bounds. why?
+    }
+
+    lineinfo_t *info = typevec_offset(cache->line_info, line);
+
+    text_view_t view = {
+        .text = cache->source.text + info->offset,
+        .size = info->length
+    };
+
+    return view;
+}
+
+#if 0
 
 typedef struct lineinfo_t
 {
@@ -436,3 +494,5 @@ size_t sparse_text_count(const sparse_text_t *text)
 
     return map_count(text->line_cache);
 }
+
+#endif

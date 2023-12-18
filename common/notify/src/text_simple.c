@@ -131,7 +131,21 @@ static void print_segments(text_config_t config, const event_t *event)
     print_segment_list(config, none, entry_count + 1);
 }
 
-USE_DECL void text_report_simple(text_config_t config, const event_t *event)
+static char *fmt_path(file_config_t config, const node_t *node)
+{
+    if (!node_has_line(node))
+    {
+        return fmt_node(config, node);
+    }
+
+    where_t where = node_get_location(node);
+    size_t line = get_offset_line(config, where.first_line);
+
+    return format("%s(%zu)", fmt_node(config, node), line);
+}
+
+USE_DECL
+void text_report_simple(text_config_t config, const event_t *event)
 {
     CTASSERT(config.io != NULL);
     CTASSERT(event != NULL);
@@ -140,12 +154,10 @@ USE_DECL void text_report_simple(text_config_t config, const event_t *event)
     const char *sev = get_severity_name(diagnostic->severity);
     colour_t col = get_severity_colour(diagnostic->severity);
 
-    where_t where = node_get_location(event->node);
-    const char *path = fmt_node(config.config, event->node);
+    const char *path = fmt_path(config.config, event->node);
     const char *lvl = fmt_coloured(config.colours, col, "%s %s:", sev, diagnostic->id);
-    size_t line = get_offset_line(config.config, where.first_line);
 
-    const char *path_coloured = fmt_coloured(config.colours, eColourBlue, "%s(%zu):", path, line);
+    const char *path_coloured = fmt_coloured(config.colours, eColourBlue, "%s:", path);
 
     io_printf(config.io, "%s %s %s:\n", path_coloured, lvl, event->message);
 

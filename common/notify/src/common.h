@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/text.h"
 #include "notify/text.h"
 #include "notify/notify.h"
 #include "notify/colour.h"
@@ -21,6 +22,8 @@ char *fmt_node(file_config_t config, const node_t *node);
 char *fmt_coloured(const text_colour_t *colours, colour_t idx, const char *fmt, ...);
 
 size_t get_line_number(file_config_t config, const node_t *node);
+
+bool node_has_line(const node_t *node);
 size_t get_offset_line(file_config_t config, size_t line);
 
 /// @brief get the width of a number if it were printed as base10
@@ -28,31 +31,10 @@ size_t get_num_width(size_t num);
 
 char *fmt_align(size_t width, const char *fmt, ...);
 
-#if 0
-/// sparse reports are an efficient and easy to manipulate in-memory representation of a report
-/// and its associated source code.
 
-typedef struct sparse_text_t sparse_text_t;
-typedef struct sparse_report_t sparse_report_t;
 
-/// @brief create a new sparse report
-/// this builds the internal data structures for the report
-///
-/// @param event the event to create the report from
-///
-/// @return the new sparse report
-sparse_report_t *sparse_report_new(const event_t *event);
+typedef struct text_cache_t text_cache_t;
 
-/// @brief get all the distinct source files in a sparse report
-/// the primary files is first, then this is sorted by the file name
-/// for the rest of the files.
-///
-/// @param report the report to get the source files of
-///
-/// @return the source files in @p report
-vector_t *sparse_report_get_files(const sparse_report_t *report);
+text_cache_t *text_cache_new(const scan_t *scan);
 
-size_t sparse_text_count(const sparse_text_t *text);
-
-const scan_t *sparse_get_scan(const sparse_text_t *text);
-#endif
+text_view_t cache_get_line(text_cache_t *cache, size_t line);

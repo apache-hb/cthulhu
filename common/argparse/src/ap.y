@@ -12,7 +12,7 @@
 }
 
 %code requires {
-    #include "ap_common.h"
+    #include "common.h"
     #define YYSTYPE APSTYPE
     #define YYLTYPE APLTYPE
 }

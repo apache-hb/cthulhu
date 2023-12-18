@@ -1,10 +1,10 @@
 #include "common.h"
 
-#include <objbase.h>
+#include <crtdbg.h>
 
 void os_init(void)
 {
-    _set_abort_behavior(0, _WRITE_ABORT_MSG);
+    _CrtSetReportMode(_CRT_ASSERT, 0);
 }
 
 os_result_t *win_result(DWORD error, const void *value, size_t size)

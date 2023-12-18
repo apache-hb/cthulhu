@@ -200,9 +200,10 @@ void print_backtrace(void)
     io_t *io = io_blob("backtrace", 0x1000, eAccessWrite | eAccessText);
     text_config_t config = {
         .config = {
-            .zeroth_line = false
+            .zeroth_line = false,
+            .print_source = true
         },
-        .colours = &kDefaultColour,
+        .colours = colour_get_default(),
         .io = io
     };
 
@@ -258,7 +259,7 @@ int main()
         .config = {
             .zeroth_line = false,
         },
-        .colours = &kDefaultColour,
+        .colours = colour_get_default(),
         .io = io_rich
     };
 
@@ -266,7 +267,7 @@ int main()
         .config = {
             .zeroth_line = false,
         },
-        .colours = &kDefaultColour,
+        .colours = colour_get_default(),
         .io = io_simple
     };
 

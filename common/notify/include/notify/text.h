@@ -40,6 +40,9 @@ typedef struct file_config_t
 {
     /// @brief the zeroth line of a file is the first line
     bool zeroth_line;
+
+    /// @brief should the source code be loaded and printed
+    bool print_source;
 } file_config_t;
 
 typedef struct text_config_t

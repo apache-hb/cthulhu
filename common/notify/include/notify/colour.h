@@ -6,6 +6,8 @@
 
 BEGIN_API
 
+typedef struct text_colour_t text_colour_t;
+
 typedef enum colour_t
 {
     eColourRed,
@@ -22,18 +24,8 @@ typedef enum colour_t
 
 // TODO: rework colours to be more flexible
 
-/// @brief a colour pallete
-typedef struct text_colour_t
-{
-    /// @brief the colour set
-    const char *colours[eColourCount];
-
-    /// @brief the reset colour
-    const char *reset;
-} text_colour_t;
-
-extern const text_colour_t kDisabledColour;
-extern const text_colour_t kDefaultColour;
+const text_colour_t *colour_get_default(void);
+const text_colour_t *colour_get_disabled(void);
 
 const char *colour_get(const text_colour_t *colours, colour_t idx);
 const char *colour_reset(const text_colour_t *colours);

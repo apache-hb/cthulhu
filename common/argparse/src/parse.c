@@ -1,4 +1,4 @@
-#include "ap_common.h"
+#include "common.h"
 
 #include "memory/memory.h"
 #include "std/vector.h"

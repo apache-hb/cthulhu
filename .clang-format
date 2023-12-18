@@ -5,6 +5,8 @@ IndentPPDirectives: AfterHash
 PPIndentWidth: 3
 BreakAfterAttributes: Always
 ColumnLimit: 100
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: true
 AttributeMacros:
     - CT_PRINTF
     - CONSTFN
