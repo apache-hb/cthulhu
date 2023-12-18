@@ -43,10 +43,15 @@ option('doxygen', type : 'feature',
     value : 'auto'
 )
 
-# static analysis options
+# build options
 
 option('analyze', type : 'feature',
     description : 'enable static code analysis',
+    value : 'disabled'
+)
+
+option('hardening', type : 'feature',
+    description : 'enable hardening flags',
     value : 'disabled'
 )
 

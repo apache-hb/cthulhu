@@ -34,7 +34,7 @@ static void runtime_init(void)
     GLOBAL_INIT();
 
     os_init();
-    stacktrace_init();
+    bt_init();
     scan_init();
 
     init_global_alloc(ctu_default_alloc());

@@ -101,7 +101,7 @@ static void test_panic_handler(panic_t panic, const char *fmt, va_list args)
 {
     if (!gExpectingPanic)
     {
-        stacktrace_print(stdout);
+        bt_print_trace(stdout);
 
         (void)printf("unexpected panic: %s:%zu: %s: ", panic.file, panic.line, panic.function);
         (void)vprintf(fmt, args);
@@ -118,7 +118,7 @@ static void test_panic_handler(panic_t panic, const char *fmt, va_list args)
 void test_install_panic_handler()
 {
     init_global_alloc(ctu_default_alloc());
-    stacktrace_init();
+    bt_init();
     gPanicHandler = test_panic_handler;
 }
 

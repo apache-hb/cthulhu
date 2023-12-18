@@ -4,14 +4,14 @@
 
 #include <dbghelp.h>
 
-void stacktrace_init(void)
+void bt_init(void)
 {
     SymInitialize(GetCurrentProcess(), NULL, TRUE);
     SymSetOptions(SYMOPT_LOAD_LINES);
 }
 
 USE_DECL
-const char *stacktrace_backend(void)
+const char *bt_backend(void)
 {
     return "dbghelp";
 }
@@ -36,7 +36,7 @@ union disp_t {
     DWORD64 disp64;
 };
 
-void stacktrace_read_inner(bt_frame_t callback, void *user)
+void bt_read_inner(bt_frame_t callback, void *user)
 {
     HANDLE thread = GetCurrentThread();
     HANDLE process = GetCurrentProcess();
@@ -69,7 +69,7 @@ void stacktrace_read_inner(bt_frame_t callback, void *user)
     }
 }
 
-frame_resolve_t frame_resolve_inner(const frame_t *frame, symbol_t *symbol)
+frame_resolve_t bt_resolve_inner(const frame_t *frame, symbol_t *symbol)
 {
     union disp_t disp = { 0 };
     IMAGEHLP_LINE64 line = { 0 };

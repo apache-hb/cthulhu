@@ -37,7 +37,8 @@ compiler_gui = get_option('compiler_gui').require(target == 'windows')
 unit_tests = get_option('unit_tests').disable_auto_if(is_release or meson.is_subproject())
 driver_tests = get_option('driver_tests').disable_auto_if(meson.is_subproject())
 
-analyze = get_option('analyze')
+opt_analyze = get_option('analyze')
+opt_hardening = get_option('hardening')
 
 warning_level = get_option('warning_level').to_int()
 
@@ -141,8 +142,24 @@ analyze_user_args = [
     '-Wno-analyzer-double-free'
 ]
 
-if analyze.enabled()
+if opt_analyze.enabled()
     user_args += cc.get_supported_arguments(analyze_user_args)
+endif
+
+harden_args = [
+    # msvc hardening args
+    '/GS', '/Gs', '/guard:cf',
+
+    # gcc hardening args
+    '-fstack-protector-all', '-fstack-clash-protection',
+    '-fcf-protection=full',
+
+    # other hardening args
+    '-D_FORTIFY_SOURCE=2'
+]
+
+if opt_hardening.enabled()
+    args += cc.get_supported_arguments(harden_args)
 endif
 
 add_project_arguments(args, language : [ 'c' ])
@@ -258,7 +275,9 @@ summary = {
         'Debug': is_debug,
         'Interfaces': ', '.join(get_option('interfaces')),
         'Languages': ', '.join(get_option('languages')),
-        'Memory tracing': trace_memory.allowed()
+        'Memory tracing': trace_memory.allowed(),
+        'Analyze': opt_analyze.enabled(),
+        'Hardening': opt_hardening.enabled()
     },
     'Graphical Interface': {
         'Enabled': compiler_gui.allowed(),
@@ -266,8 +285,7 @@ summary = {
     },
     'Testing': {
         'Unit tests': unit_tests,
-        'Driver tests': driver_tests,
-        'Analyze': analyze
+        'Driver tests': driver_tests
     },
     'Tools': {
         'Stacktrace': tool_stacktrace.allowed(),

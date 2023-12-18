@@ -610,7 +610,7 @@ static message_t *report_push(reports_t *reports, level_t level, const node_t *n
     if (level == eInternal)
     {
         report_send("internal error", message);
-        stacktrace_print(stderr);
+        bt_print_trace(stderr);
     }
     else
     {

@@ -279,18 +279,96 @@ static void do_backtrace(void)
     rec2(5, 100, bt_config2);
 }
 
+static void do_simple(logger_t *logs)
+{
+    io_t *io_simple = io_blob("simple_test", 0x1000, eAccessWrite);
+
+    text_config_t config2 = {
+        .config = {
+            .zeroth_line = false,
+        },
+        .colours = colour_get_default(),
+        .io = io_simple
+    };
+
+    vector_t *events = log_events(logs);
+    size_t count = vector_len(events);
+
+    for (size_t i = 0; i < count; i++)
+    {
+        event_t *event = vector_get(events, i);
+        text_report_simple(config2, event);
+
+        if (i != count - 1)
+        {
+            io_printf(io_simple, "\n");
+        }
+    }
+
+    fprintf(stdout, "\n=== simple text ===\n\n");
+
+    const void *data2 = io_map(io_simple);
+    size_t size2 = io_size(io_simple);
+
+    fwrite(data2, size2, 1, stdout);
+}
+
+static void do_rich(logger_t *logs)
+{
+    io_t *io_rich = io_blob("rich_test", 0x1000, eAccessWrite);
+
+    text_config_t config = {
+        .config = {
+            .zeroth_line = false,
+        },
+        .colours = colour_get_default(),
+        .io = io_rich
+    };
+
+    vector_t *events = log_events(logs);
+    size_t count = vector_len(events);
+
+    for (size_t i = 0; i < count; i++)
+    {
+        event_t *event = vector_get(events, i);
+        text_report_rich(config, event);
+
+        if (i != count - 1)
+        {
+            io_printf(io_rich, "\n");
+        }
+    }
+
+    const void *data1 = io_map(io_rich);
+    size_t size1 = io_size(io_rich);
+
+    fprintf(stdout, "=== rich text ===\n\n");
+
+    fwrite(data1, size1, 1, stdout);
+}
+
 int main(int argc, const char **argv)
 {
     bool backtraces = false;
+    bool simple = false;
+    bool rich = false;
     for (int i = 1; i < argc; i++)
     {
         if (str_equal(argv[i], "-bt"))
         {
             backtraces = true;
         }
+        else if (str_equal(argv[i], "-simple"))
+        {
+            simple = true;
+        }
+        else if (str_equal(argv[i], "-rich"))
+        {
+            rich = true;
+        }
     }
 
-    stacktrace_init();
+    bt_init();
     os_init();
     scan_init();
 
@@ -312,54 +390,18 @@ int main(int argc, const char **argv)
     event_invalid_import(logs, scan_main, scan_rhs);
     event_invalid_function(logs, scan_main);
 
-    io_t *io_rich = io_blob("rich_test", 0x1000, eAccessWrite);
-    io_t *io_simple = io_blob("simple_test", 0x1000, eAccessWrite);
-
-    text_config_t config = {
-        .config = {
-            .zeroth_line = false,
-        },
-        .colours = colour_get_default(),
-        .io = io_rich
-    };
-
-    text_config_t config2 = {
-        .config = {
-            .zeroth_line = false,
-        },
-        .colours = colour_get_default(),
-        .io = io_simple
-    };
-
-    vector_t *events = log_events(logs);
-    size_t count = vector_len(events);
-
-    for (size_t i = 0; i < count; i++)
+    if (!rich && !simple && !backtraces)
     {
-        event_t *event = vector_get(events, i);
-        text_report_rich(config, event);
-        text_report_simple(config2, event);
-
-        if (i != count - 1)
-        {
-            io_printf(io_rich, "\n");
-            io_printf(io_simple, "\n");
-        }
+        rich = true;
+        simple = true;
+        backtraces = true;
     }
 
-    const void *data1 = io_map(io_rich);
-    size_t size1 = io_size(io_rich);
+    if (rich)
+        do_rich(logs);
 
-    fprintf(stdout, "=== rich text ===\n\n");
-
-    fwrite(data1, size1, 1, stdout);
-
-    fprintf(stdout, "\n=== simple text ===\n\n");
-
-    const void *data2 = io_map(io_simple);
-    size_t size2 = io_size(io_simple);
-
-    fwrite(data2, size2, 1, stdout);
+    if (simple)
+        do_simple(logs);
 
     if (backtraces)
         do_backtrace();

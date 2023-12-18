@@ -450,7 +450,7 @@ void init_global()
     ed::install_panic_handler();
 
     os_init();
-    stacktrace_init();
+    bt_init();
     scan_init();
 }
 

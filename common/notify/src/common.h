@@ -31,11 +31,14 @@ size_t get_num_width(size_t num);
 
 char *fmt_align(size_t width, const char *fmt, ...);
 
+typedef struct map_t cache_map_t;
 typedef struct text_cache_t text_cache_t;
 
-text_cache_t *text_cache_new(io_t *io);
-void text_cache_delete(text_cache_t *cache);
+cache_map_t *cache_map_new(size_t size);
+void cache_map_delete(cache_map_t *map);
+
+text_cache_t *cache_emplace_file(cache_map_t *map, const char *path);
+text_cache_t *cache_emplace_scan(cache_map_t *map, const scan_t *scan);
 
 text_view_t cache_get_line(text_cache_t *cache, size_t line);
 size_t cache_count_lines(text_cache_t *cache);
-bool cache_io_valid(text_cache_t *cache);

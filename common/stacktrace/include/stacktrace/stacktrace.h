@@ -64,47 +64,34 @@ typedef void (*bt_frame_t)(void *user, const frame_t *frame);
 
 /// @brief initialize the stacktrace backend
 /// @note this function must be called before any other stacktrace function
-void stacktrace_init(void);
+void bt_init(void);
 
 /// @brief get the stacktrace backend name
 /// @return the stacktrace backend name
 RET_STRING
-const char *stacktrace_backend(void);
-
-/// @brief get a stacktrace from the current location
-/// @note this function is not thread safe
-/// @note @ref stacktrace_init must be called before calling this function
-///
-/// @param frames the frames to fill
-/// @param size the number of frames @p frames can hold
-///
-/// @return the number of frames filled
-RET_RANGE(<=, size)
-size_t stacktrace_get(
-        frame_t *frames, // OUT_WRITES(return)
-        IN_RANGE(>, 0) size_t size);
+const char *bt_backend(void);
 
 /// @brief get a stacktrace from the current location using a callback
 /// @note this function is not thread safe
-/// @note @ref stacktrace_init must be called before calling this function
+/// @note @ref bt_init must be called before calling this function
 ///
 /// @param callback the callback to call for each frame
 /// @param user the user data to pass to the callback
-void stacktrace_read(bt_frame_t callback, void *user);
+void bt_read(bt_frame_t callback, void *user);
 
 /// @brief resolve a frame to a symbol
 ///
-/// @note @ref stacktrace_init must be called before calling this function
+/// @note @ref bt_init must be called before calling this function
 ///
 /// @param frame the frame to resolve
 /// @param symbol the symbol to fill
-frame_resolve_t frame_resolve(IN_NOTNULL const frame_t *frame, symbol_t *symbol);
+frame_resolve_t bt_resolve_symbol(IN_NOTNULL const frame_t *frame, symbol_t *symbol);
 
 /// @brief print a stacktrace to a file
 /// @note this follows the same precondition as @ref stacktrace_get
 ///
 /// @param file the file to print to
-void stacktrace_print(IN_NOTNULL FILE *file);
+void bt_print_trace(IN_NOTNULL FILE *file);
 
 /// @}
 

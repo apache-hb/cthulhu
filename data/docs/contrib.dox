@@ -50,11 +50,19 @@
     - `lang` - language specific tests
     - `unit` - compiler code unit tests
 
+<h3>Coding rules</h3>
+
+1. All features that require platform specific code must have a reasonable fallback implementation.
+  - See @ref Stacktrace for an example of this, doing nothing can be a reasonable fallback.
+
+2. Everything must be implemented in standard C11
+  - No compiler extensions in common code
+
 <h3>Styleguide</h3>
 
 <h4>Declarations</h4>
   - new and delete methods should be named `type_new` and `type_delete` respectivley
-  - files contents should be in the following sequence
+  - files contents should be layed out in the following order
 
 ```c
 // includes

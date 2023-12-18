@@ -6,11 +6,11 @@ template<int I> void recurse() {
 
 template<>
 void recurse<0>() {
-    stacktrace_print(stdout);
+    bt_print_trace(stdout);
 }
 
 int main() {
-    stacktrace_init();
+    bt_init();
     recurse<10>();
     return 0;
 }

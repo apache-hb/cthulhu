@@ -9,7 +9,7 @@ has_unwind = cc.check_header('<unwind.h>', dependencies : unwind)
 if dbghlp.found()
     src += [ 'src/bt_dbghlp.c' ]
     stacktrace_deps = [ dbghlp ]
-elif unwind.found() and has_unwind
+elif has_unwind
     src += [ 'src/bt_unwind.c' ]
     stacktrace_deps = [ unwind ]
 else

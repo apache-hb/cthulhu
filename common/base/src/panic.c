@@ -17,7 +17,7 @@ static void default_panic_handler(panic_t panic, const char *fmt, va_list args)
     volatile char *ptr = NULL;
     *ptr = 0;
 #else
-    stacktrace_print(stderr);
+    bt_print_trace(stderr);
 #endif
 }
 

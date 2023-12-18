@@ -5,18 +5,18 @@
 
 static unw_context_t gContext;
 
-void stacktrace_init(void)
+void bt_init(void)
 {
     unw_getcontext(&gContext);
 }
 
 USE_DECL
-const char *stacktrace_backend(void)
+const char *bt_backend(void)
 {
     return "libunwind";
 }
 
-void stacktrace_read_inner(bt_frame_t callback, void *user)
+void bt_read_inner(bt_frame_t callback, void *user)
 {
     unw_cursor_t cursor;
     unw_word_t ip, sp;
@@ -36,7 +36,7 @@ void stacktrace_read_inner(bt_frame_t callback, void *user)
     }
 }
 
-frame_resolve_t frame_resolve_inner(const frame_t *frame, symbol_t *symbol)
+frame_resolve_t bt_resolve_inner(const frame_t *frame, symbol_t *symbol)
 {
     snprintf(symbol->name, sizeof(symbol->name), "0x%016" PRIxPTR, frame->address);
 

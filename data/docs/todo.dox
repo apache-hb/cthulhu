@@ -24,6 +24,9 @@ GFI = good first issue
 
 <h3>Important</h3>
 
+- find a way to nicely wrap exception info for segfaults
+    - need to wrap for client code to work across platforms
+
 - use SetUnhandledExceptionFilter on windows
     - this will allow us to get stack traces on unhandled exceptions
 
@@ -41,7 +44,7 @@ GFI = good first issue
     - x64
 
 - detect mutually recursive functions in stacktrace collection
-    - this is a bit tricky since we need to detect cycles in the call graph
+    - this is a bit tricky
 
 - valist forwarding
 - enum consts

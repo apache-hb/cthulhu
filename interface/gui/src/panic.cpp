@@ -73,7 +73,7 @@ static void trace_callback(void *user, const frame_t *frame)
 {
     auto& [symbol, info] = *reinterpret_cast<TraceCapture*>(user);
 
-    frame_resolve(frame, &symbol);
+    bt_resolve_symbol(frame, &symbol);
 
     StackFrame stack_frame = {
         .address = frame->address,
@@ -94,7 +94,7 @@ void PanicInfo::capture_trace(panic_t panic, const char *fmt, va_list args)
     frames.clear();
     frames.reserve(64);
 
-    stacktrace_read(trace_callback, &capture);
+    bt_read(trace_callback, &capture);
 
     info = panic;
     message = vformat(fmt, args);

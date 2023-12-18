@@ -225,7 +225,17 @@ static void load_lineinfo(text_cache_t *text)
     }
 }
 
-text_cache_t *text_cache_new(io_t *io)
+static text_cache_t *text_cache_new(io_t *io, text_view_t source, size_t len)
+{
+    text_cache_t *cache = ctu_malloc(sizeof(text_cache_t));
+    cache->io = io;
+    cache->source = source;
+    cache->line_info = typevec_new(sizeof(lineinfo_t), len);
+
+    return cache;
+}
+
+static text_cache_t *text_cache_io(io_t *io)
 {
     CTASSERT(io != NULL);
 
@@ -234,10 +244,7 @@ text_cache_t *text_cache_new(io_t *io)
         .size = io_size(io)
     };
 
-    text_cache_t *cache = ctu_malloc(sizeof(text_cache_t));
-    cache->io = io;
-    cache->source = view;
-    cache->line_info = typevec_new(sizeof(lineinfo_t), 32);
+    text_cache_t *cache = text_cache_new(io, view, 32);
 
     if (io_error(io) == 0)
         load_lineinfo(cache);
@@ -245,13 +252,85 @@ text_cache_t *text_cache_new(io_t *io)
     return cache;
 }
 
-void text_cache_delete(text_cache_t *cache)
+static text_cache_t *text_cache_scan(const scan_t *scan)
+{
+    CTASSERT(scan != NULL);
+
+    text_view_t view = scan_source(scan);
+
+    text_cache_t *cache = text_cache_new(NULL, view, 32);
+
+    load_lineinfo(cache);
+
+    return cache;
+}
+
+static void text_cache_delete(text_cache_t *cache)
 {
     CTASSERT(cache != NULL);
 
-    io_close(cache->io);
+    if (cache->io != NULL) io_close(cache->io);
     typevec_delete(cache->line_info);
     ctu_free(cache);
+}
+
+static bool cache_is_valid(text_cache_t *cache)
+{
+    CTASSERT(cache != NULL);
+
+    return cache->io != NULL && io_error(cache->io) == 0;
+}
+
+cache_map_t *cache_map_new(size_t size)
+{
+    return map_optimal(size);
+}
+
+void cache_map_delete(cache_map_t *map)
+{
+    CTASSERT(map != NULL);
+
+    map_iter_t iter = map_iter(map);
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+        text_cache_t *cache = entry.value;
+        text_cache_delete(cache);
+    }
+}
+
+text_cache_t *cache_emplace_file(cache_map_t *map, const char *path)
+{
+    CTASSERT(map != NULL);
+    CTASSERT(path != NULL);
+
+    text_cache_t *cache = map_get(map, path);
+    if (cache != NULL && cache_is_valid(cache)) return cache;
+
+    io_t *io = io_file(path, eAccessRead | eAccessText);
+    text_cache_t *text = text_cache_io(io);
+
+    // always insert the cache, even if it is invalid.
+    // this way we avoid trying to open the file again
+    map_set(map, path, text);
+    if (cache_is_valid(text)) return text;
+
+    return NULL;
+}
+
+text_cache_t *cache_emplace_scan(cache_map_t *map, const scan_t *scan)
+{
+    CTASSERT(map != NULL);
+    CTASSERT(scan != NULL);
+
+    text_cache_t *cache = map_get_ptr(map, scan);
+    if (cache != NULL && cache_is_valid(cache)) return cache;
+
+    // scan caches will never be invalid, so we can just insert them
+    text_cache_t *text = text_cache_scan(scan);
+    map_set_ptr(map, scan, text);
+
+    return text;
 }
 
 text_view_t cache_get_line(text_cache_t *cache, size_t line)
@@ -285,13 +364,6 @@ size_t cache_count_lines(text_cache_t *cache)
     CTASSERT(cache != NULL);
 
     return typevec_len(cache->line_info);
-}
-
-bool cache_io_valid(text_cache_t *cache)
-{
-    CTASSERT(cache != NULL);
-
-    return io_error(cache->io) == 0;
 }
 
 #if 0

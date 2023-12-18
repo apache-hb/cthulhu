@@ -14,21 +14,37 @@
 #include <ctype.h>
 #include <string.h>
 
+/// @brief a single backtrace entry
 typedef struct bt_entry_t
 {
+    /// @brief what symbol info has been resolved by the backend?
     frame_resolve_t info;
 
-    // the number of times this frame has recursed in sequence
+    /// @brief recursion count for this symbol
+    /// the number of times this frame has recursed in sequence
     size_t recurse;
 
+    /// @brief the file name
+    /// @note dont use this if @a info does not have @a eResolveFile
     char *file;
+
+    /// @brief the symbol name
+    /// @note dont use this if @a info does not have @a eResolveName or @a eResolveDemangledName
     char *symbol;
+
+    /// @brief the line number
+    /// @note dont use this if @a info does not have @a eResolveLine
     size_t line;
+
+    /// @brief the address of the frame
     void *address;
 } bt_entry_t;
 
+/// @brief a backtrace report context
 typedef struct bt_report_t
 {
+    /// @brief all entries
+    /// @note sequentially recursive frames are combined into a single entry
     typevec_t *entries;
 
     /// @brief the longest symbol name
@@ -56,7 +72,7 @@ static size_t get_max_symbol_width(const bt_report_t *report)
     return report->longest_symbol + 3 + get_num_width(report->max_consecutive_frames);
 }
 
-static size_t get_max_line_width(const bt_report_t *report)
+static size_t get_max_index_width(const bt_report_t *report)
 {
     CTASSERT(report != NULL);
 
@@ -100,14 +116,15 @@ typedef struct bt_format_t
     /// symbol name right align width
     size_t symbol_align;
 
-    size_t line_align;
+    /// frame index number align width
+    size_t index_align;
 
     /// formatting config
     text_config_t config;
 
     /// the file cache
     /// map_t<const char*, text_cache_t*>
-    map_t *file_cache;
+    cache_map_t *file_cache;
 
     /// current frame index
     size_t index;
@@ -141,7 +158,7 @@ static void print_frame(bt_format_t *pass, const bt_entry_t *entry)
 {
     text_config_t config = pass->config;
 
-    print_frame_index(pass, entry, pass->line_align);
+    print_frame_index(pass, entry, pass->index_align);
 
     // right align the address
     char *addr = fmt_align(pass->symbol_align, "0x%p", entry->address);
@@ -166,7 +183,7 @@ static void print_simple(bt_format_t *pass, const bt_entry_t *entry)
 
     const char *recurse = fmt_recurse(config.colours, entry);
 
-    print_frame_index(pass, entry, pass->line_align);
+    print_frame_index(pass, entry, pass->index_align);
 
     if (entry->info & eResolveFile)
     {
@@ -186,23 +203,13 @@ static text_cache_t *get_file(bt_format_t *format, const char *path)
     file_config_t config = format->config.config;
     if (!config.print_source) return NULL;
 
-    text_cache_t *cache = map_get(format->file_cache, path);
-    if (cache != NULL && cache_io_valid(cache)) return cache;
-
-    io_t *result = io_file(path, eAccessRead | eAccessText);
-    text_cache_t *text = text_cache_new(result);
-
-    // always insert the cache, even if it is invalid
-    // this way we avoid trying to open the file again
-    map_set(format->file_cache, path, text);
-    if (cache_io_valid(text))
-        return text;
-
-    return NULL;
+    return cache_emplace_file(format->file_cache, path);
 }
 
 static bool is_text_empty(const text_view_t *view)
 {
+    CTASSERT(view != NULL);
+
     for (size_t i = 0; i < view->size; i++)
         if (!isspace(view->text[i]))
             return false;
@@ -212,6 +219,8 @@ static bool is_text_empty(const text_view_t *view)
 
 static bool is_line_empty(text_cache_t *cache, size_t line)
 {
+    CTASSERT(cache != NULL);
+
     text_view_t view = cache_get_line(cache, line);
     return is_text_empty(&view);
 }
@@ -284,24 +293,16 @@ static void print_with_source(bt_format_t *pass, const bt_entry_t *entry, text_c
 static void print_source(bt_format_t *pass, const bt_entry_t *entry)
 {
     // we found the file for this entry
-    if (entry->info & eResolveFile)
+    text_cache_t *cache = (entry->info & eResolveFile) ? get_file(pass, entry->file) : NULL;
+    if (cache == NULL)
     {
-        text_cache_t *cache = get_file(pass, entry->file);
-        if (cache == NULL)
-        {
-            // we know the file but we dont have it on disk
-            print_simple(pass, entry);
-        }
-        else
-        {
-            // we have the file on disk
-            print_with_source(pass, entry, cache);
-        }
+        // we dont have the file on disk
+        print_simple(pass, entry);
     }
     else
     {
-        // no file found, just print the symbol
-        print_simple(pass, entry);
+        // we have the file on disk
+        print_with_source(pass, entry, cache);
     }
 }
 
@@ -312,9 +313,9 @@ void bt_report_finish(text_config_t config, bt_report_t *report)
 
     bt_format_t pass = {
         .symbol_align = get_max_symbol_width(report),
-        .line_align = get_max_line_width(report),
+        .index_align = get_max_index_width(report),
         .config = config,
-        .file_cache = map_optimal(report->total_frames),
+        .file_cache = cache_map_new(report->total_frames),
         .index = 0,
     };
 
@@ -341,13 +342,7 @@ void bt_report_finish(text_config_t config, bt_report_t *report)
     }
 
     // close all the files
-    map_t *cache = pass.file_cache;
-    map_iter_t iter = map_iter(cache);
-    while (map_has_next(&iter))
-    {
-        map_entry_t entry = map_next(&iter);
-        text_cache_delete(entry.value);
-    }
+    cache_map_delete(pass.file_cache);
 }
 
 // the length of a pointer in hex, plus the 0x prefix
@@ -391,7 +386,7 @@ bt_report_t *bt_report_collect(void)
 {
     bt_report_t *report = bt_report_new();
 
-    stacktrace_read(read_stacktrace_frame, report);
+    bt_read(read_stacktrace_frame, report);
 
     return report;
 }
@@ -411,7 +406,7 @@ void bt_report_add(bt_report_t *report, const frame_t *frame)
     }
 
     symbol_t symbol = { 0 };
-    frame_resolve_t info = frame_resolve(frame, &symbol);
+    frame_resolve_t info = bt_resolve_symbol(frame, &symbol);
 
     bt_entry_t entry = {
         .info = info,
