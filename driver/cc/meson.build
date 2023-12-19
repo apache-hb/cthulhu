@@ -9,7 +9,7 @@ src = [
 ]
 
 libcc = library('cc', src,
-    dependencies : [ mediator, interop, scan, report, tree, util ],
+    dependencies : [ mediator, interop, scan, notify, tree, util ],
     c_args : generated_args,
     include_directories : [ 'src', 'include' ]
 )

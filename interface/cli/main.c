@@ -12,13 +12,14 @@
 
 #include "fs/fs.h"
 
-#include "report/report.h"
+#include "notify/notify.h"
 
 #include "cthulhu/ssa/ssa.h"
 
 #include "cthulhu/emit/emit.h"
 
 #include "core/macros.h"
+#include <stdio.h>
 
 static const version_info_t kVersionInfo = {
     .license = "GPLv3",
@@ -37,7 +38,7 @@ static const version_info_t kVersionInfo = {
 
 static void parse_source(lifetime_t *lifetime, const char *path)
 {
-    reports_t *reports = lifetime_get_reports(lifetime);
+    logger_t *reports = lifetime_get_logger(lifetime);
     const char *ext = str_ext(path);
     if (ext == NULL)
     {
@@ -68,13 +69,28 @@ int main(int argc, const char **argv)
 {
     mediator_t *mediator = mediator_new("cli", kVersionInfo);
     lifetime_t *lifetime = lifetime_new(mediator, ctu_default_alloc());
-    reports_t *reports = lifetime_get_reports(lifetime);
+    logger_t *reports = lifetime_get_logger(lifetime);
 
-    runtime_t rt = cmd_parse(reports, mediator, lifetime, argc, argv);
+    logger_t *logger = logger_new(ctu_default_alloc());
+
+    runtime_t rt = cmd_parse(logger, mediator, lifetime, argc, argv);
     report_config_t reportConfig = {
         .limit = rt.reportLimit,
         .warningsAreErrors = rt.warnAsError
     };
+
+    vector_t *errors = logger_get_events(logger);
+    size_t len = vector_len(errors);
+    if (len > 0)
+    {
+        for (size_t i = 0; i < len; i++)
+        {
+            event_t *event = vector_get(errors, i);
+            printf("%s\n", event->message); // TODO: use text reporting
+        }
+
+        return 1;
+    }
 
     CHECK_REPORTS(reports, "failed to parse command line arguments");
 

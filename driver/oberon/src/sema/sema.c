@@ -4,8 +4,6 @@
 
 #include "cthulhu/util/util.h"
 
-#include "report/report-ext.h"
-
 #include "base/panic.h"
 
 #include "std/vector.h"

@@ -1,3 +1,4 @@
+#include "memory/memory.h"
 #include "pl0/sema.h"
 #include "pl0/ast.h"
 
@@ -11,6 +12,18 @@
 #include "pl0_flex.h"
 
 CTU_CALLBACKS(kCallbacks, pl0);
+
+static void pl0_preparse(driver_t *handle, scan_t *scan)
+{
+    lifetime_t *lifetime = handle_get_lifetime(handle);
+    logger_t *reports = lifetime_get_logger(lifetime);
+
+    pl0_scan_t info = {
+        .reports = reports
+    };
+
+    scan_set_context(scan, BOX(info));
+}
 
 static void pl0_postparse(driver_t *handle, scan_t *scan, void *tree)
 {
@@ -45,6 +58,7 @@ const language_t kPl0Module = {
 
     .fnCreate = pl0_init,
 
+    .fn_prepass = pl0_preparse,
     .fn_postpass = pl0_postparse,
     .callbacks = &kCallbacks,
 

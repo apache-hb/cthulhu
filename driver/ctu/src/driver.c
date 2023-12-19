@@ -9,9 +9,6 @@
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"
 
-#include "report/report.h"
-#include "report/report-ext.h"
-
 #include "std/vector.h"
 #include "std/map.h"
 #include "std/str.h"

@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <gmp.h>
 
-typedef struct reports_t reports_t;
+typedef struct logger_t logger_t;
 
 typedef struct vector_t vector_t;
 typedef struct map_t map_t;
@@ -43,7 +43,7 @@ typedef enum tree_kind_t {
 } tree_kind_t;
 
 typedef struct cookie_t {
-    reports_t *reports;
+    logger_t *reports;
     vector_t *stack;
 } cookie_t;
 
@@ -213,7 +213,7 @@ typedef struct tree_t {
                     tree_t *parent;
                     cookie_t *cookie;
 
-                    reports_t *reports;
+                    logger_t *reports;
                     vector_t *tags; ///< vector_t<map_t<const char*, void*>*>
                     map_t *extra;
                 };
@@ -228,8 +228,8 @@ typedef struct tree_t {
 
 tree_t *tree_error(const node_t *node, const char *message, ...);
 tree_t *tree_pick_error(const node_t *node, const tree_t *lhs, const tree_t *rhs);
-tree_t *tree_raise(const node_t *node, reports_t *reports, const char *message, ...);
-void tree_report(reports_t *reports, const tree_t *error);
+tree_t *tree_raise(const node_t *node, logger_t *reports, const char *message, ...);
+void tree_report(logger_t *reports, const tree_t *error);
 
 ///
 /// tree type interface
@@ -505,7 +505,7 @@ void tree_set_storage(tree_t *self, tree_storage_t storage);
 // will be emitted, they are also required to be valid tree_t objects
 // any custom slots can contain any data, but they will not be emitted
 
-tree_t *tree_module_root(reports_t *reports, cookie_t *cookie, const node_t *node, const char *name, size_t decls, const size_t *sizes);
+tree_t *tree_module_root(logger_t *reports, cookie_t *cookie, const node_t *node, const char *name, size_t decls, const size_t *sizes);
 
 /**
  * @brief create a new module

@@ -5,9 +5,6 @@
 
 #include "cthulhu/mediator/driver.h"
 
-#include "report/report.h"
-#include "report/report-ext.h"
-
 #include "base/panic.h"
 
 #include "std/str.h"
@@ -47,7 +44,7 @@ static char *pl0_normalize(const char *name)
     return str_lower(name);
 }
 
-static void report_pl0_shadowing(reports_t *reports, const char *name, const node_t *prevDefinition, const node_t *newDefinition)
+static void report_pl0_shadowing(logger_t *reports, const char *name, const node_t *prevDefinition, const node_t *newDefinition)
 {
     message_t *id = report_shadow(reports, name, prevDefinition, newDefinition);
     report_note(id, "PL/0 is case insensitive");
@@ -203,7 +200,7 @@ void pl0_init(driver_t *handle)
     add_context(handle_get_lifetime(handle), path, ctx);
 }
 
-static void report_pl0_unresolved(reports_t *reports, const node_t *node, const char *name)
+static void report_pl0_unresolved(logger_t *reports, const node_t *node, const char *name)
 {
     report(reports, eFatal, node, "unresolved reference to `%s`", name);
 }
@@ -482,7 +479,7 @@ void pl0_forward_decls(context_t *context)
     lifetime_t *lifetime = context_get_lifetime(context);
 
     pl0_t *root = context_get_ast(context);
-    reports_t *reports = lifetime_get_reports(lifetime);
+    logger_t *reports = lifetime_get_logger(lifetime);
     cookie_t *cookie = lifetime_get_cookie(lifetime);
 
     size_t totalConsts = vector_len(root->consts);

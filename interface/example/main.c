@@ -8,8 +8,6 @@
 
 #include "memory/memory.h"
 
-#include "report/report.h"
-
 #include "std/str.h"
 #include "std/map.h"
 #include "std/vector.h"
@@ -31,11 +29,6 @@
         } \
     } while (0)
 
-static const report_config_t kReportConfig = {
-    .limit = SIZE_MAX,
-    .warningsAreErrors = false
-};
-
 static const version_info_t kVersion = {
     .license = "GPLv3",
     .desc = "Example compiler interface",
@@ -43,7 +36,7 @@ static const version_info_t kVersion = {
     .version = NEW_VERSION(0, 0, 1)
 };
 
-static io_t *make_file(reports_t *reports, const char *path, os_access_t flags)
+static io_t *make_file(logger_t *reports, const char *path, os_access_t flags)
 {
     io_t *io = io_file(path, flags);
     if (io_error(io) != 0)
@@ -61,7 +54,7 @@ int main(int argc, const char **argv)
     verbose = true;
     mediator_t *mediator = mediator_new("example", kVersion);
     lifetime_t *lifetime = lifetime_new(mediator, ctu_default_alloc());
-    reports_t *reports = lifetime_get_reports(lifetime);
+    logger_t *logger = lifetime_get_logger(lifetime);
 
     langs_t langs = get_langs();
     for (size_t i = 0; i < langs.size; i++)
@@ -70,7 +63,7 @@ int main(int argc, const char **argv)
         lifetime_add_language(lifetime, lang);
     }
 
-    CHECK_REPORTS(reports, "adding languages");
+    CHECK_REPORTS(logger, "adding languages");
 
     for (int i = 1; i < argc; i++)
     {
@@ -83,7 +76,7 @@ int main(int argc, const char **argv)
             printf("no language found for file: %s\n", path);
         }
 
-        io_t *io = make_file(reports, path, eAccessRead | eAccessText);
+        io_t *io = make_file(logger, path, eAccessRead | eAccessText);
         if (io != NULL)
         {
             lifetime_parse(lifetime, lang, io);

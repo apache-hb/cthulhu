@@ -4,8 +4,6 @@
 #include "cthulhu/tree/query.h"
 #include "cthulhu/tree/sema.h"
 
-#include "report/report.h"
-
 #include "scan/node.h"
 
 #include "std/str.h"

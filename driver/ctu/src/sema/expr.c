@@ -8,8 +8,6 @@
 
 #include "ctu/ast.h"
 
-#include "report/report.h"
-
 #include "std/str.h"
 #include "std/vector.h"
 
@@ -412,7 +410,7 @@ static tree_t *sema_field_indirect_rvalue(ctu_sema_t *sema, const ctu_t *expr)
 
 static tree_t *sema_init(ctu_sema_t *sema, const ctu_t *expr, const tree_t *implicitType)
 {
-    reports_t *reports = ctu_sema_reports(sema);
+    logger_t *reports = ctu_sema_reports(sema);
     if (implicitType == NULL)
     {
         return tree_raise(expr->node, reports, "cannot infer type of initializer");

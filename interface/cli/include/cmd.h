@@ -5,7 +5,7 @@
 
 #include "cthulhu/mediator/interface.h"
 
-typedef struct reports_t reports_t;
+typedef struct logger_t logger_t;
 typedef struct map_t map_t;
 typedef struct ap_t ap_t;
 typedef struct vector_t vector_t;
@@ -18,7 +18,7 @@ typedef struct runtime_t
     mediator_t *mediator;
     lifetime_t *lifetime;
 
-    reports_t *reports;
+    logger_t *reports;
     ap_t *ap;
 
     bool emitSSA;
@@ -32,4 +32,4 @@ typedef struct runtime_t
     vector_t *sourcePaths;
 } runtime_t;
 
-runtime_t cmd_parse(reports_t *reports, mediator_t *mediator, lifetime_t *lifetime, int argc, const char **argv);
+runtime_t cmd_parse(logger_t *reports, mediator_t *mediator, lifetime_t *lifetime, int argc, const char **argv);

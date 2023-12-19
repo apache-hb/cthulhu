@@ -8,7 +8,6 @@
 
 %{
 #include "ctu_bison.h"
-#include "report/report-ext.h"
 #include "interop/flex.h"
 #include "memory/memory.h"
 #include "cthulhu/util/text.h"
@@ -139,13 +138,13 @@ WS [ \t\r\v\n\f]
 }
 
 \"([^"\\\n]|{ESCAPES})*\" {
-    ctu_scan_t *scan = scan_get_context(yyextra);
+    ctu_scan_t *scan = ctu_scan_context(yyextra);
 	yylval->string = util_text_escape(scan->reports, node_new(yyextra, *yylloc), yytext + 1, yyleng - 2);
     return STRING;
 }
 
 . {
-    ctu_scan_t *scan = scan_get_context(yyextra);
+    ctu_scan_t *scan = ctu_scan_context(yyextra);
     report_unknown_character(scan->reports, node_new(yyextra, *yylloc), yytext);
 }
 

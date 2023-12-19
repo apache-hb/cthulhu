@@ -6,8 +6,6 @@
 #include "std/vector.h"
 #include "std/typed/vector.h"
 
-#include "report/report.h"
-
 #include "fs/fs.h"
 
 #include "memory/memory.h"

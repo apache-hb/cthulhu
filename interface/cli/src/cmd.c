@@ -11,7 +11,7 @@
 #include "std/vector.h"
 #include "std/str.h"
 
-#include "report/report.h"
+#include "notify/notify.h"
 
 #include "argparse/argparse.h"
 #include "argparse/commands.h"
@@ -192,18 +192,25 @@ static AP_EVENT(on_add_source, ap, param, value, data)
 
 // errors
 
+const diagnostic_t kDiagUnknownArg = {
+    .severity = eSeverityWarn,
+    .id = "CLI-0001",
+    .brief = "unknown argument",
+    .description = "unknown argument provided to command line"
+};
+
 static AP_ERROR(on_arg_error, ap, node, message, data)
 {
     CTU_UNUSED(ap);
 
     runtime_t *rt = data;
 
-    report(rt->reports, eFatal, node, "%s", message);
+    msg_notify(rt->reports, &kDiagUnknownArg, node, "%s", message);
 
     return eEventHandled;
 }
 
-runtime_t cmd_parse(reports_t *reports, mediator_t *mediator, lifetime_t *lifetime, int argc, const char **argv)
+runtime_t cmd_parse(logger_t *reports, mediator_t *mediator, lifetime_t *lifetime, int argc, const char **argv)
 {
     ap_t *ap = ap_new("cli", NEW_VERSION(0, 0, 1));
 

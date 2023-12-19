@@ -3,8 +3,6 @@
 
 #include "cthulhu/util/util.h"
 
-#include "report/report.h"
-
 #include "base/panic.h"
 
 static const size_t kLocalModuleTags[] = { eObrTagModules };

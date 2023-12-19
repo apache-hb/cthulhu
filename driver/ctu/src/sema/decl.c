@@ -9,8 +9,6 @@
 #include "cthulhu/util/util.h"
 #include "cthulhu/util/type.h"
 
-#include "report/report.h"
-
 #include "std/map.h"
 #include "std/vector.h"
 #include "std/str.h"

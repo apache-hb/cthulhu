@@ -6,6 +6,7 @@
 #include "memory/memory.h"
 #include "base/panic.h"
 
+#include "notify/notify.h"
 #include "scan/scan.h"
 #include "scan/node.h"
 
@@ -14,8 +15,6 @@
 #include "std/vector.h"
 #include "std/str.h"
 
-#include "report/report.h"
-
 #include "os/os.h"
 
 #include "stacktrace/stacktrace.h"
@@ -23,7 +22,7 @@
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"
 
-static cookie_t *cookie_new(lifetime_t *lifetime, reports_t *reports)
+static cookie_t *cookie_new(lifetime_t *lifetime, logger_t *reports)
 {
     cookie_t *self = ARENA_MALLOC(lifetime->alloc, sizeof(cookie_t), "cookie", lifetime);
     self->reports = reports;
@@ -112,13 +111,13 @@ lifetime_t *lifetime_new(mediator_t *mediator, arena_t *alloc)
 
     self->parent = mediator;
 
-    self->reports = begin_reports();
+    self->logger = logger_new(alloc);
     self->alloc = alloc;
 
     self->extensions = map_optimal(16);
     self->modules = map_optimal(64);
 
-    self->cookie = cookie_new(self, self->reports);
+    self->cookie = cookie_new(self, self->logger);
 
     return self;
 }
@@ -169,7 +168,7 @@ const language_t *lifetime_get_language(lifetime_t *lifetime, const char *ext)
     return map_get(lifetime->extensions, ext);
 }
 
-static bool parse_failed(reports_t *reports, const char *path, parse_result_t result)
+static bool parse_failed(logger_t *reports, const char *path, parse_result_t result)
 {
     switch (result.result)
     {

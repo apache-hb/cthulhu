@@ -9,9 +9,9 @@
 %{
 #include "obr_bison.h"
 #include "oberon/scan.h"
-#include "report/report-ext.h"
 #include "interop/flex.h"
 #include "memory/memory.h"
+#include "cthulhu/util/text.h"
 %}
 
 %x COMMENT
@@ -104,11 +104,15 @@ WS [ \t\r\v\n\f]
 }
 
 \"([^"\\\n]|{ESCAPES})*\" {
-	yylval->string = util_text_escape(scan_get_context(yyextra), node_new(yyextra, *yylloc), yytext + 1, yyleng - 2);
+    obr_scan_t *scan = obr_scan_context(yyextra);
+	yylval->string = util_text_escape(scan->reports, node_new(yyextra, *yylloc), yytext + 1, yyleng - 2);
     return STRING;
 }
 
-. { report_unknown_character(scan_get_context(yyextra), node_new(yyextra, *yylloc), yytext); }
+. {
+    obr_scan_t *scan = obr_scan_context(yyextra);
+    report_unknown_character(scan->reports, node_new(yyextra, *yylloc), yytext);
+}
 
 %%
 

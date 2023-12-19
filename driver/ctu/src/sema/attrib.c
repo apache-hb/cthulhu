@@ -5,7 +5,6 @@
 #include "cthulhu/tree/query.h"
 
 #include "ctu/sema/sema.h"
-#include "report/report.h"
 
 #include "std/str.h"
 #include "std/vector.h"

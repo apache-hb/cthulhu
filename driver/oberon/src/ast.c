@@ -1,6 +1,6 @@
 #include "oberon/ast.h"
 
-#include "report/report.h"
+#include "oberon/scan.h"
 
 #include "std/str.h"
 
@@ -10,13 +10,13 @@
 static void ensure_block_names_match(scan_t *scan, const node_t *node, const char *type, const char *name, const char *end)
 {
     CTASSERTF(type != NULL && name != NULL, "(type=%s, name=%s)", type, name);
-    reports_t *reports = scan_get_context(scan);
+    obr_scan_t *ctx = obr_scan_context(scan);
 
     if (end == NULL) { return; }
 
     if (!str_equal(name, end))
     {
-        message_t *id = report(reports, eWarn, node, "mismatching %s block BEGIN and END names", type);
+        message_t *id = report(ctx->reports, eWarn, node, "mismatching %s block BEGIN and END names", type);
         report_note(id, "BEGIN name `%s` does not match END name `%s`", name, end);
     }
 }

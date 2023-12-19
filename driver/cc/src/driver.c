@@ -31,7 +31,7 @@ static void add_digit(tree_t *mod, const char *name, digit_t digit, sign_t sign)
 
 static tree_t *cc_lang_module(lifetime_t *lifetime)
 {
-    reports_t *reports = lifetime_get_reports(lifetime);
+    logger_t *reports = lifetime_get_logger(lifetime);
     cookie_t *cookie = lifetime_get_cookie(lifetime);
 
     const node_t *node = node_builtin();

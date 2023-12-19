@@ -9,8 +9,6 @@
 #include "cthulhu/ssa/ssa.h"
 #include "cthulhu/emit/emit.h"
 
-#include "report/report.h"
-
 #include "base/panic.h"
 #include "core/macros.h"
 
@@ -34,11 +32,6 @@
             return err; \
         } \
     } while (0)
-
-static const report_config_t kReportConfig = {
-    .limit = SIZE_MAX,
-    .warningsAreErrors = false
-};
 
 static const version_info_t kVersion = {
     .license = "GPLv3",
@@ -171,7 +164,7 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
 
     langs_t langs = get_langs();
 
-    reports_t *reports = lifetime_get_reports(lifetime);
+    logger_t *reports = lifetime_get_logger(lifetime);
     for (size_t i = 0; i < langs.size; i++)
     {
         const language_t *lang = langs.langs + i;

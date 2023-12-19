@@ -289,7 +289,7 @@ static void do_simple(logger_t *logs)
         .io = io_simple
     };
 
-    vector_t *events = log_events(logs);
+    vector_t *events = logger_get_events(logs);
     size_t count = vector_len(events);
 
     for (size_t i = 0; i < count; i++)
@@ -323,7 +323,7 @@ static void do_rich(logger_t *logs)
         .io = io_rich
     };
 
-    vector_t *events = log_events(logs);
+    vector_t *events = logger_get_events(logs);
     size_t count = vector_len(events);
 
     for (size_t i = 0; i < count; i++)
@@ -373,7 +373,7 @@ int main(int argc, const char **argv)
     init_global_alloc(ctu_default_alloc());
     init_gmp_alloc(ctu_default_alloc());
 
-    logger_t *logs = log_new();
+    logger_t *logs = logger_new(ctu_default_alloc());
     msg_diagnostic(logs, &kInfoDiagnostic);
     msg_diagnostic(logs, &kUndefinedFunctionName);
     msg_diagnostic(logs, &kUnresolvedImport);

@@ -7,9 +7,6 @@
 
 #include "cthulhu/tree/query.h"
 
-#include "report/report.h"
-#include "report/report-ext.h"
-
 #include "std/map.h"
 #include "std/str.h"
 

@@ -65,14 +65,9 @@ typedef struct segment_t
 /// @return the new logger
 RET_NOTNULL
 NODISCARD
-logger_t *log_new(void);
+logger_t *logger_new(IN_NOTNULL arena_t *arena);
 
-/// @brief destroy a logger
-///
-/// @param logs the logger to destroy
-void log_delete(OUT_PTR_INVALID logger_t *logs);
-
-vector_t *log_events(IN_NOTNULL logger_t *logs);
+vector_t *logger_get_events(IN_NOTNULL logger_t *logs);
 
 /// @brief register a new diagnostic
 ///

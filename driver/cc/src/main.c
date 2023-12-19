@@ -5,8 +5,6 @@
 
 #include "core/macros.h"
 
-#include "report/report.h"
-
 #include "cc_bison.h"
 #include "cc_flex.h"
 
@@ -16,7 +14,7 @@ static void cc_preparse(driver_t *handle, scan_t *scan)
 {
     CTU_UNUSED(handle);
     lifetime_t *lifetime = handle_get_lifetime(handle);
-    reports_t *reports = lifetime_get_reports(lifetime);
+    logger_t *reports = lifetime_get_logger(lifetime);
 
     report(reports, eWarn, node_builtin(), "C is unimplemented, ignoring file %s", scan_path(scan));
 }
@@ -26,7 +24,7 @@ static void cc_postparse(driver_t *handle, scan_t *scan, void *tree)
     CTU_UNUSED(tree);
 
     lifetime_t *lifetime = handle_get_lifetime(handle);
-    reports_t *reports = lifetime_get_reports(lifetime);
+    logger_t *reports = lifetime_get_logger(lifetime);
 
     report(reports, eWarn, node_builtin(), "C is unimplemented, ignoring file %s", scan_path(scan));
 }

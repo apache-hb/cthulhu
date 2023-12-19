@@ -1,7 +1,5 @@
 #include "cthulhu/util/text.h"
 
-#include "report/report.h"
-
 #include "std/typed/vector.h"
 
 typedef struct escape_t {
@@ -19,7 +17,7 @@ static escape_t escape_new(size_t length, char code)
     return escape;
 }
 
-static escape_t consume_escape(reports_t *reports, const node_t *node, const char *text)
+static escape_t consume_escape(logger_t *reports, const node_t *node, const char *text)
 {
     switch (*text)
     {
@@ -35,7 +33,7 @@ static escape_t consume_escape(reports_t *reports, const node_t *node, const cha
     }
 }
 
-static escape_t consume_text(reports_t *reports, const node_t *node, const char *text)
+static escape_t consume_text(logger_t *reports, const node_t *node, const char *text)
 {
     switch (*text)
     {
@@ -44,7 +42,7 @@ static escape_t consume_text(reports_t *reports, const node_t *node, const char 
     }
 }
 
-text_t util_text_escape(reports_t *reports, const node_t *node, const char *text, size_t length)
+text_t util_text_escape(logger_t *reports, const node_t *node, const char *text, size_t length)
 {
     typevec_t *vec = typevec_new(sizeof(char), length);
 

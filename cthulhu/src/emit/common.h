@@ -11,7 +11,7 @@ typedef struct names_t {
 } names_t;
 
 typedef struct emit_t {
-    reports_t *reports;
+    logger_t *reports;
 
     names_t block_names;
     names_t vreg_names;

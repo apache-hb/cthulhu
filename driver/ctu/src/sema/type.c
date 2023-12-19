@@ -10,8 +10,6 @@
 #include "std/vector.h"
 #include "std/str.h"
 
-#include "report/report.h"
-
 #include "base/panic.h"
 
 ///

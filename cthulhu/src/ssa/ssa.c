@@ -2,8 +2,6 @@
 
 #include "cthulhu/tree/query.h"
 
-#include "report/report.h"
-
 #include "std/str.h"
 #include "std/map.h"
 #include "std/set.h"

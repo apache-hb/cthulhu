@@ -4,7 +4,6 @@
 
 BEGIN_API
 
-typedef struct reports_t reports_t;
 typedef struct lifetime_t lifetime_t;
 
 /**
@@ -13,6 +12,6 @@ typedef struct lifetime_t lifetime_t;
  * @param reports the reports object
  * @param lifetime the lifetime object
  */
-void lifetime_check(reports_t *reports, lifetime_t *lifetime);
+void lifetime_check(lifetime_t *lifetime);
 
 END_API

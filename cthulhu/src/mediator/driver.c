@@ -13,8 +13,6 @@
 #include "std/str.h"
 #include "std/vector.h"
 
-#include "report/report.h"
-
 static char *path_to_string(vector_t *path)
 {
     CTASSERT(path != NULL);
@@ -78,11 +76,11 @@ context_t *get_context(lifetime_t *lifetime, vector_t *path)
 }
 
 USE_DECL
-reports_t *lifetime_get_reports(lifetime_t *lifetime)
+logger_t *lifetime_get_logger(lifetime_t *lifetime)
 {
     CTASSERT(lifetime != NULL);
 
-    return lifetime->reports;
+    return lifetime->logger;
 }
 
 USE_DECL
@@ -140,7 +138,7 @@ tree_t *lifetime_sema_new(lifetime_t *lifetime, const char *name, size_t len, co
     CTASSERT(sizes != NULL);
     CTASSERT(len > 0);
 
-    reports_t *reports = lifetime_get_reports(lifetime);
+    logger_t *reports = lifetime_get_logger(lifetime);
     cookie_t *cookie = lifetime_get_cookie(lifetime);
     tree_t *root = tree_module_root(reports, cookie, node_builtin(), name, len, sizes);
 

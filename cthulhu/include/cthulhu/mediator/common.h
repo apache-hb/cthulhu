@@ -18,7 +18,7 @@ typedef struct ap_t ap_t;
 typedef struct tree_t tree_t;
 typedef struct cookie_t cookie_t;
 typedef struct scan_t scan_t;
-typedef struct reports_t reports_t;
+typedef struct logger_t logger_t;
 typedef struct callbacks_t callbacks_t;
 
 ///
@@ -72,7 +72,7 @@ typedef struct language_t
 ///
 
 NODISCARD
-reports_t *lifetime_get_reports(lifetime_t *lifetime);
+logger_t *lifetime_get_logger(lifetime_t *lifetime);
 
 NODISCARD
 cookie_t *lifetime_get_cookie(lifetime_t *lifetime);

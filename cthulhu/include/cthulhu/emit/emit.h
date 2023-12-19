@@ -10,7 +10,7 @@ BEGIN_API
 /// @{
 
 typedef struct ssa_module_t ssa_module_t;
-typedef struct reports_t reports_t;
+typedef struct logger_t logger_t;
 
 typedef struct io_t io_t;
 typedef struct fs_t fs_t;
@@ -26,7 +26,7 @@ typedef struct map_t map_t;
 typedef struct emit_options_t
 {
     /// @brief reporting sink
-    reports_t *reports;
+    logger_t *reports;
 
     /// @brief the filesystem to use
     fs_t *fs;

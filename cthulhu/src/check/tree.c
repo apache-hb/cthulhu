@@ -8,8 +8,6 @@
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"
 
-#include "report/report.h"
-
 #include "std/vector.h"
 #include "std/set.h"
 #include "std/map.h"
@@ -20,7 +18,7 @@
 
 typedef struct check_t
 {
-    reports_t *reports;
+    logger_t *reports;
 
     const tree_t *cli_entry;
     const tree_t *gui_entry;
@@ -564,7 +562,7 @@ static void check_module_valid(check_t *check, const tree_t *mod)
     }
 }
 
-void check_tree(reports_t *reports, map_t *mods)
+void check_tree(logger_t *reports, map_t *mods)
 {
     check_t check = {
         .reports = reports,

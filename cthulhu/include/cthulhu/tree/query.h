@@ -2,7 +2,6 @@
 
 #include "cthulhu/tree/tree.h"
 
-typedef struct reports_t reports_t;
 typedef struct node_t node_t;
 typedef struct tree_t tree_t;
 

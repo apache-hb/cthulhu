@@ -9,7 +9,6 @@ BEGIN_API
 /// @ingroup Common
 /// @{
 
-typedef struct reports_t reports_t;
 typedef struct fs_t fs_t;
 typedef struct io_t io_t;
 
@@ -20,7 +19,6 @@ void fs_delete(fs_t *fs);
 
 /// @brief create a filesystem interface to a physical location on disk
 ///
-/// @param reports report sink
 /// @param root the root directory to mount this filesystem on
 ///
 /// @return a filesystem interface, or NULL if the filesystem failed to mount
@@ -29,7 +27,6 @@ fs_t *fs_physical(const char *root);
 
 /// @brief create a virtual filesystem interface
 ///
-/// @param reports report sink
 /// @param name the name of the vfs
 ///
 /// @return a filesystem interface to an in-memory fs

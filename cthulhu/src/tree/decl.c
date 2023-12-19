@@ -2,8 +2,6 @@
 
 #include "cthulhu/tree/query.h"
 
-#include "report/report.h"
-
 #include "std/vector.h"
 
 #include "memory/memory.h"

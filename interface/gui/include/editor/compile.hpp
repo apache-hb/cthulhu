@@ -5,7 +5,7 @@
 
 typedef struct mediator_t mediator_t;
 typedef struct lifetime_t lifetime_t;
-typedef struct reports_t reports_t;
+typedef struct logger_t logger_t;
 
 namespace ed
 {
@@ -23,7 +23,7 @@ namespace ed
         bool setup = false;
         mediator_t *mediator = nullptr;
         lifetime_t *lifetime = nullptr;
-        reports_t *reports = nullptr;
+        logger_t *reports = nullptr;
 
         // editor objects
         ed::TraceArena global{"global", ed::TraceArena::eDrawTree};

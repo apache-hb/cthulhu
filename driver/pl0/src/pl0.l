@@ -9,7 +9,6 @@
 %{
 #include "pl0_bison.h"
 #include "pl0/scan.h"
-#include "report/report-ext.h"
 #include "interop/flex.h"
 #include "memory/memory.h"
 %}
@@ -73,7 +72,10 @@
 
 "!" { return PRINT; }
 
-. { report_unknown_character(scan_get_context(yyextra), node_new(yyextra, *yylloc), yytext); }
+. {
+    pl0_scan_t *scan = pl0_scan_context(yyextra);
+    report_unknown_character(scan->reports, node_new(yyextra, *yylloc), yytext);
+}
 
 %%
 

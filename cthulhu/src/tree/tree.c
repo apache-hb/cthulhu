@@ -2,8 +2,6 @@
 
 #include "cthulhu/tree/query.h"
 
-#include "report/report.h"
-
 #include "std/vector.h"
 #include "std/str.h"
 
@@ -41,7 +39,7 @@ tree_t *tree_decl(tree_kind_t kind, const node_t *node, const tree_t *type, cons
     return self;
 }
 
-void tree_report(reports_t *reports, const tree_t *error)
+void tree_report(logger_t *reports, const tree_t *error)
 {
     report(reports, eFatal, tree_get_node(error), "%s", error->message);
 }
@@ -63,7 +61,7 @@ tree_t *tree_error(const node_t *node, const char *message, ...)
     return self;
 }
 
-tree_t *tree_raise(const node_t *node, reports_t *reports, const char *message, ...)
+tree_t *tree_raise(const node_t *node, logger_t *reports, const char *message, ...)
 {
     va_list args;
     va_start(args, message);

@@ -28,7 +28,7 @@ static void ctu_preparse(driver_t *driver, scan_t *scan)
     lifetime_t *lifetime = handle_get_lifetime(driver);
 
     ctu_scan_t info = {
-        .reports = lifetime_get_reports(lifetime),
+        .reports = lifetime_get_logger(lifetime),
         .attribs = vector_new(4)
     };
 

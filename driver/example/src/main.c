@@ -4,8 +4,6 @@
 
 #include "std/vector.h"
 
-#include "report/report.h"
-
 #include "scan/node.h"
 
 static vector_t *example_lang_path(void)
@@ -18,7 +16,7 @@ static vector_t *example_lang_path(void)
 
 static tree_t *example_lang_module(lifetime_t *lifetime)
 {
-    reports_t *reports = lifetime_get_reports(lifetime);
+    logger_t *reports = lifetime_get_logger(lifetime);
     cookie_t *cookie = lifetime_get_cookie(lifetime);
 
     const node_t *node = node_builtin();

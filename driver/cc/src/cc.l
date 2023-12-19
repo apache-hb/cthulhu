@@ -9,9 +9,9 @@
 %{
 #include "cc_bison.h"
 #include "cc/scan.h"
-#include "report/report-ext.h"
 #include "interop/flex.h"
 #include "memory/memory.h"
+#include "cthulhu/util/text.h"
 %}
 
 ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
@@ -114,11 +114,15 @@ WS [ \t\r\v\n\f]
 }
 
 \"([^"\\\n]|{ESCAPES})*\" {
-	yylval->text = util_text_escape(scan_get_context(yyextra), node_new(yyextra, *yylloc), yytext + 1, yyleng - 2);
+    cc_scan_t *scan = cc_scan_context(yyextra);
+	yylval->text = util_text_escape(scan->reports, node_new(yyextra, *yylloc), yytext + 1, yyleng - 2);
     return STRING;
 }
 
-. { report_unknown_character(scan_get_context(yyextra), node_new(yyextra, *yylloc), yytext); }
+. {
+    cc_scan_t *scan = cc_scan_context(yyextra);
+    report_unknown_character(scan->reports, node_new(yyextra, *yylloc), yytext);
+}
 
 %%
 

@@ -13,13 +13,12 @@
 
 #include "core/macros.h"
 
-#include "report/report.h"
-
 #include "fs/fs.h"
 
 #include <string.h>
 
-typedef struct ssa_emit_t {
+typedef struct ssa_emit_t
+{
     emit_t emit;
 
     fs_t *fs;

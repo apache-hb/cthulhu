@@ -8,11 +8,9 @@
 #include "memory/memory.h"
 #include "base/panic.h"
 
-#include "report/report.h"
-
 static tree_t *tree_module_new(const node_t *node, const char *name,
                                tree_t *parent, cookie_t *cookie,
-                               reports_t *reports, map_t *extra,
+                               logger_t *reports, map_t *extra,
                                size_t decls, const size_t *sizes)
 {
     CTASSERTF(decls >= eSemaTotal, "module cannot be constructed with less than %d tags (%zu given)", eSemaTotal, decls);
@@ -38,7 +36,7 @@ static tree_t *tree_module_new(const node_t *node, const char *name,
     return self;
 }
 
-tree_t *tree_module_root(reports_t *reports, cookie_t *cookie, const node_t *node, const char *name, size_t decls, const size_t *sizes)
+tree_t *tree_module_root(logger_t *reports, cookie_t *cookie, const node_t *node, const char *name, size_t decls, const size_t *sizes)
 {
     return tree_module_new(
         node, name,

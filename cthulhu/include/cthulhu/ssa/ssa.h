@@ -14,7 +14,7 @@ BEGIN_API
 /// @ingroup Runtime
 /// @{
 
-typedef struct reports_t reports_t;
+typedef struct logger_t logger_t;
 typedef struct vector_t vector_t;
 typedef struct typevec_t typevec_t;
 typedef struct map_t map_t;
@@ -313,7 +313,7 @@ ssa_result_t ssa_compile(map_t *mods);
  * @param reports report sink
  * @param mod module to optimize
  */
-void ssa_opt(reports_t *reports, ssa_result_t mod);
+void ssa_opt(logger_t *reports, ssa_result_t mod);
 
 ///
 /// rewriting

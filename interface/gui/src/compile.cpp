@@ -4,8 +4,6 @@
 
 #include "io/io.h"
 
-#include "report/report.h"
-
 #include "std/str.h"
 
 #include "std/vector.h"
@@ -65,7 +63,7 @@ void CompileInfo::init_lifetime()
 
 void CompileInfo::init_reports()
 {
-    reports = lifetime_get_reports(lifetime);
+    reports = lifetime_get_logger(lifetime);
 }
 
 void CompileInfo::init()

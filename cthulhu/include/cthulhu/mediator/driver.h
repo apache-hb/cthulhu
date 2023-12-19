@@ -10,8 +10,6 @@ BEGIN_API
 
 typedef struct vector_t vector_t;
 
-typedef struct reports_t reports_t;
-
 // make a precompiled context
 context_t *compiled_new(driver_t *handle, tree_t *root);
 

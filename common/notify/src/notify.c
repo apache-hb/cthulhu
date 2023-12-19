@@ -1,7 +1,7 @@
 #include "notify/notify.h"
 
 #include "base/panic.h"
-#include "memory/memory.h"
+#include "memory/arena.h"
 
 #include "std/map.h"
 #include "std/str.h"
@@ -10,6 +10,7 @@
 
 typedef struct logger_t
 {
+    arena_t *arena;
     vector_t *diagnostics;
     map_t *lookup;
 
@@ -17,25 +18,22 @@ typedef struct logger_t
 } logger_t;
 
 USE_DECL
-logger_t *log_new(void)
+logger_t *logger_new(arena_t *arena)
 {
-    logger_t *logs = MEM_ALLOC(sizeof(logger_t), "logger", NULL);
+    CTASSERT(arena != NULL);
+
+    logger_t *logs = ARENA_MALLOC(arena, sizeof(logger_t), "logger", NULL);
+
+    logs->arena = arena;
     logs->diagnostics = vector_new(64);
     logs->lookup = map_optimal(256);
     logs->messages = vector_new(32);
+
     return logs;
 }
 
 USE_DECL
-void log_delete(logger_t *logs)
-{
-    CTASSERT(logs != NULL);
-
-    ctu_free(logs);
-}
-
-USE_DECL
-vector_t *log_events(logger_t *logs)
+vector_t *logger_get_events(logger_t *logs)
 {
     CTASSERT(logs != NULL);
 
@@ -91,17 +89,17 @@ event_t *msg_vnotify(logger_t *logs, const diagnostic_t *diagnostic, const node_
     CTASSERT(logs != NULL);
     CTASSERT(diagnostic != NULL);
 
-    CTASSERTF(map_get(logs->lookup, diagnostic->id) != NULL, "diagnostic %s was not registered prior to use", diagnostic->id);
+    // TODO: do we need to check if the diagnostic was registered?
+    // CTASSERTF(map_get(logs->lookup, diagnostic->id) != NULL, "diagnostic %s was not registered prior to use", diagnostic->id);
 
     char *msg = vformat(fmt, args);
 
-    event_t event = {
-        .diagnostic = diagnostic,
-        .node = node,
-        .message = msg
-    };
-
-    event_t *ptr = BOX(event);
+    event_t *ptr = ARENA_MALLOC(logs->arena, sizeof(event_t), "event", logs);
+    ptr->diagnostic = diagnostic;
+    ptr->node = node;
+    ptr->message = msg;
+    ptr->segments = NULL;
+    ptr->notes = NULL;
 
     vector_push(&logs->messages, ptr);
 

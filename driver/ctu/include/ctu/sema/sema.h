@@ -33,7 +33,7 @@ typedef struct ctu_sema_t {
 } ctu_sema_t;
 
 ctu_sema_t ctu_sema_init(tree_t *sema, tree_t *decl, vector_t *block);
-reports_t *ctu_sema_reports(ctu_sema_t *sema);
+logger_t *ctu_sema_reports(ctu_sema_t *sema);
 
 ///
 /// getting decls

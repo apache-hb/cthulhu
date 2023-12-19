@@ -1,7 +1,5 @@
 #include "common.h"
 
-#include "report/report.h"
-
 #include "std/str.h"
 #include "std/map.h"
 #include "std/vector.h"
@@ -126,6 +124,7 @@ static char *params_to_string(typevec_t *params)
 
     return str_join(", ", vec);
 }
+
 static char *closure_to_string(ssa_type_closure_t closure)
 {
     const char *result = type_to_string(closure.result);

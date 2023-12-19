@@ -8,8 +8,6 @@
 
 #include "cthulhu/util/util.h"
 
-#include "report/report-ext.h"
-
 #include "std/vector.h"
 
 #include "base/panic.h"
@@ -32,7 +30,7 @@ ctu_sema_t ctu_sema_init(tree_t *sema, tree_t *decl, vector_t *block)
     return it;
 }
 
-reports_t *ctu_sema_reports(ctu_sema_t *sema)
+logger_t *ctu_sema_reports(ctu_sema_t *sema)
 {
     tree_t *it = sema->sema;
     return it->reports;

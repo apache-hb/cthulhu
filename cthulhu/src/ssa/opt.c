@@ -7,15 +7,13 @@
 
 #include "std/typed/vector.h"
 
-#include "report/report.h"
-
 #include "scan/node.h"
 #include "base/panic.h"
 
 typedef struct ssa_vm_t
 {
     // externally provided values
-    reports_t *reports;
+    logger_t *reports;
     map_t *deps;
 
     // all globals
@@ -298,7 +296,7 @@ static void ssa_opt_global(ssa_vm_t *vm, ssa_symbol_t *global)
     global->value = scope.return_value;
 }
 
-void ssa_opt(reports_t *reports, ssa_result_t result)
+void ssa_opt(logger_t *reports, ssa_result_t result)
 {
     ssa_vm_t vm = {
         .reports = reports,

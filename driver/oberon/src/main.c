@@ -1,5 +1,6 @@
 #include "cthulhu/mediator/driver.h"
 
+#include "memory/memory.h"
 #include "oberon/driver.h"
 
 #include "interop/compile.h"
@@ -10,6 +11,19 @@
 #include "obr_flex.h"
 
 CTU_CALLBACKS(kCallbacks, obr);
+
+static void obr_preparse(driver_t *handle, scan_t *scan)
+{
+    CTU_UNUSED(handle);
+    lifetime_t *lifetime = handle_get_lifetime(handle);
+    logger_t *reports = lifetime_get_logger(lifetime);
+
+    obr_scan_t info = {
+        .reports = reports,
+    };
+
+    scan_set_context(scan, BOX(info));
+}
 
 static void obr_postparse(driver_t *handle, scan_t *scan, void *tree)
 {
@@ -47,6 +61,7 @@ const language_t kOberonModule = {
     .fnCreate = obr_create,
     .fnDestroy = obr_destroy,
 
+    .fn_prepass = obr_preparse,
     .fn_postpass = obr_postparse,
     .callbacks = &kCallbacks,
 

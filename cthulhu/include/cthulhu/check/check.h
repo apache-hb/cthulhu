@@ -2,7 +2,7 @@
 
 #include "cthulhu/ssa/ssa.h"
 
-typedef struct reports_t reports_t;
+typedef struct logger_t logger_t;
 
 /// @defgroup Check Tree form validation
 /// @brief Validation for tree form IR
@@ -14,6 +14,6 @@ typedef struct reports_t reports_t;
 ///
 /// @param reports the reports object
 /// @param mods the modules to check
-void check_tree(reports_t *reports, map_t *mods);
+void check_tree(logger_t *reports, map_t *mods);
 
 /// @}

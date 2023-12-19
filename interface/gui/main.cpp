@@ -13,8 +13,6 @@
 #include "memory/memory.h"
 #include "support/langs.h"
 
-#include "report/report.h"
-
 #include "scan/node.h"
 
 #include "os/os.h"
