@@ -8,7 +8,6 @@
 
 %{
 #include "ap_bison.h"
-#include "report/report-ext.h"
 #include "interop/flex.h"
 #include "memory/memory.h"
 %}

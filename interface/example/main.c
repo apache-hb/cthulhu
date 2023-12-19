@@ -150,7 +150,11 @@ int main(int argc, const char **argv)
     }
     CHECK_REPORTS(reports, "creating output directory");
 
-    fs_sync(out, fs);
+    sync_result_t result = fs_sync(out, fs);
+    if (result.path != NULL)
+    {
+        report(reports, eFatal, NULL, "failed to sync %s", result.path);
+    }
     CHECK_REPORTS(reports, "syncing output directory");
 
     logverbose("done");

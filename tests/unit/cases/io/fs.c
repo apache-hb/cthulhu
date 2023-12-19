@@ -2,15 +2,9 @@
 
 #include "fs/fs.h"
 
-#include "report/report.h"
 #include "std/str.h"
 
 #include <stdint.h>
-
-static const report_config_t kConfig = {
-    .limit = SIZE_MAX,
-    .warningsAreErrors = true
-};
 
 int main()
 {

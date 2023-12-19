@@ -8,8 +8,6 @@
 #include "std/vector.h"
 #include "std/str.h"
 
-#include "report/report.h"
-
 #include <string.h>
 
 // internals

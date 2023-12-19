@@ -7,7 +7,7 @@ src = [
 
 libargparse_base = library('argparse_base', src,
     c_args : user_args,
-    dependencies : [ gmp, std, scan, report, interop ],
+    dependencies : [ gmp, std, scan, interop ],
     include_directories : [ 'src', 'include' ]
 )
 
@@ -20,7 +20,7 @@ src = [
 libargparse = library('argparse', src,
     c_args : generated_args,
     link_with : libargparse_base,
-    dependencies : [ gmp, memory, std, scan, report, interop, io ],
+    dependencies : [ gmp, memory, std, scan, interop, io ],
     include_directories : [ 'src', 'include' ]
 )
 
