@@ -58,14 +58,14 @@ const language_t kOberonModule = {
 
     .exts = kLangNames,
 
-    .fnCreate = obr_create,
-    .fnDestroy = obr_destroy,
+    .fn_create = obr_create,
+    .fn_destroy = obr_destroy,
 
     .fn_prepass = obr_preparse,
     .fn_postpass = obr_postparse,
     .callbacks = &kCallbacks,
 
-    .fnCompilePass = {
+    .fn_compile_passes = {
         [eStageForwardSymbols] = obr_forward_decls,
         [eStageCompileImports] = obr_process_imports,
         [eStageCompileSymbols] = obr_compile_module

@@ -26,6 +26,6 @@ const language_t kJvmModule = {
 
     .exts = kLangNames,
 
-    .fnCreate = jvm_create,
-    .fnDestroy = jvm_destroy
+    .fn_create = jvm_create,
+    .fn_destroy = jvm_destroy
 };

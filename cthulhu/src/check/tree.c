@@ -1,5 +1,6 @@
 #include "cthulhu/check/check.h"
 
+#include "cthulhu/events/events.h"
 #include "cthulhu/mediator/driver.h"
 
 #include "cthulhu/util/util.h"
@@ -54,28 +55,28 @@ static void check_global_attribs(check_t *check, const tree_t *global)
     case eLinkImport:
         if (global->initial != NULL)
         {
-            message_t *id = report(check->reports, eWarn, tree_get_node(global),
+            event_t *id = msg_notify(check->reports, &kEvent_ImportedWithImpl, tree_get_node(global),
                 "global `%s` is marked as imported but has an implementation",
                 tree_get_name(global)
             );
-            report_note(id, "implementation will be ignored");
+            msg_note(id, "implementation will be ignored");
         }
         break;
 
     case eLinkModule:
         if (attribs->mangle != NULL)
         {
-            message_t *id = report(check->reports, eWarn, tree_get_node(global),
+            event_t *id = msg_notify(check->reports, &kEvent_IgnoredMangling, tree_get_node(global),
                 "global `%s` has internal linkage and user defined mangling",
                 tree_get_name(global)
             );
-            report_note(id, "attribute will be ignored");
+            msg_note(id, "attribute will be ignored");
         }
         break;
 
     case eLinkEntryGui:
     case eLinkEntryCli:
-        report(check->reports, eFatal, tree_get_node(global),
+        msg_notify(check->reports, &kEvent_EntryNotFunction, tree_get_node(global),
             "global `%s` is marked as an entry point but is not a function",
             tree_get_name(global)
         );
@@ -89,7 +90,7 @@ static void check_func_has_body(check_t *check, const tree_t *fn)
 {
     if (fn->body != NULL) { return; }
 
-    report(check->reports, eFatal, tree_get_node(fn),
+    msg_notify(check->reports, &kEvent_EntryMissingBody, tree_get_node(fn),
         "function `%s` is an entry point, but has no body",
         tree_get_name(fn)
     );
@@ -104,22 +105,22 @@ static void check_func_attribs(check_t *check, const tree_t *fn)
     case eLinkImport:
         if (fn->body != NULL)
         {
-            message_t *id = report(check->reports, eWarn, tree_get_node(fn),
+            event_t *id = msg_notify(check->reports, &kEvent_ImportedWithImpl, tree_get_node(fn),
                 "function `%s` is marked as imported but has an implementation",
                 tree_get_name(fn)
             );
-            report_note(id, "implementation will be ignored");
+            msg_note(id, "implementation will be ignored");
         }
         break;
 
     case eLinkModule:
         if (attribs->mangle != NULL)
         {
-            message_t *id = report(check->reports, eWarn, tree_get_node(fn),
+            event_t *id = msg_notify(check->reports, &kEvent_IgnoredMangling, tree_get_node(fn),
                 "function `%s` has internal linkage and user defined mangling",
                 tree_get_name(fn)
             );
-            report_note(id, "attribute will be ignored");
+            msg_note(id, "attribute will be ignored");
         }
         break;
 
@@ -127,10 +128,10 @@ static void check_func_attribs(check_t *check, const tree_t *fn)
         check_func_has_body(check, fn);
         if (check->cli_entry != NULL)
         {
-            message_t *id = report(check->reports, eFatal, tree_get_node(fn),
+            event_t *id = msg_notify(check->reports, &kEvent_MultipleEntryPoints, tree_get_node(fn),
                 "multiple CLI entry points defined"
             );
-            report_append(id, tree_get_node(check->cli_entry), "previous entry point defined here");
+            msg_append(id, tree_get_node(check->cli_entry), "previous entry point defined here");
         }
         else
         {
@@ -141,10 +142,10 @@ static void check_func_attribs(check_t *check, const tree_t *fn)
         check_func_has_body(check, fn);
         if (check->gui_entry != NULL)
         {
-            message_t *id = report(check->reports, eFatal, tree_get_node(fn),
+            event_t *id = msg_notify(check->reports, &kEvent_MultipleEntryPoints, tree_get_node(fn),
                 "multiple GUI entry points defined"
             );
-            report_append(id, tree_get_node(check->gui_entry), "previous entry point defined here");
+            msg_append(id, tree_get_node(check->gui_entry), "previous entry point defined here");
         }
         else
         {
@@ -160,7 +161,7 @@ static void check_func_return_equal(check_t *check, const tree_t *returnType, co
 {
     if (util_types_equal(returnType, realType)) { return; }
 
-    report(check->reports, eFatal, tree_get_node(realType),
+    msg_notify(check->reports, &kEvent_ReturnTypeMismatch, tree_get_node(realType),
         "return type `%s` does not match function return type `%s`",
         tree_to_string(realType),
         tree_to_string(returnType)
@@ -177,11 +178,11 @@ static void check_deprecated_call(check_t *check, const tree_t *expr)
 
     if (attribs->deprecated == NULL) { return; }
 
-    message_t *id = report(check->reports, eWarn, tree_get_node(expr),
+    event_t *id = msg_notify(check->reports, &kEvent_Deprecated, tree_get_node(expr),
         "call to deprecated function `%s`",
         tree_get_name(fn)
     );
-    report_note(id, "deprecated: %s", attribs->deprecated);
+    msg_note(id, "deprecated: %s", attribs->deprecated);
 }
 
 static void check_func_body(check_t *check, const tree_t *returnType, const tree_t *stmt)
@@ -264,7 +265,7 @@ static void check_func_return(check_t *check, const tree_t *fn)
     {
         if (tree_is(return_type, eTreeTypeUnit)) { return; }
 
-        report(check->reports, eFatal, tree_get_node(fn),
+        msg_notify(check->reports, &kEvent_MayNotReturn, tree_get_node(fn),
             "function `%s` may not return a value",
             tree_get_name(fn)
         );
@@ -343,7 +344,7 @@ static void check_global_recursion(check_t *check, const tree_t *global)
     }
     else
     {
-        message_t *id = report(check->reports, eFatal, tree_get_node(global),
+        event_t *id = msg_notify(check->reports, &kEvent_RecursiveEval, tree_get_node(global),
             "evaluation of `%s` may be infinite",
             tree_get_name(global)
         );
@@ -351,7 +352,7 @@ static void check_global_recursion(check_t *check, const tree_t *global)
         for (size_t i = 0; i < len; i++)
         {
             const tree_t *decl = vector_get(check->expr_stack, i);
-            report_append(id, tree_get_node(decl), "call to `%s`", tree_get_name(decl));
+            msg_append(id, tree_get_node(decl), "call to `%s`", tree_get_name(decl));
         }
     }
 
@@ -409,7 +410,7 @@ static void check_aggregate_recursion(check_t *check, const tree_t *type)
     }
     else
     {
-        message_t *id = report(check->reports, eFatal, tree_get_node(type),
+        event_t *id = msg_notify(check->reports, &kEvent_InfiniteSizedType, tree_get_node(type),
             "size of type `%s` may be infinite",
             tree_get_name(type)
         );
@@ -417,7 +418,7 @@ static void check_aggregate_recursion(check_t *check, const tree_t *type)
         for (size_t i = 0; i < len; i++)
         {
             const tree_t *decl = vector_get(check->type_stack, i);
-            report_append(id, tree_get_node(decl), "call to `%s`", tree_get_name(decl));
+            msg_append(id, tree_get_node(decl), "call to `%s`", tree_get_name(decl));
         }
     }
 
@@ -483,7 +484,7 @@ static void check_type_recursion(check_t *check, const tree_t *type)
     }
     else
     {
-        message_t *id = report(check->reports, eFatal, tree_get_node(type),
+        event_t *id = msg_notify(check->reports, &kEvent_InvalidType, tree_get_node(type),
             "type `%s` contains an impossible type",
             tree_get_name(type)
         );
@@ -491,7 +492,7 @@ static void check_type_recursion(check_t *check, const tree_t *type)
         for (size_t i = 0; i < len; i++)
         {
             const tree_t *decl = vector_get(check->type_stack, i);
-            report_append(id, tree_get_node(decl), "call to `%s`", tree_get_name(decl));
+            msg_append(id, tree_get_node(decl), "call to `%s`", tree_get_name(decl));
         }
     }
 
@@ -515,8 +516,6 @@ static void check_module_valid(check_t *check, const tree_t *mod)
 {
     CTASSERT(check != NULL);
     CTASSERTF(tree_is(mod, eTreeDeclModule), "invalid module `%s`", tree_to_string(mod));
-
-    logverbose("check %s", tree_get_name(mod));
 
     vector_t *modules = map_values(tree_module_tag(mod, eSemaModules));
     size_t totalModules = vector_len(modules);

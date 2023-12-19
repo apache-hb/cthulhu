@@ -1,5 +1,6 @@
 #include "common.h"
 
+#include "cthulhu/events/events.h"
 #include "cthulhu/tree/query.h"
 
 #include "std/vector.h"
@@ -51,8 +52,8 @@ tree_t *tree_resolve(cookie_t *cookie, const tree_t *decl)
     if (index != SIZE_MAX)
     {
         // TODO: better reporting
-        report(cookie->reports, eFatal, decl->node, "cyclic dependency when resolving %s", tree_get_name(decl));
-        return tree_error(decl->node, "cyclic dependency");
+        msg_notify(cookie->reports, &kEvent_CyclicDependency, decl->node, "cyclic dependency when resolving %s", tree_get_name(decl));
+        return tree_error(decl->node, &kEvent_CyclicDependency, "cyclic dependency");
     }
 
     vector_push(&cookie->stack, inner);

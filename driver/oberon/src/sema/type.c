@@ -1,4 +1,5 @@
 #include "oberon/sema/type.h"
+#include "cthulhu/events/events.h"
 #include "oberon/sema/sema.h"
 
 #include "cthulhu/util/util.h"
@@ -25,7 +26,7 @@ static tree_t *sema_type_name(tree_t *sema, obr_t *type)
     tree_t *it = obr_get_type(sema, type->name);
     if (it == NULL)
     {
-        return tree_raise(type->node, sema->reports, "type '%s' not found", type->name);
+        return tree_raise(type->node, sema->reports, &kEvent_TypeNotFound, "type '%s' not found", type->name);
     }
 
     return it;

@@ -7,6 +7,10 @@ BreakAfterAttributes: Always
 ColumnLimit: 100
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: true
+AlignOperands: true
+PenaltyBreakAssignment: 50
+BreakBeforeTernaryOperators: true
+AlignOperands: DontAlign
 AttributeMacros:
     - CT_PRINTF
     - CONSTFN

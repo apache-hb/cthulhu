@@ -1,5 +1,6 @@
 #include "common.h"
 
+#include "core/macros.h"
 #include "io/io.h"
 #include "memory/memory.h"
 
@@ -9,6 +10,7 @@
 #include "std/str.h"
 
 #include "std/typed/vector.h"
+#include "std/vector.h"
 
 #include <string.h>
 
@@ -364,4 +366,36 @@ size_t cache_count_lines(text_cache_t *cache)
     CTASSERT(cache != NULL);
 
     return typevec_len(cache->line_info);
+}
+
+int text_report(vector_t *events, text_config_t config, text_format_t format)
+{
+    CTASSERT(events != NULL);
+
+    size_t len = vector_len(events);
+    void (*fn)(text_config_t, const event_t*) = format == eTextComplex ? text_report_rich : text_report_simple;
+
+    int result = EXIT_OK;
+
+    for (size_t i = 0; i < len; i++)
+    {
+        const event_t *event = vector_get(events, i);
+        fn(config, event);
+
+        const diagnostic_t *diag = event->diagnostic;
+        switch (diag->severity)
+        {
+        case eSeverityFatal:
+            result = MAX(result, EXIT_ERROR);
+            break;
+        case eSeverityInternal:
+        case eSeveritySorry:
+            result = MAX(result, EXIT_INTERNAL);
+            break;
+        default:
+            break;
+        }
+    }
+
+    return result;
 }

@@ -6,7 +6,8 @@
 
 BEGIN_API
 
-typedef struct langs_t {
+typedef struct langs_t
+{
     const language_t *langs;
     size_t size;
 } langs_t;

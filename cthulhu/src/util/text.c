@@ -1,8 +1,10 @@
 #include "cthulhu/util/text.h"
 
+#include "cthulhu/events/events.h"
 #include "std/typed/vector.h"
 
-typedef struct escape_t {
+typedef struct escape_t
+{
     size_t length;
     char code;
 } escape_t;
@@ -28,7 +30,7 @@ static escape_t consume_escape(logger_t *reports, const node_t *node, const char
     case '\\': return escape_new(2, '\\');
 
     default:
-        report(reports, eWarn, node, "unknown escape sequence '\\%c'", *text);
+        msg_notify(reports, &kEvent_InvalidStringEscape, node, "unknown escape sequence '\\%c'", *text);
         return escape_new(1, *text);
     }
 }

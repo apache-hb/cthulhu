@@ -1,6 +1,7 @@
 #include "pl0/scan.h"
 
 #include "core/macros.h"
+#include "cthulhu/events/events.h"
 
 pl0_scan_t *pl0_scan_context(scan_t *scan)
 {
@@ -13,5 +14,5 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg)
 
     pl0_scan_t *ctx = pl0_scan_context(scan);
 
-    report(ctx->reports, eFatal, node_new(scan, *where), "%s", msg);
+    evt_scan_error(ctx->reports, node_new(scan, *where), msg);
 }

@@ -2,6 +2,8 @@
 
 #include "cthulhu/mediator/interface.h"
 
+#include "notify/notify.h"
+
 #include "io/io.h"
 
 #include "std/str.h"
@@ -82,5 +84,6 @@ void CompileInfo::init()
 /// @retval false if there are reports
 bool CompileInfo::check_reports() const
 {
-    return vector_len(reports->messages) == 0;
+    vector_t *events = logger_get_events(reports);
+    return vector_len(events) == 0;
 }

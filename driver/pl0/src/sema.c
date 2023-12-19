@@ -1,4 +1,5 @@
 #include "pl0/sema.h"
+#include "cthulhu/events/events.h"
 #include "pl0/ast.h"
 
 #include "cthulhu/util/util.h"
@@ -46,8 +47,8 @@ static char *pl0_normalize(const char *name)
 
 static void report_pl0_shadowing(logger_t *reports, const char *name, const node_t *prevDefinition, const node_t *newDefinition)
 {
-    message_t *id = report_shadow(reports, name, prevDefinition, newDefinition);
-    report_note(id, "PL/0 is case insensitive");
+    event_t *id = evt_symbol_shadowed(reports, name, prevDefinition, newDefinition);
+    msg_note(id, "PL/0 is case insensitive");
 }
 
 static tree_t *get_decl(tree_t *sema, const char *name, const pl0_tag_t *tags, size_t len)
@@ -202,7 +203,7 @@ void pl0_init(driver_t *handle)
 
 static void report_pl0_unresolved(logger_t *reports, const node_t *node, const char *name)
 {
-    report(reports, eFatal, node, "unresolved reference to `%s`", name);
+    msg_notify(reports, &kEvent_SymbolNotFound, node, "unresolved reference to `%s`", name);
 }
 
 ///
@@ -224,7 +225,7 @@ static tree_t *sema_ident(tree_t *sema, pl0_t *node)
     if (var == NULL)
     {
         report_pl0_unresolved(sema->reports, node->node, node->ident);
-        return tree_error(node->node, "unresolved identifier `%s`", node->ident);
+        return tree_error(node->node, &kEvent_SymbolNotFound, "unresolved identifier `%s`", node->ident);
     }
 
     return tree_resolve(tree_get_cookie(sema), var);
@@ -256,7 +257,7 @@ static tree_t *sema_expr(tree_t *sema, pl0_t *node)
     case ePl0Unary:
         return sema_unary(sema, node);
     default:
-        return tree_raise(node->node, sema->reports, "sema-expr: %d", node->type);
+        NEVER("sema-expr: %d", node->type);
     }
 }
 
@@ -286,7 +287,7 @@ static tree_t *sema_call(tree_t *sema, pl0_t *node)
     if (proc == NULL)
     {
         report_pl0_unresolved(sema->reports, node->node, node->procedure);
-        return tree_error(node->node, "unresolved procedure `%s`", node->procedure);
+        return tree_error(node->node, &kEvent_FunctionNotFound, "unresolved procedure `%s`", node->procedure);
     }
 
     vector_t *args = vector_new(0);
@@ -310,7 +311,7 @@ static tree_t *sema_assign(tree_t *sema, pl0_t *node)
     if (dst == NULL)
     {
         report_pl0_unresolved(sema->reports, node->node, node->dst);
-        return tree_error(node->node, "unresolved destination variable `%s`", node->dst);
+        return tree_error(node->node, &kEvent_VariableNotFound, "unresolved destination variable `%s`", node->dst);
     }
 
     const tree_t *dstType = tree_get_type(dst);
@@ -318,7 +319,7 @@ static tree_t *sema_assign(tree_t *sema, pl0_t *node)
 
     if (quals & eQualConst)
     {
-        report(sema->reports, eFatal, node->node, "cannot assign to constant value");
+        msg_notify(sema->reports, &kEvent_MutationOfConst, node->node, "cannot assign to constant value");
     }
 
     return tree_stmt_assign(node->node, dst, src);
@@ -353,7 +354,7 @@ static tree_t *sema_stmt(tree_t *sema, pl0_t *node)
     case ePl0Loop: return sema_loop(sema, node);
     case ePl0Assign: return sema_assign(sema, node);
     case ePl0Print: return sema_print(sema, node);
-    default: return tree_raise(node->node, sema->reports, "sema-stmt: %d", node->type);
+    default: NEVER("sema-stmt: %d", node->type);
     }
 }
 
@@ -403,7 +404,7 @@ static tree_t *sema_compare(tree_t *sema, pl0_t *node)
     {
     case ePl0Odd: return sema_odd(sema, node);
     case ePl0Compare: return sema_comp(sema, node);
-    default: return tree_raise(node->node, sema->reports, "sema-compare: %d", node->type);
+    default: NEVER("sema-compare: %d", node->type);
     }
 }
 
@@ -571,7 +572,7 @@ void pl0_process_imports(context_t *context)
 
         if (ctx == NULL)
         {
-            report(sema->reports, eFatal, importDecl->node, "cannot import `%s`, failed to find module", str_join(".", importDecl->path));
+            msg_notify(sema->reports, &kEvent_ImportNotFound, importDecl->node, "cannot import `%s`, failed to find module", str_join(".", importDecl->path));
             continue;
         }
 
@@ -579,7 +580,7 @@ void pl0_process_imports(context_t *context)
 
         if (lib == sema)
         {
-            report(sema->reports, eFatal, importDecl->node, "module cannot import itself");
+            msg_notify(sema->reports, &kEvent_CirclularImport, importDecl->node, "module cannot import itself");
             continue;
         }
 

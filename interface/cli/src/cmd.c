@@ -108,8 +108,6 @@ static AP_EVENT(on_register_ext, ap, param, value, data)
         return eEventHandled;
     }
 
-    logverbose("registered extension `%s` to language `%s`", ext, lang->id);
-
     return eEventHandled;
 }
 
@@ -154,8 +152,6 @@ static AP_EVENT(on_set_debug_ssa, ap, param, value, data)
 
     rt->emitSSA = *val;
 
-    logverbose("%sd debug ssa", *val ? "enable" : "disable");
-
     return eEventHandled;
 }
 
@@ -164,12 +160,7 @@ static AP_EVENT(on_set_verbose, ap, param, value, data)
     CTU_UNUSED(ap);
     CTU_UNUSED(param);
     CTU_UNUSED(data);
-
-    const bool *val = value;
-
-    verbose = *val;
-
-    logverbose("%sd verbose logging", verbose ? "enable" : "disable");
+    CTU_UNUSED(value);
 
     return eEventHandled;
 }
@@ -210,7 +201,7 @@ static AP_ERROR(on_arg_error, ap, node, message, data)
     return eEventHandled;
 }
 
-runtime_t cmd_parse(logger_t *reports, mediator_t *mediator, lifetime_t *lifetime, int argc, const char **argv)
+runtime_t cmd_parse(mediator_t *mediator, lifetime_t *lifetime, int argc, const char **argv)
 {
     ap_t *ap = ap_new("cli", NEW_VERSION(0, 0, 1));
 
@@ -221,7 +212,7 @@ runtime_t cmd_parse(logger_t *reports, mediator_t *mediator, lifetime_t *lifetim
         .mediator = mediator,
         .lifetime = lifetime,
 
-        .reports = reports,
+        .reports = lifetime_get_logger(lifetime),
         .ap = ap,
 
         .warnAsError = false,

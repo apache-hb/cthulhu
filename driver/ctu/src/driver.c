@@ -1,4 +1,5 @@
 #include "ctu/driver.h"
+#include "cthulhu/events/events.h"
 #include "ctu/ast.h"
 
 #include "ctu/sema/sema.h"
@@ -75,22 +76,22 @@ static void import_module(lifetime_t *lifetime, tree_t *sema, ctu_t *include)
 
     if (ctx == NULL)
     {
-        report(sema->reports, eFatal, include->node, "import `%s` not found", str_join("::", include->importPath));
+        msg_notify(sema->reports, &kEvent_ImportNotFound, include->node, "import `%s` not found", str_join("::", include->importPath));
         return;
     }
 
     tree_t *lib = context_get_module(ctx);
     if (lib == sema)
     {
-        report(sema->reports, eFatal, include->node, "module cannot import itself");
+        msg_notify(sema->reports, &kEvent_CirclularImport, include->node, "module cannot import itself");
         return;
     }
 
     tree_t *old = ctu_get_namespace(sema, include->name, NULL);
     if (old != NULL)
     {
-        message_t *id = report_shadow(sema->reports, include->name, tree_get_node(old), tree_get_node(lib));
-        report_note(id, "consider using import aliases; eg. `import %s as my_%s`",
+        event_t *id = evt_symbol_shadowed(sema->reports, include->name, tree_get_node(old), tree_get_node(lib));
+        msg_note(id, "consider using import aliases; eg. `import %s as my_%s`",
             str_join("::", include->importPath),
             include->name
         );

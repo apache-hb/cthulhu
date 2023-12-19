@@ -1,8 +1,9 @@
 #pragma once
 
-#include "cthulhu/tree/sema.h"
+#include "cthulhu/tree/tree.h"
 
-typedef enum cc_tag_t {
+typedef enum cc_tag_t
+{
     eCTagValues = eSemaValues,
     eCTagTypes = eSemaTypes,
     eCTagProcs = eSemaProcs,
@@ -10,3 +11,4 @@ typedef enum cc_tag_t {
 
     eCTagTotal
 } cc_tag_t;
+

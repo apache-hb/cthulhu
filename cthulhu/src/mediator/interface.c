@@ -1,5 +1,7 @@
 #include "common.h"
 
+#include "cthulhu/events/events.h"
+
 #include "cthulhu/mediator/interface.h"
 #include "cthulhu/mediator/driver.h"
 
@@ -138,7 +140,7 @@ void lifetime_add_language(lifetime_t *lifetime, const language_t *lang)
     CTASSERT(lifetime != NULL);
     CTASSERT(lang != NULL);
 
-    CTASSERTF(lang->fnCreate != NULL, "language `%s` has no create function", lang->id);
+    CTASSERTF(lang->fn_create != NULL, "language `%s` has no create function", lang->id);
 
     for (size_t i = 0; lang->exts[i] != NULL; i++)
     {
@@ -148,11 +150,11 @@ void lifetime_add_language(lifetime_t *lifetime, const language_t *lang)
             continue;
         }
 
-        report(lifetime->reports, eInternal, node_builtin(), "language `%s` registered under extension `%s` clashes with previously registered language `%s`", lang->id, lang->exts[i], old->id); // TODO: handle this
+        msg_notify(lifetime->logger, &kEvent_ExtensionConflict, node_builtin(), "language `%s` registered under extension `%s` clashes with previously registered language `%s`", lang->id, lang->exts[i], old->id); // TODO: handle this
     }
 
     driver_t *handle = handle_new(lifetime, lang);
-    EXEC(lang, fnCreate, handle);
+    EXEC(lang, fn_create, handle);
 }
 
 const language_t *lifetime_add_extension(lifetime_t *lifetime, const char *ext, const language_t *lang)
@@ -173,13 +175,13 @@ static bool parse_failed(logger_t *reports, const char *path, parse_result_t res
     switch (result.result)
     {
     case eParseInitFailed:
-        report(reports, eInternal, node_builtin(), "failed to init parser %s: %d", path, result.error);
+        msg_notify(reports, &kEvent_ParseInitFailed, node_builtin(), "failed to init parser %s: %d", path, result.error);
         return true;
     case eParseScanFailed:
-        report(reports, eFatal, node_builtin(), "failed to scan %s", path);
+        msg_notify(reports, &kEvent_ScanFailed, node_builtin(), "failed to scan %s: %d", path, result.error);
         return true;
     case eParseFailed:
-        report(reports, eFatal, node_builtin(), "failed to parse %s: %d", path, result.error);
+        msg_notify(reports, &kEvent_ParseFailed, node_builtin(), "failed to parse %s: %d", path, result.error);
         return true;
 
     default:
@@ -194,7 +196,7 @@ void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io)
     CTASSERT(io != NULL);
 
     scan_t *scan = scan_io(lang->id, io, lifetime->alloc);
-    scan_set_context(scan, lifetime->reports);
+    scan_set_context(scan, lifetime->logger);
 
     driver_t *handle = handle_new(lifetime, lang);
 
@@ -204,7 +206,7 @@ void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io)
 
         parse_result_t result = compile_scanner(scan, lang->callbacks);
         const char *path = scan_path(scan);
-        if (parse_failed(lifetime->reports, path, result))
+        if (parse_failed(lifetime->logger, path, result))
         {
             return;
         }
@@ -214,8 +216,8 @@ void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io)
     }
     else
     {
-        CTASSERTF(lang->fnParse != NULL, "language `%s` has no parse function", lang->id);
-        lang->fnParse(handle, scan);
+        CTASSERTF(lang->fn_parse != NULL, "language `%s` has no parse function", lang->id);
+        lang->fn_parse(handle, scan);
     }
 }
 
@@ -276,7 +278,7 @@ void lifetime_run_stage(lifetime_t *lifetime, compile_stage_t stage)
         CTASSERT(ctx != NULL);
 
         const language_t *lang = ctx->lang;
-        driver_pass_t fnPass = lang->fnCompilePass[stage];
+        driver_pass_t fnPass = lang->fn_compile_passes[stage];
 
         if (!context_requires_compiling(ctx) || fnPass == NULL)
         {

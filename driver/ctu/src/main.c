@@ -63,13 +63,13 @@ const language_t kCtuModule = {
 
     .exts = kLangNames,
 
-    .fnCreate = ctu_init,
+    .fn_create = ctu_init,
 
     .fn_prepass = ctu_preparse,
     .fn_postpass = ctu_postparse,
     .callbacks = &kCallbacks,
 
-    .fnCompilePass = {
+    .fn_compile_passes = {
         [eStageForwardSymbols] = ctu_forward_decls,
         [eStageCompileImports] = ctu_process_imports,
         [eStageCompileSymbols] = ctu_compile_module

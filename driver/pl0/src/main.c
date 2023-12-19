@@ -56,13 +56,13 @@ const language_t kPl0Module = {
 
     .exts = kLangNames,
 
-    .fnCreate = pl0_init,
+    .fn_create = pl0_init,
 
     .fn_prepass = pl0_preparse,
     .fn_postpass = pl0_postparse,
     .callbacks = &kCallbacks,
 
-    .fnCompilePass = {
+    .fn_compile_passes = {
         [eStageForwardSymbols] = pl0_forward_decls,
         [eStageCompileImports] = pl0_process_imports,
         [eStageCompileSymbols] = pl0_compile_module

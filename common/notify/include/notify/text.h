@@ -30,6 +30,7 @@
 typedef struct io_t io_t;
 typedef struct frame_t frame_t;
 typedef struct event_t event_t;
+typedef struct vector_t vector_t;
 
 typedef struct text_colour_t text_colour_t;
 
@@ -49,16 +50,30 @@ typedef struct file_config_t
     bool print_header;
 } file_config_t;
 
+typedef enum text_format_t
+{
+    eTextSimple,    ///< simple text reporting
+    eTextComplex,   ///< complex text reporting
+
+    eTextTotal
+} text_format_t;
+
 typedef struct text_config_t
 {
     // is the first line of a source file the zeroth line or the first line
     file_config_t config;
 
+    // colour configuration
     const text_colour_t *colours;
 
     // the io object to write to
     io_t *io;
 } text_config_t;
+
+int text_report(
+    vector_t *events,
+    text_config_t config,
+    text_format_t format);
 
 // complex reporting
 void text_report_rich(

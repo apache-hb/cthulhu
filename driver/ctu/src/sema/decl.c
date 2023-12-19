@@ -1,4 +1,5 @@
 #include "ctu/sema/decl.h"
+#include "cthulhu/events/events.h"
 #include "ctu/sema/type.h"
 #include "ctu/sema/expr.h"
 
@@ -14,6 +15,15 @@
 #include "std/str.h"
 
 #include "base/panic.h"
+
+const diagnostic_t kEvent_DuplicateDefaultCases = {
+    .severity = eSeverityFatal,
+    .id = "CTU-0001",
+    .brief = "duplicate default cases",
+    .description =
+        "enum has multiple default cases.\n"
+        "Enums are only allowed to have one or zero default cases.\n",
+};
 
 ///
 /// attributes
@@ -109,7 +119,7 @@ static vector_t *ctu_collect_fields(tree_t *sema, tree_t *self, ctu_t *decl)
         tree_t *prev = map_get(fields, name);
         if (prev != NULL)
         {
-            report(sema->reports, eFatal, field->node, "aggregate decl `%s` has duplicate field `%s`", decl->name, name);
+            msg_notify(sema->reports, &kEvent_DuplicateField, field->node, "aggregate decl `%s` has duplicate field `%s`", decl->name, name);
         }
 
         vector_set(items, i, item);
@@ -144,7 +154,7 @@ static void ctu_resolve_variant(tree_t *sema, tree_t *self, void *user)
 
     if (!tree_is(underlying, eTreeTypeDigit))
     {
-        report(sema->reports, eFatal, decl->node, "decl `%s` has non-integer underlying type", decl->name);
+        msg_notify(sema->reports, &kEvent_InvalidEnumUnderlyingType, decl->node, "decl `%s` has non-integer underlying type", decl->name);
         return;
     }
 
@@ -166,8 +176,8 @@ static void ctu_resolve_variant(tree_t *sema, tree_t *self, void *user)
         {
             if (defaultCase != NULL)
             {
-                message_t *id = report(sema->reports, eFatal, it->node, "decl `%s` has multiple default cases", decl->name);
-                report_append(id, defaultCase->node, "previous default case");
+                event_t *id = msg_notify(sema->reports, &kEvent_DuplicateDefaultCases, it->node, "decl `%s` has multiple default cases", decl->name);
+                msg_append(id, defaultCase->node, "previous default case");
             }
             else
             {

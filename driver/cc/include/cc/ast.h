@@ -2,8 +2,8 @@
 
 #include <gmp.h>
 
-#include "std/vector.h"
+#include "cthulhu/tree/ops.h" // IWYU pragma: export
 
-#include "cthulhu/tree/ops.h"
+typedef struct vector_t vector_t;
 
 // TODO: parse C

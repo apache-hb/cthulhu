@@ -1,10 +1,13 @@
 #include "c89.h"
 
+#include "scan/node.h"
 #include "std/str.h"
 #include "std/map.h"
 #include "std/set.h"
 #include "std/vector.h"
 #include "std/typed/vector.h"
+
+#include "cthulhu/events/events.h"
 
 #include "fs/fs.h"
 
@@ -373,7 +376,7 @@ static const char *c89_format_local(c89_emit_t *emit, size_t local)
     typevec_t *locals = emit->current->locals;
     if (local >= typevec_len(locals))
     {
-        report(emit->emit.reports, eFatal, NULL, "local(%zu) > locals(%zu)", local, typevec_len(locals));
+        msg_notify(emit->emit.reports, &kEvent_EmitStateError, node_builtin(), "local(%zu) > locals(%zu)", local, typevec_len(locals));
         return format("local[error(%zu > %zu)]", local, typevec_len(locals));
     }
 
@@ -386,7 +389,7 @@ static const char *c89_format_param(c89_emit_t *emit, size_t param)
     typevec_t *params = emit->current->params;
     if (param >= typevec_len(params))
     {
-        report(emit->emit.reports, eFatal, NULL, "param(%zu) > params(%zu)", param, typevec_len(params));
+        msg_notify(emit->emit.reports, &kEvent_EmitStateError, node_builtin(), "param(%zu) > params(%zu)", param, typevec_len(params));
         return format("param[error(%zu > %zu)]", param, typevec_len(params));
     }
 

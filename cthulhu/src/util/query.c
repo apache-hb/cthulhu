@@ -1,3 +1,4 @@
+#include "cthulhu/events/events.h"
 #include "cthulhu/util/util.h"
 
 #include "cthulhu/tree/tree.h"
@@ -42,14 +43,14 @@ tree_t *util_search_namespace(tree_t *sema, const decl_search_t *search, const n
     {
         if (!tree_is(ns, eTreeDeclModule))
         {
-            return tree_raise(node, sema->reports, "expected a namespace but got `%s` instead", tree_to_string(ns));
+            return tree_raise(node, sema->reports, &kEvent_MalformedTypeName, "expected a namespace but got `%s` instead", tree_to_string(ns));
         }
 
         const char *segment = vector_get(path, i);
         ns = select_module(ns, search, segment, isImported);
         if (ns == NULL)
         {
-            return tree_raise(node, sema->reports, "namespace `%s` not found", segment);
+            return tree_raise(node, sema->reports, &kEvent_SymbolNotFound, "namespace `%s` not found", segment);
         }
     }
 
@@ -70,7 +71,7 @@ tree_t *util_search_path(tree_t *sema, const decl_search_t *search, const node_t
         ns = select_module(ns, search, segment, &isImported);
         if (ns == NULL)
         {
-            return tree_raise(node, sema->reports, "namespace `%s` not found", segment);
+            return tree_raise(node, sema->reports, &kEvent_SymbolNotFound, "namespace `%s` not found", segment);
         }
     }
 
@@ -78,12 +79,12 @@ tree_t *util_search_path(tree_t *sema, const decl_search_t *search, const node_t
     tree_t *decl = util_select_decl(ns, search->declTags, search->declTagsLen, name);
     if (decl == NULL)
     {
-        return tree_raise(node, sema->reports, "decl `%s` not found", name);
+        return tree_raise(node, sema->reports, &kEvent_SymbolNotFound, "decl `%s` not found", name);
     }
 
     if (isImported && !is_public(decl))
     {
-        return tree_raise(node, sema->reports, "decl `%s` is not public", name);
+        return tree_raise(node, sema->reports, &kEvent_SymbolNotVisible, "decl `%s` is not public", name);
     }
 
     return decl;
@@ -95,18 +96,18 @@ tree_t *util_search_qualified(tree_t *sema, const decl_search_t *search, const n
     tree_t *ns = select_module(sema, search, mod, &isImported);
     if (ns == NULL)
     {
-        return tree_raise(node, sema->reports, "namespace `%s` not found", mod);
+        return tree_raise(node, sema->reports, &kEvent_SymbolNotFound, "namespace `%s` not found", mod);
     }
 
     tree_t *decl = util_select_decl(ns, search->declTags, search->declTagsLen, name);
     if (decl == NULL)
     {
-        return tree_raise(node, sema->reports, "decl `%s` not found", name);
+        return tree_raise(node, sema->reports, &kEvent_SymbolNotFound, "decl `%s` not found", name);
     }
 
     if (isImported && !is_public(decl))
     {
-        return tree_raise(node, sema->reports, "decl `%s` is not public", name);
+        return tree_raise(node, sema->reports, &kEvent_SymbolNotVisible, "decl `%s` is not public", name);
     }
 
     return decl;

@@ -1,11 +1,21 @@
 #include "oberon/ast.h"
 
+#include "notify/notify.h"
 #include "oberon/scan.h"
 
 #include "std/str.h"
 
 #include "memory/arena.h"
 #include "base/panic.h"
+
+const diagnostic_t kEvent_MismatchingBlockNames = {
+    .severity = eSeverityWarn,
+    .id = "OBR-0002",
+    .brief = "Mismatching BEGIN and END names",
+    .description =
+        "The names of BEGIN and END blocks should match.\n"
+        "Specified in Section 10: Procedure declarations.",
+};
 
 static void ensure_block_names_match(scan_t *scan, const node_t *node, const char *type, const char *name, const char *end)
 {
@@ -16,8 +26,8 @@ static void ensure_block_names_match(scan_t *scan, const node_t *node, const cha
 
     if (!str_equal(name, end))
     {
-        message_t *id = report(ctx->reports, eWarn, node, "mismatching %s block BEGIN and END names", type);
-        report_note(id, "BEGIN name `%s` does not match END name `%s`", name, end);
+        event_t *id = msg_notify(ctx->reports, &kEvent_MismatchingBlockNames, node, "mismatching %s block BEGIN and END names", type);
+        msg_note(id, "BEGIN name `%s` does not match END name `%s`", name, end);
     }
 }
 

@@ -12,6 +12,7 @@
 #include "interop/flex.h"
 #include "memory/memory.h"
 #include "cthulhu/util/text.h"
+#include "cthulhu/events/events.h"
 %}
 
 ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
@@ -121,7 +122,7 @@ WS [ \t\r\v\n\f]
 
 . {
     cc_scan_t *scan = cc_scan_context(yyextra);
-    report_unknown_character(scan->reports, node_new(yyextra, *yylloc), yytext);
+    evt_scan_unknown(scan->reports, node_new(yyextra, *yylloc), yytext);
 }
 
 %%

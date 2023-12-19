@@ -1,5 +1,6 @@
 #include "ctu/sema/sema.h"
 
+#include "cthulhu/events/events.h"
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"
 #include "cthulhu/tree/sema.h"
@@ -95,7 +96,7 @@ void ctu_add_decl(tree_t *sema, ctu_tag_t tag, const char *name, tree_t *decl)
     tree_t *old = tree_module_get(sema, tag, name);
     if (old != NULL)
     {
-        report_shadow(sema->reports, name, tree_get_node(old), tree_get_node(decl));
+        evt_symbol_shadowed(sema->reports, name, tree_get_node(old), tree_get_node(decl));
     }
     else
     {

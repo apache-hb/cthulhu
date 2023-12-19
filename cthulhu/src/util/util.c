@@ -1,5 +1,7 @@
-#include "cthulhu/util/type.h"
 #include "cthulhu/util/util.h"
+#include "cthulhu/events/events.h"
+#include "cthulhu/util/type.h"
+
 
 #include "cthulhu/tree/query.h"
 #include "cthulhu/tree/sema.h"
@@ -20,7 +22,10 @@ void *util_select_decl(tree_t *sema, const size_t *tags, size_t len, const char 
     for (size_t i = 0; i < len; i++)
     {
         tree_t *decl = tree_module_get(sema, tags[i], name);
-        if (decl != NULL) { return decl; }
+        if (decl != NULL)
+        {
+            return decl;
+        }
     }
 
     return NULL;
@@ -38,10 +43,9 @@ tree_t *util_current_module(tree_t *sema)
 
 void util_set_current_module(tree_t *sema, tree_t *module)
 {
-    CTASSERTF(module != NULL, "(module=%p)", (void*)module);
+    CTASSERTF(module != NULL, "(module=%p)", (void *)module);
     tree_set_extra(sema, kCurrentModule, module);
 }
-
 
 tree_t *util_current_symbol(tree_t *sema)
 {
@@ -52,64 +56,76 @@ tree_t *util_current_symbol(tree_t *sema)
 
 void util_set_current_symbol(tree_t *sema, tree_t *symbol)
 {
-    CTASSERTF(symbol != NULL, "(symbol=%p)", (void*)symbol);
+    CTASSERTF(symbol != NULL, "(symbol=%p)", (void *)symbol);
     tree_set_extra(sema, kCurrentSymbol, symbol);
 }
 
 bool util_types_equal(const tree_t *lhs, const tree_t *rhs)
 {
-    CTASSERTF(lhs != NULL && rhs != NULL, "(lhs=%p, rhs=%p)", (void*)lhs, (void*)rhs);
+    CTASSERTF(lhs != NULL && rhs != NULL, "(lhs=%p, rhs=%p)", (void *)lhs, (void *)rhs);
 
-    if (lhs == rhs) { return true; }
+    if (lhs == rhs)
+    {
+        return true;
+    }
 
     tree_kind_t lhsKind = tree_get_kind(lhs);
     tree_kind_t rhsKind = tree_get_kind(rhs);
 
-    if (lhsKind != rhsKind) { return false; }
+    if (lhsKind != rhsKind)
+    {
+        return false;
+    }
 
     switch (lhsKind)
     {
     case eTreeTypeEmpty:
     case eTreeTypeUnit:
-    case eTreeTypeBool:
-        return true;
+    case eTreeTypeBool: return true;
 
-    case eTreeTypeDigit:
-        return (lhs->digit == rhs->digit) && (lhs->sign == rhs->sign);
+    case eTreeTypeDigit: return (lhs->digit == rhs->digit) && (lhs->sign == rhs->sign);
 
     case eTreeTypeReference:
-    case eTreeTypePointer:
-        return util_types_equal(lhs->ptr, rhs->ptr);
+    case eTreeTypePointer: return util_types_equal(lhs->ptr, rhs->ptr);
 
-    default:
-        return false;
+    default: return false;
     }
 }
 
 bool util_types_comparable(const tree_t *lhs, const tree_t *rhs)
 {
-    if (util_types_equal(lhs, rhs)) { return true; }
+    if (util_types_equal(lhs, rhs))
+    {
+        return true;
+    }
 
     tree_kind_t lhsKind = tree_get_kind(lhs);
     tree_kind_t rhsKind = tree_get_kind(rhs);
 
-    if (lhsKind != rhsKind) { return false; }
+    if (lhsKind != rhsKind)
+    {
+        return false;
+    }
 
     switch (lhsKind)
     {
     case eTreeTypeBool:
-    case eTreeTypeDigit:
-        return true;
+    case eTreeTypeDigit: return true;
 
-    default:
-        return false; /* TODO probably wrong */
+    default: return false; /* TODO probably wrong */
     }
 }
 
 static bool can_cast_length(size_t dst, size_t src)
 {
-    if (!util_length_bounded(dst)) { return true; }
-    if (!util_length_bounded(src)) { return true; }
+    if (!util_length_bounded(dst))
+    {
+        return true;
+    }
+    if (!util_length_bounded(src))
+    {
+        return true;
+    }
 
     return dst < src;
 }
@@ -118,10 +134,10 @@ static tree_t *cast_check_length(const tree_t *dst, tree_t *expr, size_t dstlen,
 {
     if (!can_cast_length(dstlen, srclen))
     {
-        return tree_error(tree_get_node(expr),
-                          "creating an array with a length greater than its backing memory is unwise. (%s < %s)",
-                          util_length_name(srclen),
-                          util_length_name(dstlen));
+        return tree_error(
+            tree_get_node(expr), &kEvent_InvalidCast,
+            "creating an array with a length greater than its backing memory is unwise. (%s < %s)",
+            util_length_name(srclen), util_length_name(dstlen));
     }
 
     return tree_expr_cast(tree_get_node(expr), dst, expr);
@@ -139,9 +155,9 @@ static tree_t *cast_to_opaque(const tree_t *dst, tree_t *expr)
     case eTreeTypeDigit:
         return tree_expr_cast(tree_get_node(expr), dst, expr); // TODO: a little iffy
 
-    default: return tree_error(tree_get_node(expr),
-                                "cannot cast `%s` to `%s`",
-                                tree_to_string(src), tree_to_string(dst));
+    default:
+        return tree_error(tree_get_node(expr), &kEvent_InvalidCast, "cannot cast `%s` to `%s`", tree_to_string(src),
+                          tree_to_string(dst));
     }
 }
 
@@ -156,16 +172,16 @@ static tree_t *cast_to_pointer(const tree_t *dst, tree_t *expr)
     case eTreeTypePointer:
         if (!util_types_equal(dst->ptr, src->ptr))
         {
-            return tree_error(tree_get_node(expr),
-                                "cannot cast unrelated pointer types `%s` to `%s`",
-                                tree_to_string(src), tree_to_string(dst));
+            return tree_error(tree_get_node(expr), &kEvent_InvalidCast,
+                              "cannot cast unrelated pointer types `%s` to `%s`",
+                              tree_to_string(src), tree_to_string(dst));
         }
 
         return cast_check_length(dst, expr, dst->length, src->length);
 
-    default: return tree_error(tree_get_node(expr),
-                                "cannot cast `%s` to `%s`",
-                                tree_to_string(src), tree_to_string(dst));
+    default:
+        return tree_error(tree_get_node(expr), &kEvent_InvalidCast, "cannot cast `%s` to `%s`", tree_to_string(src),
+                          tree_to_string(dst));
     }
 }
 
@@ -180,17 +196,15 @@ static tree_t *cast_to_digit(const tree_t *dst, tree_t *expr)
     case eTreeTypeDigit:
         if (dst->digit < src->digit)
         {
-            return tree_error(tree_get_node(expr),
-                                "cannot cast `%s` to `%s`, may truncate",
-                                tree_to_string(src), tree_to_string(dst));
+            return tree_error(tree_get_node(expr), &kEvent_InvalidCast, "cannot cast `%s` to `%s`, may truncate",
+                              tree_to_string(src), tree_to_string(dst));
         }
 
         return expr;
 
     default:
-        return tree_error(tree_get_node(expr),
-                          "cannot cast `%s` to `%s`",
-                          tree_to_string(src), tree_to_string(dst));
+        return tree_error(tree_get_node(expr), &kEvent_InvalidCast, "cannot cast `%s` to `%s`", tree_to_string(src),
+                          tree_to_string(dst));
     }
 }
 
@@ -202,45 +216,40 @@ static tree_t *cast_to_bool(const tree_t *dst, tree_t *expr)
 
     switch (tree_get_kind(src))
     {
-    case eTreeTypeBool:
-        return expr;
+    case eTreeTypeBool: return expr;
 
     default:
-        return tree_error(tree_get_node(expr),
-                          "cannot cast `%s` to `%s`",
-                          tree_to_string(src), tree_to_string(dst));
+        return tree_error(tree_get_node(expr), &kEvent_InvalidCast, "cannot cast `%s` to `%s`", tree_to_string(src),
+                          tree_to_string(dst));
     }
 }
 
 tree_t *util_type_cast(const tree_t *dst, tree_t *expr)
 {
-    CTASSERTF(dst != NULL && expr != NULL, "(dst=%p, expr=%p)", (void*)dst, (void*)expr);
+    CTASSERTF(dst != NULL && expr != NULL, "(dst=%p, expr=%p)", (void *)dst, (void *)expr);
 
     const tree_t *src = tree_get_type(expr);
 
-    if (util_types_equal(dst, src)) { return expr; }
+    if (util_types_equal(dst, src))
+    {
+        return expr;
+    }
 
     switch (tree_get_kind(dst))
     {
-    case eTreeTypeOpaque:
-        return cast_to_opaque(dst, expr);
+    case eTreeTypeOpaque: return cast_to_opaque(dst, expr);
 
-    case eTreeTypePointer:
-        return cast_to_pointer(dst, expr);
+    case eTreeTypePointer: return cast_to_pointer(dst, expr);
 
-    case eTreeTypeReference:
-        return util_type_cast(dst->ptr, expr);
+    case eTreeTypeReference: return util_type_cast(dst->ptr, expr);
 
-    case eTreeTypeDigit:
-        return cast_to_digit(dst, expr);
+    case eTreeTypeDigit: return cast_to_digit(dst, expr);
 
-    case eTreeTypeBool:
-        return cast_to_bool(dst, expr);
+    case eTreeTypeBool: return cast_to_bool(dst, expr);
 
     default:
-        return tree_error(tree_get_node(expr),
-                          "cannot cast `%s` to `%s`",
-                          tree_to_string(src), tree_to_string(dst));
+        return tree_error(tree_get_node(expr), &kEvent_InvalidCast, "cannot cast `%s` to `%s`", tree_to_string(src),
+                          tree_to_string(dst));
     }
 }
 
@@ -253,22 +262,21 @@ static bool eval_binary(mpz_t value, const tree_t *expr)
     mpz_init(lhs);
     mpz_init(rhs);
 
-    if (!util_eval_digit(lhs, expr->lhs)) { return false; }
-    if (!util_eval_digit(rhs, expr->rhs)) { return false; }
+    if (!util_eval_digit(lhs, expr->lhs))
+    {
+        return false;
+    }
+    if (!util_eval_digit(rhs, expr->rhs))
+    {
+        return false;
+    }
 
     switch (expr->binary)
     {
-    case eBinaryAdd:
-        mpz_add(value, lhs, rhs);
-        break;
-    case eBinarySub:
-        mpz_sub(value, lhs, rhs);
-        break;
-    case eBinaryMul:
-        mpz_mul(value, lhs, rhs);
-        break;
-    default:
-        return false;
+    case eBinaryAdd: mpz_add(value, lhs, rhs); break;
+    case eBinarySub: mpz_sub(value, lhs, rhs); break;
+    case eBinaryMul: mpz_mul(value, lhs, rhs); break;
+    default: return false;
     }
 
     return true;
@@ -279,19 +287,16 @@ bool util_eval_digit(mpz_t value, const tree_t *expr)
     CTASSERT(expr != NULL);
     switch (tree_get_kind(expr))
     {
-    case eTreeExprDigit:
-        mpz_set(value, expr->digitValue);
-        return true;
+    case eTreeExprDigit: mpz_set(value, expr->digitValue); return true;
 
-    case eTreeExprBinary:
-        return eval_binary(value, expr);
+    case eTreeExprBinary: return eval_binary(value, expr);
 
-    default:
-        return false;
+    default: return false;
     }
 }
 
-tree_t *util_create_string(tree_t *sema, const node_t *node, tree_t *letter, const char *text, size_t length)
+tree_t *util_create_string(tree_t *sema, const node_t *node, tree_t *letter, const char *text,
+                           size_t length)
 {
     // get basic info
     where_t where = node_get_location(node);
@@ -302,12 +307,9 @@ tree_t *util_create_string(tree_t *sema, const node_t *node, tree_t *letter, con
 
     // create type and storage
     const tree_t *type = tree_type_pointer(node, "$", letter, length + 1);
-    tree_storage_t storage = {
-        .storage = letter,
-        .size = length + 1,
-        .quals = eQualConst
-    };
-    const char *id = format("%s$%" PRI_LINE "$%" PRI_COLUMN, tree_get_name(symbol), where.first_line, where.first_column);
+    tree_storage_t storage = {.storage = letter, .size = length + 1, .quals = eQualConst};
+    const char *id = format("%s$%" PRI_LINE "$%" PRI_COLUMN, tree_get_name(symbol),
+                            where.first_line, where.first_column);
     tree_t *str = tree_expr_string(node, type, text, length);
     tree_t *decl = tree_decl_global(node, id, storage, type, str);
 

@@ -49,4 +49,4 @@ typedef struct context_t
 
 bool context_requires_compiling(const context_t *ctx);
 
-#define EXEC(mod, fn, ...) do { if (mod->fn != NULL) { logverbose("%s:" #fn "()", mod->id); mod->fn(__VA_ARGS__); } } while (0)
+#define EXEC(mod, fn, ...) do { if (mod->fn != NULL) { mod->fn(__VA_ARGS__); } } while (0)

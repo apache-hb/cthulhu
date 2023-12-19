@@ -1,4 +1,5 @@
 #include "oberon/driver.h"
+#include "cthulhu/events/events.h"
 #include "oberon/ast.h"
 
 #include "oberon/sema/decl.h"
@@ -61,22 +62,22 @@ static void import_module(lifetime_t *lifetime, tree_t *sema, obr_t *include)
 
     if (ctx == NULL)
     {
-        report(sema->reports, eFatal, include->node, "failed to find context for module '%s'", include->symbol);
+        msg_notify(sema->reports, &kEvent_ImportNotFound, include->node, "failed to find context for module '%s'", include->symbol);
         return;
     }
 
     tree_t *lib = context_get_module(ctx);
     if (lib == sema)
     {
-        report(sema->reports, eFatal, include->node, "module cannot import itself");
+        msg_notify(sema->reports, &kEvent_CirclularImport, include->node, "module cannot import itself");
         return;
     }
 
     tree_t *old = obr_get_namespace(sema, include->name);
     if (old != NULL)
     {
-        message_t *id = report_shadow(sema->reports, include->name, tree_get_node(old), tree_get_node(lib));
-        report_note(id, "consider using import aliases; eg. `IMPORT my_%s := %s;", include->name, include->symbol);
+        event_t *id = evt_symbol_shadowed(sema->reports, include->name, tree_get_node(old), tree_get_node(lib));
+        msg_note(id, "consider using import aliases; eg. `IMPORT my_%s := %s;", include->name, include->symbol);
     }
     else
     {

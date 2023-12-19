@@ -54,8 +54,6 @@ context_t *add_context(lifetime_t *lifetime, vector_t *path, context_t *mod)
 
     char *name = path_to_string(path);
 
-    logverbose("add-context (%s: 0x%p)", name, (void*)mod);
-
     context_t *old = map_get(lifetime->modules, name);
     if (old != NULL)
     {

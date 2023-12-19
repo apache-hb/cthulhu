@@ -87,11 +87,11 @@ const language_t kExampleModule = {
 
     .exts = kLangNames,
 
-    .fnCreate = ex_create,
-    .fnDestroy = ex_destroy,
+    .fn_create = ex_create,
+    .fn_destroy = ex_destroy,
 
-    .fnParse = ex_parse,
-    .fnCompilePass = {
+    .fn_parse = ex_parse,
+    .fn_compile_passes = {
         [eStageForwardSymbols] = ex_forward_symbols,
         [eStageCompileImports] = ex_compile_imports,
         [eStageCompileTypes] = ex_compile_types,

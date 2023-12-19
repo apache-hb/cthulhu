@@ -1,23 +1,23 @@
-#include "cthulhu/mediator/interface.h"
 #include "cthulhu/mediator/check.h"
+#include "cthulhu/mediator/interface.h"
 
 #include "memory/memory.h"
 #include "support/langs.h"
 
 #include "cthulhu/check/check.h"
 
-#include "cthulhu/ssa/ssa.h"
 #include "cthulhu/emit/emit.h"
+#include "cthulhu/ssa/ssa.h"
 
 #include "base/panic.h"
 #include "core/macros.h"
 
+#include "std/map.h"
 #include "std/str.h"
 #include "std/vector.h"
-#include "std/map.h"
 
-#include "io/io.h"
 #include "fs/fs.h"
+#include "io/io.h"
 
 #include "argparse/argparse.h"
 
@@ -25,19 +25,21 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CHECK_REPORTS(reports, msg) \
-    do { \
-        int err = end_reports(reports, msg, kReportConfig); \
-        if (err != 0) { \
-            return err; \
-        } \
+#define CHECK_REPORTS(reports, msg)                                                                \
+    do                                                                                             \
+    {                                                                                              \
+        int err = end_reports(reports, msg, kReportConfig);                                        \
+        if (err != 0)                                                                              \
+        {                                                                                          \
+            return err;                                                                            \
+        }                                                                                          \
     } while (0)
 
 static const version_info_t kVersion = {
     .license = "GPLv3",
     .desc = "Test harness",
     .author = "Elliot Haisley",
-    .version = NEW_VERSION(0, 0, 1)
+    .version = NEW_VERSION(0, 0, 1),
 };
 
 static io_t *make_file(const char *path, os_access_t flags)
@@ -66,11 +68,12 @@ typedef struct user_arena_t
 
 static user_ptr_t *get_memory(user_arena_t *arena, size_t size)
 {
-    CTASSERTF(arena->memory_cursor + size + sizeof(user_ptr_t) < arena->memory_end, "out of memory");
+    CTASSERTF(arena->memory_cursor + size + sizeof(user_ptr_t) < arena->memory_end,
+              "out of memory");
 
     // TODO: align all allocations to 16 bytes
 
-    user_ptr_t *ptr = (user_ptr_t*)arena->memory_cursor;
+    user_ptr_t *ptr = (user_ptr_t *)arena->memory_cursor;
     ptr->size = (uint32_t)size;
     arena->memory_cursor += size + sizeof(user_ptr_t);
 
@@ -81,14 +84,14 @@ static user_ptr_t *get_memory(user_arena_t *arena, size_t size)
 
 static user_ptr_t *get_ptr(void *ptr)
 {
-    char *data = (char*)ptr;
-    return (user_ptr_t*)(data - sizeof(user_ptr_t));
+    char *data = (char *)ptr;
+    return (user_ptr_t *)(data - sizeof(user_ptr_t));
 }
 
 static void *user_malloc(const mem_t *mem, size_t size)
 {
     arena_t *alloc = mem_arena(mem);
-    user_arena_t *user = (user_arena_t*)alloc->user;
+    user_arena_t *user = (user_arena_t *)alloc->user;
 
     user_ptr_t *ptr = get_memory(user, size);
     return ptr->data;
@@ -99,12 +102,11 @@ static void *user_realloc(const mem_t *mem, void *ptr, size_t new_size, size_t o
     CTU_UNUSED(old_size);
 
     arena_t *alloc = mem_arena(mem);
-    user_arena_t *user = (user_arena_t*)alloc->user;
+    user_arena_t *user = (user_arena_t *)alloc->user;
 
     user_ptr_t *old = get_ptr(ptr);
 
-    if (old->size >= new_size)
-        return old->data;
+    if (old->size >= new_size) return old->data;
 
     user_ptr_t *new = get_memory(user, new_size);
     memcpy(new->data, old->data, old->size);
@@ -121,7 +123,7 @@ static void user_free(const mem_t *mem, void *ptr, size_t size)
 
     arena_t *alloc = mem_arena(mem);
 
-    user_arena_t *user = (user_arena_t*)alloc->user;
+    user_arena_t *user = (user_arena_t *)alloc->user;
 
     user->free_count++;
 }
@@ -221,17 +223,13 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
         .deps = ssa.deps,
     };
 
-    ssa_emit_options_t emitOpts = {
-        .opts = baseOpts
-    };
+    ssa_emit_options_t emitOpts = {.opts = baseOpts};
 
     ssa_emit_result_t ssaResult = emit_ssa(&emitOpts);
     CHECK_REPORTS(reports, "emitting ssa");
     CTU_UNUSED(ssaResult); // TODO: check for errors
 
-    c89_emit_options_t c89Opts = {
-        .opts = baseOpts
-    };
+    c89_emit_options_t c89Opts = {.opts = baseOpts};
 
     c89_emit_result_t c89Result = emit_c89(&c89Opts);
     CHECK_REPORTS(reports, "emitting c89");
@@ -239,11 +237,11 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
     OS_RESULT(const char *) cwd = os_dir_current();
     CTASSERTF(os_error(cwd) == 0, "failed to get cwd %s", os_error_string(os_error(cwd)));
 
-    const char *testDir = format("%s" NATIVE_PATH_SEPARATOR "test-out", OS_VALUE(const char*, cwd));
-    const char *runDir = format("%s" NATIVE_PATH_SEPARATOR "%s", testDir, argv[1]);
+    const char *test_dir = format("%s" NATIVE_PATH_SEPARATOR "test-out",
+                                 OS_VALUE(const char *, cwd));
+    const char *run_dir = format("%s" NATIVE_PATH_SEPARATOR "%s", test_dir, argv[1]);
 
-    logverbose("creating output directory %s", runDir);
-    fs_t *out = fs_physical(runDir);
+    fs_t *out = fs_physical(run_dir);
     if (out == NULL)
     {
         report(reports, eFatal, NULL, "failed to create output directory");
@@ -262,20 +260,19 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
     for (size_t i = 0; i < len; i++)
     {
         const char *part = vector_get(c89Result.sources, i);
-        char *path = format("%s" NATIVE_PATH_SEPARATOR "%s", runDir, part);
+        char *path = format("%s" NATIVE_PATH_SEPARATOR "%s", run_dir, part);
         vector_set(sources, i, path);
     }
 
-    logverbose("compiling: %s", str_join(" ", sources));
-    logverbose("include: %s", runDir);
-
 #if OS_WINDOWS
-    const char *libDir = format("%s" NATIVE_PATH_SEPARATOR "lib", runDir);
+    const char *lib_dir = format("%s" NATIVE_PATH_SEPARATOR "lib", run_dir);
 
-    OS_RESULT(bool) create = os_dir_create(libDir);
-    CTASSERTF(os_error(create) == 0, "failed to create dir `%s` %s", libDir, os_error_string(os_error(create)));
+    OS_RESULT(bool) create = os_dir_create(lib_dir);
+    CTASSERTF(os_error(create) == 0, "failed to create dir `%s` %s", lib_dir,
+              os_error_string(os_error(create)));
 
-    int status = system(format("cl /nologo /c %s /I%s\\include /Fo%s\\", str_join(" ", sources), runDir, libDir));
+    int status = system(
+        format("cl /nologo /c %s /I%s\\include /Fo%s\\", str_join(" ", sources), run_dir, lib_dir));
     if (status != 0)
     {
         report(reports, eFatal, NULL, "compilation failed `%d`", status);
@@ -304,11 +301,6 @@ int main(int argc, const char **argv)
     verbose = true;
 
     int result = run_test_harness(argc, argv, &alloc);
-
-    logverbose("allocations: %zu", arena.alloc_count);
-    logverbose("reallocations: %zu", arena.realloc_count);
-    logverbose("frees: %zu", arena.free_count);
-    logverbose("done");
 
     free(arena.memory_start);
 

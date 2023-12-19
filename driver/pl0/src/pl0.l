@@ -11,6 +11,7 @@
 #include "pl0/scan.h"
 #include "interop/flex.h"
 #include "memory/memory.h"
+#include "cthulhu/events/events.h"
 %}
 
 %x COMMENT
@@ -74,7 +75,7 @@
 
 . {
     pl0_scan_t *scan = pl0_scan_context(yyextra);
-    report_unknown_character(scan->reports, node_new(yyextra, *yylloc), yytext);
+    evt_scan_unknown(scan->reports, node_new(yyextra, *yylloc), yytext);
 }
 
 %%

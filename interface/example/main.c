@@ -1,15 +1,17 @@
+#include "cthulhu/events/events.h"
 #include "cthulhu/mediator/interface.h"
 
-#include "cthulhu/ssa/ssa.h"
 #include "cthulhu/emit/emit.h"
+#include "cthulhu/ssa/ssa.h"
 
+#include "notify/notify.h"
 #include "scan/node.h"
 #include "support/langs.h"
 
 #include "memory/memory.h"
 
-#include "std/str.h"
 #include "std/map.h"
+#include "std/str.h"
 #include "std/vector.h"
 
 #include "core/macros.h"
@@ -21,19 +23,21 @@
 
 #include <stdio.h>
 
-#define CHECK_REPORTS(reports, msg) \
-    do { \
-        int err = end_reports(reports, msg, kReportConfig); \
-        if (err != 0) { \
-            return err; \
-        } \
+#define CHECK_REPORTS(reports, msg)                                                                \
+    do                                                                                             \
+    {                                                                                              \
+        int err = end_reports(reports, msg, kReportConfig);                                        \
+        if (err != 0)                                                                              \
+        {                                                                                          \
+            return err;                                                                            \
+        }                                                                                          \
     } while (0)
 
 static const version_info_t kVersion = {
     .license = "GPLv3",
     .desc = "Example compiler interface",
     .author = "Elliot Haisley",
-    .version = NEW_VERSION(0, 0, 1)
+    .version = NEW_VERSION(0, 0, 1),
 };
 
 static io_t *make_file(logger_t *reports, const char *path, os_access_t flags)
@@ -41,8 +45,8 @@ static io_t *make_file(logger_t *reports, const char *path, os_access_t flags)
     io_t *io = io_file(path, flags);
     if (io_error(io) != 0)
     {
-        message_t *id = report(reports, eFatal, NULL, "failed to open `%s`", path);
-        report_note(id, "%s", os_error_string(io_error(io)));
+        event_t *id = msg_notify(reports, &kEvent_FailedToOpenSourceFile, NULL, "failed to open `%s`", path);
+        msg_note(id, "%s", os_error_string(io_error(io)));
         return NULL;
     }
 
@@ -114,17 +118,13 @@ int main(int argc, const char **argv)
         .deps = ssa.deps,
     };
 
-    ssa_emit_options_t emitOpts = {
-        .opts = baseOpts
-    };
+    ssa_emit_options_t emitOpts = {.opts = baseOpts};
 
     ssa_emit_result_t ssaResult = emit_ssa(&emitOpts);
     CHECK_REPORTS(reports, "emitting ssa");
     CTU_UNUSED(ssaResult); // TODO: check for errors
 
-    c89_emit_options_t c89Opts = {
-        .opts = baseOpts
-    };
+    c89_emit_options_t c89Opts = {.opts = baseOpts};
 
     c89_emit_result_t c89Result = emit_c89(&c89Opts);
     CHECK_REPORTS(reports, "emitting c89");
@@ -139,16 +139,14 @@ int main(int argc, const char **argv)
     fs_t *out = fs_physical("out");
     if (out == NULL)
     {
-        report(reports, eFatal, node_builtin(), "failed to create output directory");
+        msg_notify(reports, eFatal, node_builtin(), "failed to create output directory");
     }
     CHECK_REPORTS(reports, "creating output directory");
 
     sync_result_t result = fs_sync(out, fs);
     if (result.path != NULL)
     {
-        report(reports, eFatal, NULL, "failed to sync %s", result.path);
+        msg_notify(reports, eFatal, NULL, "failed to sync %s", result.path);
     }
     CHECK_REPORTS(reports, "syncing output directory");
-
-    logverbose("done");
 }

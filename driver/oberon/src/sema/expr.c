@@ -1,4 +1,5 @@
 #include "oberon/sema/expr.h"
+#include "cthulhu/events/events.h"
 #include "oberon/sema/sema.h"
 
 #include "cthulhu/util/util.h"
@@ -57,7 +58,7 @@ static tree_t *sema_compare(tree_t *sema, obr_t *expr)
 
     if (!util_types_comparable(lhs, rhs))
     {
-        return tree_raise(expr->node, sema->reports, "cannot compare types %s and %s", tree_to_string(lhs), tree_to_string(rhs));
+        return tree_raise(expr->node, sema->reports, &kEvent_InvalidBinaryOperation, "cannot compare types %s and %s", tree_to_string(lhs), tree_to_string(rhs));
     }
 
     return tree_expr_compare(expr->node, obr_get_bool_type(), expr->compare, lhs, rhs);
@@ -74,7 +75,7 @@ static tree_t *sema_name(tree_t *sema, obr_t *expr)
     tree_t *mod = obr_get_namespace(sema, expr->object);
     if (mod != NULL) { return mod; }
 
-    return tree_raise(expr->node, sema->reports, "unknown name `%s`", expr->object);
+    return tree_raise(expr->node, sema->reports, &kEvent_SymbolNotFound, "unknown name `%s`", expr->object);
 }
 
 static tree_t *sema_name_rvalue(tree_t *sema, obr_t *expr)
@@ -121,13 +122,13 @@ static tree_t *sema_field(tree_t *sema, obr_t *expr)
     const tree_t *resolved = tree_resolve(tree_get_cookie(sema), tree_get_type(decl));
     if (!tree_is(resolved, eTreeTypeStruct))
     {
-        return tree_raise(expr->node, sema->reports, "cannot access field of non-struct type %s", tree_to_string(decl));
+        return tree_raise(expr->node, sema->reports, &kEvent_InvalidIndirection, "cannot access field of non-struct type %s", tree_to_string(decl));
     }
 
     tree_t *field = tree_ty_get_field(resolved, expr->object);
     if (field == NULL)
     {
-        return tree_raise(expr->node, sema->reports, "struct %s has no field %s", tree_to_string(decl), expr->object);
+        return tree_raise(expr->node, sema->reports, &kEvent_FieldNotFound, "struct %s has no field %s", tree_to_string(decl), expr->object);
     }
 
     return tree_expr_field(expr->node, tree_get_type(field), decl, field);

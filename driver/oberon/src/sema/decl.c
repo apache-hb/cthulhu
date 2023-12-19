@@ -1,4 +1,5 @@
 #include "oberon/sema/decl.h"
+#include "notify/notify.h"
 #include "oberon/sema/type.h"
 #include "oberon/sema/expr.h"
 
@@ -7,14 +8,21 @@
 #include "base/panic.h"
 #include "memory/memory.h"
 
-static visibility_t remap_visibility(logger_t *reports, const node_t *node, obr_visibility_t vis)
+const diagnostic_t kEvent_PublicReadOnlyNotSupported = {
+    .severity = eSeveritySorry,
+    .id = "OBR-0001",
+    .brief = "Public read-only unimplemented",
+    .description = "Public read-only symbols are not yet supported",
+};
+
+static visibility_t remap_visibility(logger_t *reports, const node_t *node, const char *name, obr_visibility_t vis)
 {
     switch (vis)
     {
     case eObrVisPrivate: return eVisiblePrivate;
     case eObrVisPublic: return eVisiblePublic;
     case eObrVisPublicReadOnly:
-        report(reports, eWarn, node, "public read-only is not yet supported");
+        msg_notify(reports, &kEvent_PublicReadOnlyNotSupported, node, "`%s` is public and read-only", name);
         return eVisiblePublic;
     default: NEVER("remap-visibility %d", vis);
     }
@@ -35,7 +43,7 @@ static void set_attribs(tree_t *sema, tree_t *decl, obr_visibility_t vis, tree_l
 {
     tree_attribs_t attrib = {
         .link = linkage,
-        .visibility = remap_visibility(sema->reports, decl->node, vis)
+        .visibility = remap_visibility(sema->reports, decl->node, tree_get_name(decl), vis)
     };
 
     tree_set_attrib(decl, BOX(attrib));

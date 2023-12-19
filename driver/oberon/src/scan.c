@@ -2,6 +2,8 @@
 
 #include "core/macros.h"
 
+#include "cthulhu/events/events.h"
+
 obr_scan_t *obr_scan_context(scan_t *scan)
 {
     return scan_get_context(scan);
@@ -13,5 +15,5 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg)
 
     obr_scan_t *ctx = obr_scan_context(scan);
 
-    report(ctx->reports, eFatal, node_new(scan, *where), "%s", msg);
+    evt_scan_error(ctx->reports, node_new(scan, *where), msg);
 }

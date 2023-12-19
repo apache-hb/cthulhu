@@ -2,6 +2,7 @@
 
 #include "cthulhu/tree/query.h"
 
+#include "notify/notify.h"
 #include "std/vector.h"
 #include "std/str.h"
 
@@ -41,31 +42,34 @@ tree_t *tree_decl(tree_kind_t kind, const node_t *node, const tree_t *type, cons
 
 void tree_report(logger_t *reports, const tree_t *error)
 {
-    report(reports, eFatal, tree_get_node(error), "%s", error->message);
+    msg_notify(reports, error->diagnostic, tree_get_node(error), "%s", error->message);
 }
 
-static tree_t *error_vformat(const node_t *node, const char *message, va_list args)
+static tree_t *error_vformat(const node_t *node, const diagnostic_t *diagnostic, const char *message, va_list args)
 {
+    CTASSERT(diagnostic != NULL);
+
     tree_t *self = tree_new(eTreeError, node, NULL);
     self->type = self;
+    self->diagnostic = diagnostic;
     self->message = vformat(message, args);
     return self;
 }
 
-tree_t *tree_error(const node_t *node, const char *message, ...)
+tree_t *tree_error(const node_t *node, const diagnostic_t *diagnostic, const char *message, ...)
 {
     va_list args;
     va_start(args, message);
-    tree_t *self = error_vformat(node, message, args);
+    tree_t *self = error_vformat(node, diagnostic, message, args);
     va_end(args);
     return self;
 }
 
-tree_t *tree_raise(const node_t *node, logger_t *reports, const char *message, ...)
+tree_t *tree_raise(const node_t *node, logger_t *reports, const diagnostic_t *diagnostic, const char *message, ...)
 {
     va_list args;
     va_start(args, message);
-    tree_t *self = error_vformat(node, message, args);
+    tree_t *self = error_vformat(node, diagnostic, message, args);
     va_end(args);
 
     tree_report(reports, self);

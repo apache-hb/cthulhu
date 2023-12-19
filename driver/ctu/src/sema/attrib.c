@@ -74,7 +74,6 @@ static tree_link_t choose_linkage(tree_t *sema, const ctu_t *expr)
     }
 
     const char *name = vector_tail(path);
-    logverbose("entry point `%s`", name);
     if (str_equal(name, "gui"))
     {
         return eLinkEntryGui;

@@ -13,6 +13,7 @@ typedef struct node_t node_t;
 
 typedef struct tree_t tree_t;
 typedef struct cookie_t cookie_t;
+typedef struct diagnostic_t diagnostic_t;
 
 typedef void (*resolve_t)(tree_t *sema, tree_t *self, void *user);
 typedef void (*resolve_type_t)(tree_t *sema, tree_t *self, void *user);
@@ -112,7 +113,10 @@ typedef struct tree_t {
         };
 
         /* eTreeError */
-        const char *message;
+        struct {
+            const diagnostic_t *diagnostic;
+            const char *message;
+        };
 
         /* eTreeStmtBlock */
         vector_t *stmts;
@@ -226,9 +230,9 @@ typedef struct tree_t {
 /// tree error handling
 ///
 
-tree_t *tree_error(const node_t *node, const char *message, ...);
+tree_t *tree_error(const node_t *node, const diagnostic_t *diagnostic, const char *message, ...);
 tree_t *tree_pick_error(const node_t *node, const tree_t *lhs, const tree_t *rhs);
-tree_t *tree_raise(const node_t *node, logger_t *reports, const char *message, ...);
+tree_t *tree_raise(const node_t *node, logger_t *reports, const diagnostic_t *diagnostic, const char *message, ...);
 void tree_report(logger_t *reports, const tree_t *error);
 
 ///

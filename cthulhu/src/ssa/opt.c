@@ -1,5 +1,7 @@
 #include "common/common.h"
 
+#include "cthulhu/events/events.h"
+
 #include "memory/memory.h"
 #include "std/set.h"
 #include "std/map.h"
@@ -111,7 +113,7 @@ static bool check_init(ssa_scope_t *vm, const ssa_value_t *value)
 
     if (!value->init)
     {
-        report(vm->vm->reports, eFatal, node_builtin(), "use of uninitialized value inside `%s`", vm->symbol->name);
+        msg_notify(vm->vm->reports, &kEvent_UninitializedValueUsed, node_builtin(), "use of uninitialized value inside `%s`", vm->symbol->name);
         return false;
     }
 
@@ -184,7 +186,7 @@ static const ssa_value_t *ssa_opt_binary(ssa_scope_t *vm, ssa_binary_t step)
     case eBinaryDiv:
         if (mpz_cmp_ui(rhs->digitValue, 0) == 0)
         {
-            report(vm->vm->reports, eFatal, node_builtin(), "division by zero inside `%s`", vm->symbol->name);
+            msg_notify(vm->vm->reports, &kEvent_UninitializedValueUsed, node_builtin(), "division by zero inside `%s`", vm->symbol->name);
             return lhs;
         }
         mpz_divexact(result, lhs->digitValue, rhs->digitValue);
@@ -192,7 +194,7 @@ static const ssa_value_t *ssa_opt_binary(ssa_scope_t *vm, ssa_binary_t step)
     case eBinaryRem:
         if (mpz_cmp_ui(rhs->digitValue, 0) == 0)
         {
-            report(vm->vm->reports, eFatal, node_builtin(), "modulo by zero inside `%s`", vm->symbol->name);
+            msg_notify(vm->vm->reports, &kEvent_ModuloByZero, node_builtin(), "modulo by zero inside `%s`", vm->symbol->name);
             return lhs;
         }
         mpz_mod(result, lhs->digitValue, rhs->digitValue);

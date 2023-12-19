@@ -1,4 +1,5 @@
 #include "ctu/sema/type.h"
+#include "cthulhu/events/events.h"
 #include "ctu/sema/sema.h"
 #include "ctu/sema/expr.h"
 #include "ctu/ast.h"
@@ -54,7 +55,7 @@ static tree_t *sema_type_function(ctu_sema_t *sema, const ctu_t *type)
         tree_t *ty = ctu_sema_type(sema, param);
         if (tree_is(ty, eTreeTypeUnit))
         {
-            report(ctu_sema_reports(sema), eFatal, param->node, "void type is not allowed in function parameters");
+            msg_notify(ctu_sema_reports(sema), &kEvent_InvalidFunctionSignature, param->node, "void type is not allowed in function parameters");
         }
 
         tree_t *it = tree_decl_param(param->node, "", ty);
@@ -73,7 +74,7 @@ static tree_t *sema_type_array(ctu_sema_t *sema, const ctu_t *type)
     mpz_init(value);
     if (!util_eval_digit(value, length))
     {
-        report(ctu_sema_reports(sema), eFatal, type->node, "array length must be a constant integer");
+        msg_notify(ctu_sema_reports(sema), &kEvent_InvalidArraySize, type->node, "array length must be a constant integer");
     }
 
     size_t v = mpz_get_ui(value);

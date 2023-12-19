@@ -8,6 +8,7 @@
 
 %code top {
     #include "interop/flex.h"
+    #include "cthulhu/tree/ops.h"
 }
 
 %code requires {

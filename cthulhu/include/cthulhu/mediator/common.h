@@ -55,16 +55,16 @@ typedef struct language_t
 
     const char **exts; ///< null terminated list of file extensions
 
-    driver_create_t fnCreate;   ///< called at startup
-    driver_destroy_t fnDestroy; ///< called at shutdown
+    driver_create_t fn_create;   ///< called at startup
+    driver_destroy_t fn_destroy; ///< called at shutdown
 
-    driver_parse_t fnParse; ///< parse a file into an ast
+    driver_parse_t fn_parse; ///< parse a file into an ast
 
     driver_prepass_t fn_prepass;
     driver_postpass_t fn_postpass;
     callbacks_t *callbacks;
 
-    driver_pass_t fnCompilePass[eStageTotal]; ///< compile a single pass
+    driver_pass_t fn_compile_passes[eStageTotal]; ///< compile a single pass
 } language_t;
 
 ///

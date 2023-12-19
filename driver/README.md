@@ -35,16 +35,16 @@ const language_t kExampleModule = {
     .exts = kLangNames,
 
     /// first time creation function, initialize from gathered config
-    .fnCreate = ex_create,
+    .fn_create = ex_create,
 
     /// final teardown function, clean up memory created during init and runs
-    .fnDestroy = ex_destroy,
+    .fn_destroy = ex_destroy,
 
     /// parse an io handle into an ast
-    .fnParse = ex_parse,
+    .fn_parse = ex_parse,
 
     /// register available passes
-    .fnCompilePass = {
+    .fn_compile_passes = {
         /// forward symbols to opt in to order independant lookup
         /// across languages
         [eStageForwardSymbols] = ex_forward_symbols,
