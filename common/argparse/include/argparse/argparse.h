@@ -34,7 +34,7 @@ BEGIN_API
 /// @ingroup Common
 /// @{
 
-typedef struct reports_t reports_t;
+typedef struct logger_t logger_t;
 typedef struct node_t node_t;
 typedef struct vector_t vector_t;
 
@@ -169,12 +169,11 @@ void ap_error(ap_t *self, ap_error_t callback, void *data);
 /// @brief parse a command line or other string
 ///
 /// @param self the parser instance
-/// @param reports reporting channel
 /// @param argc from main
 /// @param argv from main
 ///
 /// @return int exit code
-int ap_parse(ap_t *self, reports_t *reports, int argc, const char **argv);
+int ap_parse(ap_t *self, int argc, const char **argv);
 
 /// @defgroup ArgParseReflection Argument parsing reflection
 /// @brief functions for getting information about the parser

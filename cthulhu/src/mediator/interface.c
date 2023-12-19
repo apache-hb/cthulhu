@@ -175,7 +175,9 @@ void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io)
 
     CTASSERT(lang->fnParse != NULL);
 
-    scan_t *scan = scan_io(lifetime->reports, lang->id, io, lifetime->alloc);
+    scan_t *scan = scan_io(lang->id, io, lifetime->alloc);
+    scan_set_context(scan, lifetime->reports);
+
     driver_t *handle = handle_new(lifetime, lang);
 
     lang->fnParse(handle, scan);

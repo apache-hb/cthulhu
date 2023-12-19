@@ -15,7 +15,7 @@
 static void cc_parse(driver_t *handle, scan_t *scan)
 {
     CTU_UNUSED(handle);
-    report(scan_reports(scan), eWarn, NULL, "C is unimplemented, ignoring file %s", scan_path(scan));
+    report(scan_get_context(scan), eWarn, NULL, "C is unimplemented, ignoring file %s", scan_path(scan));
 }
 
 static const char *kLangNames[] = { "c", "h", NULL };

@@ -33,7 +33,7 @@ const char *scan_language(IN_NOTNULL const scan_t *scan);
 NODISCARD CONSTFN
 const char *scan_path(IN_NOTNULL const scan_t *scan);
 
-/// @brief get the current user data of a scanner
+/// @brief get the compiled object from a scanner
 ///
 /// @param scan the scanner to get the user data of
 ///
@@ -41,11 +41,24 @@ const char *scan_path(IN_NOTNULL const scan_t *scan);
 NODISCARD CONSTFN
 void *scan_get(IN_NOTNULL scan_t *scan);
 
-/// @brief set the current user data of a scanner
+/// @brief set the compiled object of a scanner
 ///
 /// @param scan the scanner to set the user data of
 /// @param value the new user data
 void scan_set(IN_NOTNULL scan_t *scan, void *value);
+
+/// @brief get the context of a scanner
+///
+/// @param scan the scanner to get the context of
+/// @param value the new context
+void scan_set_context(IN_NOTNULL scan_t *scan, void *value);
+
+/// @brief get the context of a scanner
+///
+/// @param scan the scanner to get the context of
+///
+/// @return the context of @p scan
+void *scan_get_context(IN_NOTNULL const scan_t *scan);
 
 /// @brief get the current backing text pointer of a scanner
 ///
@@ -70,14 +83,6 @@ size_t scan_size(IN_NOTNULL const scan_t *scan);
 /// @return the text of @p scan
 NODISCARD CONSTFN
 text_view_t scan_source(IN_NOTNULL const scan_t *scan);
-
-/// @brief get the scanners report sink
-///
-/// @param scan the scanner to get the report sink of
-///
-/// @return the report sink of @p scan
-NODISCARD CONSTFN
-reports_t *scan_reports(IN_NOTNULL scan_t *scan);
 
 /// @brief get the scanners io source
 ///
@@ -115,11 +120,9 @@ size_t scan_read(IN_NOTNULL scan_t *scan, OUT_WRITES(size) void *dst, size_t siz
 ///
 /// @return the created scanner
 NODISCARD
-scan_t *scan_io(
-    IN_NOTNULL reports_t *reports,
-    IN_STRING const char *language,
-    IN_NOTNULL io_t *io,
-    IN_NOTNULL arena_t *alloc);
+scan_t *scan_io(IN_STRING const char *language,
+                IN_NOTNULL io_t *io,
+                IN_NOTNULL arena_t *alloc);
 
 NODISCARD CONSTFN
 scan_t *scan_builtin(void);

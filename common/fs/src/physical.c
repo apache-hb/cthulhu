@@ -118,7 +118,7 @@ static map_t *pfs_query_dirents(fs_t *fs, inode_t *self)
     OS_RESULT(os_iter_t) iter = os_iter_begin(absolute);
     OS_RESULT(os_dir_t) node = NULL;
 
-    CTASSERTF(iter != NULL, "fs backing corrupted, expected dir `%s` to exist, but it doesn't", absolute);
+    CTASSERTF(iter != NULL, "fs backing corrupted, expected dir `%s` to exist, it is missing", absolute);
     if (os_error(iter)) { return map_new(1); }
 
     os_iter_t *it = os_value(iter);

@@ -3,6 +3,7 @@
 #include "scan/scan.h"
 
 #include "base/panic.h"
+#include "core/macros.h"
 
 #include <limits.h>
 
@@ -63,13 +64,36 @@ typedef struct callbacks_t
         .destroy = prefix##_##id##_destroy,                                                                            \
     }
 
+typedef enum parse_error_t
+{
+    eParseOk,
+    eParseInitFailed,
+    eParseScanFailed,
+    eParseFailed,
+
+    eParseCount
+} parse_error_t;
+
+typedef struct parse_result_t
+{
+    parse_error_t result;
+
+    union {
+        void *tree;
+        int error;
+    };
+} parse_result_t;
+
+parse_result_t compile_scanner_ex(scan_t *extra, callbacks_t *callbacks);
+
 /// @brief parse the contents of a scanner into a language specific ast
 /// @note callbacks should be generated via @a CTU_CALLBACKS
 ///
 /// @param extra the sanner being used
 /// @param callbacks the flex/bison callbacks
 ///
-/// @return a pointer to the compiled ast
+/// @return the parse result
+CTU_DEPRECATED("use compile_scanner_ex")
 void *compile_scanner(scan_t *extra, callbacks_t *callbacks);
 
 /// @}

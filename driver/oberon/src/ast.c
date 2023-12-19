@@ -10,7 +10,7 @@
 static void ensure_block_names_match(scan_t *scan, const node_t *node, const char *type, const char *name, const char *end)
 {
     CTASSERTF(type != NULL && name != NULL, "(type=%s, name=%s)", type, name);
-    reports_t *reports = scan_reports(scan);
+    reports_t *reports = scan_get_context(scan);
 
     if (end == NULL) { return; }
 

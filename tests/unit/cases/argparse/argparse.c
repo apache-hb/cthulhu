@@ -83,7 +83,6 @@ int main()
     // posargs
     {
         test_group_t group = test_group(&suite, "posargs");
-        reports_t *reports = begin_reports();
         sources_t sources = { vector_new(4) };
         errors_t errors = { vector_new(4) };
         ap_t *ap = ap_new("test-argparse-posargs", NEW_VERSION(1, 0, 0));
@@ -93,7 +92,7 @@ int main()
 
         const char *argv[] = { "argparse-test", "file.txt", "lettuce.wad" };
 
-        ap_parse(ap, reports, 3, argv);
+        ap_parse(ap, 3, argv);
 
         GROUP_EXPECT_PASS(group, "has 1 error", vector_len(errors.errors) == 1);
         GROUP_EXPECT_PASS(group, "has 1 file", vector_len(sources.files) == 1);
@@ -103,7 +102,6 @@ int main()
     // error stack
     {
         test_group_t group = test_group(&suite, "error stack");
-        reports_t *reports = begin_reports();
         error_stack_t errors = { 0 };
 
         ap_t *ap = ap_new("test-argparse-error-stack", NEW_VERSION(1, 0, 0));
@@ -120,7 +118,7 @@ int main()
 
         const char *argv[] = { "argparse-test", "1", "2", "3", "4" };
 
-        ap_parse(ap, reports, 5, argv);
+        ap_parse(ap, 5, argv);
 
         GROUP_EXPECT_PASS(group, "level 1 has 1 error", errors.levels[1] == 1);
         GROUP_EXPECT_PASS(group, "level 2 has 1 error", errors.levels[2] == 1);

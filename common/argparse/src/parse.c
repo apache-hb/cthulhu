@@ -21,19 +21,20 @@ static char *join_args(int argc, const char **argv)
     {
         vector_set(vec, i - 1, (char *)argv[i]);
     }
+
     return str_join(" ", vec);
 }
 
-int ap_parse(ap_t *self, reports_t *reports, int argc, const char **argv)
+int ap_parse(ap_t *self, int argc, const char **argv)
 {
     char *args = join_args(argc, argv);
     io_t *io = io_string("<command-line>", args);
-    scan_t *scan = scan_io(reports, "ap2", io, ctu_default_alloc());
+    scan_t *scan = scan_io("ap2", io, ctu_default_alloc());
 
     scan_set(scan, self);
-    compile_scanner(scan, &kCallbacks);
+    parse_result_t result = compile_scanner_ex(scan, &kCallbacks);
 
-    return 0;
+    return result.result == eParseOk ? 0 : 1;
 }
 
 int ap_get_opt(ap_t *self, const char *name, ap_param_t **param, char **error)

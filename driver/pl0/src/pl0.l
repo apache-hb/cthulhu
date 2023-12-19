@@ -73,7 +73,7 @@
 
 "!" { return PRINT; }
 
-. { report_unknown_character(scan_reports(yyextra), node_new(yyextra, *yylloc), yytext); }
+. { report_unknown_character(scan_get_context(yyextra), node_new(yyextra, *yylloc), yytext); }
 
 %%
 

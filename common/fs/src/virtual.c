@@ -14,11 +14,13 @@
 
 #include <string.h>
 
-typedef struct virtual_t {
+typedef struct virtual_t
+{
     const char *name;
 } virtual_t;
 
-typedef struct virtual_file_t {
+typedef struct virtual_file_t
+{
     const char *name;
 
     // TODO: mutex
@@ -28,13 +30,15 @@ typedef struct virtual_file_t {
     size_t size;
 } virtual_file_t;
 
-typedef struct virtual_dir_t {
+typedef struct virtual_dir_t
+{
     map_t *dirents; ///< map<const char *, inode_t *>
 } virtual_dir_t;
 
 // io impl
 
-typedef struct virtual_io_t {
+typedef struct virtual_io_t
+{
     virtual_file_t *data;
     size_t offset;
 } virtual_io_t;

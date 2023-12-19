@@ -1,7 +1,6 @@
 #include "ctu/scan.h"
 
 #include "core/macros.h"
-#include "base/util.h"
 
 #include "report/report.h"
 
@@ -24,5 +23,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg)
 {
     CTU_UNUSED(state);
 
-    report(scan_reports(scan), eFatal, node_new(scan, *where), "%s", msg);
+    reports_t *reports = scan_get_context(scan);
+
+    report(reports, eFatal, node_new(scan, *where), "%s", msg);
 }

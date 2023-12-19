@@ -262,7 +262,7 @@ runtime_t cmd_parse(reports_t *reports, mediator_t *mediator, lifetime_t *lifeti
     ap_event(ap, NULL, on_add_source, &rt);
     ap_error(ap, on_arg_error, &rt);
 
-    ap_parse(ap, reports, argc, argv);
+    ap_parse(ap, argc, argv);
 
     return rt;
 }

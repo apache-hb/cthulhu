@@ -114,11 +114,11 @@ WS [ \t\r\v\n\f]
 }
 
 \"([^"\\\n]|{ESCAPES})*\" {
-	yylval->text = util_text_escape(scan_reports(yyextra), node_new(yyextra, *yylloc), yytext + 1, yyleng - 2);
+	yylval->text = util_text_escape(scan_get_context(yyextra), node_new(yyextra, *yylloc), yytext + 1, yyleng - 2);
     return STRING;
 }
 
-. { report_unknown_character(scan_reports(yyextra), node_new(yyextra, *yylloc), yytext); }
+. { report_unknown_character(scan_get_context(yyextra), node_new(yyextra, *yylloc), yytext); }
 
 %%
 

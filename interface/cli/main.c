@@ -1,6 +1,7 @@
 #include "cmd.h"
 
 #include "memory/memory.h"
+#include "scan/node.h"
 #include "std/vector.h"
 #include "std/str.h"
 #include "std/map.h"
@@ -80,7 +81,7 @@ int main(int argc, const char **argv)
     size_t totalSources = vector_len(rt.sourcePaths);
     if (totalSources == 0)
     {
-        report(reports, eFatal, NULL, "no source files provided");
+        report(reports, eFatal, node_builtin(), "no source files provided");
     }
 
     CHECK_REPORTS(reports, "failed to load sources");

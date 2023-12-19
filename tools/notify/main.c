@@ -193,7 +193,7 @@ void event_invalid_function(logger_t *logs, scan_t *scan)
 static scan_t *scan_string(const char *name, const char *lang, const char *source)
 {
     io_t *io = io_string(name, source);
-    return scan_io(begin_reports(), lang, io, ctu_default_alloc());
+    return scan_io(lang, io, ctu_default_alloc());
 }
 
 static void print_backtrace(text_config_t base_config)
