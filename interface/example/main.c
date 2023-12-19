@@ -3,6 +3,7 @@
 #include "cthulhu/ssa/ssa.h"
 #include "cthulhu/emit/emit.h"
 
+#include "scan/node.h"
 #include "support/langs.h"
 
 #include "memory/memory.h"
@@ -110,7 +111,7 @@ int main(int argc, const char **argv)
     ssa_opt(reports, ssa);
     CHECK_REPORTS(reports, "optimizing ssa");
 
-    fs_t *fs = fs_virtual(reports, "out");
+    fs_t *fs = fs_virtual("out");
 
     emit_options_t baseOpts = {
         .reports = reports,
@@ -142,7 +143,11 @@ int main(int argc, const char **argv)
         printf("%s\n", path);
     }
 
-    fs_t *out = fs_physical(reports, "out");
+    fs_t *out = fs_physical("out");
+    if (out == NULL)
+    {
+        report(reports, eFatal, node_builtin(), "failed to create output directory");
+    }
     CHECK_REPORTS(reports, "creating output directory");
 
     fs_sync(out, fs);

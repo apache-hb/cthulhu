@@ -10,8 +10,6 @@
 #include "io/io.h"
 #include "io/impl.h"
 
-#include "report/report.h"
-
 #include <string.h>
 
 typedef struct virtual_t
@@ -212,7 +210,7 @@ static const fs_callbacks_t kVirtualInterface = {
     .pfn_delete_file = vfs_delete_file
 };
 
-fs_t *fs_virtual(reports_t *reports, const char *name)
+fs_t *fs_virtual(const char *name)
 {
     CTASSERT(name != NULL);
 
@@ -222,5 +220,5 @@ fs_t *fs_virtual(reports_t *reports, const char *name)
 
     inode_t *root = virtual_dir();
 
-    return fs_new(reports, root, &kVirtualInterface, &self, sizeof(virtual_t));
+    return fs_new(root, &kVirtualInterface, &self, sizeof(virtual_t));
 }

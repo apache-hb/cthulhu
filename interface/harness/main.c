@@ -218,7 +218,7 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
     ssa_opt(reports, ssa);
     CHECK_REPORTS(reports, "optimizing ssa");
 
-    fs_t *fs = fs_virtual(reports, "out");
+    fs_t *fs = fs_virtual("out");
 
     emit_options_t baseOpts = {
         .reports = reports,
@@ -250,7 +250,11 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
     const char *runDir = format("%s" NATIVE_PATH_SEPARATOR "%s", testDir, argv[1]);
 
     logverbose("creating output directory %s", runDir);
-    fs_t *out = fs_physical(reports, runDir);
+    fs_t *out = fs_physical(runDir);
+    if (out == NULL)
+    {
+        report(reports, eFatal, NULL, "failed to create output directory");
+    }
     CHECK_REPORTS(reports, "creating output directory");
 
     fs_sync(out, fs);

@@ -3,7 +3,6 @@
 #include "scan/scan.h"
 
 #include "base/panic.h"
-#include "core/macros.h"
 
 #include <limits.h>
 
@@ -84,8 +83,6 @@ typedef struct parse_result_t
     };
 } parse_result_t;
 
-parse_result_t compile_scanner_ex(scan_t *extra, callbacks_t *callbacks);
-
 /// @brief parse the contents of a scanner into a language specific ast
 /// @note callbacks should be generated via @a CTU_CALLBACKS
 ///
@@ -93,7 +90,6 @@ parse_result_t compile_scanner_ex(scan_t *extra, callbacks_t *callbacks);
 /// @param callbacks the flex/bison callbacks
 ///
 /// @return the parse result
-CTU_DEPRECATED("use compile_scanner_ex")
-void *compile_scanner(scan_t *extra, callbacks_t *callbacks);
+parse_result_t compile_scanner(scan_t *extra, callbacks_t *callbacks);
 
 /// @}

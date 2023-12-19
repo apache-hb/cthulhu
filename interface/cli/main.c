@@ -112,7 +112,7 @@ int main(int argc, const char **argv)
     ssa_opt(reports, ssa);
     CHECK_REPORTS(reports, "optimizing ssa");
 
-    fs_t *fs = fs_virtual(reports, "out");
+    fs_t *fs = fs_virtual("out");
 
     emit_options_t baseOpts = {
         .reports = reports,
@@ -140,7 +140,12 @@ int main(int argc, const char **argv)
     CTU_UNUSED(c89Result); // TODO: check for errors
     CHECK_REPORTS(reports, "emitting c89");
 
-    fs_t *out = fs_physical(reports, "out");
+    fs_t *out = fs_physical("out");
+    if (out == NULL)
+    {
+        report(reports, eFatal, node_builtin(), "failed to create output directory");
+    }
+
     CHECK_REPORTS(reports, "creating output directory");
 
     fs_sync(out, fs);

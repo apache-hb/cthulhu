@@ -11,11 +11,12 @@
 #include "report/report-ext.h"
 #include "interop/flex.h"
 #include "memory/memory.h"
+#include "cthulhu/util/text.h"
 %}
 
 %x COMMENT
 
-SUFFIX [a-zA-Z_]*
+/* SUFFIX [a-zA-Z_]* */
 
 ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 WS [ \t\r\v\n\f]
@@ -123,26 +124,30 @@ WS [ \t\r\v\n\f]
 }
 
 "0b"[01]+ {
-    yylval->digit = ctu_parse_digit(yyextra, yytext + 2, 2);
+    yylval->digit = ctu_parse_digit(yyextra, *yylloc, yytext + 2, 2);
     return INTEGER;
 }
 
 "0x"[0-9a-fA-F]+ {
-    yylval->digit = ctu_parse_digit(yyextra, yytext + 2, 16);
+    yylval->digit = ctu_parse_digit(yyextra, *yylloc, yytext + 2, 16);
     return INTEGER;
 }
 
 [0-9]+ {
-    yylval->digit = ctu_parse_digit(yyextra, yytext, 10);
+    yylval->digit = ctu_parse_digit(yyextra, *yylloc, yytext, 10);
     return INTEGER;
 }
 
 \"([^"\\\n]|{ESCAPES})*\" {
-	yylval->string = util_text_escape(scan_get_context(yyextra), node_new(yyextra, *yylloc), yytext + 1, yyleng - 2);
+    ctu_scan_t *scan = scan_get_context(yyextra);
+	yylval->string = util_text_escape(scan->reports, node_new(yyextra, *yylloc), yytext + 1, yyleng - 2);
     return STRING;
 }
 
-. { report_unknown_character(scan_get_context(yyextra), node_new(yyextra, *yylloc), yytext); }
+. {
+    ctu_scan_t *scan = scan_get_context(yyextra);
+    report_unknown_character(scan->reports, node_new(yyextra, *yylloc), yytext);
+}
 
 %%
 

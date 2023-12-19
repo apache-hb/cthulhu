@@ -25,7 +25,7 @@ void fs_delete(fs_t *fs);
 ///
 /// @return a filesystem interface, or NULL if the filesystem failed to mount
 NODISCARD CT_ALLOC(fs_delete)
-fs_t *fs_physical(reports_t *reports, const char *root);
+fs_t *fs_physical(const char *root);
 
 /// @brief create a virtual filesystem interface
 ///
@@ -34,7 +34,7 @@ fs_t *fs_physical(reports_t *reports, const char *root);
 ///
 /// @return a filesystem interface to an in-memory fs
 NODISCARD CT_ALLOC(fs_delete)
-fs_t *fs_virtual(reports_t *reports, const char *name);
+fs_t *fs_virtual(const char *name);
 
 /// @brief create a directory
 /// create a directory and all child directories inside a filesystem
@@ -94,12 +94,19 @@ void fs_dir_delete(fs_t *fs, const char *path);
 /// @param path the path to the file
 void fs_file_delete(fs_t *fs, const char *path);
 
+typedef struct sync_result_t
+{
+    /// @brief the file that failed to sync
+    /// @note this will be NULL if the sync succeeded
+    const char *path;
+} sync_result_t;
+
 /// @brief synchronize 2 filesystems
-/// copies all folders and files from @arg src to @arg dst
+/// copies all folders and files from @p src to @p dst
 ///
 /// @param dst the destination filesystem
 /// @param src the source filesystem
-void fs_sync(fs_t *dst, fs_t *src);
+sync_result_t fs_sync(fs_t *dst, fs_t *src);
 
 /// @} // FS
 

@@ -7,27 +7,23 @@
 
 #include "std/str.h"
 
-#include "core/macros.h"
-
 #include "pl0_bison.h"
 #include "pl0_flex.h"
 
 CTU_CALLBACKS(kCallbacks, pl0);
 
-static void pl0_parse(driver_t *handle, scan_t *scan)
+static void pl0_postparse(driver_t *handle, scan_t *scan, void *tree)
 {
-    lifetime_t *lifetime = handle_get_lifetime(handle);
-    pl0_t *ast = compile_scanner(scan, &kCallbacks);
-    if (ast == NULL) { return; }
-
+    pl0_t *ast = tree;
     CTASSERT(ast->type == ePl0Module);
 
     // TODO: dedup this with pl0_forward_decls
-    char *fp = (char*)scan_path(scan);
+    const char *fp = scan_path(scan);
     vector_t *path = vector_len(ast->mod) > 0
         ? ast->mod
         : vector_init(str_filename_noext(fp));
 
+    lifetime_t *lifetime = handle_get_lifetime(handle);
     context_t *ctx = context_new(handle, vector_tail(path), ast, NULL);
 
     add_context(lifetime, path, ctx);
@@ -49,7 +45,9 @@ const language_t kPl0Module = {
 
     .fnCreate = pl0_init,
 
-    .fnParse = pl0_parse,
+    .fn_postpass = pl0_postparse,
+    .callbacks = &kCallbacks,
+
     .fnCompilePass = {
         [eStageForwardSymbols] = pl0_forward_decls,
         [eStageCompileImports] = pl0_process_imports,

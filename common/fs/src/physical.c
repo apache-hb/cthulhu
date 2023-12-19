@@ -7,17 +7,18 @@
 
 #include "base/panic.h"
 
-#include "report/report.h"
-
-typedef struct physical_t {
+typedef struct physical_t
+{
     const char *root; ///< absolute path to root directory
 } physical_t;
 
-typedef struct physical_file_t {
+typedef struct physical_file_t
+{
     const char *path; ///< path to file relative to root
 } physical_file_t;
 
-typedef struct physical_dir_t {
+typedef struct physical_dir_t
+{
     const char *path; ///< path to directory relative to root
 } physical_dir_t;
 
@@ -191,8 +192,10 @@ static const fs_callbacks_t kPhysicalInterface = {
     .pfn_delete_file = pfs_file_delete
 };
 
-fs_t *fs_physical(reports_t *reports, const char *root)
+fs_t *fs_physical(const char *root)
 {
+    CTASSERT(root != NULL);
+
     OS_RESULT(bool) exist = os_dir_exists(root);
     if (!OS_VALUE_OR(bool, exist, false))
     {
@@ -203,7 +206,6 @@ fs_t *fs_physical(reports_t *reports, const char *root)
 
         if (!OS_VALUE(bool, create))
         {
-            report(reports, eFatal, NULL, "root directory could not be created: %s", root);
             return NULL;
         }
     }
@@ -214,5 +216,5 @@ fs_t *fs_physical(reports_t *reports, const char *root)
 
     inode_t *dir = physical_dir(".");
 
-    return fs_new(reports, dir, &kPhysicalInterface, &self, sizeof(physical_t));
+    return fs_new(dir, &kPhysicalInterface, &self, sizeof(physical_t));
 }

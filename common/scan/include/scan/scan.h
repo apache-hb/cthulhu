@@ -7,7 +7,6 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-typedef struct reports_t reports_t;
 typedef struct io_t io_t;
 typedef struct scan_t scan_t;
 typedef struct arena_t arena_t;

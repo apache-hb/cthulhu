@@ -11,12 +11,13 @@
 
 CTU_CALLBACKS(kCallbacks, obr);
 
-static void obr_parse(driver_t *handle, scan_t *scan)
+static void obr_postparse(driver_t *handle, scan_t *scan, void *tree)
 {
-    lifetime_t *lifetime = handle_get_lifetime(handle);
+    CTU_UNUSED(scan);
 
-    vector_t *modules = compile_scanner(scan, &kCallbacks);
-    if (modules == NULL) { return; }
+    vector_t *modules = tree;
+
+    lifetime_t *lifetime = handle_get_lifetime(handle);
 
     size_t len = vector_len(modules);
     for (size_t i = 0; i < len; i++)
@@ -46,7 +47,9 @@ const language_t kOberonModule = {
     .fnCreate = obr_create,
     .fnDestroy = obr_destroy,
 
-    .fnParse = obr_parse,
+    .fn_postpass = obr_postparse,
+    .callbacks = &kCallbacks,
+
     .fnCompilePass = {
         [eStageForwardSymbols] = obr_forward_decls,
         [eStageCompileImports] = obr_process_imports,

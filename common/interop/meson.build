@@ -5,7 +5,7 @@ src = [
 
 libinterop = library('interop', src,
     c_args : user_args,
-    dependencies : [ memory, scan, report ],
+    dependencies : [ memory, scan ],
     include_directories : 'include'
 )
 

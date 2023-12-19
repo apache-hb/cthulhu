@@ -19,6 +19,7 @@ typedef struct tree_t tree_t;
 typedef struct cookie_t cookie_t;
 typedef struct scan_t scan_t;
 typedef struct reports_t reports_t;
+typedef struct callbacks_t callbacks_t;
 
 ///
 /// drivers
@@ -27,7 +28,13 @@ typedef struct reports_t reports_t;
 typedef void (*driver_create_t)(driver_t *);
 typedef void (*driver_destroy_t)(driver_t *);
 
-typedef void (*parse_t)(driver_t *, scan_t *);
+typedef void (*driver_parse_t)(driver_t *, scan_t *);
+
+/// @brief provide a scanner with context data
+typedef void (*driver_prepass_t)(driver_t *, scan_t *);
+
+/// @brief get the context data from a scanner
+typedef void (*driver_postpass_t)(driver_t *, scan_t *, void *);
 
 typedef enum compile_stage_t
 {
@@ -51,7 +58,11 @@ typedef struct language_t
     driver_create_t fnCreate;   ///< called at startup
     driver_destroy_t fnDestroy; ///< called at shutdown
 
-    parse_t fnParse; ///< parse a file into an ast
+    driver_parse_t fnParse; ///< parse a file into an ast
+
+    driver_prepass_t fn_prepass;
+    driver_postpass_t fn_postpass;
+    callbacks_t *callbacks;
 
     driver_pass_t fnCompilePass[eStageTotal]; ///< compile a single pass
 } language_t;

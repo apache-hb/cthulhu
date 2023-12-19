@@ -9,6 +9,8 @@
 #include "scan/scan.h"
 #include "scan/node.h"
 
+#include "interop/compile.h"
+
 #include "std/vector.h"
 #include "std/str.h"
 
@@ -167,20 +169,55 @@ const language_t *lifetime_get_language(lifetime_t *lifetime, const char *ext)
     return map_get(lifetime->extensions, ext);
 }
 
+static bool parse_failed(reports_t *reports, const char *path, parse_result_t result)
+{
+    switch (result.result)
+    {
+    case eParseInitFailed:
+        report(reports, eInternal, node_builtin(), "failed to init parser %s: %d", path, result.error);
+        return true;
+    case eParseScanFailed:
+        report(reports, eFatal, node_builtin(), "failed to scan %s", path);
+        return true;
+    case eParseFailed:
+        report(reports, eFatal, node_builtin(), "failed to parse %s: %d", path, result.error);
+        return true;
+
+    default:
+        return false;
+    }
+}
+
 void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io)
 {
     CTASSERT(lifetime != NULL);
     CTASSERT(lang != NULL);
     CTASSERT(io != NULL);
 
-    CTASSERT(lang->fnParse != NULL);
-
     scan_t *scan = scan_io(lang->id, io, lifetime->alloc);
     scan_set_context(scan, lifetime->reports);
 
     driver_t *handle = handle_new(lifetime, lang);
 
-    lang->fnParse(handle, scan);
+    if (lang->callbacks != NULL)
+    {
+        EXEC(lang, fn_prepass, handle, scan);
+
+        parse_result_t result = compile_scanner(scan, lang->callbacks);
+        const char *path = scan_path(scan);
+        if (parse_failed(lifetime->reports, path, result))
+        {
+            return;
+        }
+
+        CTASSERTF(lang->fn_postpass != NULL, "language `%s` has no postpass function", lang->id);
+        lang->fn_postpass(handle, scan, result.tree);
+    }
+    else
+    {
+        CTASSERTF(lang->fnParse != NULL, "language `%s` has no parse function", lang->id);
+        lang->fnParse(handle, scan);
+    }
 }
 
 static void resolve_tag(tree_t *mod, size_t tag)

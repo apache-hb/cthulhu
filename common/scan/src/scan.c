@@ -7,8 +7,6 @@
 #include <limits.h>
 #include <string.h>
 
-typedef struct reports_t reports_t;
-
 typedef struct scan_t
 {
     io_t *io;           ///< file itself

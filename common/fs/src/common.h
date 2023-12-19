@@ -7,7 +7,8 @@
 
 typedef struct map_t map_t;
 
-typedef enum inode_type_t {
+typedef enum inode_type_t
+{
     eNodeFile,
     eNodeDir,
     eNodeInvalid,
@@ -15,7 +16,8 @@ typedef enum inode_type_t {
     eNodeTotal
 } inode_type_t;
 
-typedef struct inode_t {
+typedef struct inode_t
+{
     inode_type_t type;
     uint32_t shutup; // ubsan moment
 
@@ -37,7 +39,8 @@ typedef void (*fs_file_delete_t)(fs_t *fs, inode_t *node, const char *name);
 /// @param fs the fs to delete
 typedef void (*fs_delete_t)(fs_t *fs);
 
-typedef struct fs_callbacks_t {
+typedef struct fs_callbacks_t
+{
     fs_query_node_t pfn_query_node;
     fs_query_dirents_t pfn_query_dirents;
     fs_query_file_t pfn_query_file;
@@ -54,9 +57,9 @@ typedef struct fs_callbacks_t {
     fs_delete_t pfn_delete;
 } fs_callbacks_t;
 
-typedef struct fs_t {
+typedef struct fs_t
+{
     const fs_callbacks_t *cb; ///< callbacks
-    reports_t *reports; ///< reports
     inode_t *root; ///< root inode
 
     char data[];
@@ -77,6 +80,6 @@ OS_RESULT(bool) mkdir_recursive(const char *path);
 
 // fs api
 
-fs_t *fs_new(reports_t *reports, inode_t *root, const fs_callbacks_t *cb, const void *data, size_t size);
+fs_t *fs_new(inode_t *root, const fs_callbacks_t *cb, const void *data, size_t size);
 
 void *fs_data(fs_t *fs);

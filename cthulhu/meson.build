@@ -67,7 +67,7 @@ src = [
 libmediator = library('mediator', src,
     include_directories : 'include',
     c_args : user_args,
-    dependencies : [ memory, base, std, stacktrace, scan, report, tree ]
+    dependencies : [ memory, base, std, stacktrace, scan, report, tree, interop ]
 )
 
 mediator = declare_dependency(

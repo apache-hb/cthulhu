@@ -32,7 +32,7 @@ int ap_parse(ap_t *self, int argc, const char **argv)
     scan_t *scan = scan_io("ap2", io, ctu_default_alloc());
 
     scan_set(scan, self);
-    parse_result_t result = compile_scanner_ex(scan, &kCallbacks);
+    parse_result_t result = compile_scanner(scan, &kCallbacks);
 
     return result.result == eParseOk ? 0 : 1;
 }

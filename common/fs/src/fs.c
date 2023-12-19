@@ -9,8 +9,6 @@
 #include "base/panic.h"
 #include "memory/memory.h"
 
-#include "report/report.h"
-
 #include <string.h>
 
 static vector_t *path_split(const char *path)
@@ -350,7 +348,7 @@ static void sync_file(fs_t *dst, fs_t *src, inode_t *dstNode, inode_t *srcNode)
     io_close(srcIo);
 }
 
-static void sync_dir(fs_t *dst, fs_t *src, inode_t *dstNode, inode_t *srcNode)
+static sync_result_t sync_dir(fs_t *dst, fs_t *src, inode_t *dstNode, inode_t *srcNode)
 {
     map_t *dirents = query_dirents(src, srcNode);
     map_iter_t iter = map_iter(dirents);
@@ -363,8 +361,8 @@ static void sync_dir(fs_t *dst, fs_t *src, inode_t *dstNode, inode_t *srcNode)
         inode_t *other = get_inode_for(dst, dstNode, name, child->type);
         if (other == NULL)
         {
-            report(src->reports, eWarn, NULL, "cannot create directory (path = %s)", name);
-            return;
+            sync_result_t result = { .path = name };
+            return result;
         }
 
         switch (child->type)
@@ -380,12 +378,15 @@ static void sync_dir(fs_t *dst, fs_t *src, inode_t *dstNode, inode_t *srcNode)
             NEVER("invalid inode type (type = %d)", child->type);
         }
     }
+
+    sync_result_t result = { .path = NULL };
+    return result;
 }
 
-void fs_sync(fs_t *dst, fs_t *src)
+sync_result_t fs_sync(fs_t *dst, fs_t *src)
 {
     CTASSERT(dst != NULL);
     CTASSERT(src != NULL);
 
-    sync_dir(dst, src, dst->root, src->root);
+    return sync_dir(dst, src, dst->root, src->root);
 }

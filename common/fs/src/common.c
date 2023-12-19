@@ -79,13 +79,11 @@ void fs_delete(fs_t *fs)
     ctu_free(fs);
 }
 
-fs_t *fs_new(reports_t *reports, inode_t *root, const fs_callbacks_t *cb, const void *data, size_t size)
+fs_t *fs_new(inode_t *root, const fs_callbacks_t *cb, const void *data, size_t size)
 {
-    CTASSERT(reports != NULL);
     CTASSERT(cb != NULL);
 
     fs_t *fs = MEM_ALLOC(sizeof(fs_t) + size, "fs", cb);
-    fs->reports = reports;
     fs->cb = cb;
     fs->root = root;
 

@@ -1,7 +1,6 @@
 #include "unit/ct-test.h"
 
 #include "fs/fs.h"
-#include "report/report.h"
 
 int main()
 {
@@ -11,20 +10,15 @@ int main()
 
     // virtual
     {
-        reports_t *reports = begin_reports();
-
         test_group_t group = test_group(&suite, "virtual");
-        GROUP_EXPECT_PANIC(group, "no null name", fs_virtual(reports, NULL));
-        GROUP_EXPECT_PANIC(group, "no null reports", fs_virtual(NULL, "test"));
-        GROUP_EXPECT_PANIC(group, "null everything", fs_virtual(NULL, NULL));
-        GROUP_EXPECT_PASS(group, "no return null", fs_virtual(reports, "test") != NULL);
+        GROUP_EXPECT_PANIC(group, "no null name", fs_virtual(NULL));
+        GROUP_EXPECT_PASS(group, "no return null", fs_virtual("test") != NULL);
     }
 
     // mkdir
     {
         test_group_t group = test_group(&suite, "mkdir");
-        reports_t *reports = begin_reports();
-        fs_t *fs = fs_virtual(reports, "test");
+        fs_t *fs = fs_virtual("test");
         fs_dir_create(fs, "testdir/foo/bar");
 
         GROUP_EXPECT_PASS(group, "fs_dir_create() should recursively create dirs", fs_dir_exists(fs, "testdir"));
@@ -37,8 +31,7 @@ int main()
     // rmdir
     {
         test_group_t group = test_group(&suite, "rmdir");
-        reports_t *reports = begin_reports();
-        fs_t *fs = fs_virtual(reports, "test");
+        fs_t *fs = fs_virtual("test");
         fs_dir_create(fs, "testdir/foo/bar");
         fs_dir_delete(fs, "testdir/foo/bar");
 
@@ -50,15 +43,15 @@ int main()
     // sync
     {
         test_group_t group = test_group(&suite, "sync");
-        reports_t *reports = begin_reports();
-        fs_t *dst = fs_virtual(reports, "dst");
-        fs_t *src = fs_virtual(reports, "src");
+        fs_t *dst = fs_virtual("dst");
+        fs_t *src = fs_virtual("src");
 
         fs_dir_create(src, "testdir/foo/bar");
 
-        fs_sync(dst, src);
+        sync_result_t result = fs_sync(dst, src);
 
         GROUP_EXPECT_PASS(group, "fs_sync() should sync directories", fs_dir_exists(dst, "testdir/foo/bar"));
+        GROUP_EXPECT_PASS(group, "result should be empty", result.path == NULL);
     }
 
     return test_suite_finish(&suite);
