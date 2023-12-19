@@ -5,8 +5,6 @@
 #include "argparse/argparse.h"
 #include "argparse/commands.h"
 
-#include "report/report.h"
-
 #include "std/vector.h"
 #include "std/str.h"
 #include <stdlib.h>

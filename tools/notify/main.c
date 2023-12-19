@@ -6,8 +6,6 @@
 #include "notify/notify.h"
 #include "notify/text.h"
 
-#include "report/report.h"
-
 #include "scan/node.h"
 #include "stacktrace/stacktrace.h"
 #include "std/str.h"

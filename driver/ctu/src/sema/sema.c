@@ -13,7 +13,6 @@
 #include "std/vector.h"
 
 #include "base/panic.h"
-#include "base/util.h"
 
 ///
 /// sema
