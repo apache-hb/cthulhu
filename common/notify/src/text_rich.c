@@ -484,6 +484,27 @@ static void print_extra_files(rich_t *rich)
     }
 }
 
+static void print_notes(rich_t *rich)
+{
+    CTASSERT(rich != NULL);
+
+    const event_t *event = rich->event;
+    if (event->notes == NULL)
+        return;
+
+    text_config_t config = rich->config;
+
+    char *coloured = fmt_coloured(config.colours, eColourYellow, "*");
+    size_t len = vector_len(event->notes);
+    for (size_t i = 0; i < len; i++)
+    {
+        const char *note = vector_get(event->notes, i);
+        CTASSERT(note != NULL);
+
+        io_printf(config.io, " %s %s\n", coloured, note);
+    }
+}
+
 void text_report_rich(text_config_t config, const event_t *event)
 {
     CTASSERT(config.io != NULL);
@@ -505,6 +526,8 @@ void text_report_rich(text_config_t config, const event_t *event)
     print_file_segments(&ctx, primary);
 
     print_extra_files(&ctx);
+
+    print_notes(&ctx);
 
     cache_map_delete(ctx.file_cache);
 }

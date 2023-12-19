@@ -24,6 +24,9 @@ GFI = good first issue
 
 <h3>Important</h3>
 
+- make the output of rich text notifications reproducible
+    - order of segments changes sometimes because of set_add_ptr being used
+
 - find a way to nicely wrap exception info for segfaults
     - need to wrap for client code to work across platforms
 
