@@ -21,6 +21,9 @@ typedef uint_fast64_t column_t; ///< column number
 #define PRI_LINE PRIuFAST64
 #define PRI_COLUMN PRIuFAST64
 
+#define LINE_MAX UINT_FAST64_MAX
+#define COLUMN_MAX UINT_FAST64_MAX
+
 /// @brief a location inside a scanner
 typedef struct
 {
@@ -42,7 +45,7 @@ void scan_init(void);
 ///
 /// @return the source file of @p node
 NODISCARD CONSTFN
-scan_t *node_get_scan(const node_t *node);
+const scan_t *node_get_scan(const node_t *node);
 
 /// @brief get the location of a node inside its source file
 ///
@@ -59,7 +62,7 @@ where_t node_get_location(const node_t *node);
 ///
 /// @return the created node
 NODISCARD CONSTFN
-node_t *node_new(scan_t *scan, where_t where);
+node_t *node_new(const scan_t *scan, where_t where);
 
 /// @brief get the builtin node
 /// node used for drivers that declare builtin symbols

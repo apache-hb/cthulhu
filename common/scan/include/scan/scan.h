@@ -88,7 +88,7 @@ NODISCARD CONSTFN
 io_t *scan_src(IN_NOTNULL scan_t *scan);
 
 NODISCARD CONSTFN
-arena_t *scan_alloc(IN_NOTNULL scan_t *scan);
+arena_t *scan_alloc(IN_NOTNULL const scan_t *scan);
 
 /// @brief get an invalid scanner
 ///

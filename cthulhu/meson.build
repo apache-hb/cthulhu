@@ -101,7 +101,7 @@ src = [
 libcheck = library('check', src,
     include_directories : 'include',
     c_args : user_args,
-    dependencies : [ memory, base, std, tree, ssa, scan, report ]
+    dependencies : [ memory, std, tree, ssa, scan, report, util ]
 )
 
 check = declare_dependency(

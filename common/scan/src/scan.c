@@ -127,7 +127,7 @@ reports_t *scan_reports(scan_t *scan)
 }
 
 USE_DECL
-arena_t *scan_alloc(scan_t *scan)
+arena_t *scan_alloc(const scan_t *scan)
 {
     CTASSERT(scan != NULL);
 

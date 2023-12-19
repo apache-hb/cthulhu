@@ -153,3 +153,28 @@ void typevec_sort(IN_NOTNULL typevec_t *vec, int (*cmp)(const void *, const void
 
     qsort(vec->data, vec->used, vec->type_size, cmp);
 }
+
+void typevec_reverse(IN_NOTNULL typevec_t *vec)
+{
+    CTASSERT(vec != NULL);
+
+    size_t len = typevec_len(vec);
+    size_t half = len / 2;
+
+    // TODO: if theres spare data at the end of the vector, we should use that
+    char *tmp = ctu_malloc(vec->type_size);
+
+    for (size_t i = 0; i < half; i++)
+    {
+        size_t j = len - i - 1;
+
+        void *a = typevec_offset(vec, i);
+        void *b = typevec_offset(vec, j);
+
+        memcpy(tmp, a, vec->type_size);
+        memcpy(a, b, vec->type_size);
+        memcpy(b, tmp, vec->type_size);
+    }
+
+    ctu_free(tmp);
+}

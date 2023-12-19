@@ -79,7 +79,7 @@ static char *format_location(const char *base, const scan_t *scan, where_t where
 
 static void report_scanner(const char *base, const node_t *node)
 {
-    scan_t *scan = node_get_scan(node);
+    const scan_t *scan = node_get_scan(node);
     where_t where = node_get_location(node);
     fprintf(stderr, " => %s\n", format_location(base, scan, where));
 }
@@ -232,9 +232,17 @@ static char *build_underline(const char *source, where_t where, const char *note
 
 #define MAX_BASE10_LEN 32 // 32 digits is enough for a 64 bit integer and its null terminator
 
-static int base10_length(line_t digit)
+static int base10_length(line_t num)
 {
-    return (int)ceil(log10((double)digit)) + 1;
+    int width = 0;
+
+    while (num > 0)
+    {
+        num /= 10;
+        width++;
+    }
+
+    return width;
 }
 
 static size_t longest_line(const scan_t *scan, line_t init, vector_t *parts)

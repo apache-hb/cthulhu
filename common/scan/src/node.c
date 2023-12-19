@@ -7,7 +7,7 @@
 
 typedef struct node_t
 {
-    scan_t *scan;  ///< the source file
+    const scan_t *scan;  ///< the source file
     where_t where; ///< the location of this node in the source file
 } node_t;
 
@@ -34,7 +34,7 @@ bool node_is_builtin(const node_t *node)
 }
 
 USE_DECL
-node_t *node_new(scan_t *scan, where_t where)
+node_t *node_new(const scan_t *scan, where_t where)
 {
     CTASSERT(scan != NULL);
 
@@ -47,7 +47,7 @@ node_t *node_new(scan_t *scan, where_t where)
 }
 
 USE_DECL
-scan_t *node_get_scan(const node_t *node)
+const scan_t *node_get_scan(const node_t *node)
 {
     CTASSERT(node != NULL);
 

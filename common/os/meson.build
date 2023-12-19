@@ -20,7 +20,7 @@ subdir('src' / target)
 # create the native library
 
 os = declare_dependency(
-    link_with : lib_osnative,
+    link_with : [ lib_osnative, lib_oscommon ],
     include_directories : 'include',
     dependencies : [ core ]
 )

@@ -105,6 +105,8 @@ void *typevec_data(IN_NOTNULL const typevec_t *vec);
 
 void typevec_sort(IN_NOTNULL typevec_t *vec, int (*cmp)(const void *, const void *));
 
+void typevec_reverse(IN_NOTNULL typevec_t *vec);
+
 /// @}
 
 END_API

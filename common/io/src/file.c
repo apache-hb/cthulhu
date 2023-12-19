@@ -67,7 +67,10 @@ static const void *fd_map(io_t *self)
 static void fd_close(io_t *self)
 {
     os_file_t *file = fd_data(self);
-    os_file_close(file);
+    if (io_error(self) == 0)
+    {
+        os_file_close(file);
+    }
 }
 
 static const io_callbacks_t kFileCallbacks = {

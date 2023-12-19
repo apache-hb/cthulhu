@@ -137,7 +137,7 @@ void event_missing_call(logger_t *logs, scan_t *scan_main, scan_t *scan_lhs)
 
     node_t *node3 = node_new(scan_lhs, where3);
 
-    event_t *event = msg_notify(logs, &kUndefinedFunctionName, node, "undefined function name `%s`", "lhs");
+    event_t *event = msg_notify(logs, &kUndefinedFunctionName, node, "function `%s` is undefined in the current context", "lhs");
     msg_note(event, "did you mean `%s`?", "rhs");
     msg_append(event, node, "function called here");
     msg_append(event, node, "function called here but with a different message");

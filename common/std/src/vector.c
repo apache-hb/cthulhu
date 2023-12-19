@@ -1,7 +1,6 @@
 #include "std/vector.h"
 #include "memory/memory.h"
 #include "base/panic.h"
-#include "core/macros.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -218,31 +217,6 @@ vector_t *vector_join(vector_t *vectors)
     }
 
     return result;
-}
-
-typedef int(*sort_cmp_t)(const void *, const void *);
-
-// unwrap the lhs and rhs pointers and pass them to the cmp function
-// they are actually void** pointers
-static int vector_cmp(void *cmp, const void *lhs, const void *rhs)
-{
-    sort_cmp_t fn = (sort_cmp_t)cmp;
-    void *l = *(void **)lhs;
-    void *r = *(void **)rhs;
-
-    return fn(l, r);
-}
-
-USE_DECL
-void vector_sort(vector_t *vector, int (*cmp)(const void *, const void *))
-{
-    CTASSERT(vector != NULL);
-    CTASSERT(cmp != NULL);
-
-    CTU_UNUSED(vector_cmp);
-
-    void *fn = (void *)cmp;
-    qsort_s(vector->data, vector_len(vector), sizeof(void *), vector_cmp, fn);
 }
 
 USE_DECL
