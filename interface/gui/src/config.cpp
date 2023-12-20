@@ -5,6 +5,7 @@
 // for some reason the ImU64 overload of ImGui::CheckboxFlags is not included in imgui.h
 #include "imgui/imgui_internal.h" // IWYU pragma: keep
 
+#include "std/typed/vector.h"
 #include "std/vector.h"
 
 #include <algorithm>
@@ -96,10 +97,10 @@ void draw_group_info(const config_t *group)
         ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.f);
         draw_info_preamble(info);
 
-        vector_t *child_groups = cfg_get_groups(group);
+        typevec_t *child_groups = cfg_get_groups(group);
         vector_t *child_fields = cfg_get_fields(group);
 
-        size_t group_count = vector_len(child_groups);
+        size_t group_count = typevec_len(child_groups);
         size_t field_count = vector_len(child_fields);
 
         ImGui::SeparatorText("Children");
@@ -328,12 +329,12 @@ void draw_config_group(config_t *group);
 
 void draw_config_group_children(config_t *group)
 {
-    vector_t *children = cfg_get_groups(group);
-    size_t child_count = vector_len(children);
+    typevec_t *children = cfg_get_groups(group);
+    size_t child_count = typevec_len(children);
     for (size_t i = 0; i < child_count; ++i)
     {
         ImGui::TableNextRow();
-        config_t *child = reinterpret_cast<config_t*>(vector_get(children, i));
+        config_t *child = reinterpret_cast<config_t*>(typevec_offset(children, i));
         draw_config_group(child);
     }
 }

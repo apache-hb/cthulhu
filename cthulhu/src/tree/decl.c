@@ -23,7 +23,7 @@ static tree_t *decl_open(const node_t *node, const char *name, const tree_t *typ
 
     if (resolve != NULL)
     {
-        CTASSERT(resolve->fnResolve != NULL);
+        CTASSERT(resolve->fn_resolve != NULL);
         CTASSERT(resolve->sema != NULL);
     }
 
@@ -58,7 +58,7 @@ tree_t *tree_resolve(cookie_t *cookie, const tree_t *decl)
 
     vector_push(&cookie->stack, inner);
 
-    res->fnResolve(res->sema, inner, res->user);
+    res->fn_resolve(res->sema, inner, res->user);
 
     vector_drop(cookie->stack);
 
@@ -75,9 +75,9 @@ tree_t *tree_resolve_type(const tree_t *decl)
     if (res == NULL) { return inner; }
 
     // TODO: should this be ok?
-    if (res->fnResolveType == NULL) { return inner; }
+    if (res->fn_resolve_type == NULL) { return inner; }
 
-    res->fnResolveType(res->sema, inner, res->user);
+    res->fn_resolve_type(res->sema, inner, res->user);
 
     return inner;
 }
@@ -160,7 +160,7 @@ tree_t *tree_decl_local(const node_t *node, const char *name, tree_storage_t sto
 tree_t *tree_decl_case(const node_t *node, const char *name, tree_t *expr)
 {
     tree_t *self = tree_decl(eTreeDeclCase, node, tree_get_type(expr), name, eQualUnknown);
-    self->caseValue = expr;
+    self->case_value = expr;
     return self;
 }
 
@@ -319,7 +319,7 @@ tree_t *tree_open_enum(const node_t *node, const char *name, tree_resolve_info_t
     tree_t *self = decl_open(node, name, NULL, eTreeTypeEnum, ctu_memdup(&resolve, sizeof(tree_resolve_info_t), ctu_default_alloc()));
     self->underlying = NULL;
     self->cases = vector_new(4);
-    self->defaultCase = NULL;
+    self->default_case = NULL;
     return self;
 }
 
@@ -329,7 +329,7 @@ void tree_close_enum(tree_t *self, const tree_t *underlying, vector_t *cases, tr
 
     self->underlying = underlying;
     self->cases = cases;
-    self->defaultCase = default_case;
+    self->default_case = default_case;
 
     CTASSERTF(tree_is(underlying, eTreeTypeDigit), "enums must have an underlying digit type, got %s", tree_to_string(underlying));
 

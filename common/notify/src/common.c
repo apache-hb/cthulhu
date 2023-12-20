@@ -11,7 +11,6 @@
 #include "std/set.h"
 
 #include "std/typed/vector.h"
-#include "std/vector.h"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -98,7 +97,7 @@ typevec_t *all_segments_in_scan(const typevec_t *segments, const node_t *node)
     const scan_t *scan = node_get_scan(node);
 
     size_t len = typevec_len(segments);
-    typevec_t *result = typevec_new(sizeof(segment_t), len);
+    typevec_t *result = typevec_new(sizeof(segment_t), len, ctu_default_alloc());
 
     for (size_t i = 0; i < len; i++)
     {
@@ -256,7 +255,7 @@ static text_cache_t *text_cache_new(io_t *io, text_view_t source, size_t len, ar
     cache->arena = arena;
     cache->io = io;
     cache->source = source;
-    cache->line_info = typevec_new(sizeof(lineinfo_t), len);
+    cache->line_info = typevec_new(sizeof(lineinfo_t), len, arena);
     cache->cached_lines = map_optimal(len);
 
     return cache;
@@ -428,7 +427,7 @@ text_t cache_escape_line(text_cache_t *cache, size_t line, const text_colour_t *
 
     text_view_t view = cache_get_line(cache, line);
 
-    typevec_t *result = typevec_new(sizeof(char), view.size * 2);
+    typevec_t *result = typevec_new(sizeof(char), view.size * 2, cache->arena);
 
     char buffer[8] = "";
     bool in_colour = false;
@@ -486,7 +485,7 @@ static bool set_has_option(set_t *set, const diagnostic_t *diag)
 }
 
 USE_DECL
-int text_report(vector_t *events, report_config_t config, const char *title)
+int text_report(typevec_t *events, report_config_t config, const char *title)
 {
     CTASSERT(events != NULL);
     CTASSERT(title != NULL);
@@ -501,7 +500,7 @@ int text_report(vector_t *events, report_config_t config, const char *title)
 
     text.cache = cache;
 
-    size_t len = vector_len(events);
+    size_t len = typevec_len(events);
     void (*fn)(text_config_t, const event_t*) = fmt == eTextComplex ? text_report_rich : text_report_simple;
 
     int result = EXIT_OK;
@@ -514,7 +513,7 @@ int text_report(vector_t *events, report_config_t config, const char *title)
 
     for (size_t i = 0; i < len; i++)
     {
-        event_t *event = vector_get(events, i);
+        event_t *event = typevec_offset(events, i);
         const diagnostic_t *diag = event->diagnostic;
         if (set_has_option(config.ignore_warnings, diag))
         {

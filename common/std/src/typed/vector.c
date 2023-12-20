@@ -35,6 +35,20 @@ static void *get_offset_ptr(const typevec_t *vec, size_t index)
     return ((char*)vec->data) + (index * vec->type_size);
 }
 
+static void typevec_ensure(typevec_t *vec, size_t extra)
+{
+    CTASSERT(vec != NULL);
+
+    if (vec->used + extra > vec->size)
+    {
+        size_t new_size = MAX(vec->size * 2, vec->used + extra);
+
+        vec->data = arena_realloc(vec->arena, vec->data, new_size * vec->type_size, vec->size * vec->type_size);
+
+        vec->size = new_size;
+    }
+}
+
 static typevec_t *typevec_create(size_t type_size, size_t len, arena_t *arena)
 {
     CTASSERT(type_size > 0);
@@ -61,23 +75,23 @@ void typevec_delete(typevec_t *vec)
 }
 
 USE_DECL
-typevec_t *typevec_new(size_t size, size_t len)
+typevec_t *typevec_new(size_t type_size, size_t len, arena_t *arena)
 {
-    return typevec_create(size, len, ctu_default_alloc());
+    return typevec_create(type_size, len, arena);
 }
 
 USE_DECL
-typevec_t *typevec_of(size_t size, size_t len)
+typevec_t *typevec_of(size_t type_size, size_t len)
 {
-    typevec_t *self = typevec_create(size, len, ctu_default_alloc());
+    typevec_t *self = typevec_create(type_size, len, ctu_default_alloc());
     self->used = len;
     return self;
 }
 
 USE_DECL
-typevec_t *typevec_init(size_t size, const void *value)
+typevec_t *typevec_init(size_t type_size, const void *value)
 {
-    typevec_t *self = typevec_create(size, 1, ctu_default_alloc());
+    typevec_t *self = typevec_create(type_size, 1, ctu_default_alloc());
     typevec_push(self, value);
     return self;
 }
@@ -119,21 +133,16 @@ void typevec_tail(const typevec_t *vec, void *dst)
 }
 
 USE_DECL
-void typevec_push(typevec_t *vec, const void *src)
+void *typevec_push(typevec_t *vec, const void *src)
 {
     CTASSERT(vec != NULL);
 
-    if (vec->used == vec->size)
-    {
-        size_t new_size = vec->size * 2;
-
-        vec->data = arena_realloc(vec->arena, vec->data, new_size * vec->type_size, vec->size * vec->type_size);
-
-        vec->size = new_size;
-    }
+    typevec_ensure(vec, 1);
 
     void *dst = get_offset_ptr(vec, vec->used++);
     memcpy(dst, src, vec->type_size);
+
+    return dst;
 }
 
 USE_DECL
@@ -142,20 +151,11 @@ void typevec_append(typevec_t *vec, const void *src, size_t len)
     CTASSERT(vec != NULL);
     CTASSERT(src != NULL);
 
-    size_t new_len = vec->used + len;
-
-    if (new_len > vec->size)
-    {
-        size_t new_size = MAX(vec->size * 2, new_len);
-
-        vec->data = arena_realloc(vec->arena, vec->data, new_size * vec->type_size, vec->size * vec->type_size);
-
-        vec->size = new_size;
-    }
+    typevec_ensure(vec, len);
 
     void *dst = get_offset_ptr(vec, vec->used);
     memcpy(dst, src, vec->type_size * len);
-    vec->used = new_len;
+    vec->used += len;
 }
 
 USE_DECL
@@ -216,4 +216,12 @@ void typevec_reverse(IN_NOTNULL typevec_t *vec)
     }
 
     arena_free(vec->arena, tmp, vec->type_size);
+}
+
+USE_DECL
+void typevec_reset(typevec_t *vec)
+{
+    CTASSERT(vec != NULL);
+
+    vec->used = 0;
 }

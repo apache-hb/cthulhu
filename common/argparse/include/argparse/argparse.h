@@ -98,7 +98,7 @@ ap_group_t *ap_group_new(ap_t *self, const char *name, const char *desc);
 /// @param names the names of the parameter, must be NULL terminated
 ///
 /// @return the created parameter
-ap_param_t *ap_add_bool(ap_group_t *self, const char *name, const char *desc, const char **names);
+ap_param_t *ap_add_bool(ap_group_t *self, const char *name, const char *desc, const char *const *names);
 
 /// @brief add an int parameter to a group
 ///
@@ -108,7 +108,7 @@ ap_param_t *ap_add_bool(ap_group_t *self, const char *name, const char *desc, co
 /// @param names the names of the parameter, must be NULL terminated
 ///
 /// @return the created parameter
-ap_param_t *ap_add_int(ap_group_t *self, const char *name, const char *desc, const char **names);
+ap_param_t *ap_add_int(ap_group_t *self, const char *name, const char *desc, const char *const *names);
 
 /// @brief add a string parameter to a group
 ///
@@ -118,7 +118,7 @@ ap_param_t *ap_add_int(ap_group_t *self, const char *name, const char *desc, con
 /// @param names the names of the parameter, must be NULL terminated
 ///
 /// @return the created parameter
-ap_param_t *ap_add_string(ap_group_t *self, const char *name, const char *desc, const char **names);
+ap_param_t *ap_add_string(ap_group_t *self, const char *name, const char *desc, const char *const *names);
 
 /// @brief get a boolean value from a parameter
 ///

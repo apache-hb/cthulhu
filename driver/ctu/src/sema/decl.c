@@ -160,7 +160,7 @@ static void ctu_resolve_variant(tree_t *sema, tree_t *self, void *user)
 
     size_t len = vector_len(decl->cases);
 
-    tree_t *defaultCase = NULL;
+    tree_t *default_case = NULL;
     vector_t *result = vector_of(len);
 
     for (size_t i = 0; i < len; i++)
@@ -168,25 +168,25 @@ static void ctu_resolve_variant(tree_t *sema, tree_t *self, void *user)
         ctu_t *it = vector_get(decl->cases, i);
         CTASSERTF(it->kind == eCtuVariantCase, "decl %s is not a variant case", it->name);
 
-        tree_t *val = ctu_sema_rvalue(&inner, it->caseValue, underlying);
+        tree_t *val = ctu_sema_rvalue(&inner, it->case_value, underlying);
         tree_t *field = tree_decl_case(it->node, it->name, val);
         vector_set(result, i, field);
 
-        if (it->defaultCase)
+        if (it->default_case)
         {
-            if (defaultCase != NULL)
+            if (default_case != NULL)
             {
                 event_t *id = msg_notify(sema->reports, &kEvent_DuplicateDefaultCases, it->node, "decl `%s` has multiple default cases", decl->name);
-                msg_append(id, defaultCase->node, "previous default case");
+                msg_append(id, default_case->node, "previous default case");
             }
             else
             {
-                defaultCase = field;
+                default_case = field;
             }
         }
     }
 
-    tree_close_enum(self, underlying, result, defaultCase);
+    tree_close_enum(self, underlying, result, default_case);
 }
 
 ///
@@ -204,7 +204,7 @@ static tree_t *ctu_forward_global(tree_t *sema, ctu_t *decl)
     tree_resolve_info_t resolve = {
         .sema = sema,
         .user = decl,
-        .fnResolve = ctu_resolve_global
+        .fn_resolve = ctu_resolve_global
     };
 
     tree_storage_t storage = {
@@ -226,8 +226,8 @@ static tree_t *ctu_forward_function(tree_t *sema, ctu_t *decl)
     tree_resolve_info_t resolve = {
         .sema = sema,
         .user = decl,
-        .fnResolve = ctu_resolve_function,
-        .fnResolveType = ctu_resolve_function_type
+        .fn_resolve = ctu_resolve_function,
+        .fn_resolve_type = ctu_resolve_function_type
     };
 
     return tree_open_function(decl->node, decl->name, NULL, resolve);
@@ -240,7 +240,7 @@ static tree_t *ctu_forward_type(tree_t *sema, ctu_t *decl)
     tree_resolve_info_t resolve = {
         .sema = sema,
         .user = decl,
-        .fnResolve = ctu_resolve_type
+        .fn_resolve = ctu_resolve_type
     };
 
     return tree_open_decl(decl->node, decl->name, resolve);
@@ -253,7 +253,7 @@ static tree_t *ctu_forward_struct(tree_t *sema, ctu_t *decl)
     tree_resolve_info_t resolve = {
         .sema = sema,
         .user = decl,
-        .fnResolve = ctu_resolve_struct
+        .fn_resolve = ctu_resolve_struct
     };
 
     return tree_open_struct(decl->node, decl->name, resolve);
@@ -266,7 +266,7 @@ static tree_t *ctu_forward_union(tree_t *sema, ctu_t *decl)
     tree_resolve_info_t resolve = {
         .sema = sema,
         .user = decl,
-        .fnResolve = ctu_resolve_union
+        .fn_resolve = ctu_resolve_union
     };
 
     return tree_open_union(decl->node, decl->name, resolve);
@@ -279,7 +279,7 @@ static tree_t *ctu_forward_variant(tree_t *sema, ctu_t *decl)
     tree_resolve_info_t resolve = {
         .sema = sema,
         .user = decl,
-        .fnResolve = ctu_resolve_variant
+        .fn_resolve = ctu_resolve_variant
     };
 
     return tree_open_enum(decl->node, decl->name, resolve);

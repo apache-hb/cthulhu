@@ -22,14 +22,14 @@ static const size_t kGlobalModuleTags[] = { eCtuTagImports };
 static const size_t kDeclTags[] = { eCtuTagTypes };
 
 static const decl_search_t kSearchType = {
-    .localScopeTags = kLocalModuleTags,
-    .localScopeTagsLen = sizeof(kLocalModuleTags) / sizeof(size_t),
+    .local_tags = kLocalModuleTags,
+    .local_count = sizeof(kLocalModuleTags) / sizeof(size_t),
 
-    .globalScopeTags = kGlobalModuleTags,
-    .globalScopeTagsLen = sizeof(kGlobalModuleTags) / sizeof(size_t),
+    .global_tags = kGlobalModuleTags,
+    .global_count = sizeof(kGlobalModuleTags) / sizeof(size_t),
 
-    .declTags = kDeclTags,
-    .declTagsLen = sizeof(kDeclTags) / sizeof(size_t)
+    .decl_tags = kDeclTags,
+    .decl_count = sizeof(kDeclTags) / sizeof(size_t)
 };
 
 static tree_t *sema_type_name(tree_t *sema, const ctu_t *type)

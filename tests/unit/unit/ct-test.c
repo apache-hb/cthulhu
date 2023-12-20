@@ -1,10 +1,9 @@
 #include "ct-test.h"
 
+#include "memory/memory.h"
 #include "stacktrace/stacktrace.h"
 
 #include "std/str.h"
-
-#include "memory/memory.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -135,7 +134,7 @@ test_suite_t test_suite_new(const char *suite)
 {
     test_suite_t s = {
         .suite_name = suite,
-        .results = typevec_new(sizeof(test_result_t), 64)
+        .results = typevec_new(sizeof(test_result_t), 64, ctu_default_alloc())
     };
 
     return s;

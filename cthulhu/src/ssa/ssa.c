@@ -211,8 +211,8 @@ static ssa_operand_t bb_add_step(ssa_block_t *bb, ssa_step_t step)
 
     ssa_operand_t operand = {
         .kind = eOperandReg,
-        .vregContext = bb,
-        .vregIndex = index
+        .vreg_context = bb,
+        .vreg_index = index
     };
 
     return operand;
@@ -244,7 +244,7 @@ static ssa_block_t *ssa_block_create(ssa_symbol_t *symbol, const char *name, siz
 {
     ssa_block_t *bb = ARENA_MALLOC(arena, sizeof(ssa_block_t), name, symbol);
     bb->name = name;
-    bb->steps = typevec_new(sizeof(ssa_step_t), size);
+    bb->steps = typevec_new(sizeof(ssa_step_t), size, arena);
     vector_push(&symbol->blocks, bb);
 
     return bb;

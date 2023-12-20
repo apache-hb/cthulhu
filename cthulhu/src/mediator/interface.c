@@ -24,14 +24,6 @@
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"
 
-static cookie_t *cookie_new(lifetime_t *lifetime, logger_t *reports)
-{
-    cookie_t *self = ARENA_MALLOC(lifetime->alloc, sizeof(cookie_t), "cookie", lifetime);
-    self->reports = reports;
-    self->stack = vector_new(16);
-    return self;
-}
-
 static void runtime_init(void)
 {
     GLOBAL_INIT();
@@ -113,15 +105,22 @@ lifetime_t *lifetime_new(mediator_t *mediator, arena_t *alloc)
 
     lifetime_t *self = ARENA_MALLOC(alloc, sizeof(lifetime_t), "lifetime", mediator);
 
+    logger_t *logger = logger_new(alloc);
+
     self->parent = mediator;
 
-    self->logger = logger_new(alloc);
+    self->logger = logger;
     self->alloc = alloc;
 
     self->extensions = map_optimal(16);
     self->modules = map_optimal(64);
 
-    self->cookie = cookie_new(self, self->logger);
+    cookie_t cookie = {
+        .reports = logger,
+        .stack = vector_new(16),
+    };
+
+    self->cookie = cookie;
 
     return self;
 }

@@ -1,8 +1,7 @@
 #include "common.h"
 
 #include "base/panic.h"
-#include "memory/memory.h"
-
+#include "memory/arena.h"
 
 #include "std/map.h"
 #include "std/vector.h"
@@ -31,7 +30,7 @@ static ap_err_callback_t *ap_error_new(ap_error_t event, void *data, arena_t *ar
 }
 
 static ap_param_t *ap_param_new(ap_param_type_t type, const char *name, const char *desc,
-                                const char **names, arena_t *arena)
+                                const char *const *names, arena_t *arena)
 {
     ap_param_t *self = ARENA_MALLOC(arena, sizeof(ap_param_t), name, NULL);
     self->type = type;
@@ -57,7 +56,7 @@ static void add_arg_callback(ap_t *self, ap_param_t *param, ap_callback_t *cb)
 }
 
 static ap_param_t *add_param(ap_group_t *self, ap_param_type_t type, const char *name,
-                             const char *desc, const char **names, arena_t *arena)
+                             const char *desc, const char *const *names, arena_t *arena)
 {
     CTASSERT(self != NULL);
     CTASSERT(desc != NULL);
@@ -132,17 +131,17 @@ ap_group_t *ap_group_new(ap_t *parent, const char *name, const char *desc)
     return self;
 }
 
-ap_param_t *ap_add_bool(ap_group_t *self, const char *name, const char *desc, const char **names)
+ap_param_t *ap_add_bool(ap_group_t *self, const char *name, const char *desc, const char *const *const names)
 {
     return add_param(self, eParamBool, name, desc, names, self->parent->arena);
 }
 
-ap_param_t *ap_add_int(ap_group_t *self, const char *name, const char *desc, const char **names)
+ap_param_t *ap_add_int(ap_group_t *self, const char *name, const char *desc, const char *const *names)
 {
     return add_param(self, eParamInt, name, desc, names, self->parent->arena);
 }
 
-ap_param_t *ap_add_string(ap_group_t *self, const char *name, const char *desc, const char **names)
+ap_param_t *ap_add_string(ap_group_t *self, const char *name, const char *desc, const char *const *names)
 {
     return add_param(self, eParamString, name, desc, names, self->parent->arena);
 }

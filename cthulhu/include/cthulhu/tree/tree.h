@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/text.h"
 #include "cthulhu/tree/ops.h"
 
 #include <stdbool.h>
@@ -52,8 +53,8 @@ typedef struct tree_resolve_info_t {
     tree_t *sema;
     void *user;
 
-    resolve_t fnResolve;
-    resolve_type_t fnResolveType;
+    resolve_t fn_resolve;
+    resolve_type_t fn_resolve_type;
 } tree_resolve_info_t;
 
 typedef struct tree_storage_t {
@@ -69,16 +70,13 @@ typedef struct tree_t {
 
     union {
         /* eTreeDigit */
-        mpz_t digitValue;
+        mpz_t digit_value;
 
         /* eTreeBool */
-        bool boolValue;
+        bool bool_value;
 
         /* eTreeString */
-        struct {
-            const char *stringValue;
-            size_t stringLength;
-        };
+        text_view_t string_value;
 
         /* eTreeExprLoad */
         tree_t *load;
@@ -181,11 +179,11 @@ typedef struct tree_t {
                 struct {
                     const tree_t *underlying;
                     vector_t *cases;
-                    tree_t *defaultCase;
+                    tree_t *default_case;
                 };
 
                 /* eTreeDeclCase */
-                tree_t *caseValue;
+                tree_t *case_value;
 
                 struct {
                     vector_t *params;
@@ -474,9 +472,9 @@ void tree_close_union(tree_t *self, vector_t *fields);
 /// enum decls
 ///
 
-tree_t *tree_decl_enum(const node_t *node, const char *name, const tree_t *underlying, vector_t *fields, tree_t *defaultCase);
+tree_t *tree_decl_enum(const node_t *node, const char *name, const tree_t *underlying, vector_t *fields, tree_t *default_case);
 tree_t *tree_open_enum(const node_t *node, const char *name, tree_resolve_info_t resolve);
-void tree_close_enum(tree_t *self, const tree_t *underlying, vector_t *fields, tree_t *defaultCase);
+void tree_close_enum(tree_t *self, const tree_t *underlying, vector_t *fields, tree_t *default_case);
 
 ///
 /// other decls

@@ -127,8 +127,8 @@ typedef struct ctu_t {
 
                 /* eCtuVariantCase */
                 struct {
-                    bool defaultCase;
-                    ctu_t *caseValue;
+                    bool default_case;
+                    ctu_t *case_value;
                 };
             };
         };
@@ -137,7 +137,7 @@ typedef struct ctu_t {
         mpz_t intValue;
 
         /* eCtuExprBool */
-        bool boolValue;
+        bool bool_value;
 
         /* eCtuExprString */
         struct {

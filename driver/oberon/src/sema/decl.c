@@ -137,7 +137,7 @@ static tree_t *forward_const(tree_t *sema, obr_t *decl)
     tree_resolve_info_t resolve = {
         .sema = sema,
         .user = decl,
-        .fnResolve = resolve_const
+        .fn_resolve = resolve_const
     };
 
     tree_t *type = obr_sema_type(sema, decl->type, decl->name);
@@ -158,7 +158,7 @@ static tree_t *forward_var(tree_t *sema, obr_t *decl)
     tree_resolve_info_t resolve = {
         .sema = sema,
         .user = decl,
-        .fnResolve = resolve_var
+        .fn_resolve = resolve_var
     };
 
     tree_t *type = obr_sema_type(sema, decl->type, decl->name);
@@ -179,7 +179,7 @@ static tree_t *forward_type(tree_t *sema, obr_t *decl)
     tree_resolve_info_t resolve = {
         .sema = sema,
         .user = decl,
-        .fnResolve = resolve_type
+        .fn_resolve = resolve_type
     };
 
     return tree_open_decl(decl->node, decl->name, resolve);
@@ -210,7 +210,7 @@ static tree_t *forward_proc(tree_t *sema, obr_t *decl)
     tree_resolve_info_t resolve = {
         .sema = sema,
         .user = decl,
-        .fnResolve = resolve_proc
+        .fn_resolve = resolve_proc
     };
 
     return tree_open_function(decl->node, decl->name, signature, resolve);
@@ -286,7 +286,7 @@ tree_t *obr_add_init(tree_t *sema, obr_t *mod)
     tree_resolve_info_t resolve = {
         .sema = sema,
         .user = mod,
-        .fnResolve = obr_resolve_init
+        .fn_resolve = obr_resolve_init
     };
 
     tree_t *signature = tree_type_closure(mod->node, mod->name, obr_get_void_type(), vector_of(0), eArityFixed);

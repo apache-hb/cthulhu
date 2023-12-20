@@ -29,8 +29,8 @@ static size_t vector_size(size_t size)
 }
 
 #define CHECK_VECTOR(vector) \
-    CTASSERT(vector != NULL); \
-    CTASSERT(*vector != NULL);
+    CTASSERT((vector) != NULL); \
+    CTASSERT(*(vector) != NULL);
 
 #define VEC (*vector)
 
@@ -167,16 +167,16 @@ size_t vector_find(vector_t *vector, const void *element)
 USE_DECL
 vector_t *vector_merge(const vector_t *lhs, const vector_t *rhs)
 {
-    size_t lhsLength = vector_len(lhs);
-    size_t rhsLength = vector_len(rhs);
+    size_t lhs_len = vector_len(lhs);
+    size_t rhs_len = vector_len(rhs);
 
-    size_t len = lhsLength + rhsLength;
+    size_t len = lhs_len + rhs_len;
 
     vector_t *out = vector_new(len);
     out->used = len;
 
-    memcpy(out->data, lhs->data, lhsLength * sizeof(void *));
-    memcpy(out->data + lhsLength, rhs->data, rhsLength * sizeof(void *));
+    memcpy(out->data, lhs->data, lhs_len * sizeof(void *));
+    memcpy(out->data + lhs_len, rhs->data, rhs_len * sizeof(void *));
 
     return out;
 }
@@ -213,10 +213,10 @@ vector_t *vector_join(vector_t *vectors)
     for (size_t i = 0; i < len; i++)
     {
         vector_t *vector = vector_get(vectors, i);
-        size_t innerLen = vector_len(vector);
+        size_t inner_len = vector_len(vector);
 
-        memcpy(result->data + offset, vector->data, innerLen * sizeof(void *));
-        offset += innerLen;
+        memcpy(result->data + offset, vector->data, inner_len * sizeof(void *));
+        offset += inner_len;
     }
 
     return result;

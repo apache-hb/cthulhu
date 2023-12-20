@@ -48,7 +48,7 @@ void flex_update(where_t *where, where_t *offsets, int steps);
     }
 
 /// default source location update function
-#define YYLLOC_DEFAULT(current, rhs, offset) flex_update(&current, rhs, offset)
+#define YYLLOC_DEFAULT(current, rhs, offset) flex_update(&(current), rhs, offset)
 
 /// initialize flex and bison
 #define YY_USER_INIT flex_init(yylloc);

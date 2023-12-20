@@ -8,9 +8,9 @@
 
 #include "stacktrace/stacktrace.h"
 
-#include "std/map.h"
 #include "std/str.h"
 #include "std/typed/vector.h"
+
 #include <ctype.h>
 #include <string.h>
 
@@ -39,29 +39,6 @@ typedef struct bt_entry_t
     /// @brief the address of the frame
     void *address;
 } bt_entry_t;
-
-/// @brief a backtrace report context
-typedef struct bt_report_t
-{
-    arena_t *arena;
-
-    /// @brief all entries
-    /// @note sequentially recursive frames are combined into a single entry
-    typevec_t *entries;
-
-    /// @brief the longest symbol name
-    size_t longest_symbol;
-
-    /// @brief the largest number of consecutive frames
-    size_t max_consecutive_frames;
-
-    /// @brief the total number of frames consumed
-    /// this is not the same as the number of entries as it includes recursed frames
-    size_t total_frames;
-
-    /// @brief the index of the last consecutive frame
-    size_t last_consecutive_index;
-} bt_report_t;
 
 static size_t get_max_symbol_width(const bt_report_t *report)
 {
@@ -366,15 +343,16 @@ static bool check_recurse(bt_report_t *report, const frame_t *frame)
     return true;
 }
 
-bt_report_t *bt_report_new(arena_t *arena)
+bt_report_t bt_report_new(arena_t *arena)
 {
-    bt_report_t *report = ARENA_MALLOC(arena, sizeof(bt_report_t), "bt_report", NULL);
-
-    report->entries = typevec_new(sizeof(bt_entry_t), 4);
-    report->longest_symbol = 0;
-    report->max_consecutive_frames = 0;
-    report->total_frames = 0;
-    report->last_consecutive_index = 0;
+    bt_report_t report = {
+        .arena = arena,
+        .entries = typevec_new(sizeof(bt_entry_t), 4, arena),
+        .longest_symbol = 0,
+        .max_consecutive_frames = 0,
+        .total_frames = 0,
+        .last_consecutive_index = 0,
+    };
 
     return report;
 }
@@ -384,11 +362,11 @@ static void read_stacktrace_frame(void *user, const frame_t *frame)
     bt_report_add(user, frame);
 }
 
-bt_report_t *bt_report_collect(arena_t *arena)
+bt_report_t bt_report_collect(arena_t *arena)
 {
-    bt_report_t *report = bt_report_new(arena);
+    bt_report_t report = bt_report_new(arena);
 
-    bt_read(read_stacktrace_frame, report);
+    bt_read(read_stacktrace_frame, &report);
 
     return report;
 }

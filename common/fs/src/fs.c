@@ -7,7 +7,6 @@
 #include "io/io.h"
 
 #include "base/panic.h"
-#include "memory/memory.h"
 
 #include <string.h>
 
@@ -338,10 +337,8 @@ static void sync_file(fs_t *dst_fs, fs_t *src_fs, inode_t *dst_node, inode_t *sr
     size_t size = io_size(src_io);
     if (size > 0)
     {
-        void *data = ARENA_MALLOC(dst_fs->arena, size, "tmp", NULL);
-
-        size_t read = io_read(src_io, data, size);
-        io_write(dst_io, data, read);
+        const void *data = io_map(src_io);
+        io_write(dst_io, data, size);
     }
 
     io_close(dst_io);

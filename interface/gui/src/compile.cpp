@@ -9,7 +9,7 @@
 
 #include "std/str.h"
 
-#include "std/vector.h"
+#include "std/typed/vector.h"
 
 #include "support/langs.h"
 
@@ -84,6 +84,6 @@ void CompileInfo::init()
 /// @retval false if there are reports
 bool CompileInfo::check_reports() const
 {
-    vector_t *events = logger_get_events(reports);
-    return vector_len(events) == 0;
+    typevec_t *events = logger_get_events(reports);
+    return typevec_len(events) == 0;
 }

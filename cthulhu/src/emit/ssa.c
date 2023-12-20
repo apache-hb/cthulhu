@@ -84,8 +84,8 @@ static const char *value_to_string(const ssa_value_t *value)
     const ssa_type_t *type = value->type;
     switch (type->kind)
     {
-    case eTypeDigit: return mpz_get_str(NULL, 10, value->digitValue);
-    case eTypeBool: return value->boolValue ? "true" : "false";
+    case eTypeDigit: return mpz_get_str(NULL, 10, value->digit_value);
+    case eTypeBool: return value->bool_value ? "true" : "false";
     case eTypeUnit: return "unit";
     case eTypeEmpty: return "empty";
     case eTypePointer: return pointer_value_to_string(value);
@@ -104,7 +104,7 @@ static const char *operand_to_string(ssa_emit_t *emit, ssa_operand_t operand)
     case eOperandImm:
         return format("$%s", value_to_string(operand.value));
     case eOperandReg:
-        return format("%%%s", get_step_from_block(&emit->emit, operand.vregContext, operand.vregIndex));
+        return format("%%%s", get_step_from_block(&emit->emit, operand.vreg_context, operand.vreg_index));
     case eOperandGlobal: {
         const ssa_symbol_t *symbol = operand.global;
         return format("@%s", symbol->name);

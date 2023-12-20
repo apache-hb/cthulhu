@@ -508,7 +508,7 @@ void pl0_forward_decls(context_t *context)
         tree_resolve_info_t resolve = {
             .sema = sema,
             .user = it,
-            .fnResolve = resolve_global
+            .fn_resolve = resolve_global
         };
 
         tree_t *tree = tree_open_global(it->node, it->name, gIntRef, resolve);
@@ -525,7 +525,7 @@ void pl0_forward_decls(context_t *context)
         tree_resolve_info_t resolve = {
             .sema = sema,
             .user = it,
-            .fnResolve = resolve_global
+            .fn_resolve = resolve_global
         };
 
         tree_t *tree = tree_open_global(it->node, it->name, gIntRef, resolve);
@@ -543,7 +543,7 @@ void pl0_forward_decls(context_t *context)
         tree_resolve_info_t resolve = {
             .sema = sema,
             .user = it,
-            .fnResolve = resolve_proc
+            .fn_resolve = resolve_proc
         };
 
         tree_t *tree = tree_open_function(it->node, it->name, signature, resolve);

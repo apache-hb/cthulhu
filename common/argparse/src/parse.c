@@ -9,8 +9,8 @@
 
 #include "interop/compile.h"
 
-#include "ap_bison.h"
-#include "ap_flex.h"
+#include "ap_bison.h" // IWYU pragma: keep
+#include "ap_flex.h" // IWYU pragma: keep
 
 CTU_CALLBACKS(kCallbacks, ap);
 

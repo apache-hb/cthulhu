@@ -32,14 +32,14 @@ BEGIN_API
 void *util_select_decl(tree_t *sema, const size_t *tags, size_t len, const char *name);
 
 typedef struct decl_search_t {
-    const size_t *localScopeTags;
-    size_t localScopeTagsLen;
+    const size_t *local_tags;
+    size_t local_count;
 
-    const size_t *globalScopeTags;
-    size_t globalScopeTagsLen;
+    const size_t *global_tags;
+    size_t global_count;
 
-    const size_t *declTags;
-    size_t declTagsLen;
+    const size_t *decl_tags;
+    size_t decl_count;
 } decl_search_t;
 
 /// @brief search for a namespace given a path, ignoring the last element in the path

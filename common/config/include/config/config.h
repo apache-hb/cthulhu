@@ -13,6 +13,7 @@ BEGIN_API
 /// @{
 
 typedef struct arena_t arena_t;
+typedef struct typevec_t typevec_t;
 typedef struct vector_t vector_t;
 
 /// @brief the type of a configuration field
@@ -271,7 +272,7 @@ const char *cfg_type_name(cfg_type_t type);
 /// @param config the configuration group to get the subgroups from
 ///
 /// @return the subgroups in @p config
-vector_t *cfg_get_groups(const config_t *config);
+typevec_t *cfg_get_groups(const config_t *config);
 
 /// @brief get all fields in a configuration group
 ///

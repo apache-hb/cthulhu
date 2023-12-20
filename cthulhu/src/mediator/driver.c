@@ -94,7 +94,7 @@ cookie_t *lifetime_get_cookie(lifetime_t *lifetime)
 {
     CTASSERT(lifetime != NULL);
 
-    return lifetime->cookie;
+    return &lifetime->cookie;
 }
 
 void *context_get_ast(context_t *context)

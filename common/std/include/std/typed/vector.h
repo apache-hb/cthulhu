@@ -5,6 +5,8 @@
 
 #include <stddef.h>
 
+typedef struct arena_t arena_t;
+
 BEGIN_API
 
 /// @defgroup TypedVector Typed vector
@@ -18,32 +20,32 @@ void typevec_delete(OUT_PTR_INVALID typevec_t *vec);
 
 /// @brief create a new typed vector
 ///
-/// @param size the size of the type
+/// @param type_size the size of the type
 /// @param len the initial length of the vector
 ///
 /// @return the new vector
 NODISCARD CT_ALLOC(typevec_delete)
-typevec_t *typevec_new(IN_RANGE(>, 0) size_t size, size_t len);
+typevec_t *typevec_new(IN_RANGE(>, 0) size_t type_size, size_t len, arena_t *arena);
 
 /// @brief create a new typed vector with an initial size and length
 /// @note it is expected that the user will fill the vector up to @a len using @a typevec_set
 ///       with valid values rather than using @a typevec_push
 ///
-/// @param size the size of the type
+/// @param type_size the size of the type
 /// @param len the initial length of the vector
 ///
 /// @return the new vector
 NODISCARD CT_ALLOC(typevec_delete)
-typevec_t *typevec_of(IN_RANGE(>, 0) size_t size, size_t len);
+typevec_t *typevec_of(IN_RANGE(>, 0) size_t type_size, size_t len);
 
 /// @brief create a new typed vector with an initial first value
 ///
-/// @param size the size of the type
+/// @param type_size the size of the type
 /// @param value the initial value
 ///
 /// @return the new vector
 NODISCARD CT_ALLOC(typevec_delete)
-typevec_t *typevec_init(IN_RANGE(>, 0) size_t size, IN_NOTNULL const void *value);
+typevec_t *typevec_init(IN_RANGE(>, 0) size_t type_size, IN_NOTNULL const void *value);
 
 /// @brief get the length of a vector
 ///
@@ -76,7 +78,7 @@ void typevec_tail(IN_NOTNULL const typevec_t *vec, IN_NOTNULL void *dst);
 ///
 /// @param vec the vector to push the value onto
 /// @param src the value to push
-void typevec_push(IN_NOTNULL typevec_t *vec, IN_NOTNULL const void *src);
+void *typevec_push(IN_NOTNULL typevec_t *vec, IN_NOTNULL const void *src);
 
 void typevec_append(IN_NOTNULL typevec_t *vec, IN_NOTNULL const void *src, size_t len);
 
@@ -108,6 +110,8 @@ void *typevec_data(IN_NOTNULL const typevec_t *vec);
 void typevec_sort(IN_NOTNULL typevec_t *vec, int (*cmp)(const void *, const void *));
 
 void typevec_reverse(IN_NOTNULL typevec_t *vec);
+
+void typevec_reset(IN_NOTNULL typevec_t *vec);
 
 /// @}
 

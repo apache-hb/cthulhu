@@ -127,14 +127,14 @@ typedef struct ssa_value_t {
     bool init; ///< whether this value has been initialized
 
     union {
-        mpz_t digitValue;
-        bool boolValue;
+        mpz_t digit_value;
+        bool bool_value;
 
         /* eTypeArray */
         vector_t *data;
 
         /* eTypePointer */
-        const void *ptrValue;
+        const void *ptr_value;
     };
 } ssa_value_t;
 
@@ -147,8 +147,8 @@ typedef struct ssa_operand_t {
 
         /* eOperandReg */
         struct {
-            const ssa_block_t *vregContext;
-            size_t vregIndex;
+            const ssa_block_t *vreg_context;
+            size_t vreg_index;
         };
 
         /* eOperandLocal */

@@ -10,7 +10,6 @@
 #include "scan/node.h"
 #include "stacktrace/stacktrace.h"
 #include "std/str.h"
-#include "std/vector.h"
 
 const char *const kSampleSourceLeft =
     "module multi.lhs;\n"   // 1
@@ -200,9 +199,9 @@ static void print_backtrace(text_config_t base_config)
     arena_t *arena = ctu_default_alloc();
     config.io = io_stdout(arena);
 
-    bt_report_t *report = bt_report_collect(arena);
+    bt_report_t report = bt_report_collect(arena);
 
-    bt_report_finish(config, report);
+    bt_report_finish(config, &report);
 }
 
 int recurse(int x, text_config_t base_config)
@@ -293,7 +292,7 @@ static void do_simple(logger_t *logs)
         .text_config = config2,
     };
 
-    vector_t *events = logger_get_events(logs);
+    typevec_t *events = logger_get_events(logs);
 
     text_report(events, report_config, "simple text");
 }
@@ -316,7 +315,7 @@ static void do_rich(logger_t *logs)
         .text_config = config,
     };
 
-    vector_t *events = logger_get_events(logs);
+    typevec_t *events = logger_get_events(logs);
 
     text_report(events, report_config, "rich text");
 }

@@ -3,6 +3,10 @@ src = [ 'src/cmd.c', 'main.c' ]
 cli = executable('cli', src,
     include_directories : [ 'include' ],
     link_args : setargv,
-    dependencies : [ memory, mediator, argparse, support, tree, ssa, emit, io, fs, scan, notify ],
+    dependencies : [
+        memory, mediator, argparse, support,
+        tree, ssa, emit, io, fs,
+        scan, notify, config
+    ],
     export_dynamic : true
 )

@@ -4,7 +4,7 @@
 
 #include "base/panic.h"
 
-#include "std/vector.h"
+typedef struct typevec_t typevec_t;
 
 typedef struct cfg_field_t
 {
@@ -33,9 +33,8 @@ typedef struct config_t
     arena_t *alloc;
     const cfg_info_t *info;
 
-    vector_t *groups;
+    typevec_t *groups;
     vector_t *fields;
 } config_t;
 
-#define ASSERT_FIELD_TYPE(field, type) \
-    CTASSERT(cfg_get_type(field) == type)
+#define ASSERT_FIELD_TYPE(field, type) CTASSERT(cfg_get_type(field) == (type))

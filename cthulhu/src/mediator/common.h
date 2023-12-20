@@ -2,6 +2,8 @@
 
 #include "cthulhu/mediator/common.h"
 
+#include "cthulhu/tree/tree.h"
+
 #include "std/map.h"
 
 /// global level
@@ -26,7 +28,7 @@ typedef struct lifetime_t
     map_t *extensions;
     map_t *modules;
 
-    cookie_t *cookie;
+    cookie_t cookie;
 } lifetime_t;
 
 // per language inside a compiler run

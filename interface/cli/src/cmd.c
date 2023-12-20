@@ -1,5 +1,6 @@
 #include "cmd.h"
 
+#include "config/config.h"
 #include "support/langs.h"
 
 #include "cthulhu/mediator/interface.h"
@@ -19,19 +20,19 @@
 #include <stdio.h>
 
 // general
-static const char *kHelpNames[] = { "-h", "--help", NULL };
-static const char *kVersionNames[] = { "-v", "--version", NULL };
-static const char *kAddExtensionMapNames[] = { "-ext", "--add-ext", NULL };
+static const char *const kHelpNames[] = { "-h", "--help", NULL };
+static const char *const kVersionNames[] = { "-v", "--version", NULL };
+static const char *const kAddExtensionMapNames[] = { "-ext", "--add-ext", NULL };
 
 // codegen
-static const char *kOutputSourceNames[] = { "-o", "--output", NULL };
-static const char *kOutputHeaderNames[] = { "-header", "--output-header", NULL };
+static const char *const kOutputSourceNames[] = { "-o", "--output", NULL };
+static const char *const kOutputHeaderNames[] = { "-header", "--output-header", NULL };
 
 // debug
-static const char *kDebugSsaNames[] = { "-dbgssa", "--debug-ssa", NULL };
-static const char *kDebugVerboseNames[] = { "-V", "--verbose", NULL };
-static const char *kWarnAsErrorNames[] = { "-Werror", NULL };
-static const char *kReportLimitNames[] = { "-fmax-errors", NULL };
+static const char *const kDebugSsaNames[] = { "-dbgssa", "--debug-ssa", NULL };
+static const char *const kDebugVerboseNames[] = { "-V", "--verbose", NULL };
+static const char *const kWarnAsErrorNames[] = { "-Werror", NULL };
+static const char *const kReportLimitNames[] = { "-fmax-errors", NULL };
 
 // general events
 
@@ -201,6 +202,52 @@ static AP_ERROR(on_arg_error, ap, node, message, data)
     return eEventHandled;
 }
 
+static const cfg_info_t kConfigInfo = {
+    .name = "cli",
+    .brief = "Cthulhu command line interface",
+    .description = "Cthulhu CLI configuration options",
+};
+
+/// general
+static cfg_info_t kGroup_GeneralInfo = {
+    .name = "general",
+    .brief = "General options"
+};
+
+static cfg_info_t kGeneral_HelpInfo = {
+    .name = "help",
+    .brief = "Display help information",
+    .description = "Display help information"
+};
+
+static cfg_info_t kGeneral_VersionInfo = {
+    .name = "version",
+    .brief = "Display version information",
+    .description = "Display version information"
+};
+
+/// codegen
+
+static cfg_info_t kGroup_CodegenInfo = {
+    .name = "codegen",
+    .brief = "Code generation options"
+};
+
+/// compiler debugging, user debugging options should be in codegen
+
+static cfg_info_t kGroup_DebugInfo = {
+    .name = "debug",
+    .brief = "Debugging options",
+    .description = "Compiler internal debugging options, for user debugging options see codegen"
+};
+
+/// reporting
+
+static cfg_info_t kGroup_ReportInfo = {
+    .name = "reports",
+    .brief = "Reporting options"
+};
+
 runtime_t cmd_parse(mediator_t *mediator, lifetime_t *lifetime, int argc, const char **argv)
 {
     arena_t *arena = lifetime_get_arena(lifetime);
@@ -227,6 +274,26 @@ runtime_t cmd_parse(mediator_t *mediator, lifetime_t *lifetime, int argc, const 
     {
         lifetime_add_language(lifetime, langs.langs + i);
     }
+
+    // config_t *config = config_new(arena, &kConfigInfo);
+    // config_t *general_group = config_group(config, &kGroup_GeneralInfo);
+
+    // // general
+    // cfg_bool_t help_options = {.initial = false};
+    // cfg_field_t *help_field = config_bool(general_group, &kGeneral_HelpInfo, help_options);
+
+    // cfg_bool_t version_options = {.initial = false};
+    // cfg_field_t *version_field = config_bool(general_group, &kGeneral_VersionInfo, version_options);
+
+    // // codegen
+    // config_t *codegen_group = config_group(config, &kGroup_CodegenInfo);
+
+    // // debug
+    // config_t *debug_group = config_group(config, &kGroup_DebugInfo);
+
+    // // reporting
+    // config_t *report_group = config_group(config, &kGroup_ReportInfo);
+
 
     ap_group_t *generalGroup = ap_group_new(ap, "general", "general options");
     ap_param_t *helpParam = ap_add_bool(generalGroup, "help", "display this message", kHelpNames);

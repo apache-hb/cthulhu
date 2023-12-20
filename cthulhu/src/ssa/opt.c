@@ -2,7 +2,6 @@
 
 #include "cthulhu/events/events.h"
 
-#include "memory/memory.h"
 #include "std/set.h"
 #include "std/map.h"
 #include "std/vector.h"
@@ -63,7 +62,7 @@ static const ssa_value_t *ssa_opt_operand(ssa_scope_t *vm, ssa_operand_t operand
     {
     case eOperandEmpty: return NULL;
     case eOperandImm: return operand.value;
-    case eOperandReg: return map_get_ptr(vm->step_values, get_step_indexed(operand.vregContext, operand.vregIndex));
+    case eOperandReg: return map_get_ptr(vm->step_values, get_step_indexed(operand.vreg_context, operand.vreg_index));
     case eOperandConst: return vector_get(vm->symbol->consts, operand.constant);
     case eOperandGlobal: {
         const ssa_symbol_t *global = operand.global;
@@ -134,22 +133,22 @@ static const ssa_value_t *ssa_opt_unary(ssa_scope_t *vm, ssa_unary_t step)
     {
     case eUnaryNeg:
         CTASSERTF(value_is(operand, eTypeDigit), "operand of unary %s is not a digit (inside %s)", unary_name(unary), vm->symbol->name);
-        mpz_neg(result, operand->digitValue);
+        mpz_neg(result, operand->digit_value);
         break;
 
     case eUnaryAbs:
         CTASSERTF(value_is(operand, eTypeDigit), "operand of unary %s is not a digit (inside %s)", unary_name(unary), vm->symbol->name);
-        mpz_abs(result, operand->digitValue);
+        mpz_abs(result, operand->digit_value);
         break;
 
     case eUnaryFlip:
         CTASSERTF(value_is(operand, eTypeDigit), "operand of unary %s is not a digit (inside %s)", unary_name(unary), vm->symbol->name);
-        mpz_com(result, operand->digitValue);
+        mpz_com(result, operand->digit_value);
         break;
 
     case eUnaryNot:
         CTASSERTF(value_is(operand, eTypeBool), "operand of unary %s is not a bool (inside %s)", unary_name(unary), vm->symbol->name);
-        return ssa_value_bool(operand->type, !operand->boolValue);
+        return ssa_value_bool(operand->type, !operand->bool_value);
 
     default: NEVER("unhandled unary %s (inside %s)", unary_name(unary), vm->symbol->name);
     }
@@ -175,40 +174,40 @@ static const ssa_value_t *ssa_opt_binary(ssa_scope_t *vm, ssa_binary_t step)
     switch (binary)
     {
     case eBinaryAdd:
-        mpz_add(result, lhs->digitValue, rhs->digitValue);
+        mpz_add(result, lhs->digit_value, rhs->digit_value);
         break;
     case eBinarySub:
-        mpz_sub(result, lhs->digitValue, rhs->digitValue);
+        mpz_sub(result, lhs->digit_value, rhs->digit_value);
         break;
     case eBinaryMul:
-        mpz_mul(result, lhs->digitValue, rhs->digitValue);
+        mpz_mul(result, lhs->digit_value, rhs->digit_value);
         break;
     case eBinaryDiv:
-        if (mpz_cmp_ui(rhs->digitValue, 0) == 0)
+        if (mpz_cmp_ui(rhs->digit_value, 0) == 0)
         {
             msg_notify(vm->vm->reports, &kEvent_UninitializedValueUsed, node_builtin(), "division by zero inside `%s`", vm->symbol->name);
             return lhs;
         }
-        mpz_divexact(result, lhs->digitValue, rhs->digitValue);
+        mpz_divexact(result, lhs->digit_value, rhs->digit_value);
         break;
     case eBinaryRem:
-        if (mpz_cmp_ui(rhs->digitValue, 0) == 0)
+        if (mpz_cmp_ui(rhs->digit_value, 0) == 0)
         {
             msg_notify(vm->vm->reports, &kEvent_ModuloByZero, node_builtin(), "modulo by zero inside `%s`", vm->symbol->name);
             return lhs;
         }
-        mpz_mod(result, lhs->digitValue, rhs->digitValue);
+        mpz_mod(result, lhs->digit_value, rhs->digit_value);
         break;
 
     /* TODO: do these produce correct values? */
     case eBinaryShl:
-        mpz_mul_2exp(result, lhs->digitValue, mpz_get_ui(rhs->digitValue));
+        mpz_mul_2exp(result, lhs->digit_value, mpz_get_ui(rhs->digit_value));
         break;
     case eBinaryShr:
-        mpz_fdiv_q_2exp(result, lhs->digitValue, mpz_get_ui(rhs->digitValue));
+        mpz_fdiv_q_2exp(result, lhs->digit_value, mpz_get_ui(rhs->digit_value));
         break;
     case eBinaryXor:
-        mpz_xor(result, lhs->digitValue, rhs->digitValue);
+        mpz_xor(result, lhs->digit_value, rhs->digit_value);
         break;
 
     default: NEVER("unhandled binary %s (inside %s)", binary_name(binary), vm->symbol->name);
@@ -226,7 +225,7 @@ static const ssa_value_t *cast_to_opaque(const ssa_type_t *type, const ssa_value
     case eTypeOpaque: return value;
 
     case eTypeDigit:
-        return ssa_value_pointer(type, (void*)(uintptr_t)mpz_get_ui(value->digitValue));
+        return ssa_value_pointer(type, (void*)(uintptr_t)mpz_get_ui(value->digit_value));
 
     default: NEVER("unhandled type %s", ssa_type_name(src->kind));
     }

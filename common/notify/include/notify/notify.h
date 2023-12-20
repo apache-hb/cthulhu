@@ -73,7 +73,7 @@ logger_t *logger_new(IN_NOTNULL arena_t *arena);
 ///
 /// @return the events
 NODISCARD
-vector_t *logger_get_events(IN_NOTNULL const logger_t *logs);
+typevec_t *logger_get_events(IN_NOTNULL const logger_t *logs);
 
 /// @brief reset the loggers messages
 /// @warning this invalidates the events returned by @a logger_get_events
@@ -90,6 +90,7 @@ void msg_diagnostic(
     IN_NOTNULL const diagnostic_t *diagnostic);
 
 /// @brief notify the logger of a new message
+/// @warning adding a new message invalidates all previous events handles
 ///
 /// @param[in, out] logs the logger
 /// @param diagnostic the diagnostic to use

@@ -3,6 +3,7 @@
 #include "base/panic.h"
 #include "memory/arena.h"
 
+#include "memory/memory.h"
 #include "std/map.h"
 #include "std/str.h"
 #include "std/typed/vector.h"
@@ -14,7 +15,7 @@ typedef struct logger_t
     vector_t *diagnostics;
     map_t *lookup;
 
-    vector_t *messages;
+    typevec_t *messages;
 } logger_t;
 
 USE_DECL
@@ -27,13 +28,13 @@ logger_t *logger_new(arena_t *arena)
     logs->arena = arena;
     logs->diagnostics = vector_new(64);
     logs->lookup = map_optimal(256);
-    logs->messages = vector_new(32);
+    logs->messages = typevec_new(sizeof(event_t), 64, arena);
 
     return logs;
 }
 
 USE_DECL
-vector_t *logger_get_events(const logger_t *logs)
+typevec_t *logger_get_events(const logger_t *logs)
 {
     CTASSERT(logs != NULL);
 
@@ -45,7 +46,7 @@ void logger_reset(logger_t *logs)
 {
     CTASSERT(logs != NULL);
 
-    vector_reset(logs->messages);
+    typevec_reset(logs->messages);
 }
 
 USE_DECL
@@ -85,16 +86,15 @@ event_t *msg_vnotify(logger_t *logs, const diagnostic_t *diagnostic, const node_
 
     char *msg = vformat(fmt, args);
 
-    event_t *ptr = ARENA_MALLOC(logs->arena, sizeof(event_t), "event", logs);
-    ptr->diagnostic = diagnostic;
-    ptr->node = node;
-    ptr->message = msg;
-    ptr->segments = NULL;
-    ptr->notes = NULL;
+    event_t event = {
+        .diagnostic = diagnostic,
+        .node = node,
+        .message = msg,
+        .segments = NULL,
+        .notes = NULL,
+    };
 
-    vector_push(&logs->messages, ptr);
-
-    return ptr;
+    return typevec_push(logs->messages, &event);
 }
 
 USE_DECL
@@ -116,7 +116,7 @@ void msg_vappend(event_t *event, const node_t *node, const char *fmt, va_list ar
 
     if (event->segments == NULL)
     {
-        event->segments = typevec_new(sizeof(segment_t), 2);
+        event->segments = typevec_new(sizeof(segment_t), 2, ctu_default_alloc());
     }
 
     char *msg = vformat(fmt, args);

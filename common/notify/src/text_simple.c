@@ -1,5 +1,6 @@
 #include "common.h"
 
+#include "memory/memory.h"
 #include "notify/text.h"
 
 #include "base/panic.h"
@@ -81,7 +82,7 @@ static void print_segments(text_config_t config, const event_t *event)
 
     // map_t<scan_t*, typevec_t<segment_t>>
     map_t *scans = map_optimal(len);
-    typevec_t *none = typevec_new(sizeof(segment_t), 4);
+    typevec_t *none = typevec_new(sizeof(segment_t), 4, ctu_default_alloc());
     typevec_t *primary = all_segments_in_scan(event->segments, event->node);
 
     for (size_t i = 0; i < len; i++)
@@ -104,7 +105,7 @@ static void print_segments(text_config_t config, const event_t *event)
 
         if (segments == NULL)
         {
-            segments = typevec_new(sizeof(segment_t), 2);
+            segments = typevec_new(sizeof(segment_t), 2, ctu_default_alloc());
             map_set_ptr(scans, scan, segments);
         }
 

@@ -21,7 +21,7 @@ const cfg_info_t *cfg_group_info(const config_t *config)
     return config->info;
 }
 
-vector_t *cfg_get_groups(const config_t *config)
+typevec_t *cfg_get_groups(const config_t *config)
 {
     CTASSERT(config != NULL);
 
@@ -70,12 +70,12 @@ const cfg_flags_t *cfg_flags_info(const cfg_field_t *field)
     return &field->flags_config;
 }
 
-static const char *kConfigTypeNames[eConfigTotal] = {
+static const char *const kConfigTypeNames[eConfigTotal] = {
     [eConfigInt] = "int",
     [eConfigBool] = "bool",
     [eConfigString] = "string",
     [eConfigEnum] = "enum",
-    [eConfigFlags] = "flags"
+    [eConfigFlags] = "flags",
 };
 
 const char *cfg_type_name(cfg_type_t type)
@@ -85,9 +85,7 @@ const char *cfg_type_name(cfg_type_t type)
     return kConfigTypeNames[type];
 }
 
-
 /// access
-
 
 int cfg_int_value(const cfg_field_t *field)
 {

@@ -11,6 +11,16 @@ GFI = good first issue
 - support for feeding sources directly into compilers
     - the intermediate step is annoying to users
 
+- reduce the amount of allocations
+    - will need to make some types no longer opaque
+    - maybe there is a way to keep encapsulation despite this
+    - will need a typed map
+    - need to move over to a flyweight pattern for some objects to avoid pointer invalidation
+
+- delete all the argparse config groups and help, config does that now
+
+- use outparams for the os module
+
 <h3>Important</h3>
 
 - make the output of rich text notifications reproducible

@@ -132,7 +132,7 @@ ctu_t *ctu_expr_int(scan_t *scan, where_t where, mpz_t value)
 ctu_t *ctu_expr_bool(scan_t *scan, where_t where, bool value)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuExprBool);
-    ast->boolValue = value;
+    ast->bool_value = value;
     return ast;
 }
 
@@ -351,8 +351,8 @@ ctu_t *ctu_variant_case(scan_t *scan, where_t where, char *name, bool isDefault,
 {
     ctu_t *ast = ctu_new(scan, where, eCtuVariantCase);
     ast->name = name;
-    ast->defaultCase = isDefault;
-    ast->caseValue = expr;
+    ast->default_case = isDefault;
+    ast->case_value = expr;
     return ast;
 }
 

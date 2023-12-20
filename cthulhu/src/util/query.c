@@ -12,10 +12,10 @@ static tree_t *select_module(tree_t *sema, const decl_search_t *search, const ch
 {
     CTASSERT(imported != NULL);
 
-    tree_t *inner = util_select_decl(sema, search->localScopeTags, search->localScopeTagsLen, name);
+    tree_t *inner = util_select_decl(sema, search->local_tags, search->local_count, name);
     if (inner != NULL) { return inner; }
 
-    tree_t *global = util_select_decl(sema, search->globalScopeTags, search->globalScopeTagsLen, name);
+    tree_t *global = util_select_decl(sema, search->global_tags, search->global_count, name);
     if (global != NULL)
     {
         *imported = true;
@@ -76,7 +76,7 @@ tree_t *util_search_path(tree_t *sema, const decl_search_t *search, const node_t
     }
 
     const char *name = vector_tail(path);
-    tree_t *decl = util_select_decl(ns, search->declTags, search->declTagsLen, name);
+    tree_t *decl = util_select_decl(ns, search->decl_tags, search->decl_count, name);
     if (decl == NULL)
     {
         return tree_raise(node, sema->reports, &kEvent_SymbolNotFound, "decl `%s` not found", name);
@@ -99,7 +99,7 @@ tree_t *util_search_qualified(tree_t *sema, const decl_search_t *search, const n
         return tree_raise(node, sema->reports, &kEvent_SymbolNotFound, "namespace `%s` not found", mod);
     }
 
-    tree_t *decl = util_select_decl(ns, search->declTags, search->declTagsLen, name);
+    tree_t *decl = util_select_decl(ns, search->decl_tags, search->decl_count, name);
     if (decl == NULL)
     {
         return tree_raise(node, sema->reports, &kEvent_SymbolNotFound, "decl `%s` not found", name);

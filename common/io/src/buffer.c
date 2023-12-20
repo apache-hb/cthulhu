@@ -1,7 +1,7 @@
 #include "io/impl.h"
 
 #include "core/macros.h"
-#include "memory/memory.h"
+#include "memory/arena.h"
 #include "base/panic.h"
 
 #include <string.h>
@@ -63,10 +63,7 @@ static const void *mem_map(io_t *self)
 {
     buffer_t *mem = mem_data(self);
 
-    void *it = ARENA_MALLOC(self->arena, mem->used, "mem_map", self);
-    memcpy(it, mem->data, mem->used);
-
-    return it;
+    return mem->data;
 }
 
 static void mem_close(io_t *self)

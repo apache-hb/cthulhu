@@ -285,8 +285,8 @@ static const ssa_type_t *get_operand_type(c89_emit_t *emit, ssa_operand_t operan
         return func->type;
     }
     case eOperandReg: {
-        const ssa_block_t *bb = operand.vregContext;
-        const ssa_step_t *step = typevec_offset(bb->steps, operand.vregIndex);
+        const ssa_block_t *bb = operand.vreg_context;
+        const ssa_step_t *step = typevec_offset(bb->steps, operand.vreg_index);
         const ssa_type_t *type = map_get_ptr(emit->stepmap, step);
         return type;
     }
@@ -361,8 +361,8 @@ static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value)
     const ssa_type_t *type = value->type;
     switch (type->kind)
     {
-    case eTypeBool: return value->boolValue ? "true" : "false";
-    case eTypeDigit: return mpz_get_str(NULL, 10, value->digitValue);
+    case eTypeBool: return value->bool_value ? "true" : "false";
+    case eTypeDigit: return mpz_get_str(NULL, 10, value->digit_value);
     case eTypePointer: return c89_format_pointer(emit, value->data);
     default: NEVER("unknown type kind %d", type->kind);
     }
@@ -399,7 +399,7 @@ static const char *c89_format_operand(c89_emit_t *emit, ssa_operand_t operand)
         return format("bb%s", get_block_name(&emit->emit, operand.bb));
 
     case eOperandReg:
-        return format("vreg%s", get_step_from_block(&emit->emit, operand.vregContext, operand.vregIndex));
+        return format("vreg%s", get_step_from_block(&emit->emit, operand.vreg_context, operand.vreg_index));
 
     case eOperandGlobal:
         return mangle_symbol_name(operand.global);

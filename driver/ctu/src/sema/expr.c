@@ -25,14 +25,14 @@ static const size_t kGlobalModuleTags[] = {eCtuTagImports, eCtuTagTypes};
 static const size_t kDeclTags[] = {eCtuTagValues, eCtuTagFunctions};
 
 static const decl_search_t kSearchName = {
-    .localScopeTags = kLocalModuleTags,
-    .localScopeTagsLen = sizeof(kLocalModuleTags) / sizeof(size_t),
+    .local_tags = kLocalModuleTags,
+    .local_count = sizeof(kLocalModuleTags) / sizeof(size_t),
 
-    .globalScopeTags = kGlobalModuleTags,
-    .globalScopeTagsLen = sizeof(kGlobalModuleTags) / sizeof(size_t),
+    .global_tags = kGlobalModuleTags,
+    .global_count = sizeof(kGlobalModuleTags) / sizeof(size_t),
 
-    .declTags = kDeclTags,
-    .declTagsLen = sizeof(kDeclTags) / sizeof(size_t),
+    .decl_tags = kDeclTags,
+    .decl_count = sizeof(kDeclTags) / sizeof(size_t),
 };
 
 static bool is_public(const tree_t *decl)
@@ -59,7 +59,7 @@ static tree_t *sema_decl_name(tree_t *sema, const node_t *node, vector_t *path, 
         if (it != NULL)
         {
             *needsLoad = false;
-            return it->caseValue;
+            return it->case_value;
         }
 
         return tree_raise(node, sema->reports, &kEvent_SymbolNotFound,
@@ -125,7 +125,7 @@ static tree_t *sema_bool(tree_t *sema, const ctu_t *expr, const tree_t *implicit
                           tree_to_string(type));
     }
 
-    tree_t *it = tree_expr_bool(expr->node, type, expr->boolValue);
+    tree_t *it = tree_expr_bool(expr->node, type, expr->bool_value);
 
     return verify_expr_type(sema, eTreeTypeBool, type, "boolean literal", it);
 }

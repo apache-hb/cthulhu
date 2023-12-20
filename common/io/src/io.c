@@ -1,8 +1,8 @@
 #include "io/impl.h"
 
-#include "memory/memory.h"
 #include "base/panic.h"
 #include "std/str.h"
+
 #include <string.h>
 
 void io_close(io_t *io)
@@ -89,6 +89,9 @@ const void *io_map(io_t *io)
 {
     CTASSERT(io != NULL);
     CTASSERTF(io->cb->fn_map, "fn_map not provided for `%s`", io->name);
+
+    // once a file is mapped, it is read-only
+    io->flags = eAccessRead;
 
     if (io_size(io) == 0) { return ""; }
 

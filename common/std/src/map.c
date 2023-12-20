@@ -120,7 +120,7 @@ typevec_t *map_entries(map_t *map)
 {
     CTASSERT(map != NULL);
 
-    typevec_t *result = typevec_new(sizeof(map_entry_t), map->size);
+    typevec_t *result = typevec_new(sizeof(map_entry_t), map->size, map->arena);
 
     MAP_FOREACH_APPLY(map, entry, {
         map_entry_t item = map_entry_new(entry->key, entry->value);

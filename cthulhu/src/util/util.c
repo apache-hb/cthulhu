@@ -287,7 +287,7 @@ bool util_eval_digit(mpz_t value, const tree_t *expr)
     CTASSERT(expr != NULL);
     switch (tree_get_kind(expr))
     {
-    case eTreeExprDigit: mpz_set(value, expr->digitValue); return true;
+    case eTreeExprDigit: mpz_set(value, expr->digit_value); return true;
 
     case eTreeExprBinary: return eval_binary(value, expr);
 

@@ -1,5 +1,6 @@
 #include "core/macros.h"
 #include "io/io.h"
+#include "memory/memory.h"
 #include "notify/text.h"
 
 #include "base/panic.h"
@@ -134,7 +135,7 @@ static char *fmt_underline(text_cache_t *cache, const node_t *node, size_t limit
     text_view_t view = cache_get_line(cache, where.first_line);
     size_t width = MIN(view.size, limit);
 
-    typevec_t *padding = typevec_new(sizeof(char), width);
+    typevec_t *padding = typevec_new(sizeof(char), width, ctu_default_alloc());
     for (size_t i = 0; i < width; i++)
     {
         if (i >= where.first_column) break;
@@ -284,10 +285,10 @@ static typevec_t *collect_segments(rich_t *rich, const typevec_t *all, const sca
     CTASSERT(scan != NULL);
 
     if (all == NULL)
-        return typevec_new(sizeof(segment_t), 0);
+        return typevec_new(sizeof(segment_t), 0, ctu_default_alloc());
 
     size_t count = typevec_len(all);
-    typevec_t *primary = typevec_new(sizeof(segment_t), count);
+    typevec_t *primary = typevec_new(sizeof(segment_t), count, ctu_default_alloc());
     for (size_t i = 0; i < count; i++)
     {
         const segment_t *segment = typevec_offset(all, i);
@@ -367,7 +368,7 @@ static typevec_t *merge_segments(rich_t *rich, const typevec_t *segments, const 
 
     // now merge segments that share the same span
     size_t len = typevec_len(segments);
-    typevec_t *result = typevec_new(sizeof(segment_t), len);
+    typevec_t *result = typevec_new(sizeof(segment_t), len, ctu_default_alloc());
     for (size_t i = 0; i < len; i++)
     {
         const segment_t *segment = typevec_offset(segments, i);

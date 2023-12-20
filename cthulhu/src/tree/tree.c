@@ -220,7 +220,7 @@ tree_t *tree_expr_bool(const node_t *node, const tree_t *type, bool value)
     TREE_EXPECT(type, eTreeTypeBool);
 
     tree_t *self = tree_new(eTreeExprBool, node, type);
-    self->boolValue = value;
+    self->bool_value = value;
     return self;
 }
 
@@ -229,7 +229,7 @@ tree_t *tree_expr_digit(const node_t *node, const tree_t *type, const mpz_t valu
     TREE_EXPECT(type, eTreeTypeDigit);
 
     tree_t *self = tree_new(eTreeExprDigit, node, type);
-    mpz_init_set(self->digitValue, value);
+    mpz_init_set(self->digit_value, value);
     return self;
 }
 
@@ -237,9 +237,13 @@ tree_t *tree_expr_string(const node_t *node, const tree_t *type, const char *val
 {
     CTASSERT(value != NULL);
 
+    text_view_t view = {
+        .text = value,
+        .size = length
+    };
+
     tree_t *self = tree_new(eTreeExprString, node, type);
-    self->stringValue = value;
-    self->stringLength = length;
+    self->string_value = view;
     return self;
 }
 
