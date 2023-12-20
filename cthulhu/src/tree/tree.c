@@ -17,7 +17,8 @@ static const tree_attribs_t kDefaultAttrib = {
 
 tree_t *tree_new(tree_kind_t kind, const node_t *node, const tree_t *type)
 {
-    tree_t *self = MEM_ALLOC(sizeof(tree_t), tree_kind_to_string(kind), NULL);
+    arena_t *arena = ctu_default_alloc();
+    tree_t *self = ARENA_MALLOC(arena, sizeof(tree_t), tree_kind_to_string(kind), NULL);
 
     self->kind = kind;
     self->node = node;

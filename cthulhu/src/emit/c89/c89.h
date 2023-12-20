@@ -2,12 +2,16 @@
 
 #include "common.h"
 
-typedef struct c89_source_t {
+typedef struct c89_source_t
+{
     io_t *io;
     const char *path;
 } c89_source_t;
 
-typedef struct c89_emit_t {
+typedef struct c89_emit_t
+{
+    arena_t *arena;
+
     emit_t emit;
 
     map_t *modmap; // map<ssa_symbol, ssa_module>

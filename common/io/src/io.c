@@ -13,8 +13,6 @@ void io_close(io_t *io)
     {
         io->cb->fn_close(io);
     }
-
-    ctu_free(io);
 }
 
 USE_DECL
@@ -56,8 +54,6 @@ size_t io_vprintf(io_t *io, const char *fmt, va_list args)
     char *buffer = vformat(fmt, args);
 
     size_t size = io_write(io, buffer, strlen(buffer));
-
-    ctu_free(buffer);
 
     return size;
 }

@@ -1,3 +1,4 @@
+#include "memory/memory.h"
 #include "unit/ct-test.h"
 
 #include "core/macros.h"
@@ -77,13 +78,14 @@ int main()
     test_install_panic_handler();
 
     test_suite_t suite = test_suite_new("argparse");
+    arena_t *arena = ctu_default_alloc();
 
     // posargs
     {
         test_group_t group = test_group(&suite, "posargs");
         sources_t sources = { vector_new(4) };
         errors_t errors = { vector_new(4) };
-        ap_t *ap = ap_new("test-argparse-posargs", NEW_VERSION(1, 0, 0));
+        ap_t *ap = ap_new("test-argparse-posargs", NEW_VERSION(1, 0, 0), arena);
 
         ap_event(ap, NULL, on_file, &sources);
         ap_error(ap, on_error, &errors);
@@ -102,7 +104,7 @@ int main()
         test_group_t group = test_group(&suite, "error stack");
         error_stack_t errors = { 0 };
 
-        ap_t *ap = ap_new("test-argparse-error-stack", NEW_VERSION(1, 0, 0));
+        ap_t *ap = ap_new("test-argparse-error-stack", NEW_VERSION(1, 0, 0), arena);
 
         error_filter_t f1 = { 1, &errors };
         error_filter_t f2 = { 2, &errors };

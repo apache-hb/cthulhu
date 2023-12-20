@@ -61,9 +61,9 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
         }                                                    \
     } while (0)
 
-static io_t *make_file(logger_t *reports, const char *path, os_access_t flags)
+static io_t *make_file(logger_t *reports, const char *path, os_access_t flags, arena_t *arena)
 {
-    io_t *io = io_file(path, flags);
+    io_t *io = io_file(path, flags, arena);
     if (io_error(io) != 0)
     {
         event_t *id = msg_notify(reports, &kEvent_FailedToOpenSourceFile, NULL, "failed to open `%s`", path);
@@ -77,18 +77,19 @@ static io_t *make_file(logger_t *reports, const char *path, os_access_t flags)
 int main(int argc, const char **argv)
 {
     ctu_log_control(eLogEnable);
+    arena_t *arena = ctu_default_alloc();
     mediator_t *mediator = mediator_new("example", kVersion);
-    lifetime_t *lifetime = lifetime_new(mediator, ctu_default_alloc());
+    lifetime_t *lifetime = lifetime_new(mediator, arena);
     logger_t *logger = lifetime_get_logger(lifetime);
 
-    langs_t langs = get_langs();
+    langs_t langs = get_langs(arena);
     for (size_t i = 0; i < langs.size; i++)
     {
         const language_t *lang = langs.langs + i;
         lifetime_add_language(lifetime, lang);
     }
 
-    io_t *msg_buffer = io_blob("buffer", 0x1000, eAccessWrite | eAccessText);
+    io_t *msg_buffer = io_blob("buffer", 0x1000, eAccessWrite | eAccessText, arena);
 
     text_config_t text_config = {
         .config = {
@@ -118,7 +119,7 @@ int main(int argc, const char **argv)
             printf("no language found for file: %s\n", path);
         }
 
-        io_t *io = make_file(logger, path, eAccessRead | eAccessText);
+        io_t *io = make_file(logger, path, eAccessRead | eAccessText, arena);
         if (io != NULL)
         {
             lifetime_parse(lifetime, lang, io);
@@ -146,9 +147,10 @@ int main(int argc, const char **argv)
     ssa_opt(logger, ssa);
     CHECK_LOG(logger, "optimizing ssa");
 
-    fs_t *fs = fs_virtual("out");
+    fs_t *fs = fs_virtual("out", arena);
 
     emit_options_t base_options = {
+        .arena = arena,
         .reports = logger,
         .fs = fs,
 
@@ -174,7 +176,7 @@ int main(int argc, const char **argv)
         printf("%s\n", path);
     }
 
-    fs_t *out = fs_physical("out");
+    fs_t *out = fs_physical("out", arena);
     if (out == NULL)
     {
         msg_notify(logger, &kEvent_FailedToCreateOutputDirectory, node_builtin(), "failed to create output directory");

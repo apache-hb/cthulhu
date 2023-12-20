@@ -16,20 +16,21 @@ static tree_t *tree_module_new(const node_t *node, const char *name,
     CTASSERTF(decls >= eSemaTotal, "module cannot be constructed with less than %d tags (%zu given)", eSemaTotal, decls);
     CTASSERT(reports != NULL);
 
+    arena_t *arena = ctu_default_alloc();
     tree_t *self = tree_decl(eTreeDeclModule, node, NULL, name, eQualUnknown);
     self->parent = parent;
     self->cookie = cookie;
     self->reports = reports;
     self->extra = extra;
-    MEM_IDENTIFY(self->extra, "module_extra", self);
+    ARENA_IDENTIFY(arena, self->extra, "module_extra", self);
 
     self->tags = vector_of(decls);
-    MEM_IDENTIFY(self->tags, "module_tags", self);
+    ARENA_IDENTIFY(arena, self->tags, "module_tags", self);
 
     for (size_t i = 0; i < decls; i++)
     {
         map_t *map = map_optimal(sizes[i]);
-        MEM_IDENTIFY(map, "module_tag", self);
+        ARENA_IDENTIFY(arena, map, "module_tag", self);
         vector_set(self->tags, i, map);
     }
 

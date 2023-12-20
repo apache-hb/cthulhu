@@ -27,7 +27,7 @@ int main()
     set_t *dedup_set = set_new(3);
     const char *item = set_add(dedup_set, "duplicate");
     for (size_t i = 0; i < 64; i++) {
-        char *element = ctu_strdup("duplicate");
+        char *element = ctu_strdup("duplicate", ctu_default_alloc());
         const char *it = set_add(dedup_set, element);
 
         /* pointer equality is on purpose */

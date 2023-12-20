@@ -15,6 +15,8 @@
  */
 typedef struct vector_t
 {
+    arena_t *arena;
+
     size_t size;                   ///< the total number of allocated elements
     size_t used;                   ///< the number of elements in use
     FIELD_SIZE(size) void *data[]; ///< the data
@@ -37,15 +39,16 @@ static void vector_ensure(vector_t **vector, size_t size)
     if (size >= VEC->size)
     {
         size_t resize = (size + 1) * 2;
-        VEC = ctu_realloc(VEC, vector_size(resize));
+        VEC = arena_realloc(VEC->arena, VEC, vector_size(resize), vector_size(size));
         VEC->size = resize;
     }
 }
 
-static vector_t *vector_init_inner(size_t size, size_t used)
+static vector_t *vector_init_inner(size_t size, size_t used, arena_t *arena)
 {
-    vector_t *vector = MEM_ALLOC(vector_size(size), "vector", NULL);
+    vector_t *vector = ARENA_MALLOC(arena, vector_size(size), "vector", NULL);
 
+    vector->arena = arena;
     vector->size = size;
     vector->used = used;
 
@@ -57,13 +60,13 @@ static vector_t *vector_init_inner(size_t size, size_t used)
 USE_DECL
 vector_t *vector_new(size_t size)
 {
-    return vector_init_inner(size, 0);
+    return vector_init_inner(size, 0, ctu_default_alloc());
 }
 
 USE_DECL
 vector_t *vector_of(size_t len)
 {
-    return vector_init_inner(len, len);
+    return vector_init_inner(len, len, ctu_default_alloc());
 }
 
 USE_DECL
@@ -90,7 +93,7 @@ void vector_delete(vector_t *vector)
 {
     CTASSERT(vector != NULL);
 
-    ctu_free(vector);
+    arena_free(vector->arena, vector, vector_size(vector->size));
 }
 
 USE_DECL

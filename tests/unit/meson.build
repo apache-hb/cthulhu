@@ -12,8 +12,7 @@ unit = declare_dependency(
 cases = [
     'util.str',
     'util.map',
-    'util.set',
-    'util.list'
+    'util.set'
 ]
 
 foreach case : cases
@@ -32,7 +31,7 @@ endforeach
 
 vfs_exe = executable('vfs', 'cases/io/vfs.c',
     include_directories : '.',
-    dependencies : [ unit, base, scan, fs ]
+    dependencies : [ unit, base, scan, memory, fs ]
 )
 
 test('vfs', vfs_exe, suite : 'unit')
@@ -41,7 +40,7 @@ test('vfs', vfs_exe, suite : 'unit')
 
 fs_exe = executable('fs', 'cases/io/fs.c',
     include_directories : '.',
-    dependencies : [ unit, base, std, scan, fs ]
+    dependencies : [ unit, base, std, scan, memory, fs ]
 )
 
 test('fs', fs_exe,
@@ -53,7 +52,7 @@ test('fs', fs_exe,
 
 argparse_exe = executable('argparse.argparse', 'cases/argparse/argparse.c',
     include_directories : '.',
-    dependencies : [ unit, memory, base, std, scan, argparse ]
+    dependencies : [ unit, memory, base, std, scan, memory, argparse ]
 )
 
 test('argparse', argparse_exe, suite : 'unit')

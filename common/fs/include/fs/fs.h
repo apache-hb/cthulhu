@@ -9,29 +9,25 @@ BEGIN_API
 /// @ingroup Common
 /// @{
 
+typedef struct arena_t arena_t;
 typedef struct fs_t fs_t;
 typedef struct io_t io_t;
-
-/// @brief delete a filesystem interface
-///
-/// @param fs the filesystem to delete
-void fs_delete(fs_t *fs);
 
 /// @brief create a filesystem interface to a physical location on disk
 ///
 /// @param root the root directory to mount this filesystem on
 ///
 /// @return a filesystem interface, or NULL if the filesystem failed to mount
-NODISCARD CT_ALLOC(fs_delete)
-fs_t *fs_physical(const char *root);
+NODISCARD
+fs_t *fs_physical(const char *root, arena_t *arena);
 
 /// @brief create a virtual filesystem interface
 ///
 /// @param name the name of the vfs
 ///
 /// @return a filesystem interface to an in-memory fs
-NODISCARD CT_ALLOC(fs_delete)
-fs_t *fs_virtual(const char *name);
+NODISCARD
+fs_t *fs_virtual(const char *name, arena_t *arena);
 
 /// @brief create a directory
 /// create a directory and all child directories inside a filesystem

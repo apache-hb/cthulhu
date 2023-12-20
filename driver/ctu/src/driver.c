@@ -18,7 +18,6 @@
 
 #include "core/macros.h"
 
-#include <ctype.h>
 #include <string.h>
 
 ///

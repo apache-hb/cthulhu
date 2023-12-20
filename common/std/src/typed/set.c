@@ -13,6 +13,7 @@ typedef struct item_t
 
 typedef struct typeset_t
 {
+    arena_t *arena;
     const typeinfo_t *info;
 
     FIELD_RANGE(>, 0) size_t size;
@@ -36,9 +37,9 @@ static item_t *item_at(typeset_t *set, size_t index)
     return (item_t *)(set->items + offset);
 }
 
-static item_t *item_new(size_t key_size)
+static item_t *item_new(size_t key_size, arena_t *arena)
 {
-    item_t *item = MEM_ALLOC(item_size(key_size), "item", NULL);
+    item_t *item = ARENA_MALLOC(arena, item_size(key_size), "item", NULL);
     item->next = NULL;
     return item;
 }
@@ -66,7 +67,10 @@ typeset_t *typeset_new(const typeinfo_t *info, size_t len)
 
     CTASSERT(len > 0);
 
-    typeset_t *set = MEM_ALLOC(typeset_size(len, info->size), "typeset", NULL);
+    arena_t *arena = ctu_default_alloc();
+
+    typeset_t *set = ARENA_MALLOC(arena, typeset_size(len, info->size), "typeset", NULL);
+    set->arena = arena;
     set->info = info;
     set->size = len;
 
@@ -96,7 +100,7 @@ const void *typeset_add(typeset_t *set, const void *value)
         }
     }
 
-    item_t *item = item_new(set->info->size);
+    item_t *item = item_new(set->info->size, set->arena);
     memcpy(item->key, value, set->info->size);
     item->next = bucket->next;
     bucket->next = item;

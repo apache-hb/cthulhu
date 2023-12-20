@@ -16,6 +16,7 @@ typedef struct item_t
 
 typedef struct set_t
 {
+    arena_t *arena; ///< the arena this set is allocated in
     FIELD_RANGE(>, 0) size_t size;   ///< the number of buckets
     FIELD_SIZE(size) item_t items[]; ///< the buckets
 } set_t;
@@ -26,9 +27,9 @@ static size_t set_size(size_t size)
     return sizeof(set_t) + (sizeof(item_t) * size);
 }
 
-static item_t *item_new(const char *key)
+static item_t *item_new(const char *key, arena_t *arena)
 {
-    item_t *item = MEM_ALLOC(sizeof(item_t), "item", NULL);
+    item_t *item = ARENA_MALLOC(arena, sizeof(item_t), "item", NULL);
     item->key = key;
     item->next = NULL;
     return item;
@@ -57,7 +58,9 @@ set_t *set_new(size_t size)
 {
     CTASSERT(size > 0);
 
-    set_t *set = MEM_ALLOC(set_size(size), "set", NULL);
+    arena_t *arena = ctu_default_alloc();
+    set_t *set = ARENA_MALLOC(arena, set_size(size), "set", NULL);
+    set->arena = arena;
     set->size = size;
 
     for (size_t i = 0; i < size; i++)
@@ -96,8 +99,8 @@ const char *set_add(set_t *set, const char *key)
         }
         else
         {
-            item->next = item_new(key);
-            MEM_REPARENT(item->next, item);
+            item->next = item_new(key, set->arena);
+            ARENA_REPARENT(set->arena, item->next, item);
             return key;
         }
     }
@@ -160,8 +163,8 @@ const void *set_add_ptr(set_t *set, const void *key)
         }
         else
         {
-            item->next = item_new(key);
-            MEM_REPARENT(item->next, item);
+            item->next = item_new(key, set->arena);
+            ARENA_REPARENT(set->arena, item->next, item);
             return key;
         }
     }

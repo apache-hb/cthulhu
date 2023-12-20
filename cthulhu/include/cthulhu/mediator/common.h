@@ -76,6 +76,9 @@ NODISCARD
 logger_t *lifetime_get_logger(lifetime_t *lifetime);
 
 NODISCARD
+arena_t *lifetime_get_arena(lifetime_t *lifetime);
+
+NODISCARD
 cookie_t *lifetime_get_cookie(lifetime_t *lifetime);
 
 NODISCARD

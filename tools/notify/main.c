@@ -1,3 +1,4 @@
+#include "io/console.h"
 #include "io/io.h"
 
 #include "memory/memory.h"
@@ -10,9 +11,8 @@
 #include "stacktrace/stacktrace.h"
 #include "std/str.h"
 #include "std/vector.h"
-#include <stdio.h>
 
-const char *kSampleSourceLhs =
+const char *const kSampleSourceLeft =
     "module multi.lhs;\n"   // 1
     "\n"                    // 2
     "import multi.rhs,\n"   // 3
@@ -26,7 +26,7 @@ const char *kSampleSourceLhs =
     "end;\n"                // 8
     ".\n";                  // 9
 
-const char *kSampleSourceRhs =
+const char *const kSampleSourceRight =
     "module multi.rhs;\n"   // 1
     "\n"                    // 2
     "import multi.lhs,\n"   // 3
@@ -40,7 +40,7 @@ const char *kSampleSourceRhs =
     "end;\n"                // 11
     ".\n";                  // 12
 
-const char *kSampleSourceMain =
+const char *const kSampleSourceMain =
     "module main;\n"        // 1
     "\n"                    // 2
     "import multi.lhs,\n"   // 3
@@ -188,27 +188,21 @@ void event_invalid_function(logger_t *logs, scan_t *scan)
     msg_note(event, "did you mean `%s`?", "main");
 }
 
-static scan_t *scan_string(const char *name, const char *lang, const char *source)
+static scan_t *scan_string(const char *name, const char *lang, const char *source, arena_t *arena)
 {
-    io_t *io = io_string(name, source);
-    return scan_io(lang, io, ctu_default_alloc());
+    io_t *io = io_string(name, source, arena);
+    return scan_io(lang, io, arena);
 }
 
 static void print_backtrace(text_config_t base_config)
 {
-    io_t *io = io_blob("backtrace", 0x1000, eAccessWrite | eAccessText);
-
     text_config_t config = base_config;
-    config.io = io;
+    arena_t *arena = ctu_default_alloc();
+    config.io = io_stdout(arena);
 
-    bt_report_t *report = bt_report_collect();
+    bt_report_t *report = bt_report_collect(arena);
 
     bt_report_finish(config, report);
-
-    const void *data = io_map(io);
-    size_t size = io_size(io);
-
-    fwrite(data, size, 1, stdout);
 }
 
 int recurse(int x, text_config_t base_config)
@@ -248,9 +242,9 @@ static int rec2(int x, int y, text_config_t base_config)
     return rec2(x - 1, y, base_config);
 }
 
-static void do_backtrace(void)
+static void do_backtrace(io_t *io)
 {
-    fprintf(stdout, "\n=== backtrace ===\n\n");
+    io_printf(io, "\n=== backtrace ===\n\n");
 
     text_config_t bt_config2 = {
         .config = {
@@ -258,7 +252,8 @@ static void do_backtrace(void)
             .print_source = true,
             .print_header = true
         },
-        .colours = colour_get_default()
+        .colours = colour_get_default(),
+        .io = io
     };
 
     text_config_t bt_config1 = {
@@ -267,7 +262,8 @@ static void do_backtrace(void)
             .print_source = false,
             .print_header = true
         },
-        .colours = colour_get_default()
+        .colours = colour_get_default(),
+        .io = io
     };
 
     recurse(15, bt_config1);
@@ -279,70 +275,50 @@ static void do_backtrace(void)
 
 static void do_simple(logger_t *logs)
 {
-    io_t *io_simple = io_blob("simple_test", 0x1000, eAccessWrite);
+    io_t *io = io_stdout(ctu_default_alloc());
 
     text_config_t config2 = {
         .config = {
             .zeroth_line = false,
         },
         .colours = colour_get_default(),
-        .io = io_simple
+        .io = io
+    };
+
+    report_config_t report_config = {
+        .max_errors = SIZE_MAX,
+        .max_warnings = SIZE_MAX,
+        .report_format = eTextSimple,
+
+        .text_config = config2,
     };
 
     vector_t *events = logger_get_events(logs);
-    size_t count = vector_len(events);
 
-    for (size_t i = 0; i < count; i++)
-    {
-        event_t *event = vector_get(events, i);
-        text_report_simple(config2, event);
-
-        if (i != count - 1)
-        {
-            io_printf(io_simple, "\n");
-        }
-    }
-
-    fprintf(stdout, "\n=== simple text ===\n\n");
-
-    const void *data2 = io_map(io_simple);
-    size_t size2 = io_size(io_simple);
-
-    fwrite(data2, size2, 1, stdout);
+    text_report(events, report_config, "simple text");
 }
 
 static void do_rich(logger_t *logs)
 {
-    io_t *io_rich = io_blob("rich_test", 0x1000, eAccessWrite);
-
     text_config_t config = {
         .config = {
             .zeroth_line = false,
         },
         .colours = colour_get_default(),
-        .io = io_rich
+        .io = io_stdout(ctu_default_alloc())
+    };
+
+    report_config_t report_config = {
+        .max_errors = SIZE_MAX,
+        .max_warnings = SIZE_MAX,
+        .report_format = eTextSimple,
+
+        .text_config = config,
     };
 
     vector_t *events = logger_get_events(logs);
-    size_t count = vector_len(events);
 
-    for (size_t i = 0; i < count; i++)
-    {
-        event_t *event = vector_get(events, i);
-        text_report_rich(config, event);
-
-        if (i != count - 1)
-        {
-            io_printf(io_rich, "\n");
-        }
-    }
-
-    const void *data1 = io_map(io_rich);
-    size_t size1 = io_size(io_rich);
-
-    fprintf(stdout, "=== rich text ===\n\n");
-
-    fwrite(data1, size1, 1, stdout);
+    text_report(events, report_config, "rich text");
 }
 
 int main(int argc, const char **argv)
@@ -370,18 +346,20 @@ int main(int argc, const char **argv)
     os_init();
     scan_init();
 
-    init_global_alloc(ctu_default_alloc());
-    init_gmp_alloc(ctu_default_alloc());
+    arena_t *arena = ctu_default_alloc();
+    io_t *io = io_stdout(ctu_default_alloc());
 
-    logger_t *logs = logger_new(ctu_default_alloc());
+    init_gmp_alloc(arena);
+
+    logger_t *logs = logger_new(arena);
     msg_diagnostic(logs, &kInfoDiagnostic);
     msg_diagnostic(logs, &kUndefinedFunctionName);
     msg_diagnostic(logs, &kUnresolvedImport);
     msg_diagnostic(logs, &kReservedName);
 
-    scan_t *scan_main = scan_string("sample.pl0", "PL/0", kSampleSourceMain);
-    scan_t *scan_lhs = scan_string("lhs.mod", "Oberon-2", kSampleSourceLhs);
-    scan_t *scan_rhs = scan_string("rhs.ctu", "Cthulhu", kSampleSourceRhs);
+    scan_t *scan_main = scan_string("sample.pl0", "PL/0", kSampleSourceMain, arena);
+    scan_t *scan_lhs = scan_string("lhs.mod", "Oberon-2", kSampleSourceLeft, arena);
+    scan_t *scan_rhs = scan_string("rhs.ctu", "Cthulhu", kSampleSourceRight, arena);
 
     event_simple(logs);
     event_missing_call(logs, scan_main, scan_lhs);
@@ -402,5 +380,5 @@ int main(int argc, const char **argv)
         do_simple(logs);
 
     if (backtraces)
-        do_backtrace();
+        do_backtrace(io);
 }

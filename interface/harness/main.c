@@ -3,6 +3,7 @@
 #include "cthulhu/mediator/check.h"
 #include "cthulhu/mediator/interface.h"
 
+#include "io/console.h"
 #include "memory/memory.h"
 #include "notify/colour.h"
 #include "notify/notify.h"
@@ -49,9 +50,9 @@ static const version_info_t kVersion = {
     .version = NEW_VERSION(0, 0, 1),
 };
 
-static io_t *make_file(const char *path, os_access_t flags)
+static io_t *make_file(const char *path, os_access_t flags, arena_t *arena)
 {
-    io_t *io = io_file(path, flags);
+    io_t *io = io_file(path, flags, arena);
     CTASSERT(io_error(io) == 0);
     return io;
 }
@@ -187,7 +188,7 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
     mediator_t *mediator = mediator_new("example", kVersion);
     lifetime_t *lifetime = lifetime_new(mediator, alloc);
 
-    langs_t langs = get_langs();
+    langs_t langs = get_langs(alloc);
 
     logger_t *reports = lifetime_get_logger(lifetime);
     for (size_t i = 0; i < langs.size; i++)
@@ -196,7 +197,7 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
         lifetime_add_language(lifetime, lang);
     }
 
-    io_t *msg_buffer = io_stdout();
+    io_t *msg_buffer = io_stdout(alloc);
 
     text_config_t text_config = {
         .config = {
@@ -225,7 +226,7 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
         const char *ext = str_ext(path);
         const language_t *lang = lifetime_get_language(lifetime, ext);
 
-        io_t *io = make_file(path, eAccessRead | eAccessText);
+        io_t *io = make_file(path, eAccessRead | eAccessText, alloc);
 
         lifetime_parse(lifetime, lang, io);
 
@@ -254,9 +255,10 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
     ssa_opt(reports, ssa);
     CHECK_LOG(reports, "optimizing ssa");
 
-    fs_t *fs = fs_virtual("out");
+    fs_t *fs = fs_virtual("out", alloc);
 
     emit_options_t base_options = {
+        .arena = alloc,
         .reports = reports,
         .fs = fs,
 
@@ -282,7 +284,7 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
                                  OS_VALUE(const char *, cwd));
     const char *run_dir = format("%s" NATIVE_PATH_SEPARATOR "%s", test_dir, argv[1]);
 
-    fs_t *out = fs_physical(run_dir);
+    fs_t *out = fs_physical(run_dir, alloc);
     if (out == NULL)
     {
         msg_notify(reports, &kEvent_FailedToCreateOutputDirectory, node_builtin(), "failed to create output directory");
@@ -336,7 +338,6 @@ int main(int argc, const char **argv)
     size_t size = (size_t)(1024U * 1024U * 64U);
     user_arena_t arena = new_user_arena(size);
     arena_t alloc = new_alloc(&arena);
-    init_global_alloc(&alloc);
     init_gmp_alloc(&alloc);
 
     ctu_log_control(eLogEnable);

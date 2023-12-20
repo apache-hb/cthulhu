@@ -4,8 +4,6 @@
 #include "core/version_def.h"
 #include "core/compiler.h"
 
-#include "argparse/argparse.h"
-
 #include <gmp.h>
 #include <stdbool.h>
 
@@ -37,6 +35,7 @@ BEGIN_API
 typedef struct logger_t logger_t;
 typedef struct node_t node_t;
 typedef struct vector_t vector_t;
+typedef struct arena_t arena_t;
 
 typedef struct ap_t ap_t;
 typedef struct ap_param_t ap_param_t;
@@ -80,7 +79,7 @@ typedef ap_event_result_t (*ap_error_t)(ap_t *ap, const node_t *node, const char
 /// @param version the version info of the program
 ///
 /// @return the created parser instance
-ap_t *ap_new(const char *desc, version_t version);
+ap_t *ap_new(const char *desc, version_t version, arena_t *arena);
 
 /// @brief add a group to the parser
 ///

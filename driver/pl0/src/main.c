@@ -8,8 +8,8 @@
 
 #include "std/str.h"
 
-#include "pl0_bison.h"
-#include "pl0_flex.h"
+#include "pl0_bison.h" // IWYU pragma: keep
+#include "pl0_flex.h" // IWYU pragma: keep
 
 CTU_CALLBACKS(kCallbacks, pl0);
 
@@ -22,7 +22,7 @@ static void pl0_preparse(driver_t *handle, scan_t *scan)
         .reports = reports
     };
 
-    scan_set_context(scan, BOX(info));
+    scan_set_context(scan, ctu_memdup(&info, sizeof(pl0_scan_t), ctu_default_alloc()));
 }
 
 static void pl0_postparse(driver_t *handle, scan_t *scan, void *tree)
@@ -42,7 +42,7 @@ static void pl0_postparse(driver_t *handle, scan_t *scan, void *tree)
     add_context(lifetime, path, ctx);
 }
 
-static const char *kLangNames[] = { "pl", "pl0", NULL };
+static const char *const kLangNames[] = { "pl", "pl0", NULL };
 
 const language_t kPl0Module = {
     .id = "pl0",

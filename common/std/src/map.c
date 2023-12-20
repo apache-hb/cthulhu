@@ -1,7 +1,8 @@
 #include "std/map.h"
-#include "memory/memory.h"
 #include "base/panic.h"
 #include "base/util.h"
+#include "memory/memory.h"
+
 
 #include "std/str.h"
 #include "std/typed/vector.h"
@@ -25,6 +26,7 @@ typedef struct bucket_t
  */
 typedef struct map_t
 {
+    arena_t *arena;                   ///< the arena this map is allocated in
     size_t size;                      ///< the number of buckets in the toplevel
     FIELD_SIZE(size) bucket_t data[]; ///< the buckets
 } map_t;
@@ -36,9 +38,9 @@ static size_t sizeof_map(size_t size)
     return sizeof(map_t) + (size * sizeof(bucket_t));
 }
 
-static bucket_t *bucket_new(const void *key, void *value)
+static bucket_t *bucket_new(const void *key, void *value, arena_t *arena)
 {
-    bucket_t *entry = MEM_ALLOC(sizeof(bucket_t), "bucket", NULL);
+    bucket_t *entry = ARENA_MALLOC(arena, sizeof(bucket_t), "bucket", NULL);
     entry->key = key;
     entry->value = value;
     entry->next = NULL;
@@ -66,8 +68,10 @@ map_t *map_new(size_t size)
 {
     CTASSERT(size > 0);
 
-    map_t *map = MEM_ALLOC(sizeof_map(size), "map", NULL);
+    arena_t *arena = ctu_default_alloc();
+    map_t *map = ARENA_MALLOC(arena, sizeof_map(size), "map", NULL);
 
+    map->arena = arena;
     map->size = size;
 
     clear_keys(map->data, size);
@@ -75,18 +79,18 @@ map_t *map_new(size_t size)
     return map;
 }
 
-#define MAP_FOREACH_APPLY(self, item, ...)                                                                             \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        for (size_t i = 0; i < self->size; i++)                                                                        \
-        {                                                                                                              \
-            bucket_t *item = &self->data[i];                                                                           \
-            while (item && item->key)                                                                                  \
-            {                                                                                                          \
-                __VA_ARGS__;                                                                                           \
-                item = item->next;                                                                                     \
-            }                                                                                                          \
-        }                                                                                                              \
+#define MAP_FOREACH_APPLY(self, item, ...)      \
+    do                                          \
+    {                                           \
+        for (size_t i = 0; i < self->size; i++) \
+        {                                       \
+            bucket_t *item = &self->data[i];    \
+            while (item && item->key)           \
+            {                                   \
+                __VA_ARGS__;                    \
+                item = item->next;              \
+            }                                   \
+        }                                       \
     } while (0)
 
 USE_DECL
@@ -143,7 +147,8 @@ bool map_empty(map_t *map)
     CTASSERT(map != NULL);
 
     MAP_FOREACH_APPLY(map, entry, {
-        if (entry->key != NULL) {
+        if (entry->key != NULL)
+        {
             return false;
         }
     });
@@ -218,8 +223,8 @@ void map_set(map_t *map, const char *key, void *value)
 
         if (entry->next == NULL)
         {
-            entry->next = bucket_new(key, value);
-            MEM_REPARENT(entry->next, entry);
+            entry->next = bucket_new(key, value, map->arena);
+            ARENA_REPARENT(map->arena, entry->next, entry);
             break;
         }
 
@@ -288,8 +293,8 @@ void map_set_ptr(map_t *map, const void *key, void *value)
 
         if (entry->next == NULL)
         {
-            entry->next = bucket_new(key, value);
-            MEM_REPARENT(entry->next, entry);
+            entry->next = bucket_new(key, value, map->arena);
+            ARENA_REPARENT(map->arena, entry->next, entry);
             break;
         }
 

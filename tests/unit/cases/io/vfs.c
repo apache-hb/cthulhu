@@ -1,3 +1,4 @@
+#include "memory/memory.h"
 #include "unit/ct-test.h"
 
 #include "fs/fs.h"
@@ -7,18 +8,19 @@ int main()
     test_install_panic_handler();
 
     test_suite_t suite = test_suite_new("vfs");
+    arena_t *arena = ctu_default_alloc();
 
     // virtual
     {
         test_group_t group = test_group(&suite, "virtual");
-        GROUP_EXPECT_PANIC(group, "no null name", fs_virtual(NULL));
-        GROUP_EXPECT_PASS(group, "no return null", fs_virtual("test") != NULL);
+        GROUP_EXPECT_PANIC(group, "no null name", fs_virtual(NULL, arena));
+        GROUP_EXPECT_PASS(group, "no return null", fs_virtual("test", arena) != NULL);
     }
 
     // mkdir
     {
         test_group_t group = test_group(&suite, "mkdir");
-        fs_t *fs = fs_virtual("test");
+        fs_t *fs = fs_virtual("test", arena);
         fs_dir_create(fs, "testdir/foo/bar");
 
         GROUP_EXPECT_PASS(group, "fs_dir_create() should recursively create dirs", fs_dir_exists(fs, "testdir"));
@@ -31,7 +33,7 @@ int main()
     // rmdir
     {
         test_group_t group = test_group(&suite, "rmdir");
-        fs_t *fs = fs_virtual("test");
+        fs_t *fs = fs_virtual("test", arena);
         fs_dir_create(fs, "testdir/foo/bar");
         fs_dir_delete(fs, "testdir/foo/bar");
 
@@ -43,8 +45,8 @@ int main()
     // sync
     {
         test_group_t group = test_group(&suite, "sync");
-        fs_t *dst = fs_virtual("dst");
-        fs_t *src = fs_virtual("src");
+        fs_t *dst = fs_virtual("dst", arena);
+        fs_t *src = fs_virtual("src", arena);
 
         fs_dir_create(src, "testdir/foo/bar");
 

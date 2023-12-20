@@ -290,8 +290,6 @@ static void ssa_opt_global(ssa_vm_t *vm, ssa_symbol_t *global)
         .step_values = map_optimal(64)
     };
 
-    MEM_RENAME(scope.step_values, "step_values");
-
     ssa_opt_block(&scope, global->entry);
     CTASSERTF(scope.return_value != NULL, "global %s failed to evaluate", global->name);
 
@@ -306,8 +304,6 @@ void ssa_opt(logger_t *reports, ssa_result_t result)
 
         .globals = set_new(64),
     };
-
-    MEM_RENAME(vm.globals, "globals");
 
     size_t len = vector_len(result.modules);
     for (size_t i = 0; i < len; i++)

@@ -1,6 +1,5 @@
 #include "common.h"
 
-#include "base/log.h"
 #include "core/macros.h"
 #include "io/io.h"
 #include "memory/memory.h"
@@ -189,16 +188,24 @@ char *fmt_align(size_t width, const char *fmt, ...)
     size_t len = strlen(msg);
     if (len >= width) return msg;
 
-    char *result = ctu_malloc(width + 1);
+    arena_t *arena = ctu_default_alloc();
+    size_t size = width - 1;
+    char *result = ARENA_MALLOC(arena, size, "align", NULL);
     memset(result, ' ', width);
     memcpy(result, msg, len);
 
     result[width] = '\0';
 
-    ctu_free(msg);
+    arena_free(arena, msg, size);
 
     return result;
 }
+
+typedef struct cache_map_t
+{
+    arena_t *arena;
+    map_t *map;
+} cache_map_t;
 
 typedef struct lineinfo_t
 {
@@ -208,6 +215,8 @@ typedef struct lineinfo_t
 
 typedef struct text_cache_t
 {
+    arena_t *arena;
+
     io_t *io;
     text_view_t source;
 
@@ -241,9 +250,10 @@ static void load_lineinfo(text_cache_t *text)
     }
 }
 
-static text_cache_t *text_cache_new(io_t *io, text_view_t source, size_t len)
+static text_cache_t *text_cache_new(io_t *io, text_view_t source, size_t len, arena_t *arena)
 {
-    text_cache_t *cache = ctu_malloc(sizeof(text_cache_t));
+    text_cache_t *cache = ARENA_MALLOC(arena, sizeof(text_cache_t), "text_cache", NULL);
+    cache->arena = arena;
     cache->io = io;
     cache->source = source;
     cache->line_info = typevec_new(sizeof(lineinfo_t), len);
@@ -252,7 +262,7 @@ static text_cache_t *text_cache_new(io_t *io, text_view_t source, size_t len)
     return cache;
 }
 
-static text_cache_t *text_cache_io(io_t *io)
+static text_cache_t *text_cache_io(io_t *io, arena_t *arena)
 {
     CTASSERT(io != NULL);
 
@@ -261,7 +271,7 @@ static text_cache_t *text_cache_io(io_t *io)
         .size = io_size(io)
     };
 
-    text_cache_t *cache = text_cache_new(io, view, 32);
+    text_cache_t *cache = text_cache_new(io, view, 32, arena);
 
     if (io_error(io) == 0)
         load_lineinfo(cache);
@@ -269,13 +279,13 @@ static text_cache_t *text_cache_io(io_t *io)
     return cache;
 }
 
-static text_cache_t *text_cache_scan(const scan_t *scan)
+static text_cache_t *text_cache_scan(const scan_t *scan, arena_t *arena)
 {
     CTASSERT(scan != NULL);
 
     text_view_t view = scan_source(scan);
 
-    text_cache_t *cache = text_cache_new(NULL, view, 32);
+    text_cache_t *cache = text_cache_new(NULL, view, 32, arena);
 
     load_lineinfo(cache);
 
@@ -288,7 +298,7 @@ static void text_cache_delete(text_cache_t *cache)
 
     if (cache->io != NULL) io_close(cache->io);
     typevec_delete(cache->line_info);
-    ctu_free(cache);
+    arena_free(cache->arena, cache, sizeof(text_cache_t));
 }
 
 static bool cache_is_valid(text_cache_t *cache)
@@ -300,14 +310,20 @@ static bool cache_is_valid(text_cache_t *cache)
 
 cache_map_t *cache_map_new(size_t size)
 {
-    return map_optimal(size);
+    arena_t *arena = ctu_default_alloc();
+
+    cache_map_t *data = ARENA_MALLOC(arena, sizeof(cache_map_t), "cache_map", NULL);
+    data->arena = arena;
+    data->map = map_optimal(size);
+
+    return data;
 }
 
 void cache_map_delete(cache_map_t *map)
 {
     CTASSERT(map != NULL);
 
-    map_iter_t iter = map_iter(map);
+    map_iter_t iter = map_iter(map->map);
     while (map_has_next(&iter))
     {
         map_entry_t entry = map_next(&iter);
@@ -322,15 +338,15 @@ text_cache_t *cache_emplace_file(cache_map_t *map, const char *path)
     CTASSERT(path != NULL);
 
     // TODO: is using the name stable?
-    text_cache_t *cache = map_get_ptr(map, path);
+    text_cache_t *cache = map_get_ptr(map->map, path);
     if (cache != NULL && cache_is_valid(cache)) return cache;
 
-    io_t *io = io_file(path, eAccessRead | eAccessText);
-    text_cache_t *text = text_cache_io(io);
+    io_t *io = io_file(path, eAccessRead | eAccessText, map->arena);
+    text_cache_t *text = text_cache_io(io, map->arena);
 
     // always insert the cache, even if it is invalid.
     // this way we avoid trying to open the file again
-    map_set_ptr(map, path, text);
+    map_set_ptr(map->map, path, text);
     if (cache_is_valid(text)) return text;
 
     return NULL;
@@ -341,12 +357,12 @@ text_cache_t *cache_emplace_scan(cache_map_t *map, const scan_t *scan)
     CTASSERT(map != NULL);
     CTASSERT(scan != NULL);
 
-    text_cache_t *cache = map_get_ptr(map, scan);
+    text_cache_t *cache = map_get_ptr(map->map, scan);
     if (cache != NULL && cache_is_valid(cache)) return cache;
 
     // scan caches will never be invalid, so we can just insert them
-    text_cache_t *text = text_cache_scan(scan);
-    map_set_ptr(map, scan, text);
+    text_cache_t *text = text_cache_scan(scan, map->arena);
+    map_set_ptr(map->map, scan, text);
 
     return text;
 }
@@ -414,8 +430,6 @@ text_t cache_escape_line(text_cache_t *cache, size_t line, const text_colour_t *
 
     typevec_t *result = typevec_new(sizeof(char), view.size * 2);
 
-    ctu_log("size: %zu, line: %zu", view.size, line);
-
     char buffer[8] = "";
     bool in_colour = false;
     size_t used = column_limit;
@@ -444,7 +458,7 @@ text_t cache_escape_line(text_cache_t *cache, size_t line, const text_colour_t *
         }
     }
 
-    text_t *ptr = ctu_malloc(sizeof(text_t));
+    text_t *ptr = ARENA_MALLOC(cache->arena, sizeof(text_t), "text", NULL);
     ptr->text = typevec_data(result);
     ptr->size = typevec_len(result);
 

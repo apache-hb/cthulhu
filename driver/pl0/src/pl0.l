@@ -42,7 +42,7 @@
 (?i:odd) { return ODD; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
-    yylval->ident = ctu_strdup(yytext);
+    yylval->ident = ctu_strdup(yytext, ctu_default_alloc());
     return IDENT;
 }
 

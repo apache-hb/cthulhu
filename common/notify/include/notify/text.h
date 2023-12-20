@@ -31,9 +31,10 @@ typedef struct io_t io_t;
 typedef struct frame_t frame_t;
 typedef struct event_t event_t;
 typedef struct vector_t vector_t;
+typedef struct arena_t arena_t;
 
 typedef struct text_colour_t text_colour_t;
-typedef struct map_t cache_map_t;
+typedef struct cache_map_t cache_map_t;
 typedef struct set_t set_t;
 typedef struct text_cache_t text_cache_t;
 
@@ -119,13 +120,13 @@ typedef struct bt_report_t bt_report_t;
 /// @brief create a new backtrace report
 ///
 /// @return the new backtrace report
-bt_report_t *bt_report_new(void);
+bt_report_t *bt_report_new(arena_t *arena);
 
 /// @brief collect a backtrace into a report
 /// this is equivalent to calling bt_report_new() and then bt_report_add()
 ///
 /// @return the new backtrace report
-bt_report_t *bt_report_collect(void);
+bt_report_t *bt_report_collect(arena_t *arena);
 
 /// @brief add a frame to a backtrace report
 ///

@@ -45,102 +45,38 @@ arena_t *ctu_default_alloc(void)
     return &gDefaultAlloc;
 }
 
-static arena_t *gGlobalAlloc = NULL;
-
-arena_t *get_global_alloc(void)
-{
-    return gGlobalAlloc;
-}
-
-USE_DECL
-void init_global_alloc(arena_t *alloc)
-{
-    CTASSERT(alloc != NULL);
-
-    gGlobalAlloc = alloc;
-    arena_rename(alloc, gGlobalAlloc, "global");
-}
-
-arena_t *ctu_global_alloc(void)
-{
-    return gGlobalAlloc;
-}
-
-/// global allocator
-
-USE_DECL
-void *ctu_malloc_info(size_t size, const char *name, const void *parent)
-{
-    CTASSERT(size > 0);
-
-    return arena_malloc(gGlobalAlloc, size, name, parent);
-}
-
-USE_DECL
-void *ctu_malloc(size_t size)
-{
-    return ctu_malloc_info(size, "malloc", gGlobalAlloc);
-}
-
-USE_DECL
-void *ctu_realloc(void *ptr, size_t new_size)
-{
-    CTASSERT(ptr != NULL);
-    CTASSERT(new_size > 0);
-
-    return arena_realloc(gGlobalAlloc, ptr, new_size, ALLOC_SIZE_UNKNOWN);
-}
-
-USE_DECL
-void ctu_free(void *ptr)
-{
-    arena_free(gGlobalAlloc, ptr, ALLOC_SIZE_UNKNOWN);
-}
-
 /// global string allocation
 
 USE_DECL
-void *ctu_memdup(const void *ptr, size_t size)
+void *ctu_memdup(const void *ptr, size_t size, arena_t *arena)
 {
     CTASSERT(ptr != NULL);
 
-    void *out = MEM_ALLOC(size, "memdup", gGlobalAlloc);
+    void *out = ARENA_MALLOC(arena, size, "memdup", arena);
     memcpy(out, ptr, size);
     return out;
 }
 
 USE_DECL
-char *ctu_strdup(const char *str)
+char *ctu_strdup(const char *str, arena_t *arena)
 {
     CTASSERT(str != NULL);
 
     size_t len = strlen(str) + 1;
-    char *out = MEM_ALLOC(len, "strdup", gGlobalAlloc);
+    char *out = ARENA_MALLOC(arena, len, "strdup", arena);
     memcpy(out, str, len);
     return out;
 }
 
 USE_DECL
-char *ctu_strndup(const char *str, size_t len)
+char *ctu_strndup(const char *str, size_t len, arena_t *arena)
 {
     CTASSERT(str != NULL);
 
-    char *out = MEM_ALLOC(len + 1, "strndup", gGlobalAlloc);
+    char *out = ARENA_MALLOC(arena, len + 1, "strndup", arena);
     memcpy(out, str, len);
     out[len] = '\0';
     return out;
-}
-
-USE_DECL
-void ctu_mem_rename(const void *ptr, const char *name)
-{
-    arena_rename(gGlobalAlloc, ptr, name);
-}
-
-USE_DECL
-void ctu_mem_reparent(const void *ptr, const void *parent)
-{
-    arena_reparent(gGlobalAlloc, ptr, parent);
 }
 
 /// gmp arena managment

@@ -13,6 +13,8 @@ BEGIN_API
 /// @ingroup Common
 /// @{
 
+typedef struct arena_t arena_t;
+
 /// @brief an opaque handle to an IO object
 typedef struct io_t io_t;
 
@@ -24,9 +26,6 @@ typedef os_error_t io_error_t;
 /// @param io the io object
 void io_close(OUT_PTR_INVALID io_t *io);
 
-io_t *io_stdout(void);
-io_t *io_stderr(void);
-
 /// @brief create an IO object from a file
 ///
 /// @param path the path to the file
@@ -34,7 +33,7 @@ io_t *io_stderr(void);
 ///
 /// @return the io object, or NULL on error
 NODISCARD CT_ALLOC(io_close)
-io_t *io_file(const char *path, os_access_t mode);
+io_t *io_file(const char *path, os_access_t mode, arena_t *arena);
 
 /// @brief create an IO object from an initial view of memory
 /// @note this copies @p size bytes from @p data into a new buffer
@@ -46,7 +45,7 @@ io_t *io_file(const char *path, os_access_t mode);
 ///
 /// @return the io object
 NODISCARD CT_ALLOC(io_close)
-io_t *io_memory(const char *name, const void *data, size_t size, os_access_t flags);
+io_t *io_memory(const char *name, const void *data, size_t size, os_access_t flags, arena_t *arena);
 
 /// @brief create an IO object in memory of a given size
 /// @p size specifies the initial internal buffer size, the file seek position starts at 0
@@ -57,7 +56,7 @@ io_t *io_memory(const char *name, const void *data, size_t size, os_access_t fla
 ///
 /// @return the io object
 NODISCARD CT_ALLOC(io_close)
-io_t *io_blob(const char *name, size_t size, os_access_t flags);
+io_t *io_blob(const char *name, size_t size, os_access_t flags, arena_t *arena);
 
 /// @brief create a readonly IO object for a given view of memory
 /// @pre @p data must point to a valid memory region of @p size bytes
@@ -68,7 +67,7 @@ io_t *io_blob(const char *name, size_t size, os_access_t flags);
 ///
 /// @return the IO view
 NODISCARD CT_ALLOC(io_close)
-io_t *io_view(const char *name, const void *data, size_t size);
+io_t *io_view(const char *name, const void *data, size_t size, arena_t *arena);
 
 /// @brief create an IO view of a string
 /// create a readonly IO view of a string
@@ -78,7 +77,7 @@ io_t *io_view(const char *name, const void *data, size_t size);
 ///
 /// @return the io object
 NODISCARD CT_ALLOC(io_close)
-io_t *io_string(const char *name, const char *string);
+io_t *io_string(const char *name, const char *string, arena_t *arena);
 
 /// @brief read from an io object
 /// @pre the io object must have been created with the @a eAccessRead flag

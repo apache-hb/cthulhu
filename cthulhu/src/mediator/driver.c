@@ -82,6 +82,14 @@ logger_t *lifetime_get_logger(lifetime_t *lifetime)
 }
 
 USE_DECL
+arena_t *lifetime_get_arena(lifetime_t *lifetime)
+{
+    CTASSERT(lifetime != NULL);
+
+    return lifetime->alloc;
+}
+
+USE_DECL
 cookie_t *lifetime_get_cookie(lifetime_t *lifetime)
 {
     CTASSERT(lifetime != NULL);

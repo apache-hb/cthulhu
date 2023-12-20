@@ -184,6 +184,8 @@ tree_t *ctu_rt_mod(lifetime_t *lifetime)
 {
     GLOBAL_INIT("cthulhu runtime module");
 
+    arena_t *arena = lifetime_get_arena(lifetime);
+
     size_t sizes[eCtuTagTotal] = {
         [eCtuTagValues] = 1,
         [eCtuTagTypes] = 1,
@@ -218,7 +220,7 @@ tree_t *ctu_rt_mod(lifetime_t *lifetime)
     ctu_add_decl(root, eCtuTagTypes, "void", make_void_type("void"));
     ctu_add_decl(root, eCtuTagTypes, "opaque", make_opaque_type("opaque"));
 
-    ctu_init_attribs(root);
+    ctu_init_attribs(root, arena);
 
     return root;
 }

@@ -11,6 +11,8 @@
 /// @brief A vector with a fixed type size.
 typedef struct typevec_t
 {
+    arena_t *arena;
+
     /// @brief The number of elements allocated.
     size_t size;
 
@@ -33,17 +35,20 @@ static void *get_offset_ptr(const typevec_t *vec, size_t index)
     return ((char*)vec->data) + (index * vec->type_size);
 }
 
-static typevec_t *typevec_create(size_t type_size, size_t len)
+static typevec_t *typevec_create(size_t type_size, size_t len, arena_t *arena)
 {
     CTASSERT(type_size > 0);
 
     size_t size = MAX(len, 1);
 
-    typevec_t *vec = MEM_ALLOC(sizeof(typevec_t), "typevec", NULL);
+    typevec_t *vec = ARENA_MALLOC(arena, sizeof(typevec_t), "typevec", NULL);
+    vec->arena = arena;
     vec->size = size;
     vec->used = 0;
     vec->type_size = type_size;
-    vec->data = MEM_ALLOC(type_size * (size + 1), "typevec_data", vec);
+    vec->data = ARENA_MALLOC(arena, type_size * (size + 1), "typevec_data", vec);
+    ARENA_IDENTIFY(arena, vec->data, "data", vec);
+
     return vec;
 }
 
@@ -51,20 +56,20 @@ void typevec_delete(typevec_t *vec)
 {
     CTASSERT(vec != NULL);
 
-    ctu_free(vec->data);
-    ctu_free(vec);
+    arena_free(vec->arena, vec->data, vec->type_size * vec->size);
+    arena_free(vec->arena, vec, sizeof(typevec_t));
 }
 
 USE_DECL
 typevec_t *typevec_new(size_t size, size_t len)
 {
-    return typevec_create(size, len);
+    return typevec_create(size, len, ctu_default_alloc());
 }
 
 USE_DECL
 typevec_t *typevec_of(size_t size, size_t len)
 {
-    typevec_t *self = typevec_create(size, len);
+    typevec_t *self = typevec_create(size, len, ctu_default_alloc());
     self->used = len;
     return self;
 }
@@ -72,7 +77,7 @@ typevec_t *typevec_of(size_t size, size_t len)
 USE_DECL
 typevec_t *typevec_init(size_t size, const void *value)
 {
-    typevec_t *self = typevec_create(size, 1);
+    typevec_t *self = typevec_create(size, 1, ctu_default_alloc());
     typevec_push(self, value);
     return self;
 }
@@ -120,8 +125,11 @@ void typevec_push(typevec_t *vec, const void *src)
 
     if (vec->used == vec->size)
     {
-        vec->size *= 2;
-        vec->data = ctu_realloc(vec->data, vec->size * vec->type_size);
+        size_t new_size = vec->size * 2;
+
+        vec->data = arena_realloc(vec->arena, vec->data, new_size * vec->type_size, vec->size * vec->type_size);
+
+        vec->size = new_size;
     }
 
     void *dst = get_offset_ptr(vec, vec->used++);
@@ -138,8 +146,11 @@ void typevec_append(typevec_t *vec, const void *src, size_t len)
 
     if (new_len > vec->size)
     {
-        vec->size = MAX(vec->size * 2, new_len);
-        vec->data = ctu_realloc(vec->data, vec->size * vec->type_size);
+        size_t new_size = MAX(vec->size * 2, new_len);
+
+        vec->data = arena_realloc(vec->arena, vec->data, new_size * vec->type_size, vec->size * vec->type_size);
+
+        vec->size = new_size;
     }
 
     void *dst = get_offset_ptr(vec, vec->used);
@@ -190,7 +201,7 @@ void typevec_reverse(IN_NOTNULL typevec_t *vec)
     size_t half = len / 2;
 
     // TODO: if theres spare data at the end of the vector, we should use that
-    char *tmp = ctu_malloc(vec->type_size);
+    char *tmp = ARENA_MALLOC(vec->arena, vec->type_size, "tmp", vec);
 
     for (size_t i = 0; i < half; i++)
     {
@@ -204,5 +215,5 @@ void typevec_reverse(IN_NOTNULL typevec_t *vec)
         memcpy(b, tmp, vec->type_size);
     }
 
-    ctu_free(tmp);
+    arena_free(vec->arena, tmp, vec->type_size);
 }

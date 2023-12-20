@@ -39,7 +39,8 @@ char *vformat(const char *fmt, va_list args)
 
     CTASSERTF(len > 0, "vformat failed to format string: %s", fmt);
 
-    char *out = MEM_ALLOC(len, "vformat", NULL);
+    arena_t *arena = ctu_default_alloc();
+    char *out = ARENA_MALLOC(arena, len, "vformat", NULL);
 
     int result = vsnprintf(out, len, fmt, again);
     CTASSERTF(result == len - 1, "vformat failed to format string: %s (%d == %d - 1)", fmt, result, len);
@@ -88,7 +89,7 @@ char *str_noext(const char *path)
     CTASSERT(path != NULL);
 
     size_t idx = str_rfind(path, ".");
-    char *base = ctu_strdup(path);
+    char *base = ctu_strdup(path, ctu_default_alloc());
     if (idx == SIZE_MAX)
     {
         return base;
@@ -109,7 +110,7 @@ char *str_ext(const char *path)
         return NULL;
     }
 
-    return ctu_strdup(path + idx + 1);
+    return ctu_strdup(path + idx + 1, ctu_default_alloc());
 }
 
 USE_DECL
@@ -134,10 +135,10 @@ char *str_filename(const char *path)
     size_t idx = str_rfind_any(path, PATH_SEPERATORS);
     if (idx == SIZE_MAX)
     {
-        return ctu_strdup(path);
+        return ctu_strdup(path, ctu_default_alloc());
     }
 
-    return ctu_strdup(path + idx + 1);
+    return ctu_strdup(path + idx + 1, ctu_default_alloc());
 }
 
 USE_DECL
@@ -175,13 +176,13 @@ char *str_join(const char *sep, vector_t *parts)
 
     if (all == 0)
     {
-        return ctu_strdup("");
+        return ctu_strdup("", ctu_default_alloc());
     }
     else if (all == 1)
     {
         char *it = vector_get(parts, 0);
         CTASSERT(it != NULL);
-        return ctu_strdup(it);
+        return ctu_strdup(it, ctu_default_alloc());
     }
 
     size_t len = 0;
@@ -201,7 +202,7 @@ char *str_join(const char *sep, vector_t *parts)
 
     CTASSERTF(len > 0, "len = %zu", len);
 
-    char *out = MEM_ALLOC(len + 1, "str_join", NULL);
+    char *out = ARENA_MALLOC(ctu_default_alloc(), len + 1, "str_join", NULL);
     size_t idx = 0;
 
     size_t remaining = len;
@@ -232,12 +233,12 @@ char *str_repeat(const char *str, size_t times)
 
     if (times == 0)
     {
-        return ctu_strdup("");
+        return ctu_strdup("", ctu_default_alloc());
     }
 
     size_t len = strlen(str);
     size_t outlen = len * times;
-    char *out = MEM_ALLOC(outlen + 1, "str_repeat", NULL);
+    char *out = ARENA_MALLOC(ctu_default_alloc(), outlen + 1, "str_repeat", NULL);
     size_t remaining = outlen;
     for (size_t i = 0; i < times; i++)
     {
@@ -350,11 +351,11 @@ char *str_normalize(const char *input)
     // if the string is already normalized, just return a copy
     if (input_length == result_length)
     {
-        return ctu_strndup(input, input_length);
+        return ctu_strndup(input, input_length, ctu_default_alloc());
     }
 
     const char *repl_iter = input;
-    char *buf = MEM_ALLOC(result_length + 1, "str_normalize", NULL);
+    char *buf = ARENA_MALLOC(ctu_default_alloc(), result_length + 1, "str_normalize", NULL);
     char *result = buf;
     while (*repl_iter != '\0')
     {
@@ -379,10 +380,10 @@ char *str_normalizen(const char *str, size_t len)
     // if the string is already normalized, just return a copy
     if (length == len)
     {
-        return ctu_strndup(str, len);
+        return ctu_strndup(str, len, ctu_default_alloc());
     }
 
-    char *buf = MEM_ALLOC(length + 1, "str_normalizen", NULL);
+    char *buf = ARENA_MALLOC(ctu_default_alloc(), length + 1, "str_normalizen", NULL);
     size_t offset = 0;
     for (size_t i = 0; i < len; i++)
     {
@@ -406,7 +407,7 @@ vector_t *str_split(const char *str, const char *sep)
         vector_t *result = vector_new(strlen(str));
         for (size_t i = 0; i < strlen(str); i++)
         {
-            char *c = MEM_ALLOC(2, "str_split", NULL);
+            char *c = ARENA_MALLOC(ctu_default_alloc(), 2, "str_split", NULL);
             c[0] = str[i];
             c[1] = '\0';
             vector_push(&result, c);
@@ -433,12 +434,12 @@ vector_t *str_split(const char *str, const char *sep)
             continue;
         }
 
-        vector_push(&result, ctu_strndup(token, cursor - token));
+        vector_push(&result, ctu_strndup(token, cursor - token, ctu_default_alloc()));
         token = cursor + seplen;
         cursor += seplen;
     }
 
-    vector_push(&result, ctu_strndup(token, cursor - token));
+    vector_push(&result, ctu_strndup(token, cursor - token, ctu_default_alloc()));
 
     return result;
 }
@@ -476,7 +477,7 @@ char *str_replace(const char *str, const char *search, const char *repl)
 
     if (strlen(search) == 0)
     {
-        return ctu_strdup(str);
+        return ctu_strdup(str, ctu_default_alloc());
     }
 
     vector_t *split = str_split(str, search);
@@ -526,7 +527,7 @@ char *str_replace_many(const char *str, map_t *repl)
         }
     }
 
-    char *out = MEM_ALLOC(len + 1, "str_replace_many", NULL);
+    char *out = ARENA_MALLOC(ctu_default_alloc(), len + 1, "str_replace_many", NULL);
 
     size_t offset = 0; // offset into input string
     for (size_t i = 0; i < len;)
@@ -583,7 +584,10 @@ const char *str_common_prefix(vector_t *args)
         return it;
     }
 
-    char **strings = MEM_ALLOC(len * sizeof(char *), "str_common_prefix", NULL);
+    arena_t *arena = ctu_default_alloc();
+
+    size_t size = len * sizeof(char *);
+    char **strings = ARENA_MALLOC(arena, size, "str_common_prefix", NULL);
 
     size_t lower = SIZE_MAX;
 
@@ -597,7 +601,7 @@ const char *str_common_prefix(vector_t *args)
         // find the last path seperator
         // we find the common prefix up to the last path seperator
         size_t find = str_rfind_any(arg, PATH_SEPERATORS) + 1;
-        strings[i] = ctu_strndup(arg, find);
+        strings[i] = ctu_strndup(arg, find, ctu_default_alloc());
 
         lower = MIN(lower, find);
     }
@@ -614,24 +618,24 @@ const char *str_common_prefix(vector_t *args)
         {
             if (strings[j][i] != strings[0][i])
             {
-                result = i == 0 ? "" : ctu_strndup(strings[0], i);
+                result = i == 0 ? "" : ctu_strndup(strings[0], i, ctu_default_alloc());
                 goto finish;
             }
         }
     }
 
     // if we get here, the common prefix is the shortest string
-    result = ctu_strndup(strings[0], lower);
+    result = ctu_strndup(strings[0], lower, ctu_default_alloc());
 
 finish:
     CTASSERT(strings != NULL);
     for (size_t i = 0; i < len; i++)
     {
         CTASSERTF(strings[i] != NULL, "strings[%zu] = NULL", i);
-        ctu_free(strings[i]);
+        arena_free(arena, strings[i], ALLOC_SIZE_UNKNOWN);
     }
 
-    ctu_free(strings);
+    arena_free(arena, strings, size);
 
     CTASSERT(result != NULL);
     return result;
@@ -732,7 +736,7 @@ char *str_trim(const char *str, const char *letters)
         remaining--;
     }
 
-    return ctu_strndup(tmp, remaining);
+    return ctu_strndup(tmp, remaining, ctu_default_alloc());
 }
 
 USE_DECL
@@ -741,7 +745,7 @@ char *str_erase(const char *str, size_t len, const char *letters)
     CTASSERT(str != NULL);
     CTASSERT(letters != NULL);
 
-    char *result = ctu_strndup(str, len);
+    char *result = ctu_strndup(str, len, ctu_default_alloc());
 
     size_t used = len;
     for (size_t i = 0; i < used; i++)
@@ -762,7 +766,7 @@ char *str_upper(const char *str)
 {
     CTASSERT(str != NULL);
 
-    char *result = ctu_strdup(str);
+    char *result = ctu_strdup(str, ctu_default_alloc());
     char *temp = result;
 
     while (*temp)
@@ -779,7 +783,7 @@ char *str_lower(const char *str)
 {
     CTASSERT(str != NULL);
 
-    char *result = ctu_strdup(str);
+    char *result = ctu_strdup(str, ctu_default_alloc());
     char *temp = result;
 
     while (*temp)

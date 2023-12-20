@@ -32,7 +32,7 @@ static void ctu_preparse(driver_t *driver, scan_t *scan)
         .attribs = vector_new(4)
     };
 
-    scan_set_context(scan, BOX(info));
+    scan_set_context(scan, ctu_memdup(&info, sizeof(ctu_scan_t), ctu_default_alloc()));
 }
 
 static void ctu_postparse(driver_t *driver, scan_t *scan, void *tree)
@@ -49,7 +49,7 @@ static void ctu_postparse(driver_t *driver, scan_t *scan, void *tree)
     add_context(lifetime, path, ctx);
 }
 
-static const char *kLangNames[] = { "ct", "ctu", "cthulhu", NULL };
+static const char *const kLangNames[] = { "ct", "ctu", "cthulhu", NULL };
 
 const language_t kCtuModule = {
     .id = "ctu",

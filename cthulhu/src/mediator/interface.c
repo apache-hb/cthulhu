@@ -40,7 +40,6 @@ static void runtime_init(void)
     bt_init();
     scan_init();
 
-    init_global_alloc(ctu_default_alloc());
     init_gmp_alloc(ctu_default_alloc());
 }
 
@@ -89,8 +88,11 @@ mediator_t *mediator_new_noinit(const char *id, version_info_t version)
 {
     CTASSERT(id != NULL);
 
-    mediator_t *self = MEM_ALLOC(sizeof(mediator_t), id, NULL);
+    arena_t *arena = ctu_default_alloc();
 
+    mediator_t *self = ARENA_MALLOC(arena, sizeof(mediator_t), id, NULL);
+
+    self->arena = arena;
     self->id = id;
     self->version = version;
 
@@ -297,8 +299,9 @@ map_t *lifetime_get_modules(lifetime_t *lifetime)
 {
     CTASSERT(lifetime != NULL);
 
+    arena_t *arena = lifetime->alloc;
     map_t *mods = map_optimal(64);
-    MEM_IDENTIFY(mods, "modules", lifetime);
+    ARENA_IDENTIFY(arena, mods, "modules", lifetime);
 
     map_iter_t iter = map_iter(lifetime->modules);
     while (map_has_next(&iter))

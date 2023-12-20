@@ -43,7 +43,7 @@ static AP_EVENT(on_help, ap, param, value, data)
     runtime_t *rt = data;
     ap_print_help_header(ap, rt->argv[0]);
 
-    langs_t langs = get_langs();
+    langs_t langs = get_langs(ctu_default_alloc());
 
 
     printf("\n%zu languages loaded:\n", langs.size);
@@ -91,8 +91,8 @@ static AP_EVENT(on_register_ext, ap, param, value, data)
         return eEventHandled;
     }
 
-    const char *id = ctu_strndup(mapping, split);
-    const char *ext = ctu_strdup(mapping + split + 1);
+    const char *id = ctu_strndup(mapping, split, ctu_default_alloc());
+    const char *ext = ctu_strdup(mapping + split + 1, ctu_default_alloc());
 
     const language_t *lang = lifetime_get_language(rt->lifetime, id);
     if (lang == NULL)
@@ -203,7 +203,8 @@ static AP_ERROR(on_arg_error, ap, node, message, data)
 
 runtime_t cmd_parse(mediator_t *mediator, lifetime_t *lifetime, int argc, const char **argv)
 {
-    ap_t *ap = ap_new("cli", NEW_VERSION(0, 0, 1));
+    arena_t *arena = lifetime_get_arena(lifetime);
+    ap_t *ap = ap_new("cli", NEW_VERSION(0, 0, 1), arena);
 
     runtime_t rt = {
         .argc = argc,
@@ -221,7 +222,7 @@ runtime_t cmd_parse(mediator_t *mediator, lifetime_t *lifetime, int argc, const 
         .sourcePaths = vector_new(16),
     };
 
-    langs_t langs = get_langs();
+    langs_t langs = get_langs(ctu_default_alloc());
     for (size_t i = 0; i < langs.size; i++)
     {
         lifetime_add_language(lifetime, langs.langs + i);

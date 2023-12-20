@@ -44,22 +44,23 @@ static void add_value(ap_t *self, const ap_param_t *param, void *value)
 void ap_on_string(scan_t *scan, where_t where, const ap_param_t *param, const char *value)
 {
     ap_t *self = scan_get(scan);
-    add_value(self, param, ctu_strdup(value));
+    add_value(self, param, ctu_strdup(value, ctu_default_alloc()));
     apply_callbacks(scan, where, param, value, map_get_ptr(self->event_lookup, param));
 }
 
 void ap_on_bool(scan_t *scan, where_t where, const ap_param_t *param, bool value)
 {
     ap_t *self = scan_get(scan);
-    add_value(self, param, BOX(value));
+    add_value(self, param, ctu_memdup(&value, sizeof(bool), ctu_default_alloc()));
     apply_callbacks(scan, where, param, &value, map_get_ptr(self->event_lookup, param));
 }
 
 void ap_on_int(scan_t *scan, where_t where, const ap_param_t *param, mpz_t value)
 {
     ap_t *self = scan_get(scan);
+    arena_t *arena = scan_alloc(scan);
 
-    void *it = MEM_ALLOC(sizeof(mpz_t), param->name, self);
+    void *it = ARENA_MALLOC(arena, sizeof(mpz_t), param->name, self);
     memcpy(it, value, sizeof(mpz_t));
     add_value(self, param, it);
 
@@ -89,5 +90,5 @@ void aperror(where_t *where, void *state, scan_t *scan, const char *msg)
 {
     CTU_UNUSED(state);
 
-    ap_on_error(scan, *where, ctu_strdup(msg));
+    ap_on_error(scan, *where, ctu_strdup(msg, ctu_default_alloc()));
 }

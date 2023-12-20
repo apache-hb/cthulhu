@@ -6,17 +6,6 @@ GFI = good first issue
 
 <h3>First priority</h3>
 
-- rewrite reporting
-    - more detailed location tracking
-    - fix current reports
-    - support for multiple formats
-    - option to disable colouring
-    - complete cthulhu frontend
-    - proper unit testing
-
-- error registry like msvc (GFI)
-
-- rewrite location tracking
 - fix linking to ucrt with clang-cl causing issues (GFI)
 
 - support for feeding sources directly into compilers
@@ -76,7 +65,7 @@ GFI = good first issue
 - unit tests for everything in `/common/`
 - driver specific config support
 - replace mpq with mpfr (rounding is important)
-- profile startup time (GFI)
+- profile startup time during testing (GFI)
     - something is afoot since commit `c64ef228a2a4edd01bd7eb1544e1a2cc05274e1b`
 
 <h3>Bikeshedding</h3>

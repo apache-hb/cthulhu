@@ -8,6 +8,8 @@
 
 typedef struct mediator_t
 {
+    arena_t *arena;
+
     const char *id;
     version_info_t version;
 } mediator_t;

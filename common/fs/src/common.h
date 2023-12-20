@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 typedef struct map_t map_t;
+typedef struct arena_t arena_t;
 
 typedef enum inode_type_t
 {
@@ -50,17 +51,13 @@ typedef struct fs_callbacks_t
 
     fs_file_create_t pfn_create_file;
     fs_file_delete_t pfn_delete_file;
-
-    /// @brief delete the fs
-    /// optional callback if the fs needs extra cleanup.
-    /// eg, releasing locks or other resources
-    fs_delete_t pfn_delete;
 } fs_callbacks_t;
 
 typedef struct fs_t
 {
     const fs_callbacks_t *cb; ///< callbacks
     inode_t *root; ///< root inode
+    arena_t *arena;
 
     char data[];
 } fs_t;
@@ -69,8 +66,9 @@ typedef struct fs_t
 
 extern inode_t gInvalidINode;
 
-inode_t *inode_file(const void *data, size_t size);
-inode_t *inode_dir(const void *data, size_t size);
+inode_t *inode_file(const void *data, size_t size, arena_t *arena);
+inode_t *inode_dir(const void *data, size_t size, arena_t *arena);
+
 void *inode_data(inode_t *inode);
 bool inode_is(inode_t *inode, inode_type_t type);
 
@@ -80,6 +78,6 @@ OS_RESULT(bool) mkdir_recursive(const char *path);
 
 // fs api
 
-fs_t *fs_new(inode_t *root, const fs_callbacks_t *cb, const void *data, size_t size);
+fs_t *fs_new(inode_t *root, const fs_callbacks_t *cb, const void *data, size_t size, arena_t *arena);
 
 void *fs_data(fs_t *fs);

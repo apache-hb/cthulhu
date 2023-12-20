@@ -32,7 +32,7 @@ void cfg_set_string(cfg_field_t *field, const char *value)
 {
     ASSERT_FIELD_TYPE(field, eConfigString);
 
-    field->string_value = ctu_strdup(value);
+    field->string_value = ctu_strdup(value, ctu_default_alloc());
 }
 
 bool cfg_set_enum(cfg_field_t *field, const char *choice)

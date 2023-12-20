@@ -57,7 +57,7 @@ static const io_callbacks_t kViewCallbacks = {
 };
 
 USE_DECL
-io_t *io_view(const char *name, const void *data, size_t size)
+io_t *io_view(const char *name, const void *data, size_t size, arena_t *arena)
 {
     os_access_t flags = eAccessRead;
 
@@ -67,11 +67,11 @@ io_t *io_view(const char *name, const void *data, size_t size)
         .offset = 0
     };
 
-    return io_new(&kViewCallbacks, flags, name, &view, sizeof(view_t));
+    return io_new(&kViewCallbacks, flags, name, &view, sizeof(view_t), arena);
 }
 
 USE_DECL
-io_t *io_string(const char *name, const char *string)
+io_t *io_string(const char *name, const char *string, arena_t *arena)
 {
-    return io_view(name, string, strlen(string));
+    return io_view(name, string, strlen(string), arena);
 }

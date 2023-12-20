@@ -94,6 +94,8 @@ typedef struct io_t
     /// @brief the access flags for this object
     os_access_t flags;
 
+    arena_t *arena;
+
     /// @brief the name of this object
     const char *name;
 
@@ -126,6 +128,7 @@ io_t *io_new(
     os_access_t flags,
     IN_STRING const char *name,
     IN_READS(size) const void *data,
-    IN_RANGE(>, 0) size_t size);
+    IN_RANGE(>, 0) size_t size,
+    arena_t *arena);
 
 /// @}

@@ -75,22 +75,22 @@ static const char *get_relative(inode_t *node, const char *path)
     return format("%s" NATIVE_PATH_SEPARATOR "%s", dir->path, path);
 }
 
-static inode_t *physical_dir(const char *path)
+static inode_t *physical_dir(const char *path, arena_t *arena)
 {
     physical_dir_t dir = {
         .path = path
     };
 
-    return inode_dir(&dir, sizeof(physical_dir_t));
+    return inode_dir(&dir, sizeof(physical_dir_t), arena);
 }
 
-static inode_t *physical_file(const char *path)
+static inode_t *physical_file(const char *path, arena_t *arena)
 {
     physical_file_t file = {
         .path = path
     };
 
-    return inode_file(&file, sizeof(physical_file_t));
+    return inode_file(&file, sizeof(physical_file_t), arena);
 }
 
 static inode_t *pfs_query_node(fs_t *fs, inode_t *self, const char *name)
@@ -104,9 +104,9 @@ static inode_t *pfs_query_node(fs_t *fs, inode_t *self, const char *name)
     switch (OS_VALUE_OR(os_dirent_t, dirent, eOsNodeNone))
     {
     case eOsNodeFile:
-        return physical_file(relative);
+        return physical_file(relative, fs->arena);
     case eOsNodeDir:
-        return physical_dir(relative);
+        return physical_dir(relative, fs->arena);
     default:
         return &gInvalidINode;
     }
@@ -145,7 +145,7 @@ static map_t *pfs_query_dirents(fs_t *fs, inode_t *self)
 static io_t *pfs_query_file(fs_t *fs, inode_t *self, os_access_t flags)
 {
     const char *absolute = get_absolute(fs, self, NULL);
-    return io_file(absolute, flags);
+    return io_file(absolute, flags, fs->arena);
 }
 
 static inode_t *pfs_file_create(fs_t *fs, inode_t *self, const char *name)
@@ -154,7 +154,7 @@ static inode_t *pfs_file_create(fs_t *fs, inode_t *self, const char *name)
     OS_RESULT(bool) check = os_file_create(absolute);
     CTASSERTF(os_error(check) == 0, "failed to create file `%s` %s", absolute, os_error_string(os_error(check)));
 
-    return physical_file(get_relative(self, name));
+    return physical_file(get_relative(self, name), fs->arena);
 }
 
 static inode_t *pfs_dir_create(fs_t *fs, inode_t *self, const char *name)
@@ -163,7 +163,7 @@ static inode_t *pfs_dir_create(fs_t *fs, inode_t *self, const char *name)
     OS_RESULT(bool) create = os_dir_create(absolute);
     CTASSERTF(os_error(create) == 0, "failed to create dir `%s` %s", absolute, os_error_string(os_error(create)));
 
-    return physical_dir(get_relative(self, name));
+    return physical_dir(get_relative(self, name), fs->arena);
 }
 
 static void pfs_dir_delete(fs_t *fs, inode_t *self, const char *name)
@@ -192,7 +192,7 @@ static const fs_callbacks_t kPhysicalInterface = {
     .pfn_delete_file = pfs_file_delete
 };
 
-fs_t *fs_physical(const char *root)
+fs_t *fs_physical(const char *root, arena_t *arena)
 {
     CTASSERT(root != NULL);
 
@@ -214,7 +214,7 @@ fs_t *fs_physical(const char *root)
         .root = root
     };
 
-    inode_t *dir = physical_dir(".");
+    inode_t *dir = physical_dir(".", arena);
 
-    return fs_new(dir, &kPhysicalInterface, &self, sizeof(physical_t));
+    return fs_new(dir, &kPhysicalInterface, &self, sizeof(physical_t), arena);
 }

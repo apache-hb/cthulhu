@@ -327,30 +327,30 @@ void fs_dir_delete(fs_t *fs, const char *path)
 
 // fs sync
 
-static void sync_file(fs_t *dst, fs_t *src, inode_t *dstNode, inode_t *srcNode)
+static void sync_file(fs_t *dst_fs, fs_t *src_fs, inode_t *dst_node, inode_t *src_node)
 {
-    CTASSERT(inode_is(dstNode, eNodeFile));
-    CTASSERT(inode_is(srcNode, eNodeFile));
+    CTASSERT(inode_is(dst_node, eNodeFile));
+    CTASSERT(inode_is(src_node, eNodeFile));
 
-    io_t *srcIo = query_file(src, srcNode, eAccessRead);
-    io_t *dstIo = query_file(dst, dstNode, eAccessWrite);
+    io_t *src_io = query_file(src_fs, src_node, eAccessRead);
+    io_t *dst_io = query_file(dst_fs, dst_node, eAccessWrite);
 
-    size_t size = io_size(srcIo);
+    size_t size = io_size(src_io);
     if (size > 0)
     {
-        void *data = ctu_malloc(size);
+        void *data = ARENA_MALLOC(dst_fs->arena, size, "tmp", NULL);
 
-        size_t read = io_read(srcIo, data, size);
-        io_write(dstIo, data, read);
+        size_t read = io_read(src_io, data, size);
+        io_write(dst_io, data, read);
     }
 
-    io_close(dstIo);
-    io_close(srcIo);
+    io_close(dst_io);
+    io_close(src_io);
 }
 
-static sync_result_t sync_dir(fs_t *dst, fs_t *src, inode_t *dstNode, inode_t *srcNode)
+static sync_result_t sync_dir(fs_t *dst, fs_t *src, inode_t *dst_node, inode_t *src_node)
 {
-    map_t *dirents = query_dirents(src, srcNode);
+    map_t *dirents = query_dirents(src, src_node);
     map_iter_t iter = map_iter(dirents);
     while (map_has_next(&iter))
     {
@@ -358,7 +358,7 @@ static sync_result_t sync_dir(fs_t *dst, fs_t *src, inode_t *dstNode, inode_t *s
         const char *name = entry.key;
         inode_t *child = entry.value;
 
-        inode_t *other = get_inode_for(dst, dstNode, name, child->type);
+        inode_t *other = get_inode_for(dst, dst_node, name, child->type);
         if (other == NULL)
         {
             sync_result_t result = { .path = name };

@@ -13,24 +13,24 @@ inode_t gInvalidINode = {
     .type = eNodeInvalid
 };
 
-static inode_t *inode_new(inode_type_t type, const void *data, size_t size)
+static inode_t *inode_new(inode_type_t type, const void *data, size_t size, arena_t *arena)
 {
     CTASSERT(type < eNodeTotal);
 
-    inode_t *inode = MEM_ALLOC(sizeof(inode_t) + size, "inode", NULL);
+    inode_t *inode = ARENA_MALLOC(arena, sizeof(inode_t) + size, "inode", NULL);
     inode->type = type;
     memcpy(inode->data, data, size);
     return inode;
 }
 
-inode_t *inode_file(const void *data, size_t size)
+inode_t *inode_file(const void *data, size_t size, arena_t *arena)
 {
-    return inode_new(eNodeFile, data, size);
+    return inode_new(eNodeFile, data, size, arena);
 }
 
-inode_t *inode_dir(const void *data, size_t size)
+inode_t *inode_dir(const void *data, size_t size, arena_t *arena)
 {
-    return inode_new(eNodeDir, data, size);
+    return inode_new(eNodeDir, data, size, arena);
 }
 
 void *inode_data(inode_t *inode)
@@ -56,7 +56,7 @@ OS_RESULT(bool) mkdir_recursive(const char *path)
     if (index != SIZE_MAX)
     {
         // create parent directory
-        char *parent = ctu_strndup(path, index);
+        char *parent = ctu_strndup(path, index, ctu_default_alloc());
         OS_RESULT(bool) result = mkdir_recursive(parent);
         if (os_error(result) != 0) { return result; }
     }
@@ -67,23 +67,12 @@ OS_RESULT(bool) mkdir_recursive(const char *path)
 
 // fs api
 
-void fs_delete(fs_t *fs)
-{
-    CTASSERT(fs != NULL);
-
-    if (fs->cb->pfn_delete != NULL)
-    {
-        fs->cb->pfn_delete(fs);
-    }
-
-    ctu_free(fs);
-}
-
-fs_t *fs_new(inode_t *root, const fs_callbacks_t *cb, const void *data, size_t size)
+fs_t *fs_new(inode_t *root, const fs_callbacks_t *cb, const void *data, size_t size, arena_t *arena)
 {
     CTASSERT(cb != NULL);
 
-    fs_t *fs = MEM_ALLOC(sizeof(fs_t) + size, "fs", cb);
+    fs_t *fs = ARENA_MALLOC(arena, sizeof(fs_t) + size, "fs", cb);
+    fs->arena = arena;
     fs->cb = cb;
     fs->root = root;
 

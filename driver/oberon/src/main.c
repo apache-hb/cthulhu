@@ -22,7 +22,7 @@ static void obr_preparse(driver_t *handle, scan_t *scan)
         .reports = reports,
     };
 
-    scan_set_context(scan, BOX(info));
+    scan_set_context(scan, ctu_memdup(&info, sizeof(obr_scan_t), ctu_default_alloc()));
 }
 
 static void obr_postparse(driver_t *handle, scan_t *scan, void *tree)

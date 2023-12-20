@@ -36,7 +36,7 @@ static size_t mem_write(io_t *self, const void *src, size_t size)
     mem->used = MAX(mem->used, mem->offset + size);
     if (mem->offset + size > mem->total)
     {
-        mem->data = ctu_realloc(mem->data, mem->offset + size);
+        mem->data = arena_realloc(self->arena, mem->data, mem->offset + size, mem->total);
         mem->total = mem->offset + size;
     }
 
@@ -63,7 +63,7 @@ static const void *mem_map(io_t *self)
 {
     buffer_t *mem = mem_data(self);
 
-    void *it = MEM_ALLOC(mem->used, "mem_map", self);
+    void *it = ARENA_MALLOC(self->arena, mem->used, "mem_map", self);
     memcpy(it, mem->data, mem->used);
 
     return it;
@@ -72,7 +72,7 @@ static const void *mem_map(io_t *self)
 static void mem_close(io_t *self)
 {
     buffer_t *mem = mem_data(self);
-    ctu_free(mem->data);
+    arena_free(self->arena, mem->data, mem->total);
 }
 
 static const io_callbacks_t kBufferCallbacks = {
@@ -87,12 +87,12 @@ static const io_callbacks_t kBufferCallbacks = {
 };
 
 USE_DECL
-io_t *io_memory(const char *name, const void *data, size_t size, os_access_t flags)
+io_t *io_memory(const char *name, const void *data, size_t size, os_access_t flags, arena_t *arena)
 {
     CTASSERT(data != NULL);
 
     buffer_t buffer = {
-        .data = MEM_ALLOC(size, "memory", NULL),
+        .data = ARENA_MALLOC(arena, size, "memory", NULL),
         .total = size,
         .used = size,
         .offset = 0
@@ -100,22 +100,22 @@ io_t *io_memory(const char *name, const void *data, size_t size, os_access_t fla
 
     memcpy(buffer.data, data, size);
 
-    io_t *io = io_new(&kBufferCallbacks, flags, name, &buffer, sizeof(buffer_t));
-    MEM_REPARENT(buffer.data, io);
+    io_t *io = io_new(&kBufferCallbacks, flags, name, &buffer, sizeof(buffer_t), arena);
+    ARENA_REPARENT(arena, buffer.data, io);
     return io;
 }
 
 USE_DECL
-io_t *io_blob(const char *name, size_t size, os_access_t flags)
+io_t *io_blob(const char *name, size_t size, os_access_t flags, arena_t *arena)
 {
     buffer_t buffer = {
-        .data = MEM_ALLOC(size, "blob", NULL),
+        .data = ARENA_MALLOC(arena, size, "blob", NULL),
         .total = size,
         .used = 0,
         .offset = 0
     };
 
-    io_t *io = io_new(&kBufferCallbacks, flags, name, &buffer, sizeof(buffer_t));
-    MEM_REPARENT(buffer.data, io);
+    io_t *io = io_new(&kBufferCallbacks, flags, name, &buffer, sizeof(buffer_t), arena);
+    ARENA_REPARENT(arena, buffer.data, io);
     return io;
 }

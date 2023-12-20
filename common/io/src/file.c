@@ -85,14 +85,14 @@ static const io_callbacks_t kFileCallbacks = {
 };
 
 USE_DECL
-io_t *io_file(const char *path, os_access_t mode)
+io_t *io_file(const char *path, os_access_t mode, arena_t *arena)
 {
     OS_RESULT(os_file_t *) file = os_file_open(path, mode);
 
     os_file_t *fd = os_value(file);
     io_file_t it = { .file = fd };
 
-    io_t *io = io_new(&kFileCallbacks, mode, path, &it, sizeof(io_file_t));
+    io_t *io = io_new(&kFileCallbacks, mode, path, &it, sizeof(io_file_t), arena);
     io->error = os_error(file);
 
     return io;

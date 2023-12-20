@@ -28,7 +28,8 @@ static char *join_args(int argc, const char **argv)
 int ap_parse(ap_t *self, int argc, const char **argv)
 {
     char *args = join_args(argc, argv);
-    io_t *io = io_string("<command-line>", args);
+    arena_t *arena = ctu_default_alloc();
+    io_t *io = io_string("<command-line>", args, arena);
     scan_t *scan = scan_io("ap2", io, ctu_default_alloc());
 
     scan_set(scan, self);

@@ -47,6 +47,8 @@ CALLBACK_TYPE(ap_callback_t, ap_event_t)
 CALLBACK_TYPE(ap_err_callback_t, ap_error_t)
 
 typedef struct ap_t {
+    arena_t *arena;
+
     const char *desc;
     version_t version;
 

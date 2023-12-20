@@ -1,7 +1,7 @@
 #include "io/impl.h"
 
 #include "base/panic.h"
-#include "memory/memory.h"
+#include "memory/arena.h"
 
 #include <string.h>
 
@@ -13,7 +13,7 @@ void *io_data(io_t *io)
 }
 
 io_t *io_new(const io_callbacks_t *cb, os_access_t flags, const char *name, const void *data,
-             size_t size)
+             size_t size, arena_t *arena)
 {
     CTASSERT(cb != NULL);
     CTASSERT(name != NULL);
@@ -25,7 +25,7 @@ io_t *io_new(const io_callbacks_t *cb, os_access_t flags, const char *name, cons
     if (flags & eAccessRead)
         CTASSERTF(cb->fn_read != NULL, "%s provided no `fn_read` for a readable object", name);
 
-    io_t *io = MEM_ALLOC(sizeof(io_t) + size, name, NULL);
+    io_t *io = ARENA_MALLOC(arena, sizeof(io_t) + size, name, NULL);
 
     if (size > 0)
     {
@@ -37,6 +37,7 @@ io_t *io_new(const io_callbacks_t *cb, os_access_t flags, const char *name, cons
     io->name = name;
     io->flags = flags;
     io->error = 0;
+    io->arena = arena;
 
     return io;
 }

@@ -43,6 +43,8 @@ typedef struct bt_entry_t
 /// @brief a backtrace report context
 typedef struct bt_report_t
 {
+    arena_t *arena;
+
     /// @brief all entries
     /// @note sequentially recursive frames are combined into a single entry
     typevec_t *entries;
@@ -364,9 +366,9 @@ static bool check_recurse(bt_report_t *report, const frame_t *frame)
     return true;
 }
 
-bt_report_t *bt_report_new(void)
+bt_report_t *bt_report_new(arena_t *arena)
 {
-    bt_report_t *report = MEM_ALLOC(sizeof(bt_report_t), "bt_report", NULL);
+    bt_report_t *report = ARENA_MALLOC(arena, sizeof(bt_report_t), "bt_report", NULL);
 
     report->entries = typevec_new(sizeof(bt_entry_t), 4);
     report->longest_symbol = 0;
@@ -382,9 +384,9 @@ static void read_stacktrace_frame(void *user, const frame_t *frame)
     bt_report_add(user, frame);
 }
 
-bt_report_t *bt_report_collect(void)
+bt_report_t *bt_report_collect(arena_t *arena)
 {
-    bt_report_t *report = bt_report_new();
+    bt_report_t *report = bt_report_new(arena);
 
     bt_read(read_stacktrace_frame, report);
 
@@ -411,8 +413,8 @@ void bt_report_add(bt_report_t *report, const frame_t *frame)
     bt_entry_t entry = {
         .info = info,
 
-        .file = ctu_strdup(symbol.file),
-        .symbol = ctu_strdup(symbol.name),
+        .file = ctu_strdup(symbol.file, report->arena),
+        .symbol = ctu_strdup(symbol.name, report->arena),
         .line = symbol.line,
         .address = (void*)frame->address,
     };

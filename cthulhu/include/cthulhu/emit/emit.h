@@ -11,6 +11,7 @@ BEGIN_API
 
 typedef struct ssa_module_t ssa_module_t;
 typedef struct logger_t logger_t;
+typedef struct arena_t arena_t;
 
 typedef struct io_t io_t;
 typedef struct fs_t fs_t;
@@ -25,6 +26,8 @@ typedef struct map_t map_t;
 /// @brief common code emitter options
 typedef struct emit_options_t
 {
+    arena_t *arena;
+
     /// @brief reporting sink
     logger_t *reports;
 

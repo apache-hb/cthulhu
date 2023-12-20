@@ -53,7 +53,7 @@ static void parse_source(lifetime_t *lifetime, const char *path)
         return;
     }
 
-    io_t *io = io_file(path, eAccessRead);
+    io_t *io = io_file(path, eAccessRead, ctu_default_alloc());
     if (io_error(io) != 0)
     {
         event_t *id = msg_notify(reports, &kEvent_FailedToOpenSourceFile, node_builtin(),
@@ -95,13 +95,14 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
 
 int main(int argc, const char **argv)
 {
+    arena_t *arena = ctu_default_alloc();
     mediator_t *mediator = mediator_new("cli", kVersionInfo);
-    lifetime_t *lifetime = lifetime_new(mediator, ctu_default_alloc());
+    lifetime_t *lifetime = lifetime_new(mediator, arena);
     logger_t *reports = lifetime_get_logger(lifetime);
 
     runtime_t rt = cmd_parse(mediator, lifetime, argc, argv);
 
-    io_t *msg_buffer = io_blob("buffer", 0x1000, eAccessWrite | eAccessText);
+    io_t *msg_buffer = io_blob("buffer", 0x1000, eAccessWrite | eAccessText, arena);
 
     text_config_t text_config = {
         .config = {
@@ -154,9 +155,10 @@ int main(int argc, const char **argv)
     ssa_opt(reports, ssa);
     CHECK_LOG(reports, "optimizing ssa");
 
-    fs_t *fs = fs_virtual("out");
+    fs_t *fs = fs_virtual("out", arena);
 
     emit_options_t base_emit_options = {
+        .arena = arena,
         .reports = reports,
         .fs = fs,
 
@@ -178,7 +180,7 @@ int main(int argc, const char **argv)
     CHECK_LOG(reports, "emitting c89");
 
     const char *outpath = "out";
-    fs_t *out = fs_physical(outpath);
+    fs_t *out = fs_physical(outpath, arena);
     if (out == NULL)
     {
         msg_notify(reports, &kEvent_FailedToCreateOutputDirectory, node_builtin(),

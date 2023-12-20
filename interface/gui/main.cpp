@@ -466,7 +466,6 @@ int main(int argc, const char **argv)
 
     EditorUi ui;
 
-    init_global_alloc(ctu_default_alloc());
     ui.init_mediator();
 
     while (draw::begin_frame())

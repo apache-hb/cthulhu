@@ -28,14 +28,14 @@ static ctu_attrib_t *get_attrib(tree_t *sema, vector_t *path)
     return ctu_get_attrib(sema, name);
 }
 
-static ctu_attrib_t *attrib_create(const char *name, ctu_attrib_apply_t fn_apply)
+static ctu_attrib_t *attrib_create(const char *name, ctu_attrib_apply_t fn_apply, arena_t *arena)
 {
     CTASSERT(name != NULL);
     CTASSERT(fn_apply != NULL);
 
-    ctu_attrib_t *it = MEM_ALLOC(sizeof(ctu_attrib_t), name, NULL);
+    ctu_attrib_t *it = ARENA_MALLOC(arena, sizeof(ctu_attrib_t), name, NULL);
     it->name = name;
-    it->fnApply = fn_apply;
+    it->fn_apply = fn_apply;
     return it;
 }
 
@@ -120,7 +120,7 @@ static void apply_entry(tree_t *sema, tree_t *decl, vector_t *args)
         return;
     }
 
-    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t));
+    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t), ctu_default_alloc());
     copy->link = get_linkage(sema, decl, args);
     tree_set_attrib(decl, copy);
 }
@@ -143,7 +143,7 @@ static void apply_deprecated(tree_t *sema, tree_t *decl, vector_t *args)
     const char *msg = get_first_string(sema, decl, args);
     if (msg == NULL) { return; }
 
-    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t));
+    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t), ctu_default_alloc());
     copy->deprecated = msg;
     tree_set_attrib(decl, copy);
 }
@@ -166,7 +166,7 @@ static void apply_section(tree_t *sema, tree_t *decl, vector_t *args)
     const char *msg = get_first_string(sema, decl, args);
     if (msg == NULL) { return; }
 
-    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t));
+    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t), ctu_default_alloc());
     copy->section = msg;
     tree_set_attrib(decl, copy);
 }
@@ -186,7 +186,7 @@ static void apply_extern(tree_t *sema, tree_t *decl, vector_t *args)
         return;
     }
 
-    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t));
+    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t), ctu_default_alloc());
     if (vector_len(args) == 0)
     {
         copy->mangle = tree_get_name(decl);
@@ -214,21 +214,21 @@ static void apply_layout(tree_t *sema, tree_t *decl, vector_t *args)
     msg_notify(sema->reports, &kEvent_UnimplementedAttribute, tree_get_node(decl), "layout attribute not implemented");
 }
 
-void ctu_init_attribs(tree_t *sema)
+void ctu_init_attribs(tree_t *sema, arena_t *arena)
 {
-    ctu_attrib_t *entry = attrib_create("entry", apply_entry);
+    ctu_attrib_t *entry = attrib_create("entry", apply_entry, arena);
     tree_module_set(sema, eCtuTagAttribs, entry->name, entry);
 
-    ctu_attrib_t *deprecated = attrib_create("deprecated", apply_deprecated);
+    ctu_attrib_t *deprecated = attrib_create("deprecated", apply_deprecated, arena);
     tree_module_set(sema, eCtuTagAttribs, deprecated->name, deprecated);
 
-    ctu_attrib_t *section = attrib_create("section", apply_section);
+    ctu_attrib_t *section = attrib_create("section", apply_section, arena);
     tree_module_set(sema, eCtuTagAttribs, section->name, section);
 
-    ctu_attrib_t *attrib_extern = attrib_create("extern", apply_extern);
+    ctu_attrib_t *attrib_extern = attrib_create("extern", apply_extern, arena);
     tree_module_set(sema, eCtuTagAttribs, attrib_extern->name, attrib_extern);
 
-    ctu_attrib_t *layout = attrib_create("layout", apply_layout);
+    ctu_attrib_t *layout = attrib_create("layout", apply_layout, arena);
     tree_module_set(sema, eCtuTagAttribs, layout->name, layout);
 }
 
@@ -247,6 +247,6 @@ void ctu_apply_attribs(tree_t *sema, tree_t *decl, vector_t *attribs)
             continue;
         }
 
-        it->fnApply(sema, decl, attrib->attribArgs);
+        it->fn_apply(sema, decl, attrib->attribArgs);
     }
 }

@@ -41,12 +41,12 @@ OPT [a-zA-Z0-9\-\:]
 }
 
 [a-zA-Z0-9_.,/;:\\\-]+ {
-    yylval->ident = ctu_strdup(yytext);
+    yylval->ident = ctu_strdup(yytext, ctu_default_alloc());
     return IDENT;
 }
 
 \"(\\.|[^"\\])*\" {
-    yylval->ident = ctu_strndup(yytext + 1, yyleng - 2);
+    yylval->ident = ctu_strndup(yytext + 1, yyleng - 2, ctu_default_alloc());
     return IDENT;
 }
 

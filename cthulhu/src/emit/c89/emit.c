@@ -8,16 +8,16 @@
 
 #include "fs/fs.h"
 
-#include "memory/memory.h"
+#include "memory/arena.h"
 
 #include "base/panic.h"
 #include "core/macros.h"
 
 #include <string.h>
 
-static c89_source_t *source_new(io_t *io, const char *path)
+static c89_source_t *source_new(io_t *io, const char *path, arena_t *arena)
 {
-    c89_source_t *source = MEM_ALLOC(sizeof(c89_source_t), path, io);
+    c89_source_t *source = ARENA_MALLOC(arena, sizeof(c89_source_t), path, io);
     source->io = io;
     source->path = path;
     return source;
@@ -29,7 +29,7 @@ static c89_source_t *header_for(c89_emit_t *emit, const ssa_module_t *mod, const
     fs_file_create(emit->fs, it);
 
     io_t *io = fs_open(emit->fs, it, eAccessWrite | eAccessText);
-    c89_source_t *source = source_new(io, format("%s.h", path));
+    c89_source_t *source = source_new(io, format("%s.h", path), emit->arena);
     map_set_ptr(emit->hdrmap, mod, source);
     return source;
 }
@@ -40,7 +40,7 @@ static c89_source_t *source_for(c89_emit_t *emit, const ssa_module_t *mod, const
     fs_file_create(emit->fs, it);
 
     io_t *io = fs_open(emit->fs, it, eAccessWrite | eAccessText);
-    c89_source_t *source = source_new(io, it);
+    c89_source_t *source = source_new(io, it, emit->arena);
     map_set_ptr(emit->srcmap, mod, source);
     return source;
 }
@@ -792,6 +792,7 @@ c89_emit_result_t emit_c89(const c89_emit_options_t *options)
     size_t len = vector_len(opts.modules);
 
     c89_emit_t emit = {
+        .arena = opts.arena,
         .emit = {
             .reports = opts.reports,
             .block_names = names_new(64),

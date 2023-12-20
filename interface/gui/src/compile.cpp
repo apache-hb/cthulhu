@@ -2,6 +2,7 @@
 
 #include "cthulhu/mediator/interface.h"
 
+#include "memory/memory.h"
 #include "notify/notify.h"
 
 #include "io/io.h"
@@ -36,7 +37,7 @@ char *CompileInfo::parse_source(size_t index)
         return format("could not find language for `%s` by extension `%s`", basepath, ext);
     }
 
-    io_t *io = io_file(path, eAccessRead);
+    io_t *io = io_file(path, eAccessRead, ctu_default_alloc());
     if (os_error_t err = io_error(io); err != 0)
     {
         return format("could not open file '%s' (os error: %s)", path, os_error_string(err));
@@ -48,7 +49,6 @@ char *CompileInfo::parse_source(size_t index)
 
 void CompileInfo::init_alloc()
 {
-    global.install_global();
     gmp.install_gmp();
 }
 
@@ -56,7 +56,7 @@ void CompileInfo::init_lifetime()
 {
     lifetime = lifetime_new(mediator, &global);
 
-    langs_t langs = get_langs();
+    langs_t langs = get_langs(ctu_default_alloc());
     for (size_t i = 0; i < langs.size; i++)
     {
         lifetime_add_language(lifetime, &langs.langs[i]);

@@ -27,9 +27,9 @@ static const io_callbacks_t kConsoleCallbacks = {
     .fn_close = NULL
 };
 
-io_t *io_stdout(void)
+io_t *io_stdout(arena_t *arena)
 {
     io_console_t console = { 0 };
 
-    return io_new(&kConsoleCallbacks, eAccessWrite, "stdout", &console, sizeof(io_console_t));
+    return io_new(&kConsoleCallbacks, eAccessWrite, "stdout", &console, sizeof(io_console_t), arena);
 }

@@ -31,6 +31,8 @@ typedef struct ssa_compile_t
 
     /// internal data
 
+    arena_t *arena;
+
     /// @brief all globals in the program
     /// map<tree, ssa_symbol>
     map_t *globals;
@@ -96,7 +98,7 @@ static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const tree_t *tree, ssa_s
     const ssa_type_t *type = ssa_type_create_cached(ssa->types, tree_get_type(tree));
     const tree_attribs_t *attrib = tree_get_attrib(tree);
 
-    ssa_symbol_t *symbol = MEM_ALLOC(sizeof(ssa_symbol_t), name, NULL);
+    ssa_symbol_t *symbol = ARENA_MALLOC(ssa->arena, sizeof(ssa_symbol_t), name, ssa);
     symbol->linkage = attrib->link;
     symbol->visibility = attrib->visibility;
     symbol->link_name = attrib->mangle;
@@ -176,7 +178,7 @@ static ssa_module_t *module_create(ssa_compile_t *ssa, const char *name)
 {
     vector_t *path = vector_clone(ssa->path);
 
-    ssa_module_t *mod = MEM_ALLOC(sizeof(ssa_module_t), name, NULL);
+    ssa_module_t *mod = ARENA_MALLOC(ssa->arena, sizeof(ssa_module_t), name, ssa);
     mod->name = name;
     mod->path = path;
 
@@ -238,9 +240,9 @@ static ssa_operand_t add_step(ssa_compile_t *ssa, ssa_step_t step)
     return bb_add_step(ssa->current_block, step);
 }
 
-static ssa_block_t *ssa_block_create(ssa_symbol_t *symbol, const char *name, size_t size)
+static ssa_block_t *ssa_block_create(ssa_symbol_t *symbol, const char *name, size_t size, arena_t *arena)
 {
-    ssa_block_t *bb = MEM_ALLOC(sizeof(ssa_block_t), name, symbol);
+    ssa_block_t *bb = ARENA_MALLOC(arena, sizeof(ssa_block_t), name, symbol);
     bb->name = name;
     bb->steps = typevec_new(sizeof(ssa_step_t), size);
     vector_push(&symbol->blocks, bb);
@@ -255,9 +257,9 @@ static ssa_operand_t compile_branch(ssa_compile_t *ssa, const tree_t *branch)
     ssa_operand_t cond = compile_tree(ssa, branch->cond);
     ssa_block_t *current = ssa->current_block;
 
-    ssa_block_t *tail_block = ssa_block_create(ssa->current_symbol, "tail", 0);
-    ssa_block_t *then_block = ssa_block_create(ssa->current_symbol, "then", 0);
-    ssa_block_t *else_block = branch->other != NULL ? ssa_block_create(ssa->current_symbol, "other", 0) : NULL;
+    ssa_block_t *tail_block = ssa_block_create(ssa->current_symbol, "tail", 0, ssa->arena);
+    ssa_block_t *then_block = ssa_block_create(ssa->current_symbol, "then", 0, ssa->arena);
+    ssa_block_t *else_block = branch->other != NULL ? ssa_block_create(ssa->current_symbol, "other", 0, ssa->arena) : NULL;
 
     ssa_step_t step = {
         .opcode = eOpBranch,
@@ -312,11 +314,11 @@ static ssa_operand_t compile_loop(ssa_compile_t *ssa, const tree_t *tree)
     * .tail:
     *
     */
-    ssa_block_t *loop_block = ssa_block_create(ssa->current_symbol, NULL, 0);
-    ssa_block_t *body_block = ssa_block_create(ssa->current_symbol, NULL, 0);
-    ssa_block_t *tail_block = ssa_block_create(ssa->current_symbol, NULL, 0);
+    ssa_block_t *loop_block = ssa_block_create(ssa->current_symbol, NULL, 0, ssa->arena);
+    ssa_block_t *body_block = ssa_block_create(ssa->current_symbol, NULL, 0, ssa->arena);
+    ssa_block_t *tail_block = ssa_block_create(ssa->current_symbol, NULL, 0, ssa->arena);
 
-    ssa_loop_t *save = MEM_ALLOC(sizeof(ssa_loop_t), "ssa_loop", NULL);
+    ssa_loop_t *save = ARENA_MALLOC(ssa->arena, sizeof(ssa_loop_t), "ssa_loop", ssa);
     save->enter_loop = body_block;
     save->exit_loop = tail_block;
     map_set_ptr(ssa->symbol_loops, tree, save);
@@ -740,7 +742,7 @@ static void compile_module(ssa_compile_t *ssa, const tree_t *tree)
 
 static void begin_compile(ssa_compile_t *ssa, ssa_symbol_t *symbol)
 {
-    ssa_block_t *bb = ssa_block_create(symbol, "entry", 4);
+    ssa_block_t *bb = ssa_block_create(symbol, "entry", 4, ssa->arena);
 
     symbol->entry = bb;
     ssa->current_block = bb;
@@ -822,6 +824,8 @@ ssa_result_t ssa_compile(map_t *mods)
     ssa_map_sizes_t sizes = predict_maps(mods);
 
     ssa_compile_t ssa = {
+        .arena = ctu_default_alloc(),
+
         .modules = vector_new(sizes.modules),
         .symbol_deps = map_optimal(sizes.deps),
 

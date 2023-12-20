@@ -64,7 +64,7 @@ static size_t vfs_write(io_t *self, const void *src, size_t size)
     if (io->offset + size > data->size)
     {
         size_t new_size = MAX(data->size * 2, io->offset + size);
-        data->data = ctu_realloc(data->data, new_size);
+        data->data = arena_realloc(self->arena, data->data, new_size, data->size);
         data->size = new_size;
     }
 
@@ -110,25 +110,25 @@ static const io_callbacks_t kVirtualCallbacks = {
     .fn_close = vfs_close
 };
 
-static io_t *vfs_io(virtual_file_t *file, os_access_t flags)
+static io_t *vfs_io(virtual_file_t *file, os_access_t flags, arena_t *arena)
 {
     virtual_io_t io = {
         .data = file,
         .offset = 0
     };
 
-    return io_new(&kVirtualCallbacks, flags, file->name, &io, sizeof(virtual_io_t));
+    return io_new(&kVirtualCallbacks, flags, file->name, &io, sizeof(virtual_io_t), arena);
 }
 
 // fs impl
 
-static inode_t *virtual_dir(void)
+static inode_t *virtual_dir(arena_t *arena)
 {
     virtual_dir_t dir = {
         .dirents = map_new(64)
     };
 
-    return inode_dir(&dir, sizeof(virtual_dir_t));
+    return inode_dir(&dir, sizeof(virtual_dir_t), arena);
 }
 
 static inode_t *vfs_query_node(fs_t *fs, inode_t *self, const char *name)
@@ -152,7 +152,7 @@ static io_t *vfs_query_file(fs_t *fs, inode_t *self, os_access_t flags)
     CTU_UNUSED(fs);
 
     virtual_file_t *file = inode_data(self);
-    return vfs_io(file, flags);
+    return vfs_io(file, flags, fs->arena);
 }
 
 static inode_t *vfs_create_dir(fs_t *fs, inode_t *self, const char *name)
@@ -160,7 +160,7 @@ static inode_t *vfs_create_dir(fs_t *fs, inode_t *self, const char *name)
     CTU_UNUSED(fs);
 
     virtual_dir_t *dir = inode_data(self);
-    inode_t *node = virtual_dir();
+    inode_t *node = virtual_dir(fs->arena);
     map_set(dir->dirents, name, node);
     return node;
 }
@@ -182,12 +182,12 @@ static inode_t *vfs_create_file(fs_t *fs, inode_t *self, const char *name)
     virtual_file_t file = {
         .name = name,
 
-        .data = MEM_ALLOC(0x1000, "virtual_file", self),
+        .data = ARENA_MALLOC(fs->arena, 0x1000, "virtual_file", self),
         .used = 0,
         .size = 0x1000
     };
 
-    inode_t *node = inode_file(&file, sizeof(virtual_file_t));
+    inode_t *node = inode_file(&file, sizeof(virtual_file_t), fs->arena);
     map_set(dir->dirents, name, node);
     return node;
 }
@@ -212,7 +212,7 @@ static const fs_callbacks_t kVirtualInterface = {
     .pfn_delete_file = vfs_delete_file
 };
 
-fs_t *fs_virtual(const char *name)
+fs_t *fs_virtual(const char *name, arena_t *arena)
 {
     CTASSERT(name != NULL);
 
@@ -220,7 +220,7 @@ fs_t *fs_virtual(const char *name)
         .name = name
     };
 
-    inode_t *root = virtual_dir();
+    inode_t *root = virtual_dir(arena);
 
-    return fs_new(root, &kVirtualInterface, &self, sizeof(virtual_t));
+    return fs_new(root, &kVirtualInterface, &self, sizeof(virtual_t), arena);
 }
