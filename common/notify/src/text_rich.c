@@ -169,7 +169,7 @@ static void print_file_segment(rich_t *rich, const node_t *node, const char *mes
     size_t data_line = where.first_line;
 
     size_t display_line = get_line_number(config.config, node);
-    size_t width = get_num_width(display_line);
+    size_t width = get_num_width(MAX(display_line, rich->largest_line));
     char *padding = str_repeat(" ", width);
     char *line = fmt_align(width, "%zu", display_line);
 

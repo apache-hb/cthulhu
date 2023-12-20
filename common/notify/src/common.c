@@ -444,6 +444,17 @@ text_t cache_escape_line(text_cache_t *cache, size_t line, const text_colour_t *
     return *ptr;
 }
 
+static bool events_equal(const event_t *lhs, const event_t *rhs)
+{
+    if (lhs == rhs) return true;
+    if (lhs == NULL || rhs == NULL) return false;
+
+    if (lhs->diagnostic == rhs->diagnostic) return true;
+    if (str_equal(lhs->message, rhs->message)) return true;
+
+    return false;
+}
+
 USE_DECL
 int text_report(vector_t *events, report_config_t config, const char *title)
 {
@@ -465,10 +476,27 @@ int text_report(vector_t *events, report_config_t config, const char *title)
     size_t error_count = 0;
     size_t bug_count = 0;
 
+    const event_t *prev = NULL;
+    size_t repeat = 0;
+
     for (size_t i = 0; i < len; i++)
     {
-        const event_t *event = vector_get(events, i);
-        fn(text, event);
+        event_t *event = vector_get(events, i);
+        if (!events_equal(event, prev))
+        {
+            // merge consecutive events with the same message
+            if (repeat > 0)
+            {
+                event->message = format("%s (repeated %zu times)", event->message, repeat);
+            }
+
+            fn(text, event);
+            prev = event;
+        }
+        else
+        {
+            repeat += 1;
+        }
 
         const diagnostic_t *diag = event->diagnostic;
         switch (diag->severity)

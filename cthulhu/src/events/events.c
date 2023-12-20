@@ -12,7 +12,7 @@ void evt_scan_error(logger_t *logger, node_t *node, const char *msg)
 
 void evt_scan_unknown(logger_t *logger, node_t *node, const char *msg)
 {
-    msg_notify(logger, &kEvent_UnknownToken, node, "unkown symbol: `%s`", str_normalize(msg));
+    msg_notify(logger, &kEvent_UnknownToken, node, "unknown symbol: `%s`", str_normalize(msg));
 }
 
 event_t *evt_symbol_shadowed(logger_t *logger, const char *name, const node_t *prev,

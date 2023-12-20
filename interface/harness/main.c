@@ -169,19 +169,7 @@ static arena_t new_alloc(user_arena_t *arena)
 static int check_reports(logger_t *logger, report_config_t config, const char *title)
 {
     int err = text_report(logger_get_events(logger), config, title);
-
-    text_config_t inner = config.text_config;
-
-    if (err != EXIT_OK)
-    {
-        const void *buffer = io_map(inner.io);
-        size_t size = io_size(inner.io);
-        (void)fwrite(buffer, size, 1, stderr);
-
-        return err;
-    }
-
-    return 0;
+    return err;
 }
 
 #define CHECK_LOG(logger, fmt)                               \
@@ -217,12 +205,12 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
             .print_header = true,
             .max_columns = 80
         },
-        .colours = colour_get_default(),
+        .colours = colour_get_disabled(),
         .io = msg_buffer,
     };
 
     report_config_t report_config = {
-        .report_format = eTextComplex,
+        .report_format = eTextSimple,
         .text_config = text_config,
     };
 
