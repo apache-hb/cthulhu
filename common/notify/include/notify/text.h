@@ -34,6 +34,7 @@ typedef struct vector_t vector_t;
 
 typedef struct text_colour_t text_colour_t;
 typedef struct map_t cache_map_t;
+typedef struct set_t set_t;
 typedef struct text_cache_t text_cache_t;
 
 BEGIN_API
@@ -54,6 +55,9 @@ typedef struct file_config_t
     /// @brief the maximum number of columns to print
     /// set to 0 to use default
     size_t max_columns;
+
+    /// @brief if true all warnings are treated as fatal
+    bool override_fatal;
 } file_config_t;
 
 typedef enum text_format_t
@@ -81,6 +85,12 @@ typedef struct text_config_t
 
 typedef struct report_config_t
 {
+    size_t max_errors;
+    size_t max_warnings;
+
+    set_t *ignore_warnings;
+    set_t *error_warnings;
+
     text_format_t report_format;
     text_config_t text_config;
 } report_config_t;

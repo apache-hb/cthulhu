@@ -9,6 +9,7 @@
 #include "scan/node.h"
 #include "std/map.h"
 #include "std/str.h"
+#include "std/set.h"
 
 #include "std/typed/vector.h"
 #include "std/vector.h"
@@ -16,6 +17,14 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+
+severity_t get_severity(const diagnostic_t *diag, bool override_fatal)
+{
+    severity_t severity = diag->severity;
+    if (override_fatal && severity == eSeverityWarn) return eSeverityFatal;
+
+    return severity;
+}
 
 const char *get_severity_name(severity_t severity)
 {
@@ -455,11 +464,21 @@ static bool events_equal(const event_t *lhs, const event_t *rhs)
     return false;
 }
 
+static bool set_has_option(set_t *set, const diagnostic_t *diag)
+{
+    if (set == NULL) return false;
+
+    return set_contains_ptr(set, diag);
+}
+
 USE_DECL
 int text_report(vector_t *events, report_config_t config, const char *title)
 {
     CTASSERT(events != NULL);
     CTASSERT(title != NULL);
+
+    size_t error_budget = config.max_errors == 0 ? 20 : config.max_errors;
+    size_t warn_budget = config.max_warnings == 0 ? 20 : config.max_warnings;
 
     cache_map_t *cache = cache_map_new(32);
 
@@ -482,6 +501,12 @@ int text_report(vector_t *events, report_config_t config, const char *title)
     for (size_t i = 0; i < len; i++)
     {
         event_t *event = vector_get(events, i);
+        const diagnostic_t *diag = event->diagnostic;
+        if (set_has_option(config.ignore_warnings, diag))
+        {
+            continue;
+        }
+
         if (!events_equal(event, prev))
         {
             // merge consecutive events with the same message
@@ -489,6 +514,23 @@ int text_report(vector_t *events, report_config_t config, const char *title)
             {
                 event->message = format("%s (repeated %zu times)", event->message, repeat);
             }
+
+            switch (diag->severity) {
+            case eSeverityWarn:
+                warn_budget -= 1;
+                if (warn_budget == 0) continue;
+                break;
+
+            case eSeverityFatal:
+                error_budget -= 1;
+                if (error_budget == 0) continue;
+                break;
+
+            default:
+                break;
+            }
+
+            text.config.override_fatal = set_has_option(config.error_warnings, diag);
 
             fn(text, event);
             prev = event;
@@ -498,7 +540,6 @@ int text_report(vector_t *events, report_config_t config, const char *title)
             repeat += 1;
         }
 
-        const diagnostic_t *diag = event->diagnostic;
         switch (diag->severity)
         {
         case eSeverityFatal:

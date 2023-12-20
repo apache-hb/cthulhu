@@ -19,6 +19,8 @@ typedef struct rich_t
     text_config_t config;
     const event_t *event;
 
+    severity_t severity;
+
     // the largest line number in the report
     size_t largest_line;
 
@@ -35,8 +37,8 @@ static void print_report_header(rich_t *rich, const char *message)
     const diagnostic_t *diag = rich->event->diagnostic;
     text_config_t config = rich->config;
 
-    const char *sev = get_severity_name(diag->severity);
-    colour_t colour = get_severity_colour(diag->severity);
+    const char *sev = get_severity_name(rich->severity);
+    colour_t colour = get_severity_colour(rich->severity);
 
     char *coloured = fmt_coloured(config.colours, colour, "%s [%s]:", sev, diag->id);
 
@@ -516,6 +518,7 @@ void text_report_rich(text_config_t config, const event_t *event)
     rich_t ctx = {
         .config = config,
         .event = event,
+        .severity = get_severity(event->diagnostic, info.override_fatal),
         .file_cache = config.cache != NULL ? config.cache : cache_map_new(4),
         .max_columns = info.max_columns == 0 ? 240 : info.max_columns,
     };

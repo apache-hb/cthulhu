@@ -10,6 +10,8 @@
 typedef struct map_t map_t;
 typedef struct scan_t scan_t;
 
+severity_t get_severity(const diagnostic_t *diag, bool override_fatal);
+
 const char *get_severity_name(severity_t severity);
 colour_t get_severity_colour(severity_t severity);
 

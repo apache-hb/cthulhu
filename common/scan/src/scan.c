@@ -1,4 +1,3 @@
-#include "base/log.h"
 #include "base/panic.h"
 
 #include "core/text.h"
@@ -66,7 +65,6 @@ void *scan_get(scan_t *scan)
 {
     CTASSERT(scan != NULL);
 
-    ctu_log("scan get %p", scan->tree);
     return scan->tree;
 }
 
@@ -75,7 +73,6 @@ void scan_set(scan_t *scan, void *value)
 {
     CTASSERT(scan != NULL);
 
-    ctu_log("scan set %p", value);
     scan->tree = value;
 }
 

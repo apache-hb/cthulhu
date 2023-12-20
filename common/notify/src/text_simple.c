@@ -153,8 +153,11 @@ void text_report_simple(text_config_t config, const event_t *event)
     CTASSERT(event != NULL);
     const diagnostic_t *diagnostic = event->diagnostic;
 
-    const char *sev = get_severity_name(diagnostic->severity);
-    colour_t col = get_severity_colour(diagnostic->severity);
+    file_config_t cfg = config.config;
+    severity_t severity = get_severity(diagnostic, cfg.override_fatal);
+
+    const char *sev = get_severity_name(severity);
+    colour_t col = get_severity_colour(severity);
 
     const char *path = fmt_path(config.config, event->node);
     const char *lvl = fmt_coloured(config.colours, col, "%s %s:", sev, diagnostic->id);
