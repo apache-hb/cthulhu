@@ -5,12 +5,14 @@
 
 #include "io/io.h"
 
-typedef struct names_t {
+typedef struct names_t
+{
     size_t counter;
     map_t *names;
 } names_t;
 
-typedef struct emit_t {
+typedef struct emit_t
+{
     logger_t *reports;
 
     names_t block_names;

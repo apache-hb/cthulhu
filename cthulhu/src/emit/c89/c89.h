@@ -31,7 +31,7 @@ typedef struct c89_emit_t {
 /// type formatting
 ///
 
-const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char *name, bool emitConst);
+const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char *name, bool emit_const);
 const char *c89_format_params(c89_emit_t *emit, typevec_t *params, bool variadic);
 
 const char *c89_format_storage(c89_emit_t *emit, ssa_storage_t storage, const char *name);

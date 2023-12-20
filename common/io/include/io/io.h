@@ -24,6 +24,9 @@ typedef os_error_t io_error_t;
 /// @param io the io object
 void io_close(OUT_PTR_INVALID io_t *io);
 
+io_t *io_stdout(void);
+io_t *io_stderr(void);
+
 /// @brief create an IO object from a file
 ///
 /// @param path the path to the file

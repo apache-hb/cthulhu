@@ -1,6 +1,7 @@
 src = [
     'src/util.c',
     'src/panic.c',
+    'src/log.c',
     'src/endian.c'
 ]
 

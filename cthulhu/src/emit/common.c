@@ -28,10 +28,10 @@ char *begin_module(emit_t *emit, fs_t *fs, const ssa_module_t *mod)
     // if the last element of the path and the module name are the same then remove the last element
     // this isnt required to be semanticly correct but it makes the output look nicer
 
-    bool isRoot = check_root_mod(mod->path, mod->name);
+    bool is_root = check_root_mod(mod->path, mod->name);
     vector_t *vec = vector_clone(mod->path);
 
-    if (isRoot) { vector_drop(vec); }
+    if (is_root) { vector_drop(vec); }
 
     char *path = str_join("/", vec);
     if (vector_len(vec) > 0)

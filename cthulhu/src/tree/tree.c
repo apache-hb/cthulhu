@@ -381,8 +381,8 @@ tree_t *tree_stmt_return(const node_t *node, const tree_t *value)
 
 tree_t *tree_stmt_assign(const node_t *node, tree_t *dst, tree_t *src)
 {
-    const tree_t *dstType = tree_get_type(dst);
-    TREE_EXPECT_ADDRESS(dstType);
+    const tree_t *dst_type = tree_get_type(dst);
+    TREE_EXPECT_ADDRESS(dst_type);
 
     CTASSERT(src != NULL);
 

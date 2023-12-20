@@ -255,45 +255,45 @@ static ssa_operand_t compile_branch(ssa_compile_t *ssa, const tree_t *branch)
     ssa_operand_t cond = compile_tree(ssa, branch->cond);
     ssa_block_t *current = ssa->current_block;
 
-    ssa_block_t *tailBlock = ssa_block_create(ssa->current_symbol, "tail", 0);
-    ssa_block_t *thenBlock = ssa_block_create(ssa->current_symbol, "then", 0);
-    ssa_block_t *elseBlock = branch->other != NULL ? ssa_block_create(ssa->current_symbol, "other", 0) : NULL;
+    ssa_block_t *tail_block = ssa_block_create(ssa->current_symbol, "tail", 0);
+    ssa_block_t *then_block = ssa_block_create(ssa->current_symbol, "then", 0);
+    ssa_block_t *else_block = branch->other != NULL ? ssa_block_create(ssa->current_symbol, "other", 0) : NULL;
 
     ssa_step_t step = {
         .opcode = eOpBranch,
         .branch = {
             .cond = cond,
-            .then = operand_bb(thenBlock),
-            .other = elseBlock ? operand_bb(elseBlock) : operand_bb(tailBlock)
+            .then = operand_bb(then_block),
+            .other = else_block ? operand_bb(else_block) : operand_bb(tail_block)
         }
     };
 
     ssa_operand_t tail = {
         .kind = eOperandBlock,
-        .bb = tailBlock
+        .bb = tail_block
     };
-    ssa_step_t jumpToTail = {
+    ssa_step_t jump_to_tail = {
         .opcode = eOpJump,
         .jump = {
             .target = tail
         }
     };
 
-    ssa->current_block = thenBlock;
+    ssa->current_block = then_block;
     compile_tree(ssa, branch->then);
-    bb_add_step(thenBlock, jumpToTail);
+    bb_add_step(then_block, jump_to_tail);
 
     if (branch->other != NULL)
     {
-        ssa->current_block = elseBlock;
+        ssa->current_block = else_block;
         compile_tree(ssa, branch->other);
-        bb_add_step(elseBlock, jumpToTail);
+        bb_add_step(else_block, jump_to_tail);
     }
 
     ssa->current_block = current;
     add_step(ssa, step);
 
-    ssa->current_block = tailBlock;
+    ssa->current_block = tail_block;
 
     return tail;
 }
@@ -331,13 +331,13 @@ static ssa_operand_t compile_loop(ssa_compile_t *ssa, const tree_t *tree)
         .bb = tail_block
     };
 
-    ssa_step_t enterLoop = {
+    ssa_step_t enter_loop = {
         .opcode = eOpJump,
         .jump = {
             .target = loop
         }
     };
-    add_step(ssa, enterLoop);
+    add_step(ssa, enter_loop);
 
     ssa->current_block = loop_block;
     ssa_operand_t cond = compile_tree(ssa, tree->cond);
@@ -354,13 +354,13 @@ static ssa_operand_t compile_loop(ssa_compile_t *ssa, const tree_t *tree)
     ssa->current_block = body_block;
     compile_tree(ssa, tree->then);
 
-    ssa_step_t repeatLoop = {
+    ssa_step_t repeat_loop = {
         .opcode = eOpJump,
         .jump = {
             .target = loop
         }
     };
-    add_step(ssa, repeatLoop);
+    add_step(ssa, repeat_loop);
 
     ssa->current_block = tail_block;
     return loop;

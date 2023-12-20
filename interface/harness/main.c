@@ -1,7 +1,13 @@
+#include "base/log.h"
+#include "cthulhu/events/events.h"
 #include "cthulhu/mediator/check.h"
 #include "cthulhu/mediator/interface.h"
 
 #include "memory/memory.h"
+#include "notify/colour.h"
+#include "notify/notify.h"
+#include "notify/text.h"
+#include "scan/node.h"
 #include "support/langs.h"
 
 #include "cthulhu/check/check.h"
@@ -21,6 +27,7 @@
 
 #include "argparse/argparse.h"
 
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -159,6 +166,34 @@ static arena_t new_alloc(user_arena_t *arena)
     return alloc;
 }
 
+static int check_reports(logger_t *logger, report_config_t config, const char *title)
+{
+    int err = text_report(logger_get_events(logger), config, title);
+
+    text_config_t inner = config.text_config;
+
+    if (err != EXIT_OK)
+    {
+        const void *buffer = io_map(inner.io);
+        size_t size = io_size(inner.io);
+        (void)fwrite(buffer, size, 1, stderr);
+
+        return err;
+    }
+
+    return 0;
+}
+
+#define CHECK_LOG(logger, fmt)                               \
+    do                                                       \
+    {                                                        \
+        int err = check_reports(logger, report_config, fmt); \
+        if (err != EXIT_OK)                                  \
+        {                                                    \
+            return err;                                      \
+        }                                                    \
+    } while (0)
+
 int run_test_harness(int argc, const char **argv, arena_t *alloc)
 {
     mediator_t *mediator = mediator_new("example", kVersion);
@@ -173,7 +208,24 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
         lifetime_add_language(lifetime, lang);
     }
 
-    CHECK_REPORTS(reports, "adding languages");
+    io_t *msg_buffer = io_blob("buffer", 0x1000, eAccessWrite | eAccessText);
+
+    text_config_t text_config = {
+        .config = {
+            .zeroth_line = false,
+            .print_source = true,
+            .print_header = true,
+        },
+        .colours = colour_get_default(),
+        .io = msg_buffer,
+    };
+
+    report_config_t report_config = {
+        .report_format = eTextSimple,
+        .text_config = text_config,
+    };
+
+    CHECK_LOG(reports, "adding languages");
 
     // harness.exe <name> [files...]
     CTASSERT(argc > 2);
@@ -188,7 +240,7 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
 
         lifetime_parse(lifetime, lang, io);
 
-        CHECK_REPORTS(reports, "parsing source");
+        CHECK_LOG(reports, "parsing source");
     }
 
     for (size_t stage = 0; stage < eStageTotal; stage++)
@@ -196,26 +248,26 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
         lifetime_run_stage(lifetime, stage);
 
         char *msg = format("running stage %s", stage_to_string(stage));
-        CHECK_REPORTS(reports, msg);
+        CHECK_LOG(reports, msg);
     }
 
     lifetime_resolve(lifetime);
-    CHECK_REPORTS(reports, "resolving symbols");
+    CHECK_LOG(reports, "resolving symbols");
 
     map_t *modmap = lifetime_get_modules(lifetime);
 
     check_tree(reports, modmap);
-    CHECK_REPORTS(reports, "validations failed");
+    CHECK_LOG(reports, "validations failed");
 
     ssa_result_t ssa = ssa_compile(modmap);
-    CHECK_REPORTS(reports, "generating ssa");
+    CHECK_LOG(reports, "generating ssa");
 
     ssa_opt(reports, ssa);
-    CHECK_REPORTS(reports, "optimizing ssa");
+    CHECK_LOG(reports, "optimizing ssa");
 
     fs_t *fs = fs_virtual("out");
 
-    emit_options_t baseOpts = {
+    emit_options_t base_options = {
         .reports = reports,
         .fs = fs,
 
@@ -223,16 +275,16 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
         .deps = ssa.deps,
     };
 
-    ssa_emit_options_t emitOpts = {.opts = baseOpts};
+    ssa_emit_options_t emit_options = {.opts = base_options};
 
-    ssa_emit_result_t ssaResult = emit_ssa(&emitOpts);
-    CHECK_REPORTS(reports, "emitting ssa");
-    CTU_UNUSED(ssaResult); // TODO: check for errors
+    ssa_emit_result_t ssa_emit_result = emit_ssa(&emit_options);
+    CHECK_LOG(reports, "emitting ssa");
+    CTU_UNUSED(ssa_emit_result); // TODO: check for errors
 
-    c89_emit_options_t c89Opts = {.opts = baseOpts};
+    c89_emit_options_t c89_emit_options = {.opts = base_options};
 
-    c89_emit_result_t c89Result = emit_c89(&c89Opts);
-    CHECK_REPORTS(reports, "emitting c89");
+    c89_emit_result_t c89_emit_result = emit_c89(&c89_emit_options);
+    CHECK_LOG(reports, "emitting c89");
 
     OS_RESULT(const char *) cwd = os_dir_current();
     CTASSERTF(os_error(cwd) == 0, "failed to get cwd %s", os_error_string(os_error(cwd)));
@@ -244,22 +296,22 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
     fs_t *out = fs_physical(run_dir);
     if (out == NULL)
     {
-        report(reports, eFatal, NULL, "failed to create output directory");
+        msg_notify(reports, &kEvent_FailedToCreateOutputDirectory, node_builtin(), "failed to create output directory");
     }
-    CHECK_REPORTS(reports, "creating output directory");
+    CHECK_LOG(reports, "creating output directory");
 
     sync_result_t result = fs_sync(out, fs);
     if (result.path != NULL)
     {
-        report(reports, eFatal, NULL, "failed to sync %s", result.path);
+        msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(), "failed to sync %s", result.path);
     }
-    CHECK_REPORTS(reports, "syncing output directory");
+    CHECK_LOG(reports, "syncing output directory");
 
-    size_t len = vector_len(c89Result.sources);
+    size_t len = vector_len(c89_emit_result.sources);
     vector_t *sources = vector_of(len);
     for (size_t i = 0; i < len; i++)
     {
-        const char *part = vector_get(c89Result.sources, i);
+        const char *part = vector_get(c89_emit_result.sources, i);
         char *path = format("%s" NATIVE_PATH_SEPARATOR "%s", run_dir, part);
         vector_set(sources, i, path);
     }
@@ -275,30 +327,30 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
         format("cl /nologo /c %s /I%s\\include /Fo%s\\", str_join(" ", sources), run_dir, lib_dir));
     if (status != 0)
     {
-        report(reports, eFatal, NULL, "compilation failed `%d`", status);
+        msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(), "compilation failed `%d`", status);
     }
 #else
     int status = system(format("cd %s && cc %s -c -Iinclude", runDir, str_join(" ", sources)));
     if (WEXITSTATUS(status) != EXIT_OK)
     {
-        report(reports, eFatal, NULL, "compilation failed %d", WEXITSTATUS(status));
+        msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(), "compilation failed %d", WEXITSTATUS(status));
     }
 #endif
 
-    CHECK_REPORTS(reports, "compiling");
+    CHECK_LOG(reports, "compiling");
 
     return 0;
 }
 
 int main(int argc, const char **argv)
 {
-    size_t size = 1024 * 1024 * 64;
+    size_t size = (size_t)(1024U * 1024U * 64U);
     user_arena_t arena = new_user_arena(size);
     arena_t alloc = new_alloc(&arena);
     init_global_alloc(&alloc);
     init_gmp_alloc(&alloc);
 
-    verbose = true;
+    ctu_log_control(eLogEnable);
 
     int result = run_test_harness(argc, argv, &alloc);
 

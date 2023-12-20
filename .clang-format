@@ -1,23 +1,15 @@
 ---
-Language:        Cpp
-BasedOnStyle:  Microsoft
+Language: Cpp
+BasedOnStyle: Microsoft
 IndentPPDirectives: AfterHash
 PPIndentWidth: 3
-BreakAfterAttributes: Always
 ColumnLimit: 100
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: true
 AlignOperands: true
 PenaltyBreakAssignment: 50
 BreakBeforeTernaryOperators: true
-AlignOperands: DontAlign
-AttributeMacros:
-    - CT_PRINTF
-    - CONSTFN
-    - PUREFN
-    - HOTFN
-    - COLDFN
-    - CT_ALLOC
-    - NODISCARD
-    - USE_DECL
+# AlignOperands: DontAlign
+AlignEscapedNewlines: Left
+BreakAfterAttributes: Always
 ...

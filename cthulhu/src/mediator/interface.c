@@ -180,9 +180,6 @@ static bool parse_failed(logger_t *reports, const char *path, parse_result_t res
     case eParseScanFailed:
         msg_notify(reports, &kEvent_ScanFailed, node_builtin(), "failed to scan %s: %d", path, result.error);
         return true;
-    case eParseFailed:
-        msg_notify(reports, &kEvent_ParseFailed, node_builtin(), "failed to parse %s: %d", path, result.error);
-        return true;
 
     default:
         return false;
@@ -278,14 +275,14 @@ void lifetime_run_stage(lifetime_t *lifetime, compile_stage_t stage)
         CTASSERT(ctx != NULL);
 
         const language_t *lang = ctx->lang;
-        driver_pass_t fnPass = lang->fn_compile_passes[stage];
+        driver_pass_t fn_pass = lang->fn_compile_passes[stage];
 
-        if (!context_requires_compiling(ctx) || fnPass == NULL)
+        if (!context_requires_compiling(ctx) || fn_pass == NULL)
         {
             continue;
         }
 
-        fnPass(ctx);
+        fn_pass(ctx);
     }
 }
 

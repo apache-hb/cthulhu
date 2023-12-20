@@ -6,6 +6,8 @@
 
 #include "scan/node.h"
 
+#include "base/log.h"
+
 static vector_t *example_lang_path(void)
 {
     vector_t *path = vector_new(2);
@@ -40,40 +42,40 @@ static void ex_create(driver_t *handle)
 
     add_context(lifetime, path, ctx);
 
-    logverbose("ex-create(0x%p)", (void*)handle);
+    ctu_log("ex-create(0x%p)", (void*)handle);
 }
 
 static void ex_destroy(driver_t *handle)
 {
-    logverbose("ex-destroy(0x%p)", (void*)handle);
+    ctu_log("ex-destroy(0x%p)", (void*)handle);
 }
 
 static void ex_parse(driver_t *handle, scan_t *scan)
 {
-    logverbose("ex-parse(0x%p, %s)", (void*)handle, scan_path(scan));
+    ctu_log("ex-parse(0x%p, %s)", (void*)handle, scan_path(scan));
 }
 
 static void ex_forward_symbols(context_t *context)
 {
-    logverbose("ex-forward(0x%p)", (void*)context);
+    ctu_log("ex-forward(0x%p)", (void*)context);
 }
 
 static void ex_compile_imports(context_t *context)
 {
-    logverbose("ex-compile-imports(0x%p)", (void*)context);
+    ctu_log("ex-compile-imports(0x%p)", (void*)context);
 }
 
 static void ex_compile_types(context_t *context)
 {
-    logverbose("ex-compile-types(0x%p)", (void*)context);
+    ctu_log("ex-compile-types(0x%p)", (void*)context);
 }
 
 static void ex_compile_symbols(context_t *context)
 {
-    logverbose("ex-compile-symbols(0x%p)", (void*)context);
+    ctu_log("ex-compile-symbols(0x%p)", (void*)context);
 }
 
-static const char *kLangNames[] = { "e", "example", NULL };
+static const char * const kLangNames[] = { "e", "example", NULL };
 
 const language_t kExampleModule = {
     .id = "example",
@@ -82,7 +84,7 @@ const language_t kExampleModule = {
         .license = "GPLv3",
         .desc = "Example language driver",
         .author = "Elliot Haisley",
-        .version = NEW_VERSION(1, 0, 1)
+        .version = NEW_VERSION(1, 0, 2)
     },
 
     .exts = kLangNames,

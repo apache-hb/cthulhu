@@ -17,14 +17,14 @@
 /// @brief the native byte order
 
 #if OS_WINDOWS
-#   include "core/win32.h"
+#   include "core/win32.h" // IWYU pragma: keep
 #   define CTU_BIG_ENDIAN REG_DWORD_BIG_ENDIAN
 #   define CTU_LITTLE_ENDIAN REG_DWORD_LITTLE_ENDIAN
 #   define CTU_BYTE_ORDER REG_DWORD
 #else
 #   if OS_LINUX
 #      include <endian.h>
-#   elif OS_MACOS
+#   elif OS_APPLE
 #      include <machine/endian.h>
 #   endif
 #   define CTU_BIG_ENDIAN __ORDER_BIG_ENDIAN__

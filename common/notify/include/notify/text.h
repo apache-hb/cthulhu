@@ -70,10 +70,16 @@ typedef struct text_config_t
     io_t *io;
 } text_config_t;
 
+typedef struct report_config_t
+{
+    text_format_t report_format;
+    text_config_t text_config;
+} report_config_t;
+
 int text_report(
-    vector_t *events,
-    text_config_t config,
-    text_format_t format);
+    IN_NOTNULL vector_t *events,
+    report_config_t config,
+    IN_STRING const char *title);
 
 // complex reporting
 void text_report_rich(

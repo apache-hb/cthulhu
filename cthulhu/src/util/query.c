@@ -31,11 +31,11 @@ static bool is_public(const tree_t *decl)
     return attrib->visibility == eVisiblePublic;
 }
 
-tree_t *util_search_namespace(tree_t *sema, const decl_search_t *search, const node_t *node, vector_t *path, bool *isImported)
+tree_t *util_search_namespace(tree_t *sema, const decl_search_t *search, const node_t *node, vector_t *path, bool *is_imported)
 {
     CTASSERTF(sema != NULL && search != NULL, "(sema = %p, search = %p)", (void*)sema, (void*)search);
     CTASSERT(vector_len(path) > 0);
-    CTASSERT(isImported != NULL);
+    CTASSERT(is_imported != NULL);
 
     size_t len = vector_len(path);
     tree_t *ns = sema;
@@ -47,7 +47,7 @@ tree_t *util_search_namespace(tree_t *sema, const decl_search_t *search, const n
         }
 
         const char *segment = vector_get(path, i);
-        ns = select_module(ns, search, segment, isImported);
+        ns = select_module(ns, search, segment, is_imported);
         if (ns == NULL)
         {
             return tree_raise(node, sema->reports, &kEvent_SymbolNotFound, "namespace `%s` not found", segment);
@@ -62,13 +62,13 @@ tree_t *util_search_path(tree_t *sema, const decl_search_t *search, const node_t
     CTASSERTF(sema != NULL && search != NULL, "(sema = %p, search = %p)", (void*)sema, (void*)search);
     CTASSERT(vector_len(path) > 0);
 
-    bool isImported = false;
+    bool is_imported = false;
     size_t len = vector_len(path);
     tree_t *ns = sema;
     for (size_t i = 0; i < len - 1; i++)
     {
         const char *segment = vector_get(path, i);
-        ns = select_module(ns, search, segment, &isImported);
+        ns = select_module(ns, search, segment, &is_imported);
         if (ns == NULL)
         {
             return tree_raise(node, sema->reports, &kEvent_SymbolNotFound, "namespace `%s` not found", segment);
@@ -82,7 +82,7 @@ tree_t *util_search_path(tree_t *sema, const decl_search_t *search, const node_t
         return tree_raise(node, sema->reports, &kEvent_SymbolNotFound, "decl `%s` not found", name);
     }
 
-    if (isImported && !is_public(decl))
+    if (is_imported && !is_public(decl))
     {
         return tree_raise(node, sema->reports, &kEvent_SymbolNotVisible, "decl `%s` is not public", name);
     }
@@ -92,8 +92,8 @@ tree_t *util_search_path(tree_t *sema, const decl_search_t *search, const node_t
 
 tree_t *util_search_qualified(tree_t *sema, const decl_search_t *search, const node_t *node, const char *mod, const char *name)
 {
-    bool isImported = false;
-    tree_t *ns = select_module(sema, search, mod, &isImported);
+    bool is_imported = false;
+    tree_t *ns = select_module(sema, search, mod, &is_imported);
     if (ns == NULL)
     {
         return tree_raise(node, sema->reports, &kEvent_SymbolNotFound, "namespace `%s` not found", mod);
@@ -105,7 +105,7 @@ tree_t *util_search_qualified(tree_t *sema, const decl_search_t *search, const n
         return tree_raise(node, sema->reports, &kEvent_SymbolNotFound, "decl `%s` not found", name);
     }
 
-    if (isImported && !is_public(decl))
+    if (is_imported && !is_public(decl))
     {
         return tree_raise(node, sema->reports, &kEvent_SymbolNotVisible, "decl `%s` is not public", name);
     }

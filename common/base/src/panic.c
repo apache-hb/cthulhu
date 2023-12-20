@@ -9,9 +9,9 @@
 
 static void default_panic_handler(panic_t panic, const char *fmt, va_list args)
 {
-    fprintf(stderr, ANSI_CYAN "[panic]" ANSI_RESET "[%s:%zu] => " ANSI_RED "%s" ANSI_RESET ": ", panic.file, panic.line, panic.function);
-    vfprintf(stderr, fmt, args);
-    fprintf(stderr, "\n");
+    (void)fprintf(stderr, ANSI_CYAN "[panic]" ANSI_RESET "[%s:%zu] => " ANSI_RED "%s" ANSI_RESET ": ", panic.file, panic.line, panic.function);
+    (void)vfprintf(stderr, fmt, args);
+    (void)fprintf(stderr, "\n");
 
 #if ADDRSAN_ENABLED
     volatile char *ptr = NULL;
@@ -36,5 +36,5 @@ void ctpanic(panic_t panic, const char *msg, ...)
     gPanicHandler(panic, msg, args);
     va_end(args);
 
-    exit(99);
+    exit(99); // NOLINT(concurrency-mt-unsafe)
 }

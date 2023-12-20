@@ -31,8 +31,8 @@ void *util_select_decl(tree_t *sema, const size_t *tags, size_t len, const char 
     return NULL;
 }
 
-static const char *kCurrentModule = "util:current-module";
-static const char *kCurrentSymbol = "util:current-symbol";
+static const char *const kCurrentModule = "util:current-module";
+static const char *const kCurrentSymbol = "util:current-symbol";
 
 tree_t *util_current_module(tree_t *sema)
 {
@@ -69,15 +69,15 @@ bool util_types_equal(const tree_t *lhs, const tree_t *rhs)
         return true;
     }
 
-    tree_kind_t lhsKind = tree_get_kind(lhs);
-    tree_kind_t rhsKind = tree_get_kind(rhs);
+    tree_kind_t lhs_kind = tree_get_kind(lhs);
+    tree_kind_t rhs_kind = tree_get_kind(rhs);
 
-    if (lhsKind != rhsKind)
+    if (lhs_kind != rhs_kind)
     {
         return false;
     }
 
-    switch (lhsKind)
+    switch (lhs_kind)
     {
     case eTreeTypeEmpty:
     case eTreeTypeUnit:
@@ -99,15 +99,15 @@ bool util_types_comparable(const tree_t *lhs, const tree_t *rhs)
         return true;
     }
 
-    tree_kind_t lhsKind = tree_get_kind(lhs);
-    tree_kind_t rhsKind = tree_get_kind(rhs);
+    tree_kind_t lhs_kind = tree_get_kind(lhs);
+    tree_kind_t rhs_kind = tree_get_kind(rhs);
 
-    if (lhsKind != rhsKind)
+    if (lhs_kind != rhs_kind)
     {
         return false;
     }
 
-    switch (lhsKind)
+    switch (lhs_kind)
     {
     case eTreeTypeBool:
     case eTreeTypeDigit: return true;

@@ -36,7 +36,7 @@ colour_t get_severity_colour(severity_t severity)
     case eSeverityInternal: return eColourCyan;
     case eSeverityFatal: return eColourRed;
     case eSeverityWarn: return eColourYellow;
-    case eSeverityInfo: return eColourGreen;
+    case eSeverityInfo:
     case eSeverityDebug: return eColourGreen;
     default: return eColourDefault;
     }
@@ -368,33 +368,63 @@ size_t cache_count_lines(text_cache_t *cache)
     return typevec_len(cache->line_info);
 }
 
-int text_report(vector_t *events, text_config_t config, text_format_t format)
+USE_DECL
+int text_report(vector_t *events, report_config_t config, const char *title)
 {
     CTASSERT(events != NULL);
+    CTASSERT(title != NULL);
+
+    text_format_t fmt = config.report_format;
+    text_config_t text = config.text_config;
 
     size_t len = vector_len(events);
-    void (*fn)(text_config_t, const event_t*) = format == eTextComplex ? text_report_rich : text_report_simple;
+    void (*fn)(text_config_t, const event_t*) = fmt == eTextComplex ? text_report_rich : text_report_simple;
 
     int result = EXIT_OK;
+    size_t warning_count = 0;
+    size_t error_count = 0;
+    size_t bug_count = 0;
 
     for (size_t i = 0; i < len; i++)
     {
         const event_t *event = vector_get(events, i);
-        fn(config, event);
+        fn(text, event);
 
         const diagnostic_t *diag = event->diagnostic;
         switch (diag->severity)
         {
         case eSeverityFatal:
             result = MAX(result, EXIT_ERROR);
+            error_count += 1;
             break;
         case eSeverityInternal:
         case eSeveritySorry:
             result = MAX(result, EXIT_INTERNAL);
+            bug_count += 1;
             break;
+        case eSeverityWarn:
+            warning_count += 1;
+            /* fallthrough */
         default:
             break;
         }
+    }
+
+    io_t *io = text.io;
+
+    if (result != EXIT_OK)
+    {
+        io_printf(io, "compilation failed during stage: %s\n", title);
+        char *colour_err = fmt_coloured(text.colours, eColourRed, "%zu errors", error_count);
+        char *colour_warn = fmt_coloured(text.colours, eColourYellow, "%zu warnings", warning_count);
+        char *colour_bug = fmt_coloured(text.colours, eColourMagenta, "%zu bugs", bug_count);
+        io_printf(io, "  %s, %s, %s\n", colour_err, colour_warn, colour_bug);
+    }
+    else if (warning_count > 0)
+    {
+        io_printf(io, "compilation succeeded with warnings during stage: %s\n", title);
+        char *colour_warn = fmt_coloured(text.colours, eColourYellow, "%zu warnings", warning_count);
+        io_printf(io, "  %s\n", colour_warn);
     }
 
     return result;

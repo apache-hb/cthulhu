@@ -12,7 +12,6 @@
 #include "std/vector.h"
 
 #include <ctype.h>
-#include <stdio.h>
 #include <string.h>
 
 typedef struct rich_t

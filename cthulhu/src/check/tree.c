@@ -157,14 +157,14 @@ static void check_func_attribs(check_t *check, const tree_t *fn)
     }
 }
 
-static void check_func_return_equal(check_t *check, const tree_t *returnType, const tree_t *realType)
+static void check_func_return_equal(check_t *check, const tree_t *return_type, const tree_t *real_type)
 {
-    if (util_types_equal(returnType, realType)) { return; }
+    if (util_types_equal(return_type, real_type)) { return; }
 
-    msg_notify(check->reports, &kEvent_ReturnTypeMismatch, tree_get_node(realType),
+    msg_notify(check->reports, &kEvent_ReturnTypeMismatch, tree_get_node(real_type),
         "return type `%s` does not match function return type `%s`",
-        tree_to_string(realType),
-        tree_to_string(returnType)
+        tree_to_string(real_type),
+        tree_to_string(return_type)
     );
 }
 
@@ -185,14 +185,14 @@ static void check_deprecated_call(check_t *check, const tree_t *expr)
     msg_note(id, "deprecated: %s", attribs->deprecated);
 }
 
-static void check_func_body(check_t *check, const tree_t *returnType, const tree_t *stmt)
+static void check_func_body(check_t *check, const tree_t *return_type, const tree_t *stmt)
 {
     switch (stmt->kind)
     {
     case eTreeStmtBlock:
         for (size_t i = 0; i < vector_len(stmt->stmts); i++)
         {
-            check_func_body(check, returnType, vector_get(stmt->stmts, i));
+            check_func_body(check, return_type, vector_get(stmt->stmts, i));
         }
         break;
 
@@ -202,7 +202,7 @@ static void check_func_body(check_t *check, const tree_t *returnType, const tree
         break;
 
     case eTreeStmtReturn:
-        check_func_return_equal(check, returnType, tree_get_type(stmt->value));
+        check_func_return_equal(check, return_type, tree_get_type(stmt->value));
         break;
 
     case eTreeExprCompare:
@@ -518,16 +518,16 @@ static void check_module_valid(check_t *check, const tree_t *mod)
     CTASSERTF(tree_is(mod, eTreeDeclModule), "invalid module `%s`", tree_to_string(mod));
 
     vector_t *modules = map_values(tree_module_tag(mod, eSemaModules));
-    size_t totalModules = vector_len(modules);
-    for (size_t i = 0; i < totalModules; i++)
+    size_t total_modules = vector_len(modules);
+    for (size_t i = 0; i < total_modules; i++)
     {
         const tree_t *child = vector_get(modules, i);
         check_module_valid(check, child);
     }
 
     vector_t *globals = map_values(tree_module_tag(mod, eSemaValues));
-    size_t totalGlobals = vector_len(globals);
-    for (size_t i = 0; i < totalGlobals; i++)
+    size_t total_globals = vector_len(globals);
+    for (size_t i = 0; i < total_globals; i++)
     {
         const tree_t *global = vector_get(globals, i);
         CTASSERTF(tree_is(global, eTreeDeclGlobal), "invalid global `%s`", tree_to_string(global));
@@ -538,8 +538,8 @@ static void check_module_valid(check_t *check, const tree_t *mod)
     }
 
     vector_t *functions = map_values(tree_module_tag(mod, eSemaProcs));
-    size_t totalFunctions = vector_len(functions);
-    for (size_t i = 0; i < totalFunctions; i++)
+    size_t total_functions = vector_len(functions);
+    for (size_t i = 0; i < total_functions; i++)
     {
         const tree_t *function = vector_get(functions, i);
         CTASSERTF(tree_is(function, eTreeDeclFunction), "invalid function `%s`", tree_to_string(function));
@@ -550,8 +550,8 @@ static void check_module_valid(check_t *check, const tree_t *mod)
     }
 
     vector_t *types = map_values(tree_module_tag(mod, eSemaTypes));
-    size_t totalTypes = vector_len(types);
-    for (size_t i = 0; i < totalTypes; i++)
+    size_t total_types = vector_len(types);
+    for (size_t i = 0; i < total_types; i++)
     {
         const tree_t *type = vector_get(types, i);
         // check_ident(check, type); TODO: check these properly

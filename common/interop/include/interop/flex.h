@@ -40,11 +40,11 @@ void flex_update(where_t *where, where_t *offsets, int steps);
 #define YY_USER_ACTION flex_action(yylloc, yytext);
 
 /// read input from flex and bison
-#define YY_INPUT(buffer, result, size)                                                                                 \
-    result = flex_input(yyextra, buffer, size);                                                                        \
-    if ((result) <= 0)                                                                                                 \
-    {                                                                                                                  \
-        (result) = YY_NULL;                                                                                            \
+#define YY_INPUT(buffer, result, size)          \
+    result = flex_input(yyextra, buffer, size); \
+    if ((result) <= 0)                          \
+    {                                           \
+        (result) = YY_NULL;                     \
     }
 
 /// default source location update function
@@ -54,26 +54,26 @@ void flex_update(where_t *where, where_t *offsets, int steps);
 #define YY_USER_INIT flex_init(yylloc);
 
 /// route memory for flex and bison though cthulhu allocators
-#define FLEX_MEMORY(fn_malloc, fn_realloc, fn_free)                                                                    \
-    inline void *fn_malloc(size_t size, yyscan_t scanner)                                                              \
-    {                                                                                                                  \
-        scan_t *scan = yyget_extra(scanner);                                                                           \
-        arena_t *alloc = scan_alloc(scan);                                                                             \
-        return ARENA_MALLOC(alloc, size, "yyalloc", scan);                                                             \
-    }                                                                                                                  \
-    inline void *fn_realloc(void *ptr, size_t bytes, yyscan_t scanner)                                                 \
-    {                                                                                                                  \
-        arena_t *alloc = scan_alloc(yyget_extra(scanner));                                                             \
-        return arena_realloc(alloc, ptr, bytes, ALLOC_SIZE_UNKNOWN);                                                   \
-    }                                                                                                                  \
-    inline void fn_free(void *ptr, yyscan_t scanner)                                                                   \
-    {                                                                                                                  \
-        arena_t *alloc = scan_alloc(yyget_extra(scanner));                                                             \
-        if (ptr == NULL)                                                                                               \
-        {                                                                                                              \
-            return;                                                                                                    \
-        }                                                                                                              \
-        arena_free(alloc, ptr, ALLOC_SIZE_UNKNOWN);                                                                    \
+#define FLEX_MEMORY(fn_malloc, fn_realloc, fn_free)                    \
+    inline void *fn_malloc(size_t size, yyscan_t scanner)              \
+    {                                                                  \
+        scan_t *scan = yyget_extra(scanner);                           \
+        arena_t *alloc = scan_alloc(scan);                             \
+        return ARENA_MALLOC(alloc, size, "yyalloc", scan);             \
+    }                                                                  \
+    inline void *fn_realloc(void *ptr, size_t bytes, yyscan_t scanner) \
+    {                                                                  \
+        arena_t *alloc = scan_alloc(yyget_extra(scanner));             \
+        return arena_realloc(alloc, ptr, bytes, ALLOC_SIZE_UNKNOWN);   \
+    }                                                                  \
+    inline void fn_free(void *ptr, yyscan_t scanner)                   \
+    {                                                                  \
+        arena_t *alloc = scan_alloc(yyget_extra(scanner));             \
+        if (ptr == NULL)                                               \
+        {                                                              \
+            return;                                                    \
+        }                                                              \
+        arena_free(alloc, ptr, ALLOC_SIZE_UNKNOWN);                    \
     }
 
 /// @}

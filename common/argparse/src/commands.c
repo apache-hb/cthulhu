@@ -48,16 +48,16 @@ void ap_print_help_body(const ap_t *ap, const char *name)
 
     const vector_t *groups = ap_get_groups(ap);
 
-    size_t groupCount = vector_len(groups);
-    for (size_t i = 0; i < groupCount; i++)
+    size_t group_count = vector_len(groups);
+    for (size_t i = 0; i < group_count; i++)
     {
         const ap_group_t *group = vector_get(groups, i);
         const vector_t *params = ap_get_params(group);
-        size_t paramCount = vector_len(params);
+        size_t param_count = vector_len(params);
 
-        printf("\n%s - %s (%zu commands)\n", group->name, group->desc, paramCount);
+        printf("\n%s - %s (%zu commands)\n", group->name, group->desc, param_count);
 
-        for (size_t j = 0; j < paramCount; j++)
+        for (size_t j = 0; j < param_count; j++)
         {
             printf("  [");
             const ap_param_t *param = vector_get(params, j);

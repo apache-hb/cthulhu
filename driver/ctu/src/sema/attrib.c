@@ -1,5 +1,6 @@
 #include "ctu/sema/attrib.h"
 
+#include "cthulhu/events/events.h"
 #include "ctu/ast.h"
 
 #include "cthulhu/tree/query.h"
@@ -27,14 +28,14 @@ static ctu_attrib_t *get_attrib(tree_t *sema, vector_t *path)
     return ctu_get_attrib(sema, name);
 }
 
-static ctu_attrib_t *attrib_create(const char *name, ctu_attrib_apply_t fnApply)
+static ctu_attrib_t *attrib_create(const char *name, ctu_attrib_apply_t fn_apply)
 {
     CTASSERT(name != NULL);
-    CTASSERT(fnApply != NULL);
+    CTASSERT(fn_apply != NULL);
 
     ctu_attrib_t *it = MEM_ALLOC(sizeof(ctu_attrib_t), name, NULL);
     it->name = name;
-    it->fnApply = fnApply;
+    it->fnApply = fn_apply;
     return it;
 }
 
@@ -42,21 +43,21 @@ static const char *get_first_string(tree_t *sema, tree_t *decl, vector_t *args)
 {
     if (vector_len(args) != 1)
     {
-        report(sema->reports, eFatal, decl->node, "expected 1 string argument");
+        msg_notify(sema->reports, &kEvent_IncorrectParamCount, decl->node, "expected 1 string argument");
         return NULL;
     }
 
     ctu_t *arg = vector_tail(args);
     if (arg->kind != eCtuExprString)
     {
-        report(sema->reports, eFatal, arg->node, "expected string argument");
+        msg_notify(sema->reports, &kEvent_IncorrectParamType, arg->node, "expected string argument");
         return NULL;
     }
 
     return arg->text;
 }
 
-#define MALFORMED_ENTRY(REPORTS, NODE) report(REPORTS, eFatal, NODE, "malformed entry point type, must be either `gui` or `cli`")
+#define MALFORMED_ENTRY(REPORTS, NODE) msg_notify(REPORTS, &kEvent_MalformedAttribute, NODE, "malformed entry point type, must be either `gui` or `cli`")
 
 static tree_link_t choose_linkage(tree_t *sema, const ctu_t *expr)
 {
@@ -95,7 +96,7 @@ static tree_link_t get_linkage(tree_t *sema, tree_t *decl, vector_t *args)
     case 1: return choose_linkage(sema, vector_tail(args));
 
     default:
-        report(sema->reports, eWarn, tree_get_node(decl), "entry attribute takes at most 1 argument, ignoring extra arguments");
+        msg_notify(sema->reports, &kEvent_IncorrectParamCount, tree_get_node(decl), "entry attribute takes at most 1 argument, ignoring extra arguments");
         return eLinkEntryCli;
     }
 }
@@ -108,14 +109,14 @@ static void apply_entry(tree_t *sema, tree_t *decl, vector_t *args)
 {
     if (!tree_is(decl, eTreeDeclFunction))
     {
-        report(sema->reports, eFatal, decl->node, "entry attribute can only be applied to functions");
+        msg_notify(sema->reports, &kEvent_InvalidAttributeApplication, decl->node, "entry attribute can only be applied to functions");
         return;
     }
 
     const tree_attribs_t *old = tree_get_attrib(decl);
     if (old->link != eLinkModule && old->link != eLinkExport)
     {
-        report(sema->reports, eFatal, decl->node, "entry attribute can only be applied to public functions");
+        msg_notify(sema->reports, &kEvent_InvalidAttributeApplication, decl->node, "entry attribute can only be applied to public functions");
         return;
     }
 
@@ -128,14 +129,14 @@ static void apply_deprecated(tree_t *sema, tree_t *decl, vector_t *args)
 {
     if (!tree_is(decl, eTreeDeclFunction))
     {
-        report(sema->reports, eFatal, decl->node, "deprecated attribute can only be applied to functions");
+        msg_notify(sema->reports, &kEvent_InvalidAttributeApplication, decl->node, "deprecated attribute can only be applied to functions");
         return;
     }
 
     const tree_attribs_t *old = tree_get_attrib(decl);
     if (old->deprecated != NULL)
     {
-        report(sema->reports, eFatal, decl->node, "deprecated attribute already applied");
+        msg_notify(sema->reports, &kEvent_DuplicateAttribute, decl->node, "deprecated attribute already applied");
         return;
     }
 
@@ -151,14 +152,14 @@ static void apply_section(tree_t *sema, tree_t *decl, vector_t *args)
 {
     if (!tree_is(decl, eTreeDeclFunction))
     {
-        report(sema->reports, eFatal, decl->node, "section attribute can only be applied to functions");
+        msg_notify(sema->reports, &kEvent_InvalidAttributeApplication, decl->node, "section attribute can only be applied to functions");
         return;
     }
 
     const tree_attribs_t *old = tree_get_attrib(decl);
     if (old->section != NULL)
     {
-        report(sema->reports, eFatal, decl->node, "section attribute already applied");
+        msg_notify(sema->reports, &kEvent_DuplicateAttribute, decl->node, "section attribute already applied");
         return;
     }
 
@@ -174,14 +175,14 @@ static void apply_extern(tree_t *sema, tree_t *decl, vector_t *args)
 {
     if (!tree_is(decl, eTreeDeclFunction))
     {
-        report(sema->reports, eFatal, decl->node, "extern attribute can only be applied to functions");
+        msg_notify(sema->reports, &kEvent_InvalidAttributeApplication, decl->node, "extern attribute can only be applied to functions");
         return;
     }
 
     const tree_attribs_t *old = tree_get_attrib(decl);
     if (old->mangle != NULL)
     {
-        report(sema->reports, eFatal, decl->node, "extern attribute already applied");
+        msg_notify(sema->reports, &kEvent_DuplicateAttribute, decl->node, "extern attribute already applied");
         return;
     }
 
@@ -206,11 +207,11 @@ static void apply_layout(tree_t *sema, tree_t *decl, vector_t *args)
 
     if (!tree_is(decl, eTreeTypeStruct))
     {
-        report(sema->reports, eFatal, decl->node, "layout attribute can only be applied to structs");
+        msg_notify(sema->reports, &kEvent_InvalidAttributeApplication, decl->node, "layout attribute can only be applied to structs");
         return;
     }
 
-    report(sema->reports, eWarn, tree_get_node(decl), "layout attribute not implemented");
+    msg_notify(sema->reports, &kEvent_UnimplementedAttribute, tree_get_node(decl), "layout attribute not implemented");
 }
 
 void ctu_init_attribs(tree_t *sema)
@@ -224,8 +225,8 @@ void ctu_init_attribs(tree_t *sema)
     ctu_attrib_t *section = attrib_create("section", apply_section);
     tree_module_set(sema, eCtuTagAttribs, section->name, section);
 
-    ctu_attrib_t *attribExtern = attrib_create("extern", apply_extern);
-    tree_module_set(sema, eCtuTagAttribs, attribExtern->name, attribExtern);
+    ctu_attrib_t *attrib_extern = attrib_create("extern", apply_extern);
+    tree_module_set(sema, eCtuTagAttribs, attrib_extern->name, attrib_extern);
 
     ctu_attrib_t *layout = attrib_create("layout", apply_layout);
     tree_module_set(sema, eCtuTagAttribs, layout->name, layout);
@@ -242,7 +243,7 @@ void ctu_apply_attribs(tree_t *sema, tree_t *decl, vector_t *attribs)
         ctu_attrib_t *it = get_attrib(sema, attrib->attribPath);
         if (it == NULL)
         {
-            report(sema->reports, eWarn, attrib->node, "attrib '%s' not found", attrib_name(attrib->attribPath));
+            msg_notify(sema->reports, &kEvent_AttribNotFound, attrib->node, "attrib '%s' not found", attrib_name(attrib->attribPath));
             continue;
         }
 

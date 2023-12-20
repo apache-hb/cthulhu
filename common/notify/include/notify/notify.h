@@ -67,7 +67,19 @@ RET_NOTNULL
 NODISCARD
 logger_t *logger_new(IN_NOTNULL arena_t *arena);
 
-vector_t *logger_get_events(IN_NOTNULL logger_t *logs);
+/// @brief get the events from the logger
+///
+/// @param[in] logs the logger
+///
+/// @return the events
+NODISCARD
+vector_t *logger_get_events(IN_NOTNULL const logger_t *logs);
+
+/// @brief reset the loggers messages
+/// @warning this invalidates the events returned by @a logger_get_events
+///
+/// @param[in, out] logs the logger
+void logger_reset(IN_NOTNULL logger_t *logs);
 
 /// @brief register a new diagnostic
 ///
@@ -76,23 +88,6 @@ vector_t *logger_get_events(IN_NOTNULL logger_t *logs);
 void msg_diagnostic(
     IN_NOTNULL logger_t *logs,
     IN_NOTNULL const diagnostic_t *diagnostic);
-
-/// @brief notify the logger of a new message
-/// this is the same as @ref msg_notify but with an attached stacktrace
-///
-/// @param[in, out] logs the logger
-/// @param diagnostic the diagnostic to use
-/// @param node the node to attach to the message
-/// @param fmt the format string
-/// @param ... the format arguments
-///
-/// @return the new event
-RET_NOTNULL
-event_t *msg_panic(
-    IN_NOTNULL logger_t *logs,
-    IN_NOTNULL const diagnostic_t *diagnostic,
-    const node_t *node,
-    FMT_STRING const char *fmt, ...) CT_PRINTF(4, 5);
 
 /// @brief notify the logger of a new message
 ///

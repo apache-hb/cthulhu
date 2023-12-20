@@ -33,11 +33,19 @@ logger_t *logger_new(arena_t *arena)
 }
 
 USE_DECL
-vector_t *logger_get_events(logger_t *logs)
+vector_t *logger_get_events(const logger_t *logs)
 {
     CTASSERT(logs != NULL);
 
     return logs->messages;
+}
+
+USE_DECL
+void logger_reset(logger_t *logs)
+{
+    CTASSERT(logs != NULL);
+
+    vector_reset(logs->messages);
 }
 
 USE_DECL
@@ -51,23 +59,6 @@ void msg_diagnostic(logger_t *logs, const diagnostic_t *diagnostic)
 
     vector_push(&logs->diagnostics, (void*)diagnostic);
     map_set(logs->lookup, diagnostic->id, (void*)diagnostic);
-}
-
-USE_DECL
-event_t *msg_panic(logger_t *logs, const diagnostic_t *diagnostic, const node_t *node, const char *fmt, ...)
-{
-    CTASSERT(logs != NULL);
-    CTASSERT(diagnostic != NULL);
-    CTASSERT(fmt != NULL);
-
-    va_list args;
-    va_start(args, fmt);
-
-    event_t *event = msg_vnotify(logs, diagnostic, node, fmt, args);
-
-    va_end(args);
-
-    return event;
 }
 
 USE_DECL

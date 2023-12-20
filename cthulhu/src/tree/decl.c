@@ -307,10 +307,10 @@ static void check_enum_cases(vector_t *cases)
     }
 }
 
-tree_t *tree_decl_enum(const node_t *node, const char *name, const tree_t *underlying, vector_t *cases, tree_t *defaultCase)
+tree_t *tree_decl_enum(const node_t *node, const char *name, const tree_t *underlying, vector_t *cases, tree_t *default_case)
 {
     tree_t *self = decl_open(node, name, NULL, eTreeTypeEnum, NULL);
-    tree_close_enum(self, underlying, cases, defaultCase);
+    tree_close_enum(self, underlying, cases, default_case);
     return self;
 }
 
@@ -323,19 +323,19 @@ tree_t *tree_open_enum(const node_t *node, const char *name, tree_resolve_info_t
     return self;
 }
 
-void tree_close_enum(tree_t *self, const tree_t *underlying, vector_t *cases, tree_t *defaultCase)
+void tree_close_enum(tree_t *self, const tree_t *underlying, vector_t *cases, tree_t *default_case)
 {
     decl_close(self, eTreeTypeEnum);
 
     self->underlying = underlying;
     self->cases = cases;
-    self->defaultCase = defaultCase;
+    self->defaultCase = default_case;
 
     CTASSERTF(tree_is(underlying, eTreeTypeDigit), "enums must have an underlying digit type, got %s", tree_to_string(underlying));
 
     check_enum_cases(cases);
-    if (defaultCase != NULL)
+    if (default_case != NULL)
     {
-        CHECK_CASE(defaultCase);
+        CHECK_CASE(default_case);
     }
 }

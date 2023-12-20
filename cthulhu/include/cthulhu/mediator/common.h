@@ -1,8 +1,9 @@
 #pragma once
 
-#include "core/version_def.h"
-#include "core/compiler.h"
 #include "core/analyze.h"
+#include "core/compiler.h"
+#include "core/version_def.h"
+
 
 BEGIN_API
 
@@ -53,7 +54,7 @@ typedef struct language_t
 
     version_info_t version; ///< version info for the frontend
 
-    const char **exts; ///< null terminated list of file extensions
+    const char * const * exts; ///< null terminated list of file extensions
 
     driver_create_t fn_create;   ///< called at startup
     driver_destroy_t fn_destroy; ///< called at shutdown

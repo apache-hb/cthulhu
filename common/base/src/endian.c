@@ -1,6 +1,6 @@
 #include "base/endian.h"
 
-#include <stdlib.h>
+#include <stdlib.h> // IWYU pragma: keep
 
 uint16_t endian_swap16(uint16_t value)
 {

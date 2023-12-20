@@ -75,19 +75,19 @@ static void c89_begin_module(c89_emit_t *emit, const ssa_module_t *mod)
     // create source and header files
     char *path = begin_module(&emit->emit, emit->fs, mod); // lets not scuff the original path
 
-    const char *srcFile = format_path(path, mod->name);
-    const char *hdrFile = format_path(path, mod->name);
+    const char *src_file = format_path(path, mod->name);
+    const char *hdr_file = format_path(path, mod->name);
 
-    vector_push(&emit->sources, format("src/%s.c", srcFile));
+    vector_push(&emit->sources, format("src/%s.c", src_file));
 
-    c89_source_t *src = source_for(emit, mod, srcFile);
-    c89_source_t *hdr = header_for(emit, mod, hdrFile);
+    c89_source_t *src = source_for(emit, mod, src_file);
+    c89_source_t *hdr = header_for(emit, mod, hdr_file);
 
     write_string(hdr->io, "#pragma once\n");
     write_string(hdr->io, "#include <stdbool.h>\n");
     write_string(hdr->io, "#include <stdint.h>\n");
 
-    write_string(src->io, "#include \"%s.h\"\n", hdrFile);
+    write_string(src->io, "#include \"%s.h\"\n", hdr_file);
 }
 
 // emit api
@@ -121,10 +121,10 @@ static void get_required_headers(c89_emit_t *emit, set_t *requires, const ssa_mo
         while (set_has_next(&iter))
         {
             const ssa_symbol_t *dep = set_next(&iter);
-            const ssa_module_t *depMod = map_get_ptr(emit->modmap, dep);
-            if (depMod != root)
+            const ssa_module_t *dep_mod = map_get_ptr(emit->modmap, dep);
+            if (dep_mod != root)
             {
-                set_add_ptr(requires, depMod);
+                set_add_ptr(requires, dep_mod);
             }
         }
     }
@@ -374,11 +374,8 @@ static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value)
 static const char *c89_format_local(c89_emit_t *emit, size_t local)
 {
     typevec_t *locals = emit->current->locals;
-    if (local >= typevec_len(locals))
-    {
-        msg_notify(emit->emit.reports, &kEvent_EmitStateError, node_builtin(), "local(%zu) > locals(%zu)", local, typevec_len(locals));
-        return format("local[error(%zu > %zu)]", local, typevec_len(locals));
-    }
+    CTASSERTF(local < typevec_len(locals), "local(%zu) > locals(%zu)", local, typevec_len(locals));
+
 
     const ssa_local_t *it = typevec_offset(locals, local);
     return format("l_%s", it->name);
@@ -387,11 +384,7 @@ static const char *c89_format_local(c89_emit_t *emit, size_t local)
 static const char *c89_format_param(c89_emit_t *emit, size_t param)
 {
     typevec_t *params = emit->current->params;
-    if (param >= typevec_len(params))
-    {
-        msg_notify(emit->emit.reports, &kEvent_EmitStateError, node_builtin(), "param(%zu) > params(%zu)", param, typevec_len(params));
-        return format("param[error(%zu > %zu)]", param, typevec_len(params));
-    }
+    CTASSERTF(param < typevec_len(params), "param(%zu) > params(%zu)", param, typevec_len(params));
 
     const ssa_param_t *it = typevec_offset(params, param);
     return it->name;
@@ -454,10 +447,10 @@ static void c89_write_address(c89_emit_t *emit, io_t *io, const ssa_step_t *step
     const ssa_type_t *type = get_operand_type(emit, symbol);
 
     const ssa_type_t *ptr = ssa_type_pointer(type->name, eQualUnknown, (ssa_type_t*)type, 0);
-    const char *stepName = c89_name_vreg(emit, step, ptr);
+    const char *step_name = c89_name_vreg(emit, step, ptr);
 
     write_string(io, "\t%s = &(%s); // %s\n",
-        stepName,
+        step_name,
         c89_format_operand(emit, addr.symbol),
         type_to_string(ptr)
     );
@@ -480,15 +473,15 @@ static void c89_write_member(c89_emit_t *emit, io_t *io, const ssa_step_t *step)
     CTASSERTF(step->opcode == eOpMember, "expected member, got %s", ssa_opcode_name(step->opcode));
 
     ssa_member_t member = step->member;
-    const ssa_type_t *recordPtr = get_operand_type(emit, member.object);
-    CTASSERTF(recordPtr->kind == eTypePointer, "expected record type, got %s", type_to_string(recordPtr));
+    const ssa_type_t *record_ptr = get_operand_type(emit, member.object);
+    CTASSERTF(record_ptr->kind == eTypePointer, "expected record type, got %s", type_to_string(record_ptr));
 
-    ssa_type_pointer_t ptr = recordPtr->pointer;
+    ssa_type_pointer_t ptr = record_ptr->pointer;
     const ssa_type_t *record = ptr.pointer;
     CTASSERTF(record->kind == eTypeStruct, "expected record type, got %s", type_to_string(record));
 
-    ssa_type_record_t recordType = record->record;
-    const ssa_field_t *field = typevec_offset(recordType.fields, member.index);
+    ssa_type_record_t record_type = record->record;
+    const ssa_field_t *field = typevec_offset(record_type.fields, member.index);
 
     write_string(io, "\t%s = &%s->%s;\n",
         c89_name_vreg(emit, step, ssa_type_pointer(field->name, eQualUnknown, (ssa_type_t*)field->type, 1)),

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/compiler.h"
 #include "core/analyze.h"
+#include "core/compiler.h"
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -18,7 +18,8 @@ BEGIN_API
 
 /// @def CTU_ENABLE_PANIC
 /// @brief enable panic handling
-/// @note this is only enabled in debug builds, see [The build guide](@ref building) for more information
+/// @note this is only enabled in debug builds, see [The build guide](@ref building) for more
+/// information
 
 /// @brief panic location information
 typedef struct
@@ -64,11 +65,11 @@ NORETURN ctpanic(panic_t panic, FMT_STRING const char *msg, ...) CT_PRINTF(2, 3)
 /// @brief panic with a message and optional format arguments
 ///
 /// @param ... the format string and optional arguments to format
-#define CTU_PANIC(...)                                                                                                 \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        panic_t panic = {__FILE__, __LINE__, FUNCNAME};                                                                \
-        ctpanic(panic, __VA_ARGS__);                                                                                   \
+#define CTU_PANIC(...)                                  \
+    do                                                  \
+    {                                                   \
+        panic_t panic = {__FILE__, __LINE__, FUNCNAME}; \
+        ctpanic(panic, __VA_ARGS__);                    \
     } while (0)
 
 /// @def CTU_ALWAYS_ASSERTF(expr, ...)
@@ -78,13 +79,13 @@ NORETURN ctpanic(panic_t panic, FMT_STRING const char *msg, ...) CT_PRINTF(2, 3)
 /// @param expr the condition to assert
 /// @param ... the format string and optional arguments to format
 
-#define CTU_ALWAYS_ASSERTF(expr, ...)                                                                                  \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        if (!(expr))                                                                                                   \
-        {                                                                                                              \
-            CTU_PANIC(__VA_ARGS__);                                                                                    \
-        }                                                                                                              \
+#define CTU_ALWAYS_ASSERTF(expr, ...) \
+    do                                \
+    {                                 \
+        if (!(expr))                  \
+        {                             \
+            CTU_PANIC(__VA_ARGS__);   \
+        }                             \
     } while (0)
 
 /// @def CTASSERTF(expr, ...)
@@ -123,12 +124,12 @@ NORETURN ctpanic(panic_t panic, FMT_STRING const char *msg, ...) CT_PRINTF(2, 3)
 /// @brief assert that a global is only initialized once
 ///
 /// @param ID the unique identifier for this global
-#define GLOBAL_INIT(ID)                                                                                                \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        static bool init = false;                                                                                      \
-        CTASSERTM(!init, ID " already initialized");                                                                   \
-        init = true;                                                                                                   \
+#define GLOBAL_INIT(ID)                              \
+    do                                               \
+    {                                                \
+        static bool init = false;                    \
+        CTASSERTM(!init, ID " already initialized"); \
+        init = true;                                 \
     } while (0)
 
 /// @} // Panic

@@ -2,6 +2,8 @@
 
 #include "cthulhu/events/events.h"
 #include "memory/memory.h"
+#include "notify/colour.h"
+#include "notify/text.h"
 #include "scan/node.h"
 #include "std/map.h"
 #include "std/str.h"
@@ -28,16 +30,6 @@ static const version_info_t kVersionInfo = {
     .author = "Elliot Haisley",
     .version = NEW_VERSION(0, 0, 3),
 };
-
-#define CHECK_REPORTS(reports)                                                                     \
-    do                                                                                             \
-    {                                                                                              \
-        int err = text_report(logger_get_events(reports), reportConfig);                           \
-        if (err != 0)                                                                              \
-        {                                                                                          \
-            return err;                                                                            \
-        }                                                                                          \
-    } while (0)
 
 static void parse_source(lifetime_t *lifetime, const char *path)
 {
@@ -73,6 +65,34 @@ static void parse_source(lifetime_t *lifetime, const char *path)
     lifetime_parse(lifetime, lang, io);
 }
 
+static int check_reports(logger_t *logger, report_config_t config, const char *title)
+{
+    int err = text_report(logger_get_events(logger), config, title);
+
+    text_config_t inner = config.text_config;
+
+    if (err != EXIT_OK)
+    {
+        const void *buffer = io_map(inner.io);
+        size_t size = io_size(inner.io);
+        (void)fwrite(buffer, size, 1, stderr);
+
+        return err;
+    }
+
+    return 0;
+}
+
+#define CHECK_LOG(logger, fmt)                               \
+    do                                                       \
+    {                                                        \
+        int err = check_reports(logger, report_config, fmt); \
+        if (err != EXIT_OK)                                  \
+        {                                                    \
+            return err;                                      \
+        }                                                    \
+    } while (0)
+
 int main(int argc, const char **argv)
 {
     mediator_t *mediator = mediator_new("cli", kVersionInfo);
@@ -81,59 +101,62 @@ int main(int argc, const char **argv)
 
     runtime_t rt = cmd_parse(mediator, lifetime, argc, argv);
 
-    vector_t *errors = logger_get_events(reports);
-    size_t len = vector_len(errors);
-    if (len > 0)
-    {
-        for (size_t i = 0; i < len; i++)
-        {
-            event_t *event = vector_get(errors, i);
-            printf("%s\n", event->message); // TODO: use text reporting
-        }
+    io_t *msg_buffer = io_blob("buffer", 0x1000, eAccessWrite | eAccessText);
 
-        return 1;
-    }
+    text_config_t text_config = {
+        .config = {
+            .zeroth_line = false,
+            .print_source = true,
+            .print_header = true,
+        },
+        .colours = colour_get_default(),
+        .io = msg_buffer,
+    };
 
-    // CHECK_REPORTS(reports, "failed to parse command line arguments");
+    report_config_t report_config = {
+        .report_format = eTextSimple,
+        .text_config = text_config,
+    };
 
-    size_t totalSources = vector_len(rt.sourcePaths);
-    if (totalSources == 0)
+    CHECK_LOG(reports, "initializing");
+
+    size_t total_sources = vector_len(rt.sourcePaths);
+    if (total_sources == 0)
     {
         msg_notify(reports, &kEvent_NoSourceFiles, node_builtin(), "no source files provided");
-        // report(reports, eFatal, node_builtin(), "no source files provided");
     }
 
-    // CHECK_REPORTS(reports, "failed to load sources");
+    CHECK_LOG(reports, "opening sources");
 
-    for (size_t i = 0; i < totalSources; i++)
+    for (size_t i = 0; i < total_sources; i++)
     {
         const char *path = vector_get(rt.sourcePaths, i);
         parse_source(lifetime, path);
     }
 
-    // CHECK_REPORTS(reports, "failed to parse sources");
+    CHECK_LOG(reports, "parsing sources");
 
     for (size_t stage = 0; stage < eStageTotal; stage++)
     {
         lifetime_run_stage(lifetime, stage);
 
         char *msg = format("running stage %s", stage_to_string(stage));
-        // CHECK_REPORTS(reports, msg);
+        CHECK_LOG(reports, msg);
     }
 
     lifetime_resolve(lifetime);
-    // CHECK_REPORTS(reports, "resolving symbols");
+    CHECK_LOG(reports, "compiling sources");
 
     map_t *modmap = lifetime_get_modules(lifetime);
     ssa_result_t ssa = ssa_compile(modmap);
-    // CHECK_REPORTS(reports, "generating ssa");
+    CHECK_LOG(reports, "compiling ssa");
 
     ssa_opt(reports, ssa);
-    // CHECK_REPORTS(reports, "optimizing ssa");
+    CHECK_LOG(reports, "optimizing ssa");
 
     fs_t *fs = fs_virtual("out");
 
-    emit_options_t baseOpts = {
+    emit_options_t base_emit_options = {
         .reports = reports,
         .fs = fs,
 
@@ -143,16 +166,16 @@ int main(int argc, const char **argv)
 
     if (rt.emitSSA)
     {
-        ssa_emit_options_t emitOpts = {.opts = baseOpts};
+        ssa_emit_options_t emit_options = {.opts = base_emit_options};
 
-        emit_ssa(&emitOpts);
-        // CHECK_REPORTS(reports, "emitting ssa");
+        emit_ssa(&emit_options);
+        CHECK_LOG(reports, "emitting ssa");
     }
 
-    c89_emit_options_t c89Opts = {.opts = baseOpts};
-    c89_emit_result_t c89Result = emit_c89(&c89Opts);
-    CTU_UNUSED(c89Result); // TODO: check for errors
-    // CHECK_REPORTS(reports, "emitting c89");
+    c89_emit_options_t c89_emit_options = {.opts = base_emit_options};
+    c89_emit_result_t c89_emit_result = emit_c89(&c89_emit_options);
+    CTU_UNUSED(c89_emit_result); // TODO: check for errors
+    CHECK_LOG(reports, "emitting c89");
 
     const char *outpath = "out";
     fs_t *out = fs_physical(outpath);
@@ -160,18 +183,16 @@ int main(int argc, const char **argv)
     {
         msg_notify(reports, &kEvent_FailedToCreateOutputDirectory, node_builtin(),
                    "failed to create output directory `%s`", outpath);
-        // report(reports, eFatal, node_builtin(), "failed to create output directory");
     }
 
-    // CHECK_REPORTS(reports, "creating output directory");
+    CHECK_LOG(reports, "creating output directory");
 
     sync_result_t result = fs_sync(out, fs);
     if (result.path != NULL)
     {
         msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(), "failed to sync %s",
                    result.path);
-        // report(reports, eFatal, NULL, "failed to sync %s", result.path);
     }
-    // CHECK_REPORTS(reports, "syncing output directory");
 
+    CHECK_LOG(reports, "writing output files");
 }

@@ -29,10 +29,10 @@ static const char *get_c89_digit(ssa_type_digit_t ty)
     }
 }
 
-static const char *get_quals(quals_t quals, bool emitConst)
+static const char *get_quals(quals_t quals, bool emit_const)
 {
     // const is the default
-    if (quals & eQualConst) { return emitConst ? "const " : ""; }
+    if (quals & eQualConst) { return emit_const ? "const " : ""; }
 
     vector_t *vec = vector_new(3);
     if (quals & eQualAtomic) { vector_push(&vec, "_Atomic"); }
@@ -58,11 +58,11 @@ static const char *format_c89_pointer(c89_emit_t *emit, ssa_type_pointer_t point
     return c89_format_type(emit, pointer.pointer, tmp, true);
 }
 
-const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char *name, bool emitConst)
+const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char *name, bool emit_const)
 {
     CTASSERT(type != NULL);
 
-    const char *quals = get_quals(type->quals, emitConst);
+    const char *quals = get_quals(type->quals, emit_const);
 
     switch (type->kind)
     {
@@ -75,10 +75,10 @@ const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char
         : format("%sbool", quals);
 
     case eTypeDigit: {
-        const char *digitName = get_c89_digit(type->digit);
+        const char *digit_name = get_c89_digit(type->digit);
         return (name != NULL)
-            ? format("%s%s %s", quals, digitName, name)
-            : format("%s%s", quals, digitName);
+            ? format("%s%s %s", quals, digit_name, name)
+            : format("%s%s", quals, digit_name);
     }
 
     case eTypeOpaque: return (name != NULL)
