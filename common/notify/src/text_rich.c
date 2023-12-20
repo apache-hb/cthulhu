@@ -23,6 +23,8 @@ typedef struct rich_t
     size_t largest_line;
 
     cache_map_t *file_cache;
+
+    size_t max_columns;
 } rich_t;
 
 static void print_report_header(rich_t *rich, const char *message)
@@ -121,14 +123,14 @@ static void print_file_header(rich_t *rich, const node_t *node)
     }
 }
 
-static char *fmt_underline(text_cache_t *cache, const node_t *node)
+static char *fmt_underline(text_cache_t *cache, const node_t *node, size_t limit)
 {
     CTASSERT(cache != NULL);
 
     where_t where = node_get_location(node);
 
     text_view_t view = cache_get_line(cache, where.first_line);
-    size_t width = view.size;
+    size_t width = MIN(view.size, limit);
 
     typevec_t *padding = typevec_new(sizeof(char), width);
     for (size_t i = 0; i < width; i++)
@@ -140,7 +142,7 @@ static char *fmt_underline(text_cache_t *cache, const node_t *node)
     }
     typevec_push(padding, "\0");
 
-    size_t underline_width = view.size;
+    size_t underline_width = width;
     if (where.first_line == where.last_line)
     {
         underline_width = MIN(where.last_column - where.first_column, 1);
@@ -166,13 +168,13 @@ static void print_file_segment(rich_t *rich, const node_t *node, const char *mes
     where_t where = node_get_location(node);
     size_t data_line = where.first_line;
 
-    size_t width = get_num_width(rich->largest_line);
     size_t display_line = get_line_number(config.config, node);
+    size_t width = get_num_width(display_line);
     char *padding = str_repeat(" ", width);
     char *line = fmt_align(width, "%zu", display_line);
 
     text_cache_t *file = cache_emplace_scan(rich->file_cache, scan);
-    text_t source = cache_escape_line(file, data_line, config.colours);
+    text_t source = cache_escape_line(file, data_line, config.colours, rich->max_columns);
 
     // get the first line of the message
     vector_t *lines = str_split(message, "\n");
@@ -184,7 +186,7 @@ static void print_file_segment(rich_t *rich, const node_t *node, const char *mes
         first = format("%s %s", one, first);
     }
 
-    char *underline = fmt_underline(file, node);
+    char *underline = fmt_underline(file, node, rich->max_columns);
     char *coloured_underline = fmt_coloured(config.colours, eColourMagenta, "%s", underline);
 
     const char *pretext = !isspace(source.text[0]) ? " " : "";
@@ -509,10 +511,13 @@ void text_report_rich(text_config_t config, const event_t *event)
     CTASSERT(config.io != NULL);
     CTASSERT(event != NULL);
 
+    file_config_t info = config.config;
+
     rich_t ctx = {
         .config = config,
         .event = event,
         .file_cache = config.cache != NULL ? config.cache : cache_map_new(4),
+        .max_columns = info.max_columns == 0 ? 240 : info.max_columns,
     };
 
     print_report_header(&ctx, event->message);

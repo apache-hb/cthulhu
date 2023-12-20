@@ -394,7 +394,7 @@ static bool get_escaped_char(char *buf, char c)
     return true;
 }
 
-text_t cache_escape_line(text_cache_t *cache, size_t line, const text_colour_t *colours)
+text_t cache_escape_line(text_cache_t *cache, size_t line, const text_colour_t *colours, size_t column_limit)
 {
     CTASSERT(colours != NULL);
 
@@ -409,6 +409,7 @@ text_t cache_escape_line(text_cache_t *cache, size_t line, const text_colour_t *
 
     char buffer[8] = "";
     bool in_colour = false;
+    size_t used = column_limit;
     for (size_t i = 0; i < view.size; i++)
     {
         char c = view.text[i];
@@ -427,6 +428,11 @@ text_t cache_escape_line(text_cache_t *cache, size_t line, const text_colour_t *
         }
 
         typevec_append(result, buffer, strlen(buffer));
+
+        if (0 >= --used)
+        {
+            break;
+        }
     }
 
     text_t *ptr = ctu_malloc(sizeof(text_t));

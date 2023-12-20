@@ -42,4 +42,4 @@ size_t cache_count_lines(text_cache_t *cache);
 
 // extract a line of text, converting non-printable characters to their escape codes
 // and highlighting the escaped characters
-text_t cache_escape_line(text_cache_t *cache, size_t line, const text_colour_t *colours);
+text_t cache_escape_line(text_cache_t *cache, size_t line, const text_colour_t *colours, size_t column_limit);

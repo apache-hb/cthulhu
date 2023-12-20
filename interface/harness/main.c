@@ -215,6 +215,7 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
             .zeroth_line = false,
             .print_source = true,
             .print_header = true,
+            .max_columns = 80
         },
         .colours = colour_get_default(),
         .io = msg_buffer,

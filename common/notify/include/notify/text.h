@@ -50,6 +50,10 @@ typedef struct file_config_t
     /// @brief should the backtrace header be printed
     /// @note this only applies to @a bt_report_finish
     bool print_header;
+
+    /// @brief the maximum number of columns to print
+    /// set to 0 to use default
+    size_t max_columns;
 } file_config_t;
 
 typedef enum text_format_t

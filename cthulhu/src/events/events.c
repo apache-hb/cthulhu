@@ -1,4 +1,5 @@
 #include "cthulhu/events/events.h"
+#include "std/str.h"
 
 #define CTU_EVENT(name, ...) const diagnostic_t kEvent_##name = __VA_ARGS__;
 
@@ -6,12 +7,12 @@
 
 void evt_scan_error(logger_t *logger, node_t *node, const char *msg)
 {
-    msg_notify(logger, &kEvent_ParseFailed, node, "%s", msg);
+    msg_notify(logger, &kEvent_ParseFailed, node, "scan error: `%s`", msg);
 }
 
 void evt_scan_unknown(logger_t *logger, node_t *node, const char *msg)
 {
-    msg_notify(logger, &kEvent_UnknownToken, node, "%s", msg);
+    msg_notify(logger, &kEvent_UnknownToken, node, "unkown symbol: `%s`", str_normalize(msg));
 }
 
 event_t *evt_symbol_shadowed(logger_t *logger, const char *name, const node_t *prev,
