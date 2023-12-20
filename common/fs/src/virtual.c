@@ -59,11 +59,13 @@ static size_t vfs_write(io_t *self, const void *src, size_t size)
 {
     virtual_io_t *io = vfs_data(self);
     virtual_file_t *data = io->data;
+
     data->used = MAX(data->used, io->offset + size);
     if (io->offset + size > data->size)
     {
-        data->data = ctu_realloc(data->data, io->offset + size);
-        data->size = io->offset + size;
+        size_t new_size = MAX(data->size * 2, io->offset + size);
+        data->data = ctu_realloc(data->data, new_size);
+        data->size = new_size;
     }
 
     memcpy(data->data + io->offset, src, size);

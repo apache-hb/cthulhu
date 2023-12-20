@@ -24,6 +24,15 @@ typedef struct typevec_t
     void *data;
 } typevec_t;
 
+// seperate from typevec_offset because we want to be able to get offsets
+// outside of the vector
+static void *get_offset_ptr(const typevec_t *vec, size_t index)
+{
+    CTASSERT(vec != NULL);
+
+    return ((char*)vec->data) + (index * vec->type_size);
+}
+
 static typevec_t *typevec_create(size_t type_size, size_t len)
 {
     CTASSERT(type_size > 0);
@@ -115,8 +124,27 @@ void typevec_push(typevec_t *vec, const void *src)
         vec->data = ctu_realloc(vec->data, vec->size * vec->type_size);
     }
 
-    void *dst = typevec_offset(vec, vec->used++);
+    void *dst = get_offset_ptr(vec, vec->used++);
     memcpy(dst, src, vec->type_size);
+}
+
+USE_DECL
+void typevec_append(typevec_t *vec, const void *src, size_t len)
+{
+    CTASSERT(vec != NULL);
+    CTASSERT(src != NULL);
+
+    size_t new_len = vec->used + len;
+
+    if (new_len > vec->size)
+    {
+        vec->size = MAX(vec->size * 2, new_len);
+        vec->data = ctu_realloc(vec->data, vec->size * vec->type_size);
+    }
+
+    void *dst = get_offset_ptr(vec, vec->used);
+    memcpy(dst, src, vec->type_size * len);
+    vec->used = new_len;
 }
 
 USE_DECL

@@ -78,6 +78,8 @@ void typevec_tail(IN_NOTNULL const typevec_t *vec, IN_NOTNULL void *dst);
 /// @param src the value to push
 void typevec_push(IN_NOTNULL typevec_t *vec, IN_NOTNULL const void *src);
 
+void typevec_append(IN_NOTNULL typevec_t *vec, IN_NOTNULL const void *src, size_t len);
+
 /// @brief pop a value from the vector
 ///
 /// @param vec the vector to pop the value from

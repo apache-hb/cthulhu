@@ -796,7 +796,7 @@ char str_tolower(int c)
 {
     if (c >= 'A' && c <= 'Z')
     {
-        return (c + 'a' - 'A') & CHAR_MAX;
+        return (char)((c + 'a' - 'A') & CHAR_MAX);
     }
 
     if (CHAR_MIN <= c && c <= CHAR_MAX)

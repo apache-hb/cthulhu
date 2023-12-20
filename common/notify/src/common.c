@@ -1,5 +1,6 @@
 #include "common.h"
 
+#include "base/log.h"
 #include "core/macros.h"
 #include "io/io.h"
 #include "memory/memory.h"
@@ -12,6 +13,8 @@
 #include "std/typed/vector.h"
 #include "std/vector.h"
 
+#include <ctype.h>
+#include <stdio.h>
 #include <string.h>
 
 const char *get_severity_name(severity_t severity)
@@ -112,7 +115,7 @@ char *fmt_node(file_config_t config, const node_t *node)
 
     if (!node_is_builtin(node))
     {
-        line_t first_line = get_line_number(config, node);
+        size_t first_line = get_line_number(config, node);
 
         return format("%s:%" PRI_LINE ":%" PRI_COLUMN "", path, first_line, where.first_column);
     }
@@ -200,6 +203,8 @@ typedef struct text_cache_t
     text_view_t source;
 
     typevec_t *line_info;
+
+    map_t *cached_lines;
 } text_cache_t;
 
 // load the start and length of each line in the file
@@ -233,6 +238,7 @@ static text_cache_t *text_cache_new(io_t *io, text_view_t source, size_t len)
     cache->io = io;
     cache->source = source;
     cache->line_info = typevec_new(sizeof(lineinfo_t), len);
+    cache->cached_lines = map_optimal(len);
 
     return cache;
 }
@@ -280,7 +286,7 @@ static bool cache_is_valid(text_cache_t *cache)
 {
     CTASSERT(cache != NULL);
 
-    return cache->io != NULL && io_error(cache->io) == 0;
+    return cache->io == NULL || io_error(cache->io) == 0;
 }
 
 cache_map_t *cache_map_new(size_t size)
@@ -306,7 +312,8 @@ text_cache_t *cache_emplace_file(cache_map_t *map, const char *path)
     CTASSERT(map != NULL);
     CTASSERT(path != NULL);
 
-    text_cache_t *cache = map_get(map, path);
+    // TODO: is using the name stable?
+    text_cache_t *cache = map_get_ptr(map, path);
     if (cache != NULL && cache_is_valid(cache)) return cache;
 
     io_t *io = io_file(path, eAccessRead | eAccessText);
@@ -314,7 +321,7 @@ text_cache_t *cache_emplace_file(cache_map_t *map, const char *path)
 
     // always insert the cache, even if it is invalid.
     // this way we avoid trying to open the file again
-    map_set(map, path, text);
+    map_set_ptr(map, path, text);
     if (cache_is_valid(text)) return text;
 
     return NULL;
@@ -368,14 +375,81 @@ size_t cache_count_lines(text_cache_t *cache)
     return typevec_len(cache->line_info);
 }
 
+static bool get_escaped_char(char *buf, char c)
+{
+    if (isprint(c))
+    {
+        buf[0] = c;
+        buf[1] = '\0';
+        return false;
+    }
+
+    // print 2 byte hex value, we need to do this manually rather than using snprintf
+    // because snprintf is too slow and for some ungodly reason this is a hot path
+    buf[0] = '\\';
+    buf[1] = "0123456789abcdef"[c >> 4];
+    buf[2] = "0123456789abcdef"[c & 0xf];
+    buf[3] = '\0';
+
+    return true;
+}
+
+text_t cache_escape_line(text_cache_t *cache, size_t line, const text_colour_t *colours)
+{
+    CTASSERT(colours != NULL);
+
+    text_t *cached = map_get_ptr(cache->cached_lines, (void*)(uintptr_t)(line + 1));
+    if (cached != NULL) return *cached;
+
+    text_view_t view = cache_get_line(cache, line);
+
+    typevec_t *result = typevec_new(sizeof(char), view.size * 2);
+
+    ctu_log("size: %zu, line: %zu", view.size, line);
+
+    char buffer[8] = "";
+    bool in_colour = false;
+    for (size_t i = 0; i < view.size; i++)
+    {
+        char c = view.text[i];
+        bool is_notprint = get_escaped_char(buffer, c);
+        if (is_notprint && !in_colour)
+        {
+            const char *colour = colour_get(colours, eColourMagenta);
+            typevec_append(result, colour, strlen(colour));
+            in_colour = true;
+        }
+        else if (!is_notprint && in_colour)
+        {
+            const char *reset = colour_reset(colours);
+            typevec_append(result, reset, strlen(reset));
+            in_colour = false;
+        }
+
+        typevec_append(result, buffer, strlen(buffer));
+    }
+
+    text_t *ptr = ctu_malloc(sizeof(text_t));
+    ptr->text = typevec_data(result);
+    ptr->size = typevec_len(result);
+
+    map_set_ptr(cache->cached_lines, (void*)(uintptr_t)(line + 1), ptr);
+
+    return *ptr;
+}
+
 USE_DECL
 int text_report(vector_t *events, report_config_t config, const char *title)
 {
     CTASSERT(events != NULL);
     CTASSERT(title != NULL);
 
+    cache_map_t *cache = cache_map_new(32);
+
     text_format_t fmt = config.report_format;
     text_config_t text = config.text_config;
+
+    text.cache = cache;
 
     size_t len = vector_len(events);
     void (*fn)(text_config_t, const event_t*) = fmt == eTextComplex ? text_report_rich : text_report_simple;

@@ -208,7 +208,7 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
         lifetime_add_language(lifetime, lang);
     }
 
-    io_t *msg_buffer = io_blob("buffer", 0x1000, eAccessWrite | eAccessText);
+    io_t *msg_buffer = io_stdout();
 
     text_config_t text_config = {
         .config = {
@@ -221,7 +221,7 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
     };
 
     report_config_t report_config = {
-        .report_format = eTextSimple,
+        .report_format = eTextComplex,
         .text_config = text_config,
     };
 

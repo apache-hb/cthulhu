@@ -33,6 +33,8 @@ typedef struct event_t event_t;
 typedef struct vector_t vector_t;
 
 typedef struct text_colour_t text_colour_t;
+typedef struct map_t cache_map_t;
+typedef struct text_cache_t text_cache_t;
 
 BEGIN_API
 
@@ -60,6 +62,9 @@ typedef enum text_format_t
 
 typedef struct text_config_t
 {
+    /// a shared cache between all reports, set to NULL to disable caching
+    cache_map_t *cache;
+
     // is the first line of a source file the zeroth line or the first line
     file_config_t config;
 

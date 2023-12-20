@@ -5,6 +5,7 @@
 static void default_verbose(const char *fmt, va_list args)
 {
     (void)vprintf(fmt, args);
+    (void)printf("\n");
 }
 
 static verbose_t gVerboseFn = default_verbose;

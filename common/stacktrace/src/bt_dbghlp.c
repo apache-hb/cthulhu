@@ -1,6 +1,6 @@
 #include "stacktrace/stacktrace.h"
 
-#include "core/win32.h"
+#include "core/win32.h" // IWYU pragma: keep
 
 #include <dbghelp.h>
 

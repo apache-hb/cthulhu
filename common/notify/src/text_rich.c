@@ -46,7 +46,7 @@ static where_t get_first_line(const typevec_t *segments)
     CTASSERT(segments != NULL);
 
     size_t len = typevec_len(segments);
-    line_t first_line = LINE_MAX;
+    size_t first_line = SIZE_MAX;
 
     for (size_t i = 0; i < len; i++)
     {
@@ -71,7 +71,7 @@ static where_t get_first_line(const typevec_t *segments)
     return where;
 }
 
-static void print_scan_header(rich_t *rich, size_t largest, line_t line, const scan_t *scan)
+static void print_scan_header(rich_t *rich, size_t largest, size_t line, const scan_t *scan)
 {
     CTASSERT(rich != NULL);
     CTASSERT(scan != NULL);
@@ -140,13 +140,13 @@ static char *fmt_underline(text_cache_t *cache, const node_t *node)
     }
     typevec_push(padding, "\0");
 
-    column_t underline_width = view.size;
+    size_t underline_width = view.size;
     if (where.first_line == where.last_line)
     {
-        underline_width = where.last_column - where.first_column;
+        underline_width = MIN(where.last_column - where.first_column, 1);
     }
 
-    char *lines = str_repeat("~", underline_width - 1);
+    const char *lines = (underline_width > 1) ? str_repeat("~", underline_width - 1) : "";
     char *underline = format("%s^%s", (char*)typevec_data(padding), lines);
 
     typevec_delete(padding);
@@ -172,7 +172,7 @@ static void print_file_segment(rich_t *rich, const node_t *node, const char *mes
     char *line = fmt_align(width, "%zu", display_line);
 
     text_cache_t *file = cache_emplace_scan(rich->file_cache, scan);
-    text_view_t source = cache_get_line(file, data_line);
+    text_t source = cache_escape_line(file, data_line, config.colours);
 
     // get the first line of the message
     vector_t *lines = str_split(message, "\n");
@@ -512,7 +512,7 @@ void text_report_rich(text_config_t config, const event_t *event)
     rich_t ctx = {
         .config = config,
         .event = event,
-        .file_cache = cache_map_new(4),
+        .file_cache = config.cache != NULL ? config.cache : cache_map_new(4),
     };
 
     print_report_header(&ctx, event->message);
@@ -528,5 +528,6 @@ void text_report_rich(text_config_t config, const event_t *event)
 
     print_notes(&ctx);
 
-    cache_map_delete(ctx.file_cache);
+    if (config.cache == NULL)
+        cache_map_delete(ctx.file_cache);
 }

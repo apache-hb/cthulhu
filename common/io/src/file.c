@@ -81,7 +81,7 @@ static const io_callbacks_t kFileCallbacks = {
     .fn_seek = fd_seek,
 
     .fn_map = fd_map,
-    .fn_close = fd_close
+    .fn_close = fd_close,
 };
 
 USE_DECL

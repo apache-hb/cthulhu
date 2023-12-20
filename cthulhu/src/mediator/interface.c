@@ -181,6 +181,10 @@ static bool parse_failed(logger_t *reports, const char *path, parse_result_t res
         msg_notify(reports, &kEvent_ScanFailed, node_builtin(), "failed to scan %s: %d", path, result.error);
         return true;
 
+    // the driver will reject the file with errors, no need to clutter the output
+    case eParseFailed:
+        return true;
+
     default:
         return false;
     }
@@ -209,7 +213,10 @@ void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io)
         }
 
         CTASSERTF(lang->fn_postpass != NULL, "language `%s` has no postpass function", lang->id);
-        lang->fn_postpass(handle, scan, result.tree);
+        if (result.result == eParseOk)
+        {
+            lang->fn_postpass(handle, scan, result.tree);
+        }
     }
     else
     {

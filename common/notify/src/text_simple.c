@@ -141,7 +141,9 @@ static char *fmt_path(file_config_t config, const node_t *node)
     where_t where = node_get_location(node);
     size_t line = get_offset_line(config, where.first_line);
 
-    return format("%s(%zu)", fmt_node(config, node), line);
+    const char *path = get_scan_name(node);
+
+    return format("%s(%zu)", path, line);
 }
 
 USE_DECL

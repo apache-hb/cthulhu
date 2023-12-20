@@ -4,8 +4,11 @@ src = [
     'src/common.c',
     'src/view.c',
     'src/buffer.c',
-    'src/file.c'
+    'src/file.c',
+    'src/console.c'
 ]
+
+# TODO: make src/console.c optional for platforms without stdio.h
 
 libio = library('io', src,
     c_args : user_args,

@@ -31,9 +31,6 @@ size_t get_num_width(size_t num);
 
 char *fmt_align(size_t width, const char *fmt, ...);
 
-typedef struct map_t cache_map_t;
-typedef struct text_cache_t text_cache_t;
-
 cache_map_t *cache_map_new(size_t size);
 void cache_map_delete(cache_map_t *map);
 
@@ -42,3 +39,7 @@ text_cache_t *cache_emplace_scan(cache_map_t *map, const scan_t *scan);
 
 text_view_t cache_get_line(text_cache_t *cache, size_t line);
 size_t cache_count_lines(text_cache_t *cache);
+
+// extract a line of text, converting non-printable characters to their escape codes
+// and highlighting the escaped characters
+text_t cache_escape_line(text_cache_t *cache, size_t line, const text_colour_t *colours);

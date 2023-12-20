@@ -22,7 +22,7 @@ size_t io_read(io_t *io, void *dst, size_t size)
 {
     CTASSERT(io != NULL);
     CTASSERTF(io->flags & eAccessRead, "io.read(%s) flags not readable", io_name(io));
-    CTASSERTF(io->cb->fn_read, "fn_read invalid for `%s`", io->name);
+    CTASSERTF(io->cb->fn_read, "fn_read not provided for `%s`", io->name);
 
     return io->cb->fn_read(io, dst, size);
 }
@@ -31,8 +31,8 @@ USE_DECL
 size_t io_write(io_t *io, const void *src, size_t size)
 {
     CTASSERT(io != NULL);
-    CTASSERT(io->flags & eAccessWrite);
-    CTASSERTF(io->cb->fn_write, "fn_write invalid for `%s`", io->name);
+    CTASSERTF(io->flags & eAccessWrite, "io.write(%s) flags not writable", io_name(io));
+    CTASSERTF(io->cb->fn_write, "fn_write not provided for `%s`", io->name);
 
     return io->cb->fn_write(io, src, size);
 }
@@ -50,6 +50,7 @@ size_t io_printf(io_t *io, const char *fmt, ...)
     return size;
 }
 
+USE_DECL
 size_t io_vprintf(io_t *io, const char *fmt, va_list args)
 {
     char *buffer = vformat(fmt, args);
@@ -65,7 +66,7 @@ USE_DECL
 size_t io_size(io_t *io)
 {
     CTASSERT(io != NULL);
-    CTASSERTF(io->cb->fn_get_size, "fn_get_size invalid for `%s`", io->name);
+    CTASSERTF(io->cb->fn_get_size, "fn_get_size not provided for `%s`", io->name);
 
     return io->cb->fn_get_size(io);
 }
@@ -74,7 +75,7 @@ USE_DECL
 size_t io_seek(io_t *io, size_t offset)
 {
     CTASSERT(io != NULL);
-    CTASSERTF(io->cb->fn_seek, "fn_seek invalid for `%s`", io->name);
+    CTASSERTF(io->cb->fn_seek, "fn_seek not provided for `%s`", io->name);
 
     return io->cb->fn_seek(io, offset);
 }
@@ -91,7 +92,7 @@ USE_DECL
 const void *io_map(io_t *io)
 {
     CTASSERT(io != NULL);
-    CTASSERTF(io->cb->fn_map, "fn_map invalid for `%s`", io->name);
+    CTASSERTF(io->cb->fn_map, "fn_map not provided for `%s`", io->name);
 
     if (io_size(io) == 0) { return ""; }
 

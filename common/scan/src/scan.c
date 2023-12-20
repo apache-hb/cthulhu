@@ -1,10 +1,10 @@
+#include "base/log.h"
 #include "base/panic.h"
 
 #include "core/text.h"
 #include "io/io.h"
 #include "memory/arena.h"
 
-#include <limits.h>
 #include <string.h>
 
 typedef struct scan_t
@@ -21,7 +21,7 @@ typedef struct scan_t
     size_t size;
 } scan_t;
 
-static scan_t kBuiltinScan = {
+static scan_t gBuiltinScan = {
     .io = NULL,
     .alloc = NULL,
 
@@ -36,7 +36,7 @@ static scan_t kBuiltinScan = {
 USE_DECL
 scan_t *scan_builtin(void)
 {
-    return &kBuiltinScan;
+    return &gBuiltinScan;
 }
 
 USE_DECL
@@ -66,6 +66,7 @@ void *scan_get(scan_t *scan)
 {
     CTASSERT(scan != NULL);
 
+    ctu_log("scan get %p", scan->tree);
     return scan->tree;
 }
 
@@ -74,6 +75,7 @@ void scan_set(scan_t *scan, void *value)
 {
     CTASSERT(scan != NULL);
 
+    ctu_log("scan set %p", value);
     scan->tree = value;
 }
 
@@ -155,7 +157,7 @@ scan_t *scan_io(const char *language, io_t *io, arena_t *alloc)
     CTASSERTF(io_error(io) == 0, "io-error(%s) = %zu", io_name(io), io_error(io));
     CTASSERT(alloc != NULL);
 
-    scan_t *self = ARENA_MALLOC(alloc, sizeof(scan_t), io_name(io), NULL);
+    scan_t *self = ARENA_MALLOC(alloc, sizeof(scan_t), io_name(io), io);
 
     self->language = language;
     self->io = io;
