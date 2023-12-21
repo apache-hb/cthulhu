@@ -2,8 +2,10 @@
 
 #include "base/panic.h"
 
+#include "memory/memory.h"
 #include "os/os.h"
 
+#include <climits>
 #include <stdio.h>
 #include <errno.h>
 
@@ -44,24 +46,26 @@ static const char *get_access(os_access_t access)
 }
 
 USE_DECL
-OS_RESULT(os_file_t *) os_file_open(const char *path, os_access_t access)
+os_error_t os_file_open(const char *path, os_access_t access, os_file_t **file)
 {
     CTASSERT(path != NULL);
     CTASSERT(access & (eAccessRead | eAccessWrite));
+    CTASSERT(file != NULL);
 
     FILE *fd = fopen(path, get_access(access));
 
     if (fd == NULL)
     {
-        return linux_error(errno);
+        return errno;
     }
 
-    os_file_t file = {
-        .path = path,
-        .file = fd
-    };
+    arena_t *arena = ctu_default_alloc();
+    os_file_t *result = ARENA_MALLOC(arena, sizeof(os_file_t), path, NULL);
+    result->file = fd;
+    result->path = path;
 
-    return linux_result(0, &file, sizeof(os_file_t));
+    *file = result;
+    return 0;
 }
 
 void os_file_close(os_file_t *file)
@@ -72,11 +76,12 @@ void os_file_close(os_file_t *file)
 }
 
 USE_DECL
-OS_RESULT(size_t) os_file_read(os_file_t *file, void *buffer, size_t size)
+os_error_t os_file_read(os_file_t *file, void *buffer, size_t size, size_t *actual)
 {
     CTASSERT(file != NULL);
     CTASSERT(buffer != NULL);
     CTASSERT(size > 0);
+    CTASSERT(actual != NULL);
 
     size_t read = fread(buffer, 1, size, file->file);
 
@@ -84,19 +89,21 @@ OS_RESULT(size_t) os_file_read(os_file_t *file, void *buffer, size_t size)
     {
         if (ferror(file->file))
         {
-            return linux_error(errno);
+            return errno;
         }
     }
 
-    return linux_result(errno, &read, sizeof(size_t));
+    *actual = read;
+    return 0;
 }
 
 USE_DECL
-OS_RESULT(size_t) os_file_write(os_file_t *file, const void *buffer, size_t size)
+os_error_t os_file_write(os_file_t *file, const void *buffer, size_t size, size_t *actual)
 {
     CTASSERT(file != NULL);
     CTASSERT(buffer != NULL);
     CTASSERT(size > 0);
+    CTASSERT(actual != NULL);
 
     size_t written = fwrite(buffer, 1, size, file->file);
 
@@ -104,80 +111,88 @@ OS_RESULT(size_t) os_file_write(os_file_t *file, const void *buffer, size_t size
     {
         if (ferror(file->file))
         {
-            return linux_error(errno);
+            return errno;
         }
     }
 
-    return linux_result(errno, &written, sizeof(size_t));
+    *actual = written;
+    return errno;
 }
 
 USE_DECL
-OS_RESULT(size_t) os_file_size(os_file_t *file)
+os_error_t os_file_size(os_file_t *file, size_t *actual)
 {
     CTASSERT(file != NULL);
+    CTASSERT(actual != NULL);
 
     long pos = ftell(file->file);
 
-    if (pos < 0) { return linux_error(errno); }
-    if (fseek(file->file, 0, SEEK_END) < 0) { return linux_error(errno); }
+    if (pos < 0) { return errno; }
+    if (fseek(file->file, 0, SEEK_END) < 0) { return errno; }
 
     long size = ftell(file->file);
 
-    if (size < 0) { return linux_error(errno); }
-    if (fseek(file->file, pos, SEEK_SET) < 0) { return linux_error(errno); }
+    if (size < 0) { return errno; }
+    if (fseek(file->file, pos, SEEK_SET) < 0) { return errno; }
 
-    size_t result = size;
-
-    return linux_result(errno, &result, sizeof(size_t));
+    *actual = size;
+    return errno;
 }
 
 USE_DECL
-OS_RESULT(size_t) os_file_seek(os_file_t *file, size_t offset)
+os_error_t os_file_seek(os_file_t *file, size_t offset, size_t *actual)
 {
     CTASSERT(file != NULL);
+    CTASSERT(offset < LONG_MAX);
+    CTASSERT(actual != NULL);
 
-    if (fseek(file->file, offset, SEEK_SET) < 0)
+    int result = fseek(file->file, (long)offset, SEEK_SET);
+    if (result < 0)
     {
-        return linux_error(errno);
+        return errno;
     }
 
-    return linux_result(errno, NULL, 0);
+    *actual = offset;
+    return errno;
 }
 
 USE_DECL
-OS_RESULT(size_t) os_file_tell(os_file_t *file)
+os_error_t os_file_tell(os_file_t *file, size_t *actual)
 {
     CTASSERT(file != NULL);
+    CTASSERT(actual != NULL);
 
     long pos = ftell(file->file);
 
     if (pos < 0)
     {
-        return linux_error(errno);
+        return errno;
     }
 
-    size_t result = pos;
-
-    return linux_result(errno, &result, sizeof(size_t));
+    *actual = pos;
+    return errno;
 }
 
 USE_DECL
-OS_RESULT(const void *) os_file_map(os_file_t *file)
+os_error_t os_file_map(os_file_t *file, const void **mapped)
 {
     CTASSERT(file != NULL);
+    CTASSERT(mapped != NULL);
 
-    OS_RESULT(size_t) size = os_file_size(file);
-    if (os_error(size)) { return size; }
+    size_t size = 0;
+    os_error_t err = os_file_size(file, &size);
+    if (err) { return err; }
 
     int fd = fileno(file->file);
-    void *ptr = mmap(NULL, OS_VALUE(size_t, size), PROT_READ, MAP_PRIVATE, fd, 0);
+    void *ptr = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
 
     if (ptr == MAP_FAILED)
     {
-        return linux_error(errno);
+        return errno;
     }
 
-    return os_result_new(0, &ptr, sizeof(void *));
+    *mapped = ptr;
+    return 0;
 }
 
 USE_DECL

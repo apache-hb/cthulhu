@@ -2,9 +2,8 @@
 
 #include "base/panic.h"
 
+#include "memory/memory.h"
 #include "os/os.h"
-
-#include <limits.h>
 
 typedef struct os_file_t
 {
@@ -21,35 +20,37 @@ static DWORD get_access(os_access_t access)
 }
 
 USE_DECL
-OS_RESULT(os_file_t *) os_file_open(const char *path, os_access_t access)
+os_error_t os_file_open(const char *path, os_access_t access, os_file_t **file)
 {
     CTASSERT(path != NULL);
     CTASSERT(access & (eAccessRead | eAccessWrite));
+    CTASSERT(file != NULL);
 
-    DWORD dwAccess = get_access(access);
-    DWORD dwDisposition = (access & eAccessWrite)
+    DWORD dw_access = get_access(access);
+    DWORD dw_disposition = (access & eAccessWrite)
         ? (OPEN_ALWAYS | TRUNCATE_EXISTING)
         : OPEN_EXISTING;
     HANDLE handle = CreateFile(
         /* lpFileName = */ path,
-        /* dwDesiredAccess = */ dwAccess,
+        /* dwDesiredAccess = */ dw_access,
         /* dwShareMode = */ FILE_SHARE_READ,
         /* lpSecurityAttributes = */ NULL,
-        /* dwCreationDisposition = */ dwDisposition,
+        /* dwCreationDisposition = */ dw_disposition,
         /* dwFlagsAndAttributes = */ FILE_ATTRIBUTE_NORMAL,
         /* hTemplateFile = */ NULL);
 
     if (handle == INVALID_HANDLE_VALUE)
     {
-        return win_error(GetLastError());
+        return GetLastError();
     }
 
-    os_file_t fd = {
-        .path = path,
-        .handle = handle,
-    };
+    arena_t *arena = ctu_default_alloc();
+    os_file_t *result = ARENA_MALLOC(arena, sizeof(os_file_t), "os_file_t", NULL);
+    result->path = path;
+    result->handle = handle;
 
-    return win_result(ERROR_SUCCESS, &fd, sizeof(os_file_t));
+    *file = result;
+    return ERROR_SUCCESS;
 }
 
 USE_DECL
@@ -61,102 +62,109 @@ void os_file_close(os_file_t *fd)
 }
 
 USE_DECL
-OS_RESULT(size_t) os_file_read(os_file_t *file, void *buffer, size_t size)
+os_error_t os_file_read(os_file_t *file, void *buffer, size_t size, size_t *actual)
 {
     CTASSERT(file != NULL);
     CTASSERT(buffer != NULL);
     CTASSERTF(size > 0 && size <= UINT32_MAX, "size=%zu", size);
+    CTASSERT(actual != NULL);
 
-    DWORD readSize = 0;
-    BOOL result = ReadFile(file->handle, buffer, (DWORD)size, &readSize, NULL);
+    DWORD read_size = 0;
+    BOOL result = ReadFile(file->handle, buffer, (DWORD)size, &read_size, NULL);
 
-    size_t read = readSize;
+    size_t read = read_size;
 
     if (!result)
     {
-        return win_error(GetLastError());
+        return GetLastError();
     }
 
-    return win_result(ERROR_SUCCESS, &read, sizeof(size_t));
+    *actual = read;
+    return 0;
 }
 
 USE_DECL
-OS_RESULT(size_t) os_file_write(os_file_t *file, const void *buffer, size_t size)
+os_error_t os_file_write(os_file_t *file, const void *buffer, size_t size, size_t *actual)
 {
     CTASSERT(file != NULL);
     CTASSERT(buffer != NULL);
     CTASSERT(size > 0 && size <= UINT32_MAX);
+    CTASSERT(actual != NULL);
 
-    DWORD writtenSize = 0;
-    BOOL result = WriteFile(file->handle, buffer, (DWORD)size, &writtenSize, NULL);
+    DWORD written_size = 0;
+    BOOL result = WriteFile(file->handle, buffer, (DWORD)size, &written_size, NULL);
 
-    size_t written = writtenSize;
+    size_t written = written_size;
 
     if (!result)
     {
-        return win_error(GetLastError());
+        return GetLastError();
     }
 
-    return win_result(ERROR_SUCCESS, &written, sizeof(size_t));
+    *actual = written;
+    return ERROR_SUCCESS;
 }
 
 USE_DECL
-OS_RESULT(size_t) os_file_size(os_file_t *file)
+os_error_t os_file_size(os_file_t *file, size_t *actual)
 {
     CTASSERT(file != NULL);
+    CTASSERT(actual != NULL);
 
     LARGE_INTEGER size;
     BOOL result = GetFileSizeEx(file->handle, &size);
-    size_t it = size.QuadPart;
+    *actual = size.QuadPart;
 
     if (!result)
     {
-        return win_error(GetLastError());
+        return GetLastError();
     }
 
-    return win_result(ERROR_SUCCESS, &it, sizeof(size_t));
+    return ERROR_SUCCESS;
 }
 
 USE_DECL
-OS_RESULT(size_t) os_file_seek(os_file_t *file, size_t offset)
+os_error_t os_file_seek(os_file_t *file, size_t offset, size_t *actual)
 {
     CTASSERT(file != NULL);
+    CTASSERT(actual != NULL);
 
-    LARGE_INTEGER it = { .QuadPart = offset };
+    LARGE_INTEGER it = { .QuadPart = (LONGLONG)offset };
     LARGE_INTEGER out = { 0 };
     BOOL result = SetFilePointerEx(file->handle, it, &out, FILE_BEGIN);
-    size_t seek = out.QuadPart;
+    *actual = out.QuadPart;
 
     if (!result)
     {
-        return win_error(GetLastError());
+        return GetLastError();
     }
 
-    return win_result(ERROR_SUCCESS, &seek, sizeof(size_t));
+    return ERROR_SUCCESS;
 }
 
 USE_DECL
-OS_RESULT(size_t) os_file_tell(os_file_t *file)
+os_error_t os_file_tell(os_file_t *file, size_t *actual)
 {
     CTASSERT(file != NULL);
 
     LARGE_INTEGER offset = { 0 };
     LARGE_INTEGER zero = { 0 };
     BOOL result = SetFilePointerEx(file->handle, zero, &offset, FILE_CURRENT);
-    size_t it = offset.QuadPart;
+    *actual = offset.QuadPart;
 
     if (!result)
     {
-        return win_error(GetLastError());
+        return GetLastError();
     }
 
-    return win_result(ERROR_SUCCESS, &it, sizeof(size_t));
+    return ERROR_SUCCESS;
 }
 
 USE_DECL
-OS_RESULT(const void *) os_file_map(os_file_t *file)
+os_error_t os_file_map(os_file_t *file, const void **mapped)
 {
     CTASSERT(file != NULL);
+    CTASSERT(mapped != NULL);
 
     // TODO: maybe mapping should be part of os_file_t?
     HANDLE mapping = CreateFileMapping(
@@ -169,7 +177,7 @@ OS_RESULT(const void *) os_file_map(os_file_t *file)
 
     if (mapping == NULL)
     {
-        return win_error(GetLastError());
+        return GetLastError();
     }
 
     LPVOID view = MapViewOfFile(
@@ -181,10 +189,11 @@ OS_RESULT(const void *) os_file_map(os_file_t *file)
 
     if (view == NULL)
     {
-        return win_error(GetLastError());
+        return GetLastError();
     }
 
-    return win_result(ERROR_SUCCESS, &view, sizeof(LPVOID));
+    *mapped = view;
+    return ERROR_SUCCESS;
 }
 
 USE_DECL

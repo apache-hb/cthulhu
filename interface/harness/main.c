@@ -176,10 +176,10 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
 #define CHECK_LOG(logger, fmt)                               \
     do                                                       \
     {                                                        \
-        int err = check_reports(logger, report_config, fmt); \
-        if (err != EXIT_OK)                                  \
+        int log_ok = check_reports(logger, report_config, fmt); \
+        if (log_ok != EXIT_OK)                                  \
         {                                                    \
-            return err;                                      \
+            return log_ok;                                      \
         }                                                    \
     } while (0)
 
@@ -310,9 +310,10 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
 #if OS_WINDOWS
     const char *lib_dir = format("%s" NATIVE_PATH_SEPARATOR "lib", run_dir);
 
-    OS_RESULT(bool) create = os_dir_create(lib_dir);
-    CTASSERTF(os_error(create) == 0, "failed to create dir `%s` %s", lib_dir,
-              os_error_string(os_error(create)));
+    bool create = false;
+    os_error_t err = os_dir_create(lib_dir, &create);
+    CTASSERTF(err == 0, "failed to create dir `%s` %s", lib_dir,
+              os_error_string(err));
 
     int status = system(
         format("cl /nologo /c %s /I%s\\include /Fo%s\\", str_join(" ", sources), run_dir, lib_dir));

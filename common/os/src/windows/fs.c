@@ -1,3 +1,4 @@
+#include "base/panic.h"
 #include "common.h"
 
 #include "os/os.h"
@@ -6,7 +7,7 @@
 
 // TODO: this feels janky
 USE_DECL
-OS_RESULT(bool) os_file_create(const char *path)
+os_error_t os_file_create(const char *path)
 {
     HANDLE handle = CreateFile(
         /* lpFileName = */ path,
@@ -24,7 +25,7 @@ OS_RESULT(bool) os_file_create(const char *path)
         DWORD error = GetLastError();
         if (error != ERROR_ALREADY_EXISTS)
         {
-            return win_error(error);
+            return error;
         }
     }
     else
@@ -32,78 +33,65 @@ OS_RESULT(bool) os_file_create(const char *path)
         CloseHandle(handle);
     }
 
-    return win_result(ERROR_SUCCESS, &valid, sizeof(bool));
+    return ERROR_SUCCESS;
 }
 
 USE_DECL
-OS_RESULT(bool) os_file_delete(const char *path)
+os_error_t os_file_delete(const char *path)
 {
     bool result = DeleteFileA(path);
 
     if (!result)
     {
-        return win_error(GetLastError());
+        return GetLastError();
     }
 
-    return win_result(ERROR_SUCCESS, &result, sizeof(bool));
+    return ERROR_SUCCESS;
 }
 
 USE_DECL
-OS_RESULT(bool) os_file_exists(const char *path)
+os_error_t os_dir_create(const char *path, bool *create)
 {
-    OS_RESULT(os_dirent_t) type = os_dirent_type(path);
-    if (os_error(type))
-    {
-        return type;
-    }
+    CTASSERT(path != NULL);
+    CTASSERT(create != NULL);
 
-    bool result = OS_VALUE(os_dirent_t, type) == eOsNodeFile;
-    return win_result(ERROR_SUCCESS, &result, sizeof(bool));
-}
-
-USE_DECL
-OS_RESULT(bool) os_dir_create(const char *path)
-{
     bool result = CreateDirectoryA(path, NULL);
     if (!result)
     {
         DWORD error = GetLastError();
         if (error != ERROR_ALREADY_EXISTS)
         {
-            return win_error(error);
+            return error;
         }
 
         result = true;
     }
 
-    return win_result(ERROR_SUCCESS, &result, sizeof(bool));
+    *create = result;
+    return 0;
 }
 
 USE_DECL
-OS_RESULT(bool) os_dir_delete(const char *path)
+os_error_t os_dir_delete(const char *path)
 {
     bool result = RemoveDirectoryA(path);
     if (!result)
     {
-        return win_error(GetLastError());
+        return GetLastError();
     }
 
-    return win_result(ERROR_SUCCESS, &result, sizeof(bool));
+    return ERROR_SUCCESS;
 }
 
 USE_DECL
-OS_RESULT(bool) os_dir_exists(const char *path)
+bool os_dir_exists(const char *path)
 {
-    OS_RESULT(os_dirent_t) type = os_dirent_type(path);
-    if (os_error(type)) { return type; }
-
-    os_dirent_t ent = OS_VALUE(os_dirent_t, type);
-    bool result = ent == eOsNodeDir;
-    return win_result(ERROR_SUCCESS, &result, sizeof(bool));
+    os_dirent_t type = os_dirent_type(path);
+    return type == eOsNodeDir;
 }
 
 USE_DECL
-OS_RESULT(os_dirent_t) os_dirent_type(const char *path)
+os_dirent_t os_dirent_type(const char *path)
 {
     DWORD attributes = GetFileAttributesA(path);
 
@@ -111,24 +99,21 @@ OS_RESULT(os_dirent_t) os_dirent_type(const char *path)
     {
         if (attributes & FILE_ATTRIBUTE_DIRECTORY)
         {
-            os_dirent_t ent = eOsNodeDir;
-            return win_result(ERROR_SUCCESS, &ent, sizeof(os_dirent_t));
+            return eOsNodeDir;
         }
         else
         {
-            os_dirent_t ent = eOsNodeFile;
-            return win_result(ERROR_SUCCESS, &ent, sizeof(os_dirent_t));
+            return eOsNodeFile;
         }
     }
 
     DWORD error = GetLastError();
     if (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND)
     {
-        os_dirent_t ent = eOsNodeNone;
-        return win_result(ERROR_SUCCESS, &ent, sizeof(os_dirent_t));
+        return eOsNodeNone;
     }
 
-    return win_error(error);
+    return eOsNodeError;
 }
 
 USE_DECL

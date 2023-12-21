@@ -11,108 +11,84 @@
 #include <string.h>
 
 USE_DECL
-OS_RESULT(bool) os_file_create(const char *path)
+os_error_t os_file_create(const char *path)
 {
     CTASSERT(path != NULL);
 
     FILE *fd = fopen(path, "wb+");
-    if (fd == NULL)
+    if (fd != NULL)
     {
-        return linux_error(errno);
+        fclose(fd);
     }
 
-    fclose(fd);
-
-    bool created = (errno == 0);
-    return linux_result(0, &created, sizeof(bool));
+    return errno;
 }
 
 USE_DECL
-OS_RESULT(bool) os_file_delete(const char *path)
+os_error_t os_file_delete(const char *path)
 {
     CTASSERT(path != NULL);
 
     if (remove(path) != 0)
     {
-        return linux_error(errno);
+        return errno;
     }
 
-    bool removed = (errno == 0);
-    return linux_result(errno, &removed, sizeof(bool));
+    return errno;
 }
 
 USE_DECL
-OS_RESULT(bool) os_file_exists(const char *path)
+os_error_t os_dir_create(const char *path, bool *create)
 {
     CTASSERT(path != NULL);
-
-    bool exists = access(path, F_OK) == 0;
-    return linux_result(errno, &exists, sizeof(bool));
-}
-
-USE_DECL
-OS_RESULT(bool) os_dir_create(const char *path)
-{
-    CTASSERT(path != NULL);
+    CTASSERT(create != NULL);
 
     // TODO: this is a bit of a hack to avoid a bug in mkdir_recursive
     // on linux it will pass an empty string into mkdir because of the leading `/`
     if (strlen(path) == 0)
     {
-        bool created = true;
-        return linux_result(0, &created, sizeof(bool));
+        *create = true;
+        return 0;
     }
 
     if (mkdir(path, 0777) != 0)
     {
         if (errno != EEXIST)
         {
-            return linux_error(errno);
+            return errno;
         }
 
         errno = 0;
     }
 
-    bool created = (errno == 0);
-    return linux_result(0, &created, sizeof(bool));
+    *create = (errno == 0);
+    return 0;
 }
 
 USE_DECL
-OS_RESULT(bool) os_dir_delete(const char *path)
+os_error_t os_dir_delete(const char *path)
 {
     CTASSERT(path != NULL);
 
     if (rmdir(path) != 0)
     {
-        return linux_error(errno);
+        return errno;
     }
 
-    bool removed = (errno == 0);
-    return linux_result(errno, &removed, sizeof(bool));
+    return errno;
 }
 
 USE_DECL
-OS_RESULT(bool) os_dir_exists(const char *path)
+bool os_dir_exists(const char *path)
 {
     CTASSERT(path != NULL);
 
     struct stat sb;
-    bool exists = stat(path, &sb) == 0 && S_ISDIR(sb.st_mode);
-    return linux_result(errno, &exists, sizeof(bool));
+    return stat(path, &sb) == 0 && S_ISDIR(sb.st_mode);
 }
 
 USE_DECL
-OS_RESULT(bool) os_dirent_exists(const char *path)
-{
-    CTASSERT(path != NULL);
-
-    struct stat sb;
-    bool exists = stat(path, &sb) == 0;
-    return linux_result(errno, &exists, sizeof(bool));
-}
-
-USE_DECL
-OS_RESULT(os_dirent_t) os_dirent_type(const char *path)
+os_dirent_t os_dirent_type(const char *path)
 {
     CTASSERT(path != NULL);
 
@@ -121,26 +97,22 @@ OS_RESULT(os_dirent_t) os_dirent_type(const char *path)
     {
         if (errno == ENOENT)
         {
-            os_dirent_t ent = eOsNodeNone;
-            return os_result_new(0, &ent, sizeof(os_dirent_t));
+            return eOsNodeError;
         }
 
-        return linux_error(errno);
+        return eOsNodeError;
     }
 
     if (sb.st_mode & S_IFDIR)
     {
-        os_dirent_t ent = eOsNodeDir;
-        return os_result_new(0, &ent, sizeof(os_dirent_t));
+        return eOsNodeDir;
     }
     else if (sb.st_mode & S_IFREG)
     {
-        os_dirent_t ent = eOsNodeFile;
-        return os_result_new(0, &ent, sizeof(os_dirent_t));
+        return eOsNodeFile;
     }
 
-    os_dirent_t ent = eOsNodeNone;
-    return os_result_new(0, &ent, sizeof(os_dirent_t));
+    return eOsNodeNone;
 }
 
 USE_DECL

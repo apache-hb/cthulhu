@@ -18,50 +18,55 @@ static size_t fd_read(io_t *self, void *dst, size_t size)
 {
     os_file_t *file = fd_data(self);
 
-    OS_RESULT(size_t) read = os_file_read(file, dst, size);
-    self->error = os_error(read);
+    size_t read = 0;
+    self->error = os_file_read(file, dst, size, &read);
+    if (self->error != 0) return SIZE_MAX;
 
-    return OS_VALUE_OR(size_t, read, SIZE_MAX);
+    return read;
 }
 
 static size_t fd_write(io_t *self, const void *src, size_t size)
 {
     os_file_t *file = fd_data(self);
 
-    OS_RESULT(size_t) written = os_file_write(file, src, size);
-    self->error = os_error(written);
+    size_t written = 0;
+    self->error = os_file_write(file, src, size, &written);
+    if (self->error != 0) return SIZE_MAX;
 
-    return OS_VALUE_OR(size_t, written, SIZE_MAX);
+    return written;
 }
 
 static size_t fd_size(io_t *self)
 {
     os_file_t *file = fd_data(self);
 
-    OS_RESULT(size_t) size = os_file_size(file);
-    self->error = os_error(size);
+    size_t size = 0;
+    self->error = os_file_size(file, &size);
+    if (self->error != 0) return SIZE_MAX;
 
-    return OS_VALUE_OR(size_t, size, SIZE_MAX);
+    return size;
 }
 
 static size_t fd_seek(io_t *self, size_t offset)
 {
     os_file_t *file = fd_data(self);
 
-    OS_RESULT(size_t) seek = os_file_seek(file, offset);
-    self->error = os_error(seek);
+    size_t seek = 0;
+    self->error = os_file_seek(file, offset, &seek);
+    if (self->error != 0) return SIZE_MAX;
 
-    return OS_VALUE_OR(size_t, seek, SIZE_MAX);
+    return seek;
 }
 
 static const void *fd_map(io_t *self)
 {
     os_file_t *file = fd_data(self);
 
-    OS_RESULT(const void *) data = os_file_map(file);
-    self->error = os_error(data);
+    const void *data = NULL;
+    self->error = os_file_map(file, &data);
+    if (self->error != 0) return NULL;
 
-    return OS_VALUE_OR(const void *, data, NULL);
+    return data;
 }
 
 static void fd_close(io_t *self)
@@ -87,13 +92,13 @@ static const io_callbacks_t kFileCallbacks = {
 USE_DECL
 io_t *io_file(const char *path, os_access_t mode, arena_t *arena)
 {
-    OS_RESULT(os_file_t *) file = os_file_open(path, mode);
+    os_file_t *fd = NULL;
+    os_error_t err = os_file_open(path, mode, &fd);
 
-    os_file_t *fd = os_value(file);
     io_file_t it = { .file = fd };
 
     io_t *io = io_new(&kFileCallbacks, mode, path, &it, sizeof(io_file_t), arena);
-    io->error = os_error(file);
+    io->error = err;
 
     return io;
 }

@@ -96,12 +96,12 @@ static inode_t *physical_file(const char *path, arena_t *arena)
 static inode_t *pfs_query_node(fs_t *fs, inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
-    OS_RESULT(os_dirent_t) dirent = os_dirent_type(absolute);
-    CTASSERTF(os_error(dirent) == 0, "failed to query dirent (path=%s, err=%s)", absolute, os_error_string(os_error(dirent)));
+    os_dirent_t dirent = os_dirent_type(absolute);
+    CTASSERTF(dirent != eOsNodeError, "failed to query node %s", absolute);
 
     const char *relative = get_relative(self, name);
 
-    switch (OS_VALUE_OR(os_dirent_t, dirent, eOsNodeNone))
+    switch (dirent)
     {
     case eOsNodeFile:
         return physical_file(relative, fs->arena);
@@ -151,8 +151,8 @@ static io_t *pfs_query_file(fs_t *fs, inode_t *self, os_access_t flags)
 static inode_t *pfs_file_create(fs_t *fs, inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
-    OS_RESULT(bool) check = os_file_create(absolute);
-    CTASSERTF(os_error(check) == 0, "failed to create file `%s` %s", absolute, os_error_string(os_error(check)));
+    os_error_t err = os_file_create(absolute);
+    CTASSERTF(err == 0, "failed to create file `%s` %s", absolute, os_error_string(err));
 
     return physical_file(get_relative(self, name), fs->arena);
 }
@@ -160,8 +160,9 @@ static inode_t *pfs_file_create(fs_t *fs, inode_t *self, const char *name)
 static inode_t *pfs_dir_create(fs_t *fs, inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
-    OS_RESULT(bool) create = os_dir_create(absolute);
-    CTASSERTF(os_error(create) == 0, "failed to create dir `%s` %s", absolute, os_error_string(os_error(create)));
+    bool create = false;
+    os_error_t err = os_dir_create(absolute, &create);
+    CTASSERTF(err == 0, "failed to create dir `%s` %s", absolute, os_error_string(err));
 
     return physical_dir(get_relative(self, name), fs->arena);
 }
@@ -169,15 +170,15 @@ static inode_t *pfs_dir_create(fs_t *fs, inode_t *self, const char *name)
 static void pfs_dir_delete(fs_t *fs, inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
-    OS_RESULT(bool) check = os_dir_delete(absolute);
-    CTASSERT(os_error(check) == 0);
+    os_error_t check = os_dir_delete(absolute);
+    CTASSERT(check == 0);
 }
 
 static void pfs_file_delete(fs_t *fs, inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
-    OS_RESULT(bool) check = os_file_delete(absolute);
-    CTASSERT(os_error(check) == 0);
+    os_error_t check = os_file_delete(absolute);
+    CTASSERT(check == 0);
 }
 
 static const fs_callbacks_t kPhysicalInterface = {
@@ -196,15 +197,16 @@ fs_t *fs_physical(const char *root, arena_t *arena)
 {
     CTASSERT(root != NULL);
 
-    OS_RESULT(bool) exist = os_dir_exists(root);
-    if (!OS_VALUE_OR(bool, exist, false))
+    bool exist = os_dir_exists(root);
+    if (exist)
     {
-        OS_RESULT(bool) create = mkdir_recursive(root);
+        bool create = false;
+        os_error_t err = mkdir_recursive(root, &create);
 
         // TODO: make this work recursively
-        CTASSERTF(os_error(create) == 0, "error creating root directory: %s. %s", root, os_error_string(os_error(create)));
+        CTASSERTF(err == 0, "error creating root directory: %s. %s", root, os_error_string(err));
 
-        if (!OS_VALUE(bool, create))
+        if (!create)
         {
             return NULL;
         }

@@ -34,6 +34,7 @@ typedef enum os_dirent_t
     eOsNodeNone, ///< unknown node type
     eOsNodeFile, ///< file node type
     eOsNodeDir,  ///< directory node type
+    eOsNodeError,///< error node type
 
     eOsNodeTotal
 } os_dirent_t;
@@ -51,7 +52,7 @@ void os_init(void);
 /// @return true if the file was created, false if it already exists
 /// @return an error if the file could not be created
 RET_INSPECT
-OS_RESULT(bool) os_file_create(IN_STRING const char *path);
+os_error_t os_file_create(IN_STRING const char *path);
 
 /// @brief delete a file
 ///
@@ -60,16 +61,7 @@ OS_RESULT(bool) os_file_create(IN_STRING const char *path);
 /// @return true if the file was deleted, false if it did not exist
 /// @return an error if the file could not be deleted
 RET_INSPECT
-OS_RESULT(bool) os_file_delete(IN_STRING const char *path);
-
-/// @brief check if a file exists
-///
-/// @param path the path to the file to check
-///
-/// @return true if the file exists, false otherwise
-/// @return an error if the file could not be checked
-RET_INSPECT
-OS_RESULT(bool) os_file_exists(IN_STRING const char *path);
+os_error_t os_file_delete(IN_STRING const char *path);
 
 /// @brief check if a directory exists
 ///
@@ -78,7 +70,7 @@ OS_RESULT(bool) os_file_exists(IN_STRING const char *path);
 /// @return true if the directory exists, false otherwise
 /// @return an error if the directory could not be checked
 RET_INSPECT
-OS_RESULT(bool) os_dir_create(IN_STRING const char *path);
+os_error_t os_dir_create(IN_STRING const char *path, IN_NOTNULL bool *create);
 
 /// @brief delete a directory
 ///
@@ -87,7 +79,7 @@ OS_RESULT(bool) os_dir_create(IN_STRING const char *path);
 /// @return true if the directory was deleted, false if it did not exist
 /// @return an error if the directory could not be deleted
 RET_INSPECT
-OS_RESULT(bool) os_dir_delete(IN_STRING const char *path);
+os_error_t os_dir_delete(IN_STRING const char *path);
 
 /// @brief check if a directory exists
 ///
@@ -96,16 +88,7 @@ OS_RESULT(bool) os_dir_delete(IN_STRING const char *path);
 /// @return true if the directory exists, false otherwise
 /// @return an error if the directory could not be checked
 RET_INSPECT
-OS_RESULT(bool) os_dir_exists(IN_STRING const char *path);
-
-/// @brief check if an inode exists
-///
-/// @param path the path to the inode entry to check
-///
-/// @return the type of the inode entry
-/// @return an error if the inode entry could not be checked
-NODISCARD
-OS_RESULT(bool) os_dirent_exists(IN_STRING const char *path);
+bool os_dir_exists(IN_STRING const char *path);
 
 /// @brief get the type of a paths inode entry
 ///
@@ -114,7 +97,7 @@ OS_RESULT(bool) os_dirent_exists(IN_STRING const char *path);
 /// @return the type of the inode entry
 /// @return an error if the inode entry could not be checked
 NODISCARD
-OS_RESULT(os_dirent_t) os_dirent_type(IN_STRING const char *path);
+os_dirent_t os_dirent_type(IN_STRING const char *path);
 
 /// @brief get the current working directory
 ///
@@ -162,7 +145,7 @@ const char *os_dir_name(IN_NOTNULL os_dir_t *dir);
 /// @return a file handle on success
 /// @return an error if the file could not be opened
 NODISCARD
-OS_RESULT(os_file_t *) os_file_open(IN_STRING const char *path, os_access_t access);
+os_error_t os_file_open(IN_STRING const char *path, os_access_t access, os_file_t **file);
 
 /// @brief close a file
 ///
@@ -178,10 +161,11 @@ void os_file_close(OUT_PTR_INVALID os_file_t *file);
 /// @return the number of bytes read
 /// @return an error if the file could not be read from
 NODISCARD
-OS_RESULT(size_t) os_file_read(
+os_error_t os_file_read(
         IN_NOTNULL os_file_t *file,
-        void *buffer, // OUT_WRITES(os_value(return))
-        IN_RANGE(>, 0) size_t size);
+        void *buffer,
+        IN_RANGE(>, 0) size_t size,
+        size_t *actual);
 
 /// @brief write to a file
 ///
@@ -192,10 +176,11 @@ OS_RESULT(size_t) os_file_read(
 /// @return the number of bytes written
 /// @return an error if the file could not be written to
 NODISCARD
-OS_RESULT(size_t) os_file_write(
+os_error_t os_file_write(
         IN_NOTNULL os_file_t *file,
         IN_READS(size) const void *buffer,
-        IN_RANGE(>, 0) size_t size);
+        IN_RANGE(>, 0) size_t size,
+        size_t *actual);
 
 /// @brief get the size of a file
 ///
@@ -204,7 +189,7 @@ OS_RESULT(size_t) os_file_write(
 /// @return the size of the file
 /// @return an error if the file size could not be retrieved
 NODISCARD
-OS_RESULT(size_t) os_file_size(IN_NOTNULL os_file_t *file);
+os_error_t os_file_size(IN_NOTNULL os_file_t *file, size_t *actual);
 
 /// @brief seek to a position in a file
 ///
@@ -214,7 +199,7 @@ OS_RESULT(size_t) os_file_size(IN_NOTNULL os_file_t *file);
 /// @return the new position in the file
 /// @return an error if the file could not be seeked
 NODISCARD
-OS_RESULT(size_t) os_file_seek(IN_NOTNULL os_file_t *file, size_t offset);
+os_error_t os_file_seek(IN_NOTNULL os_file_t *file, size_t offset, size_t *actual);
 
 /// @brief get the current position in a file
 ///
@@ -223,7 +208,7 @@ OS_RESULT(size_t) os_file_seek(IN_NOTNULL os_file_t *file, size_t offset);
 /// @return the current position in the file
 /// @return an error if the file position could not be retrieved
 NODISCARD
-OS_RESULT(size_t) os_file_tell(IN_NOTNULL os_file_t *file);
+os_error_t os_file_tell(IN_NOTNULL os_file_t *file, size_t *actual);
 
 /// @brief map a file into memory
 ///
@@ -232,7 +217,7 @@ OS_RESULT(size_t) os_file_tell(IN_NOTNULL os_file_t *file);
 /// @return a pointer to the mapped file
 /// @return an error if the file could not be mapped
 NODISCARD
-OS_RESULT(const void *) os_file_map(IN_NOTNULL os_file_t *file);
+os_error_t os_file_map(IN_NOTNULL os_file_t *file, const void **mapped);
 
 /// @brief get the name of a file
 ///
