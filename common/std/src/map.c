@@ -68,7 +68,7 @@ map_t *map_new(size_t size)
 {
     CTASSERT(size > 0);
 
-    arena_t *arena = ctu_default_alloc();
+    arena_t *arena = get_global_arena();
     map_t *map = ARENA_MALLOC(arena, sizeof_map(size), "map", NULL);
 
     map->arena = arena;

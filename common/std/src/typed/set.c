@@ -67,7 +67,7 @@ typeset_t *typeset_new(const typeinfo_t *info, size_t len)
 
     CTASSERT(len > 0);
 
-    arena_t *arena = ctu_default_alloc();
+    arena_t *arena = get_global_arena();
 
     typeset_t *set = ARENA_MALLOC(arena, typeset_size(len, info->size), "typeset", NULL);
     set->arena = arena;

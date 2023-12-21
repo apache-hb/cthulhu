@@ -28,9 +28,9 @@ static char *join_args(int argc, const char **argv)
 int ap_parse(ap_t *self, int argc, const char **argv)
 {
     char *args = join_args(argc, argv);
-    arena_t *arena = ctu_default_alloc();
+    arena_t *arena = get_global_arena();
     io_t *io = io_string("<command-line>", args, arena);
-    scan_t *scan = scan_io("ap2", io, ctu_default_alloc());
+    scan_t *scan = scan_io("ap2", io, arena);
 
     scan_set(scan, self);
     parse_result_t result = compile_scanner(scan, &kCallbacks);

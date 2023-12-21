@@ -77,7 +77,7 @@ static io_t *make_file(logger_t *reports, const char *path, os_access_t flags, a
 int main(int argc, const char **argv)
 {
     ctu_log_control(eLogEnable);
-    arena_t *arena = ctu_default_alloc();
+    arena_t *arena = get_global_arena();
     mediator_t *mediator = mediator_new("example", kVersion);
     lifetime_t *lifetime = lifetime_new(mediator, arena);
     logger_t *logger = lifetime_get_logger(lifetime);

@@ -46,7 +46,7 @@ static void set_attribs(tree_t *sema, tree_t *decl, obr_visibility_t vis, tree_l
         .visibility = remap_visibility(sema->reports, decl->node, tree_get_name(decl), vis)
     };
 
-    tree_set_attrib(decl, ctu_memdup(&attrib, sizeof(tree_attribs_t), ctu_default_alloc()));
+    tree_set_attrib(decl, ctu_memdup(&attrib, sizeof(tree_attribs_t), get_global_arena()));
 }
 
 static obr_t *begin_resolve(tree_t *sema, tree_t *self, void *user, obr_kind_t kind)
@@ -93,11 +93,11 @@ static void resolve_proc(tree_t *sema, tree_t *self, void *user)
     obr_t *decl = begin_resolve(sema, self, user, eObrDeclProcedure);
 
     vector_t *params = tree_fn_get_params(self);
-    size_t nParams = vector_len(params);
+    size_t param_count = vector_len(params);
 
     size_t locals = vector_len(decl->locals);
     const size_t sizes[eObrTagTotal] = {
-        [eObrTagValues] = locals + nParams,
+        [eObrTagValues] = locals + param_count,
         [eObrTagTypes] = 0,
         [eObrTagProcs] = 0,
         [eObrTagModules] = 0
@@ -121,7 +121,7 @@ static void resolve_proc(tree_t *sema, tree_t *self, void *user)
         obr_add_decl(ctx, eObrTagValues, local->name, local_decl);
     }
 
-    for (size_t i = 0; i < nParams; i++)
+    for (size_t i = 0; i < param_count; i++)
     {
         tree_t *param = vector_get(params, i);
         obr_add_decl(ctx, eObrTagValues, param->name, param);

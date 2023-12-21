@@ -26,6 +26,7 @@ namespace ed
             CTU_UNUSED(parent);
         }
 
+        void install_global();
         void install_gmp();
     };
 } // namespace ed

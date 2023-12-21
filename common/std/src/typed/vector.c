@@ -83,7 +83,7 @@ typevec_t *typevec_new(size_t type_size, size_t len, arena_t *arena)
 USE_DECL
 typevec_t *typevec_of(size_t type_size, size_t len)
 {
-    typevec_t *self = typevec_create(type_size, len, ctu_default_alloc());
+    typevec_t *self = typevec_create(type_size, len, get_global_arena());
     self->used = len;
     return self;
 }
@@ -91,7 +91,7 @@ typevec_t *typevec_of(size_t type_size, size_t len)
 USE_DECL
 typevec_t *typevec_init(size_t type_size, const void *value)
 {
-    typevec_t *self = typevec_create(type_size, 1, ctu_default_alloc());
+    typevec_t *self = typevec_create(type_size, 1, get_global_arena());
     typevec_push(self, value);
     return self;
 }

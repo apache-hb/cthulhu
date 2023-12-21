@@ -7,8 +7,8 @@
 
 #include "core/macros.h"
 
-#include "obr_bison.h"
-#include "obr_flex.h"
+#include "obr_bison.h" // IWYU pragma: keep
+#include "obr_flex.h" // IWYU pragma: keep
 
 CTU_CALLBACKS(kCallbacks, obr);
 
@@ -22,7 +22,7 @@ static void obr_preparse(driver_t *handle, scan_t *scan)
         .reports = reports,
     };
 
-    scan_set_context(scan, ctu_memdup(&info, sizeof(obr_scan_t), ctu_default_alloc()));
+    scan_set_context(scan, ctu_memdup(&info, sizeof(obr_scan_t), get_global_arena()));
 }
 
 static void obr_postparse(driver_t *handle, scan_t *scan, void *tree)

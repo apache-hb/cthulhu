@@ -120,7 +120,7 @@ USE_DECL
 OS_RESULT(const char *) os_dir_current(void)
 {
     DWORD size = GetCurrentDirectoryA(0, NULL);
-    arena_t *arena = ctu_default_alloc();
+    arena_t *arena = get_global_arena();
     char *buffer = ARENA_MALLOC(arena, size + 1, "os_dir_current", NULL);
 
     if (GetCurrentDirectoryA(size, buffer) == 0)

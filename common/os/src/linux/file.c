@@ -59,7 +59,7 @@ os_error_t os_file_open(const char *path, os_access_t access, os_file_t **file)
         return errno;
     }
 
-    arena_t *arena = ctu_default_alloc();
+    arena_t *arena = get_global_arena();
     os_file_t *result = ARENA_MALLOC(arena, sizeof(os_file_t), path, NULL);
     result->file = fd;
     result->path = path;

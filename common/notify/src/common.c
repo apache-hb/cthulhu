@@ -97,7 +97,7 @@ typevec_t *all_segments_in_scan(const typevec_t *segments, const node_t *node)
     const scan_t *scan = node_get_scan(node);
 
     size_t len = typevec_len(segments);
-    typevec_t *result = typevec_new(sizeof(segment_t), len, ctu_default_alloc());
+    typevec_t *result = typevec_new(sizeof(segment_t), len, get_global_arena());
 
     for (size_t i = 0; i < len; i++)
     {
@@ -187,7 +187,7 @@ char *fmt_align(size_t width, const char *fmt, ...)
     size_t len = strlen(msg);
     if (len >= width) return msg;
 
-    arena_t *arena = ctu_default_alloc();
+    arena_t *arena = get_global_arena();
     size_t size = width - 1;
     char *result = ARENA_MALLOC(arena, size, "align", NULL);
     memset(result, ' ', width);
@@ -309,7 +309,7 @@ static bool cache_is_valid(text_cache_t *cache)
 
 cache_map_t *cache_map_new(size_t size)
 {
-    arena_t *arena = ctu_default_alloc();
+    arena_t *arena = get_global_arena();
 
     cache_map_t *data = ARENA_MALLOC(arena, sizeof(cache_map_t), "cache_map", NULL);
     data->arena = arena;

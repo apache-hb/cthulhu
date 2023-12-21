@@ -84,5 +84,5 @@ const char *os_dir_name(os_dir_t *dir)
     CTASSERT(dir != NULL);
 
     // have to copy the string because it's owned by the dirent
-    return ctu_strdup(dir->ent->d_name, ctu_default_alloc());
+    return ctu_strdup(dir->ent->d_name, get_global_arena());
 }

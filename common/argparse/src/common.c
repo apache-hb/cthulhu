@@ -44,14 +44,14 @@ static void add_value(ap_t *self, const ap_param_t *param, void *value)
 void ap_on_string(scan_t *scan, where_t where, const ap_param_t *param, const char *value)
 {
     ap_t *self = scan_get(scan);
-    add_value(self, param, ctu_strdup(value, ctu_default_alloc()));
+    add_value(self, param, ctu_strdup(value, get_global_arena()));
     apply_callbacks(scan, where, param, value, map_get_ptr(self->event_lookup, param));
 }
 
 void ap_on_bool(scan_t *scan, where_t where, const ap_param_t *param, bool value)
 {
     ap_t *self = scan_get(scan);
-    add_value(self, param, ctu_memdup(&value, sizeof(bool), ctu_default_alloc()));
+    add_value(self, param, ctu_memdup(&value, sizeof(bool), get_global_arena()));
     apply_callbacks(scan, where, param, &value, map_get_ptr(self->event_lookup, param));
 }
 
@@ -90,5 +90,5 @@ void aperror(where_t *where, void *state, scan_t *scan, const char *msg)
 {
     CTU_UNUSED(state);
 
-    ap_on_error(scan, *where, ctu_strdup(msg, ctu_default_alloc()));
+    ap_on_error(scan, *where, ctu_strdup(msg, get_global_arena()));
 }

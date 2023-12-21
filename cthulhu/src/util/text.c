@@ -47,7 +47,7 @@ static escape_t consume_text(logger_t *reports, const node_t *node, const char *
 
 text_t util_text_escape(logger_t *reports, const node_t *node, const char *text, size_t length)
 {
-    typevec_t *vec = typevec_new(sizeof(char), length, ctu_default_alloc());
+    typevec_t *vec = typevec_new(sizeof(char), length, get_global_arena());
 
     for (size_t i = 0; i < length;)
     {

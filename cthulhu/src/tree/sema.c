@@ -16,7 +16,7 @@ static tree_t *tree_module_new(const node_t *node, const char *name,
     CTASSERTF(decls >= eSemaTotal, "module cannot be constructed with less than %d tags (%zu given)", eSemaTotal, decls);
     CTASSERT(reports != NULL);
 
-    arena_t *arena = ctu_default_alloc();
+    arena_t *arena = get_global_arena();
     tree_t *self = tree_decl(eTreeDeclModule, node, NULL, name, eQualUnknown);
     self->parent = parent;
     self->cookie = cookie;

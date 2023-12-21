@@ -824,7 +824,7 @@ ssa_result_t ssa_compile(map_t *mods)
     ssa_map_sizes_t sizes = predict_maps(mods);
 
     ssa_compile_t ssa = {
-        .arena = ctu_default_alloc(),
+        .arena = get_global_arena(),
 
         .modules = vector_new(sizes.modules),
         .symbol_deps = map_optimal(sizes.deps),

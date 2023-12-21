@@ -58,7 +58,7 @@ set_t *set_new(size_t size)
 {
     CTASSERT(size > 0);
 
-    arena_t *arena = ctu_default_alloc();
+    arena_t *arena = get_global_arena();
     set_t *set = ARENA_MALLOC(arena, set_size(size), "set", NULL);
     set->arena = arena;
     set->size = size;

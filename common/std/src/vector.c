@@ -60,13 +60,13 @@ static vector_t *vector_init_inner(size_t size, size_t used, arena_t *arena)
 USE_DECL
 vector_t *vector_new(size_t size)
 {
-    return vector_init_inner(size, 0, ctu_default_alloc());
+    return vector_init_inner(size, 0, get_global_arena());
 }
 
 USE_DECL
 vector_t *vector_of(size_t len)
 {
-    return vector_init_inner(len, len, ctu_default_alloc());
+    return vector_init_inner(len, len, get_global_arena());
 }
 
 USE_DECL

@@ -44,6 +44,11 @@ IArena::IArena(const char *alloc_name)
     fn_reparent = wrap_reparent;
 }
 
+void IArena::install_global()
+{
+    init_global_arena(this);
+}
+
 void IArena::install_gmp()
 {
     init_gmp_arena(this);

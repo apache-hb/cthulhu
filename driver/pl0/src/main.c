@@ -22,7 +22,7 @@ static void pl0_preparse(driver_t *handle, scan_t *scan)
         .reports = reports
     };
 
-    scan_set_context(scan, ctu_memdup(&info, sizeof(pl0_scan_t), ctu_default_alloc()));
+    scan_set_context(scan, ctu_memdup(&info, sizeof(pl0_scan_t), get_global_arena()));
 }
 
 static void pl0_postparse(driver_t *handle, scan_t *scan, void *tree)

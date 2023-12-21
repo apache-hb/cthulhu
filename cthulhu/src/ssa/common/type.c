@@ -13,7 +13,7 @@
 
 ssa_type_t *ssa_type_new(ssa_kind_t kind, const char *name, quals_t quals)
 {
-    arena_t *arena = ctu_default_alloc();
+    arena_t *arena = get_global_arena();
     ssa_type_t *type = ARENA_MALLOC(arena, sizeof(ssa_type_t), name, NULL);
     type->kind = kind;
     type->quals = quals;

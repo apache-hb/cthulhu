@@ -53,7 +53,7 @@ static void parse_source(lifetime_t *lifetime, const char *path)
         return;
     }
 
-    io_t *io = io_file(path, eAccessRead, ctu_default_alloc());
+    io_t *io = io_file(path, eAccessRead, get_global_arena());
     if (io_error(io) != 0)
     {
         event_t *id = msg_notify(reports, &kEvent_FailedToOpenSourceFile, node_builtin(),
@@ -95,7 +95,7 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
 
 int main(int argc, const char **argv)
 {
-    arena_t *arena = ctu_default_alloc();
+    arena_t *arena = get_global_arena();
     mediator_t *mediator = mediator_new("cli", kVersionInfo);
     lifetime_t *lifetime = lifetime_new(mediator, arena);
     logger_t *reports = lifetime_get_logger(lifetime);

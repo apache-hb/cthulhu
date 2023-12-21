@@ -116,7 +116,7 @@ void msg_vappend(event_t *event, const node_t *node, const char *fmt, va_list ar
 
     if (event->segments == NULL)
     {
-        event->segments = typevec_new(sizeof(segment_t), 2, ctu_default_alloc());
+        event->segments = typevec_new(sizeof(segment_t), 2, get_global_arena());
     }
 
     char *msg = vformat(fmt, args);

@@ -348,6 +348,7 @@ int main(int argc, const char **argv)
     arena_t *arena = ctu_default_alloc();
     io_t *io = io_stdout(ctu_default_alloc());
 
+    init_global_arena(arena);
     init_gmp_arena(arena);
 
     logger_t *logs = logger_new(arena);

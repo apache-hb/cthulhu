@@ -336,6 +336,7 @@ int main(int argc, const char **argv)
     size_t size = (size_t)(1024U * 1024U * 64U);
     user_arena_t arena = new_user_arena(size);
     arena_t user = new_alloc(&arena);
+    init_global_arena(&user);
     init_gmp_arena(&user);
 
     ctu_log_control(eLogEnable);

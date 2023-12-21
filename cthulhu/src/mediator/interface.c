@@ -32,6 +32,7 @@ static void runtime_init(void)
     bt_init();
     scan_init();
 
+    init_global_arena(ctu_default_alloc());
     init_gmp_arena(ctu_default_alloc());
 }
 
@@ -80,7 +81,7 @@ mediator_t *mediator_new_noinit(const char *id, version_info_t version)
 {
     CTASSERT(id != NULL);
 
-    arena_t *arena = ctu_default_alloc();
+    arena_t *arena = get_global_arena();
 
     mediator_t *self = ARENA_MALLOC(arena, sizeof(mediator_t), id, NULL);
 

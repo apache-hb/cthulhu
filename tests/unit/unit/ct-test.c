@@ -118,6 +118,8 @@ void test_install_panic_handler()
 {
     bt_init();
     gPanicHandler = test_panic_handler;
+
+    init_global_arena(ctu_default_alloc());
 }
 
 void test_begin_expect_panic()

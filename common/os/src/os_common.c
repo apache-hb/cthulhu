@@ -10,7 +10,7 @@
 
 os_result_t *os_result_new(os_error_t error, const void *data, size_t size)
 {
-    arena_t *arena = ctu_default_alloc();
+    arena_t *arena = get_global_arena();
     os_result_t *result = ARENA_MALLOC(arena, sizeof(os_result_t) + size, "os_result", NULL);
     result->error = error;
 
