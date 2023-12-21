@@ -32,7 +32,7 @@ static void runtime_init(void)
     bt_init();
     scan_init();
 
-    init_gmp_alloc(ctu_default_alloc());
+    init_gmp_arena(ctu_default_alloc());
 }
 
 static const language_t *add_language_extension(lifetime_t *lifetime, const char *ext, const language_t *lang)
@@ -56,7 +56,7 @@ static driver_t *handle_new(lifetime_t *lifetime, const language_t *lang)
     CTASSERT(lifetime != NULL);
     CTASSERT(lang != NULL);
 
-    driver_t *self = ARENA_MALLOC(lifetime->alloc, sizeof(driver_t), lang->id, lifetime);
+    driver_t *self = ARENA_MALLOC(lifetime->arena, sizeof(driver_t), lang->id, lifetime);
 
     self->parent = lifetime;
     self->lang = lang;
@@ -98,19 +98,19 @@ mediator_t *mediator_new(const char *id, version_info_t version)
     return mediator_new_noinit(id, version);
 }
 
-lifetime_t *lifetime_new(mediator_t *mediator, arena_t *alloc)
+lifetime_t *lifetime_new(mediator_t *mediator, arena_t *arena)
 {
     CTASSERT(mediator != NULL);
-    CTASSERT(alloc != NULL);
+    CTASSERT(arena != NULL);
 
-    lifetime_t *self = ARENA_MALLOC(alloc, sizeof(lifetime_t), "lifetime", mediator);
+    lifetime_t *self = ARENA_MALLOC(arena, sizeof(lifetime_t), "lifetime", mediator);
 
-    logger_t *logger = logger_new(alloc);
+    logger_t *logger = logger_new(arena);
 
     self->parent = mediator;
 
     self->logger = logger;
-    self->alloc = alloc;
+    self->arena = arena;
 
     self->extensions = map_optimal(16);
     self->modules = map_optimal(64);
@@ -197,7 +197,7 @@ void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io)
     CTASSERT(lang != NULL);
     CTASSERT(io != NULL);
 
-    scan_t *scan = scan_io(lang->id, io, lifetime->alloc);
+    scan_t *scan = scan_io(lang->id, io, lifetime->arena);
     scan_set_context(scan, lifetime->logger);
 
     driver_t *handle = handle_new(lifetime, lang);
@@ -298,7 +298,7 @@ map_t *lifetime_get_modules(lifetime_t *lifetime)
 {
     CTASSERT(lifetime != NULL);
 
-    arena_t *arena = lifetime->alloc;
+    arena_t *arena = lifetime->arena;
     map_t *mods = map_optimal(64);
     ARENA_IDENTIFY(arena, mods, "modules", lifetime);
 

@@ -35,12 +35,12 @@ static obr_t *obr_new(scan_t *scan, where_t where, obr_kind_t kind)
 {
     CTASSERT(scan != NULL);
 
-    arena_t *alloc = scan_alloc(scan);
-    obr_t *self = ARENA_MALLOC(alloc, sizeof(obr_t), "obr", scan);
+    arena_t *arena = scan_alloc(scan);
+    obr_t *self = ARENA_MALLOC(arena, sizeof(obr_t), "obr", scan);
     self->kind = kind;
     self->node = node_new(scan, where);
 
-    ARENA_IDENTIFY(alloc, self->node, "node", self);
+    ARENA_IDENTIFY(arena, self->node, "node", self);
 
     return self;
 }
@@ -315,8 +315,8 @@ obr_t *obr_receiver(scan_t *scan, where_t where, bool mut, char *name, char *typ
 
 obr_symbol_t *obr_symbol(scan_t *scan, where_t where, char *name, obr_visibility_t visibility)
 {
-    arena_t *alloc = scan_alloc(scan);
-    obr_symbol_t *self = ARENA_MALLOC(alloc, sizeof(obr_symbol_t), "obr_symbol", scan);
+    arena_t *arena = scan_alloc(scan);
+    obr_symbol_t *self = ARENA_MALLOC(arena, sizeof(obr_symbol_t), "obr_symbol", scan);
     self->scan = scan;
     self->where = where;
     self->name = name;

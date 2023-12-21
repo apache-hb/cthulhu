@@ -38,8 +38,8 @@ node_t *node_new(const scan_t *scan, where_t where)
 {
     CTASSERT(scan != NULL);
 
-    arena_t *alloc = scan_alloc(scan);
-    node_t *node = ARENA_MALLOC(alloc, sizeof(node_t), "node", scan);
+    arena_t *arena = scan_alloc(scan);
+    node_t *node = ARENA_MALLOC(arena, sizeof(node_t), "node", scan);
     node->scan = scan;
     node->where = where;
 

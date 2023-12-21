@@ -33,14 +33,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CHECK_REPORTS(reports, msg)                                                                \
-    do                                                                                             \
-    {                                                                                              \
-        int err = end_reports(reports, msg, kReportConfig);                                        \
-        if (err != 0)                                                                              \
-        {                                                                                          \
-            return err;                                                                            \
-        }                                                                                          \
+#define CHECK_REPORTS(reports, msg)                         \
+    do                                                      \
+    {                                                       \
+        int err = end_reports(reports, msg, kReportConfig); \
+        if (err != 0)                                       \
+        {                                                   \
+            return err;                                     \
+        }                                                   \
     } while (0)
 
 static const version_info_t kVersion = {
@@ -96,44 +96,40 @@ static user_ptr_t *get_ptr(void *ptr)
     return (user_ptr_t *)(data - sizeof(user_ptr_t));
 }
 
-static void *user_malloc(const mem_t *mem, size_t size)
+static void *user_malloc(size_t size, void *user)
 {
-    arena_t *alloc = mem_arena(mem);
-    user_arena_t *user = (user_arena_t *)alloc->user;
+    user_arena_t *data = (user_arena_t *)user;
 
-    user_ptr_t *ptr = get_memory(user, size);
+    user_ptr_t *ptr = get_memory(data, size);
     return ptr->data;
 }
 
-static void *user_realloc(const mem_t *mem, void *ptr, size_t new_size, size_t old_size)
+static void *user_realloc(void *ptr, size_t new_size, size_t old_size, void *user)
 {
     CTU_UNUSED(old_size);
 
-    arena_t *alloc = mem_arena(mem);
-    user_arena_t *user = (user_arena_t *)alloc->user;
+    user_arena_t *data = (user_arena_t *)user;
 
     user_ptr_t *old = get_ptr(ptr);
 
     if (old->size >= new_size) return old->data;
 
-    user_ptr_t *new = get_memory(user, new_size);
+    user_ptr_t *new = get_memory(data, new_size);
     memcpy(new->data, old->data, old->size);
 
-    user->realloc_count++;
+    data->realloc_count++;
 
     return new->data;
 }
 
-static void user_free(const mem_t *mem, void *ptr, size_t size)
+static void user_free(void *ptr, size_t size, void *user)
 {
     CTU_UNUSED(ptr);
     CTU_UNUSED(size);
 
-    arena_t *alloc = mem_arena(mem);
+    user_arena_t *data = (user_arena_t *)user;
 
-    user_arena_t *user = (user_arena_t *)alloc->user;
-
-    user->free_count++;
+    data->free_count++;
 }
 
 static user_arena_t new_user_arena(size_t size)
@@ -154,17 +150,17 @@ static user_arena_t new_user_arena(size_t size)
     return arena;
 }
 
-static arena_t new_alloc(user_arena_t *arena)
+static arena_t new_alloc(user_arena_t *user)
 {
-    arena_t alloc = {
+    arena_t arena = {
         .name = "user",
         .fn_malloc = user_malloc,
         .fn_realloc = user_realloc,
         .fn_free = user_free,
-        .user = arena,
+        .user = user,
     };
 
-    return alloc;
+    return arena;
 }
 
 static int check_reports(logger_t *logger, report_config_t config, const char *title)
@@ -173,22 +169,22 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
     return err;
 }
 
-#define CHECK_LOG(logger, fmt)                               \
-    do                                                       \
-    {                                                        \
+#define CHECK_LOG(logger, fmt)                                  \
+    do                                                          \
+    {                                                           \
         int log_ok = check_reports(logger, report_config, fmt); \
         if (log_ok != EXIT_OK)                                  \
-        {                                                    \
+        {                                                       \
             return log_ok;                                      \
-        }                                                    \
+        }                                                       \
     } while (0)
 
-int run_test_harness(int argc, const char **argv, arena_t *alloc)
+int run_test_harness(int argc, const char **argv, arena_t *arena)
 {
     mediator_t *mediator = mediator_new("example", kVersion);
-    lifetime_t *lifetime = lifetime_new(mediator, alloc);
+    lifetime_t *lifetime = lifetime_new(mediator, arena);
 
-    langs_t langs = get_langs(alloc);
+    langs_t langs = get_langs(arena);
 
     logger_t *reports = lifetime_get_logger(lifetime);
     for (size_t i = 0; i < langs.size; i++)
@@ -197,15 +193,13 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
         lifetime_add_language(lifetime, lang);
     }
 
-    io_t *msg_buffer = io_stdout(alloc);
+    io_t *msg_buffer = io_stdout(arena);
 
     text_config_t text_config = {
-        .config = {
-            .zeroth_line = false,
-            .print_source = true,
-            .print_header = true,
-            .max_columns = 80
-        },
+        .config = {.zeroth_line = false,
+                   .print_source = true,
+                   .print_header = true,
+                   .max_columns = 80},
         .colours = colour_get_disabled(),
         .io = msg_buffer,
     };
@@ -226,7 +220,7 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
         const char *ext = str_ext(path);
         const language_t *lang = lifetime_get_language(lifetime, ext);
 
-        io_t *io = make_file(path, eAccessRead | eAccessText, alloc);
+        io_t *io = make_file(path, eAccessRead | eAccessText, arena);
 
         lifetime_parse(lifetime, lang, io);
 
@@ -255,10 +249,10 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
     ssa_opt(reports, ssa);
     CHECK_LOG(reports, "optimizing ssa");
 
-    fs_t *fs = fs_virtual("out", alloc);
+    fs_t *fs = fs_virtual("out", arena);
 
     emit_options_t base_options = {
-        .arena = alloc,
+        .arena = arena,
         .reports = reports,
         .fs = fs,
 
@@ -281,20 +275,22 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
     CTASSERTF(os_error(cwd) == 0, "failed to get cwd %s", os_error_string(os_error(cwd)));
 
     const char *test_dir = format("%s" NATIVE_PATH_SEPARATOR "test-out",
-                                 OS_VALUE(const char *, cwd));
+                                  OS_VALUE(const char *, cwd));
     const char *run_dir = format("%s" NATIVE_PATH_SEPARATOR "%s", test_dir, argv[1]);
 
-    fs_t *out = fs_physical(run_dir, alloc);
+    fs_t *out = fs_physical(run_dir, arena);
     if (out == NULL)
     {
-        msg_notify(reports, &kEvent_FailedToCreateOutputDirectory, node_builtin(), "failed to create output directory");
+        msg_notify(reports, &kEvent_FailedToCreateOutputDirectory, node_builtin(),
+                   "failed to create output directory");
     }
     CHECK_LOG(reports, "creating output directory");
 
     sync_result_t result = fs_sync(out, fs);
     if (result.path != NULL)
     {
-        msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(), "failed to sync %s", result.path);
+        msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(), "failed to sync %s",
+                   result.path);
     }
     CHECK_LOG(reports, "syncing output directory");
 
@@ -312,20 +308,21 @@ int run_test_harness(int argc, const char **argv, arena_t *alloc)
 
     bool create = false;
     os_error_t err = os_dir_create(lib_dir, &create);
-    CTASSERTF(err == 0, "failed to create dir `%s` %s", lib_dir,
-              os_error_string(err));
+    CTASSERTF(err == 0, "failed to create dir `%s` %s", lib_dir, os_error_string(err));
 
     int status = system(
         format("cl /nologo /c %s /I%s\\include /Fo%s\\", str_join(" ", sources), run_dir, lib_dir));
     if (status != 0)
     {
-        msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(), "compilation failed `%d`", status);
+        msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(),
+                   "compilation failed `%d`", status);
     }
 #else
     int status = system(format("cd %s && cc %s -c -Iinclude", runDir, str_join(" ", sources)));
     if (WEXITSTATUS(status) != EXIT_OK)
     {
-        msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(), "compilation failed %d", WEXITSTATUS(status));
+        msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(),
+                   "compilation failed %d", WEXITSTATUS(status));
     }
 #endif
 
@@ -338,12 +335,12 @@ int main(int argc, const char **argv)
 {
     size_t size = (size_t)(1024U * 1024U * 64U);
     user_arena_t arena = new_user_arena(size);
-    arena_t alloc = new_alloc(&arena);
-    init_gmp_alloc(&alloc);
+    arena_t user = new_alloc(&arena);
+    init_gmp_arena(&user);
 
     ctu_log_control(eLogEnable);
 
-    int result = run_test_harness(argc, argv, &alloc);
+    int result = run_test_harness(argc, argv, &user);
 
     free(arena.memory_start);
 

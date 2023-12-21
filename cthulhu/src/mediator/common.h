@@ -23,7 +23,7 @@ typedef struct lifetime_t
     mediator_t *parent;
 
     logger_t *logger;
-    arena_t *alloc;
+    arena_t *arena;
 
     map_t *extensions;
     map_t *modules;

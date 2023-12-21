@@ -4295,7 +4295,7 @@ int
 mpz_set_str (mpz_t r, const char *sp, int base)
 {
   unsigned bits, value_of_a;
-  mp_size_t rn, alloc;
+  mp_size_t rn, arena;
   mp_ptr rp;
   size_t dn;
   int sign;
@@ -4373,22 +4373,22 @@ mpz_set_str (mpz_t r, const char *sp, int base)
 
   if (bits > 0)
     {
-      alloc = (dn * bits + GMP_LIMB_BITS - 1) / GMP_LIMB_BITS;
-      rp = MPZ_REALLOC (r, alloc);
+      arena = (dn * bits + GMP_LIMB_BITS - 1) / GMP_LIMB_BITS;
+      rp = MPZ_REALLOC (r, arena);
       rn = mpn_set_str_bits (rp, dp, dn, bits);
     }
   else
     {
       struct mpn_base_info info;
       mpn_get_base_info (&info, base);
-      alloc = (dn + info.exp - 1) / info.exp;
-      rp = MPZ_REALLOC (r, alloc);
+      arena = (dn + info.exp - 1) / info.exp;
+      rp = MPZ_REALLOC (r, arena);
       rn = mpn_set_str_other (rp, dp, dn, base, &info);
       /* Normalization, needed for all-zero input. */
       assert (rn > 0);
       rn -= rp[rn-1] == 0;
     }
-  assert (rn <= alloc);
+  assert (rn <= arena);
   gmp_free (dp);
 
   r->_mp_size = sign ? - rn : rn;

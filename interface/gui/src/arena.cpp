@@ -3,39 +3,34 @@
 
 using namespace ed;
 
-static void *wrap_malloc(const mem_t *mem, size_t size)
+static void *wrap_malloc(size_t size, void *user)
 {
-    arena_t *alloc = mem_arena(mem);
-    IArena *user = reinterpret_cast<IArena*>(alloc->user);
-    return user->malloc(size);
+    IArena *arena = reinterpret_cast<IArena*>(user);
+    return arena->malloc(size);
 }
 
-static void *wrap_realloc(const mem_t *mem, void *ptr, size_t new_size, size_t old_size)
+static void *wrap_realloc(void *ptr, size_t new_size, size_t old_size, void *user)
 {
-    arena_t *alloc = mem_arena(mem);
-    IArena *user = reinterpret_cast<IArena*>(alloc->user);
-    return user->realloc(ptr, new_size, old_size);
+    IArena *arena = reinterpret_cast<IArena*>(user);
+    return arena->realloc(ptr, new_size, old_size);
 }
 
-static void wrap_free(const mem_t *mem, void *ptr, size_t size)
+static void wrap_free(void *ptr, size_t size, void *user)
 {
-    arena_t *alloc = mem_arena(mem);
-    IArena *user = reinterpret_cast<IArena*>(alloc->user);
-    user->free(ptr, size);
+    IArena *arena = reinterpret_cast<IArena*>(user);
+    arena->free(ptr, size);
 }
 
-static void wrap_rename(const mem_t *mem, const void *ptr, const char *name)
+static void wrap_rename(const void *ptr, const char *name, void *user)
 {
-    arena_t *alloc = mem_arena(mem);
-    IArena *user = reinterpret_cast<IArena*>(alloc->user);
-    user->set_name(ptr, name);
+    IArena *arena = reinterpret_cast<IArena*>(user);
+    arena->set_name(ptr, name);
 }
 
-static void wrap_reparent(const mem_t *mem, const void *ptr, const void *parent)
+static void wrap_reparent(const void *ptr, const void *parent, void *user)
 {
-    arena_t *alloc = mem_arena(mem);
-    IArena *user = reinterpret_cast<IArena*>(alloc->user);
-    user->set_parent(ptr, parent);
+    IArena *arena = reinterpret_cast<IArena*>(user);
+    arena->set_parent(ptr, parent);
 }
 
 IArena::IArena(const char *alloc_name)
@@ -51,5 +46,5 @@ IArena::IArena(const char *alloc_name)
 
 void IArena::install_gmp()
 {
-    init_gmp_alloc(this);
+    init_gmp_arena(this);
 }

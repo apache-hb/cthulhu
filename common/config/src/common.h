@@ -30,7 +30,7 @@ typedef struct cfg_field_t
 
 typedef struct config_t
 {
-    arena_t *alloc;
+    arena_t *arena;
     const cfg_info_t *info;
 
     typevec_t *groups;

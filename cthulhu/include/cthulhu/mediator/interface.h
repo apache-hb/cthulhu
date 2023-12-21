@@ -38,10 +38,10 @@ mediator_t *mediator_new_noinit(const char *id, version_info_t version);
  * @brief create a new lifetime object
  *
  * @param mediator the global object
- * @param alloc the allocator to use
+ * @param arena the allocator to use
  * @return lifetime_t* the lifetime object
  */
-lifetime_t *lifetime_new(mediator_t *mediator, arena_t *alloc);
+lifetime_t *lifetime_new(mediator_t *mediator, arena_t *arena);
 
 /**
  * @brief add a new language to the lifetime object

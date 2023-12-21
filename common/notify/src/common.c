@@ -195,7 +195,7 @@ char *fmt_align(size_t width, const char *fmt, ...)
 
     result[width] = '\0';
 
-    arena_free(arena, msg, size);
+    arena_free(msg, size, arena);
 
     return result;
 }
@@ -297,7 +297,7 @@ static void text_cache_delete(text_cache_t *cache)
 
     if (cache->io != NULL) io_close(cache->io);
     typevec_delete(cache->line_info);
-    arena_free(cache->arena, cache, sizeof(text_cache_t));
+    arena_free(cache, sizeof(text_cache_t), cache->arena);
 }
 
 static bool cache_is_valid(text_cache_t *cache)

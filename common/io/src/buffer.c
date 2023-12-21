@@ -36,7 +36,7 @@ static size_t mem_write(io_t *self, const void *src, size_t size)
     mem->used = MAX(mem->used, mem->offset + size);
     if (mem->offset + size > mem->total)
     {
-        mem->data = arena_realloc(self->arena, mem->data, mem->offset + size, mem->total);
+        mem->data = arena_realloc(mem->data, mem->offset + size, mem->total, self->arena);
         mem->total = mem->offset + size;
     }
 
@@ -69,7 +69,7 @@ static const void *mem_map(io_t *self)
 static void mem_close(io_t *self)
 {
     buffer_t *mem = mem_data(self);
-    arena_free(self->arena, mem->data, mem->total);
+    arena_free(mem->data, mem->total, self->arena);
 }
 
 static const io_callbacks_t kBufferCallbacks = {

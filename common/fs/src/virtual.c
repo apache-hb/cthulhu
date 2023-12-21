@@ -64,7 +64,7 @@ static size_t vfs_write(io_t *self, const void *src, size_t size)
     if (io->offset + size > data->size)
     {
         size_t new_size = MAX(data->size * 2, io->offset + size);
-        data->data = arena_realloc(self->arena, data->data, new_size, data->size);
+        data->data = arena_realloc(data->data, new_size, data->size, self->arena);
         data->size = new_size;
     }
 

@@ -26,7 +26,7 @@ static context_t *context_inner_new(driver_t *handle, const char *name, void *as
     CTASSERT(handle != NULL);
 
     lifetime_t *lifetime = handle->parent;
-    context_t *self = ARENA_MALLOC(lifetime->alloc, sizeof(context_t), "context", lifetime);
+    context_t *self = ARENA_MALLOC(lifetime->arena, sizeof(context_t), "context", lifetime);
 
     self->parent = lifetime;
     self->lang = handle->lang;
@@ -86,7 +86,7 @@ arena_t *lifetime_get_arena(lifetime_t *lifetime)
 {
     CTASSERT(lifetime != NULL);
 
-    return lifetime->alloc;
+    return lifetime->arena;
 }
 
 USE_DECL

@@ -43,7 +43,7 @@ static void typevec_ensure(typevec_t *vec, size_t extra)
     {
         size_t new_size = MAX(vec->size * 2, vec->used + extra);
 
-        vec->data = arena_realloc(vec->arena, vec->data, new_size * vec->type_size, vec->size * vec->type_size);
+        vec->data = arena_realloc(vec->data, new_size * vec->type_size, vec->size * vec->type_size, vec->arena);
 
         vec->size = new_size;
     }
@@ -70,8 +70,8 @@ void typevec_delete(typevec_t *vec)
 {
     CTASSERT(vec != NULL);
 
-    arena_free(vec->arena, vec->data, vec->type_size * vec->size);
-    arena_free(vec->arena, vec, sizeof(typevec_t));
+    arena_free(vec->data, vec->type_size * vec->size, vec->arena);
+    arena_free(vec, sizeof(typevec_t), vec->arena);
 }
 
 USE_DECL
@@ -215,7 +215,7 @@ void typevec_reverse(IN_NOTNULL typevec_t *vec)
         memcpy(b, tmp, vec->type_size);
     }
 
-    arena_free(vec->arena, tmp, vec->type_size);
+    arena_free(tmp, vec->type_size, vec->arena);
 }
 
 USE_DECL

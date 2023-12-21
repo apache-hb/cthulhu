@@ -39,7 +39,7 @@ static void vector_ensure(vector_t **vector, size_t size)
     if (size >= VEC->size)
     {
         size_t resize = (size + 1) * 2;
-        VEC = arena_realloc(VEC->arena, VEC, vector_size(resize), vector_size(size));
+        VEC = arena_realloc(VEC, vector_size(resize), vector_size(size), VEC->arena);
         VEC->size = resize;
     }
 }
@@ -93,7 +93,7 @@ void vector_delete(vector_t *vector)
 {
     CTASSERT(vector != NULL);
 
-    arena_free(vector->arena, vector, vector_size(vector->size));
+    arena_free(vector, vector_size(vector->size), vector->arena);
 }
 
 USE_DECL

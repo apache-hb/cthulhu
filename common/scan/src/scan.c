@@ -9,7 +9,7 @@
 typedef struct scan_t
 {
     io_t *io;           ///< file itself
-    arena_t *alloc;     ///< allocator to use everything involving this file
+    arena_t *arena;     ///< allocator to use everything involving this file
 
     const char *language; ///< the language this file contains
     const char *path;     ///< the path to this file
@@ -22,7 +22,7 @@ typedef struct scan_t
 
 static scan_t gBuiltinScan = {
     .io = NULL,
-    .alloc = NULL,
+    .arena = NULL,
 
     .language = "builtin",
     .path = "builtin",
@@ -135,7 +135,7 @@ arena_t *scan_alloc(const scan_t *scan)
 {
     CTASSERT(scan != NULL);
 
-    return scan->alloc;
+    return scan->arena;
 }
 
 USE_DECL
@@ -147,19 +147,19 @@ io_t *scan_src(scan_t *scan)
 }
 
 USE_DECL
-scan_t *scan_io(const char *language, io_t *io, arena_t *alloc)
+scan_t *scan_io(const char *language, io_t *io, arena_t *arena)
 {
     CTASSERT(language != NULL);
     CTASSERT(io != NULL);
     CTASSERTF(io_error(io) == 0, "io-error(%s) = %zu", io_name(io), io_error(io));
-    CTASSERT(alloc != NULL);
+    CTASSERT(arena != NULL);
 
-    scan_t *self = ARENA_MALLOC(alloc, sizeof(scan_t), io_name(io), io);
+    scan_t *self = ARENA_MALLOC(arena, sizeof(scan_t), io_name(io), io);
 
     self->language = language;
     self->io = io;
     self->path = io_name(io);
-    self->alloc = alloc;
+    self->arena = arena;
 
     self->tree = NULL;
     self->context = NULL;

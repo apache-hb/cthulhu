@@ -58,22 +58,22 @@ void flex_update(where_t *where, where_t *offsets, int steps);
     inline void *fn_malloc(size_t size, yyscan_t scanner)              \
     {                                                                  \
         scan_t *scan = yyget_extra(scanner);                           \
-        arena_t *alloc = scan_alloc(scan);                             \
-        return ARENA_MALLOC(alloc, size, "yyalloc", scan);             \
+        arena_t *arena = scan_alloc(scan);                             \
+        return ARENA_MALLOC(arena, size, "yyalloc", scan);             \
     }                                                                  \
     inline void *fn_realloc(void *ptr, size_t bytes, yyscan_t scanner) \
     {                                                                  \
-        arena_t *alloc = scan_alloc(yyget_extra(scanner));             \
-        return arena_realloc(alloc, ptr, bytes, ALLOC_SIZE_UNKNOWN);   \
+        arena_t *arena = scan_alloc(yyget_extra(scanner));             \
+        return arena_realloc(ptr, bytes, ALLOC_SIZE_UNKNOWN, arena);   \
     }                                                                  \
     inline void fn_free(void *ptr, yyscan_t scanner)                   \
     {                                                                  \
-        arena_t *alloc = scan_alloc(yyget_extra(scanner));             \
+        arena_t *arena = scan_alloc(yyget_extra(scanner));             \
         if (ptr == NULL)                                               \
         {                                                              \
             return;                                                    \
         }                                                              \
-        arena_free(alloc, ptr, ALLOC_SIZE_UNKNOWN);                    \
+        arena_free(ptr, ALLOC_SIZE_UNKNOWN, arena);                    \
     }
 
 /// @}

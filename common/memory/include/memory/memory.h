@@ -14,6 +14,13 @@ BEGIN_API
 /// @return the default allocator
 arena_t *ctu_default_alloc(void);
 
+arena_t *get_global_arena(void);
+void init_global_arena(arena_t *arena);
+
+void ctu_malloc(size_t size);
+void *ctu_realloc(void *ptr, size_t new_size, size_t old_size);
+void ctu_free(void *ptr, size_t size);
+
 ///
 /// @brief allocate a copy of a string
 ///
@@ -49,10 +56,8 @@ void *ctu_memdup(IN_READS(size) const void *ptr, IN_RANGE(>, 0) size_t size, are
 
 /// @brief initialize gmp with a custom allocator
 ///
-/// @param alloc the allocator to use
-void init_gmp_alloc(IN_NOTNULL arena_t *alloc);
-
-arena_t *get_gmp_alloc(void);
+/// @param arena the allocator to use
+void init_gmp_arena(IN_NOTNULL arena_t *arena);
 
 /// @} // GlobalMemory
 

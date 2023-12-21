@@ -133,11 +133,11 @@ typedef struct cfg_flags_t
 
 /// @brief create a new configuration group
 ///
-/// @param alloc the allocator to use
+/// @param arena the allocator to use
 /// @param info the information about this group
 ///
 /// @return the new configuration group
-config_t *config_new(arena_t *alloc, const cfg_info_t *info);
+config_t *config_new(arena_t *arena, const cfg_info_t *info);
 
 /// @defgroup ConfigAdd Construction
 /// @brief Configuration construction API

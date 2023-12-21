@@ -4,7 +4,7 @@ type BOOL = int;
 
 struct Arena {
     name: str;
-    alloc: def(*Arena, usize) -> opaque;
+    arena: def(*Arena, usize) -> opaque;
     release: def(*Arena, opaque) -> void;
 }
 
@@ -44,7 +44,7 @@ def printMemory(mem: Memory) {
 }
 
 def defaultAlloc(mem: *Arena, size: usize): opaque {
-    printf("[%s] alloc %zu\n", mem->name, size);
+    printf("[%s] arena %zu\n", mem->name, size);
     return libcAlloc(size);
 }
 
@@ -55,12 +55,12 @@ def defaultRelease(mem: *Arena, ptr: opaque) {
 
 export def defaultArena(name: str): Arena = .{
     name = name,
-    alloc = defaultAlloc,
+    arena = defaultAlloc,
     release = defaultRelease
 };
 
 def arenaAlloc(mem: *Arena, size: usize): opaque {
-    return mem->alloc(mem, size);
+    return mem->arena(mem, size);
 }
 
 def arenaRelease(mem: *Arena, ptr: opaque) {

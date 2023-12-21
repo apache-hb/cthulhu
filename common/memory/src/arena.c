@@ -2,109 +2,76 @@
 
 #include "base/panic.h"
 
-typedef struct mem_t
-{
-    arena_t *alloc;
-} mem_t;
-
-static mem_t event_new(arena_t *alloc)
-{
-    CTASSERT(alloc != NULL);
-
-    mem_t event = {
-        .alloc = alloc
-    };
-
-    return event;
-}
-
-arena_t *mem_arena(const mem_t *event)
-{
-    CTASSERT(event != NULL);
-
-    return event->alloc;
-}
-
 /// arena allocator
 
 USE_DECL
-void *arena_malloc(arena_t *alloc, size_t size, const char *name, const void *parent)
+void *arena_malloc(size_t size, const char *name, const void *parent, arena_t *arena)
 {
-    CTASSERT(alloc != NULL);
+    CTASSERT(arena != NULL);
     CTASSERT(size > 0);
 
-    mem_t mem = event_new(alloc);
-
-    void *ptr = alloc->fn_malloc(&mem, size);
-    CTASSERTF(ptr != NULL, "alloc `%s` of %zu bytes failed", name, size);
+    void *ptr = arena->fn_malloc(size, arena->user);
+    CTASSERTF(ptr != NULL, "arena `%s` of %zu bytes failed", name, size);
 
     if (name != NULL)
     {
-        arena_rename(alloc, ptr, name);
+        arena_rename(ptr, name, arena);
     }
 
     if (parent != NULL)
     {
-        arena_reparent(alloc, ptr, parent);
+        arena_reparent(ptr, parent, arena);
     }
 
     return ptr;
 }
 
 USE_DECL
-void *arena_realloc(arena_t *alloc, void *ptr, size_t new_size, size_t old_size)
+void *arena_realloc(void *ptr, size_t new_size, size_t old_size, arena_t *arena)
 {
-    CTASSERT(alloc != NULL);
+    CTASSERT(arena != NULL);
     CTASSERT(ptr != NULL);
     CTASSERT(new_size > 0);
     CTASSERT(old_size > 0);
 
-    mem_t mem = event_new(alloc);
-
-    void *outptr = alloc->fn_realloc(&mem, ptr, new_size, old_size);
+    void *outptr = arena->fn_realloc(ptr, new_size, old_size, arena->user);
     CTASSERTF(outptr != NULL, "realloc(%zu) failed", new_size);
 
     return outptr;
 }
 
 USE_DECL
-void arena_free(arena_t *alloc, void *ptr, size_t size)
+void arena_free(void *ptr, size_t size, arena_t *arena)
 {
-    CTASSERT(alloc != NULL);
+    CTASSERT(arena != NULL);
     CTASSERT(ptr != NULL);
     CTASSERT(size > 0);
 
-    mem_t mem = event_new(alloc);
-
-    alloc->fn_free(&mem, ptr, size);
+    arena->fn_free(ptr, size, arena->user);
 }
 
 USE_DECL
-void arena_rename(arena_t *alloc, const void *ptr, const char *name)
+void arena_rename(const void *ptr, const char *name, arena_t *arena)
 {
-    CTASSERT(alloc != NULL);
+    CTASSERT(arena != NULL);
     CTASSERT(ptr != NULL);
     CTASSERT(name != NULL);
 
-    if (alloc->fn_rename == NULL)
+    if (arena->fn_rename == NULL)
         return;
 
-    mem_t mem = event_new(alloc);
-
-    alloc->fn_rename(&mem, ptr, name);
+    arena->fn_rename(ptr, name, arena->user);
 }
 
 USE_DECL
-void arena_reparent(arena_t *alloc, const void *ptr, const void *parent)
+void arena_reparent(const void *ptr, const void *parent, arena_t *arena)
 {
-    CTASSERT(alloc != NULL);
+    CTASSERT(arena != NULL);
     CTASSERT(ptr != NULL);
     CTASSERT(parent != NULL);
 
-    if (alloc->fn_reparent == NULL)
+    if (arena->fn_reparent == NULL)
         return;
 
-    mem_t mem = event_new(alloc);
-
-    alloc->fn_reparent(&mem, ptr, parent);
+    arena->fn_reparent(ptr, parent, arena->user);
 }

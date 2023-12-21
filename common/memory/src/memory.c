@@ -10,24 +10,24 @@
 
 /// default global allocator
 
-static void *default_malloc(const mem_t *mem, size_t size)
+static void *default_malloc(size_t size, void *user)
 {
-    CTU_UNUSED(mem);
+    CTU_UNUSED(user);
 
     return malloc(size);
 }
 
-static void *default_realloc(const mem_t *mem, void *ptr, size_t new_size, size_t old_size)
+static void *default_realloc(void *ptr, size_t new_size, size_t old_size, void *user)
 {
-    CTU_UNUSED(mem);
+    CTU_UNUSED(user);
     CTU_UNUSED(old_size);
 
     return realloc(ptr, new_size);
 }
 
-static void default_free(const mem_t *mem, void *ptr, size_t size)
+static void default_free(void *ptr, size_t size, void *user)
 {
-    CTU_UNUSED(mem);
+    CTU_UNUSED(user);
     CTU_UNUSED(size);
 
     free(ptr);
@@ -83,33 +83,27 @@ char *ctu_strndup(const char *str, size_t len, arena_t *arena)
 
 static arena_t *gGmpAlloc = NULL;
 
-arena_t *get_gmp_alloc(void)
-{
-    return gGmpAlloc;
-}
-
 static void *ctu_gmp_malloc(size_t size)
 {
-    return arena_malloc(gGmpAlloc, size, "gmp", gGmpAlloc);
+    return arena_malloc(size, "gmp", gGmpAlloc, gGmpAlloc);
 }
 
 static void *ctu_gmp_realloc(void *ptr, size_t old_size, size_t new_size)
 {
-    return arena_realloc(gGmpAlloc, ptr, new_size, old_size);
+    return arena_realloc(ptr, new_size, old_size, gGmpAlloc);
 }
 
 static void ctu_gmp_free(void *ptr, size_t size)
 {
     // mini-gmp doesnt handle free size and always gives us zero
-    arena_free(gGmpAlloc, ptr, size != 0 ? size : ALLOC_SIZE_UNKNOWN);
+    arena_free(ptr, size != 0 ? size : ALLOC_SIZE_UNKNOWN, gGmpAlloc);
 }
 
 USE_DECL
-void init_gmp_alloc(arena_t *alloc)
+void init_gmp_arena(arena_t *arena)
 {
-    CTASSERT(alloc != NULL);
+    CTASSERT(arena != NULL);
 
-    gGmpAlloc = alloc;
-    arena_rename(alloc, gGmpAlloc, "gmp");
+    gGmpAlloc = arena;
     mp_set_memory_functions(ctu_gmp_malloc, ctu_gmp_realloc, ctu_gmp_free);
 }

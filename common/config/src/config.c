@@ -50,7 +50,7 @@ static void options_validate(const cfg_choice_t *options, size_t count)
 
 static cfg_field_t *add_field(config_t *config, const cfg_info_t *info, cfg_type_t type)
 {
-    cfg_field_t *field = ARENA_MALLOC(config->alloc, sizeof(cfg_field_t), info->name, config);
+    cfg_field_t *field = ARENA_MALLOC(config->arena, sizeof(cfg_field_t), info->name, config);
 
     field->type = type;
     field->info = info;
@@ -65,7 +65,7 @@ static void config_init(config_t *config, arena_t *arena, const cfg_info_t *info
     CTASSERT(config != NULL);
     ASSERT_INFO_VALID_GROUP(info);
 
-    config->alloc = arena;
+    config->arena = arena;
     config->info = info;
 
     config->groups = typevec_new(sizeof(config_t), 4, arena);
@@ -75,10 +75,10 @@ static void config_init(config_t *config, arena_t *arena, const cfg_info_t *info
     ARENA_IDENTIFY(arena, config->fields, "fields", config);
 }
 
-config_t *config_new(arena_t *alloc, const cfg_info_t *info)
+config_t *config_new(arena_t *arena, const cfg_info_t *info)
 {
-    config_t *config = ARENA_MALLOC(alloc, sizeof(config_t), "config", NULL);
-    config_init(config, alloc, info);
+    config_t *config = ARENA_MALLOC(arena, sizeof(config_t), "config", NULL);
+    config_init(config, arena, info);
     return config;
 }
 
@@ -117,7 +117,7 @@ cfg_field_t *config_string(config_t *group, const cfg_info_t *info, cfg_string_t
 
     cfg_field_t *field = add_field(group, info, eConfigString);
     field->string_config = cfg;
-    field->string_value = ctu_strdup(cfg.initial, group->alloc);
+    field->string_value = ctu_strdup(cfg.initial, group->arena);
 
     return field;
 }
@@ -151,11 +151,11 @@ config_t *config_group(config_t *group, const cfg_info_t *info)
     CTASSERT(group != NULL);
 
     config_t config = { 0 };
-    config_init(&config, group->alloc, info);
+    config_init(&config, group->arena, info);
 
     config_t *result = typevec_push(group->groups, &config);
 
-    ARENA_REPARENT(group->alloc, result, group);
+    ARENA_REPARENT(group->arena, result, group);
 
     return result;
 }

@@ -632,10 +632,10 @@ finish:
     for (size_t i = 0; i < len; i++)
     {
         CTASSERTF(strings[i] != NULL, "strings[%zu] = NULL", i);
-        arena_free(arena, strings[i], ALLOC_SIZE_UNKNOWN);
+        arena_free(strings[i], ALLOC_SIZE_UNKNOWN, arena);
     }
 
-    arena_free(arena, strings, size);
+    arena_free(strings, size, arena);
 
     CTASSERT(result != NULL);
     return result;

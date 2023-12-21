@@ -115,13 +115,13 @@ size_t scan_read(IN_NOTNULL scan_t *scan, OUT_WRITES(size) void *dst, size_t siz
 /// @param reports the report sink to use
 /// @param language the language of the source
 /// @param io the io source to use
-/// @param alloc the allocator to use
+/// @param arena the allocator to use
 ///
 /// @return the created scanner
 NODISCARD
 scan_t *scan_io(IN_STRING const char *language,
                 IN_NOTNULL io_t *io,
-                IN_NOTNULL arena_t *alloc);
+                IN_NOTNULL arena_t *arena);
 
 NODISCARD CONSTFN
 scan_t *scan_builtin(void);
