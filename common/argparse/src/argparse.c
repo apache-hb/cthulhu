@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include "base/panic.h"
+#include "core/macros.h"
 #include "memory/arena.h"
 
 #include "std/map.h"
@@ -92,8 +93,10 @@ static ap_param_t *add_param(ap_group_t *self, ap_param_type_t type, const char 
 
 /// public api
 
-ap_t *ap_new(const char *desc, version_t version, arena_t *arena)
+ap_t *ap_new(const char *desc, version_t version, config_t *config, arena_t *arena)
 {
+    CTU_UNUSED(config);
+
     ap_t *self = ARENA_MALLOC(arena, sizeof(ap_t), "argparse", NULL);
 
     self->arena = arena;

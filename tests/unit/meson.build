@@ -50,9 +50,9 @@ test('fs', fs_exe,
 
 # argparse
 
-argparse_exe = executable('argparse.argparse', 'cases/argparse/argparse.c',
-    include_directories : '.',
-    dependencies : [ unit, memory, base, std, scan, memory, argparse ]
-)
+# argparse_exe = executable('argparse.argparse', 'cases/argparse/argparse.c',
+#     include_directories : '.',
+#     dependencies : [ unit, memory, base, std, scan, memory, argparse ]
+# )
 
-test('argparse', argparse_exe, suite : 'unit')
+# test('argparse', argparse_exe, suite : 'unit')

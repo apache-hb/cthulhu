@@ -161,7 +161,7 @@ static inode_t *pfs_dir_create(fs_t *fs, inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
     bool create = false;
-    os_error_t err = os_dir_create(absolute, &create);
+    os_error_t err = mkdir_recursive(absolute, &create);
     CTASSERTF(err == 0, "failed to create dir `%s` %s", absolute, os_error_string(err));
 
     return physical_dir(get_relative(self, name), fs->arena);

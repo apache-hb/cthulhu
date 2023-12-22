@@ -251,7 +251,7 @@ static cfg_info_t kGroup_ReportInfo = {
 runtime_t cmd_parse(mediator_t *mediator, lifetime_t *lifetime, int argc, const char **argv)
 {
     arena_t *arena = lifetime_get_arena(lifetime);
-    ap_t *ap = ap_new("cli", NEW_VERSION(0, 0, 1), arena);
+    ap_t *ap = ap_new("cli", NEW_VERSION(0, 0, 1), NULL, arena);
 
     runtime_t rt = {
         .argc = argc,

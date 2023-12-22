@@ -23,6 +23,10 @@ GFI = good first issue
 
 <h3>Important</h3>
 
+- vendor flex+bison ourselves to always have the best version
+    - will also allow us to not use winflexbison from chocolatey
+    - needs at least m4, gettext, and glib ported as well
+
 - make the output of rich text notifications reproducible
     - order of segments changes sometimes because of set_add_ptr being used
 
