@@ -23,6 +23,11 @@ GFI = good first issue
 
 <h3>Important</h3>
 
+- improve the OS layer
+    - should use the OS layer `posix` or `win32` rather than an os name
+    - maybe we should break encapsulation and make the os layers not opaque to make using them easier
+    - would also require less allocations
+
 - vendor flex+bison ourselves to always have the best version
     - will also allow us to not use winflexbison from chocolatey
     - needs at least m4, gettext, and glib ported as well

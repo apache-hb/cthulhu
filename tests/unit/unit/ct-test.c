@@ -100,11 +100,13 @@ static void test_panic_handler(panic_t panic, const char *fmt, va_list args)
 {
     if (!gExpectingPanic)
     {
-        bt_print_trace(stdout);
 
         (void)printf("unexpected panic: %s:%zu: %s: ", panic.file, panic.line, panic.function);
         (void)vprintf(fmt, args);
         (void)printf("\n");
+
+        bt_print_trace(stdout);
+
         abort();
     }
 

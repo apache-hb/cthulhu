@@ -251,7 +251,15 @@ static cfg_info_t kGroup_ReportInfo = {
 runtime_t cmd_parse(mediator_t *mediator, lifetime_t *lifetime, int argc, const char **argv)
 {
     arena_t *arena = lifetime_get_arena(lifetime);
-    ap_t *ap = ap_new("cli", NEW_VERSION(0, 0, 1), NULL, arena);
+    langs_t langs = get_langs(get_global_arena());
+    for (size_t i = 0; i < langs.size; i++)
+    {
+        lifetime_add_language(lifetime, langs.langs + i);
+    }
+
+    config_t *config = config_new(arena, &kConfigInfo);
+
+    ap_t *ap = ap_new("cli", NEW_VERSION(0, 0, 1), config, arena);
 
     runtime_t rt = {
         .argc = argc,
@@ -269,11 +277,6 @@ runtime_t cmd_parse(mediator_t *mediator, lifetime_t *lifetime, int argc, const 
         .sourcePaths = vector_new(16),
     };
 
-    langs_t langs = get_langs(ctu_default_alloc());
-    for (size_t i = 0; i < langs.size; i++)
-    {
-        lifetime_add_language(lifetime, langs.langs + i);
-    }
 
     // config_t *config = config_new(arena, &kConfigInfo);
     // config_t *general_group = config_group(config, &kGroup_GeneralInfo);

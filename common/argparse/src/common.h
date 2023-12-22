@@ -49,6 +49,7 @@ CALLBACK_TYPE(ap_err_callback_t, ap_error_t)
 typedef struct ap_t
 {
     arena_t *arena;
+    config_t *config;
 
     const char *desc;
     version_t version;

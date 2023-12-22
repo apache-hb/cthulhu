@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include "core/macros.h"
+#include "core/text.h"
 #include "io/io.h"
 #include "memory/memory.h"
 
@@ -261,14 +262,31 @@ static text_cache_t *text_cache_new(io_t *io, text_view_t source, size_t len, ar
     return cache;
 }
 
-static text_cache_t *text_cache_io(io_t *io, arena_t *arena)
+static text_view_t get_io_view(io_t *io)
 {
-    CTASSERT(io != NULL);
+    if (io_error(io) != 0) 
+    {
+        text_view_t view = {
+            .text = "",
+            .size = 0
+        };
+
+        return view;
+    }
 
     text_view_t view = {
         .text = io_map(io),
         .size = io_size(io)
     };
+
+    return view;
+}
+
+static text_cache_t *text_cache_io(io_t *io, arena_t *arena)
+{
+    CTASSERT(io != NULL);
+
+    text_view_t view = get_io_view(io);
 
     text_cache_t *cache = text_cache_new(io, view, 32, arena);
 

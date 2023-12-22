@@ -95,11 +95,12 @@ static ap_param_t *add_param(ap_group_t *self, ap_param_type_t type, const char 
 
 ap_t *ap_new(const char *desc, version_t version, config_t *config, arena_t *arena)
 {
-    CTU_UNUSED(config);
+    CTASSERT(config != NULL);
 
-    ap_t *self = ARENA_MALLOC(arena, sizeof(ap_t), "argparse", NULL);
+    ap_t *self = ARENA_MALLOC(arena, sizeof(ap_t), "argparse", config);
 
     self->arena = arena;
+    self->config = config;
     self->desc = desc;
     self->version = version;
 
