@@ -73,7 +73,7 @@ static AP_EVENT(count_error, ap, node, message, data)
     return eEventHandled;
 }
 
-int main()
+int main(void)
 {
     test_install_panic_handler();
 

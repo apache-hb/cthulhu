@@ -209,44 +209,44 @@ static const cfg_info_t kConfigInfo = {
 };
 
 /// general
-static cfg_info_t kGroup_GeneralInfo = {
-    .name = "general",
-    .brief = "General options"
-};
+// static cfg_info_t kGroup_GeneralInfo = {
+//     .name = "general",
+//     .brief = "General options"
+// };
 
-static cfg_info_t kGeneral_HelpInfo = {
-    .name = "help",
-    .brief = "Display help information",
-    .description = "Display help information"
-};
+// static cfg_info_t kGeneral_HelpInfo = {
+//     .name = "help",
+//     .brief = "Display help information",
+//     .description = "Display help information"
+// };
 
-static cfg_info_t kGeneral_VersionInfo = {
-    .name = "version",
-    .brief = "Display version information",
-    .description = "Display version information"
-};
+// static cfg_info_t kGeneral_VersionInfo = {
+//     .name = "version",
+//     .brief = "Display version information",
+//     .description = "Display version information"
+// };
 
-/// codegen
+// /// codegen
 
-static cfg_info_t kGroup_CodegenInfo = {
-    .name = "codegen",
-    .brief = "Code generation options"
-};
+// static cfg_info_t kGroup_CodegenInfo = {
+//     .name = "codegen",
+//     .brief = "Code generation options"
+// };
 
-/// compiler debugging, user debugging options should be in codegen
+// /// compiler debugging, user debugging options should be in codegen
 
-static cfg_info_t kGroup_DebugInfo = {
-    .name = "debug",
-    .brief = "Debugging options",
-    .description = "Compiler internal debugging options, for user debugging options see codegen"
-};
+// static cfg_info_t kGroup_DebugInfo = {
+//     .name = "debug",
+//     .brief = "Debugging options",
+//     .description = "Compiler internal debugging options, for user debugging options see codegen"
+// };
 
-/// reporting
+// /// reporting
 
-static cfg_info_t kGroup_ReportInfo = {
-    .name = "reports",
-    .brief = "Reporting options"
-};
+// static cfg_info_t kGroup_ReportInfo = {
+//     .name = "reports",
+//     .brief = "Reporting options"
+// };
 
 runtime_t cmd_parse(mediator_t *mediator, lifetime_t *lifetime, int argc, const char **argv)
 {

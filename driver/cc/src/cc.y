@@ -19,7 +19,7 @@
 }
 
 %{
-int cclex();
+int cclex(void *yylval, void *yylloc, void *yyscanner);
 void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %}
 

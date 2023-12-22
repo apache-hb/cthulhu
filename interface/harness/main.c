@@ -199,8 +199,8 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
         .config = {.zeroth_line = false,
                    .print_source = true,
                    .print_header = true,
-                   .max_columns = 80},
-        .colours = colour_get_disabled(),
+                   .max_columns = 80,},
+        .colours = colour_get_default(),
         .io = msg_buffer,
     };
 
@@ -318,7 +318,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
                    "compilation failed `%d`", status);
     }
 #else
-    int status = system(format("cd %s && cc %s -c -Iinclude", runDir, str_join(" ", sources)));
+    int status = system(format("cd %s && cc %s -c -Iinclude", run_dir, str_join(" ", sources)));
     if (WEXITSTATUS(status) != EXIT_OK)
     {
         msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(),

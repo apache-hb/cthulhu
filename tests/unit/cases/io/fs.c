@@ -5,7 +5,7 @@
 
 #include "std/str.h"
 
-int main()
+int main(void)
 {
     test_install_panic_handler();
 

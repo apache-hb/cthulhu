@@ -6,6 +6,7 @@
 #include "io/io.h"
 
 #include "base/panic.h"
+#include "base/log.h"
 
 typedef struct physical_t
 {
@@ -152,7 +153,7 @@ static inode_t *pfs_file_create(fs_t *fs, inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
     os_error_t err = os_file_create(absolute);
-    CTASSERTF(err == 0, "failed to create file `%s` %s", absolute, os_error_string(err));
+    CTASSERTF(err == 0, "failed to create file `%s` (%s) %s", absolute, name, os_error_string(err));
 
     return physical_file(get_relative(self, name), fs->arena);
 }

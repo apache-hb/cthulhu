@@ -16,7 +16,7 @@ static const char *const kSetItems[] = {
 
 #define SET_ITEMS_COUNT sizeof(kSetItems) / sizeof(char*)
 
-int main()
+int main(void)
 {
     test_install_panic_handler();
 

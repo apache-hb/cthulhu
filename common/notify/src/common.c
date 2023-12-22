@@ -125,7 +125,7 @@ char *fmt_node(file_config_t config, const node_t *node)
     {
         size_t first_line = get_line_number(config, node);
 
-        return format("%s:%" PRI_LINE ":%" PRI_COLUMN "", path, first_line, where.first_column);
+        return format("%s:%zu:%" PRI_COLUMN "", path, first_line, where.first_column);
     }
     else
     {

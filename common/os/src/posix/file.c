@@ -5,7 +5,7 @@
 #include "memory/memory.h"
 #include "os/os.h"
 
-#include <climits>
+#include <limits.h>
 #include <stdio.h>
 #include <errno.h>
 

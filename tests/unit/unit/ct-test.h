@@ -55,10 +55,10 @@ void group_notify_failure(test_group_t *group, const char *msg);
 void group_notify_exception(test_group_t *group, const char *msg);
 
 /// @brief install the global panic handler
-void test_install_panic_handler();
+void test_install_panic_handler(void);
 
 /// @brief begin expecting a panic
-void test_begin_expect_panic();
+void test_begin_expect_panic(void);
 
 /// @brief create a new test group
 ///

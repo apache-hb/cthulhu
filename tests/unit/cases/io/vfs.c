@@ -3,7 +3,9 @@
 
 #include "fs/fs.h"
 
-int main()
+#include "core/macros.h"
+
+int main(void)
 {
     test_install_panic_handler();
 

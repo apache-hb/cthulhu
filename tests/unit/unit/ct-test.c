@@ -116,7 +116,7 @@ static void test_panic_handler(panic_t panic, const char *fmt, va_list args)
     longjmp(gPanicJump, 1);
 }
 
-void test_install_panic_handler()
+void test_install_panic_handler(void)
 {
     bt_init();
     gPanicHandler = test_panic_handler;
@@ -124,12 +124,12 @@ void test_install_panic_handler()
     init_global_arena(ctu_default_alloc());
 }
 
-void test_begin_expect_panic()
+void test_begin_expect_panic(void)
 {
     gExpectingPanic = true;
 }
 
-static void test_end_expect_panic()
+static void test_end_expect_panic(void)
 {
     gExpectingPanic = false;
 }

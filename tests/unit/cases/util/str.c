@@ -29,7 +29,7 @@ static const char *kStringParts[] = {"zero", "one", "two", "three", "four", "fiv
 
 #define STRING_PARTS_LEN (sizeof(kStringParts) / sizeof(char *))
 
-int main()
+int main(void)
 {
     test_install_panic_handler();
 

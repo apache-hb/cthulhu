@@ -21,9 +21,6 @@ typedef uint_fast64_t column_t; ///< column number
 #define PRI_LINE PRIuFAST64
 #define PRI_COLUMN PRIuFAST64
 
-#define LINE_MAX UINT_FAST64_MAX
-#define COLUMN_MAX UINT_FAST64_MAX
-
 /// @brief a location inside a scanner
 typedef struct
 {

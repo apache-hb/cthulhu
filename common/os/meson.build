@@ -15,7 +15,13 @@ os_common = declare_dependency(
 
 # get the backend
 
-subdir('src' / target)
+if target == 'windows'
+    subdir('src/windows')
+elif target == 'darwin' or target == 'linux'
+    subdir('src/posix')
+else
+    error('unknown os api')
+endif
 
 # create the native library
 

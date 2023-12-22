@@ -19,6 +19,7 @@ os_error_t os_file_create(const char *path)
     if (fd != NULL)
     {
         fclose(fd);
+        return 0;
     }
 
     return errno;
@@ -97,7 +98,7 @@ os_dirent_t os_dirent_type(const char *path)
     {
         if (errno == ENOENT)
         {
-            return eOsNodeError;
+            return eOsNodeNone;
         }
 
         return eOsNodeError;
