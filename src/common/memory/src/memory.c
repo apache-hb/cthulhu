@@ -65,9 +65,9 @@ void init_global_arena(arena_t *arena)
     gGlobalArena = arena;
 }
 
-void ctu_malloc(size_t size)
+void *ctu_malloc(size_t size)
 {
-    arena_malloc(size, "global", gGlobalArena, get_global_arena());
+    return arena_malloc(size, "global", gGlobalArena, get_global_arena());
 }
 
 void *ctu_realloc(void *ptr, size_t new_size, size_t old_size)

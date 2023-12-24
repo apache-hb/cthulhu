@@ -1,8 +1,9 @@
 #pragma once
 
-#include "os/error.h"
-
 #include OS_API_HEADER
+
+#include "core/analyze.h"
+#include "core/compiler.h"
 
 #include <stdbool.h>
 
@@ -40,6 +41,17 @@ typedef enum os_dirent_t
 
     eOsNodeTotal
 } os_dirent_t;
+
+/// @brief error code
+typedef size_t os_error_t;
+
+/// @brief convert an os error code to a string
+///
+/// @param error the error code to convert
+///
+/// @return the string representation of the error code
+NODISCARD RET_STRING
+const char *os_error_string(os_error_t error);
 
 /// @brief initialize the os api
 /// @note this must be called before using any other os api

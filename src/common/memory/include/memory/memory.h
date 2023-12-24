@@ -17,7 +17,7 @@ arena_t *ctu_default_alloc(void);
 arena_t *get_global_arena(void);
 void init_global_arena(arena_t *arena);
 
-void ctu_malloc(size_t size);
+void *ctu_malloc(size_t size);
 void *ctu_realloc(void *ptr, size_t new_size, size_t old_size);
 void ctu_free(void *ptr, size_t size);
 

@@ -1,4 +1,4 @@
-#include "os/error.h"
+#include "os/os.h"
 
 #include "std/str.h"
 
@@ -7,7 +7,7 @@
 USE_DECL
 const char *os_error_string(os_error_t error)
 {
-    int err = error;
+    int err = (int)error;
 
     const char *str = strerror(err);
     if (str == NULL)

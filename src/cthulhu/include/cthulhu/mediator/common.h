@@ -4,6 +4,7 @@
 #include "core/compiler.h"
 #include "core/version_def.h"
 
+#include <stddef.h>
 
 BEGIN_API
 

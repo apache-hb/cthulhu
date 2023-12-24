@@ -109,7 +109,10 @@ typedef struct arena_t
 /// @param arena the allocator to use
 /// @param ptr the pointer to free
 /// @param size the size of the allocation
-void arena_free(OUT_PTR_INVALID void *ptr, IN_RANGE(!=, 0) size_t size, IN_NOTNULL arena_t *arena);
+void arena_free(
+    OUT_PTR_INVALID void *ptr,
+    IN_RANGE(!=, 0) size_t size,
+    IN_NOTNULL arena_t *arena);
 
 /// @brief allocate memory from a custom allocator
 ///
@@ -119,7 +122,7 @@ void arena_free(OUT_PTR_INVALID void *ptr, IN_RANGE(!=, 0) size_t size, IN_NOTNU
 /// @param parent the parent of the allocation
 ///
 /// @return the allocated pointer
-NODISCARD CT_ALLOC(arena_free, 2) CT_ALLOC_SIZE(2)
+NODISCARD CT_ALLOC(arena_free) CT_ALLOC_SIZE(1)
 RET_NOTNULL
 void *arena_malloc(
     IN_RANGE(!=, 0) size_t size,
@@ -144,18 +147,18 @@ void *arena_realloc(
     IN_RANGE(!=, 0) size_t old_size,
     IN_NOTNULL arena_t *arena);
 
-NODISCARD CT_ALLOC(arena_free, 2)
+NODISCARD CT_ALLOC(arena_free)
 char *arena_strdup(
     IN_STRING const char *str,
     IN_NOTNULL arena_t *arena);
 
-NODISCARD CT_ALLOC(arena_free, 2)
+NODISCARD CT_ALLOC(arena_free)
 char *arena_strndup(
     IN_READS(len) const char *str,
     IN_RANGE(>, 0) size_t len,
     IN_NOTNULL arena_t *arena);
 
-NODISCARD CT_ALLOC(arena_free, 2) CT_ALLOC_SIZE(2)
+NODISCARD CT_ALLOC(arena_free) CT_ALLOC_SIZE(2)
 void *arena_memdup(
     IN_READS(size) const void *ptr,
     IN_RANGE(>, 0) size_t size,
