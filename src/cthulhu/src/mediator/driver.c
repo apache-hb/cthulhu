@@ -24,9 +24,10 @@ static char *path_to_string(vector_t *path)
 static context_t *context_inner_new(driver_t *handle, const char *name, void *ast, tree_t *root)
 {
     CTASSERT(handle != NULL);
+    CTASSERT(name != NULL);
 
     lifetime_t *lifetime = handle->parent;
-    context_t *self = ARENA_MALLOC(lifetime->arena, sizeof(context_t), "context", lifetime);
+    context_t *self = ARENA_MALLOC(lifetime->arena, sizeof(context_t), name, lifetime);
 
     self->parent = lifetime;
     self->lang = handle->lang;

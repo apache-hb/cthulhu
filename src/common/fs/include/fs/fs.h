@@ -16,6 +16,7 @@ typedef struct io_t io_t;
 /// @brief create a filesystem interface to a physical location on disk
 ///
 /// @param root the root directory to mount this filesystem on
+/// @param arena the arena to allocate from
 ///
 /// @return a filesystem interface, or NULL if the filesystem failed to mount
 NODISCARD
@@ -24,6 +25,7 @@ fs_t *fs_physical(const char *root, arena_t *arena);
 /// @brief create a virtual filesystem interface
 ///
 /// @param name the name of the vfs
+/// @param arena the arena to allocate from
 ///
 /// @return a filesystem interface to an in-memory fs
 NODISCARD

@@ -121,6 +121,7 @@ void *io_data(IN_NOTNULL io_t *io);
 /// @param name the name of the object
 /// @param data the user data, this is copied into the io object
 /// @param size the size of the user data
+/// @param arena the arena to allocate the io object from
 ///
 /// @return a new IO interface
 io_t *io_new(

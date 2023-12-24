@@ -88,7 +88,7 @@ void bt_read(bt_frame_t callback, void *user);
 frame_resolve_t bt_resolve_symbol(IN_NOTNULL const frame_t *frame, symbol_t *symbol);
 
 /// @brief print a stacktrace to a file
-/// @note this follows the same precondition as @ref stacktrace_get
+/// @note this follows the same precondition as @ref bt_read
 ///
 /// @param file the file to print to
 void bt_print_trace(IN_NOTNULL FILE *file);

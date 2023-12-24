@@ -22,6 +22,7 @@ void typevec_delete(OUT_PTR_INVALID typevec_t *vec);
 ///
 /// @param type_size the size of the type
 /// @param len the initial length of the vector
+/// @param arena the arena to allocate from
 ///
 /// @return the new vector
 NODISCARD CT_ALLOC(typevec_delete)

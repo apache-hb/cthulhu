@@ -112,7 +112,6 @@ size_t scan_read(IN_NOTNULL scan_t *scan, OUT_WRITES(size) void *dst, size_t siz
 
 /// @brief create a scanner from an io source
 ///
-/// @param reports the report sink to use
 /// @param language the language of the source
 /// @param io the io source to use
 /// @param arena the allocator to use

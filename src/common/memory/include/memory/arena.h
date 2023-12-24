@@ -33,8 +33,8 @@ typedef struct arena_t arena_t;
 /// @brief arena malloc callback
 /// @pre @p size must be greater than 0.
 ///
-/// @param header associated event
 /// @param size the size of the allocation
+/// @param user user data
 ///
 /// @return the allocated pointer
 /// @retval NULL if the allocation failed
@@ -45,10 +45,10 @@ typedef void *(*mem_alloc_t)(size_t size, void *user);
 /// @pre @p new_size must be greater than 0.
 /// @pre @p ptr must not be NULL.
 ///
-/// @param header associated event
 /// @param ptr the pointer to reallocate
 /// @param new_size the new size of the allocation
 /// @param old_size the old size of the allocation
+/// @param user user data
 ///
 /// @return the reallocated pointer
 /// @retval NULL if the allocation failed
@@ -57,23 +57,23 @@ typedef void *(*mem_resize_t)(void *ptr, size_t new_size, size_t old_size, void 
 /// @brief arena free callback
 /// @pre @p size must be either @ref ALLOC_SIZE_UNKNOWN or the size of the allocation.
 ///
-/// @param header associated event
 /// @param ptr the pointer to free
 /// @param size the size of the allocation.
+/// @param user user data
 typedef void (*mem_release_t)(void *ptr, size_t size, void *user);
 
 /// @brief arena rename callback
 ///
-/// @param header associated event
 /// @param ptr the pointer to rename
 /// @param name the new name of the pointer
+/// @param user user data
 typedef void (*mem_rename_t)(const void *ptr, const char *name, void *user);
 
 /// @brief arena reparent callback
 ///
-/// @param user associated event
 /// @param ptr the pointer to reparent
 /// @param parent the new parent of the pointer
+/// @param user user data
 typedef void (*mem_reparent_t)(const void *ptr, const void *parent, void *user);
 
 /// @brief an allocator object

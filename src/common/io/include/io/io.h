@@ -30,6 +30,7 @@ void io_close(OUT_PTR_INVALID io_t *io);
 ///
 /// @param path the path to the file
 /// @param mode the access mode of the file
+/// @param arena the arena to allocate from
 ///
 /// @return the io object, or NULL on error
 NODISCARD CT_ALLOC(io_close)
@@ -42,6 +43,7 @@ io_t *io_file(const char *path, os_access_t mode, arena_t *arena);
 /// @param data the data to copy into the initial buffer
 /// @param size the size of the data
 /// @param flags the access mode of the file
+/// @param arena the arena to allocate from
 ///
 /// @return the io object
 NODISCARD CT_ALLOC(io_close)
@@ -53,6 +55,7 @@ io_t *io_memory(const char *name, const void *data, size_t size, os_access_t fla
 /// @param name the name of the io object
 /// @param size the starting size of the buffer
 /// @param flags the access mode
+/// @param arena the arena to allocate from
 ///
 /// @return the io object
 NODISCARD CT_ALLOC(io_close)
@@ -64,6 +67,7 @@ io_t *io_blob(const char *name, size_t size, os_access_t flags, arena_t *arena);
 /// @param name the name of the IO view
 /// @param data the data to provide in the view
 /// @param size the size of the data
+/// @param arena the arena to allocate from
 ///
 /// @return the IO view
 NODISCARD CT_ALLOC(io_close)
@@ -74,6 +78,7 @@ io_t *io_view(const char *name, const void *data, size_t size, arena_t *arena);
 ///
 /// @param name the name of the IO view
 /// @param string the backing string view
+/// @param arena the arena to allocate from
 ///
 /// @return the io object
 NODISCARD CT_ALLOC(io_close)
@@ -99,7 +104,24 @@ size_t io_read(io_t *io, OUT_WRITES(size) void *dst, size_t size);
 /// @return the number of bytes actually written
 size_t io_write(io_t *io, IN_READS(size) const void *src, size_t size);
 
+/// @brief printf to an io object
+/// @pre the io object must have been created with the @a eAccessWrite flag
+///
+/// @param io the io object
+/// @param fmt the format string
+/// @param ... the format arguments
+///
+/// @return the number of bytes actually written
 size_t io_printf(io_t *io, FMT_STRING const char *fmt, ...) CT_PRINTF(2, 3);
+
+/// @brief vprintf to an io object
+/// @pre the io object must have been created with the @a eAccessWrite flag
+///
+/// @param io the io object
+/// @param fmt the format string
+/// @param args the format arguments
+///
+/// @return the number of bytes actually written
 size_t io_vprintf(io_t *io, const char *fmt, va_list args);
 
 /// @brief get the name of an io object

@@ -77,7 +77,9 @@ typedef ap_event_result_t (*ap_error_t)(ap_t *ap, const node_t *node, const char
 /// @brief create a new parser instance
 ///
 /// @param desc the description of the program
-/// @param version the version info of the program
+/// @param version the version of the program
+/// @param config the config object to use
+/// @param arena the arena to allocate from
 ///
 /// @return the created parser instance
 ap_t *ap_new(const char *desc, version_t version, config_t *config, arena_t *arena);
