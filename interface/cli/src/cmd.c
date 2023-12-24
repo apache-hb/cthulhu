@@ -20,8 +20,6 @@
 #include <stdio.h>
 
 // general
-static const char *const kHelpNames[] = { "-h", "--help", NULL };
-static const char *const kVersionNames[] = { "-v", "--version", NULL };
 static const char *const kAddExtensionMapNames[] = { "-ext", "--add-ext", NULL };
 
 // codegen
@@ -35,46 +33,6 @@ static const char *const kWarnAsErrorNames[] = { "-Werror", NULL };
 static const char *const kReportLimitNames[] = { "-fmax-errors", NULL };
 
 // general events
-
-static AP_EVENT(on_help, ap, param, value, data)
-{
-    CTU_UNUSED(param);
-    CTU_UNUSED(value);
-
-    runtime_t *rt = data;
-    ap_print_help_header(ap, rt->argv[0]);
-
-    langs_t langs = get_langs(ctu_default_alloc());
-
-
-    printf("\n%zu languages loaded:\n", langs.size);
-    printf("========================================\n");
-
-    for (size_t i = 0; i < langs.size; i++)
-    {
-        const language_t *lang = langs.langs + i;
-        ap_print_version_info(lang->version, lang->name);
-        printf("========================================\n");
-    }
-
-    printf("\n");
-
-
-    ap_print_help_body(ap, rt->argv[0]);
-
-    return eEventHandled;
-}
-
-static AP_EVENT(on_version, ap, param, value, data)
-{
-    CTU_UNUSED(param);
-    CTU_UNUSED(value);
-    CTU_UNUSED(data);
-
-    ap_version(ap);
-
-    return eEventHandled;
-}
 
 static AP_EVENT(on_register_ext, ap, param, value, data)
 {
@@ -92,8 +50,8 @@ static AP_EVENT(on_register_ext, ap, param, value, data)
         return eEventHandled;
     }
 
-    const char *id = ctu_strndup(mapping, split, ctu_default_alloc());
-    const char *ext = ctu_strdup(mapping + split + 1, ctu_default_alloc());
+    const char *id = ctu_strndup(mapping, split);
+    const char *ext = ctu_strdup(mapping + split + 1);
 
     const language_t *lang = lifetime_get_language(rt->lifetime, id);
     if (lang == NULL)
@@ -251,7 +209,7 @@ static const cfg_info_t kConfigInfo = {
 runtime_t cmd_parse(mediator_t *mediator, lifetime_t *lifetime, int argc, const char **argv)
 {
     arena_t *arena = lifetime_get_arena(lifetime);
-    langs_t langs = get_langs(get_global_arena());
+    langs_t langs = get_langs();
     for (size_t i = 0; i < langs.size; i++)
     {
         lifetime_add_language(lifetime, langs.langs + i);
@@ -299,8 +257,6 @@ runtime_t cmd_parse(mediator_t *mediator, lifetime_t *lifetime, int argc, const 
 
 
     ap_group_t *generalGroup = ap_group_new(ap, "general", "general options");
-    ap_param_t *helpParam = ap_add_bool(generalGroup, "help", "display this message", kHelpNames);
-    ap_param_t *versionParam = ap_add_bool(generalGroup, "version", "print version information", kVersionNames);
     ap_param_t *addExtensionMapParam = ap_add_string(generalGroup, "add extension map", "register a new extension for a compiler", kAddExtensionMapNames);
 
     ap_group_t *codegenGroup = ap_group_new(ap, "codegen", "code generation options");
@@ -317,8 +273,6 @@ runtime_t cmd_parse(mediator_t *mediator, lifetime_t *lifetime, int argc, const 
     CTU_UNUSED(reportLimitParam);
 
     // general
-    ap_event(ap, helpParam, on_help, &rt);
-    ap_event(ap, versionParam, on_version, &rt);
     ap_event(ap, addExtensionMapParam, on_register_ext, &rt);
 
     // debug

@@ -117,19 +117,22 @@ os_dirent_t os_dirent_type(const char *path)
 }
 
 USE_DECL
-OS_RESULT(const char *) os_dir_current(void)
+os_error_t os_dir_current(const char **cwd)
 {
+    CTASSERT(cwd != NULL);
+
     DWORD size = GetCurrentDirectoryA(0, NULL);
     arena_t *arena = get_global_arena();
     char *buffer = ARENA_MALLOC(arena, size + 1, "os_dir_current", NULL);
 
     if (GetCurrentDirectoryA(size, buffer) == 0)
     {
-        return win_error(GetLastError());
+        return GetLastError();
     }
 
     // add null terminator
     buffer[size] = '\0';
 
-    return win_result(ERROR_SUCCESS, &buffer, sizeof(char *));
+    *cwd = buffer;
+    return ERROR_SUCCESS;
 }

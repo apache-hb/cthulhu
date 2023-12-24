@@ -1,3 +1,4 @@
+#include "core/macros.h"
 #include "ctu/driver.h"
 
 #include "cthulhu/mediator/driver.h"
@@ -9,8 +10,8 @@
 
 #include "memory/memory.h"
 
-#include "ctu_bison.h"
-#include "ctu_flex.h"
+#include "ctu_bison.h" // IWYU pragma: keep
+#include "ctu_flex.h" // IWYU pragma: keep
 
 CTU_CALLBACKS(kCallbacks, ctu);
 
@@ -23,8 +24,10 @@ static vector_t *find_mod_path(ctu_t *ast, char *fp)
         : vector_init(str_filename_noext(fp));
 }
 
-static void ctu_preparse(driver_t *driver, scan_t *scan)
+static void *ctu_preparse(driver_t *driver, scan_t *scan)
 {
+    CTU_UNUSED(scan);
+
     lifetime_t *lifetime = handle_get_lifetime(driver);
 
     ctu_scan_t info = {
@@ -32,7 +35,7 @@ static void ctu_preparse(driver_t *driver, scan_t *scan)
         .attribs = vector_new(4)
     };
 
-    scan_set_context(scan, ctu_memdup(&info, sizeof(ctu_scan_t), get_global_arena()));
+    return ctu_memdup(&info, sizeof(ctu_scan_t));
 }
 
 static void ctu_postparse(driver_t *driver, scan_t *scan, void *tree)
@@ -65,9 +68,9 @@ const language_t kCtuModule = {
 
     .fn_create = ctu_init,
 
-    .fn_prepass = ctu_preparse,
-    .fn_postpass = ctu_postparse,
-    .callbacks = &kCallbacks,
+    .fn_preparse = ctu_preparse,
+    .fn_postparse = ctu_postparse,
+    .parse_callbacks = &kCallbacks,
 
     .fn_compile_passes = {
         [eStageForwardSymbols] = ctu_forward_decls,

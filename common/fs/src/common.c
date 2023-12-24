@@ -59,7 +59,7 @@ os_error_t mkdir_recursive(const char *path, bool *create)
     if (index != SIZE_MAX)
     {
         // create parent directory
-        char *parent = ctu_strndup(path, index, get_global_arena());
+        char *parent = ctu_strndup(path, index);
         os_error_t result = mkdir_recursive(parent, create);
         if (result != 0) { return result; }
     }

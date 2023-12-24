@@ -51,6 +51,4 @@ typedef struct context_t
     tree_t *root;
 } context_t;
 
-bool context_requires_compiling(const context_t *ctx);
-
 #define EXEC(mod, fn, ...) do { if (mod->fn != NULL) { mod->fn(__VA_ARGS__); } } while (0)

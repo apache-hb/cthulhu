@@ -3,7 +3,7 @@
 
 #include "core/macros.h"
 #include "io/io.h"
-#include "memory/memory.h"
+#include "memory/arena.h"
 #include "notify/text.h"
 
 #include "stacktrace/stacktrace.h"
@@ -391,8 +391,8 @@ void bt_report_add(bt_report_t *report, const frame_t *frame)
     bt_entry_t entry = {
         .info = info,
 
-        .file = ctu_strdup(symbol.file, report->arena),
-        .symbol = ctu_strdup(symbol.name, report->arena),
+        .file = arena_strdup(symbol.file, report->arena),
+        .symbol = arena_strdup(symbol.name, report->arena),
         .line = symbol.line,
         .address = (void*)frame->address,
     };

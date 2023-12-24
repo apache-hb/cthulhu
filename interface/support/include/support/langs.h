@@ -12,6 +12,6 @@ typedef struct langs_t
     size_t size;
 } langs_t;
 
-langs_t get_langs(arena_t *arena);
+langs_t get_langs(void);
 
 END_API

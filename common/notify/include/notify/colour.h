@@ -10,6 +10,7 @@ typedef struct text_colour_t text_colour_t;
 
 typedef enum colour_t
 {
+    eColourDefault,
     eColourRed,
     eColourGreen,
     eColourYellow,
@@ -17,7 +18,6 @@ typedef enum colour_t
     eColourMagenta,
     eColourCyan,
     eColourWhite,
-    eColourDefault,
 
     eColourCount
 } colour_t;

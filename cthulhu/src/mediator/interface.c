@@ -65,7 +65,7 @@ static driver_t *handle_new(lifetime_t *lifetime, const language_t *lang)
     return self;
 }
 
-bool context_requires_compiling(const context_t *ctx)
+static bool ctx_requires_compile(const context_t *ctx)
 {
     return ctx->ast != NULL;
 }
@@ -203,21 +203,25 @@ void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io)
 
     driver_t *handle = handle_new(lifetime, lang);
 
-    if (lang->callbacks != NULL)
+    if (lang->parse_callbacks != NULL)
     {
-        EXEC(lang, fn_prepass, handle, scan);
+        if (lang->fn_preparse != NULL)
+        {
+            void *ctx = lang->fn_preparse(handle, scan);
+            scan_set_context(scan, ctx);
+        }
 
-        parse_result_t result = compile_scanner(scan, lang->callbacks);
+        parse_result_t result = compile_scanner(scan, lang->parse_callbacks);
         const char *path = scan_path(scan);
         if (parse_failed(lifetime->logger, path, result))
         {
             return;
         }
 
-        CTASSERTF(lang->fn_postpass != NULL, "language `%s` has no postpass function", lang->id);
+        CTASSERTF(lang->fn_postparse != NULL, "language `%s` has no postpass function", lang->id);
         if (result.result == eParseOk)
         {
-            lang->fn_postpass(handle, scan, result.tree);
+            lang->fn_postparse(handle, scan, result.tree);
         }
     }
     else
@@ -286,7 +290,7 @@ void lifetime_run_stage(lifetime_t *lifetime, compile_stage_t stage)
         const language_t *lang = ctx->lang;
         driver_pass_t fn_pass = lang->fn_compile_passes[stage];
 
-        if (!context_requires_compiling(ctx) || fn_pass == NULL)
+        if (fn_pass == NULL || !ctx_requires_compile(ctx))
         {
             continue;
         }

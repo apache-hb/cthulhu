@@ -12,9 +12,10 @@
 
 CTU_CALLBACKS(kCallbacks, obr);
 
-static void obr_preparse(driver_t *handle, scan_t *scan)
+static void *obr_preparse(driver_t *handle, scan_t *scan)
 {
-    CTU_UNUSED(handle);
+    CTU_UNUSED(scan);
+
     lifetime_t *lifetime = handle_get_lifetime(handle);
     logger_t *reports = lifetime_get_logger(lifetime);
 
@@ -22,7 +23,7 @@ static void obr_preparse(driver_t *handle, scan_t *scan)
         .reports = reports,
     };
 
-    scan_set_context(scan, ctu_memdup(&info, sizeof(obr_scan_t), get_global_arena()));
+    return ctu_memdup(&info, sizeof(obr_scan_t));
 }
 
 static void obr_postparse(driver_t *handle, scan_t *scan, void *tree)
@@ -44,7 +45,7 @@ static void obr_postparse(driver_t *handle, scan_t *scan, void *tree)
 
 static void obr_destroy(driver_t *handle) { CTU_UNUSED(handle); }
 
-static const char *kLangNames[] = { "m", "mod", "obr", "oberon", NULL };
+static const char * const kLangNames[] = { "m", "mod", "obr", "oberon", NULL };
 
 const language_t kOberonModule = {
     .id = "obr",
@@ -61,9 +62,9 @@ const language_t kOberonModule = {
     .fn_create = obr_create,
     .fn_destroy = obr_destroy,
 
-    .fn_prepass = obr_preparse,
-    .fn_postpass = obr_postparse,
-    .callbacks = &kCallbacks,
+    .fn_preparse = obr_preparse,
+    .fn_postparse = obr_postparse,
+    .parse_callbacks = &kCallbacks,
 
     .fn_compile_passes = {
         [eStageForwardSymbols] = obr_forward_decls,

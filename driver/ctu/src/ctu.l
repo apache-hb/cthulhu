@@ -119,7 +119,7 @@ WS [ \t\r\v\n\f]
 }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
-    yylval->ident = ctu_strdup(yytext, get_global_arena());
+    yylval->ident = ctu_strdup(yytext);
     return IDENT;
 }
 

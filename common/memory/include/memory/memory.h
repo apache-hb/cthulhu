@@ -30,7 +30,7 @@ void ctu_free(void *ptr, size_t size);
 ///
 /// @return the allocated copy of the string
 NODISCARD
-char *ctu_strdup(IN_STRING const char *str, arena_t *arena);
+char *ctu_strdup(IN_STRING const char *str);
 
 /// @brief allocate a copy of a string with a maximum length
 ///
@@ -41,7 +41,7 @@ char *ctu_strdup(IN_STRING const char *str, arena_t *arena);
 ///
 /// @return the allocated copy of the string
 NODISCARD
-char *ctu_strndup(IN_READS(len) const char *str, size_t len, arena_t *arena);
+char *ctu_strndup(IN_READS(len) const char *str, size_t len);
 
 /// @brief duplicate a memory region
 /// duplicate a region of memory and return a pointer to the new memory.
@@ -52,7 +52,7 @@ char *ctu_strndup(IN_READS(len) const char *str, size_t len, arena_t *arena);
 ///
 /// @return the duplicated memory
 NODISCARD
-void *ctu_memdup(IN_READS(size) const void *ptr, IN_RANGE(>, 0) size_t size, arena_t *arena);
+void *ctu_memdup(IN_READS(size) const void *ptr, IN_RANGE(>, 0) size_t size);
 
 /// @brief initialize gmp with a custom allocator
 ///

@@ -310,7 +310,7 @@ static void do_rich(logger_t *logs)
     report_config_t report_config = {
         .max_errors = SIZE_MAX,
         .max_warnings = SIZE_MAX,
-        .report_format = eTextSimple,
+        .report_format = eTextComplex,
 
         .text_config = config,
     };

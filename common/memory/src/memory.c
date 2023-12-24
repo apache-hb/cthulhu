@@ -53,6 +53,8 @@ static arena_t *gGlobalArena = NULL;
 
 arena_t *get_global_arena(void)
 {
+    CTASSERT(gGlobalArena != NULL);
+
     return gGlobalArena;
 }
 
@@ -65,50 +67,36 @@ void init_global_arena(arena_t *arena)
 
 void ctu_malloc(size_t size)
 {
-    arena_malloc(size, "global", gGlobalArena, gGlobalArena);
+    arena_malloc(size, "global", gGlobalArena, get_global_arena());
 }
 
 void *ctu_realloc(void *ptr, size_t new_size, size_t old_size)
 {
-    return arena_realloc(ptr, new_size, old_size, gGlobalArena);
+    return arena_realloc(ptr, new_size, old_size, get_global_arena());
 }
 
 void ctu_free(void *ptr, size_t size)
 {
-    arena_free(ptr, size, gGlobalArena);
+    arena_free(ptr, size, get_global_arena());
 }
 
 
 USE_DECL
-void *ctu_memdup(const void *ptr, size_t size, arena_t *arena)
+void *ctu_memdup(const void *ptr, size_t size)
 {
-    CTASSERT(ptr != NULL);
-
-    void *out = ARENA_MALLOC(arena, size, "memdup", arena);
-    memcpy(out, ptr, size);
-    return out;
+    return arena_memdup(ptr, size, get_global_arena());
 }
 
 USE_DECL
-char *ctu_strdup(const char *str, arena_t *arena)
+char *ctu_strdup(const char *str)
 {
-    CTASSERT(str != NULL);
-
-    size_t len = strlen(str) + 1;
-    char *out = ARENA_MALLOC(arena, len, "strdup", arena);
-    memcpy(out, str, len);
-    return out;
+    return arena_strdup(str, get_global_arena());
 }
 
 USE_DECL
-char *ctu_strndup(const char *str, size_t len, arena_t *arena)
+char *ctu_strndup(const char *str, size_t len)
 {
-    CTASSERT(str != NULL);
-
-    char *out = ARENA_MALLOC(arena, len + 1, "strndup", arena);
-    memcpy(out, str, len);
-    out[len] = '\0';
-    return out;
+    return arena_strndup(str, len, get_global_arena());
 }
 
 /// gmp arena managment

@@ -72,7 +72,7 @@ void os_file_close(os_file_t *file)
 {
     CTASSERT(file != NULL);
 
-    fclose(file->file);
+    (void)fclose(file->file);
 }
 
 USE_DECL

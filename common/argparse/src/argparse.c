@@ -1,7 +1,6 @@
 #include "common.h"
 
 #include "base/panic.h"
-#include "core/macros.h"
 #include "memory/arena.h"
 
 #include "std/map.h"

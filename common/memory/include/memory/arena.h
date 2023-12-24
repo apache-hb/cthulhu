@@ -144,6 +144,23 @@ void *arena_realloc(
     IN_RANGE(!=, 0) size_t old_size,
     IN_NOTNULL arena_t *arena);
 
+NODISCARD CT_ALLOC(arena_free, 2)
+char *arena_strdup(
+    IN_STRING const char *str,
+    IN_NOTNULL arena_t *arena);
+
+NODISCARD CT_ALLOC(arena_free, 2)
+char *arena_strndup(
+    IN_READS(len) const char *str,
+    IN_RANGE(>, 0) size_t len,
+    IN_NOTNULL arena_t *arena);
+
+NODISCARD CT_ALLOC(arena_free, 2) CT_ALLOC_SIZE(2)
+void *arena_memdup(
+    IN_READS(size) const void *ptr,
+    IN_RANGE(>, 0) size_t size,
+    IN_NOTNULL arena_t *arena);
+
 /// @brief rename a pointer in a custom allocator
 ///
 /// @param arena the allocator to use

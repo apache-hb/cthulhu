@@ -46,7 +46,7 @@ static void set_attribs(tree_t *sema, tree_t *decl, obr_visibility_t vis, tree_l
         .visibility = remap_visibility(sema->reports, decl->node, tree_get_name(decl), vis)
     };
 
-    tree_set_attrib(decl, ctu_memdup(&attrib, sizeof(tree_attribs_t), get_global_arena()));
+    tree_set_attrib(decl, ctu_memdup(&attrib, sizeof(tree_attribs_t)));
 }
 
 static obr_t *begin_resolve(tree_t *sema, tree_t *self, void *user, obr_kind_t kind)

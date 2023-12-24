@@ -117,13 +117,16 @@ os_dirent_t os_dirent_type(const char *path)
 }
 
 USE_DECL
-OS_RESULT(const char *) os_dir_current(void)
+os_error_t os_dir_current(const char **cwd)
 {
+    CTASSERT(cwd != NULL);
+
     char *path = getcwd(NULL, 0);
     if (path == NULL)
     {
-        return linux_error(errno);
+        return errno;
     }
 
-    return os_result_new(0, &path, sizeof(char *));
+    *cwd = path;
+    return 0;
 }

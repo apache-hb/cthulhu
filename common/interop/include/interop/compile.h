@@ -91,6 +91,6 @@ typedef struct parse_result_t
 /// @param callbacks the flex/bison callbacks
 ///
 /// @return the parse result
-parse_result_t compile_scanner(scan_t *extra, callbacks_t *callbacks);
+parse_result_t compile_scanner(scan_t *extra, const callbacks_t *callbacks);
 
 /// @}

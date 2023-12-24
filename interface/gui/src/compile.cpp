@@ -57,10 +57,10 @@ void CompileInfo::init_lifetime()
 {
     lifetime = lifetime_new(mediator, &global);
 
-    langs_t langs = get_langs(get_global_arena());
+    langs_t langs = get_langs();
     for (size_t i = 0; i < langs.size; i++)
     {
-        lifetime_add_language(lifetime, &langs.langs[i]);
+        lifetime_add_language(lifetime, langs.langs + i);
     }
 }
 

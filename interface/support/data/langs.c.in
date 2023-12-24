@@ -4,13 +4,14 @@
 
 @EXTERNS@
 
-langs_t get_langs(arena_t *arena)
+langs_t get_langs(void)
 {
-    const language_t langs[] = { @MODS@ };
-    size_t len = sizeof(langs) / sizeof(const language_t);
+    const language_t kLangArray[] = { @MODS@ };
+    size_t len = sizeof(kLangArray) / sizeof(language_t);
 
-    const language_t *data = ctu_memdup(langs, sizeof(langs), arena);
-
-    langs_t ret = { data, len };
+    langs_t ret = {
+        .langs = ctu_memdup(kLangArray, sizeof(kLangArray)),
+        .size = len
+    };
     return ret;
 }

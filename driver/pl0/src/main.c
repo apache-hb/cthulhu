@@ -1,3 +1,4 @@
+#include "core/macros.h"
 #include "memory/memory.h"
 #include "pl0/sema.h"
 #include "pl0/ast.h"
@@ -13,8 +14,10 @@
 
 CTU_CALLBACKS(kCallbacks, pl0);
 
-static void pl0_preparse(driver_t *handle, scan_t *scan)
+static void *pl0_preparse(driver_t *handle, scan_t *scan)
 {
+    CTU_UNUSED(scan);
+
     lifetime_t *lifetime = handle_get_lifetime(handle);
     logger_t *reports = lifetime_get_logger(lifetime);
 
@@ -22,7 +25,7 @@ static void pl0_preparse(driver_t *handle, scan_t *scan)
         .reports = reports
     };
 
-    scan_set_context(scan, ctu_memdup(&info, sizeof(pl0_scan_t), get_global_arena()));
+    return ctu_memdup(&info, sizeof(pl0_scan_t));
 }
 
 static void pl0_postparse(driver_t *handle, scan_t *scan, void *tree)
@@ -58,9 +61,9 @@ const language_t kPl0Module = {
 
     .fn_create = pl0_init,
 
-    .fn_prepass = pl0_preparse,
-    .fn_postpass = pl0_postparse,
-    .callbacks = &kCallbacks,
+    .fn_preparse = pl0_preparse,
+    .fn_postparse = pl0_postparse,
+    .parse_callbacks = &kCallbacks,
 
     .fn_compile_passes = {
         [eStageForwardSymbols] = pl0_forward_decls,

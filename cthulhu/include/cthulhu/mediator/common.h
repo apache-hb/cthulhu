@@ -14,6 +14,7 @@ typedef struct plugin_t plugin_t;
 typedef struct context_t context_t;
 typedef struct arena_t arena_t;
 
+typedef struct diagnostic_t diagnostic_t;
 typedef struct vector_t vector_t;
 typedef struct ap_t ap_t;
 typedef struct tree_t tree_t;
@@ -31,8 +32,8 @@ typedef void (*driver_destroy_t)(driver_t *);
 
 typedef void (*driver_parse_t)(driver_t *, scan_t *);
 
-/// @brief provide a scanner with context data
-typedef void (*driver_prepass_t)(driver_t *, scan_t *);
+/// @brief return the context data needed for a scanner
+typedef void *(*driver_prepass_t)(driver_t *, scan_t *);
 
 /// @brief get the context data from a scanner
 typedef void (*driver_postpass_t)(driver_t *, scan_t *, void *);
@@ -56,16 +57,31 @@ typedef struct language_t
 
     const char * const * exts; ///< null terminated list of file extensions
 
-    driver_create_t fn_create;   ///< called at startup
-    driver_destroy_t fn_destroy; ///< called at shutdown
+    /// @brief all diagnostics this language can produce
+    const diagnostic_t *diagnostics;
+    size_t diagnostic_count;
 
-    driver_parse_t fn_parse; ///< parse a file into an ast
+    /// @brief called once at startup
+    driver_create_t fn_create;
 
-    driver_prepass_t fn_prepass;
-    driver_postpass_t fn_postpass;
-    callbacks_t *callbacks;
+    /// @brief called at shutdown
+    driver_destroy_t fn_destroy;
 
-    driver_pass_t fn_compile_passes[eStageTotal]; ///< compile a single pass
+    /// @brief parse a file into an AST
+    /// @note if @a parse_callbacks is set, this function is ignored
+    driver_parse_t fn_parse;
+
+    /// @brief called before parsing a file
+    driver_prepass_t fn_preparse;
+
+    /// @brief called after parsing a file
+    driver_postpass_t fn_postparse;
+
+    /// @brief callbacks for the parser
+    const callbacks_t *parse_callbacks;
+
+    /// @brief an array of passes to run on each translation unit
+    driver_pass_t fn_compile_passes[eStageTotal];
 } language_t;
 
 ///

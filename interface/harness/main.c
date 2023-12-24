@@ -184,7 +184,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     mediator_t *mediator = mediator_new("example", kVersion);
     lifetime_t *lifetime = lifetime_new(mediator, arena);
 
-    langs_t langs = get_langs(arena);
+    langs_t langs = get_langs();
 
     logger_t *reports = lifetime_get_logger(lifetime);
     for (size_t i = 0; i < langs.size; i++)
@@ -196,10 +196,12 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     io_t *msg_buffer = io_stdout(arena);
 
     text_config_t text_config = {
-        .config = {.zeroth_line = false,
-                   .print_source = true,
-                   .print_header = true,
-                   .max_columns = 80,},
+        .config = {
+            .zeroth_line = false,
+            .print_source = true,
+            .print_header = true,
+            .max_columns = 80,
+        },
         .colours = colour_get_default(),
         .io = msg_buffer,
     };
@@ -271,11 +273,11 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     c89_emit_result_t c89_emit_result = emit_c89(&c89_emit_options);
     CHECK_LOG(reports, "emitting c89");
 
-    OS_RESULT(const char *) cwd = os_dir_current();
-    CTASSERTF(os_error(cwd) == 0, "failed to get cwd %s", os_error_string(os_error(cwd)));
+    const char *cwd = NULL;
+    os_error_t err = os_dir_current(&cwd);
+    CTASSERTF(err == 0, "failed to get cwd %s", os_error_string(err));
 
-    const char *test_dir = format("%s" NATIVE_PATH_SEPARATOR "test-out",
-                                  OS_VALUE(const char *, cwd));
+    const char *test_dir = format("%s" NATIVE_PATH_SEPARATOR "test-out", cwd);
     const char *run_dir = format("%s" NATIVE_PATH_SEPARATOR "%s", test_dir, argv[1]);
 
     fs_t *out = fs_physical(run_dir, arena);
@@ -307,8 +309,8 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     const char *lib_dir = format("%s" NATIVE_PATH_SEPARATOR "lib", run_dir);
 
     bool create = false;
-    os_error_t err = os_dir_create(lib_dir, &create);
-    CTASSERTF(err == 0, "failed to create dir `%s` %s", lib_dir, os_error_string(err));
+    os_error_t cwd_err = os_dir_create(lib_dir, &create);
+    CTASSERTF(cwd_err == 0, "failed to create dir `%s` %s", lib_dir, os_error_string(cwd_err));
 
     int status = system(
         format("cl /nologo /c %s /I%s\\include /Fo%s\\", str_join(" ", sources), run_dir, lib_dir));

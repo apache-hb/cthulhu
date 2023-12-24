@@ -89,7 +89,7 @@ char *str_noext(const char *path)
     CTASSERT(path != NULL);
 
     size_t idx = str_rfind(path, ".");
-    char *base = ctu_strdup(path, get_global_arena());
+    char *base = ctu_strdup(path);
     if (idx == SIZE_MAX)
     {
         return base;
@@ -110,7 +110,7 @@ char *str_ext(const char *path)
         return NULL;
     }
 
-    return ctu_strdup(path + idx + 1, get_global_arena());
+    return ctu_strdup(path + idx + 1);
 }
 
 USE_DECL
@@ -135,10 +135,10 @@ char *str_filename(const char *path)
     size_t idx = str_rfind_any(path, PATH_SEPERATORS);
     if (idx == SIZE_MAX)
     {
-        return ctu_strdup(path, get_global_arena());
+        return ctu_strdup(path);
     }
 
-    return ctu_strdup(path + idx + 1, get_global_arena());
+    return ctu_strdup(path + idx + 1);
 }
 
 USE_DECL
@@ -176,13 +176,13 @@ char *str_join(const char *sep, vector_t *parts)
 
     if (all == 0)
     {
-        return ctu_strdup("", get_global_arena());
+        return ctu_strdup("");
     }
     else if (all == 1)
     {
         char *it = vector_get(parts, 0);
         CTASSERT(it != NULL);
-        return ctu_strdup(it, get_global_arena());
+        return ctu_strdup(it);
     }
 
     size_t len = 0;
@@ -233,7 +233,7 @@ char *str_repeat(const char *str, size_t times)
 
     if (times == 0)
     {
-        return ctu_strdup("", get_global_arena());
+        return ctu_strdup("");
     }
 
     size_t len = strlen(str);
@@ -351,7 +351,7 @@ char *str_normalize(const char *input)
     // if the string is already normalized, just return a copy
     if (input_length == result_length)
     {
-        return ctu_strndup(input, input_length, get_global_arena());
+        return ctu_strndup(input, input_length);
     }
 
     const char *repl_iter = input;
@@ -380,7 +380,7 @@ char *str_normalizen(const char *str, size_t len)
     // if the string is already normalized, just return a copy
     if (length == len)
     {
-        return ctu_strndup(str, len, get_global_arena());
+        return ctu_strndup(str, len);
     }
 
     char *buf = ARENA_MALLOC(get_global_arena(), length + 1, "str_normalizen", NULL);
@@ -434,12 +434,12 @@ vector_t *str_split(const char *str, const char *sep)
             continue;
         }
 
-        vector_push(&result, ctu_strndup(token, cursor - token, get_global_arena()));
+        vector_push(&result, ctu_strndup(token, cursor - token));
         token = cursor + seplen;
         cursor += seplen;
     }
 
-    vector_push(&result, ctu_strndup(token, cursor - token, get_global_arena()));
+    vector_push(&result, ctu_strndup(token, cursor - token));
 
     return result;
 }
@@ -477,7 +477,7 @@ char *str_replace(const char *str, const char *search, const char *repl)
 
     if (strlen(search) == 0)
     {
-        return ctu_strdup(str, get_global_arena());
+        return ctu_strdup(str);
     }
 
     vector_t *split = str_split(str, search);
@@ -601,7 +601,7 @@ const char *str_common_prefix(vector_t *args)
         // find the last path seperator
         // we find the common prefix up to the last path seperator
         size_t find = str_rfind_any(arg, PATH_SEPERATORS) + 1;
-        strings[i] = ctu_strndup(arg, find, get_global_arena());
+        strings[i] = ctu_strndup(arg, find);
 
         lower = MIN(lower, find);
     }
@@ -618,14 +618,14 @@ const char *str_common_prefix(vector_t *args)
         {
             if (strings[j][i] != strings[0][i])
             {
-                result = i == 0 ? "" : ctu_strndup(strings[0], i, get_global_arena());
+                result = i == 0 ? "" : ctu_strndup(strings[0], i);
                 goto finish;
             }
         }
     }
 
     // if we get here, the common prefix is the shortest string
-    result = ctu_strndup(strings[0], lower, get_global_arena());
+    result = ctu_strndup(strings[0], lower);
 
 finish:
     CTASSERT(strings != NULL);
@@ -736,7 +736,7 @@ char *str_trim(const char *str, const char *letters)
         remaining--;
     }
 
-    return ctu_strndup(tmp, remaining, get_global_arena());
+    return ctu_strndup(tmp, remaining);
 }
 
 USE_DECL
@@ -745,7 +745,7 @@ char *str_erase(const char *str, size_t len, const char *letters)
     CTASSERT(str != NULL);
     CTASSERT(letters != NULL);
 
-    char *result = ctu_strndup(str, len, get_global_arena());
+    char *result = ctu_strndup(str, len);
 
     size_t used = len;
     for (size_t i = 0; i < used; i++)
@@ -766,7 +766,7 @@ char *str_upper(const char *str)
 {
     CTASSERT(str != NULL);
 
-    char *result = ctu_strdup(str, get_global_arena());
+    char *result = ctu_strdup(str);
     char *temp = result;
 
     while (*temp)
@@ -783,7 +783,7 @@ char *str_lower(const char *str)
 {
     CTASSERT(str != NULL);
 
-    char *result = ctu_strdup(str, get_global_arena());
+    char *result = ctu_strdup(str);
     char *temp = result;
 
     while (*temp)

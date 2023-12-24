@@ -117,7 +117,7 @@ cfg_field_t *config_string(config_t *group, const cfg_info_t *info, cfg_string_t
 
     cfg_field_t *field = add_field(group, info, eConfigString);
     field->string_config = cfg;
-    field->string_value = ctu_strdup(cfg.initial, group->arena);
+    field->string_value = ctu_strdup(cfg.initial);
 
     return field;
 }

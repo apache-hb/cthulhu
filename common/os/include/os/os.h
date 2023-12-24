@@ -104,7 +104,7 @@ os_dirent_t os_dirent_type(IN_STRING const char *path);
 /// @return the current working directory
 /// @return an error if the current working directory could not be retrieved
 NODISCARD
-OS_RESULT(const char *) os_dir_current(void);
+os_error_t os_dir_current(IN_NOTNULL const char **cwd);
 
 /// directory iteration
 

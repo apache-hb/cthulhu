@@ -14,7 +14,7 @@ static const char *const kSetItems[] = {
     "4", "5", "6", "7", "8", "9"
 };
 
-#define SET_ITEMS_COUNT sizeof(kSetItems) / sizeof(char*)
+#define SET_ITEMS_COUNT (sizeof(kSetItems) / sizeof(char*))
 
 int main(void)
 {
@@ -27,7 +27,7 @@ int main(void)
     set_t *dedup_set = set_new(3);
     const char *item = set_add(dedup_set, "duplicate");
     for (size_t i = 0; i < 64; i++) {
-        char *element = ctu_strdup("duplicate", get_global_arena());
+        char *element = ctu_strdup("duplicate");
         const char *it = set_add(dedup_set, element);
 
         /* pointer equality is on purpose */

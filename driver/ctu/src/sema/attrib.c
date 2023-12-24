@@ -120,7 +120,7 @@ static void apply_entry(tree_t *sema, tree_t *decl, vector_t *args)
         return;
     }
 
-    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t), get_global_arena());
+    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t));
     copy->link = get_linkage(sema, decl, args);
     tree_set_attrib(decl, copy);
 }
@@ -143,7 +143,7 @@ static void apply_deprecated(tree_t *sema, tree_t *decl, vector_t *args)
     const char *msg = get_first_string(sema, decl, args);
     if (msg == NULL) { return; }
 
-    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t), get_global_arena());
+    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t));
     copy->deprecated = msg;
     tree_set_attrib(decl, copy);
 }
@@ -166,7 +166,7 @@ static void apply_section(tree_t *sema, tree_t *decl, vector_t *args)
     const char *msg = get_first_string(sema, decl, args);
     if (msg == NULL) { return; }
 
-    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t), get_global_arena());
+    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t));
     copy->section = msg;
     tree_set_attrib(decl, copy);
 }
@@ -186,7 +186,7 @@ static void apply_extern(tree_t *sema, tree_t *decl, vector_t *args)
         return;
     }
 
-    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t), get_global_arena());
+    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t));
     if (vector_len(args) == 0)
     {
         copy->mangle = tree_get_name(decl);

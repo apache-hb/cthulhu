@@ -82,11 +82,10 @@ int main(int argc, const char **argv)
     lifetime_t *lifetime = lifetime_new(mediator, arena);
     logger_t *logger = lifetime_get_logger(lifetime);
 
-    langs_t langs = get_langs(arena);
+    langs_t langs = get_langs();
     for (size_t i = 0; i < langs.size; i++)
     {
-        const language_t *lang = langs.langs + i;
-        lifetime_add_language(lifetime, lang);
+        lifetime_add_language(lifetime, langs.langs + i);
     }
 
     io_t *msg_buffer = io_blob("buffer", 0x1000, eAccessWrite | eAccessText, arena);
