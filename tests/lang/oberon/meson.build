@@ -6,7 +6,8 @@ tests = {
             'single-single',
             'single-multi',
             'multi-single',
-            'multi-multi'
+            'multi-multi',
+            'const-value'
         ],
         'fail': [ ]
     },

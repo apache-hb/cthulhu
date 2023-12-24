@@ -189,14 +189,16 @@ decl: valueDeclSeq { $$ = $1; }
 
 /* procedures */
 
-procDecl: PROCEDURE optReceiver identDef optParams returnType SEMI declSeq START stmtSeq end { $$ = obr_decl_procedure(x, @$, $3,
-                                                                                                                       $2, $4, $5,
-                                                                                                                       $7, $9, $10); }
+procDecl: PROCEDURE optReceiver identDef optParams returnType SEMI declSeq START stmtSeq end
+    {
+        $$ = obr_decl_procedure(x, @$, $3, $2, $4, $5, $7, $9, $10);
+    }
     ;
 
-forward: PROCEDURE CARET optReceiver identDef optParams returnType { $$ = obr_decl_procedure(x, @$, $4,
-                                                                                             $3, $5, $6,
-                                                                                             NULL, NULL, NULL); }
+forward: PROCEDURE CARET optReceiver identDef optParams returnType
+    {
+        $$ = obr_decl_procedure(x, @$, $4, $3, $5, $6, NULL, NULL, NULL);
+    }
     ;
 
 returnType: %empty { $$ = NULL; }
@@ -297,7 +299,7 @@ stmt: RETURN optExpr { $$ = obr_stmt_return(x, @$, $2); }
 
 /* exprs */
 
-designator: IDENT { $$ = obr_expr_name(x, @$, $1); } /* this deviates from the original grammar to prevent ambiguity */
+designator: IDENT { $$ = obr_expr_name(x, @$, $1); } /* this deviates from the original grammar to prevent ambiguity, this isnt a breaking change */
     | designator DOT IDENT { $$ = obr_expr_field(x, @$, $1, $3); }
     //| designator LPAREN qualified RPAREN { $$ = obr_expr_cast(x, @$, $1, $3); } /* TODO: oberons cast syntax is great i just love it */
     ;

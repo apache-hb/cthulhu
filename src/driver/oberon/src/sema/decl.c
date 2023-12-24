@@ -9,7 +9,7 @@
 #include "memory/memory.h"
 
 const diagnostic_t kEvent_PublicReadOnlyNotSupported = {
-    .severity = eSeveritySorry,
+    .severity = eSeverityWarn,
     .id = "OBR-0001",
     .brief = "Public read-only unimplemented",
     .description = "Public read-only symbols are not yet supported",
@@ -60,13 +60,35 @@ static obr_t *begin_resolve(tree_t *sema, tree_t *self, void *user, obr_kind_t k
     return decl;
 }
 
+static void set_const_type(tree_t *self, obr_t *decl, const tree_t *type)
+{
+    tree_t *ref = tree_type_reference(decl->node, decl->name, type);
+    tree_storage_t storage = {
+        .storage = type,
+        .size = 1,
+        .quals = eQualConst
+    };
+
+    tree_set_storage(self, storage);
+    tree_set_type(self, ref);
+}
+
 static void resolve_const(tree_t *sema, tree_t *self, void *user)
 {
     obr_t *decl = begin_resolve(sema, self, user, eObrDeclConst);
 
     tree_t *expr = obr_sema_rvalue(sema, decl->value, NULL);
 
+    set_const_type(self, decl, tree_get_type(expr));
     tree_close_global(self, expr);
+}
+
+static void resolve_const_type(tree_t *sema, tree_t *self, void *user)
+{
+    obr_t *decl = begin_resolve(sema, self, user, eObrDeclConst);
+
+    const tree_t *type = self->initial ? tree_get_type(self->initial) : obr_sema_rvalue(sema, decl->value, NULL);
+    set_const_type(self, decl, type);
 }
 
 static void resolve_var(tree_t *sema, tree_t *self, void *user)
@@ -137,19 +159,12 @@ static tree_t *forward_const(tree_t *sema, obr_t *decl)
     tree_resolve_info_t resolve = {
         .sema = sema,
         .user = decl,
-        .fn_resolve = resolve_const
+        .fn_resolve = resolve_const,
+        .fn_resolve_type = resolve_const_type
     };
 
-    tree_t *type = obr_sema_type(sema, decl->type, decl->name);
-    tree_t *ref = tree_type_reference(decl->node, decl->name, type);
-    tree_storage_t storage = {
-        .storage = type,
-        .size = 1,
-        .quals = eQualConst
-    };
-
-    tree_t *it = tree_open_global(decl->node, decl->name, ref, resolve);
-    tree_set_storage(it, storage);
+    // const declarations never have a type, we infer it from the value
+    tree_t *it = tree_open_global(decl->node, decl->name, NULL, resolve);
     return it;
 }
 

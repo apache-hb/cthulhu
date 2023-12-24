@@ -5,28 +5,33 @@
 
 #include "std/str.h"
 
-#include "memory/arena.h"
 #include "base/panic.h"
+#include "memory/arena.h"
+
 
 const diagnostic_t kEvent_MismatchingBlockNames = {
     .severity = eSeverityWarn,
     .id = "OBR-0002",
     .brief = "Mismatching BEGIN and END names",
-    .description =
-        "The names of BEGIN and END blocks should match.\n"
-        "Specified in Section 10: Procedure declarations.",
+    .description = "The names of BEGIN and END blocks should match.\n"
+                   "Specified in Section 10: Procedure declarations.",
 };
 
-static void ensure_block_names_match(scan_t *scan, const node_t *node, const char *type, const char *name, const char *end)
+static void ensure_block_names_match(scan_t *scan, const node_t *node, const char *type,
+                                     const char *name, const char *end)
 {
     CTASSERTF(type != NULL && name != NULL, "(type=%s, name=%s)", type, name);
     obr_scan_t *ctx = obr_scan_context(scan);
 
-    if (end == NULL) { return; }
+    if (end == NULL)
+    {
+        return;
+    }
 
     if (!str_equal(name, end))
     {
-        event_t *id = msg_notify(ctx->reports, &kEvent_MismatchingBlockNames, node, "mismatching %s block BEGIN and END names", type);
+        event_t *id = msg_notify(ctx->reports, &kEvent_MismatchingBlockNames, node,
+                                 "mismatching %s block BEGIN and END names", type);
         msg_note(id, "BEGIN name `%s` does not match END name `%s`", name, end);
     }
 }
@@ -45,7 +50,8 @@ static obr_t *obr_new(scan_t *scan, where_t where, obr_kind_t kind)
     return self;
 }
 
-static obr_t *obr_decl(scan_t *scan, where_t where, obr_kind_t kind, char *name, obr_visibility_t vis)
+static obr_t *obr_decl(scan_t *scan, where_t where, obr_kind_t kind, char *name,
+                       obr_visibility_t vis)
 {
     obr_t *self = obr_new(scan, where, kind);
     self->name = name;
@@ -53,7 +59,8 @@ static obr_t *obr_decl(scan_t *scan, where_t where, obr_kind_t kind, char *name,
     return self;
 }
 
-static obr_t *obr_decl_from_symbol(scan_t *scan, where_t where, obr_kind_t kind, const obr_symbol_t *symbol)
+static obr_t *obr_decl_from_symbol(scan_t *scan, where_t where, obr_kind_t kind,
+                                   const obr_symbol_t *symbol)
 {
     return obr_decl(scan, where, kind, symbol->name, symbol->visibility);
 }
@@ -63,14 +70,8 @@ static obr_t *obr_decl_symbol_location(const obr_symbol_t *symbol, obr_kind_t ki
     return obr_decl(symbol->scan, symbol->where, kind, symbol->name, symbol->visibility);
 }
 
-obr_t *obr_module(
-    scan_t *scan,
-    where_t where,
-    char *name,
-    char *end,
-    vector_t *imports,
-    vector_t *decls,
-    vector_t *init)
+obr_t *obr_module(scan_t *scan, where_t where, char *name, char *end, vector_t *imports,
+                  vector_t *decls, vector_t *init)
 {
     obr_t *self = obr_decl(scan, where, eObrModule, name, eObrVisPublic);
     self->imports = imports;
@@ -112,11 +113,9 @@ obr_t *obr_decl_const(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *
     return self;
 }
 
-obr_t *obr_decl_procedure(
-    scan_t *scan, where_t where, obr_symbol_t *symbol,
-    obr_t *receiver, vector_t *params, obr_t *result,
-    vector_t *locals, vector_t *body, char *end
-)
+obr_t *obr_decl_procedure(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *receiver,
+                          vector_t *params, obr_t *result, vector_t *locals, vector_t *body,
+                          char *end)
 {
     obr_t *self = obr_decl_from_symbol(scan, where, eObrDeclProcedure, symbol);
 
@@ -260,7 +259,8 @@ obr_t *obr_type_name(scan_t *scan, where_t where, char *name)
 
 obr_t *obr_type_qual(scan_t *scan, where_t where, char *name, char *symbol)
 {
-    obr_t *self = obr_decl(scan, where, eObrTypeQual, name, eObrVisPrivate); // TODO: should types need this data?
+    obr_t *self = obr_decl(scan, where, eObrTypeQual, name,
+                           eObrVisPrivate); // TODO: should types need this data?
     self->symbol = symbol;
     return self;
 }
@@ -324,17 +324,18 @@ obr_symbol_t *obr_symbol(scan_t *scan, where_t where, char *name, obr_visibility
     return self;
 }
 
-#define EXPAND_INNER(fn, ...) \
-    do {\
-        size_t len = vector_len(symbols); \
-        vector_t *result = vector_of(len); \
-        for (size_t i = 0; i < len; i++) \
-        {   \
+#define EXPAND_INNER(fn, ...)                              \
+    do                                                     \
+    {                                                      \
+        size_t len = vector_len(symbols);                  \
+        vector_t *result = vector_of(len);                 \
+        for (size_t i = 0; i < len; i++)                   \
+        {                                                  \
             obr_symbol_t *symbol = vector_get(symbols, i); \
-            obr_t *decl = fn(symbol, __VA_ARGS__); \
-            vector_set(result, i, decl); \
-        } \
-        return result; \
+            obr_t *decl = fn(symbol, __VA_ARGS__);         \
+            vector_set(result, i, decl);                   \
+        }                                                  \
+        return result;                                     \
     } while (0)
 
 vector_t *obr_expand_vars(vector_t *symbols, obr_t *type)

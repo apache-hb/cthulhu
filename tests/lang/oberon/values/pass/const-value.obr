@@ -1,0 +1,6 @@
+MODULE Values;
+    TYPE PTR = POINTER TO INTEGER;
+    VAR lhs*, rhs*, result* : INTEGER;
+
+    CONST Offset- = 1000;
+END Values.
