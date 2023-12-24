@@ -29,10 +29,16 @@ void obr_add_decl(tree_t *sema, obr_tag_t tag, const char *name, tree_t *decl);
 
 /// builtin types
 
-tree_t *obr_get_digit_type(digit_t digit, sign_t sign);
-tree_t *obr_get_char_type(void);
-tree_t *obr_get_bool_type(void);
-tree_t *obr_get_void_type(void);
+// basic types as defined in [6.1 Basic Types]
+
+tree_t *obr_get_bool_type(void); // BOOLEAN
+tree_t *obr_get_char_type(void); // CHAR
+tree_t *obr_get_shortint_type(void); // SHORTINT
+tree_t *obr_get_integer_type(void); // INTEGER
+tree_t *obr_get_longint_type(void); // LONGINT
+tree_t *obr_get_real_type(void); // REAL
+tree_t *obr_get_longreal_type(void); // LONGREAL
+tree_t *obr_get_void_type(void); // VOID
 
 /// runtime module
 

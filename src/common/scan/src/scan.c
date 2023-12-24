@@ -20,7 +20,7 @@ typedef struct scan_t
     size_t size;
 } scan_t;
 
-static scan_t gBuiltinScan = {
+const scan_t kScanBuiltin = {
     .io = NULL,
     .arena = NULL,
 
@@ -33,15 +33,9 @@ static scan_t gBuiltinScan = {
 };
 
 USE_DECL
-scan_t *scan_builtin(void)
-{
-    return &gBuiltinScan;
-}
-
-USE_DECL
 bool scan_is_builtin(const scan_t *scan)
 {
-    return scan == scan_builtin();
+    return scan == &kScanBuiltin;
 }
 
 USE_DECL

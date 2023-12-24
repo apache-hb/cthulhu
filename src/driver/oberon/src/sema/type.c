@@ -1,5 +1,7 @@
 #include "oberon/sema/type.h"
 #include "cthulhu/events/events.h"
+#include "oberon/driver.h"
+#include "oberon/sema/expr.h"
 #include "oberon/sema/sema.h"
 
 #include "cthulhu/util/util.h"
@@ -43,10 +45,66 @@ static tree_t *sema_type_pointer(tree_t *sema, obr_t *type, const char *name)
     return tree_type_pointer(type->node, name, it, SIZE_MAX);
 }
 
+static size_t get_array_length(tree_t *sema, obr_t *expr)
+{
+    CTASSERT(sema != NULL);
+    if (expr == NULL) return SIZE_MAX;
+
+    tree_t *it = obr_sema_rvalue(sema, expr, obr_get_integer_type());
+    if (tree_is(it, eTreeExprDigit))
+    {
+        int sign = mpz_sgn(it->digit_value);
+        if (sign < 0)
+        {
+            msg_notify(sema->reports, &kEvent_ArrayLengthNegative, it->node, "array length cannot be negative");
+            return SIZE_MAX;
+        }
+        else if (sign == 0)
+        {
+            msg_notify(sema->reports, &kEvent_ArrayLengthZero, it->node, "array length cannot be zero");
+            return SIZE_MAX;
+        }
+        else if (mpz_fits_uint_p(it->digit_value) == 0)
+        {
+            msg_notify(sema->reports, &kEvent_ArrayLengthOverflow, it->node, "`%s` is too large to be an array length", mpz_get_str(NULL, 10, it->digit_value));
+            return SIZE_MAX;
+        }
+
+        return mpz_get_ui(it->digit_value);
+    }
+
+    msg_notify(sema->reports, &kEvent_ArrayLengthNotConstant, it->node, "array length must be a constant");
+    return SIZE_MAX;
+}
+
+static tree_t *sema_array_segment(tree_t *sema, obr_t *size, tree_t *element, const char *name)
+{
+    // even if get_array_length fails we still want to return a valid type
+    size_t len = get_array_length(sema, size);
+
+    return tree_type_array(size->node, name, element, len);
+}
+
 static tree_t *sema_type_array(tree_t *sema, obr_t *type, const char *name)
 {
-    tree_t *it = obr_sema_type(sema, type->array, name); // TODO: will the name clash matter?
-    return tree_type_array(type->node, name, it, SIZE_MAX); // TODO: compute length
+    tree_t *it = obr_sema_type(sema, type->array_element, name); // TODO: will the name clash matter?
+
+    size_t len = vector_len(type->sizes);
+
+    // if theres no sizes its an open array
+    if (len == 0)
+        return tree_type_array(type->node, name, it, SIZE_MAX);
+
+    // otherwise we need to iterate backwards over the sizes
+    // to build up the array type
+
+    for (size_t i = len; i > 0; i--)
+    {
+        obr_t *size = vector_get(type->sizes, i - 1);
+        it = sema_array_segment(sema, size, it, name);
+    }
+
+    return it;
 }
 
 static tree_t *sema_type_record(tree_t *sema, obr_t *type, const char *name)

@@ -30,7 +30,6 @@ void runtime_init(arena_t *arena)
 
     os_init();
     bt_init();
-    scan_init();
 
     init_global_arena(arena);
     init_gmp_arena(arena);

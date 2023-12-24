@@ -122,8 +122,7 @@ scan_t *scan_io(IN_STRING const char *language,
                 IN_NOTNULL io_t *io,
                 IN_NOTNULL arena_t *arena);
 
-NODISCARD CONSTFN
-scan_t *scan_builtin(void);
+extern const scan_t kScanBuiltin;
 
 NODISCARD CONSTFN
 bool scan_is_builtin(const scan_t *scan);

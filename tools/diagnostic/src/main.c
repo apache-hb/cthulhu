@@ -301,13 +301,13 @@ int main(int argc, const char **argv)
     if (cfg_bool_value(root.help))
     {
         print_help(io, argv[0], root);
-        return 0;
+        goto finish;
     }
 
     if (cfg_bool_value(root.version))
     {
         print_version(io);
-        return 0;
+        goto finish;
     }
 
     langs_t langs = get_langs();
@@ -370,4 +370,7 @@ int main(int argc, const char **argv)
             }
         }
     }
+
+finish:
+    io_close(io);
 }

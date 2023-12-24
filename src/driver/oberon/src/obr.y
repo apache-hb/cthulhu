@@ -268,7 +268,7 @@ typeDecl: identDef EQUAL type SEMI { $$ = obr_decl_type(x, @$, $1, $3); }
 
 type: qualified { $$ = $1; }
     | POINTER TO type { $$ = obr_type_pointer(x, @$, $3); }
-    | ARRAY OF type { $$ = obr_type_array(x, @$, $3); }
+    | ARRAY optExprList OF type { $$ = obr_type_array(x, @$, $2, $4); }
     | RECORD fieldList END { $$ = obr_type_record(x, @$, $2); }
     ;
 
@@ -331,7 +331,7 @@ simpleExprInner: term { $$ = $1; }
     | simpleExprInner OR term { $$ = obr_expr_binary(x, @$, eBinaryBitOr, $1, $3); }
     ;
 
-expr: simpleExpr { $$= $1; }
+expr: simpleExpr { $$ = $1; }
     | simpleExpr EQUAL simpleExpr { $$ = obr_expr_compare(x, @$, eCompareEq, $1, $3); }
     | simpleExpr NEQUAL simpleExpr { $$ = obr_expr_compare(x, @$, eCompareNeq, $1, $3); }
     | simpleExpr LT simpleExpr { $$ = obr_expr_compare(x, @$, eCompareLt, $1, $3); }

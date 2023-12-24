@@ -45,7 +45,15 @@ static void obr_postparse(driver_t *handle, scan_t *scan, void *tree)
 
 static void obr_destroy(driver_t *handle) { CTU_UNUSED(handle); }
 
-static const char * const kLangNames[] = { "m", "mod", "obr", "oberon", NULL };
+#define NEW_EVENT(id, ...) const diagnostic_t kEvent_##id = __VA_ARGS__;
+#include "oberon/events.inc"
+
+static const diagnostic_t *const kDiagnosticTable[] = {
+#define NEW_EVENT(id, ...) &kEvent_##id,
+#include "oberon/events.inc"
+};
+
+static const char *const kLangNames[] = { "m", "mod", "obr", "oberon", NULL };
 
 const language_t kOberonModule = {
     .id = "obr",
@@ -58,6 +66,11 @@ const language_t kOberonModule = {
     },
 
     .exts = kLangNames,
+
+    .diagnostics = {
+        .diagnostics = kDiagnosticTable,
+        .count = sizeof(kDiagnosticTable) / sizeof(const diagnostic_t *)
+    },
 
     .fn_create = obr_create,
     .fn_destroy = obr_destroy,

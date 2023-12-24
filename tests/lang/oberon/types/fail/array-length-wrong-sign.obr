@@ -1,0 +1,3 @@
+MODULE Arrays;
+    TYPE X = ARRAY -5 OF INTEGER;
+END Arrays.

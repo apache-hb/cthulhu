@@ -1564,7 +1564,8 @@ mpz_fits_sint_p (const mpz_t u)
 int
 mpz_fits_uint_p (const mpz_t u)
 {
-  return 0;
+  // TODO: this may not cover the case where u == UINT_MAX
+  return mpz_cmpabs_ui(u, UINT_MAX) <= 0;
 }
 
 int

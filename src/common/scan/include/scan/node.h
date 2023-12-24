@@ -34,8 +34,6 @@ typedef struct
 /// @brief a position in a source file
 typedef struct node_t node_t;
 
-void scan_init(void);
-
 /// @brief get the associated source file of a node
 ///
 /// @param node the node to get the source file of

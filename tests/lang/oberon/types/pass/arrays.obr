@@ -1,0 +1,5 @@
+MODULE Arrays;
+    TYPE X = ARRAY OF INTEGER;
+         Y = ARRAY 10 OF INTEGER;
+         Z = ARRAY 5 OF X;
+END Arrays.

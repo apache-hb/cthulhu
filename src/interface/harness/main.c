@@ -53,7 +53,7 @@ static const version_info_t kVersion = {
 static io_t *make_file(const char *path, os_access_t flags, arena_t *arena)
 {
     io_t *io = io_file(path, flags, arena);
-    CTASSERT(io_error(io) == 0);
+    CTASSERTF(io_error(io) == 0, "failed to open file `%s`", path);
     return io;
 }
 

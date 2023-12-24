@@ -21,7 +21,7 @@ static tree_t *sema_digit(tree_t *sema, obr_t *expr, const tree_t *implicit_type
 
     // TODO: get correct digit size
     const tree_t *type = implicit_type == NULL
-        ? obr_get_digit_type(eDigitInt, eSignSigned)
+        ? obr_get_integer_type()
         : implicit_type;
 
     return tree_expr_digit(expr->node, type, expr->digit);
@@ -42,7 +42,7 @@ static tree_t *sema_binary(tree_t *sema, obr_t *expr, const tree_t *implicit_typ
 {
     // TODO: get common type
     const tree_t *type = implicit_type == NULL
-        ? obr_get_digit_type(eDigitInt, eSignSigned)
+        ? obr_get_integer_type()
         : implicit_type;
 
     tree_t *lhs = obr_sema_rvalue(sema, expr->lhs, implicit_type);
@@ -134,9 +134,9 @@ static tree_t *sema_field(tree_t *sema, obr_t *expr)
     return tree_expr_field(expr->node, tree_get_type(field), decl, field);
 }
 
-tree_t *obr_sema_rvalue(tree_t *sema, obr_t *expr, const tree_t *implicitType)
+tree_t *obr_sema_rvalue(tree_t *sema, obr_t *expr, const tree_t *implicit_type)
 {
-    const tree_t *type = implicitType != NULL ? tree_ty_load_type(tree_resolve(tree_get_cookie(sema), implicitType)) : NULL;
+    const tree_t *type = implicit_type != NULL ? tree_ty_load_type(tree_resolve(tree_get_cookie(sema), implicit_type)) : NULL;
 
     switch (expr->kind)
     {

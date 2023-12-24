@@ -1,5 +1,6 @@
 #include "oberon/sema/decl.h"
 #include "notify/notify.h"
+#include "oberon/driver.h"
 #include "oberon/sema/type.h"
 #include "oberon/sema/expr.h"
 
@@ -7,13 +8,6 @@
 
 #include "base/panic.h"
 #include "memory/memory.h"
-
-const diagnostic_t kEvent_PublicReadOnlyNotSupported = {
-    .severity = eSeverityWarn,
-    .id = "OBR-0001",
-    .brief = "Public read-only unimplemented",
-    .description = "Public read-only symbols are not yet supported",
-};
 
 static visibility_t remap_visibility(logger_t *reports, const node_t *node, const char *name, obr_visibility_t vis)
 {

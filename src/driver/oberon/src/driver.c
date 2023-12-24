@@ -8,9 +8,6 @@
 
 #include "cthulhu/tree/query.h"
 
-#include "std/map.h"
-#include "std/str.h"
-
 #include "base/panic.h"
 
 #include "core/macros.h"
@@ -26,18 +23,18 @@ void obr_create(driver_t *handle)
 void obr_forward_decls(context_t *context)
 {
     obr_t *root = context_get_ast(context);
-    size_t lenDecls = vector_len(root->decls);
+    size_t decl_count = vector_len(root->decls);
 
     size_t sizes[eObrTagTotal] = {
-        [eObrTagValues] = lenDecls,
-        [eObrTagTypes] = lenDecls,
-        [eObrTagProcs] = lenDecls,
+        [eObrTagValues] = decl_count,
+        [eObrTagTypes] = decl_count,
+        [eObrTagProcs] = decl_count,
         [eObrTagModules] = 32,
     };
 
     tree_t *sema = tree_module(gRuntime, root->node, root->name, eObrTagTotal, sizes);
 
-    for (size_t i = 0; i < lenDecls; i++)
+    for (size_t i = 0; i < decl_count; i++)
     {
         obr_t *decl = vector_get(root->decls, i);
         obr_forward_t fwd = obr_forward_decl(sema, decl);

@@ -1,0 +1,3 @@
+MODULE Arrays;
+    TYPE X = ARRAY TRUE OF INTEGER;
+END Arrays.

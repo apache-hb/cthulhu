@@ -11,8 +11,6 @@
 
 #include "scan/node.h"
 
-#include "core/macros.h"
-
 tree_t *obr_get_type(tree_t *sema, const char *name)
 {
     const size_t tags[] = { eObrTagTypes };
@@ -54,18 +52,19 @@ void obr_add_decl(tree_t *sema, obr_tag_t tag, const char *name, tree_t *decl)
 /// runtime mod
 ///
 
-static tree_t *gTypeVoid = NULL;
-static tree_t *gTypeChar = NULL;
-static tree_t *gTypeInteger = NULL;
 static tree_t *gTypeBoolean = NULL;
+static tree_t *gTypeChar = NULL;
+static tree_t *gTypeShort = NULL;
+static tree_t *gTypeInteger = NULL;
+static tree_t *gTypeLong = NULL;
+static tree_t *gTypeReal = NULL;
+static tree_t *gTypeLongReal = NULL;
+static tree_t *gTypeVoid = NULL;
 
-tree_t *obr_get_digit_type(digit_t digit, sign_t sign)
+tree_t *obr_get_bool_type(void)
 {
-    CTU_UNUSED(digit); // TODO: use digit
-    CTU_UNUSED(sign);
-
-    CTASSERT(gTypeInteger != NULL);
-    return gTypeInteger;
+    CTASSERT(gTypeBoolean != NULL);
+    return gTypeBoolean;
 }
 
 tree_t *obr_get_char_type(void)
@@ -74,10 +73,34 @@ tree_t *obr_get_char_type(void)
     return gTypeChar;
 }
 
-tree_t *obr_get_bool_type(void)
+tree_t *obr_get_shortint_type(void)
 {
-    CTASSERT(gTypeBoolean != NULL);
-    return gTypeBoolean;
+    CTASSERT(gTypeShort != NULL);
+    return gTypeShort;
+}
+
+tree_t *obr_get_integer_type(void)
+{
+    CTASSERT(gTypeInteger != NULL);
+    return gTypeInteger;
+}
+
+tree_t *obr_get_longint_type(void)
+{
+    CTASSERT(gTypeLong != NULL);
+    return gTypeLong;
+}
+
+tree_t *obr_get_real_type(void)
+{
+    CTASSERT(gTypeReal != NULL);
+    return gTypeReal;
+}
+
+tree_t *obr_get_longreal_type(void)
+{
+    CTASSERT(gTypeLongReal != NULL);
+    return gTypeLongReal;
 }
 
 tree_t *obr_get_void_type(void)
@@ -95,16 +118,20 @@ tree_t *obr_rt_mod(lifetime_t *lifetime)
         [eObrTagModules] = 32,
     };
 
-    gTypeVoid = tree_type_unit(node_builtin(), "VOID");
-    gTypeChar = tree_type_digit(node_builtin(), "CHAR", eDigitChar, eSignSigned, eQualUnknown);
-    gTypeInteger = tree_type_digit(node_builtin(), "INTEGER", eDigitInt, eSignSigned, eQualUnknown);
     gTypeBoolean = tree_type_bool(node_builtin(), "BOOLEAN", eQualUnknown);
+    gTypeChar = tree_type_digit(node_builtin(), "CHAR", eDigitChar, eSignSigned, eQualUnknown);
+    gTypeShort = tree_type_digit(node_builtin(), "SHORTINT", eDigitShort, eSignSigned, eQualUnknown);
+    gTypeInteger = tree_type_digit(node_builtin(), "INTEGER", eDigitInt, eSignSigned, eQualUnknown);
+    gTypeLong = tree_type_digit(node_builtin(), "LONGINT", eDigitLong, eSignSigned, eQualUnknown);
+    gTypeVoid = tree_type_unit(node_builtin(), "VOID");
 
     tree_t *rt = lifetime_sema_new(lifetime, "oberon", eObrTagTotal, tags);
-    obr_add_decl(rt, eObrTagTypes, "VOID", gTypeVoid);
-    obr_add_decl(rt, eObrTagTypes, "CHAR", gTypeChar);
-    obr_add_decl(rt, eObrTagTypes, "INTEGER", gTypeInteger);
     obr_add_decl(rt, eObrTagTypes, "BOOLEAN", gTypeBoolean);
+    obr_add_decl(rt, eObrTagTypes, "CHAR", gTypeChar);
+    obr_add_decl(rt, eObrTagTypes, "SHORTINT", gTypeShort);
+    obr_add_decl(rt, eObrTagTypes, "INTEGER", gTypeInteger);
+    obr_add_decl(rt, eObrTagTypes, "LONGINT", gTypeLong);
+    obr_add_decl(rt, eObrTagTypes, "VOID", gTypeVoid);
 
     return rt;
 }

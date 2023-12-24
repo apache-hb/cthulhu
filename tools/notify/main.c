@@ -343,7 +343,6 @@ int main(int argc, const char **argv)
 
     bt_init();
     os_init();
-    scan_init();
 
     arena_t *arena = ctu_default_alloc();
     io_t *io = io_stdout(ctu_default_alloc());
@@ -377,4 +376,6 @@ int main(int argc, const char **argv)
 
     if (backtraces)
         do_backtrace(io);
+
+    io_close(io);
 }

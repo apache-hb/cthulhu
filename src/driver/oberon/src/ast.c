@@ -1,21 +1,13 @@
 #include "oberon/ast.h"
 
 #include "notify/notify.h"
+#include "oberon/driver.h"
 #include "oberon/scan.h"
 
 #include "std/str.h"
 
 #include "base/panic.h"
 #include "memory/arena.h"
-
-
-const diagnostic_t kEvent_MismatchingBlockNames = {
-    .severity = eSeverityWarn,
-    .id = "OBR-0002",
-    .brief = "Mismatching BEGIN and END names",
-    .description = "The names of BEGIN and END blocks should match.\n"
-                   "Specified in Section 10: Procedure declarations.",
-};
 
 static void ensure_block_names_match(scan_t *scan, const node_t *node, const char *type,
                                      const char *name, const char *end)
@@ -30,7 +22,7 @@ static void ensure_block_names_match(scan_t *scan, const node_t *node, const cha
 
     if (!str_equal(name, end))
     {
-        event_t *id = msg_notify(ctx->reports, &kEvent_MismatchingBlockNames, node,
+        event_t *id = msg_notify(ctx->reports, &kEvent_BlockMismatchEnds, node,
                                  "mismatching %s block BEGIN and END names", type);
         msg_note(id, "BEGIN name `%s` does not match END name `%s`", name, end);
     }
@@ -272,10 +264,11 @@ obr_t *obr_type_pointer(scan_t *scan, where_t where, obr_t *type)
     return self;
 }
 
-obr_t *obr_type_array(scan_t *scan, where_t where, obr_t *type)
+obr_t *obr_type_array(scan_t *scan, where_t where, vector_t *sizes, obr_t *type)
 {
     obr_t *self = obr_new(scan, where, eObrTypeArray);
-    self->array = type;
+    self->sizes = sizes;
+    self->array_element = type;
     return self;
 }
 

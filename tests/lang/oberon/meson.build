@@ -32,12 +32,21 @@ tests = {
             'alias',
             'builtins',
             'nested',
-            'records'
+            'records',
+
+            'arrays',
+            'nested-arrays'
         ],
         'fail': [
             'invalid-type',
             'recursive-pointer',
-            'recursive'
+            'recursive',
+
+            'array-length-bool',
+            'array-length-not-const',
+            'array-size-zero',
+            'array-length-wrong-sign',
+            'array-length-too-big'
         ]
     },
     'programs': {

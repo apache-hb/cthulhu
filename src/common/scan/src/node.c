@@ -3,28 +3,21 @@
 #include "base/panic.h"
 #include "memory/arena.h"
 
-#include <limits.h>
-
 typedef struct node_t
 {
     const scan_t *scan;  ///< the source file
     where_t where; ///< the location of this node in the source file
 } node_t;
 
-static node_t gBuiltinNode = {
-    .scan = NULL,
+static const node_t kBuiltinNode = {
+    .scan = &kScanBuiltin,
     .where = { 0, 0, 0, 0 }
 };
-
-void scan_init(void)
-{
-    gBuiltinNode.scan = scan_builtin();
-}
 
 USE_DECL
 const node_t *node_builtin(void)
 {
-    return &gBuiltinNode;
+    return &kBuiltinNode;
 }
 
 USE_DECL
