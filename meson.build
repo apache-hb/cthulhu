@@ -64,7 +64,8 @@ version = meson.project_version()
 host = host_machine.system()
 parts = version.split('.')
 
-source_root = meson.project_source_root()
+source_dir = meson.project_source_root() / 'src'
+data_dir = meson.project_source_root() / 'data'
 
 config_cdata = configuration_data({
     'CTU_MAJOR': parts[0].to_int(),
@@ -193,10 +194,10 @@ parse = generator(bison,
 )
 
 # common helper libraries used by compiler, tools, interfaces, and drivers
-subdir('common')
+subdir('src/common')
 
 # common compiler libraries used by interfaces and drivers
-subdir('cthulhu')
+subdir('src/cthulhu')
 
 driver_summary = {}
 langs = {}
@@ -204,13 +205,13 @@ interfaces = {}
 plugins = {}
 
 foreach lang : get_option('languages')
-    subdir('driver' / lang)
+    subdir('src/driver' / lang)
 endforeach
 
-subdir('interface')
+subdir('src/interface')
 
 if compiler_gui.allowed()
-    subdir('interface/gui')
+    subdir('src/interface/gui')
 endif
 
 if unit_tests.allowed()
@@ -218,7 +219,7 @@ if unit_tests.allowed()
 endif
 
 if driver_tests.allowed()
-    subdir('interface/harness')
+    subdir('src/interface/harness')
     subdir('tests/lang')
 endif
 
@@ -233,13 +234,11 @@ endif
 doxygen = find_program('doxygen', required : get_option('doxygen'))
 
 if doxygen.found()
-    data_dir = source_root / 'data'
-
     doxy_sources = [
-        source_root / 'interface',
-        source_root / 'common',
-        source_root / 'cthulhu',
-        source_root / 'driver',
+        source_dir / 'interface',
+        source_dir / 'common',
+        source_dir / 'cthulhu',
+        source_dir / 'driver',
 
         data_dir / 'docs'
     ]
@@ -250,13 +249,13 @@ if doxygen.found()
     ]
 
     doxy_includes = [
-        source_root / 'cthulhu' / 'include'
+        source_dir / 'cthulhu' / 'include'
     ]
 
     doxy_cdata = configuration_data()
     doxy_cdata.merge_from(config_cdata)
     doxy_cdata.set('CTU_SOURCES', ' '.join(doxy_sources))
-    doxy_cdata.set('ROOT_SOURCE_DIR', source_root)
+    doxy_cdata.set('ROOT_SOURCE_DIR', source_dir)
     doxy_cdata.set('INCLUDE_PATHS', ' '.join(doxy_includes))
     doxy_cdata.set('EXTRA_STYLESHEET', ' '.join(stylesheets))
     doxy_cdata.set('CLANG_DATABASE', meson.global_build_root() / 'compile_commands.json')
