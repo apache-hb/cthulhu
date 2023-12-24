@@ -1,4 +1,4 @@
-src = [ 'common.c', 'file.c', 'dir.c', 'fs.c', 'error.c' ]
+src = [ 'init.c', 'file.c', 'dir.c', 'fs.c', 'error.c' ]
 
 platform = [ ]
 

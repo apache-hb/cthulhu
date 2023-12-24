@@ -4,40 +4,25 @@
 
 #include "memory/memory.h"
 
-#include <dirent.h>
 #include <errno.h>
 
-typedef struct os_iter_t
-{
-    DIR *dir;
-} os_iter_t;
-
-typedef struct os_dir_t
-{
-    struct dirent *ent;
-} os_dir_t;
-
 USE_DECL
-OS_RESULT(os_iter_t *) os_iter_begin(const char *path)
+os_error_t os_iter_begin(const char *path, os_iter_t *result)
 {
     CTASSERT(path != NULL);
+    CTASSERT(result != NULL);
 
     DIR *dir = opendir(path);
     if (dir == NULL)
     {
-        if (errno == ENOENT)
-        {
-            return NULL;
-        }
-
-        return linux_error(errno);
+        return errno;
     }
 
     os_iter_t iter = {
         .dir = dir
     };
-
-    return os_result_new(0, &iter, sizeof(os_iter_t));
+    *result = iter;
+    return 0;
 }
 
 void os_iter_end(os_iter_t *iter)
@@ -48,9 +33,10 @@ void os_iter_end(os_iter_t *iter)
 }
 
 USE_DECL
-OS_RESULT(os_dir_t) os_iter_next(os_iter_t *iter)
+bool os_iter_next(os_iter_t *iter, os_dir_t *result)
 {
     CTASSERT(iter != NULL);
+    CTASSERT(result != NULL);
 
     struct dirent *ent = NULL;
     while ((ent = readdir(iter->dir)) != NULL)
@@ -63,19 +49,24 @@ OS_RESULT(os_dir_t) os_iter_next(os_iter_t *iter)
 
     if (ent == NULL)
     {
-        if (errno != 0)
-        {
-            return linux_error(errno);
-        }
-
-        return NULL;
+        iter->error = errno;
+        return false;
     }
 
     os_dir_t dir = {
         .ent = ent
     };
+    *result = dir;
 
-    return os_result_new(0, &dir, sizeof(os_dir_t));
+    return true;
+}
+
+USE_DECL
+os_error_t os_iter_error(os_iter_t *iter)
+{
+    CTASSERT(iter != NULL);
+
+    return iter->error;
 }
 
 USE_DECL
@@ -84,5 +75,5 @@ const char *os_dir_name(os_dir_t *dir)
     CTASSERT(dir != NULL);
 
     // have to copy the string because it's owned by the dirent
-    return ctu_strdup(dir->ent->d_name, get_global_arena());
+    return ctu_strdup(dir->ent->d_name);
 }

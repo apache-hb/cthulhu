@@ -2,7 +2,7 @@
 
 #include "std/str.h"
 
-#include "core/win32.h"
+#include "core/win32.h" // IWYU pragma: keep
 
 #define FORMAT_FLAGS (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS)
 

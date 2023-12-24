@@ -188,23 +188,26 @@ void group_notify_result(test_group_t *group, bool result, const char *msg)
     }
 }
 
+static void add_test_result(test_group_t *group, test_result_t result)
+{
+    typevec_push(group->suite->results, &result);
+    test_end_expect_panic();
+}
+
 void group_notify_success(test_group_t *group, const char *msg)
 {
     test_result_t result = test_result_status(group->name, msg, eTestPassed);
-    typevec_push(group->suite->results, &result);
-    test_end_expect_panic();
+    add_test_result(group, result);
 }
 
 void group_notify_failure(test_group_t *group, const char *msg)
 {
     test_result_t result = test_result_status(group->name, msg, eTestFailed);
-    typevec_push(group->suite->results, &result);
-    test_end_expect_panic();
+    add_test_result(group, result);
 }
 
 void group_notify_exception(test_group_t *group, const char *msg)
 {
     test_result_t result = test_result_exception(group->name, msg, gPanicException);
-    typevec_push(group->suite->results, &result);
-    test_end_expect_panic();
+    add_test_result(group, result);
 }

@@ -6,7 +6,6 @@
 #include "io/io.h"
 
 #include "base/panic.h"
-#include "base/log.h"
 
 typedef struct physical_t
 {
@@ -117,28 +116,25 @@ static map_t *pfs_query_dirents(fs_t *fs, inode_t *self)
 {
     const char *absolute = get_absolute(fs, self, NULL);
 
-    OS_RESULT(os_iter_t) iter = os_iter_begin(absolute);
-    OS_RESULT(os_dir_t) node = NULL;
+    os_iter_t iter = { 0 };
+    os_error_t err = os_iter_begin(absolute, &iter);
+    CTASSERTF(err == 0, "failed to query dirents %s (%s)", absolute, os_error_string(err));
 
-    CTASSERTF(iter != NULL, "fs backing corrupted, expected dir `%s` to exist, it is missing", absolute);
-    if (os_error(iter)) { return map_new(1); }
-
-    os_iter_t *it = os_value(iter);
+    os_dir_t dir = { 0 };
 
     map_t *dirents = map_new(64);
 
-    while ((node = os_iter_next(it)) != NULL)
+    while (os_iter_next(&iter, &dir))
     {
-        if (os_error(node)) { break; }
-        os_dir_t *dir = os_value(node);
-        const char *path = os_dir_name(dir);
+        if (os_iter_error(&iter)) { break; }
+        const char *path = os_dir_name(&dir);
 
         inode_t *inode = pfs_query_node(fs, self, path);
         CTASSERTF(inode != NULL, "failed to query node %s '%s'", absolute, path);
         map_set(dirents, path, inode);
     }
 
-    os_iter_end(it);
+    os_iter_end(&iter);
 
     return dirents;
 }

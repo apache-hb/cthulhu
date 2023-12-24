@@ -2,6 +2,8 @@
 
 #include "os/error.h"
 
+#include OS_API_HEADER
+
 #include <stdbool.h>
 
 BEGIN_API
@@ -114,7 +116,7 @@ os_error_t os_dir_current(IN_NOTNULL const char **cwd);
 /// @return result containing either a valid iterator or an error, NULL if dir does not exist
 /// @note the iterator must be closed with os_iter_end
 NODISCARD
-OS_RESULT(os_iter_t) os_iter_begin(IN_STRING const char *path);
+os_error_t os_iter_begin(IN_STRING const char *path, os_iter_t *iter);
 
 /// @brief close a directory iterator
 ///
@@ -124,9 +126,13 @@ void os_iter_end(IN_NOTNULL os_iter_t *iter);
 /// @brief get the next directory entry
 ///
 /// @param iter iterator to use
-/// @return result containing either a valid directory entry or an error, NULL if no more entries
+/// @param dir directory entry to fill
+///
+/// @return true if a directory entry was found
 NODISCARD
-OS_RESULT(os_dir_t) os_iter_next(IN_NOTNULL os_iter_t *iter);
+bool os_iter_next(IN_NOTNULL os_iter_t *iter, os_dir_t *dir);
+
+os_error_t os_iter_error(IN_NOTNULL os_iter_t *iter);
 
 /// @brief get the name of a directory entry
 ///
@@ -145,7 +151,7 @@ const char *os_dir_name(IN_NOTNULL os_dir_t *dir);
 /// @return a file handle on success
 /// @return an error if the file could not be opened
 NODISCARD
-os_error_t os_file_open(IN_STRING const char *path, os_access_t access, os_file_t **file);
+os_error_t os_file_open(IN_STRING const char *path, os_access_t access, os_file_t *file);
 
 /// @brief close a file
 ///

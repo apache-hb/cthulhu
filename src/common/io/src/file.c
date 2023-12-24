@@ -2,16 +2,10 @@
 
 #include <stdint.h>
 
-/// @brief a wrapper around an os file
-typedef struct io_file_t
-{
-    os_file_t *file; ///< the file
-} io_file_t;
-
 static os_file_t *fd_data(io_t *self)
 {
-    io_file_t *file = io_data(self);
-    return file->file;
+    os_file_t *file = io_data(self);
+    return file;
 }
 
 static size_t fd_read(io_t *self, void *dst, size_t size)
@@ -92,12 +86,10 @@ static const io_callbacks_t kFileCallbacks = {
 USE_DECL
 io_t *io_file(const char *path, os_access_t mode, arena_t *arena)
 {
-    os_file_t *fd = NULL;
+    os_file_t fd = { 0 };
     os_error_t err = os_file_open(path, mode, &fd);
 
-    io_file_t it = { .file = fd };
-
-    io_t *io = io_new(&kFileCallbacks, mode, path, &it, sizeof(io_file_t), arena);
+    io_t *io = io_new(&kFileCallbacks, mode, path, &fd, sizeof(os_file_t), arena);
     io->error = err;
 
     return io;

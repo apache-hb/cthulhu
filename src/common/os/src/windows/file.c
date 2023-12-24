@@ -1,15 +1,7 @@
-#include "common.h"
-
 #include "base/panic.h"
 
-#include "memory/memory.h"
 #include "os/os.h"
-
-typedef struct os_file_t
-{
-    const char *path;
-    HANDLE handle;
-} os_file_t;
+#include <stdint.h>
 
 static DWORD get_access(os_access_t access)
 {
@@ -20,7 +12,7 @@ static DWORD get_access(os_access_t access)
 }
 
 USE_DECL
-os_error_t os_file_open(const char *path, os_access_t access, os_file_t **file)
+os_error_t os_file_open(const char *path, os_access_t access, os_file_t *file)
 {
     CTASSERT(path != NULL);
     CTASSERT(access & (eAccessRead | eAccessWrite));
@@ -44,10 +36,10 @@ os_error_t os_file_open(const char *path, os_access_t access, os_file_t **file)
         return GetLastError();
     }
 
-    arena_t *arena = get_global_arena();
-    os_file_t *result = ARENA_MALLOC(arena, sizeof(os_file_t), "os_file_t", NULL);
-    result->path = path;
-    result->handle = handle;
+    os_file_t result = {
+        .path = path,
+        .handle = handle
+    };
 
     *file = result;
     return ERROR_SUCCESS;

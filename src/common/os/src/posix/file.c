@@ -11,12 +11,6 @@
 
 #include <sys/mman.h>
 
-typedef struct os_file_t
-{
-    const char *path;
-    FILE *file;
-} os_file_t;
-
 static const char *get_access(os_access_t access)
 {
     if (access & eAccessText)
@@ -46,7 +40,7 @@ static const char *get_access(os_access_t access)
 }
 
 USE_DECL
-os_error_t os_file_open(const char *path, os_access_t access, os_file_t **file)
+os_error_t os_file_open(const char *path, os_access_t access, os_file_t *file)
 {
     CTASSERT(path != NULL);
     CTASSERT(access & (eAccessRead | eAccessWrite));
@@ -59,10 +53,10 @@ os_error_t os_file_open(const char *path, os_access_t access, os_file_t **file)
         return errno;
     }
 
-    arena_t *arena = get_global_arena();
-    os_file_t *result = ARENA_MALLOC(arena, sizeof(os_file_t), path, NULL);
-    result->file = fd;
-    result->path = path;
+    os_file_t result = {
+        .path = path,
+        .file = fd,
+    };
 
     *file = result;
     return 0;

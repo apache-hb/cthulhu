@@ -1,5 +1,6 @@
 #include "base/panic.h"
-#include "common.h"
+
+#include "core/win32.h" // IWYU pragma: keep
 
 #include "os/os.h"
 

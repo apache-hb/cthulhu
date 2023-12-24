@@ -1,20 +1,12 @@
-#include "common.h"
+#include "memory/memory.h"
+
+#include "core/win32.h" // IWYU pragma: keep
+#include "os/os.h"
+#include "os_common.h"
 
 #include "base/panic.h"
 
 #include "std/str.h"
-
-typedef struct os_iter_t
-{
-    HANDLE hFind;
-    WIN32_FIND_DATA data;
-    DWORD error;
-} os_iter_t;
-
-typedef struct os_dir_t
-{
-    WIN32_FIND_DATA data;
-} os_dir_t;
 
 static BOOL find_next(HANDLE handle, WIN32_FIND_DATA *data, DWORD *error)
 {
@@ -27,9 +19,10 @@ static BOOL find_next(HANDLE handle, WIN32_FIND_DATA *data, DWORD *error)
 }
 
 USE_DECL
-OS_RESULT(os_iter_t) os_iter_begin(const char *path)
+os_error_t os_iter_begin(const char *path, os_iter_t *result)
 {
     CTASSERT(path != NULL);
+    CTASSERT(result != NULL);
 
     char *wild = format("%s" NATIVE_PATH_SEPARATOR "*", path);
 
@@ -39,15 +32,7 @@ OS_RESULT(os_iter_t) os_iter_begin(const char *path)
 
     if (find == INVALID_HANDLE_VALUE)
     {
-        error = GetLastError();
-        switch (error)
-        {
-        case ERROR_FILE_NOT_FOUND:
-        case ERROR_PATH_NOT_FOUND:
-            return NULL;
-        default:
-            return win_result(error, NULL, 0);
-        }
+        return GetLastError();
     }
 
     do
@@ -59,12 +44,13 @@ OS_RESULT(os_iter_t) os_iter_begin(const char *path)
     } while (find_next(find, &data, &error) != 0);
 
     os_iter_t iter = {
-        .hFind = find,
+        .find = find,
         .data = data,
         .error = error
     };
 
-    return win_result(ERROR_SUCCESS, &iter, sizeof(os_iter_t));
+    *result = iter;
+    return ERROR_SUCCESS;
 }
 
 USE_DECL
@@ -72,27 +58,24 @@ void os_iter_end(os_iter_t *iter)
 {
     CTASSERT(iter != NULL);
 
-    FindClose(iter->hFind); // TODO: check result
+    FindClose(iter->find); // TODO: check result
 }
 
 USE_DECL
-OS_RESULT(os_dir_t) os_iter_next(os_iter_t *iter)
+bool os_iter_next(os_iter_t *iter, os_dir_t *result)
 {
     CTASSERT(iter != NULL);
+    CTASSERT(result != NULL);
 
     // check for error from previous iteration
-    switch (iter->error)
-    {
-    case ERROR_SUCCESS: break;
-    case ERROR_NO_MORE_FILES: return NULL;
-    default: return win_result(iter->error, NULL, 0);
-    }
+    if (iter->error != ERROR_SUCCESS)
+        return false;
 
     PWIN32_FIND_DATA data = &iter->data;
     os_dir_t dir = { .data = iter->data };
 
     // get the next directory
-    while (find_next(iter->hFind, data, &iter->error) != 0)
+    while (find_next(iter->find, data, &iter->error) != 0)
     {
         if (!is_special(data->cFileName))
         {
@@ -100,7 +83,19 @@ OS_RESULT(os_dir_t) os_iter_next(os_iter_t *iter)
         }
     }
 
-    return win_result(ERROR_SUCCESS, &dir, sizeof(os_dir_t));
+    *result = dir;
+    return true;
+}
+
+USE_DECL
+os_error_t os_iter_error(os_iter_t *iter)
+{
+    CTASSERT(iter != NULL);
+
+    if (iter->error == ERROR_NO_MORE_FILES)
+        return ERROR_SUCCESS;
+
+    return iter->error;
 }
 
 USE_DECL
@@ -109,5 +104,6 @@ const char *os_dir_name(os_dir_t *dir)
     CTASSERT(dir != NULL);
 
     // TODO: does this return the full or relative path?
-    return dir->data.cFileName;
+    // TODO: duplicating this string is not ideal
+    return ctu_strdup(dir->data.cFileName);
 }
