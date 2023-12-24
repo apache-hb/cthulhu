@@ -48,4 +48,4 @@ void ap_on_int(scan_t *scan, cfg_field_t *param, mpz_t value);
 void ap_on_posarg(scan_t *scan, const char *value);
 void ap_on_error(scan_t *scan, const char *message);
 
-int ap_get_opt(ap_t *self, const char *name, cfg_field_t **param);
+int ap_get_opt(ap_t *self, const char *name, cfg_field_t **param, char **value);

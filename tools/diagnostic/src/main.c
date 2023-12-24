@@ -64,6 +64,7 @@ static const cfg_info_t kPrintDiagsInfo = {
 typedef struct diag_config_t
 {
     config_t *root;
+
     cfg_field_t *help;
     cfg_field_t *version;
     cfg_field_t *langs;
@@ -289,6 +290,14 @@ int main(int argc, const char **argv)
     ap_t *ap = ap_new(root.root, arena);
     ap_parse(ap, argc, argv);
 
+    vector_t *unknown = ap_get_unknown(ap);
+    size_t unknown_count = vector_len(unknown);
+    for (size_t i = 0; i < unknown_count; i++)
+    {
+        const char *arg = vector_get(unknown, i);
+        io_printf(io, "unknown argument: %s\n", arg);
+    }
+
     if (cfg_bool_value(root.help))
     {
         print_help(io, argv[0], root);
@@ -325,8 +334,23 @@ int main(int argc, const char **argv)
         add_diagnostics(&ctx, lang->diagnostics);
     }
 
+    if (cfg_bool_value(root.diags))
+    {
+        size_t diag_count = typevec_len(ctx.diagnostics);
+        io_printf(io, "%zu diagnostics:\n", diag_count);
+        for (size_t i = 0; i < diag_count; i++)
+        {
+            const diagnostic_t *diag = typevec_offset(ctx.diagnostics, i);
+            print_diagnostic(io, diag);
+
+            if (i + 1 < diag_count)
+            {
+                io_printf(io, "\n");
+            }
+        }
+    }
+
     vector_t *posargs = ap_get_posargs(ap);
-    io_printf(io, "%zu posargs\n", vector_len(posargs));
     size_t posarg_count = vector_len(posargs);
     for (size_t i = 0; i < posarg_count; i++)
     {
@@ -339,6 +363,11 @@ int main(int argc, const char **argv)
         else
         {
             print_diagnostic(io, diag);
+
+            if (i + 1 < posarg_count)
+            {
+                io_printf(io, "\n");
+            }
         }
     }
 }

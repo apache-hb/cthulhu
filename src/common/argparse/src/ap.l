@@ -25,19 +25,19 @@ OPT [a-zA-Z0-9\-\:]
 [-]{LETTER}{OPT}* {
     /* short opt */
     ap_t *ap = scan_get_context(yyextra);
-    return ap_get_opt(ap, yytext + 1, &yylval->field);
+    return ap_get_opt(ap, yytext + 1, &yylval->field, &yylval->error);
 }
 
 [-][-]{LETTER}{OPT}* {
     /* long opt */
     ap_t *ap = scan_get_context(yyextra);
-    return ap_get_opt(ap, yytext + 2, &yylval->field);
+    return ap_get_opt(ap, yytext + 2, &yylval->field, &yylval->error);
 }
 
 [/]{LETTER}{OPT}* {
     /* nt style opt */
     ap_t *ap = scan_get_context(yyextra);
-    return ap_get_opt(ap, yytext + 1, &yylval->field);
+    return ap_get_opt(ap, yytext + 1, &yylval->field, &yylval->error);
 }
 
 [0-9]+ {

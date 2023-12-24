@@ -39,16 +39,29 @@ static void add_arg_callback(ap_t *self, const cfg_field_t *param, ap_callback_t
 
 /// public api
 
-static void add_name(ap_t *ap, const char *name, cfg_field_t *field)
+static void add_arg(ap_t *ap, const char *arg, cfg_field_t *field)
+{
+    cfg_field_t *old = map_get(ap->name_lookup, arg);
+    if (old != NULL)
+    {
+        const cfg_info_t *info = cfg_get_info(old);
+        NEVER("arg `%s` was already registered by `%s`", arg, info->name);
+    }
+
+    map_set(ap->name_lookup, arg, field);
+}
+
+static void add_single_field(ap_t *ap, cfg_field_t *field)
 {
     CTASSERT(ap != NULL);
-    CTASSERT(name != NULL);
     CTASSERT(field != NULL);
 
-    cfg_field_t *old = map_get(ap->name_lookup, name);
-    CTASSERTF(old == NULL, "field `%s` was already registered", name);
+    const cfg_info_t *info = cfg_get_info(field);
 
-    map_set(ap->name_lookup, name, field);
+    for (size_t i = 0; info->args[i]; i++)
+    {
+        add_arg(ap, info->args[i], field);
+    }
 }
 
 static void add_config_fields(ap_t *ap, const config_t *config)
@@ -58,8 +71,7 @@ static void add_config_fields(ap_t *ap, const config_t *config)
     for (size_t i = 0; i < field_count; i++)
     {
         cfg_field_t *field = vector_get(fields, i);
-        const cfg_info_t *info = cfg_get_info(field);
-        add_name(ap, info->name, field);
+        add_single_field(ap, field);
     }
 
     typevec_t *groups = cfg_get_groups(config);

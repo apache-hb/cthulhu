@@ -55,7 +55,7 @@ static int get_option_type(const cfg_field_t *field)
     }
 }
 
-int ap_get_opt(ap_t *self, const char *name, cfg_field_t **param)
+int ap_get_opt(ap_t *self, const char *name, cfg_field_t **param, char **value)
 {
     CTASSERT(self != NULL);
     CTASSERT(name != NULL);
@@ -63,7 +63,10 @@ int ap_get_opt(ap_t *self, const char *name, cfg_field_t **param)
 
     cfg_field_t *result = map_get(self->name_lookup, name);
     if (result == NULL)
+    {
+        *value = ctu_strdup(name);
         return AP_ERROR;
+    }
 
     *param = result;
     return get_option_type(result);
