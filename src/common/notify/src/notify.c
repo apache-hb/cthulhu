@@ -12,8 +12,6 @@
 typedef struct logger_t
 {
     arena_t *arena;
-    vector_t *diagnostics;
-    map_t *lookup;
 
     typevec_t *messages;
 } logger_t;
@@ -26,8 +24,6 @@ logger_t *logger_new(arena_t *arena)
     logger_t *logs = ARENA_MALLOC(arena, sizeof(logger_t), "logger", NULL);
 
     logs->arena = arena;
-    logs->diagnostics = vector_new(64);
-    logs->lookup = map_optimal(256);
     logs->messages = typevec_new(sizeof(event_t), 8, arena);
 
     ARENA_IDENTIFY(arena, logs->messages, "messages", logs);
@@ -52,19 +48,6 @@ void logger_reset(logger_t *logs)
 }
 
 USE_DECL
-void msg_diagnostic(logger_t *logs, const diagnostic_t *diagnostic)
-{
-    CTASSERT(logs != NULL);
-    CTASSERT(diagnostic != NULL);
-
-    const diagnostic_t *old = map_get(logs->lookup, diagnostic->id);
-    CTASSERTF(old == NULL, "diagnostic %s already exists", diagnostic->id);
-
-    vector_push(&logs->diagnostics, (void*)diagnostic);
-    map_set(logs->lookup, diagnostic->id, (void*)diagnostic);
-}
-
-USE_DECL
 event_t *msg_notify(logger_t *reports, const diagnostic_t *diagnostic, const node_t *node, const char *fmt, ...)
 {
     va_list args;
@@ -82,9 +65,6 @@ event_t *msg_vnotify(logger_t *logs, const diagnostic_t *diagnostic, const node_
 {
     CTASSERT(logs != NULL);
     CTASSERT(diagnostic != NULL);
-
-    // TODO: do we need to check if the diagnostic was registered?
-    // CTASSERTF(map_get(logs->lookup, diagnostic->id) != NULL, "diagnostic %s was not registered prior to use", diagnostic->id);
 
     char *msg = vformat(fmt, args);
 

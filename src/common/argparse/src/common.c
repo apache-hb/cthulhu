@@ -1,8 +1,12 @@
 #include "common.h"
 
+#include "base/panic.h"
+#include "config/config.h"
 #include "core/macros.h"
 
 #include "memory/memory.h"
+
+#include "scan/node.h"
 
 #include "std/map.h"
 #include "std/vector.h"
@@ -12,9 +16,13 @@
 
 // internals
 
-static void apply_callbacks(scan_t *scan, where_t where, const ap_param_t *param, const void *value, vector_t *all)
+static void apply_callbacks(scan_t *scan, const cfg_field_t *param, const void *value, vector_t *all)
 {
-    ap_t *self = scan_get(scan);
+    CTASSERT(scan != NULL);
+    CTASSERT(all != NULL);
+    CTASSERT(value != NULL);
+
+    ap_t *self = scan_get_context(scan);
     size_t len = vector_len(all);
 
     for (size_t i = 0; i < len; i++)
@@ -27,68 +35,69 @@ static void apply_callbacks(scan_t *scan, where_t where, const ap_param_t *param
             return;
         }
     }
-
-    const char *msg = param == NULL
-        ? format("unhandled positional argument '%s'", (char*)value)
-        : format("unhandled event '%s'", param->names[0]);
-    ap_on_error(scan, where, msg);
-}
-
-static void add_value(ap_t *self, const ap_param_t *param, void *value)
-{
-    map_set_ptr(self->param_values, param, value);
 }
 
 // flex + bison callbacks
 
-void ap_on_string(scan_t *scan, where_t where, const ap_param_t *param, const char *value)
+void ap_on_string(scan_t *scan, cfg_field_t *param, const char *value)
 {
-    ap_t *self = scan_get(scan);
-    add_value(self, param, ctu_strdup(value));
-    apply_callbacks(scan, where, param, value, map_get_ptr(self->event_lookup, param));
+    ap_t *self = scan_get_context(scan);
+    vector_t *callbacks = map_get_ptr(self->event_lookup, param);
+
+    if (callbacks)
+        apply_callbacks(scan, param, value, callbacks);
+
+    // TODO: handle enum and flags
+    cfg_set_string(param, value);
 }
 
-void ap_on_bool(scan_t *scan, where_t where, const ap_param_t *param, bool value)
+void ap_on_bool(scan_t *scan, cfg_field_t *param, bool value)
 {
-    ap_t *self = scan_get(scan);
-    add_value(self, param, ctu_memdup(&value, sizeof(bool)));
-    apply_callbacks(scan, where, param, &value, map_get_ptr(self->event_lookup, param));
+    ap_t *self = scan_get_context(scan);
+    vector_t *callbacks = map_get_ptr(self->event_lookup, param);
+
+    if (callbacks)
+        apply_callbacks(scan, param, &value, callbacks);
+
+    cfg_set_bool(param, value);
 }
 
-void ap_on_int(scan_t *scan, where_t where, const ap_param_t *param, mpz_t value)
+void ap_on_int(scan_t *scan, cfg_field_t *param, mpz_t value)
 {
-    ap_t *self = scan_get(scan);
+    ap_t *self = scan_get_context(scan);
     arena_t *arena = scan_alloc(scan);
 
-    void *it = ARENA_MALLOC(arena, sizeof(mpz_t), param->name, self);
+    void *it = ARENA_MALLOC(arena, sizeof(mpz_t), "int", self);
     memcpy(it, value, sizeof(mpz_t));
-    add_value(self, param, it);
 
-    apply_callbacks(scan, where, param, value, map_get_ptr(self->event_lookup, param));
+    vector_t *callbacks = map_get_ptr(self->event_lookup, param);
+
+    if (callbacks)
+        apply_callbacks(scan, param, value, callbacks);
+
+    int v = mpz_get_si(value);
+
+    // TODO: handle errors
+    cfg_set_int(param, v);
 }
 
-void ap_on_posarg(scan_t *scan, where_t where, const char *value)
+void ap_on_posarg(scan_t *scan, const char *value)
 {
-    ap_t *self = scan_get(scan);
-    apply_callbacks(scan, where, NULL, value, self->posarg_callbacks);
+    ap_t *self = scan_get_context(scan);
+    apply_callbacks(scan, NULL, value, self->posarg_callbacks);
+    vector_push(&self->posargs, (char*)value);
 }
 
-void ap_on_error(scan_t *scan, where_t where, const char *message)
+void ap_on_error(scan_t *scan, const char *message)
 {
-    ap_t *self = scan_get(scan);
-    node_t *node = node_new(scan, where);
-    size_t len = vector_len(self->error_callbacks);
-
-    for (size_t i = 0; i < len; i++)
-    {
-        ap_err_callback_t *cb = vector_get(self->error_callbacks, i);
-        cb->callback(self, node, message, cb->data);
-    }
+    ap_t *self = scan_get_context(scan);
+    vector_push(&self->unknown, ctu_strdup(message));
 }
 
 void aperror(where_t *where, void *state, scan_t *scan, const char *msg)
 {
     CTU_UNUSED(state);
+    CTU_UNUSED(where);
 
-    ap_on_error(scan, *where, ctu_strdup(msg));
+    ap_on_error(scan, msg);
 }

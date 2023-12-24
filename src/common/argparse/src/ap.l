@@ -10,6 +10,7 @@
 #include "ap_bison.h"
 #include "interop/flex.h"
 #include "memory/memory.h"
+#include "scan/node.h"
 %}
 
 LETTER [a-zA-Z]
@@ -17,12 +18,26 @@ OPT [a-zA-Z0-9\-\:]
 
 %%
 
-[ \r\n\t] ;
+[ \r\n\t\f] ;
 
 "=" { return ASSIGN; }
 
-[-]+{LETTER}{OPT}* {
-    return ap_get_opt(scan_get(yyextra), yytext, &yylval->option, &yylval->error);
+[-]{LETTER}{OPT}* {
+    /* short opt */
+    ap_t *ap = scan_get_context(yyextra);
+    return ap_get_opt(ap, yytext + 1, &yylval->field);
+}
+
+[-][-]{LETTER}{OPT}* {
+    /* long opt */
+    ap_t *ap = scan_get_context(yyextra);
+    return ap_get_opt(ap, yytext + 2, &yylval->field);
+}
+
+[/]{LETTER}{OPT}* {
+    /* nt style opt */
+    ap_t *ap = scan_get_context(yyextra);
+    return ap_get_opt(ap, yytext + 1, &yylval->field);
 }
 
 [0-9]+ {
@@ -50,7 +65,7 @@ OPT [a-zA-Z0-9\-\:]
     return IDENT;
 }
 
-. { ap_on_error(yyextra, *yylloc, yytext); }
+. { ap_on_error(yyextra, yytext); }
 
 %%
 

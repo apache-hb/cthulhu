@@ -56,7 +56,16 @@
   - See @ref Stacktrace for an example of this, doing nothing can be a reasonable fallback.
 
 2. Everything must be implemented in standard C11
-  - No compiler extensions in common code
+  - No compiler extensions in common code.
+
+3. No io or filesystem access that isnt marhshalled by @ref io_t or @ref fs_t
+  - Makes porting to systems with non tradition IO easier.
+
+4. The build process must only rely on C and meson
+  - Optional features may require python/C++
+  - To aid porting to systems that may not have a big ecosystem
+
+5. All platform specific code must go in the @ref OS module
 
 <h3>Styleguide</h3>
 

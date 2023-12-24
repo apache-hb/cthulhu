@@ -66,3 +66,8 @@ option('tool_notify', type : 'feature',
     description : 'build notify test tool',
     value : 'auto'
 )
+
+option('tool_diagnostic', type : 'feature',
+    description : 'build diagnostic search tool',
+    value : 'auto'
+)

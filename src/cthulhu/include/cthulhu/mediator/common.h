@@ -3,8 +3,7 @@
 #include "core/analyze.h"
 #include "core/compiler.h"
 #include "core/version_def.h"
-
-#include <stddef.h>
+#include "notify/diagnostic.h"
 
 BEGIN_API
 
@@ -59,8 +58,7 @@ typedef struct language_t
     const char * const * exts; ///< null terminated list of file extensions
 
     /// @brief all diagnostics this language can produce
-    const diagnostic_t *diagnostics;
-    size_t diagnostic_count;
+    diagnostic_list_t diagnostics;
 
     /// @brief called once at startup
     driver_create_t fn_create;

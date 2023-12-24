@@ -20,7 +20,7 @@ typedef struct errors_t
     vector_t *errors;
 } errors_t;
 
-static ap_event_result_t on_file(ap_t *ap, const ap_param_t *param, const void *value, void *data)
+static ap_event_result_t on_file(ap_t *ap, const cfg_field_t *param, const void *value, void *data)
 {
     CTU_UNUSED(ap);
     CTU_UNUSED(param);

@@ -15,6 +15,13 @@ typedef struct map_t map_t;
  * @{
  */
 
+/// @brief initialize the global runtime object
+/// @warning this is called by @a mediator_new, if you call this yourself you promise to not use the mediator
+/// @note this may only be called once
+///
+/// @param arena the allocator to use
+void runtime_init(arena_t *arena);
+
 /// @brief create the global mediator object, must be the first part of cthulhu called
 ///
 /// @param id the name of the mediator

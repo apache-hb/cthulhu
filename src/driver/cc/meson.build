@@ -3,6 +3,7 @@ src = [
     'src/main.c',
     'src/scan.c',
     'src/driver.c',
+    'src/events.c',
 
     lex.process('src/cc.l'),
     parse.process('src/cc.y')

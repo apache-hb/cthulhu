@@ -5,6 +5,23 @@
 
 #include "cthulhu/events/events.inc"
 
+static const diagnostic_t * const kDiagnosticTable[] = {
+#define CTU_EVENT(name, ...) &kEvent_##name,
+#include "cthulhu/events/events.inc"
+};
+
+#define DIAGNOTSIC_COUNT (sizeof(kDiagnosticTable) / sizeof(diagnostic_t*))
+
+diagnostic_list_t get_common_diagnostics(void)
+{
+    diagnostic_list_t list = {
+        .diagnostics = kDiagnosticTable,
+        .count = DIAGNOTSIC_COUNT,
+    };
+
+    return list;
+}
+
 void evt_scan_error(logger_t *logger, node_t *node, const char *msg)
 {
     msg_notify(logger, &kEvent_ParseFailed, node, "scan error: `%s`", msg);

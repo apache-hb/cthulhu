@@ -24,7 +24,7 @@
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"
 
-static void runtime_init(arena_t *arena)
+void runtime_init(arena_t *arena)
 {
     GLOBAL_INIT();
 

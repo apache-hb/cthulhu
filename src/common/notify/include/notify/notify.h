@@ -3,6 +3,8 @@
 #include "core/analyze.h"
 #include "core/compiler.h"
 
+#include "notify/diagnostic.h"
+
 #include <stdarg.h>
 
 BEGIN_API
@@ -20,23 +22,6 @@ typedef struct segment_t segment_t;
 /// @ingroup Common
 /// @brief Compiler message logging and error registration
 /// @{
-
-typedef enum severity_t
-{
-#define SEVERITY(ID, NAME) ID,
-#include "notify/notify.inc"
-
-    eSeverityTotal
-} severity_t;
-
-typedef struct diagnostic_t
-{
-    severity_t severity;
-    const char *id;
-
-    const char *brief;
-    const char *description;
-} diagnostic_t;
 
 typedef struct event_t
 {
@@ -80,14 +65,6 @@ typevec_t *logger_get_events(IN_NOTNULL const logger_t *logs);
 ///
 /// @param[in, out] logs the logger
 void logger_reset(IN_NOTNULL logger_t *logs);
-
-/// @brief register a new diagnostic
-///
-/// @param[in, out] logs the logger
-/// @param diagnostic the diagnostic to register
-void msg_diagnostic(
-    IN_NOTNULL logger_t *logs,
-    IN_NOTNULL const diagnostic_t *diagnostic);
 
 /// @brief notify the logger of a new message
 /// @warning adding a new message invalidates all previous events handles

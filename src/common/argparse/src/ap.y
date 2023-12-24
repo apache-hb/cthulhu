@@ -12,6 +12,7 @@
 }
 
 %code requires {
+    #include "scan/node.h"
     #include "common.h"
     #define YYSTYPE APSTYPE
     #define YYLTYPE APLTYPE
@@ -23,16 +24,16 @@ void aperror(where_t *where, void *state, scan_t *scan, const char *msg);
 %}
 
 %union {
-    ap_param_t *option;
+    cfg_field_t *field;
     char *ident;
     char *error;
     mpz_t number;
 }
 
-%token<option>
-    AP_STRING "string option"
-    AP_INT "integer option"
-    AP_BOOL "flag option"
+%token<field>
+    AP_STRING_OPTION "string option"
+    AP_INT_OPTION "integer option"
+    AP_BOOL_OPTION "boolean option"
 
 %token<error>
     AP_ERROR "unknown flag"
@@ -56,12 +57,12 @@ void aperror(where_t *where, void *state, scan_t *scan, const char *msg);
 entry: %empty | arguments ;
 arguments: argument | arguments argument ;
 
-argument: AP_STRING ident { ap_on_string(x, @$, $1, $2); }
-    | AP_INT number { ap_on_int(x, @$, $1, $2); }
-    | AP_BOOL { ap_on_bool(x, @$, $1, true); }
-    | ident { ap_on_posarg(x, @$, $1); }
-    | number { ap_on_posarg(x, @$, mpz_get_str(NULL, 10, $1)); }
-    | AP_ERROR { ap_on_error(x, @$, $1); }
+argument: AP_STRING_OPTION ident { ap_on_string(x, $1, $2); }
+    | AP_INT_OPTION number { ap_on_int(x, $1, $2); }
+    | AP_BOOL_OPTION { ap_on_bool(x, $1, true); }
+    | IDENT { ap_on_posarg(x, $1); }
+    | NUMBER { ap_on_posarg(x, mpz_get_str(NULL, 10, $1)); }
+    | AP_ERROR { ap_on_error(x, $1); }
     ;
 
 ident: IDENT { $$ = $1; }

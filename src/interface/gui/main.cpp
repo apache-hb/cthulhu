@@ -63,12 +63,13 @@ struct CompileRun : ed::CompileInfo
         .brief = "Test group to demonstrate config"
     };
 
+    constexpr static const char *test_int_args[] = { "test-int", NULL };
+
     cfg_info_t test_int_info = {
         .name = "test_int",
         .brief = "Test integer",
         .description = "This is a test integer",
-        .arg_long = "test-int",
-        .arg_short = "i"
+        .args = test_int_args
     };
 
     cfg_int_t test_int_config = {
@@ -77,35 +78,39 @@ struct CompileRun : ed::CompileInfo
         .max = 99
     };
 
+    constexpr static const char *test_bool_args[] = { "test-bool", NULL };
+
     cfg_info_t test_bool_info = {
         .name = "test_bool",
         .brief = "Test boolean",
         .description = "This is a test boolean",
-        .arg_long = "test-bool",
-        .arg_short = "b"
+        .args = test_bool_args
     };
 
     cfg_bool_t test_bool_config = {
         .initial = true
     };
 
+    constexpr static const char *test_string_args[] = { "test-string", NULL };
+
     cfg_info_t test_string_info = {
         .name = "test_string",
         .brief = "Test string",
         .description = "This is a test string",
-        .arg_long = "test-string",
-        .arg_short = "s"
+        .args = test_string_args
     };
 
     cfg_string_t test_string_config = {
         .initial = "hello"
     };
 
+    constexpr static const char *test_enum_args[] = { "test-enum", NULL };
+
     cfg_info_t test_enum_info = {
         .name = "test_enum",
         .brief = "Test enum",
         .description = "This is a test enum",
-        .arg_short = "num"
+        .args = test_enum_args
     };
 
     cfg_choice_t test_enum_choices[3] = {
@@ -120,11 +125,13 @@ struct CompileRun : ed::CompileInfo
         .initial = 2
     };
 
+    constexpr static const char *test_flags_args[] = { "test-flags", NULL };
+
     cfg_info_t test_flags_info = {
         .name = "test_flags",
         .brief = "Test flags",
         .description = "This is a test flags",
-        .arg_long = "vegetables"
+        .args = test_flags_args
     };
 
     cfg_choice_t test_flags_choices[3] = {

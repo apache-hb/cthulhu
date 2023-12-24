@@ -66,21 +66,13 @@ void draw_field_info(const cfg_field_t *field)
         ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.f);
         draw_info_preamble(info);
 
-        if (info->arg_long != nullptr && info->arg_short != nullptr)
+        ImGui::Separator();
+        ImGui::Text("Args");
+        for (size_t i = 0; info->args[i]; i++)
         {
-            ImGui::Separator();
-            ImGui::Text("args: --%s / -%s", info->arg_long, info->arg_short);
+            ImGui::Text("%s", info->args[i]);
         }
-        else if (info->arg_long != nullptr)
-        {
-            ImGui::Separator();
-            ImGui::Text("long: --%s", info->arg_long);
-        }
-        else if (info->arg_short != nullptr)
-        {
-            ImGui::Separator();
-            ImGui::Text("short: -%s", info->arg_short);
-        }
+
 
         ImGui::PopTextWrapPos();
         ImGui::EndTooltip();

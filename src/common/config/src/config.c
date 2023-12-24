@@ -12,8 +12,8 @@
 
 #define ASSERT_INFO_VALID(info)                                  \
     ASSERT_INFO_VALID_GROUP(info);                               \
-    CTASSERTF(info->arg_short != NULL || info->arg_long != NULL, \
-              "config `%s` must have a short or long argument", info->name);
+    CTASSERTF(*info->args != NULL, \
+              "config `%s` must have an argument name", info->name);
 
 static const cfg_field_t *config_find(const config_t *config, const char *name)
 {

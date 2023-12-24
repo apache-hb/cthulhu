@@ -55,13 +55,9 @@ typedef struct cfg_info_t
     /// an optional multi-line description
     const char *description;
 
-    /// @brief the argparse long name for this field
-    /// either this or @a arg_short must be non-NULL
-    const char *arg_long;
-
-    /// @brief the argparse short name for this field
-    /// either this or @a arg_long must be non-NULL
-    const char *arg_short;
+    /// @brief a null terminated list of argument names
+    /// must have at least one element
+    const char *const *args;
 } cfg_info_t;
 
 /// @brief an integer field

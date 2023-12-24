@@ -352,10 +352,6 @@ int main(int argc, const char **argv)
     init_gmp_arena(arena);
 
     logger_t *logs = logger_new(arena);
-    msg_diagnostic(logs, &kInfoDiagnostic);
-    msg_diagnostic(logs, &kUndefinedFunctionName);
-    msg_diagnostic(logs, &kUnresolvedImport);
-    msg_diagnostic(logs, &kReservedName);
 
     scan_t *scan_main = scan_string("sample.pl0", "PL/0", kSampleSourceMain, arena);
     scan_t *scan_lhs = scan_string("lhs.mod", "Oberon-2", kSampleSourceLeft, arena);

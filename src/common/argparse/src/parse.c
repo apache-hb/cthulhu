@@ -1,5 +1,6 @@
 #include "common.h"
 
+#include "config/config.h"
 #include "memory/memory.h"
 #include "std/vector.h"
 #include "std/str.h"
@@ -32,32 +33,38 @@ int ap_parse(ap_t *self, int argc, const char **argv)
     io_t *io = io_string("<command-line>", args, arena);
     scan_t *scan = scan_io("ap2", io, arena);
 
-    scan_set(scan, self);
+    scan_set_context(scan, self);
     parse_result_t result = compile_scanner(scan, &kCallbacks);
 
     return result.result == eParseOk ? 0 : 1;
 }
 
-int ap_get_opt(ap_t *self, const char *name, ap_param_t **param, char **error)
+static int get_option_type(const cfg_field_t *field)
+{
+    switch (cfg_get_type(field))
+    {
+    case eConfigBool: return AP_BOOL_OPTION;
+    case eConfigInt: return AP_INT_OPTION;
+
+    case eConfigEnum:
+    case eConfigFlags: // TODO: these need special validation
+    case eConfigString:
+        return AP_STRING_OPTION;
+
+    default: NEVER("unknown option type %d", cfg_get_type(field));
+    }
+}
+
+int ap_get_opt(ap_t *self, const char *name, cfg_field_t **param)
 {
     CTASSERT(self != NULL);
     CTASSERT(name != NULL);
     CTASSERT(param != NULL);
 
-    ap_param_t *result = map_get(self->name_lookup, name);
+    cfg_field_t *result = map_get(self->name_lookup, name);
     if (result == NULL)
-    {
-        *error = format("unknown option '%s'", name);
         return AP_ERROR;
-    }
 
     *param = result;
-
-    switch (result->type)
-    {
-    case eParamBool: return AP_BOOL;
-    case eParamInt: return AP_INT;
-    case eParamString: return AP_STRING;
-    default: return AP_ERROR;
-    }
+    return get_option_type(result);
 }

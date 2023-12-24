@@ -2,13 +2,11 @@
 
 ## Description
 
-Please inclue a bullet point list of changes or fixes to add to the changelog.
+Please inclue a bullet point list of changes or fixes.
 
 Fixes #(issue)
 
 ## I Have
-
-if any of these are not done the PR will not be accepted
 
 - [ ] Run the full test suite available through meson
 

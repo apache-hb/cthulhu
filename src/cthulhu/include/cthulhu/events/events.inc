@@ -427,7 +427,7 @@ CTU_EVENT(InvalidType, {
     .description = "A type was invalid due to invalid recursion",
 })
 
-CTU_EVENT(kEvent_WorryingCast, {
+CTU_EVENT(WorryingCast, {
     .severity = eSeverityWarn,
     .id = "M0061",
     .brief = "Worrying cast",

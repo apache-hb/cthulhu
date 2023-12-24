@@ -16,9 +16,11 @@
 
 %x COMMENT
 
+WS [ \t\r\v\n\f]
+
 %%
 
-[ \r\n\t] ;
+{WS} ;
 "//".* ;
 "/*" { BEGIN(COMMENT); }
 <COMMENT>"*/" { BEGIN(INITIAL); }

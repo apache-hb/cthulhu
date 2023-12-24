@@ -9,6 +9,9 @@ BEGIN_API
 #define CTU_EVENT(name, ...) extern const diagnostic_t kEvent_##name;
 #include "events.inc"
 
+/// @brief register all events with the logger
+diagnostic_list_t get_common_diagnostics(void);
+
 void evt_scan_error(logger_t *logger, node_t *node, const char *msg);
 void evt_scan_unknown(logger_t *logger, node_t *node, const char *msg);
 

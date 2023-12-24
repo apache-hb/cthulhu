@@ -34,6 +34,8 @@ target = target_machine.system()
 compiler_gui = get_option('compiler_gui').require(target == 'windows')
 
 # disable unit tests if we are a subproject or release build
+# this is because they require some different compiler flags that slow down the compiler
+# but only on gcc
 unit_tests = get_option('unit_tests').disable_auto_if(is_release or meson.is_subproject())
 driver_tests = get_option('driver_tests').disable_auto_if(meson.is_subproject())
 
@@ -43,8 +45,13 @@ opt_hardening = get_option('hardening')
 warning_level = get_option('warning_level').to_int()
 
 trace_memory = get_option('trace_memory').disable_auto_if(is_release or meson.is_subproject())
+
+# these are tools for internal use, so disable them in release mode
 tool_stacktrace = get_option('tool_stacktrace').disable_auto_if(is_release or meson.is_subproject())
 tool_notify = get_option('tool_notify').disable_auto_if(is_release or meson.is_subproject())
+
+# tools like this are user facing, so dont disable them in release mode
+tool_diagnostic = get_option('tool_diagnostic').disable_auto_if(meson.is_subproject())
 
 wants_cpp = compiler_gui.allowed() or tool_stacktrace.allowed()
 needs_cpp = compiler_gui.enabled() or tool_stacktrace.enabled()
@@ -231,6 +238,10 @@ if tool_notify.allowed()
     subdir('tools/notify')
 endif
 
+if tool_diagnostic.allowed()
+    subdir('tools/diagnostic')
+endif
+
 doxygen = find_program('doxygen', required : get_option('doxygen'))
 
 if doxygen.found()
@@ -288,7 +299,8 @@ summary = {
     },
     'Tools': {
         'Stacktrace': tool_stacktrace.allowed(),
-        'Notify': tool_notify.allowed()
+        'Notify': tool_notify.allowed(),
+        'Diagnostics': tool_diagnostic.allowed()
     },
     'Documentation': {
         'Doxygen': doxygen

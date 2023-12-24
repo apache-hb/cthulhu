@@ -1,13 +1,12 @@
 
 src = [
     'src/argparse.c',
-    'src/common.c',
-    'src/commands.c',
+    'src/common.c'
 ]
 
 libargparse_base = library('argparse_base', src,
     c_args : user_args,
-    dependencies : [ gmp, std, scan, interop ],
+    dependencies : [ gmp, std, scan, interop, config ],
     include_directories : [ 'src', 'include' ]
 )
 
@@ -20,7 +19,7 @@ src = [
 libargparse = library('argparse', src,
     c_args : generated_args,
     link_with : libargparse_base,
-    dependencies : [ gmp, memory, std, scan, interop, io ],
+    dependencies : [ gmp, memory, std, scan, interop, io, config ],
     include_directories : [ 'src', 'include' ]
 )
 
