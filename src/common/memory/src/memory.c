@@ -53,8 +53,6 @@ static arena_t *gGlobalArena = NULL;
 
 arena_t *get_global_arena(void)
 {
-    CTASSERT(gGlobalArena != NULL);
-
     return gGlobalArena;
 }
 

@@ -28,7 +28,9 @@ logger_t *logger_new(arena_t *arena)
     logs->arena = arena;
     logs->diagnostics = vector_new(64);
     logs->lookup = map_optimal(256);
-    logs->messages = typevec_new(sizeof(event_t), 64, arena);
+    logs->messages = typevec_new(sizeof(event_t), 8, arena);
+
+    ARENA_IDENTIFY(arena, logs->messages, "messages", logs);
 
     return logs;
 }
@@ -116,7 +118,9 @@ void msg_vappend(event_t *event, const node_t *node, const char *fmt, va_list ar
 
     if (event->segments == NULL)
     {
-        event->segments = typevec_new(sizeof(segment_t), 2, get_global_arena());
+        arena_t *arena = get_global_arena();
+        event->segments = typevec_new(sizeof(segment_t), 2, arena);
+        ARENA_IDENTIFY(arena, event->segments, "segments", event);
     }
 
     char *msg = vformat(fmt, args);

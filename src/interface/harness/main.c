@@ -181,7 +181,7 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
 
 int run_test_harness(int argc, const char **argv, arena_t *arena)
 {
-    mediator_t *mediator = mediator_new("example", kVersion);
+    mediator_t *mediator = mediator_new("example", kVersion, ctu_default_alloc());
     lifetime_t *lifetime = lifetime_new(mediator, arena);
 
     langs_t langs = get_langs();

@@ -55,7 +55,7 @@ static cfg_field_t *add_field(config_t *config, const cfg_info_t *info, cfg_type
     field->type = type;
     field->info = info;
 
-    vector_push(&config->fields, &field);
+    vector_push(&config->fields, field);
 
     return field;
 }

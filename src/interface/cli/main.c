@@ -95,8 +95,8 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
 
 int main(int argc, const char **argv)
 {
-    arena_t *arena = get_global_arena();
-    mediator_t *mediator = mediator_new("cli", kVersionInfo);
+    arena_t *arena = ctu_default_alloc();
+    mediator_t *mediator = mediator_new("cli", kVersionInfo, arena);
     lifetime_t *lifetime = lifetime_new(mediator, arena);
     logger_t *reports = lifetime_get_logger(lifetime);
 

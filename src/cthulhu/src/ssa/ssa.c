@@ -247,6 +247,8 @@ static ssa_block_t *ssa_block_create(ssa_symbol_t *symbol, const char *name, siz
     bb->steps = typevec_new(sizeof(ssa_step_t), size, arena);
     vector_push(&symbol->blocks, bb);
 
+    ARENA_IDENTIFY(arena, bb->steps, "steps", bb);
+
     return bb;
 }
 

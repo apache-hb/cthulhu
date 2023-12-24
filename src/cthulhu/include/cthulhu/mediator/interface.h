@@ -15,22 +15,14 @@ typedef struct map_t map_t;
  * @{
  */
 
-/**
- * @brief create the global mediator object, must be the first part of cthulhu called
- *
- * @param id the name of the mediator
- * @param version the version of the mediator
- * @return mediator_t* the mediator object
- */
-mediator_t *mediator_new(const char *id, version_info_t version);
-
-/// @brief create a new mediator object without initializing the global runtime
+/// @brief create the global mediator object, must be the first part of cthulhu called
 ///
 /// @param id the name of the mediator
 /// @param version the version of the mediator
+/// @param arena the allocator to use
 ///
-/// @return the mediator object
-mediator_t *mediator_new_noinit(const char *id, version_info_t version);
+/// @return mediator_t* the mediator object
+mediator_t *mediator_new(const char *id, version_info_t version, arena_t *arena);
 
 // lifetime api
 

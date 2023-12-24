@@ -284,11 +284,13 @@ static typevec_t *collect_segments(rich_t *rich, const typevec_t *all, const sca
     CTASSERT(rich != NULL);
     CTASSERT(scan != NULL);
 
+    arena_t *arena = get_global_arena();
+
     if (all == NULL)
-        return typevec_new(sizeof(segment_t), 0, get_global_arena());
+        return typevec_new(sizeof(segment_t), 0, arena);
 
     size_t count = typevec_len(all);
-    typevec_t *primary = typevec_new(sizeof(segment_t), count, get_global_arena());
+    typevec_t *primary = typevec_new(sizeof(segment_t), count, arena);
     for (size_t i = 0; i < count; i++)
     {
         const segment_t *segment = typevec_offset(all, i);

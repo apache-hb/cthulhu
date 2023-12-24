@@ -24,7 +24,7 @@
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"
 
-static void runtime_init(void)
+static void runtime_init(arena_t *arena)
 {
     GLOBAL_INIT();
 
@@ -32,8 +32,8 @@ static void runtime_init(void)
     bt_init();
     scan_init();
 
-    init_global_arena(ctu_default_alloc());
-    init_gmp_arena(ctu_default_alloc());
+    init_global_arena(arena);
+    init_gmp_arena(arena);
 }
 
 static const language_t *add_language_extension(lifetime_t *lifetime, const char *ext, const language_t *lang)
@@ -77,11 +77,9 @@ lifetime_t *handle_get_lifetime(driver_t *handle)
     return handle->parent;
 }
 
-mediator_t *mediator_new_noinit(const char *id, version_info_t version)
+mediator_t *mediator_new(const char *id, version_info_t version, arena_t *arena)
 {
-    CTASSERT(id != NULL);
-
-    arena_t *arena = get_global_arena();
+    runtime_init(arena);
 
     mediator_t *self = ARENA_MALLOC(arena, sizeof(mediator_t), id, NULL);
 
@@ -90,13 +88,6 @@ mediator_t *mediator_new_noinit(const char *id, version_info_t version)
     self->version = version;
 
     return self;
-}
-
-mediator_t *mediator_new(const char *id, version_info_t version)
-{
-    runtime_init();
-
-    return mediator_new_noinit(id, version);
 }
 
 lifetime_t *lifetime_new(mediator_t *mediator, arena_t *arena)

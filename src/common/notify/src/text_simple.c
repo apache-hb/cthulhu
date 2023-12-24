@@ -79,10 +79,11 @@ static void print_segments(text_config_t config, const event_t *event)
         return;
 
     size_t len = typevec_len(event->segments);
+    arena_t *arena = get_global_arena();
 
     // map_t<scan_t*, typevec_t<segment_t>>
     map_t *scans = map_optimal(len);
-    typevec_t *none = typevec_new(sizeof(segment_t), 4, get_global_arena());
+    typevec_t *none = typevec_new(sizeof(segment_t), 4, arena);
     typevec_t *primary = all_segments_in_scan(event->segments, event->node);
 
     for (size_t i = 0; i < len; i++)
@@ -105,7 +106,7 @@ static void print_segments(text_config_t config, const event_t *event)
 
         if (segments == NULL)
         {
-            segments = typevec_new(sizeof(segment_t), 2, get_global_arena());
+            segments = typevec_new(sizeof(segment_t), 2, arena);
             map_set_ptr(scans, scan, segments);
         }
 

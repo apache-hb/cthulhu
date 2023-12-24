@@ -274,11 +274,13 @@ struct EditorUi
     bool show_demo_window = false;
     std::vector<CompileRun> compile_runs;
 
+    ed::TraceArena global{ "global", ed::TraceArena::eDrawTree };
+
     mediator_t *mediator = nullptr;
 
     void init_mediator()
     {
-        mediator = mediator_new_noinit("editor", kVersionInfo);
+        mediator = mediator_new("editor", kVersionInfo, &global);
     }
 
     static const ImGuiDockNodeFlags kDockFlags
@@ -431,6 +433,12 @@ struct EditorUi
         }
 
         ImGui::End();
+
+        if (ImGui::Begin("Memory"))
+        {
+            global.draw_info();
+        }
+        ImGui::End();
     }
 
     void draw_compiles()
@@ -446,10 +454,6 @@ struct EditorUi
 void init_global()
 {
     ed::install_panic_handler();
-
-    os_init();
-    bt_init();
-    scan_init();
 }
 
 int main(int argc, const char **argv)
