@@ -1,7 +1,13 @@
 from sys import argv
+from os import mkdir
 
 length = int(argv[1])
 path = str(argv[2])
+
+try:
+    mkdir(path)
+except:
+    pass
 
 languages = [
     # (ext, template,                                                         newline, begin,           end)

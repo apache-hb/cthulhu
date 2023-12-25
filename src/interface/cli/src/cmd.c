@@ -38,16 +38,22 @@ static cfg_info_t kGroup_GeneralInfo = {
     .brief = "General options"
 };
 
+static const char *kGeneralHelpInfoArgs[] = { "h", "help", "?", NULL };
+
 static cfg_info_t kGeneral_HelpInfo = {
     .name = "help",
     .brief = "Display help information",
-    .description = "Display help information"
+    .description = "Display help information",
+    .args = kGeneralHelpInfoArgs
 };
+
+static const char *kGeneralVersionInfoArgs[] = { "V", "version", NULL };
 
 static cfg_info_t kGeneral_VersionInfo = {
     .name = "version",
     .brief = "Display version information",
-    .description = "Display version information"
+    .description = "Display version information",
+    .args = kGeneralVersionInfoArgs
 };
 
 /// codegen

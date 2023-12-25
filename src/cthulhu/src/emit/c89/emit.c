@@ -798,7 +798,7 @@ c89_emit_result_t emit_c89(const c89_emit_options_t *options)
             .block_names = names_new(64),
             .vreg_names = names_new(64),
         },
-        .modmap = map_optimal(len),
+        .modmap = map_optimal(len * 2),
         .srcmap = map_optimal(len),
         .hdrmap = map_optimal(len),
 

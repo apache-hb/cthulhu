@@ -8,6 +8,10 @@
 #include "std/typed/vector.h"
 #include "std/vector.h"
 
+/// @brief how many buckets to search for after the current bucket
+/// with open addressing
+#define MAP_OPEN_ADDRESS_LENGTH 2
+
 /**
  * a bucket in a hashmap
  */
@@ -47,11 +51,21 @@ static bucket_t *bucket_new(const void *key, void *value, arena_t *arena)
     return entry;
 }
 
-static bucket_t *get_bucket(map_t *map, size_t hash)
+static size_t wrap_bucket_index(map_t *map, size_t hash)
 {
-    size_t index = hash % map->size;
+    return hash % map->size;
+}
+
+static bucket_t *map_bucket_at(map_t *map, size_t index)
+{
     bucket_t *entry = &map->data[index];
     return entry;
+}
+
+static bucket_t *map_get_bucket(map_t *map, size_t hash)
+{
+    size_t index = wrap_bucket_index(map, hash);
+    return map_bucket_at(map, index);
 }
 
 static void clear_keys(bucket_t *buckets, size_t size)
@@ -158,15 +172,26 @@ bool map_empty(map_t *map)
 
 // string key map functions
 
+static size_t map_bucket_str_index(map_t *map, const char *key)
+{
+    size_t hash = strhash(key);
+    return wrap_bucket_index(map, hash);
+}
+
 static bucket_t *map_bucket_str(map_t *map, const char *key)
 {
     size_t hash = strhash(key);
-    return get_bucket(map, hash);
+    return map_get_bucket(map, hash);
+}
+
+static bool entry_str_equal(const bucket_t *entry, const char *key)
+{
+    return entry->key != NULL && str_equal(entry->key, key);
 }
 
 static void *entry_get(const bucket_t *entry, const char *key, void *other)
 {
-    if (entry->key && str_equal(entry->key, key))
+    if (entry_str_equal(entry, key))
     {
         return entry->value;
     }
@@ -179,17 +204,36 @@ static void *entry_get(const bucket_t *entry, const char *key, void *other)
     return other;
 }
 
-USE_DECL
+USE_DECL HOTFN
 void *map_get_default(map_t *map, const char *key, void *other)
 {
     CTASSERT(map != NULL);
     CTASSERT(key != NULL);
 
-    bucket_t *bucket = map_bucket_str(map, key);
+    size_t index = map_bucket_str_index(map, key);
+    bucket_t *bucket = map_bucket_at(map, index);
+
+    // quick test the first bucket
+    if (entry_str_equal(bucket, key))
+        return bucket->value;
+
+    for (size_t i = 0; i < MAP_OPEN_ADDRESS_LENGTH; i++)
+    {
+        size_t next_index = index + i;
+        if (next_index >= map->size)
+            break;
+        
+        // test next bucket
+        bucket_t *next = map_bucket_at(map, next_index);
+        if (entry_str_equal(next, key))
+            return next->value;
+    }
+
+    // give up and walk the chain
     return entry_get(bucket, key, other);
 }
 
-USE_DECL
+USE_DECL HOTFN
 void *map_get(map_t *map, const char *key)
 {
     CTASSERT(map != NULL);
@@ -198,28 +242,56 @@ void *map_get(map_t *map, const char *key)
     return map_get_default(map, key, NULL);
 }
 
-USE_DECL
+static bool try_insert_into_str_bucket(bucket_t *bucket, const char *key, void *value)
+{
+    // we can use this bucket if it has no key or has the same key
+    if (bucket->key == NULL || str_equal(bucket->key, key))
+    {
+        bucket->key = key;
+        bucket->value = value;
+        return true;
+    }
+
+    return false;
+}
+
+// try inserting into the next bucket 
+// avoids chaining in some cases
+static bool try_insert_next_str_bucket(map_t *map, size_t index, const char *key, void *value)
+{
+    // try the next bucket if we have it
+    bucket_t *entry = map_bucket_at(map, index);
+    return try_insert_into_str_bucket(entry, key, value);
+}
+
+USE_DECL HOTFN
 void map_set(map_t *map, const char *key, void *value)
 {
     CTASSERT(map != NULL);
     CTASSERT(key != NULL);
 
-    bucket_t *entry = map_bucket_str(map, key);
+    size_t index = map_bucket_str_index(map, key);
+    bucket_t *entry = map_bucket_at(map, index);
+
+    // early test the first bucket
+    if (try_insert_into_str_bucket(entry, key, value))
+        return;
+
+    for (size_t i = 0; i < MAP_OPEN_ADDRESS_LENGTH; i++)
+    {
+        size_t new_index = index + i;
+        if (new_index >= map->size)
+            break;
+
+        // if we can get this key in the next bucket then we're done now
+        if (try_insert_next_str_bucket(map, index, key, value))
+            return;
+    }
 
     while (true)
     {
-        if (entry->key == NULL)
-        {
-            entry->key = key;
-            entry->value = value;
-            break;
-        }
-
-        if (str_equal(entry->key, key))
-        {
-            entry->value = value;
-            break;
-        }
+        if (try_insert_into_str_bucket(entry, key, value))
+            return;
 
         if (entry->next == NULL)
         {
@@ -234,15 +306,26 @@ void map_set(map_t *map, const char *key, void *value)
 
 // ptr map functions
 
+static size_t map_bucket_ptr_index(map_t *map, const void *key)
+{
+    size_t hash = ptrhash(key);
+    return wrap_bucket_index(map, hash);
+}
+
 static bucket_t *map_bucket_ptr(map_t *map, const void *key)
 {
     size_t hash = ptrhash(key);
-    return get_bucket(map, hash);
+    return map_get_bucket(map, hash);
+}
+
+static bool entry_ptr_equal(const bucket_t *entry, const void *key)
+{
+    return entry->key == key;
 }
 
 static void *entry_get_ptr(const bucket_t *entry, const void *key, void *other)
 {
-    if (entry->key == key)
+    if (entry_ptr_equal(entry, key))
     {
         return entry->value;
     }
@@ -268,28 +351,51 @@ static void delete_bucket(bucket_t *previous, bucket_t *entry)
     }
 }
 
-USE_DECL
+static bool try_insert_into_ptr_bucket(bucket_t *bucket, const void *key, void *value)
+{
+    if (bucket->key == NULL || bucket->key == key)
+    {
+        bucket->key = key;
+        bucket->value = value;
+        return true;
+    }
+
+    return false;
+}
+
+static bool try_insert_next_ptr_bucket(map_t *map, size_t index, const void *key, void *value)
+{
+    bucket_t *bucket = map_bucket_at(map, index);
+    return try_insert_into_ptr_bucket(bucket, key, value);
+}
+
+USE_DECL HOTFN
 void map_set_ptr(map_t *map, const void *key, void *value)
 {
     CTASSERT(map != NULL);
     CTASSERT(key != NULL);
 
-    bucket_t *entry = map_bucket_ptr(map, key);
+    size_t index = map_bucket_ptr_index(map, key);
+    bucket_t *entry = map_bucket_at(map, index);
+
+    if (try_insert_into_ptr_bucket(entry, key, value))
+        return;
+
+    // open addressing
+    for (size_t i = 0; i < MAP_OPEN_ADDRESS_LENGTH; i++)
+    {
+        size_t new_index = index + i;
+        if (new_index >= map->size)
+            break;
+
+        if (try_insert_next_ptr_bucket(map, index, key, value))
+            return;
+    }
 
     while (true)
     {
-        if (entry->key == NULL)
-        {
-            entry->key = key;
-            entry->value = value;
+        if (try_insert_into_ptr_bucket(entry, key, value))
             break;
-        }
-
-        if (entry->key == key)
-        {
-            entry->value = value;
-            break;
-        }
 
         if (entry->next == NULL)
         {
@@ -302,7 +408,7 @@ void map_set_ptr(map_t *map, const void *key, void *value)
     }
 }
 
-USE_DECL
+USE_DECL HOTFN
 void *map_get_ptr(map_t *map, const void *key)
 {
     CTASSERT(map != NULL);
@@ -311,13 +417,29 @@ void *map_get_ptr(map_t *map, const void *key)
     return map_get_default_ptr(map, key, NULL);
 }
 
-USE_DECL
+USE_DECL HOTFN
 void *map_get_default_ptr(map_t *map, const void *key, void *other)
 {
     CTASSERT(map != NULL);
     CTASSERT(key != NULL);
 
-    bucket_t *bucket = map_bucket_ptr(map, key);
+    size_t index = map_bucket_ptr_index(map, key);
+    bucket_t *bucket = map_bucket_at(map, index);
+    if (entry_ptr_equal(bucket, key))
+        return bucket->value;
+
+    for (size_t i = 0; i < MAP_OPEN_ADDRESS_LENGTH; i++)
+    {
+        size_t new_index = index + i;
+        if (new_index >= map->size)
+            break;
+
+        bucket_t *next = map_bucket_at(map, new_index);
+        if (entry_ptr_equal(next, key))
+            return next->value;
+    }
+
+    // give up and follow the chain
     return entry_get_ptr(bucket, key, other);
 }
 
@@ -378,7 +500,7 @@ void map_delete(map_t *map, const char *key)
     CTASSERT(key != NULL);
 
     size_t hash = strhash(key);
-    bucket_t *entry = get_bucket(map, hash);
+    bucket_t *entry = map_get_bucket(map, hash);
     bucket_t *previous = entry;
 
     while (entry != NULL)
@@ -401,7 +523,7 @@ void map_delete_ptr(map_t *map, const void *key)
     CTASSERT(key != NULL);
 
     size_t hash = ptrhash(key);
-    bucket_t *entry = get_bucket(map, hash);
+    bucket_t *entry = map_get_bucket(map, hash);
     bucket_t *previous = entry;
 
     while (entry != NULL)

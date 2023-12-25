@@ -2,7 +2,12 @@
 
 #include <stdint.h>
 
-static size_t kSizeAnchors[] = {10, 100, 1000, 10000, 50000, 100000, 250000, 500000, 750000, 1000000};
+static size_t kSizeAnchors[] = {
+    10, 100, 1000, 
+    10000, 50000, 100000, 
+    250000, 500000, 750000, 1000000
+};
+
 #define TOTAL_SIZE_ANCHORS (sizeof(kSizeAnchors) / sizeof(size_t))
 
 /// @brief select a magic constant from our tuning data
@@ -34,7 +39,7 @@ static size_t bucket_for_size(size_t size)
     }
 }
 
-static size_t sabs(size_t lhs, size_t rhs)
+static size_t signed_abs(size_t lhs, size_t rhs)
 {
     if (rhs > lhs)
     {
@@ -50,7 +55,7 @@ static size_t nearest_const(size_t size)
 
     for (size_t i = 0; i < TOTAL_SIZE_ANCHORS; i++)
     {
-        size_t d = sabs(size, kSizeAnchors[i]);
+        size_t d = signed_abs(size, kSizeAnchors[i]);
         if (d < distance)
         {
             distance = d;
