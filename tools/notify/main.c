@@ -1,9 +1,9 @@
+#include "base/colour.h"
 #include "io/console.h"
 #include "io/io.h"
 
 #include "memory/memory.h"
 
-#include "notify/colour.h"
 #include "notify/notify.h"
 #include "notify/text.h"
 
@@ -251,7 +251,7 @@ static void do_backtrace(io_t *io)
             .print_source = true,
             .print_header = true
         },
-        .colours = colour_get_default(),
+        .colours = &kColourDefault,
         .io = io
     };
 
@@ -261,7 +261,7 @@ static void do_backtrace(io_t *io)
             .print_source = false,
             .print_header = true
         },
-        .colours = colour_get_default(),
+        .colours = &kColourDefault,
         .io = io
     };
 
@@ -280,7 +280,7 @@ static void do_simple(logger_t *logs)
         .config = {
             .zeroth_line = false,
         },
-        .colours = colour_get_default(),
+        .colours = &kColourDefault,
         .io = io
     };
 
@@ -303,7 +303,7 @@ static void do_rich(logger_t *logs)
         .config = {
             .zeroth_line = false,
         },
-        .colours = colour_get_default(),
+        .colours = &kColourDefault,
         .io = io_stdout(ctu_default_alloc())
     };
 

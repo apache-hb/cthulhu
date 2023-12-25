@@ -1,8 +1,8 @@
+#include "base/colour.h"
 #include "cmd.h"
 
 #include "cthulhu/events/events.h"
 #include "memory/memory.h"
-#include "notify/colour.h"
 #include "notify/text.h"
 #include "scan/node.h"
 #include "std/map.h"
@@ -110,7 +110,7 @@ int main(int argc, const char **argv)
             .print_source = true,
             .print_header = true,
         },
-        .colours = colour_get_default(),
+        .colours = &kColourDefault,
         .io = msg_buffer,
     };
 

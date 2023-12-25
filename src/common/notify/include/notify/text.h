@@ -33,7 +33,7 @@ typedef struct event_t event_t;
 typedef struct typevec_t typevec_t;
 typedef struct arena_t arena_t;
 
-typedef struct text_colour_t text_colour_t;
+typedef struct colour_pallete_t colour_pallete_t;
 typedef struct cache_map_t cache_map_t;
 typedef struct set_t set_t;
 typedef struct text_cache_t text_cache_t;
@@ -78,7 +78,7 @@ typedef struct text_config_t
     file_config_t config;
 
     // colour configuration
-    const text_colour_t *colours;
+    const colour_pallete_t *colours;
 
     // the io object to write to
     io_t *io;

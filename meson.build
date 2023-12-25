@@ -31,7 +31,9 @@ is_release = buildtype.contains('release')
 cc = meson.get_compiler('c')
 target = target_machine.system()
 
-compiler_gui = get_option('compiler_gui').require(target == 'windows')
+opt_assert = get_option('assert').disable_auto_if(is_release)
+
+frontend_gui = get_option('frontend_gui')
 
 # disable unit tests if we are a subproject or release build
 # this is because they require some different compiler flags that slow down the compiler
@@ -53,15 +55,17 @@ tool_notify = get_option('tool_notify').disable_auto_if(is_release or meson.is_s
 # tools like this are user facing, so dont disable them in release mode
 tool_diagnostic = get_option('tool_diagnostic').disable_auto_if(meson.is_subproject())
 
-wants_cpp = compiler_gui.allowed() or tool_stacktrace.allowed()
-needs_cpp = compiler_gui.enabled() or tool_stacktrace.enabled()
+wants_cpp = frontend_gui.allowed() or tool_stacktrace.allowed()
+needs_cpp = frontend_gui.enabled() or tool_stacktrace.enabled()
 
 if wants_cpp
     has_cpp = add_languages('cpp', native : false, required : needs_cpp)
 
-    compiler_gui = compiler_gui.require(has_cpp)
+    frontend_gui = frontend_gui.require(has_cpp)
     tool_stacktrace = tool_stacktrace.require(has_cpp)
 endif
+
+frontend_gui = frontend_gui.require(target == 'windows')
 
 if unit_tests.enabled() and is_release and cc.get_id() == 'gcc'
     warning('enabling unit tests in release mode with gcc will result in degraded performance')
@@ -80,7 +84,7 @@ config_cdata = configuration_data({
     'CTU_PATCH': parts[2].to_int()
 })
 
-config_cdata.set10('CTU_ENABLE_PANIC', is_debug)
+config_cdata.set10('CTU_DEBUG', opt_assert.allowed())
 
 # we use `__attribute__((const|pure))` heavily, but during unit tests we
 # violate function preconditions to test assertions.
@@ -217,7 +221,7 @@ endforeach
 
 subdir('src/interface')
 
-if compiler_gui.allowed()
+if frontend_gui.allowed()
     subdir('src/interface/gui')
 endif
 
@@ -287,10 +291,11 @@ summary = {
         'Languages': ', '.join(get_option('languages')),
         'Memory tracing': trace_memory.allowed(),
         'Analyze': opt_analyze.enabled(),
-        'Hardening': opt_hardening.enabled()
+        'Hardening': opt_hardening.enabled(),
+        'Assertions': opt_assert.allowed()
     },
     'Graphical Interface': {
-        'Enabled': compiler_gui.allowed(),
+        'Enabled': frontend_gui.allowed(),
         'Backend': 'd3d12+win32'
     },
     'Testing': {

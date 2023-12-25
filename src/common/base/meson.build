@@ -2,7 +2,8 @@ src = [
     'src/util.c',
     'src/panic.c',
     'src/log.c',
-    'src/endian.c'
+    'src/endian.c',
+    'src/colour.c'
 ]
 
 libbase = library('base', src,

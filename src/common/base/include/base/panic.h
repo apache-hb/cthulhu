@@ -13,10 +13,10 @@ BEGIN_API
 /// @{
 
 #ifdef WITH_DOXYGEN
-#   define CTU_ENABLE_PANIC 1
+#   define CTU_DEBUG 1
 #endif
 
-/// @def CTU_ENABLE_PANIC
+/// @def CTU_DEBUG
 /// @brief enable panic handling
 /// @note this is only enabled in debug builds, see [The build guide](@ref building) for more
 /// information
@@ -95,7 +95,7 @@ NORETURN ctpanic(panic_t panic, FMT_STRING const char *msg, ...) CT_PRINTF(2, 3)
 /// @param expr the condition to assert
 /// @param ... the format string and optional arguments to format
 
-#if CTU_ENABLE_PANIC
+#if CTU_DEBUG
 #   define CTASSERTF(expr, ...) CTU_ALWAYS_ASSERTF(expr, __VA_ARGS__)
 #else
 #   define CTASSERTF(expr, ...) CTU_ASSUME(expr)

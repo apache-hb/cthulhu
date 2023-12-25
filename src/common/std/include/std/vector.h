@@ -12,6 +12,8 @@ BEGIN_API
 /// @brief Generic vector of pointers
 /// @{
 
+typedef struct arena_t arena_t;
+
 /**
  * a vector of non-owning pointers
  *
@@ -28,7 +30,10 @@ typedef struct vector_t vector_t;
  *
  * @param vector the vector to release
  */
-void vector_delete(IN_NOTNULL OUT_PTR_INVALID vector_t *vector);
+void vector_delete(OUT_PTR_INVALID vector_t *vector);
+
+NODISCARD
+vector_t *vector_new_arena(size_t size, IN_NOTNULL arena_t *arena);
 
 /**
  * @brief create a new vector.

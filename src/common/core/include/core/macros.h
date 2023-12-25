@@ -54,7 +54,7 @@
 #define ANSI_MAGENTA "\x1B[1;35m" ///< ANSI magenta
 #define ANSI_CYAN "\x1B[1;36m"   ///< ANSI cyan
 #define ANSI_WHITE "\x1B[1;37m"  ///< ANSI white
-#define ANSI_DEFAULT "\x1B[0m"   ///< ANSI default
+
 #define ANSI_RESET "\x1B[0m"     ///< ANSI reset
 
 /// @}

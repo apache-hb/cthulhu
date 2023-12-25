@@ -3,7 +3,8 @@
 #include "core/text.h"
 #include "notify/text.h"
 #include "notify/notify.h"
-#include "notify/colour.h"
+
+#include "base/colour.h"
 
 #include <stddef.h>
 
@@ -21,7 +22,7 @@ typevec_t *all_segments_in_scan(const typevec_t *segments, const node_t *node);
 void segments_sort(typevec_t *segments);
 
 char *fmt_node(file_config_t config, const node_t *node);
-char *fmt_coloured(const text_colour_t *colours, colour_t idx, const char *fmt, ...);
+char *fmt_coloured(const colour_pallete_t *colours, colour_t idx, const char *fmt, ...);
 
 size_t get_line_number(file_config_t config, const node_t *node);
 
@@ -44,4 +45,4 @@ size_t cache_count_lines(text_cache_t *cache);
 
 // extract a line of text, converting non-printable characters to their escape codes
 // and highlighting the escaped characters
-text_t cache_escape_line(text_cache_t *cache, size_t line, const text_colour_t *colours, size_t column_limit);
+text_t cache_escape_line(text_cache_t *cache, size_t line, const colour_pallete_t *colours, size_t column_limit);

@@ -1,6 +1,5 @@
 src = [
     'src/notify.c',
-    'src/colour.c',
     'src/common.c',
 
     'src/text_rich.c',

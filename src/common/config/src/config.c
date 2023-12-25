@@ -31,6 +31,7 @@ static const cfg_field_t *config_find(const config_t *config, const char *name)
     return NULL;
 }
 
+#if CTU_DEBUG
 static void options_validate(const cfg_choice_t *options, size_t count)
 {
     CTASSERT(options != NULL);
@@ -41,6 +42,12 @@ static void options_validate(const cfg_choice_t *options, size_t count)
         CTASSERT(options[i].text != NULL);
     }
 }
+
+#   define ASSERT_OPTIONS_VALID(options, count) \
+        options_validate(options, count)
+#else
+#   define ASSERT_OPTIONS_VALID(options, count)
+#endif
 
 #define ASSERT_CONFIG_VALID(config, info)                                               \
     CTASSERT((config) != NULL);                                                         \
@@ -69,7 +76,7 @@ static void config_init(config_t *config, arena_t *arena, const cfg_info_t *info
     config->info = info;
 
     config->groups = typevec_new(sizeof(config_t), 4, arena);
-    config->fields = vector_new(4);
+    config->fields = vector_new_arena(4, arena);
 
     ARENA_IDENTIFY(arena, config->groups, "groups", config);
     ARENA_IDENTIFY(arena, config->fields, "fields", config);
@@ -125,7 +132,7 @@ cfg_field_t *config_string(config_t *group, const cfg_info_t *info, cfg_string_t
 cfg_field_t *config_enum(config_t *group, const cfg_info_t *info, cfg_enum_t cfg)
 {
     ASSERT_CONFIG_VALID(group, info);
-    options_validate(cfg.options, cfg.count);
+    ASSERT_OPTIONS_VALID(cfg.options, cfg.count);
 
     cfg_field_t *field = add_field(group, info, eConfigEnum);
     field->enum_config = cfg;
@@ -137,7 +144,7 @@ cfg_field_t *config_enum(config_t *group, const cfg_info_t *info, cfg_enum_t cfg
 cfg_field_t *config_flags(config_t *group, const cfg_info_t *info, cfg_flags_t cfg)
 {
     ASSERT_CONFIG_VALID(group, info);
-    options_validate(cfg.options, cfg.count);
+    ASSERT_OPTIONS_VALID(cfg.options, cfg.count);
 
     cfg_field_t *field = add_field(group, info, eConfigFlags);
     field->flags_config = cfg;

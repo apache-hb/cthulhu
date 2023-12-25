@@ -49,7 +49,7 @@ colour_t get_severity_colour(severity_t severity)
     case eSeverityWarn: return eColourYellow;
     case eSeverityInfo:
     case eSeverityDebug: return eColourGreen;
-    default: return eColourDefault;
+    default: return eColourMagenta;
     }
 }
 
@@ -133,7 +133,7 @@ char *fmt_node(file_config_t config, const node_t *node)
     }
 }
 
-char *fmt_coloured(const text_colour_t *colours, colour_t idx, const char *fmt, ...)
+char *fmt_coloured(const colour_pallete_t *colours, colour_t idx, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -436,7 +436,7 @@ static bool get_escaped_char(char *buf, char c)
     return true;
 }
 
-text_t cache_escape_line(text_cache_t *cache, size_t line, const text_colour_t *colours, size_t column_limit)
+text_t cache_escape_line(text_cache_t *cache, size_t line, const colour_pallete_t *colours, size_t column_limit)
 {
     CTASSERT(colours != NULL);
 

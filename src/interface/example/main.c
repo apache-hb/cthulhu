@@ -1,3 +1,4 @@
+#include "base/colour.h"
 #include "base/log.h"
 #include "cthulhu/events/events.h"
 #include "cthulhu/mediator/interface.h"
@@ -5,7 +6,6 @@
 #include "cthulhu/emit/emit.h"
 #include "cthulhu/ssa/ssa.h"
 
-#include "notify/colour.h"
 #include "notify/notify.h"
 #include "notify/text.h"
 #include "scan/node.h"
@@ -96,7 +96,7 @@ int main(int argc, const char **argv)
             .print_source = true,
             .print_header = true,
         },
-        .colours = colour_get_default(),
+        .colours = &kColourDefault,
         .io = msg_buffer,
     };
 

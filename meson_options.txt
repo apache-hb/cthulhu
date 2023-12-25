@@ -5,15 +5,15 @@ option('languages', type : 'array',
 )
 
 option('interfaces', type : 'array',
-    description : 'select which frontend interfaces to enable',
-    choices : [ 'cli', 'browser', 'example' ],
+    description : 'select which compiler frontends to enable',
+    choices : [ 'cli', 'example' ],
     value : [ 'cli', 'example' ]
 )
 
 # gui interface
 
-option('compiler_gui', type : 'feature',
-    description : 'build gui interface (requires c++ compiler)',
+option('frontend_gui', type : 'feature',
+    description : 'build gui frontend (requires c++ compiler)',
     value : 'auto'
 )
 
@@ -21,6 +21,11 @@ option('compiler_gui', type : 'feature',
 
 option('trace_memory', type : 'feature',
     description : 'enable memory allocation tracing',
+    value : 'auto'
+)
+
+option('assert', type : 'feature',
+    description : 'enable basic assertions, disabled in release by default',
     value : 'auto'
 )
 

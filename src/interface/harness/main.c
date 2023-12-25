@@ -1,3 +1,4 @@
+#include "base/colour.h"
 #include "base/log.h"
 #include "cthulhu/events/events.h"
 #include "cthulhu/mediator/check.h"
@@ -5,7 +6,6 @@
 
 #include "io/console.h"
 #include "memory/memory.h"
-#include "notify/colour.h"
 #include "notify/notify.h"
 #include "notify/text.h"
 #include "scan/node.h"
@@ -202,7 +202,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
             .print_header = true,
             .max_columns = 80,
         },
-        .colours = colour_get_default(),
+        .colours = &kColourNone,
         .io = msg_buffer,
     };
 

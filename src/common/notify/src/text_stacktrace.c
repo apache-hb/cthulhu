@@ -79,7 +79,7 @@ static size_t get_symbol_padding(size_t align, const bt_entry_t *entry)
     return pad;
 }
 
-static const char *fmt_recurse(const text_colour_t *colour, const bt_entry_t *entry)
+static const char *fmt_recurse(const colour_pallete_t *colour, const bt_entry_t *entry)
 {
     if (entry->recurse == 0)
         return "";

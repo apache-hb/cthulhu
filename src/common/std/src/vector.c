@@ -22,8 +22,8 @@ typedef struct vector_t
     FIELD_SIZE(size) void *data[]; ///< the data
 } vector_t;
 
-NODISCARD
-static size_t vector_size(size_t size)
+// get the size of the vector struct given a number of elements
+static size_t vector_typesize(size_t size)
 {
     return sizeof(vector_t) + (size * sizeof(void *));
 }
@@ -39,14 +39,14 @@ static void vector_ensure(vector_t **vector, size_t size)
     if (size >= VEC->size)
     {
         size_t resize = (size + 1) * 2;
-        VEC = arena_realloc(VEC, vector_size(resize), vector_size(size), VEC->arena);
+        VEC = arena_realloc(VEC, vector_typesize(resize), vector_typesize(size), VEC->arena);
         VEC->size = resize;
     }
 }
 
 static vector_t *vector_init_inner(size_t size, size_t used, arena_t *arena)
 {
-    vector_t *vector = ARENA_MALLOC(arena, vector_size(size), "vector", NULL);
+    vector_t *vector = ARENA_MALLOC(arena, vector_typesize(size), "vector", NULL);
 
     vector->arena = arena;
     vector->size = size;
@@ -56,6 +56,14 @@ static vector_t *vector_init_inner(size_t size, size_t used, arena_t *arena)
 }
 
 // vector public api
+
+NODISCARD
+vector_t *vector_new_arena(size_t size, arena_t *arena)
+{
+    CTASSERT(arena != NULL);
+
+    return vector_init_inner(size, 0, arena);
+}
 
 USE_DECL
 vector_t *vector_new(size_t size)
@@ -93,7 +101,7 @@ void vector_delete(vector_t *vector)
 {
     CTASSERT(vector != NULL);
 
-    arena_free(vector, vector_size(vector->size), vector->arena);
+    arena_free(vector, vector_typesize(vector->size), vector->arena);
 }
 
 USE_DECL
