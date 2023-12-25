@@ -30,11 +30,10 @@ void io_close(OUT_PTR_INVALID io_t *io);
 ///
 /// @param path the path to the file
 /// @param mode the access mode of the file
-/// @param arena the arena to allocate from
 ///
 /// @return the io object, or NULL on error
 NODISCARD CT_ALLOC(io_close)
-io_t *io_file(const char *path, os_access_t mode, arena_t *arena);
+io_t *io_file(const char *path, os_access_t mode);
 
 /// @brief create an IO object from an initial view of memory
 /// @note this copies @p size bytes from @p data into a new buffer

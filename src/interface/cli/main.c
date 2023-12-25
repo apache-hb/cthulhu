@@ -53,7 +53,7 @@ static void parse_source(lifetime_t *lifetime, const char *path)
         return;
     }
 
-    io_t *io = io_file(path, eAccessRead, get_global_arena());
+    io_t *io = io_file(path, eAccessRead);
     if (io_error(io) != 0)
     {
         event_t *id = msg_notify(reports, &kEvent_FailedToOpenSourceFile, node_builtin(),

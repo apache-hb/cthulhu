@@ -39,4 +39,6 @@ As alot of code can be shared, adding a feature for one language may often requi
 @subpage contrib Contributing to Cthulhu
 
 @subpage todo The ever growing todo list
+
+All source code is available on <a href="https://github.com/apache-hb/cthulhu">Github</a>
 */

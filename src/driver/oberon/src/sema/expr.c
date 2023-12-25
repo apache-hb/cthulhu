@@ -237,6 +237,15 @@ static tree_t *sema_branch(tree_t *sema, obr_t *stmt)
     return tree_stmt_branch(stmt->node, cond, then, els);
 }
 
+static tree_t *sema_loop(tree_t *sema, obr_t *stmt)
+{
+    tree_t *body = obr_sema_stmts(sema, stmt->node, stmt->loop);
+
+    tree_t *truthy = tree_expr_bool(stmt->node, obr_get_bool_type(), true);
+
+    return tree_stmt_loop(stmt->node, truthy, body, NULL);
+}
+
 static tree_t *sema_while(tree_t *sema, obr_t *stmt)
 {
     tree_t *cond = obr_sema_rvalue(sema, stmt->cond, obr_get_bool_type());
@@ -267,6 +276,7 @@ static tree_t *sema_stmt(tree_t *sema, obr_t *stmt)
     {
     case eObrStmtAssign: return sema_assign(sema, stmt);
     case eObrStmtReturn: return sema_return(sema, stmt);
+    case eObrStmtLoop: return sema_loop(sema, stmt);
     case eObrStmtWhile: return sema_while(sema, stmt);
     case eObrStmtRepeat: return sema_repeat(sema, stmt);
     case eObrExprCall: return sema_call(sema, stmt);

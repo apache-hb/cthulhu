@@ -416,7 +416,7 @@ mpq_inv (mpq_t r, const mpq_t q)
   mpq_canonical_sign (r);
 }
 
-
+
 /* MPQ to/from double. */
 void
 mpq_set_d (mpq_t r, double x)

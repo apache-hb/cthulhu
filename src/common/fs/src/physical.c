@@ -142,7 +142,7 @@ static map_t *pfs_query_dirents(fs_t *fs, inode_t *self)
 static io_t *pfs_query_file(fs_t *fs, inode_t *self, os_access_t flags)
 {
     const char *absolute = get_absolute(fs, self, NULL);
-    return io_file(absolute, flags, fs->arena);
+    return io_file(absolute, flags);
 }
 
 static inode_t *pfs_file_create(fs_t *fs, inode_t *self, const char *name)

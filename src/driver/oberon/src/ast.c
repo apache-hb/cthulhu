@@ -232,6 +232,18 @@ obr_t *obr_stmt_while(scan_t *scan, where_t where, obr_t *cond, vector_t *then)
     return self;
 }
 
+obr_t *obr_stmt_loop(scan_t *scan, where_t where, vector_t *loop)
+{
+    obr_t *self = obr_new(scan, where, eObrStmtLoop);
+    self->loop = loop;
+    return self;
+}
+
+obr_t *obr_stmt_break(scan_t *scan, where_t where)
+{
+    return obr_new(scan, where, eObrStmtBreak);
+}
+
 obr_t *obr_stmt_repeat(scan_t *scan, where_t where, vector_t *repeat, obr_t *until)
 {
     obr_t *self = obr_new(scan, where, eObrStmtRepeat);

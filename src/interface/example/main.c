@@ -61,9 +61,9 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
         }                                                    \
     } while (0)
 
-static io_t *make_file(logger_t *reports, const char *path, os_access_t flags, arena_t *arena)
+static io_t *make_file(logger_t *reports, const char *path, os_access_t flags)
 {
-    io_t *io = io_file(path, flags, arena);
+    io_t *io = io_file(path, flags);
     if (io_error(io) != 0)
     {
         event_t *id = msg_notify(reports, &kEvent_FailedToOpenSourceFile, NULL, "failed to open `%s`", path);
@@ -118,7 +118,7 @@ int main(int argc, const char **argv)
             printf("no language found for file: %s\n", path);
         }
 
-        io_t *io = make_file(logger, path, eAccessRead | eAccessText, arena);
+        io_t *io = make_file(logger, path, eAccessRead | eAccessText);
         if (io != NULL)
         {
             lifetime_parse(lifetime, lang, io);

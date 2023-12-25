@@ -17,8 +17,6 @@ GFI = good first issue
     - will need a typed map
     - need to move over to a flyweight pattern for some objects to avoid pointer invalidation
 
-- delete all the argparse config groups and help, config does that now
-
 <h3>Important</h3>
 
 - vendor flex+bison ourselves to always have the best version

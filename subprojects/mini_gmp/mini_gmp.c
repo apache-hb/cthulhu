@@ -762,7 +762,7 @@ mpn_neg (mp_ptr rp, mp_srcptr up, mp_size_t n)
   return 1;
 }
 
-
+
 /* MPN division interface. */
 
 /* The 3/2 inverse is defined as
@@ -1147,7 +1147,7 @@ mpn_div_qr (mp_ptr qp, mp_ptr np, mp_size_t nn, mp_srcptr dp, mp_size_t dn)
     gmp_free (tp);
 }
 
-
+
 /* MPN base conversion. */
 static unsigned
 mpn_base_power_of_two_p (unsigned b)
@@ -1690,7 +1690,7 @@ mpz_roinit_n (mpz_t x, mp_srcptr xp, mp_size_t xs)
   return x;
 }
 
-
+
 /* Conversions and comparison to double. */
 void
 mpz_set_d (mpz_t r, double x)
@@ -1848,7 +1848,7 @@ mpz_cmp_d (const mpz_t x, double d)
     }
 }
 
-
+
 /* MPZ comparisons and the like. */
 int
 mpz_sgn (const mpz_t u)
@@ -1937,7 +1937,7 @@ mpz_swap (mpz_t u, mpz_t v)
   MP_PTR_SWAP (u->_mp_d, v->_mp_d);
 }
 
-
+
 /* MPZ addition and subtraction */
 
 
@@ -2037,7 +2037,7 @@ mpz_sub (mpz_t r, const mpz_t a, const mpz_t b)
   r->_mp_size = a->_mp_size >= 0 ? rn : - rn;
 }
 
-
+
 /* MPZ multiplication */
 void
 mpz_mul_si (mpz_t r, const mpz_t u, long int v)
@@ -2173,7 +2173,7 @@ mpz_submul (mpz_t r, const mpz_t u, const mpz_t v)
   mpz_clear (t);
 }
 
-
+
 /* MPZ division */
 enum mpz_div_round_mode { GMP_DIV_FLOOR, GMP_DIV_CEIL, GMP_DIV_TRUNC };
 
@@ -2648,7 +2648,7 @@ mpz_divisible_ui_p (const mpz_t n, unsigned long d)
   return mpz_div_qr_ui (NULL, NULL, n, d, GMP_DIV_TRUNC) == 0;
 }
 
-
+
 /* GCD */
 static mp_limb_t
 mpn_gcd_11 (mp_limb_t u, mp_limb_t v)
@@ -3037,7 +3037,7 @@ mpz_invert (mpz_t r, const mpz_t u, const mpz_t m)
   return invertible;
 }
 
-
+
 /* Higher level operations (sqrt, pow and root) */
 
 void
@@ -3315,7 +3315,7 @@ mpn_sqrtrem (mp_ptr sp, mp_ptr rp, mp_srcptr p, mp_size_t n)
   mpz_clear (r);
   return res;
 }
-
+
 /* Combinatorics */
 
 void
@@ -3359,7 +3359,7 @@ mpz_bin_uiui (mpz_t r, unsigned long n, unsigned long k)
   mpz_clear (t);
 }
 
-
+
 /* Primality testing */
 
 /* Computes Kronecker (a/b) with odd b, a!=0 and GCD(a,b) = 1 */
@@ -3631,7 +3631,7 @@ mpz_probab_prime_p (const mpz_t n, int reps)
   return is_prime;
 }
 
-
+
 /* Logical operations and bit manipulation. */
 
 /* Numbers are treated as if represented in two's complement (and
@@ -4168,7 +4168,7 @@ mpz_scan0 (const mpz_t u, mp_bitcnt_t starting_bit)
   return mpn_common_scan (limb, i, up, un, ux);
 }
 
-
+
 /* MPZ base conversion. */
 
 size_t
@@ -4419,7 +4419,7 @@ mpz_out_str (FILE *stream, int base, const mpz_t x)
   return len;
 }
 
-
+
 static int
 gmp_detect_endian (void)
 {

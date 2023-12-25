@@ -2,7 +2,6 @@
 
 #include "cthulhu/mediator/interface.h"
 
-#include "memory/memory.h"
 #include "notify/notify.h"
 
 #include "io/io.h"
@@ -22,9 +21,9 @@ using namespace ed;
 /// @return nullptr on success, otherwise an error message
 char *CompileInfo::parse_source(size_t index)
 {
-    const char *path = sources.get(index);
+    const char *path = sources.get_path(index);
 
-    const char *ext = str_ext(path);
+    char *ext = str_ext(path);
     if (ext == nullptr)
     {
         return format("could not determine file extension for '%s'", path);
@@ -37,11 +36,7 @@ char *CompileInfo::parse_source(size_t index)
         return format("could not find language for `%s` by extension `%s`", basepath, ext);
     }
 
-    io_t *io = io_file(path, eAccessRead, get_global_arena());
-    if (os_error_t err = io_error(io); err != 0)
-    {
-        return format("could not open file '%s' (os error: %s)", path, os_error_string(err));
-    }
+    io_t *io = sources.get_io(index);
 
     lifetime_parse(lifetime, lang, io);
     return nullptr;

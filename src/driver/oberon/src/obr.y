@@ -294,9 +294,11 @@ stmtSeq: stmt { $$ = vector_init($1); }
 
 stmt: RETURN optExpr { $$ = obr_stmt_return(x, @$, $2); }
     | WHILE expr DO stmtSeq END { $$ = obr_stmt_while(x, @$, $2, $4); }
+    | LOOP stmtSeq END { $$ = obr_stmt_loop(x, @$, $2); }
     | designator ASSIGN expr { $$ = obr_stmt_assign(x, @$, $1, $3); }
     | designator LPAREN optExprList RPAREN { $$ = obr_expr_call(x, @$, $1, $3); }
     | REPEAT stmtSeq UNTIL expr { $$ = obr_stmt_repeat(x, @$, $2, $4); }
+    | EXIT { $$ = obr_stmt_break(x, @$); }
     | branchStmt { $$ = $1; }
     ;
 

@@ -20,6 +20,8 @@
   - `interface` - user facing components used to interact with drivers and the collection
     - `cli` - command line user interface
     - `gui` - graphical user interface (TODO)
+    - `harness` - end to end test harness
+    - `support` - common interface support library
 
   - `common` - common code
     - `core` - header only compiler specific

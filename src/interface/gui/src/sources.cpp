@@ -1,8 +1,50 @@
 #include "editor/sources.hpp"
 
+#include "cthulhu/mediator/interface.h"
 #include "imgui/imgui.h"
 
+#include "io/io.h"
+#include "std/str.h"
+
 using namespace ed;
+
+static constexpr os_access_t kAccess = os_access_t(eAccessRead | eAccessText);
+
+Source::Source(const char *str)
+    : path(str)
+    , io(io_file(path.c_str(), kAccess))
+{
+    basename = str_filename(path.c_str());
+
+    os_error_t err = io_error(io);
+    if (err == 0)
+    {
+        source.size = io_size(io);
+        source.text = (const char*)io_map(io);
+    }
+    else
+    {
+        error_string = os_error_string(err);
+    }
+}
+
+static constexpr ImGuiChildFlags kSourceFlags = ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY;
+
+void Source::draw()
+{
+    if (io_error(io) != 0)
+    {
+        ImGui::TextUnformatted(error_string);
+        return;
+    }
+
+    if (ImGui::BeginChild(get_path(), ImVec2(0, 0), kSourceFlags))
+    {
+        ImGui::TextUnformatted(source.text, source.text + source.size);
+    }
+
+    ImGui::EndChild();
+}
 
 void SourceList::draw()
 {
@@ -12,20 +54,29 @@ void SourceList::draw()
 
     if (open || add)
     {
-        paths.push_back(buffer);
+        paths.emplace_back(buffer);
         buffer[0] = '\0';
     }
 
     size_t idx = SIZE_MAX;
 
+    char label[1024] = {};
+
     for (size_t i = 0; i < paths.size(); i++)
     {
-        ImGui::BulletText("%s", paths[i].c_str());
-        ImGui::SameLine();
-        if (ImGui::Button("Remove"))
+        Source *src = &paths[i];
+        if (ImGui::CollapsingHeader(src->get_title(), ImGuiTreeNodeFlags_DefaultOpen))
         {
-            idx = i;
-            break;
+            (void)snprintf(label, std::size(label), "Remove##%s", src->get_path());
+            if (ImGui::Button(label))
+            {
+                idx = i;
+            }
+
+            ImGui::SameLine();
+            ImGui::Text("%s | size: %zu", src->get_path(), src->get_size());
+
+            src->draw();
         }
     }
 
