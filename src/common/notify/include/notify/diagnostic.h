@@ -2,6 +2,8 @@
 
 #include "core/compiler.h"
 
+#include <stddef.h>
+
 BEGIN_API
 
 typedef enum severity_t
