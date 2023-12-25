@@ -17,11 +17,13 @@ static void print_notes(text_config_t config, const vector_t *notes)
     if (notes == NULL)
         return;
 
+    char *star = fmt_coloured(config.colours, eColourGreen, "*");
+
     size_t note_count = vector_len(notes);
     for (size_t i = 0; i < note_count; i++)
     {
         const char *note = vector_get(notes, i);
-        io_printf(config.io, "  * note: %s\n", note);
+        io_printf(config.io, "  %s note: %s\n", star, note);
     }
 }
 
