@@ -26,6 +26,7 @@ NEW_EVENT(ArrayLengthNotConstant, {
                    "This is not defined in the Oberon-2 standard, but is a limitation of this implementation.",
 })
 
+// deprecated, we now support public read-only
 NEW_EVENT(PublicReadOnlyNotSupported, {
     .severity = eSeverityWarn,
     .id = "OBR0004",

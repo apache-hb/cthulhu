@@ -97,7 +97,6 @@ static tree_t *sema_type_array(tree_t *sema, obr_t *type, const char *name)
 
     // otherwise we need to iterate backwards over the sizes
     // to build up the array type
-
     for (size_t i = len; i > 0; i--)
     {
         obr_t *size = vector_get(type->sizes, i - 1);

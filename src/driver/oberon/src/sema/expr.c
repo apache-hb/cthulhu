@@ -211,13 +211,67 @@ static tree_t *sema_return(tree_t *sema, obr_t *stmt)
     return tree_stmt_return(stmt->node, value);
 }
 
+static tree_t *sema_block(tree_t *sema, obr_t *stmt)
+{
+    const size_t sizes[eObrTagTotal] = {
+        [eObrTagValues] = 4,
+        [eObrTagTypes] = 4,
+        [eObrTagProcs] = 4,
+        [eObrTagModules] = 4,
+        [eObrTagImports] = 4,
+    };
+
+    tree_t *ctx = tree_module(sema, stmt->node, NULL, eObrTagTotal, sizes);
+
+    return obr_sema_stmts(ctx, stmt->node, stmt->stmts);
+}
+
+static tree_t *sema_stmt(tree_t *sema, obr_t *stmt);
+
+static tree_t *sema_branch(tree_t *sema, obr_t *stmt)
+{
+    tree_t *cond = obr_sema_rvalue(sema, stmt->branch, obr_get_bool_type());
+    tree_t *then = obr_sema_stmts(sema, stmt->node, stmt->branch_body);
+    tree_t *els = stmt->branch_else == NULL ? NULL : sema_stmt(sema, stmt->branch_else);
+
+    return tree_stmt_branch(stmt->node, cond, then, els);
+}
+
+static tree_t *sema_while(tree_t *sema, obr_t *stmt)
+{
+    tree_t *cond = obr_sema_rvalue(sema, stmt->cond, obr_get_bool_type());
+    tree_t *body = obr_sema_stmts(sema, stmt->node, stmt->then);
+
+    return tree_stmt_loop(stmt->node, cond, body, NULL);
+}
+
+static tree_t *sema_repeat(tree_t *sema, obr_t *stmt)
+{
+    tree_t *cond = obr_sema_rvalue(sema, stmt->until, obr_get_bool_type());
+    tree_t *body = obr_sema_stmts(sema, stmt->node, stmt->repeat);
+
+    // we lower a repeat until loop into a while loop and an initial body
+
+    vector_t *stmts = vector_of(2);
+    vector_push(&stmts, body);
+
+    tree_t *loop = tree_stmt_loop(stmt->node, cond, body, NULL);
+    vector_push(&stmts, loop);
+
+    return tree_stmt_block(stmt->node, stmts);
+}
+
 static tree_t *sema_stmt(tree_t *sema, obr_t *stmt)
 {
     switch (stmt->kind)
     {
     case eObrStmtAssign: return sema_assign(sema, stmt);
     case eObrStmtReturn: return sema_return(sema, stmt);
+    case eObrStmtWhile: return sema_while(sema, stmt);
+    case eObrStmtRepeat: return sema_repeat(sema, stmt);
     case eObrExprCall: return sema_call(sema, stmt);
+    case eObrStmtBlock: return sema_block(sema, stmt);
+    case eObrStmtBranch: return sema_branch(sema, stmt);
     default: NEVER("unknown stmt kind %d", stmt->kind);
     }
 }

@@ -54,6 +54,7 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
     type forward
 
     stmt
+    branchStmt branchTail
 
     constDecl typeDecl procDecl
     constExpr expr optExpr
@@ -295,13 +296,22 @@ stmt: RETURN optExpr { $$ = obr_stmt_return(x, @$, $2); }
     | WHILE expr DO stmtSeq END { $$ = obr_stmt_while(x, @$, $2, $4); }
     | designator ASSIGN expr { $$ = obr_stmt_assign(x, @$, $1, $3); }
     | designator LPAREN optExprList RPAREN { $$ = obr_expr_call(x, @$, $1, $3); }
+    | REPEAT stmtSeq UNTIL expr { $$ = obr_stmt_repeat(x, @$, $2, $4); }
+    | branchStmt { $$ = $1; }
+    ;
+
+branchStmt: IF expr THEN stmtSeq branchTail END { $$ = obr_stmt_branch(x, @$, $2, $4, $5); }
+    ;
+
+branchTail: %empty { $$ = NULL; }
+    | ELSIF expr THEN stmtSeq branchTail { $$ = obr_stmt_branch(x, @$, $2, $4, $5); }
+    | ELSE stmtSeq { $$ = obr_stmt_block(x, @$, $2); }
     ;
 
 /* exprs */
 
 designator: IDENT { $$ = obr_expr_name(x, @$, $1); } /* this deviates from the original grammar to prevent ambiguity, this isnt a breaking change */
     | designator DOT IDENT { $$ = obr_expr_field(x, @$, $1, $3); }
-    //| designator LPAREN qualified RPAREN { $$ = obr_expr_cast(x, @$, $1, $3); } /* TODO: oberons cast syntax is great i just love it */
     ;
 
 factor: designator { $$ = $1; }

@@ -62,7 +62,10 @@ typedef enum obr_kind_t
     /* stmts */
     eObrStmtReturn,
     eObrStmtWhile,
+    eObrStmtRepeat,
     eObrStmtAssign,
+    eObrStmtBlock,
+    eObrStmtBranch,
 
     /* decls */
     eObrDeclVar,
@@ -111,6 +114,12 @@ typedef struct obr_t
             vector_t *then;
         };
 
+        /* eObrStmtRepeat */
+        struct {
+            vector_t *repeat;
+            obr_t *until;
+        };
+
         /* eObrExprBinary|eObrExprCompare|eObrExprIn|eObrExprIs */
         struct {
             union {
@@ -126,6 +135,16 @@ typedef struct obr_t
         struct {
             obr_t *dst;
             obr_t *src;
+        };
+
+        /* eObrStmtBlock */
+        vector_t *stmts;
+
+        /* eObrStmtBranch */
+        struct {
+            obr_t *branch;
+            vector_t *branch_body;
+            obr_t *branch_else;
         };
 
         /* eObrTypePointer */
@@ -228,7 +247,11 @@ obr_t *obr_expr_string(scan_t *scan, where_t where, char *text, size_t length);
 
 obr_t *obr_stmt_return(scan_t *scan, where_t where, obr_t *expr);
 obr_t *obr_stmt_while(scan_t *scan, where_t where, obr_t *cond, vector_t *then);
+obr_t *obr_stmt_repeat(scan_t *scan, where_t where, vector_t *repeat, obr_t *until);
 obr_t *obr_stmt_assign(scan_t *scan, where_t where, obr_t *dst, obr_t *src);
+obr_t *obr_stmt_block(scan_t *scan, where_t where, vector_t *stmts);
+
+obr_t *obr_stmt_branch(scan_t *scan, where_t where, obr_t *cond, vector_t *then, obr_t *other);
 
 /* types */
 

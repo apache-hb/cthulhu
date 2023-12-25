@@ -1,6 +1,5 @@
 #include "oberon/sema/decl.h"
 #include "notify/notify.h"
-#include "oberon/driver.h"
 #include "oberon/sema/type.h"
 #include "oberon/sema/expr.h"
 
@@ -9,15 +8,13 @@
 #include "base/panic.h"
 #include "memory/memory.h"
 
-static visibility_t remap_visibility(logger_t *reports, const node_t *node, const char *name, obr_visibility_t vis)
+static visibility_t remap_visibility(obr_visibility_t vis)
 {
     switch (vis)
     {
     case eObrVisPrivate: return eVisiblePrivate;
-    case eObrVisPublic: return eVisiblePublic;
-    case eObrVisPublicReadOnly:
-        msg_notify(reports, &kEvent_PublicReadOnlyNotSupported, node, "`%s` is public and read-only", name);
-        return eVisiblePublic;
+    case eObrVisPublic:
+    case eObrVisPublicReadOnly: return eVisiblePublic;
     default: NEVER("remap-visibility %d", vis);
     }
 }
@@ -33,11 +30,11 @@ static tree_link_t remap_linkage(obr_visibility_t vis)
     }
 }
 
-static void set_attribs(tree_t *sema, tree_t *decl, obr_visibility_t vis, tree_link_t linkage)
+static void set_attribs(tree_t *decl, obr_visibility_t vis, tree_link_t linkage)
 {
     tree_attribs_t attrib = {
         .link = linkage,
-        .visibility = remap_visibility(sema->reports, decl->node, tree_get_name(decl), vis)
+        .visibility = remap_visibility(vis)
     };
 
     tree_set_attrib(decl, ctu_memdup(&attrib, sizeof(tree_attribs_t)));
@@ -267,12 +264,12 @@ obr_forward_t obr_forward_decl(tree_t *sema, obr_t *decl)
             .decl = inner
         };
 
-        set_attribs(sema, fwd.decl, decl->visibility, decl->body == NULL ? eLinkImport : eLinkModule);
+        set_attribs(fwd.decl, decl->visibility, decl->body == NULL ? eLinkImport : eLinkModule);
         return fwd;
     }
 
     obr_forward_t fwd = forward_inner(sema, decl);
-    set_attribs(sema, fwd.decl, decl->visibility, remap_linkage(decl->visibility));
+    set_attribs(fwd.decl, decl->visibility, remap_linkage(decl->visibility));
     return fwd;
 }
 

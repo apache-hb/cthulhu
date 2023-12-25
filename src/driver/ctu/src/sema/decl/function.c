@@ -46,7 +46,7 @@ void ctu_resolve_function(tree_t *sema, tree_t *self, void *user)
 
     const node_t *node = tree_get_node(fn);
     vector_t *params = tree_fn_get_params(fn);
-    const tree_t *returnType = tree_fn_get_return(fn);
+    const tree_t *return_type = tree_fn_get_return(fn);
 
     size_t len = vector_len(params);
     const size_t sizes[eCtuTagTotal] = {
@@ -62,22 +62,22 @@ void ctu_resolve_function(tree_t *sema, tree_t *self, void *user)
         add_param(&inner, param);
     }
 
-    ctu_t *fnBody = decl->body;
+    ctu_t *fn_body = decl->body;
 
-    if (fnBody == NULL)
+    if (fn_body == NULL)
     {
         tree_close_function(fn, NULL);
         return;
     }
 
-    tree_t *body = ctu_sema_stmt(&inner, fnBody);
+    tree_t *body = ctu_sema_stmt(&inner, fn_body);
     vector_push(&inner.block, body);
 
-    if (fnBody->kind == eCtuStmtList)
+    if (fn_body->kind == eCtuStmtList)
     {
-        if (util_types_equal(returnType, ctu_get_void_type()))
+        if (util_types_equal(return_type, ctu_get_void_type()))
         {
-            tree_t *ret = tree_stmt_return(node, tree_expr_unit(node, returnType));
+            tree_t *ret = tree_stmt_return(node, tree_expr_unit(node, return_type));
             vector_push(&inner.block, ret);
         }
     }
@@ -102,11 +102,11 @@ void ctu_resolve_function_type(tree_t *sema, tree_t *self, void *user)
     }
 
     arity_t arity = (decl->variadic != NULL) ? eArityVariable : eArityFixed;
-    tree_t *returnType = decl->returnType == NULL
+    tree_t *return_type = decl->returnType == NULL
         ? ctu_get_void_type()
         : ctu_sema_type(&inner, decl->returnType);
 
-    tree_t *signature = tree_type_closure(decl->node, decl->name, returnType, params, arity);
+    tree_t *signature = tree_type_closure(decl->node, decl->name, return_type, params, arity);
 
     tree_set_type(self, signature);
     self->params = params;

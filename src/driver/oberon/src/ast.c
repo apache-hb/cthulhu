@@ -232,11 +232,35 @@ obr_t *obr_stmt_while(scan_t *scan, where_t where, obr_t *cond, vector_t *then)
     return self;
 }
 
+obr_t *obr_stmt_repeat(scan_t *scan, where_t where, vector_t *repeat, obr_t *until)
+{
+    obr_t *self = obr_new(scan, where, eObrStmtRepeat);
+    self->repeat = repeat;
+    self->until = until;
+    return self;
+}
+
 obr_t *obr_stmt_assign(scan_t *scan, where_t where, obr_t *dst, obr_t *src)
 {
     obr_t *self = obr_new(scan, where, eObrStmtAssign);
     self->dst = dst;
     self->src = src;
+    return self;
+}
+
+obr_t *obr_stmt_block(scan_t *scan, where_t where, vector_t *stmts)
+{
+    obr_t *self = obr_new(scan, where, eObrStmtBlock);
+    self->stmts = stmts;
+    return self;
+}
+
+obr_t *obr_stmt_branch(scan_t *scan, where_t where, obr_t *cond, vector_t *then, obr_t *other)
+{
+    obr_t *self = obr_new(scan, where, eObrStmtBranch);
+    self->branch = cond;
+    self->branch_body = then;
+    self->branch_else = other;
     return self;
 }
 
