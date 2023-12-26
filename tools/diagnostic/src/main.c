@@ -12,7 +12,7 @@
 
 #include "memory/memory.h"
 
-static const version_info_t kVersionInfo = {
+static const version_info_t kToolVersion = {
     .license = "GPLv3",
     .author = "Elliot Haisley",
     .desc = "Cthulhu diagnostic lookup and query tool",
@@ -21,44 +21,45 @@ static const version_info_t kVersionInfo = {
 
 static const cfg_info_t kGroupInfo = {
     .name = "diagnostics",
-    .brief = "Diagnostic query options",
-    .description = "Diagnostic lookup and search tool"
+    .brief = "Diagnostic query options"
 };
 
-static const char *kPrintHelpArgs[] = { "help", "h", "?", NULL };
+static const char *const kPrintHelpShortArgs[] = { "h", "?", NULL };
+static const char *const kPrintHelpLongArgs[] = { "help", NULL };
 
 static const cfg_info_t kPrintHelpInfo = {
     .name = "help",
     .brief = "Print help information",
-    .description = "Print help information",
-    .args = kPrintHelpArgs
+    .short_args = kPrintHelpShortArgs,
+    .long_args = kPrintHelpLongArgs
 };
 
-static const char *kPrintVersionArgs[] = { "version", NULL };
+static const char *const kPrintVersionShortArgs[] = { "V", NULL };
+static const char *const kPrintVersionLongArgs[] = { "version", NULL };
 
 static const cfg_info_t kPrintVersionInfo = {
     .name = "version",
     .brief = "Print version information",
-    .description = "Print version information",
-    .args = kPrintVersionArgs
+    .short_args = kPrintVersionShortArgs,
+    .long_args = kPrintVersionLongArgs
 };
 
-static const char *kPrintLangsArgs[] = { "langs", NULL };
+static const char *const kPrintLangsArgs[] = { "langs", NULL };
 
 static const cfg_info_t kPrintLangsInfo = {
     .name = "langs",
     .brief = "Print available languages",
-    .description = "Print available languages",
-    .args = kPrintLangsArgs
+    .short_args = kPrintLangsArgs,
+    .long_args = kPrintLangsArgs,
 };
 
-static const char *kPrintDiagInfoArgs[] = { "all", NULL };
+static const char *const kPrintDiagInfoArgs[] = { "all", NULL };
 
 static const cfg_info_t kPrintDiagsInfo = {
     .name = "diags",
-    .brief = "Print available diagnostics",
-    .description = "Print all available diagnostics for all languages",
-    .args = kPrintDiagInfoArgs
+    .brief = "Print all available diagnostics for all languages",
+    .short_args = kPrintDiagInfoArgs,
+    .long_args = kPrintDiagInfoArgs,
 };
 
 typedef struct diag_config_t
@@ -173,12 +174,32 @@ static void print_config_field(io_t *io, const cfg_field_t *field)
 
     io_printf(io, "  ");
 
-    for (size_t i = 0; info->args[i]; i++)
+    if (info->short_args)
     {
-        io_printf(io, "-%s", info->args[i]);
-        if (info->args[i + 1])
+        for (size_t i = 0; info->short_args[i]; i++)
+        {
+            io_printf(io, "-%s", info->short_args[i]);
+            if (info->short_args[i + 1])
+            {
+                io_printf(io, ", ");
+            }
+        }
+    }
+
+    if (info->long_args)
+    {
+        if (info->short_args)
         {
             io_printf(io, ", ");
+        }
+
+        for (size_t i = 0; info->long_args[i]; i++)
+        {
+            io_printf(io, "--%s", info->long_args[i]);
+            if (info->long_args[i + 1])
+            {
+                io_printf(io, ", ");
+            }
         }
     }
 
@@ -240,14 +261,14 @@ static void print_help(io_t *io, const char *name, diag_config_t config)
 
 static void print_version(io_t *io)
 {
-    int major = VERSION_MAJOR(kVersionInfo.version);
-    int minor = VERSION_MINOR(kVersionInfo.version);
-    int patch = VERSION_PATCH(kVersionInfo.version);
+    int major = VERSION_MAJOR(kToolVersion.version);
+    int minor = VERSION_MINOR(kToolVersion.version);
+    int patch = VERSION_PATCH(kToolVersion.version);
 
-    io_printf(io, "%s\n", kVersionInfo.desc);
+    io_printf(io, "%s\n", kToolVersion.desc);
     io_printf(io, "version: %d.%d.%d\n", major, minor, patch);
-    io_printf(io, "author: %s\n", kVersionInfo.author);
-    io_printf(io, "license: %s\n", kVersionInfo.license);
+    io_printf(io, "author: %s\n", kToolVersion.author);
+    io_printf(io, "license: %s\n", kToolVersion.license);
 }
 
 static const char *severity_to_string(severity_t severity)

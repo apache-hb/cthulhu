@@ -6,15 +6,10 @@
 #include "std/typed/vector.h"
 #include "std/vector.h"
 
-#define ASSERT_INFO_VALID_GROUP(info) \
-    CTASSERT(info != NULL);           \
-    CTASSERT(info->name != NULL);
+// all this is put behind the same macro used for asserts
+// because i dont trust compilers to optimize it out
 
-#define ASSERT_INFO_VALID(info)                                  \
-    ASSERT_INFO_VALID_GROUP(info);                               \
-    CTASSERTF(info->args != NULL && *info->args != NULL, \
-              "config `%s` must have an argument name", info->name);
-
+#if CTU_DEBUG
 static const cfg_field_t *config_find(const config_t *config, const char *name)
 {
     size_t field_len = vector_len(config->fields);
@@ -31,29 +26,50 @@ static const cfg_field_t *config_find(const config_t *config, const char *name)
     return NULL;
 }
 
-#if CTU_DEBUG
 static void options_validate(const cfg_choice_t *options, size_t count)
 {
-    CTASSERT(options != NULL);
-    CTASSERT(count > 0);
-
     for (size_t i = 0; i < count; i++)
     {
         CTASSERT(options[i].text != NULL);
     }
 }
 
-#   define ASSERT_OPTIONS_VALID(options, count) \
-        options_validate(options, count)
-#else
-#   define ASSERT_OPTIONS_VALID(options, count)
-#endif
+static bool has_any_element(const char *const *list)
+{
+    return list != NULL && *list != NULL;
+}
+
+static void info_validate(const cfg_info_t *info)
+{
+    CTASSERT(info != NULL);
+    CTASSERT(info->name != NULL);
+    CTASSERT(has_any_element(info->short_args) || has_any_element(info->long_args));
+}
+
+#define ASSERT_OPTIONS_VALID(options, count) \
+    CTASSERT((options) != NULL); \
+    CTASSERT((count) > 0); \
+    options_validate(options, count)
+
+#define ASSERT_INFO_VALID_GROUP(info) \
+    CTASSERT((info) != NULL);           \
+    CTASSERT((info)->name != NULL);
+
+#define ASSERT_INFO_VALID(info)    \
+    ASSERT_INFO_VALID_GROUP(info); \
+    info_validate(info);
 
 #define ASSERT_CONFIG_VALID(config, info)                                               \
     CTASSERT((config) != NULL);                                                         \
     ASSERT_INFO_VALID(info);                                                            \
     CTASSERTF(config_find(config, (info)->name) == NULL, "duplicate config field `%s`", \
               (info)->name);
+#else
+#   define ASSERT_OPTIONS_VALID(options, count)
+#   define ASSERT_INFO_VALID_GROUP(info)
+#   define ASSERT_INFO_VALID(info)
+#   define ASSERT_CONFIG_VALID(config, info)
+#endif
 
 static cfg_field_t *add_field(config_t *config, const cfg_info_t *info, cfg_type_t type)
 {
@@ -157,7 +173,7 @@ config_t *config_group(config_t *group, const cfg_info_t *info)
 {
     CTASSERT(group != NULL);
 
-    config_t config = { 0 };
+    config_t config = {0};
     config_init(&config, group->arena, info);
 
     config_t *result = typevec_push(group->groups, &config);

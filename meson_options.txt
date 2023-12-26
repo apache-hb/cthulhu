@@ -76,3 +76,8 @@ option('tool_diagnostic', type : 'feature',
     description : 'build diagnostic search tool',
     value : 'auto'
 )
+
+option('tool_display', type : 'feature',
+    description : 'build format testing tool',
+    value : 'auto'
+)

@@ -63,13 +63,12 @@ struct CompileRun : ed::CompileInfo
         .brief = "Test group to demonstrate config"
     };
 
-    constexpr static const char *test_int_args[] = { "test-int", NULL };
+    constexpr static const char *test_int_args_long[] = { "test-int", NULL };
 
     cfg_info_t test_int_info = {
         .name = "test_int",
         .brief = "Test integer",
-        .description = "This is a test integer",
-        .args = test_int_args
+        .long_args = test_int_args_long
     };
 
     cfg_int_t test_int_config = {
@@ -83,8 +82,7 @@ struct CompileRun : ed::CompileInfo
     cfg_info_t test_bool_info = {
         .name = "test_bool",
         .brief = "Test boolean",
-        .description = "This is a test boolean",
-        .args = test_bool_args
+        .long_args = test_bool_args
     };
 
     cfg_bool_t test_bool_config = {
@@ -96,8 +94,7 @@ struct CompileRun : ed::CompileInfo
     cfg_info_t test_string_info = {
         .name = "test_string",
         .brief = "Test string",
-        .description = "This is a test string",
-        .args = test_string_args
+        .long_args = test_string_args
     };
 
     cfg_string_t test_string_config = {
@@ -109,8 +106,7 @@ struct CompileRun : ed::CompileInfo
     cfg_info_t test_enum_info = {
         .name = "test_enum",
         .brief = "Test enum",
-        .description = "This is a test enum",
-        .args = test_enum_args
+        .long_args = test_enum_args
     };
 
     cfg_choice_t test_enum_choices[3] = {
@@ -130,8 +126,7 @@ struct CompileRun : ed::CompileInfo
     cfg_info_t test_flags_info = {
         .name = "test_flags",
         .brief = "Test flags",
-        .description = "This is a test flags",
-        .args = test_flags_args
+        .long_args = test_flags_args
     };
 
     cfg_choice_t test_flags_choices[3] = {

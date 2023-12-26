@@ -41,23 +41,21 @@ typedef struct cfg_field_t cfg_field_t;
 typedef struct config_t config_t;
 
 /// @brief information about a configuration field
-/// @note either arg_long or arg_short must be non-NULL
+/// @note either @a short_args or @a long_args must have at least
+/// one argument
 typedef struct cfg_info_t
 {
     /// @brief the name of this field
     const char *name;
 
     /// @brief a brief description of this field
-    /// a single line description, optional
     const char *brief;
 
-    /// @brief a longer description of this field
-    /// an optional multi-line description
-    const char *description;
+    /// @brief a null terminated list of short argument names
+    const char *const *short_args;
 
-    /// @brief a null terminated list of argument names
-    /// must have at least one element
-    const char *const *args;
+    /// @brief a null terminated list of long argument names
+    const char *const *long_args;
 } cfg_info_t;
 
 /// @brief an integer field

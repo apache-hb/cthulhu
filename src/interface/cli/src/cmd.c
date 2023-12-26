@@ -28,8 +28,7 @@ const diagnostic_t kDiagUnknownArg = {
 
 static const cfg_info_t kConfigInfo = {
     .name = "cli",
-    .brief = "Cthulhu command line interface",
-    .description = "Cthulhu CLI configuration options",
+    .brief = "Cthulhu CLI configuration options",
 };
 
 /// general
@@ -38,22 +37,24 @@ static cfg_info_t kGroup_GeneralInfo = {
     .brief = "General options"
 };
 
-static const char *kGeneralHelpInfoArgs[] = { "h", "help", "?", NULL };
+static const char *const kGeneralHelpInfoShortArgs[] = { "h", "?", NULL };
+static const char *const kGeneralHelpInfoLongArgs[] = { "help", NULL };
 
 static cfg_info_t kGeneral_HelpInfo = {
     .name = "help",
-    .brief = "Display help information",
-    .description = "Display help information",
-    .args = kGeneralHelpInfoArgs
+    .brief = "Print help message",
+    .short_args = kGeneralHelpInfoShortArgs,
+    .long_args = kGeneralHelpInfoLongArgs,
 };
 
-static const char *kGeneralVersionInfoArgs[] = { "V", "version", NULL };
+static const char *const kGeneralVersionInfoShortArgs[] = { "V", NULL };
+static const char *const kGeneralVersionInfoLongArgs[] = { "version", NULL };
 
 static cfg_info_t kGeneral_VersionInfo = {
     .name = "version",
-    .brief = "Display version information",
-    .description = "Display version information",
-    .args = kGeneralVersionInfoArgs
+    .brief = "Print version message",
+    .short_args = kGeneralVersionInfoShortArgs,
+    .long_args = kGeneralVersionInfoLongArgs,
 };
 
 /// codegen
@@ -63,30 +64,31 @@ static cfg_info_t kGroup_CodegenInfo = {
     .brief = "Code generation options"
 };
 
-static const char *const kCodegen_EmitSsaArgs[] = { "-dbgssa", "--debug-ssa", NULL };
+static const char *const kCodegenEmitSsaShortArgs[] = { "ssa", NULL };
+static const char *const kCodegenEmitSsaLongArgs[] = { "emit-ssa", NULL };
 
 static cfg_info_t kCodegen_EmitSsa = {
     .name = "debug-ssa",
-    .brief = "Emit SSA",
-    .description = "Emit SSA to the output directory",
-    .args = kCodegen_EmitSsaArgs
+    .brief = "Emit SSA to the output directory",
+    .short_args = kCodegenEmitSsaShortArgs,
+    .long_args = kCodegenEmitSsaLongArgs,
 };
 
 /// compiler debugging, user debugging options should be in codegen
 
 static cfg_info_t kGroup_DebugInfo = {
     .name = "debug",
-    .brief = "Debugging options",
-    .description = "Compiler internal debugging options, for user debugging options see codegen"
+    .brief = "Compiler internal debugging options, for user debugging options see codegen",
 };
 
-static const char *const kDebug_VerboseLogsArgs[] = { "-V", "--verbose", NULL };
+static const char *const kDebugVerboseLogsShortArgs[] = { "V", NULL };
+static const char *const kDebugVerboseLogsLongArgs[] = { "verbose", NULL };
 
 static cfg_info_t kDebug_VerboseLogs = {
     .name = "verbose",
-    .brief = "Verbose logging",
-    .description = "Enable verbose logging",
-    .args = kDebug_VerboseLogsArgs
+    .brief = "Enable verbose logging",
+    .short_args = kDebugVerboseLogsShortArgs,
+    .long_args = kDebugVerboseLogsLongArgs,
 };
 
 /// reporting
@@ -96,22 +98,21 @@ static cfg_info_t kGroup_ReportInfo = {
     .brief = "Reporting options"
 };
 
-static const char *const kReport_WarnAsErrorArgs[] = { "-Werror", NULL };
+static const char *const kReportWarnAsErrorArgs[] = { "Werror", NULL };
 
 static cfg_info_t kReport_WarnAsError = {
     .name = "warn-as-error",
     .brief = "Treat warnings as errors",
-    .description = "Treat warnings as errors",
-    .args = kReport_WarnAsErrorArgs
+    .short_args = kReportWarnAsErrorArgs,
+    .long_args = kReportWarnAsErrorArgs,
 };
 
-static const char *const kReport_LimitArgs[] = { "-fmax-errors", NULL };
+static const char *const kReportLimitArgs[] = { "fmax-errors", NULL };
 
 static cfg_info_t kReport_Limit = {
     .name = "max-errors",
     .brief = "Limit the number of reports",
-    .description = "Limit the number of reports, set to 0 to disable",
-    .args = kReport_LimitArgs
+    .short_args = kReportLimitArgs,
 };
 
 runtime_t cmd_parse(mediator_t *mediator, lifetime_t *lifetime, int argc, const char **argv)

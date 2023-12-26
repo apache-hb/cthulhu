@@ -21,11 +21,6 @@ namespace ed
 
     struct ReportConfig : public ConfigGroup
     {
-        static inline const cfg_info_t kInfo = {
-            .name = "Report",
-            .description = "Report settings"
-        };
-
         ReportConfig(config_t *parent);
 
         ConfigField<int> warning_level;

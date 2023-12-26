@@ -49,12 +49,6 @@ void draw_info_preamble(const cfg_info_t *info)
 {
     const char *brief = info->brief != nullptr ? info->brief : "no brief";
     ImGui::Text("brief: %s", brief);
-
-    if (info->description != nullptr)
-    {
-        ImGui::Separator();
-        ImGui::Text("description: %s", info->description);
-    }
 }
 
 void draw_field_info(const cfg_field_t *field)
@@ -67,12 +61,26 @@ void draw_field_info(const cfg_field_t *field)
         draw_info_preamble(info);
 
         ImGui::Separator();
-        ImGui::Text("Args");
-        for (size_t i = 0; info->args[i]; i++)
+
+        if (info->short_args)
         {
-            ImGui::Text("%s", info->args[i]);
+            ImGui::Text("Short Args");
+            for (size_t i = 0; info->short_args[i]; i++)
+            {
+                ImGui::Text("%s", info->short_args[i]);
+            }
         }
 
+        if (info->long_args)
+        {
+            if (info->short_args) ImGui::Separator();
+
+            ImGui::Text("Long Args");
+            for (size_t i = 0; info->long_args[i]; i++)
+            {
+                ImGui::Text("%s", info->long_args[i]);
+            }
+        }
 
         ImGui::PopTextWrapPos();
         ImGui::EndTooltip();
@@ -397,7 +405,7 @@ ConfigGroup::ConfigGroup(config_t *parent, const cfg_info_t *info)
 
 static const cfg_info_t kReportInfo = {
     .name = "Report",
-    .description = "Report settings"
+    .brief = "Report settings"
 };
 
 ReportConfig::ReportConfig(config_t *parent)

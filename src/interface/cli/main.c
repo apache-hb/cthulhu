@@ -24,7 +24,7 @@
 #include "core/macros.h"
 #include <stdio.h>
 
-static const version_info_t kVersionInfo = {
+static const version_info_t kToolVersion = {
     .license = "GPLv3",
     .desc = "Cthulhu Compiler Collection CLI",
     .author = "Elliot Haisley",
@@ -96,7 +96,7 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
 int main(int argc, const char **argv)
 {
     arena_t *arena = ctu_default_alloc();
-    mediator_t *mediator = mediator_new("cli", kVersionInfo, arena);
+    mediator_t *mediator = mediator_new("cli", kToolVersion, arena);
     lifetime_t *lifetime = lifetime_new(mediator, arena);
     logger_t *reports = lifetime_get_logger(lifetime);
 

@@ -4,6 +4,7 @@
 #include "memory/arena.h"
 
 #include "std/map.h"
+#include "std/str.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
 
@@ -41,13 +42,7 @@ static void add_arg_callback(ap_t *self, const cfg_field_t *param, ap_callback_t
 
 static void add_arg(ap_t *ap, const char *arg, cfg_field_t *field)
 {
-    cfg_field_t *old = map_get(ap->name_lookup, arg);
-    if (old != NULL)
-    {
-        const cfg_info_t *info = cfg_get_info(old);
-        NEVER("arg `%s` was already registered by `%s`", arg, info->name);
-    }
-
+    // lets trust that the config doesnt have any duplicate fields
     map_set(ap->name_lookup, arg, field);
 }
 
@@ -58,9 +53,23 @@ static void add_single_field(ap_t *ap, cfg_field_t *field)
 
     const cfg_info_t *info = cfg_get_info(field);
 
-    for (size_t i = 0; info->args[i]; i++)
+    // TODO: take the union of all the args when adding them
+    if (info->short_args)
     {
-        add_arg(ap, info->args[i], field);
+        for (size_t i = 0; info->short_args[i]; i++)
+        {
+            add_arg(ap, format("-%s", info->short_args[i]), field);
+            add_arg(ap, format("/%s", info->short_args[i]), field);
+        }
+    }
+
+    if (info->long_args)
+    {
+        for (size_t i = 0; info->long_args[i]; i++)
+        {
+            add_arg(ap, format("--%s", info->long_args[i]), field);
+            add_arg(ap, format("/%s", info->long_args[i]), field);
+        }
     }
 }
 

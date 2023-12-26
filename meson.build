@@ -51,6 +51,7 @@ trace_memory = get_option('trace_memory').disable_auto_if(is_release or meson.is
 # these are tools for internal use, so disable them in release mode
 tool_stacktrace = get_option('tool_stacktrace').disable_auto_if(is_release or meson.is_subproject())
 tool_notify = get_option('tool_notify').disable_auto_if(is_release or meson.is_subproject())
+tool_display = get_option('tool_display').disable_auto_if(is_release or meson.is_subproject())
 
 # tools like this are user facing, so dont disable them in release mode
 tool_diagnostic = get_option('tool_diagnostic').disable_auto_if(meson.is_subproject())
@@ -246,6 +247,10 @@ if tool_diagnostic.allowed()
     subdir('tools/diagnostic')
 endif
 
+if tool_display.allowed()
+    subdir('tools/display')
+endif
+
 doxygen = find_program('doxygen', required : get_option('doxygen'))
 
 if doxygen.found()
@@ -305,7 +310,8 @@ summary = {
     'Tools': {
         'Stacktrace': tool_stacktrace.allowed(),
         'Notify': tool_notify.allowed(),
-        'Diagnostics': tool_diagnostic.allowed()
+        'Diagnostics': tool_diagnostic.allowed(),
+        'Display': tool_display.allowed()
     },
     'Documentation': {
         'Doxygen': doxygen
