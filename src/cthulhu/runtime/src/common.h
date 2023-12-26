@@ -4,6 +4,7 @@
 
 #include "cthulhu/tree/tree.h"
 
+#include "memory/arena.h"
 #include "std/map.h"
 
 /// global level

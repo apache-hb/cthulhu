@@ -9,7 +9,7 @@ foreach id, lang : langs
 
     mod = lang['mod']
     externs += 'extern const language_t ' + mod + ';'
-    mods += mod
+    mods += '&' + mod
 endforeach
 
 impl = configure_file(

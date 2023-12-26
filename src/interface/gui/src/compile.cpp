@@ -55,7 +55,7 @@ void CompileInfo::init_lifetime()
     langs_t langs = get_langs();
     for (size_t i = 0; i < langs.size; i++)
     {
-        lifetime_add_language(lifetime, langs.langs + i);
+        lifetime_add_language(lifetime, langs.langs[i]);
     }
 }
 

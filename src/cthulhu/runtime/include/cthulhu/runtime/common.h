@@ -41,7 +41,7 @@ typedef void (*driver_postpass_t)(driver_t *, scan_t *, void *);
 typedef enum compile_stage_t
 {
 #define STAGE(ID, STR) ID,
-#include "cthulhu/runtime/mediator.inc"
+#include "mediator.inc"
 
     eStageTotal
 } compile_stage_t;

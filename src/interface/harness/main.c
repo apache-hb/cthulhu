@@ -180,7 +180,7 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
 
 int run_test_harness(int argc, const char **argv, arena_t *arena)
 {
-    mediator_t *mediator = mediator_new("example", kVersion, ctu_default_alloc());
+    mediator_t *mediator = mediator_new("example", kVersion, arena);
     lifetime_t *lifetime = lifetime_new(mediator, arena);
 
     langs_t langs = get_langs();
@@ -188,7 +188,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     logger_t *reports = lifetime_get_logger(lifetime);
     for (size_t i = 0; i < langs.size; i++)
     {
-        const language_t *lang = langs.langs + i;
+        const language_t *lang = langs.langs[i];
         lifetime_add_language(lifetime, lang);
     }
 

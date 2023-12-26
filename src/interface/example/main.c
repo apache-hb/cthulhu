@@ -85,7 +85,7 @@ int main(int argc, const char **argv)
     langs_t langs = get_langs();
     for (size_t i = 0; i < langs.size; i++)
     {
-        lifetime_add_language(lifetime, langs.langs + i);
+        lifetime_add_language(lifetime, langs.langs[i]);
     }
 
     io_t *msg_buffer = io_blob("buffer", 0x1000, eAccessWrite | eAccessText, arena);

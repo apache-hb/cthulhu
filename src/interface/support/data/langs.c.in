@@ -4,14 +4,13 @@
 
 @EXTERNS@
 
+static const language_t *const kLangArray[] = { @MODS@ };
+
 langs_t get_langs(void)
 {
-    const language_t kLangArray[] = { @MODS@ };
-    size_t len = sizeof(kLangArray) / sizeof(language_t);
-
     langs_t ret = {
-        .langs = ctu_memdup(kLangArray, sizeof(kLangArray)),
-        .size = len
+        .langs = kLangArray,
+        .size = (sizeof(kLangArray) / sizeof(language_t*))
     };
     return ret;
 }

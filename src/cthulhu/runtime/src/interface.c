@@ -1,3 +1,4 @@
+#include "base/log.h"
 #include "common.h"
 
 #include "cthulhu/events/events.h"
@@ -134,7 +135,9 @@ void lifetime_add_language(lifetime_t *lifetime, const language_t *lang)
 
     CTASSERTF(lang->fn_create != NULL, "language `%s` has no create function", lang->id);
 
-    for (size_t i = 0; lang->exts[i] != NULL; i++)
+    CTASSERT(lang->exts != NULL);
+
+    for (size_t i = 0; lang->exts[i]; i++)
     {
         const language_t *old = add_language_extension(lifetime, lang->exts[i], lang);
         if (old == NULL)

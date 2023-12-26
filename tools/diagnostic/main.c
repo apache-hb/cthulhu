@@ -86,7 +86,7 @@ static tool_t make_config(arena_t *arena, langs_t langs)
 
     for (size_t i = 0; i < langs.size; i++)
     {
-        const language_t *lang = langs.langs + i;
+        const language_t *lang = langs.langs[i];
         cfg_choice_t choice = {
             .text = lang->id,
             .value = i + 1
@@ -157,7 +157,7 @@ static size_t count_diagnostics(const langs_t *langs)
 
     for (size_t i = 0; i < langs->size; i++)
     {
-        const language_t *lang = langs->langs + i;
+        const language_t *lang = langs->langs[i];
         count += lang->diagnostics.count;
     }
 
@@ -190,7 +190,7 @@ static void print_all_langs(io_t *io, langs_t langs)
     io_printf(io, "%zu available languages:\n", langs.size);
     for (size_t i = 0; i < langs.size; i++)
     {
-        const language_t *lang = langs.langs + i;
+        const language_t *lang = langs.langs[i];
         print_lang_info(io, lang);
     }
 }
@@ -269,7 +269,7 @@ int main(int argc, const char **argv)
     size_t lang_index = cfg_enum_value(tool.print_one_lang);
     if (lang_index != 0)
     {
-        const language_t *lang = langs.langs + lang_index - 1;
+        const language_t *lang = langs.langs[lang_index - 1];
         print_lang_info(io, lang);
         return EXIT_OK;
     }
@@ -291,7 +291,7 @@ int main(int argc, const char **argv)
 
     for (size_t i = 0; i < langs.size; i++)
     {
-        const language_t *lang = langs.langs + i;
+        const language_t *lang = langs.langs[i];
         add_diagnostics(&ctx, lang->diagnostics);
     }
 
@@ -324,7 +324,7 @@ int main(int argc, const char **argv)
     size_t lang_diag_index = cfg_enum_value(tool.print_one_diag);
     if (lang_diag_index != 0)
     {
-        const language_t *lang = langs.langs + lang_diag_index - 1;
+        const language_t *lang = langs.langs[lang_diag_index - 1];
 
         size_t diag_count = lang->diagnostics.count;
         io_printf(io, "%zu diagnostics for %s:\n", diag_count, lang->name);

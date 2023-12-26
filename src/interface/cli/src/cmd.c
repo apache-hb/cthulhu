@@ -122,7 +122,7 @@ runtime_t cmd_parse(mediator_t *mediator, lifetime_t *lifetime, int argc, const 
     langs_t langs = get_langs();
     for (size_t i = 0; i < langs.size; i++)
     {
-        lifetime_add_language(lifetime, langs.langs + i);
+        lifetime_add_language(lifetime, langs.langs[i]);
     }
 
     config_t *config = config_new(arena, &kConfigInfo);
