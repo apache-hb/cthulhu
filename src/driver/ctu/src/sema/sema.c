@@ -5,7 +5,7 @@
 #include "cthulhu/tree/query.h"
 #include "cthulhu/tree/sema.h"
 
-#include "cthulhu/mediator/driver.h"
+#include "cthulhu/runtime/driver.h"
 
 #include "cthulhu/util/util.h"
 

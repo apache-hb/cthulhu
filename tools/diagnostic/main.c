@@ -1,7 +1,7 @@
 #include "base/panic.h"
 #include "config/config.h"
 #include "core/macros.h"
-#include "cthulhu/mediator/interface.h"
+#include "cthulhu/runtime/interface.h"
 #include "cthulhu/events/events.h"
 #include "defaults/defaults.h"
 #include "io/console.h"

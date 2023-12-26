@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cthulhu/mediator/common.h"
+#include "cthulhu/runtime/common.h"
 
 #include "cthulhu/tree/tree.h"
 

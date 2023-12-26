@@ -7,7 +7,7 @@
 #include "core/macros.h"
 #include "core/version_def.h"
 
-#include "cthulhu/mediator/interface.h"
+#include "cthulhu/runtime/interface.h"
 
 #include "editor/panic.hpp"
 #include "memory/memory.h"

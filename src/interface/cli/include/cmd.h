@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "cthulhu/mediator/interface.h"
+#include "cthulhu/runtime/interface.h"
 
 typedef struct logger_t logger_t;
 typedef struct map_t map_t;

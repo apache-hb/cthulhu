@@ -2,7 +2,7 @@
 
 #include <stddef.h>
 
-#include "cthulhu/mediator/common.h"
+#include "cthulhu/runtime/common.h"
 
 BEGIN_API
 

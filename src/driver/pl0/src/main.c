@@ -3,7 +3,7 @@
 #include "pl0/sema.h"
 #include "pl0/ast.h"
 
-#include "cthulhu/mediator/driver.h"
+#include "cthulhu/runtime/driver.h"
 
 #include "interop/compile.h"
 

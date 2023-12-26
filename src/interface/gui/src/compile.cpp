@@ -1,6 +1,6 @@
 #include "editor/compile.hpp"
 
-#include "cthulhu/mediator/interface.h"
+#include "cthulhu/runtime/interface.h"
 
 #include "notify/notify.h"
 

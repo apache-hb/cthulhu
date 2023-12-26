@@ -3,5 +3,9 @@ src = [
 ]
 
 executable('tool_diagnostic', src,
-    dependencies : [ support, mediator, memory, events, io, config, defaults, argparse ]
+    dependencies : [
+        support, memory,
+        events, io, config, defaults,
+        argparse, runtime
+    ]
 )

@@ -4,7 +4,7 @@
 
 #include "cthulhu/util/util.h"
 
-#include "cthulhu/mediator/driver.h"
+#include "cthulhu/runtime/driver.h"
 
 #include "base/panic.h"
 

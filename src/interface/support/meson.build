@@ -23,7 +23,7 @@ impl = configure_file(
 
 libsupport = library('support', impl,
     include_directories : 'include',
-    dependencies : deps + [ mediator, memory ]
+    dependencies : deps + [ runtime, memory ]
 )
 
 support = declare_dependency(

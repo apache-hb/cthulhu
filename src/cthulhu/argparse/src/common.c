@@ -6,7 +6,6 @@
 
 #include "memory/memory.h"
 
-#include "notify/notify.h"
 #include "scan/node.h"
 
 #include "std/map.h"

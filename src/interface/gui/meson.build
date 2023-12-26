@@ -50,5 +50,9 @@ src = [
 executable('gui', src,
     cpp_args : gui_args,
     include_directories : 'include',
-    dependencies : [ imgui, core, os, scan, memory, notify, config, io, mediator, support ]
+    dependencies : [
+        imgui, core, os, scan,
+        memory, notify, config,
+        io, runtime, support
+    ]
 )

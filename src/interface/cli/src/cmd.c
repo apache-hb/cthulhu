@@ -6,7 +6,7 @@
 #include "io/io.h"
 #include "support/langs.h"
 
-#include "cthulhu/mediator/interface.h"
+#include "cthulhu/runtime/interface.h"
 
 #include "std/vector.h"
 #include "std/str.h"

@@ -4,9 +4,9 @@ cli = executable('cli', src,
     include_directories : [ 'include' ],
     link_args : setargv,
     dependencies : [
-        memory, mediator, argparse, support,
+        memory, runtime, argparse, support,
         tree, ssa, emit, io, fs,
-        scan, notify, config
+        scan, notify, config, events
     ],
     export_dynamic : true
 )

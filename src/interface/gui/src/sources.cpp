@@ -1,6 +1,6 @@
 #include "editor/sources.hpp"
 
-#include "cthulhu/mediator/interface.h"
+#include "cthulhu/runtime/interface.h"
 #include "imgui/imgui.h"
 
 #include "io/io.h"

@@ -1,7 +1,7 @@
 #include "oberon/sema/sema.h"
 
 #include "cthulhu/events/events.h"
-#include "cthulhu/mediator/driver.h"
+#include "cthulhu/runtime/driver.h"
 
 #include "cthulhu/util/util.h"
 

@@ -27,7 +27,7 @@ BEGIN_API
 
 /// @defgroup ArgParse Command line argument parsing
 /// @brief Command line argument parsing
-/// @ingroup Common
+/// @ingroup Runtime
 /// @{
 
 typedef struct node_t node_t;

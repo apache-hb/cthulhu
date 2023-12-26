@@ -1,7 +1,7 @@
 #include "core/macros.h"
 #include "ctu/driver.h"
 
-#include "cthulhu/mediator/driver.h"
+#include "cthulhu/runtime/driver.h"
 
 #include "interop/compile.h"
 

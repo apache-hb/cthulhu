@@ -1,4 +1,4 @@
-#include "cthulhu/mediator/driver.h"
+#include "cthulhu/runtime/driver.h"
 #include "interop/compile.h"
 
 #include "cc/driver.h"

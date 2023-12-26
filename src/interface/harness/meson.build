@@ -1,6 +1,10 @@
 src = [ 'main.c' ]
 
 harness = executable('harness', src,
-    dependencies : [ mediator, argparse, support, ssa, emit, check, io, fs, scan, notify, memory ],
+    dependencies : [
+        runtime, argparse, support,
+        ssa, emit, check, io, fs,
+        scan, notify, memory, events
+    ],
     export_dynamic : true
 )

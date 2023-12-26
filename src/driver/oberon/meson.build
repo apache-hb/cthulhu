@@ -15,7 +15,7 @@ src = [
 ]
 
 obr = library('obr', src,
-    dependencies : [ base, mediator, interop, scan, tree, util, notify ],
+    dependencies : [ base, runtime, interop, scan, tree, util, notify, events ],
     c_args : generated_args,
     include_directories : [ 'src', 'include' ]
 )

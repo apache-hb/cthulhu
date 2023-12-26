@@ -1,8 +1,7 @@
 #include "base/colour.h"
 #include "base/log.h"
 #include "cthulhu/events/events.h"
-#include "cthulhu/mediator/check.h"
-#include "cthulhu/mediator/interface.h"
+#include "cthulhu/runtime/interface.h"
 
 #include "io/console.h"
 #include "memory/memory.h"
