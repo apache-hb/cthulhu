@@ -66,6 +66,7 @@
 /// Used in tests and the cli.
 /// @{
 
+#define EXIT_SHOULD_EXIT 2 ///< the user has requested to exit the program
 #define EXIT_OK 0        ///< no user errors or internal errors
 #define EXIT_ERROR 1     ///< the user has made an error
 #define EXIT_INTERNAL 99 ///< internal compiler errors have occurred

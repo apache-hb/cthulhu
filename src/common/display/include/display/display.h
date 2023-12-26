@@ -7,7 +7,13 @@
 
 BEGIN_API
 
-/// @defgroup Display Text formatting for displaying to the user
+#if OS_WINDOWS
+#   define DISPLAY_WIN_STYLE true
+#else
+#   define DISPLAY_WIN_STYLE false
+#endif
+
+/// @defgroup Display Pretty message printing
 /// @ingroup Common
 /// @brief Text formatting for displaying types to the user
 /// @{

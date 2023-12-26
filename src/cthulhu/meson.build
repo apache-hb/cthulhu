@@ -125,3 +125,5 @@ check = declare_dependency(
     include_directories : 'include',
     dependencies : [ base ]
 )
+
+subdir('defaults')

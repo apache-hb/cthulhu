@@ -1,7 +1,5 @@
 #include "display/display.h"
 
-#include "common.h"
-
 #include "base/panic.h"
 #include "core/macros.h"
 #include "io/io.h"
@@ -60,6 +58,26 @@ typedef struct alignment_info_t
     size_t brief_alignment;
 } alignment_info_t;
 
+// get the longest single line in a string
+static size_t longest_line(const char *str)
+{
+    size_t longest = 0;
+    size_t current = 0;
+
+    for (size_t i = 0; str[i]; i++)
+    {
+        current += 1;
+
+        if (str[i] == '\n')
+        {
+            longest = MAX(longest, current);
+            current = 0;
+        }
+    }
+
+    return MAX(longest, current);
+}
+
 static alignment_info_t get_group_alignment(const config_t *config, bool win_style)
 {
     // +1 for a forward slash, otherwise +2 for 2 dashes
@@ -76,7 +94,8 @@ static alignment_info_t get_group_alignment(const config_t *config, bool win_sty
         size_t len = get_arg_length(info, long_arg_stride);
         largest = MAX(largest, len);
 
-        size_t brief_len = strlen(info->brief);
+        size_t brief_len = longest_line(info->brief);
+
         longest_brief = MAX(longest_brief, brief_len);
     }
 
@@ -152,10 +171,15 @@ static const char *get_enum_option(const cfg_choice_t *choices, size_t len, size
     return "<unknown>";
 }
 
-static void print_enum(display_options_t options, alignment_info_t alignment, const cfg_field_t *field)
+static void print_enum_default(display_options_t options, const cfg_field_t *field)
 {
     const cfg_enum_t *info = cfg_enum_info(field);
     io_printf(options.io, "enum (default: %s)\n", get_enum_option(info->options, info->count, info->initial));
+}
+
+static void print_enum(display_options_t options, alignment_info_t alignment, const cfg_field_t *field)
+{
+    const cfg_enum_t *info = cfg_enum_info(field);
 
     char *padding = str_repeat(" ", alignment.arg_alignment);
     io_printf(options.io, "%soptions: ", padding);
@@ -174,7 +198,7 @@ static void print_enum(display_options_t options, alignment_info_t alignment, co
     io_printf(options.io, "\n");
 }
 
-static void print_flags(display_options_t options, alignment_info_t alignment, const cfg_field_t *field)
+static void print_flags_default(display_options_t options, const cfg_field_t *field)
 {
     const cfg_flags_t *info = cfg_flags_info(field);
     io_printf(options.io, "flags (default: ");
@@ -187,7 +211,7 @@ static void print_flags(display_options_t options, alignment_info_t alignment, c
         {
             if (!first)
             {
-                io_printf(options.io, " | ");
+                io_printf(options.io, "|");
             }
 
             io_printf(options.io, "%s", choice.text);
@@ -196,6 +220,11 @@ static void print_flags(display_options_t options, alignment_info_t alignment, c
     }
 
     io_printf(options.io, ")\n");
+}
+
+static void print_flags(display_options_t options, alignment_info_t alignment, const cfg_field_t *field)
+{
+    const cfg_flags_t *info = cfg_flags_info(field);
 
     char *padding = str_repeat(" ", alignment.arg_alignment);
     io_printf(options.io, "%soptions: ", padding);
@@ -214,7 +243,7 @@ static void print_flags(display_options_t options, alignment_info_t alignment, c
     io_printf(options.io, "\n");
 }
 
-static void print_field_default(display_options_t options, alignment_info_t alignment, const cfg_field_t *field)
+static void print_field_default(display_options_t options, const cfg_field_t *field)
 {
     switch (cfg_get_type(field))
     {
@@ -239,12 +268,12 @@ static void print_field_default(display_options_t options, alignment_info_t alig
     }
 
     case eConfigEnum: {
-        print_enum(options, alignment, field);
+        print_enum_default(options, field);
         break;
     }
 
     case eConfigFlags: {
-        print_flags(options, alignment, field);
+        print_flags_default(options, field);
         break;
     }
 
@@ -253,7 +282,28 @@ static void print_field_default(display_options_t options, alignment_info_t alig
     }
 }
 
-static void print_field_info(display_options_t options, alignment_info_t alignment, bool win_style, const cfg_field_t *field)
+static bool print_field_details(display_options_t options, alignment_info_t alignment, const cfg_field_t *field)
+{
+    switch (cfg_get_type(field))
+    {
+    case eConfigEnum: {
+        print_enum(options, alignment, field);
+        return true;
+    }
+
+    case eConfigFlags: {
+        print_flags(options, alignment, field);
+        return true;
+    }
+
+    default:
+        break;
+    }
+    return false;
+}
+
+// return true if the field needs a second line
+static bool print_field_info(display_options_t options, alignment_info_t alignment, bool win_style, const cfg_field_t *field)
 {
     const cfg_info_t *info = cfg_get_info(field);
 
@@ -262,14 +312,56 @@ static void print_field_info(display_options_t options, alignment_info_t alignme
 
     char *pad = str_repeat(" ", padding);
 
-    io_printf(options.io, "%s%s", pad, info->brief);
+    bool needs_second_line = false;
 
-    size_t after_brief = alignment.brief_alignment - strlen(info->brief);
-    char *pad2 = str_repeat(" ", after_brief);
+    // print the first line
+    size_t first_newline = str_find(info->brief, "\n");
+    if (first_newline == SIZE_MAX)
+    {
+        io_printf(options.io, "%s%s", pad, info->brief);
+        size_t after_brief = alignment.brief_alignment - strlen(info->brief);
+        char *pad2 = str_repeat(" ", after_brief);
 
-    io_printf(options.io, "%s", pad2);
+        io_printf(options.io, "%s", pad2);
 
-    print_field_default(options, alignment, field);
+        print_field_default(options, field);
+    }
+    else
+    {
+        // print the first line
+        io_printf(options.io, "%s%.*s", pad, (int)first_newline, info->brief);
+
+        size_t after_brief = alignment.brief_alignment - first_newline;
+        char *pad2 = str_repeat(" ", after_brief);
+
+        io_printf(options.io, "%s", pad2);
+
+        print_field_default(options, field);
+
+        // print remaining lines, putting padding in front of each
+        char *pad_remaining = str_repeat(" ", alignment.arg_alignment);
+        size_t start = first_newline + 1;
+        size_t len = 0;
+        for (size_t i = start; info->brief[i]; i++)
+        {
+            len += 1;
+            if (info->brief[i] == '\n')
+            {
+                io_printf(options.io, "%s%.*s\n", pad_remaining, (int)len, info->brief + start);
+                start = i + 1;
+                len = 0;
+            }
+        }
+
+        if (len != 0)
+        {
+            io_printf(options.io, "%s%.*s\n", pad_remaining, (int)len, info->brief + start);
+        }
+
+        needs_second_line = true;
+    }
+
+    return print_field_details(options, alignment, field) || needs_second_line;
 }
 
 static void print_config_group(display_options_t options, bool win_style, const config_t *config)
@@ -287,7 +379,11 @@ static void print_config_group(display_options_t options, bool win_style, const 
     for (size_t i = 0; i < field_count; i++)
     {
         const cfg_field_t *field = vector_get(fields, i);
-        print_field_info(options, alignment, win_style, field);
+        bool needs_second_line = print_field_info(options, alignment, win_style, field);
+        if (needs_second_line && i != field_count - 1)
+        {
+            io_printf(options.io, "\n");
+        }
     }
 
     io_printf(options.io, "\n");

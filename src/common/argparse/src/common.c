@@ -48,6 +48,7 @@ void ap_on_string(scan_t *scan, cfg_field_t *param, const char *value)
         apply_callbacks(scan, param, value, callbacks);
 
     // TODO: handle enum and flags
+    CTASSERTF(cfg_get_type(param) == eConfigString, "expected string param, got %d", cfg_get_type(param));
     cfg_set_string(param, value);
 }
 
@@ -65,10 +66,6 @@ void ap_on_bool(scan_t *scan, cfg_field_t *param, bool value)
 void ap_on_int(scan_t *scan, cfg_field_t *param, mpz_t value)
 {
     ap_t *self = scan_get_context(scan);
-    arena_t *arena = scan_alloc(scan);
-
-    void *it = ARENA_MALLOC(arena, sizeof(mpz_t), "int", self);
-    memcpy(it, value, sizeof(mpz_t));
 
     vector_t *callbacks = map_get_ptr(self->event_lookup, param);
 
@@ -78,7 +75,7 @@ void ap_on_int(scan_t *scan, cfg_field_t *param, mpz_t value)
     int v = mpz_get_si(value);
 
     // TODO: handle errors
-    cfg_set_int(param, v);
+    CTASSERTF(cfg_set_int(param, v), "failed to set int %d", v);
 }
 
 void ap_on_posarg(scan_t *scan, const char *value)

@@ -1,4 +1,9 @@
+#include "argparse/argparse.h"
 #include "base/colour.h"
+#include "config/config.h"
+#include "core/macros.h"
+#include "defaults/defaults.h"
+#include "display/display.h"
 #include "io/console.h"
 #include "io/io.h"
 
@@ -8,8 +13,77 @@
 #include "notify/text.h"
 
 #include "scan/node.h"
-#include "stacktrace/stacktrace.h"
-#include "std/str.h"
+
+typedef struct tool_t
+{
+    config_t *config;
+
+    cfg_field_t *test_backtrace;
+    cfg_field_t *test_simple;
+    cfg_field_t *test_rich;
+
+    default_options_t options;
+} tool_t;
+
+static const version_info_t kToolVersion = {
+    .license = "GPLv3",
+    .desc = "Notification testing tool",
+    .author = "Elliot Haisley",
+    .version = NEW_VERSION(0, 0, 1),
+};
+
+static const cfg_info_t kToolInfo = {
+    .name = "notify",
+    .brief = "Notification testing options",
+};
+
+static const char *const kBacktraceArgsShort[] = { "bt", NULL };
+static const char *const kBacktraceArgsLong[] = { "backtrace", NULL };
+
+static const cfg_info_t kBacktraceInfo = {
+    .name = "backtrace",
+    .brief = "Print a backtrace",
+    .short_args = kBacktraceArgsShort,
+    .long_args = kBacktraceArgsLong,
+};
+
+static const char *const kSimpleArgsShort[] = { "simple", NULL };
+
+static const cfg_info_t kSimpleInfo = {
+    .name = "simple",
+    .brief = "Print a simple report",
+    .short_args = kSimpleArgsShort,
+};
+
+static const char *const kRichArgsShort[] = { "rich", NULL };
+
+static const cfg_info_t kRichInfo = {
+    .name = "rich",
+    .brief = "Print a rich report",
+    .short_args = kRichArgsShort,
+};
+
+static tool_t make_config(arena_t *arena)
+{
+    config_t *config = config_new(arena, &kToolInfo);
+
+    cfg_bool_t initial = { .initial = false };
+    cfg_field_t *test_backtrace = config_bool(config, &kBacktraceInfo, initial);
+    cfg_field_t *test_simple = config_bool(config, &kSimpleInfo, initial);
+    cfg_field_t *test_rich = config_bool(config, &kRichInfo, initial);
+
+    default_options_t defaults = get_default_options(config);
+
+    tool_t tool = {
+        .config = config,
+        .test_backtrace = test_backtrace,
+        .test_simple = test_simple,
+        .test_rich = test_rich,
+        .options = defaults,
+    };
+
+    return tool;
+}
 
 const char *const kSampleSourceLeft =
     "module multi.lhs;\n"   // 1
@@ -322,33 +396,32 @@ static void do_rich(logger_t *logs)
 
 int main(int argc, const char **argv)
 {
-    bool backtraces = false;
-    bool simple = false;
-    bool rich = false;
-    for (int i = 1; i < argc; i++)
+    default_init();
+
+    arena_t *arena = get_global_arena();
+    io_t *io = io_stdout(arena);
+    tool_t tool = make_config(arena);
+
+    tool_config_t config = {
+        .arena = arena,
+        .io = io,
+
+        .group = tool.config,
+        .version = kToolVersion,
+
+        .argc = argc,
+        .argv = argv,
+    };
+
+    int err = parse_commands(tool.options, config);
+    if (err == EXIT_SHOULD_EXIT)
     {
-        if (str_equal(argv[i], "-bt"))
-        {
-            backtraces = true;
-        }
-        else if (str_equal(argv[i], "-simple"))
-        {
-            simple = true;
-        }
-        else if (str_equal(argv[i], "-rich"))
-        {
-            rich = true;
-        }
+        return EXIT_OK;
     }
 
-    bt_init();
-    os_init();
-
-    arena_t *arena = ctu_default_alloc();
-    io_t *io = io_stdout(ctu_default_alloc());
-
-    init_global_arena(arena);
-    init_gmp_arena(arena);
+    bool backtraces = cfg_bool_value(tool.test_backtrace);
+    bool simple = cfg_bool_value(tool.test_simple);
+    bool rich = cfg_bool_value(tool.test_rich);
 
     logger_t *logs = logger_new(arena);
 

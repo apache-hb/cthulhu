@@ -1,0 +1,14 @@
+src = [
+    'src/defaults.c'
+]
+
+libdefaults = library('defaults', src,
+    include_directories : 'include',
+    dependencies : [ config, display, argparse, os, io ]
+)
+
+defaults = declare_dependency(
+    link_with : libdefaults,
+    include_directories : 'include',
+    dependencies : [ config ]
+)

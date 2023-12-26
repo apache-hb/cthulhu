@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include "config/config.h"
+#include "core/macros.h"
 #include "memory/memory.h"
 #include "std/vector.h"
 #include "std/str.h"
@@ -30,13 +31,13 @@ int ap_parse(ap_t *self, int argc, const char **argv)
 {
     char *args = join_args(argc, argv);
     arena_t *arena = get_global_arena();
-    io_t *io = io_string("<command-line>", args, arena);
-    scan_t *scan = scan_io("ap2", io, arena);
+    io_t *io = io_string("<command>", args, arena);
+    scan_t *scan = scan_io("args", io, arena);
 
     scan_set_context(scan, self);
     parse_result_t result = compile_scanner(scan, &kCallbacks);
 
-    return result.result == eParseOk ? 0 : 1;
+    return result.result == eParseOk ? EXIT_OK : EXIT_ERROR;
 }
 
 static int get_option_type(const cfg_field_t *field)
@@ -68,6 +69,7 @@ int ap_get_opt(ap_t *self, const char *name, cfg_field_t **param, char **value)
         return AP_ERROR;
     }
 
+    self->count += 1;
     *param = result;
     return get_option_type(result);
 }

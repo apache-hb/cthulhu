@@ -108,6 +108,8 @@ ap_t *ap_new(config_t *config, arena_t *arena)
     self->posargs = vector_new(16);
     self->unknown = vector_new(16);
 
+    self->count = 0;
+
     ARENA_IDENTIFY(arena, self->name_lookup, "name_lookup", self);
     ARENA_IDENTIFY(arena, self->event_lookup, "event_lookup", self);
     ARENA_IDENTIFY(arena, self->posarg_callbacks, "posarg_callbacks", self);
@@ -151,4 +153,11 @@ vector_t *ap_get_unknown(ap_t *self)
     CTASSERT(self != NULL);
 
     return self->unknown;
+}
+
+size_t ap_count_params(ap_t *self)
+{
+    CTASSERT(self != NULL);
+
+    return self->count;
 }

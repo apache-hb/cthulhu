@@ -354,7 +354,7 @@ bt_report_t bt_report_new(arena_t *arena)
         .last_consecutive_index = 0,
     };
 
-    ARENA_IDENTIFY(arena, &report, "bt_report", NULL);
+    ARENA_RENAME(arena, &report, "bt_report");
     ARENA_IDENTIFY(arena, report.entries, "entries", &report);
 
     return report;

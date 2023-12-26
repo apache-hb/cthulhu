@@ -39,6 +39,10 @@ typedef struct ap_t
     /// arguments that the config did not register at startup
     // vector_t<const char*>
     vector_t *unknown;
+
+    /// @brief tracks the number of encountered arguments
+    /// only counts arguments that are not positional or unknown
+    size_t count;
 } ap_t;
 
 void ap_on_string(scan_t *scan, cfg_field_t *param, const char *value);

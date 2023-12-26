@@ -101,6 +101,13 @@ vector_t *ap_get_posargs(ap_t *self);
 /// @return all unknown arguments
 vector_t *ap_get_unknown(ap_t *self);
 
+/// @brief get the number of processed arguments
+///
+/// @param self the parser instance
+///
+/// @return the number of processed arguments
+size_t ap_count_params(ap_t *self);
+
 /// @} // ArgParse
 
 END_API
