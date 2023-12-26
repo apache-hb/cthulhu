@@ -5,26 +5,41 @@
 
 BEGIN_API
 
+
+/// @defgroup Defaults Default options
+/// @brief Default command line options and behaviour
+/// @ingroup Runtime
+/// @{
+
 typedef struct config_t config_t;
 typedef struct cfg_field_t cfg_field_t;
 typedef struct io_t io_t;
 typedef struct arena_t arena_t;
 typedef struct ap_t ap_t;
-typedef struct logger_t logger_t;
 
+/// @brief tool config
 typedef struct tool_config_t
 {
+    /// @brief the arena to use
     arena_t *arena;
+
+    /// @brief the io buffer to use
     io_t *io;
 
+    /// @brief the root config group
     config_t *group;
 
+    /// @brief this tools version
     version_info_t version;
 
+    /// @brief the number of arguments
     int argc;
+
+    /// @brief the arguments
     const char **argv;
 } tool_config_t;
 
+/// @brief default options
 typedef struct default_options_t
 {
     // default config group
@@ -82,9 +97,20 @@ int process_default_options(default_options_t options, tool_config_t config);
 /// @return @a EXIT_OK on success or an error code
 int parse_commands(default_options_t options, tool_config_t config);
 
+/// @brief parse the default arguments
+/// @note this function is the same as @see parse_commands but allows
+///       the user to use their own @see ap_t instance
+///
+/// @param ap the parser instance
+/// @param options the default options
+/// @param config the tool config
+///
+/// @return @a EXIT_OK on success or an error code
 int parse_argparse(ap_t *ap, default_options_t options, tool_config_t config);
 
 /// @brief initialise the runtime with default options
 void default_init(void);
+
+/// @}
 
 END_API

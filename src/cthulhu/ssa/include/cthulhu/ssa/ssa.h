@@ -34,21 +34,21 @@ typedef struct ssa_value_t ssa_value_t;
 
 typedef enum ssa_kind_t {
 #define SSA_KIND(ID, NAME) ID,
-#include "cthulhu/ssa/ssa.inc"
+#include "ssa.inc"
 
     eTypeTotal
 } ssa_kind_t;
 
 typedef enum ssa_opkind_t {
 #define SSA_OPKIND(ID, NAME) ID,
-#include "cthulhu/ssa/ssa.inc"
+#include "ssa.inc"
 
     eOperandTotal
 } ssa_opkind_t;
 
 typedef enum ssa_opcode_t {
 #define SSA_OPCODE(ID, NAME) ID,
-#include "cthulhu/ssa/ssa.inc"
+#include "ssa.inc"
 
     eOpTotal
 } ssa_opcode_t;
