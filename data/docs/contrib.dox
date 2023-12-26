@@ -18,7 +18,7 @@
     - `example` - example frontend
 
   - `interface` - user facing components used to interact with drivers and the collection
-    - `cli` - command line user interface
+    - `cli` - command line user interface (TODO)
     - `gui` - graphical user interface (TODO)
     - `harness` - end to end test harness
     - `support` - common interface support library
@@ -26,24 +26,25 @@
   - `common` - common code
     - `core` - header only compiler specific
     - `stacktrace` - backtrace retrieval
-    - `argparse` - command line parsing
     - `base` - base utils
     - `memory` - memory allocation and arenas
     - `interop` - flex & bison helper functions
     - `platform` - platform detail wrappers
     - `io` - file io abstraction
-    - `report` - error reporting tools
+    - `notify` - error reporting tools
     - `scan` - flex & bison scanning tools
     - `std` - collections and data structures
+    - `config` - configuration schema tools
+    - `display` - text formatting for displaying to a user
 
   - `cthulhu` - compiler framework library
-    - `include/cthulhu` - public interface
-      - `emit` - ssa emitter
-      - `tree` - common typed ast
-      - `util` - common utilities
-      - `mediator` - code required to orchestrate communication between languages, the framework, and frontends
-      - `check` - validates state for various structures
-      - `ssa` - tree to ssa transforms, as well as optimizations
+    - `argparse` - command line parsing
+    - `emit` - ssa emitter
+    - `tree` - common typed ast
+    - `util` - common utilities
+    - `mediator` - code required to orchestrate communication between languages, the framework, and frontends
+    - `check` - validates state for various structures
+    - `ssa` - tree to ssa transforms, as well as optimizations
 
   - `subprojects` - dependencies
     - `mini-gmp` - fallback gmp library if system gmp isnt installed
