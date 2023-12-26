@@ -6,6 +6,7 @@
 
 #include "memory/memory.h"
 
+#include "notify/notify.h"
 #include "scan/node.h"
 
 #include "std/map.h"
@@ -47,9 +48,26 @@ void ap_on_string(scan_t *scan, cfg_field_t *param, const char *value)
     if (callbacks)
         apply_callbacks(scan, param, value, callbacks);
 
-    // TODO: handle enum and flags
-    CTASSERTF(cfg_get_type(param) == eConfigString, "expected string param, got %d", cfg_get_type(param));
-    cfg_set_string(param, value);
+    // TODO: handle these failing
+    // how do we get error messages out of here nicely?
+
+    cfg_type_t type = cfg_get_type(param);
+    switch (type) {
+    case eConfigString:
+        cfg_set_string(param, value);
+        break;
+
+    case eConfigEnum:
+        cfg_set_enum(param, value);
+        break;
+
+    case eConfigFlags:
+        cfg_set_flag(param, value, true);
+        break;
+
+    default:
+        NEVER("unknown config type %d", type);
+    }
 }
 
 void ap_on_bool(scan_t *scan, cfg_field_t *param, bool value)
@@ -74,8 +92,9 @@ void ap_on_int(scan_t *scan, cfg_field_t *param, mpz_t value)
 
     int v = mpz_get_si(value);
 
-    // TODO: handle errors
-    CTASSERTF(cfg_set_int(param, v), "failed to set int %d", v);
+    // TODO: handle the int being out of range
+    //       how do we get error messages out of here nicely?
+    cfg_set_int(param, v);
 }
 
 void ap_on_posarg(scan_t *scan, const char *value)

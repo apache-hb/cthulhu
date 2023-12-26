@@ -1,14 +1,17 @@
-#include "argparse/argparse.h"
 #include "base/panic.h"
 #include "config/config.h"
+#include "core/macros.h"
 #include "cthulhu/mediator/interface.h"
 #include "cthulhu/events/events.h"
+#include "defaults/defaults.h"
 #include "io/console.h"
 #include "io/io.h"
 #include "std/map.h"
+#include "std/str.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
 #include "support/langs.h"
+#include "argparse/argparse.h"
 
 #include "memory/memory.h"
 
@@ -24,75 +27,101 @@ static const cfg_info_t kGroupInfo = {
     .brief = "Diagnostic query options"
 };
 
-static const char *const kPrintHelpShortArgs[] = { "h", "?", NULL };
-static const char *const kPrintHelpLongArgs[] = { "help", NULL };
-
-static const cfg_info_t kPrintHelpInfo = {
-    .name = "help",
-    .brief = "Print help information",
-    .short_args = kPrintHelpShortArgs,
-    .long_args = kPrintHelpLongArgs
-};
-
-static const char *const kPrintVersionShortArgs[] = { "V", NULL };
-static const char *const kPrintVersionLongArgs[] = { "version", NULL };
-
-static const cfg_info_t kPrintVersionInfo = {
-    .name = "version",
-    .brief = "Print version information",
-    .short_args = kPrintVersionShortArgs,
-    .long_args = kPrintVersionLongArgs
-};
-
 static const char *const kPrintLangsArgs[] = { "langs", NULL };
 
 static const cfg_info_t kPrintLangsInfo = {
     .name = "langs",
-    .brief = "Print available languages",
-    .short_args = kPrintLangsArgs,
-    .long_args = kPrintLangsArgs,
+    .brief = "Print info about all available languages",
+    .short_args = kPrintLangsArgs
 };
 
-static const char *const kPrintDiagInfoArgs[] = { "all", NULL };
+static const char *const kPrintSingleLangArgs[] = { "lang", NULL };
+
+static const cfg_info_t kPrintSingleLangInfo = {
+    .name = "lang",
+    .brief = "Print information about a specific language",
+    .short_args = kPrintSingleLangArgs
+};
+
+static const char *const kPrintDiagInfoArgs[] = { "all-diags", NULL };
 
 static const cfg_info_t kPrintDiagsInfo = {
     .name = "diags",
     .brief = "Print all available diagnostics for all languages",
-    .short_args = kPrintDiagInfoArgs,
-    .long_args = kPrintDiagInfoArgs,
+    .short_args = kPrintDiagInfoArgs
 };
 
-typedef struct diag_config_t
+static const char *const kPrintSingleDiagInfoArgs[] = { "lang-diag", NULL };
+
+static const cfg_info_t kPrintSingleDiagInfo = {
+    .name = "lang-diag",
+    .brief = "Print all available diagnostics for a specific language",
+    .short_args = kPrintSingleDiagInfoArgs
+};
+
+typedef struct tool_t
 {
     config_t *root;
 
-    cfg_field_t *help;
-    cfg_field_t *version;
-    cfg_field_t *langs;
-    cfg_field_t *diags;
-} diag_config_t;
+    cfg_field_t *print_all_langs;
+    cfg_field_t *print_one_lang;
 
-static diag_config_t make_config(arena_t *arena)
+    cfg_field_t *print_all_diags;
+    cfg_field_t *print_one_diag;
+
+    default_options_t options;
+} tool_t;
+
+static tool_t make_config(arena_t *arena, langs_t langs)
 {
     config_t *root = config_new(arena, &kGroupInfo);
-    cfg_bool_t help_options = { .initial = false };
-    cfg_field_t *help = config_bool(root, &kPrintHelpInfo, help_options);
 
-    cfg_bool_t version_options = { .initial = false };
-    cfg_field_t *version = config_bool(root, &kPrintVersionInfo, version_options);
+    cfg_choice_t *lang_choices = ARENA_MALLOC(arena, sizeof(cfg_choice_t) * (langs.size + 1), "lang_choices", root);
+    cfg_choice_t none_choice = {
+        .text = "none",
+        .value = 0
+    };
+
+    lang_choices[0] = none_choice;
+
+    for (size_t i = 0; i < langs.size; i++)
+    {
+        const language_t *lang = langs.langs + i;
+        cfg_choice_t choice = {
+            .text = lang->id,
+            .value = i + 1
+        };
+
+        lang_choices[i + 1] = choice;
+    }
+
+    cfg_enum_t lang_options = {
+        .options = lang_choices,
+        .count = langs.size + 1,
+        .initial = 0
+    };
+
+    default_options_t options = get_default_options(root);
 
     cfg_bool_t langs_options = { .initial = false };
-    cfg_field_t *langs = config_bool(root, &kPrintLangsInfo, langs_options);
+    cfg_field_t *print_all_langs = config_bool(root, &kPrintLangsInfo, langs_options);
+
+    cfg_field_t *print_one_lang = config_enum(root, &kPrintSingleLangInfo, lang_options);
 
     cfg_bool_t diags_options = { .initial = false };
-    cfg_field_t *diags = config_bool(root, &kPrintDiagsInfo, diags_options);
+    cfg_field_t *print_all_diags = config_bool(root, &kPrintDiagsInfo, diags_options);
 
-    diag_config_t config = {
+    cfg_field_t *print_one_diag = config_enum(root, &kPrintSingleDiagInfo, lang_options);
+
+    tool_t config = {
         .root = root,
-        .help = help,
-        .version = version,
-        .langs = langs,
-        .diags = diags
+        .print_all_langs = print_all_langs,
+        .print_one_lang = print_one_lang,
+
+        .print_all_diags = print_all_diags,
+        .print_one_diag = print_one_diag,
+
+        .options = options,
     };
 
     return config;
@@ -166,111 +195,6 @@ static void print_all_langs(io_t *io, langs_t langs)
     }
 }
 
-static void print_config_field(io_t *io, const cfg_field_t *field)
-{
-    const cfg_info_t *info = cfg_get_info(field);
-    const char *name = info->name;
-    const char *brief = info->brief;
-
-    io_printf(io, "  ");
-
-    if (info->short_args)
-    {
-        for (size_t i = 0; info->short_args[i]; i++)
-        {
-            io_printf(io, "-%s", info->short_args[i]);
-            if (info->short_args[i + 1])
-            {
-                io_printf(io, ", ");
-            }
-        }
-    }
-
-    if (info->long_args)
-    {
-        if (info->short_args)
-        {
-            io_printf(io, ", ");
-        }
-
-        for (size_t i = 0; info->long_args[i]; i++)
-        {
-            io_printf(io, "--%s", info->long_args[i]);
-            if (info->long_args[i + 1])
-            {
-                io_printf(io, ", ");
-            }
-        }
-    }
-
-    io_printf(io, " ");
-
-    switch (cfg_get_type(field))
-    {
-    case eConfigBool:
-        break;
-    case eConfigInt:
-        io_printf(io, "=[int]");
-        break;
-    case eConfigString:
-        io_printf(io, "=[string]");
-        break;
-    case eConfigEnum:
-        io_printf(io, "=[enum]");
-        break;
-    case eConfigFlags:
-        io_printf(io, "=[flags]");
-        break;
-    default:
-        NEVER("unknown config type %d", cfg_get_type(field));
-    }
-
-    io_printf(io, "  %s: %s\n", name, brief);
-}
-
-static void print_config_group(io_t *io, const config_t *group)
-{
-    const cfg_info_t *info = cfg_group_info(group);
-    io_printf(io, "%s:\n", info->name);
-
-    vector_t *fields = cfg_get_fields(group);
-    size_t field_count = vector_len(fields);
-
-    for (size_t i = 0; i < field_count; i++)
-    {
-        const cfg_field_t *field = vector_get(fields, i);
-        print_config_field(io, field);
-    }
-
-    typevec_t *groups = cfg_get_groups(group);
-    size_t group_count = typevec_len(groups);
-
-    for (size_t i = 0; i < group_count; i++)
-    {
-        const config_t *child = typevec_offset(groups, i);
-        print_config_group(io, child);
-    }
-}
-
-static void print_help(io_t *io, const char *name, diag_config_t config)
-{
-    io_printf(io, "usage: %s [options] [diagnostics...]\n", name);
-    io_printf(io, "\n");
-    print_config_group(io, config.root);
-}
-
-static void print_version(io_t *io)
-{
-    int major = VERSION_MAJOR(kToolVersion.version);
-    int minor = VERSION_MINOR(kToolVersion.version);
-    int patch = VERSION_PATCH(kToolVersion.version);
-
-    io_printf(io, "%s\n", kToolVersion.desc);
-    io_printf(io, "version: %d.%d.%d\n", major, minor, patch);
-    io_printf(io, "author: %s\n", kToolVersion.author);
-    io_printf(io, "license: %s\n", kToolVersion.license);
-}
-
 static const char *severity_to_string(severity_t severity)
 {
     // TODO: this should be part of notify
@@ -302,41 +226,57 @@ static void print_diagnostic(io_t *io, const diagnostic_t *diag)
 
 int main(int argc, const char **argv)
 {
-    arena_t *arena = ctu_default_alloc();
-    runtime_init(arena);
-
-    diag_config_t root = make_config(arena);
-
+    default_init();
+    arena_t *arena = get_global_arena();
     io_t *io = io_stdout(arena);
-    ap_t *ap = ap_new(root.root, arena);
-    ap_parse(ap, argc, argv);
-
-    vector_t *unknown = ap_get_unknown(ap);
-    size_t unknown_count = vector_len(unknown);
-    for (size_t i = 0; i < unknown_count; i++)
-    {
-        const char *arg = vector_get(unknown, i);
-        io_printf(io, "unknown argument: %s\n", arg);
-    }
-
-    if (cfg_bool_value(root.help))
-    {
-        print_help(io, argv[0], root);
-        goto finish;
-    }
-
-    if (cfg_bool_value(root.version))
-    {
-        print_version(io);
-        goto finish;
-    }
 
     langs_t langs = get_langs();
+    tool_t tool = make_config(arena, langs);
 
-    if (cfg_bool_value(root.langs))
+    tool_config_t config = {
+        .arena = arena,
+        .io = io,
+
+        .group = tool.root,
+        .version = kToolVersion,
+
+        .argc = argc,
+        .argv = argv,
+    };
+
+    ap_t *ap = ap_new(config.group, config.arena);
+
+    int err = parse_argparse(ap, tool.options, config);
+    if (err == EXIT_SHOULD_EXIT)
+    {
+        return EXIT_OK;
+    }
+
+    ///
+    /// print all langs
+    ///
+
+    if (cfg_bool_value(tool.print_all_langs))
     {
         print_all_langs(io, langs);
+        return EXIT_OK;
     }
+
+    ///
+    /// print one lang
+    ///
+
+    size_t lang_index = cfg_enum_value(tool.print_one_lang);
+    if (lang_index != 0)
+    {
+        const language_t *lang = langs.langs + lang_index - 1;
+        print_lang_info(io, lang);
+        return EXIT_OK;
+    }
+
+    ///
+    /// collect all diagnostics
+    ///
 
     diagnostic_list_t common = get_common_diagnostics();
 
@@ -355,7 +295,11 @@ int main(int argc, const char **argv)
         add_diagnostics(&ctx, lang->diagnostics);
     }
 
-    if (cfg_bool_value(root.diags))
+    ///
+    /// print all diags
+    ///
+
+    if (cfg_bool_value(tool.print_all_diags))
     {
         size_t diag_count = typevec_len(ctx.diagnostics);
         io_printf(io, "%zu diagnostics:\n", diag_count);
@@ -369,7 +313,37 @@ int main(int argc, const char **argv)
                 io_printf(io, "\n");
             }
         }
+
+        return EXIT_OK;
     }
+
+    ///
+    /// print all diags for a specific lang
+    ///
+
+    size_t lang_diag_index = cfg_enum_value(tool.print_one_diag);
+    if (lang_diag_index != 0)
+    {
+        const language_t *lang = langs.langs + lang_diag_index - 1;
+
+        size_t diag_count = lang->diagnostics.count;
+        io_printf(io, "%zu diagnostics for %s:\n", diag_count, lang->name);
+
+        for (size_t i = 0; i < diag_count; i++)
+        {
+            const diagnostic_t *diag = lang->diagnostics.diagnostics[i];
+            print_diagnostic(io, diag);
+
+            if (i + 1 < diag_count)
+            {
+                io_printf(io, "\n");
+            }
+        }
+    }
+
+    ///
+    /// print info about specific diagnostics
+    ///
 
     vector_t *posargs = ap_get_posargs(ap);
     size_t posarg_count = vector_len(posargs);
@@ -392,6 +366,5 @@ int main(int argc, const char **argv)
         }
     }
 
-finish:
     io_close(io);
 }

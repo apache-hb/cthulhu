@@ -9,6 +9,8 @@ typedef struct config_t config_t;
 typedef struct cfg_field_t cfg_field_t;
 typedef struct io_t io_t;
 typedef struct arena_t arena_t;
+typedef struct ap_t ap_t;
+typedef struct logger_t logger_t;
 
 typedef struct tool_config_t
 {
@@ -26,7 +28,7 @@ typedef struct tool_config_t
 typedef struct default_options_t
 {
     // default config group
-    config_t *group;
+    config_t *general_group;
 
     // print help and quit
     cfg_field_t *print_help;
@@ -42,6 +44,15 @@ typedef struct default_options_t
 
     // enable colour output
     cfg_field_t *colour_output;
+
+    // debug config group
+    config_t *debug_group;
+
+    // enable debug verbosity
+    cfg_field_t *log_verbose;
+
+    // enable nicer backtraces
+    cfg_field_t *fancy_backtrace;
 } default_options_t;
 
 /// @brief get the default options
@@ -61,8 +72,19 @@ default_options_t get_default_options(config_t *group);
 /// @return @a EXIT_OK on success or an error code
 int process_default_options(default_options_t options, tool_config_t config);
 
+/// @brief parse the default commands
+/// @note if this function does not return @a EXIT_OK, the program should exit
+///       with the returned error code
+///
+/// @param options the default options
+/// @param config the tool config
+///
+/// @return @a EXIT_OK on success or an error code
 int parse_commands(default_options_t options, tool_config_t config);
 
+int parse_argparse(ap_t *ap, default_options_t options, tool_config_t config);
+
+/// @brief initialise the runtime with default options
 void default_init(void);
 
 END_API

@@ -1,16 +1,21 @@
 #include "argparse/argparse.h"
 #include "base/colour.h"
+#include "base/log.h"
 #include "base/panic.h"
 #include "core/macros.h"
 #include "defaults/defaults.h"
 #include "display/display.h"
 #include "io/io.h"
 #include "memory/memory.h"
+#include "notify/notify.h"
+#include "notify/text.h"
 #include "os/os.h"
 #include "stacktrace/stacktrace.h"
 
 #include "config/config.h"
+#include "std/str.h"
 #include "std/vector.h"
+#include <stdlib.h>
 
 static const cfg_info_t kGroupInfo = {
     .name = "general",
@@ -67,6 +72,29 @@ static const cfg_info_t kColourInfo = {
     .long_args = kColourInfoLongArgs,
 };
 
+static const cfg_info_t kDebugGroupInfo = {
+    .name = "debug",
+    .brief = "Internal debugging options",
+};
+
+static const char *const kVerboseLoggingInfoShortArgs[] = {"v", NULL};
+static const char *const kVerboseLoggingInfoLongArgs[] = {"verbose", NULL};
+
+static const cfg_info_t kVerboseLoggingInfo = {
+    .name = "verbose",
+    .brief = "Enable verbose logging",
+    .short_args = kVerboseLoggingInfoShortArgs,
+    .long_args = kVerboseLoggingInfoLongArgs,
+};
+
+static const char *const kBacktraceInfoLongArgs[] = { "backtrace-complex", NULL };
+
+static const cfg_info_t kBacktraceInfo = {
+    .name = "backtrace",
+    .brief = "Enable complex backtraces",
+    .long_args = kBacktraceInfoLongArgs,
+};
+
 default_options_t get_default_options(config_t *group)
 {
     CTASSERT(group != NULL);
@@ -88,21 +116,71 @@ default_options_t get_default_options(config_t *group)
     cfg_bool_t colour_initial = { .initial = false };
     cfg_field_t *colour = config_bool(general, &kColourInfo, colour_initial);
 
+    config_t *debug = config_group(group, &kDebugGroupInfo);
+
+    cfg_bool_t verbose_initial = { .initial = false };
+    cfg_field_t *verbose = config_bool(debug, &kVerboseLoggingInfo, verbose_initial);
+
+    cfg_bool_t backtrace_initial = { .initial = false };
+    cfg_field_t *backtrace = config_bool(debug, &kBacktraceInfo, backtrace_initial);
+
     default_options_t options = {
-        .group = general,
+        .general_group = general,
         .print_help = help,
         .print_version = version,
         .enable_usage = argparse_usage,
         .enable_windows_style = windows_style,
         .colour_output = colour,
+
+        .debug_group = debug,
+        .log_verbose = verbose,
+        .fancy_backtrace = backtrace,
     };
 
     return options;
 }
 
+static void fancy_panic_handler(panic_t panic, const char *msg, va_list args)
+{
+    bt_report_t report = bt_report_collect(get_global_arena());
+
+    char *info = vformat(msg, args);
+
+    char *detail = format("[%s:%zu] %s: %s", panic.file, panic.line, panic.function, info);
+
+    file_config_t file_config = {
+        .zeroth_line = false,
+        .print_source = true,
+        .print_header = true,
+        .header_message = detail,
+    };
+
+    text_config_t config = {
+        .config = file_config,
+        .colours = &kColourDefault,
+    };
+
+    bt_report_finish(config, &report);
+
+    abort();
+}
+
 int process_default_options(default_options_t options, tool_config_t config)
 {
     const char *name = config.argv[0];
+
+    bool log_verbose = cfg_bool_value(options.log_verbose);
+    if (log_verbose)
+    {
+        ctu_log_control(eLogEnable);
+        ctu_log("enabled verbose logging");
+    }
+
+    bool fancy_backtrace = cfg_bool_value(options.fancy_backtrace);
+    if (fancy_backtrace)
+    {
+        gPanicHandler = fancy_panic_handler;
+    }
 
     bool colour = cfg_bool_value(options.colour_output);
     display_options_t display = {
@@ -146,6 +224,16 @@ static int process_argparse_result(default_options_t options, tool_config_t conf
 {
     int err = ap_parse(ap, config.argc, config.argv);
 
+    vector_t *unknown = ap_get_unknown(ap);
+    size_t unknown_count = vector_len(unknown);
+    bool colour = cfg_bool_value(options.colour_output);
+    const colour_pallete_t *pallete = colour ? &kColourDefault : &kColourNone;
+    for (size_t i = 0; i < unknown_count; i++)
+    {
+        const char *arg = vector_get(unknown, i);
+        io_printf(config.io, "unknown argument: %s\n", arg);
+    }
+
     size_t count = ap_count_params(ap);
     vector_t *posargs = ap_get_posargs(ap);
     size_t posarg_count = vector_len(posargs);
@@ -157,10 +245,7 @@ static int process_argparse_result(default_options_t options, tool_config_t conf
         return EXIT_OK;
     }
 
-    bool colour = cfg_bool_value(options.colour_output);
-    const colour_pallete_t *pallete = colour ? &kColourDefault : &kColourNone;
-
-    if (has_no_args)
+    if (has_no_args && unknown_count == 0)
     {
         io_printf(config.io, "no arguments provided\n");
     }
@@ -184,6 +269,11 @@ static int process_argparse_result(default_options_t options, tool_config_t conf
 int parse_commands(default_options_t options, tool_config_t config)
 {
     ap_t *ap = ap_new(config.group, config.arena);
+    return parse_argparse(ap, options, config);
+}
+
+int parse_argparse(ap_t *ap, default_options_t options, tool_config_t config)
+{
     int err = process_argparse_result(options, config, ap);
     if (err != EXIT_OK)
     {

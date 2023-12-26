@@ -30,7 +30,6 @@ BEGIN_API
 /// @ingroup Common
 /// @{
 
-typedef struct logger_t logger_t;
 typedef struct node_t node_t;
 typedef struct vector_t vector_t;
 typedef struct arena_t arena_t;
@@ -46,8 +45,35 @@ typedef enum ap_event_result_t
     eEventHandled, ///< the event was handled, dont find the next handler
     eEventContinue, ///< the event was not handled by this handler, find the next handler
 
-    eEventTotal
+    eEventCount
 } ap_event_result_t;
+
+typedef enum ap_error_type_t
+{
+    eErrorUnknownFlag,
+    eErrorIntRange,
+    eErrorInvalidEnum,
+
+    eErrorCount
+} ap_error_type_t;
+
+typedef struct ap_error_t
+{
+    ap_error_type_t type;
+
+    union {
+        const char *unknown_flag;
+
+        struct {
+            const cfg_field_t *param;
+
+            union {
+                int int_value;
+                const char *enum_value;
+            };
+        };
+    };
+} ap_error_t;
 
 /// @brief callback for a parameter event
 ///

@@ -126,4 +126,5 @@ check = declare_dependency(
     dependencies : [ base ]
 )
 
+subdir('argparse')
 subdir('defaults')

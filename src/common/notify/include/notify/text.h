@@ -53,6 +53,10 @@ typedef struct file_config_t
     /// @note this only applies to @a bt_report_finish
     bool print_header;
 
+    /// @brief the header message to print
+    /// @note this only applies to @a bt_report_finish
+    char *header_message;
+
     /// @brief the maximum number of columns to print
     /// set to 0 to use default
     size_t max_columns;

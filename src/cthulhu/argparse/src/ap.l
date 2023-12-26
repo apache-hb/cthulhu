@@ -14,13 +14,14 @@
 %}
 
 LETTER [a-zA-Z?]
-OPT [a-zA-Z0-9\-\?:]
+OPT [a-zA-Z0-9\-\?]
 
 %%
 
 [ \r\n\t\f] ;
 
 "=" { return ASSIGN; }
+":" { return ASSIGN; }
 
 [-]{LETTER}{OPT}* {
     /* short opt */
@@ -55,7 +56,7 @@ OPT [a-zA-Z0-9\-\?:]
     return NUMBER;
 }
 
-[a-zA-Z0-9_.,/;:\\\-]+ {
+[a-zA-Z0-9_.,/;\\\-]+ {
     yylval->ident = ctu_strdup(yytext);
     return IDENT;
 }

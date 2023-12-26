@@ -1,3 +1,3 @@
 executable('tool_display', 'main.c',
-    dependencies : [ display, config, argparse, os, io, defaults ]
+    dependencies : [ display, config, os, io, defaults ]
 )

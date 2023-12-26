@@ -302,6 +302,9 @@ void bt_report_finish(text_config_t config, bt_report_t *report)
     if (config.config.print_header)
     {
         io_printf(config.io, " === backtrace (%zu frames) ===\n", report->total_frames);
+
+        if (config.config.header_message != NULL)
+            io_printf(config.io, "%s\n", config.config.header_message);
     }
 
     size_t len = typevec_len(report->entries);

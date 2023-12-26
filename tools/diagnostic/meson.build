@@ -1,7 +1,7 @@
 src = [
-    'src/main.c'
+    'main.c'
 ]
 
 executable('tool_diagnostic', src,
-    dependencies : [ support, mediator, memory, events, io, config, argparse ]
+    dependencies : [ support, mediator, memory, events, io, config, defaults, argparse ]
 )

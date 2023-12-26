@@ -174,7 +174,7 @@ static const char *get_enum_option(const cfg_choice_t *choices, size_t len, size
 static void print_enum_default(display_options_t options, const cfg_field_t *field)
 {
     const cfg_enum_t *info = cfg_enum_info(field);
-    io_printf(options.io, "enum (default: %s)\n", get_enum_option(info->options, info->count, info->initial));
+    io_printf(options.io, "(default: %s)\n", get_enum_option(info->options, info->count, info->initial));
 }
 
 static void print_enum(display_options_t options, alignment_info_t alignment, const cfg_field_t *field)
@@ -249,13 +249,13 @@ static void print_field_default(display_options_t options, const cfg_field_t *fi
     {
     case eConfigBool: {
         const cfg_bool_t *info = cfg_bool_info(field);
-        io_printf(options.io, "option (default: %s)\n", info->initial ? "true" : "false");
+        io_printf(options.io, "(default: %s)\n", info->initial ? "true" : "false");
         break;
     }
 
     case eConfigInt: {
         const cfg_int_t *info = cfg_int_info(field);
-        io_printf(options.io, "int (default: %d)", info->initial);
+        io_printf(options.io, "(default: %d)", info->initial);
         print_range(options.io, info->min, info->max);
         io_printf(options.io, "\n");
         break;
@@ -263,7 +263,14 @@ static void print_field_default(display_options_t options, const cfg_field_t *fi
 
     case eConfigString: {
         const cfg_string_t *info = cfg_string_info(field);
-        io_printf(options.io, "string (default: `%s`)\n", info->initial);
+        if (info->initial != NULL)
+        {
+            io_printf(options.io, "string (default: `%s`)\n", info->initial);
+        }
+        else
+        {
+            io_printf(options.io, "string (no default)\n");
+        }
         break;
     }
 

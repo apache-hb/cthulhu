@@ -1,5 +1,3 @@
-#include "argparse/argparse.h"
-#include "base/colour.h"
 #include "config/config.h"
 
 #include "core/macros.h"

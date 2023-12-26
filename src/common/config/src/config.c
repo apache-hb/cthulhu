@@ -140,7 +140,7 @@ cfg_field_t *config_string(config_t *group, const cfg_info_t *info, cfg_string_t
 
     cfg_field_t *field = add_field(group, info, eConfigString);
     field->string_config = cfg;
-    field->string_value = ctu_strdup(cfg.initial);
+    field->string_value = cfg.initial != NULL ? ctu_strdup(cfg.initial) : NULL;
 
     return field;
 }
@@ -154,7 +154,7 @@ cfg_field_t *config_enum(config_t *group, const cfg_info_t *info, cfg_enum_t cfg
     field->enum_config = cfg;
     field->enum_value = cfg.initial;
 
-    return NULL;
+    return field;
 }
 
 cfg_field_t *config_flags(config_t *group, const cfg_info_t *info, cfg_flags_t cfg)
@@ -166,7 +166,7 @@ cfg_field_t *config_flags(config_t *group, const cfg_info_t *info, cfg_flags_t c
     field->flags_config = cfg;
     field->flags_value = cfg.initial;
 
-    return NULL;
+    return field;
 }
 
 config_t *config_group(config_t *group, const cfg_info_t *info)
