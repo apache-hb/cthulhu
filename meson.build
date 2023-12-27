@@ -205,56 +205,24 @@ parse = generator(bison,
     ]
 )
 
-# common helper libraries used by compiler, tools, interfaces, and drivers
-subdir('src/common')
-
-# common compiler libraries used by interfaces and drivers
-subdir('src/cthulhu')
-
 driver_summary = {}
 langs = {}
 interfaces = {}
 plugins = {}
-
-foreach lang : get_option('languages')
-    subdir('src/driver' / lang)
-endforeach
 
 setargv = []
 if cc.get_id() == 'msvc'
     setargv = [ 'setargv.obj' ]
 endif
 
-subdir('src/support')
-subdir('src/interface')
-
-if frontend_gui.allowed()
-    subdir('src/interface/gui')
-endif
+subdir('src')
 
 if unit_tests.allowed()
     subdir('tests/unit')
 endif
 
 if driver_tests.allowed()
-    subdir('src/tools/harness')
     subdir('tests/lang')
-endif
-
-if tool_stacktrace.allowed()
-    subdir('src/tools/stacktrace')
-endif
-
-if tool_notify.allowed()
-    subdir('src/tools/notify')
-endif
-
-if tool_diagnostic.allowed()
-    subdir('src/tools/diagnostic')
-endif
-
-if tool_display.allowed()
-    subdir('src/tools/display')
 endif
 
 doxygen = find_program('doxygen', required : get_option('doxygen'))
