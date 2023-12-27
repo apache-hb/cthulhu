@@ -40,7 +40,7 @@ typedef void *(*driver_prepass_t)(driver_t *, scan_t *);
 typedef void (*driver_postpass_t)(driver_t *, scan_t *, void *);
 
 /// @brief get the schema for the driver
-typedef config_t *(*driver_config_t)(driver_t *);
+typedef config_t *(*driver_config_t)(driver_t *, config_t *);
 
 typedef enum compile_stage_t
 {
