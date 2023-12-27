@@ -42,10 +42,10 @@ static bool is_public(const tree_t *decl)
 }
 
 // TODO: needsLoad is awful
-static tree_t *sema_decl_name(tree_t *sema, const node_t *node, vector_t *path, bool *needsLoad)
+static tree_t *sema_decl_name(tree_t *sema, const node_t *node, vector_t *path, bool *needs_load)
 {
-    bool isImported = false;
-    tree_t *ns = util_search_namespace(sema, &kSearchName, node, path, &isImported);
+    bool is_imported = false;
+    tree_t *ns = util_search_namespace(sema, &kSearchName, node, path, &is_imported);
     if (tree_is(ns, eTreeError))
     {
         return ns;
@@ -58,7 +58,7 @@ static tree_t *sema_decl_name(tree_t *sema, const node_t *node, vector_t *path, 
         const tree_t *it = tree_ty_get_case(resolve, name);
         if (it != NULL)
         {
-            *needsLoad = false;
+            *needs_load = false;
             return it->case_value;
         }
 
@@ -74,7 +74,7 @@ static tree_t *sema_decl_name(tree_t *sema, const node_t *node, vector_t *path, 
                               "declaration `%s` not found in `%s`", name, tree_to_string(ns));
         }
 
-        if (isImported && !is_public(decl))
+        if (is_imported && !is_public(decl))
         {
             msg_notify(sema->reports, &kEvent_SymbolNotVisible, node,
                        "cannot access non-public declaration `%s`", name);
@@ -82,7 +82,7 @@ static tree_t *sema_decl_name(tree_t *sema, const node_t *node, vector_t *path, 
 
         if (tree_is(decl, eTreeDeclFunction) || tree_is(decl, eTreeDeclParam))
         {
-            *needsLoad = false;
+            *needs_load = false;
             return decl;
         }
 
@@ -116,9 +116,9 @@ static tree_t *verify_expr_type(tree_t *sema, tree_kind_t kind, const tree_t *ty
     return result;
 }
 
-static tree_t *sema_bool(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
+static tree_t *sema_bool(tree_t *sema, const ctu_t *expr, const tree_t *implicit_type)
 {
-    const tree_t *type = implicitType ? implicitType : ctu_get_bool_type();
+    const tree_t *type = implicit_type ? implicit_type : ctu_get_bool_type();
     if (!tree_is(type, eTreeTypeBool))
     {
         return tree_raise(expr->node, sema->reports, &kEvent_InvalidLiteralType, "invalid type `%s` for boolean literal",
@@ -130,10 +130,10 @@ static tree_t *sema_bool(tree_t *sema, const ctu_t *expr, const tree_t *implicit
     return verify_expr_type(sema, eTreeTypeBool, type, "boolean literal", it);
 }
 
-static tree_t *sema_int(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
+static tree_t *sema_int(tree_t *sema, const ctu_t *expr, const tree_t *implicit_type)
 {
-    const tree_t *type = implicitType
-        ? implicitType
+    const tree_t *type = implicit_type
+        ? implicit_type
         : ctu_get_int_type(eDigitInt, eSignSigned); // TODO: calculate proper type to use
     if (!tree_is(type, eTreeTypeDigit))
     {
@@ -165,16 +165,16 @@ static tree_t *sema_string(tree_t *sema, const ctu_t *expr)
 
 static tree_t *sema_name(tree_t *sema, const ctu_t *expr)
 {
-    bool needsLoad = false;
-    return sema_decl_name(sema, expr->node, expr->path, &needsLoad);
+    bool needs_load = false;
+    return sema_decl_name(sema, expr->node, expr->path, &needs_load);
 }
 
 static tree_t *sema_load(tree_t *sema, const ctu_t *expr)
 {
-    bool needsLoad = true;
-    tree_t *name = sema_decl_name(sema, expr->node, expr->path, &needsLoad);
+    bool needs_load = true;
+    tree_t *name = sema_decl_name(sema, expr->node, expr->path, &needs_load);
 
-    if (needsLoad)
+    if (needs_load)
     {
         return tree_expr_load(expr->node, name);
     }
@@ -197,10 +197,10 @@ static tree_t *sema_compare(ctu_sema_t *sema, const ctu_t *expr)
     return tree_expr_compare(expr->node, ctu_get_bool_type(), expr->compare, left, right);
 }
 
-static tree_t *sema_binary(ctu_sema_t *sema, const ctu_t *expr, const tree_t *implicitType)
+static tree_t *sema_binary(ctu_sema_t *sema, const ctu_t *expr, const tree_t *implicit_type)
 {
-    tree_t *left = ctu_sema_rvalue(sema, expr->lhs, implicitType);
-    tree_t *right = ctu_sema_rvalue(sema, expr->rhs, implicitType);
+    tree_t *left = ctu_sema_rvalue(sema, expr->lhs, implicit_type);
+    tree_t *right = ctu_sema_rvalue(sema, expr->rhs, implicit_type);
 
     if (tree_is(left, eTreeError) || tree_is(right, eTreeError))
     {
@@ -208,9 +208,9 @@ static tree_t *sema_binary(ctu_sema_t *sema, const ctu_t *expr, const tree_t *im
     }
 
     // TODO: calculate proper type to use
-    const tree_t *commonType = implicitType == NULL ? tree_get_type(left) : implicitType;
+    const tree_t *common_type = implicit_type == NULL ? tree_get_type(left) : implicit_type;
 
-    return tree_expr_binary(expr->node, commonType, expr->binary, left, right);
+    return tree_expr_binary(expr->node, common_type, expr->binary, left, right);
 }
 
 static tree_t *sema_unary(ctu_sema_t *sema, const ctu_t *expr, const tree_t *implicit_type)
@@ -250,6 +250,17 @@ static tree_t *sema_unary(ctu_sema_t *sema, const ctu_t *expr, const tree_t *imp
     return tree_expr_unary(expr->node, expr->unary, inner);
 }
 
+static const tree_t *get_param_checked(vector_t *params, size_t i)
+{
+    if (i >= vector_len(params))
+    {
+        return NULL;
+    }
+
+    const tree_t *param = vector_get(params, i);
+    return tree_get_type(param);
+}
+
 static tree_t *sema_call(ctu_sema_t *sema, const ctu_t *expr)
 {
     tree_t *callee = ctu_sema_lvalue(sema, expr->callee);
@@ -270,7 +281,7 @@ static tree_t *sema_call(ctu_sema_t *sema, const ctu_t *expr)
     vector_t *result = vector_of(len);
     for (size_t i = 0; i < len; i++)
     {
-        const tree_t *ty = i >= vector_len(params) ? NULL : tree_get_type(vector_get(params, i));
+        const tree_t *ty = get_param_checked(params, i);
 
         ctu_t *it = vector_get(expr->args, i);
         tree_t *arg = ctu_sema_rvalue(sema, it, ty);
@@ -305,9 +316,17 @@ static tree_t *sema_deref_rvalue(ctu_sema_t *sema, const ctu_t *expr)
 static tree_t *sema_ref(ctu_sema_t *sema, const ctu_t *expr)
 {
     tree_t *inner = ctu_sema_lvalue(sema, expr->expr);
-    if (tree_is(inner, eTreeError) || tree_is(inner, eTreeDeclLocal))
+    if (tree_is(inner, eTreeError))
     {
         return inner;
+    }
+
+    if (tree_is(inner, eTreeDeclLocal))
+    {
+        // TODO: do we need a way to get a pointer to a local?
+        const tree_t *type = tree_get_storage_type(inner);
+        const tree_t *ptr = tree_type_pointer(expr->node, "", type, 1);
+        return tree_expr_cast(expr->node, ptr, inner);
     }
 
     return tree_expr_address(expr->node, inner);
@@ -463,23 +482,23 @@ static tree_t *sema_field_indirect_rvalue(ctu_sema_t *sema, const ctu_t *expr)
     return tree_expr_load(expr->node, access);
 }
 
-static tree_t *sema_init(ctu_sema_t *sema, const ctu_t *expr, const tree_t *implicitType)
+static tree_t *sema_init(ctu_sema_t *sema, const ctu_t *expr, const tree_t *implicit_type)
 {
     logger_t *reports = ctu_sema_reports(sema);
-    if (implicitType == NULL)
+    if (implicit_type == NULL)
     {
         return tree_raise(expr->node, reports, &kEvent_InvalidInitializer, "cannot infer type of initializer");
     }
 
-    if (!tree_is(implicitType, eTreeTypeStruct))
+    if (!tree_is(implicit_type, eTreeTypeStruct))
     {
         return tree_raise(expr->node, reports, &kEvent_InvalidInitializer, "cannot initialize non-struct type `%s`",
-                          tree_to_string(implicitType));
+                          tree_to_string(implicit_type));
     }
 
-    const tree_t *ref = ctu_resolve_decl_type(implicitType);
+    const tree_t *ref = ctu_resolve_decl_type(implicit_type);
 
-    tree_storage_t storage = {.storage = implicitType, .size = 1, .quals = eQualMutable};
+    tree_storage_t storage = {.storage = implicit_type, .size = 1, .quals = eQualMutable};
     tree_t *local = tree_decl_local(expr->node, "$tmp", storage, ref);
     tree_add_local(sema->decl, local);
 
@@ -489,12 +508,12 @@ static tree_t *sema_init(ctu_sema_t *sema, const ctu_t *expr, const tree_t *impl
         ctu_t *init = vector_get(expr->inits, i);
         CTASSERTF(init->kind == eCtuFieldInit, "invalid init kind %d", init->kind);
 
-        tree_t *field = tree_ty_get_field(implicitType, init->field);
+        tree_t *field = tree_ty_get_field(implicit_type, init->field);
         if (field == NULL)
         {
             msg_notify(reports, &kEvent_FieldNotFound, init->node,
                        "field `%s` not found in struct `%s`", init->field,
-                       tree_to_string(implicitType));
+                       tree_to_string(implicit_type));
             continue;
         }
 
@@ -527,13 +546,13 @@ tree_t *ctu_sema_lvalue(ctu_sema_t *sema, const ctu_t *expr)
     }
 }
 
-tree_t *ctu_sema_rvalue(ctu_sema_t *sema, const ctu_t *expr, const tree_t *implicitType)
+tree_t *ctu_sema_rvalue(ctu_sema_t *sema, const ctu_t *expr, const tree_t *implicit_type)
 {
     CTASSERT(expr != NULL);
 
-    const tree_t *inner = implicitType == NULL
+    const tree_t *inner = implicit_type == NULL
         ? NULL
-        : tree_resolve(tree_get_cookie(sema->sema), implicitType);
+        : tree_resolve(tree_get_cookie(sema->sema), implicit_type);
 
     switch (expr->kind)
     {
@@ -567,18 +586,22 @@ static tree_t *sema_local(ctu_sema_t *sema, const ctu_t *stmt)
 
     CTASSERT(value != NULL || type != NULL);
 
-    const tree_t *actualType = type != NULL ? tree_resolve(tree_get_cookie(sema->sema), type)
-                                            : tree_get_type(value);
+    const tree_t *actual_type = type != NULL
+        ? tree_resolve(tree_get_cookie(sema->sema), type)
+        : tree_get_type(value);
 
-    if (tree_is(actualType, eTreeTypeUnit))
+    if (tree_is(actual_type, eTreeTypeUnit))
     {
         msg_notify(ctu_sema_reports(sema), &kEvent_InvalidVariableType, stmt->node,
                    "cannot declare a variable of type `unit`");
     }
 
-    const tree_t *ref = tree_type_reference(stmt->node, stmt->name, actualType);
+    const tree_t *ref = tree_type_reference(stmt->node, stmt->name, actual_type);
     tree_storage_t storage = {
-        .storage = actualType, .size = 1, .quals = stmt->mut ? eQualMutable : eQualConst};
+        .storage = actual_type,
+        .size = 1,
+        .quals = stmt->mut ? eQualMutable : eQualConst,
+    };
     tree_t *self = tree_decl_local(stmt->node, stmt->name, storage, ref);
     tree_add_local(sema->decl, self);
     ctu_add_decl(sema->sema, eCtuTagValues, stmt->name, self);
@@ -596,7 +619,7 @@ static tree_t *sema_stmts(ctu_sema_t *sema, const ctu_t *stmt)
     tree_t *decl = sema->decl;
     size_t len = vector_len(stmt->stmts);
 
-    size_t sizes[eCtuTagTotal] = {[eCtuTagTypes] = 4, [eCtuTagValues] = 4, [eCtuTagFunctions] = 4};
+    size_t sizes[eCtuTagTotal] = {[eCtuTagTypes] = 4, [eCtuTagValues] = 4, [eCtuTagFunctions] = 4,};
 
     tree_t *ctx = tree_module(sema->sema, stmt->node, decl->name, eCtuTagTotal, sizes);
     ctu_sema_t inner = ctu_sema_init(ctx, sema->decl, vector_new(len));
@@ -616,13 +639,6 @@ static tree_t *sema_return(ctu_sema_t *sema, const ctu_t *stmt)
 
     if (stmt->result == NULL)
     {
-        // TODO: is this needed? tree_check should catch this
-        if (!tree_is(result, eTreeTypeUnit))
-        {
-            msg_notify(ctu_sema_reports(sema), &kEvent_ReturnTypeMismatch, stmt->node,
-                       "expected return value of type `%s`", tree_to_string(result));
-        }
-
         return tree_stmt_return(stmt->node, tree_expr_unit(stmt->node, result));
     }
 

@@ -45,7 +45,7 @@ static tree_t *ctu_sema_type_pointer(ctu_sema_t *sema, const ctu_t *type)
 
 static tree_t *sema_type_function(ctu_sema_t *sema, const ctu_t *type)
 {
-    tree_t *returnType = ctu_sema_type(sema, type->returnType);
+    tree_t *result = ctu_sema_type(sema, type->returnType);
 
     size_t len = vector_len(type->params);
     vector_t *params = vector_of(len);
@@ -62,7 +62,7 @@ static tree_t *sema_type_function(ctu_sema_t *sema, const ctu_t *type)
         vector_set(params, i, it);
     }
 
-    return tree_type_closure(type->node, "", returnType, params, eArityFixed);
+    return tree_type_closure(type->node, "", result, params, eArityFixed);
 }
 
 static tree_t *sema_type_array(ctu_sema_t *sema, const ctu_t *type)

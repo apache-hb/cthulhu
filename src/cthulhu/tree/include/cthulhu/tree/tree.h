@@ -160,7 +160,7 @@ typedef struct tree_t {
             quals_t quals;
 
             union {
-                /* eTreeTypePointer|eTreeTypeReference */
+                /* eTreeTypePointer|eTreeTypeReference|eTreeTypeArray */
                 struct {
                     const tree_t *ptr;
                     size_t length;

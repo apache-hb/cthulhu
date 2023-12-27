@@ -184,6 +184,105 @@ static void check_deprecated_call(check_t *check, const tree_t *expr)
     msg_note(id, "deprecated: %s", attribs->deprecated);
 }
 
+static const char *get_fn_name(const tree_t *fn)
+{
+    if (tree_is(fn, eTreeDeclFunction)) { return tree_get_name(fn); }
+
+    // its an indirect call, so give the type name
+
+    // TODO: need a pretty typename function
+    return tree_to_string(tree_get_type(fn));
+}
+
+static void check_params(check_t *check, vector_t *args, vector_t *params, size_t count, const char *name)
+{
+    for (size_t i = 0; i < count; i++)
+    {
+        // at this point the language frontend will have turned
+        // any implicit casts into explicit casts, so simple type comparison
+        // is enough
+        const tree_t *arg = vector_get(args, i);
+        const tree_t *param = vector_get(params, i);
+
+        const tree_t *arg_type = tree_get_type(arg);
+        const tree_t *param_type = tree_get_type(param);
+
+        if (!util_types_equal(arg_type, param_type))
+        {
+            event_t *id = msg_notify(check->reports, &kEvent_IncorrectParamType, tree_get_node(arg),
+                "incorrect type for parameter %zu of function `%s`",
+                i + 1,
+                name
+            );
+            msg_note(id, "expected `%s`, got `%s`", tree_to_string(param_type), tree_to_string(arg_type));
+        }
+    }
+}
+
+static void check_call_args_fixed(check_t *check, const tree_t *expr, vector_t *args, vector_t *params)
+{
+    size_t arg_count = vector_len(args);
+    size_t param_count = vector_len(params);
+
+    const char *name = get_fn_name(expr->callee);
+
+    if (arg_count != param_count)
+    {
+        event_t *id = msg_notify(check->reports, &kEvent_IncorrectParamCount, tree_get_node(expr),
+            "incorrect number of parameters to function `%s`",
+            name
+        );
+        msg_note(id, "expected %zu, got %zu", param_count, arg_count);
+    }
+
+    size_t count = MIN(arg_count, param_count);
+
+    check_params(check, args, params, count, name);
+}
+
+static void check_call_args_variadic(check_t *check, const tree_t *expr, vector_t *args, vector_t *params)
+{
+    size_t arg_count = vector_len(args);
+    size_t param_count = vector_len(params);
+
+    const char *name = get_fn_name(expr->callee);
+
+    if (arg_count < param_count)
+    {
+        event_t *id = msg_notify(check->reports, &kEvent_IncorrectParamCount, tree_get_node(expr),
+            "incorrect number of parameters to variadic function `%s`",
+            name
+        );
+        msg_note(id, "expected at least %zu parameters, only got %zu", param_count, arg_count);
+    }
+
+    size_t count = MIN(arg_count, param_count);
+
+    check_params(check, args, params, count, name);
+}
+
+static void check_call_arguments(check_t *check, const tree_t *expr)
+{
+    const tree_t *fn = expr->callee;
+    vector_t *fn_args = expr->args;
+    vector_t *fn_params = tree_fn_get_params(fn);
+    arity_t arity = tree_fn_get_arity(fn);
+
+    switch (arity)
+    {
+    case eArityFixed:
+        check_call_args_fixed(check, expr, fn_args, fn_params);
+        break;
+
+    case eArityVariable:
+        check_call_args_variadic(check, expr, fn_args, fn_params);
+        break;
+
+    default:
+        NEVER("invalid arity %d (check-call-arguments)", arity);
+    }
+}
+
 static void check_func_body(check_t *check, const tree_t *return_type, const tree_t *stmt)
 {
     switch (stmt->kind)
@@ -211,6 +310,7 @@ static void check_func_body(check_t *check, const tree_t *return_type, const tre
 
     case eTreeExprCall:
         check_deprecated_call(check, stmt);
+        check_call_arguments(check, stmt);
         break;
 
     default:
@@ -251,7 +351,7 @@ static bool will_always_return(const tree_t *stmt)
     }
 }
 
-static void check_func_return(check_t *check, const tree_t *fn)
+static void check_func_details(check_t *check, const tree_t *fn)
 {
     if (fn->body == NULL) { return; }
 
@@ -545,7 +645,7 @@ static void check_module_valid(check_t *check, const tree_t *mod)
         check_simple(check, function);
 
         check_func_attribs(check, function);
-        check_func_return(check, function);
+        check_func_details(check, function);
     }
 
     vector_t *types = map_values(tree_module_tag(mod, eSemaTypes));

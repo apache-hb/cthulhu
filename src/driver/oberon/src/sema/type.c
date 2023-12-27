@@ -1,5 +1,6 @@
 #include "oberon/sema/type.h"
 #include "cthulhu/events/events.h"
+#include "cthulhu/util/type.h"
 #include "oberon/driver.h"
 #include "oberon/sema/expr.h"
 #include "oberon/sema/sema.h"
@@ -45,7 +46,7 @@ static tree_t *sema_type_pointer(tree_t *sema, obr_t *type, const char *name)
     return tree_type_pointer(type->node, name, it, SIZE_MAX);
 }
 
-static size_t get_array_length(tree_t *sema, obr_t *expr)
+static size_t sema_array_length(tree_t *sema, obr_t *expr)
 {
     CTASSERT(sema != NULL);
     if (expr == NULL) return SIZE_MAX;
@@ -80,7 +81,7 @@ static size_t get_array_length(tree_t *sema, obr_t *expr)
 static tree_t *sema_array_segment(tree_t *sema, obr_t *size, tree_t *element, const char *name)
 {
     // even if get_array_length fails we still want to return a valid type
-    size_t len = get_array_length(sema, size);
+    size_t len = sema_array_length(sema, size);
 
     return tree_type_array(size->node, name, element, len);
 }
@@ -145,4 +146,33 @@ tree_t *obr_sema_type(tree_t *sema, obr_t *type, const char *name)
 const tree_t *obr_rvalue_type(const tree_t *self)
 {
     return tree_ty_load_type(tree_get_type(self));
+}
+
+
+///
+/// casting
+///
+
+static bool is_open_array(const tree_t *type)
+{
+    return tree_is(type, eTreeTypeArray) && !util_length_bounded(type->length);
+}
+
+tree_t *obr_cast_type(tree_t *expr, const tree_t *type)
+{
+    const tree_t *exprtype = tree_get_type(expr);
+
+    // pointers can convert to open arrays and vice versa
+    if ((is_open_array(exprtype) && tree_is(type, eTreeTypePointer))
+        || (is_open_array(type) && tree_is(exprtype, eTreeTypePointer))
+    )
+    {
+        if (util_types_equal(exprtype->ptr, type->ptr))
+        {
+            return tree_expr_cast(expr->node, type, expr);
+        }
+    }
+
+    // TODO: deal with other casts
+    return expr;
 }

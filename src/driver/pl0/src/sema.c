@@ -45,9 +45,9 @@ static char *pl0_normalize(const char *name)
     return str_lower(name);
 }
 
-static void report_pl0_shadowing(logger_t *reports, const char *name, const node_t *prevDefinition, const node_t *newDefinition)
+static void report_pl0_shadowing(logger_t *reports, const char *name, const node_t *prev, const node_t *next)
 {
-    event_t *id = evt_symbol_shadowed(reports, name, prevDefinition, newDefinition);
+    event_t *id = evt_symbol_shadowed(reports, name, prev, next);
     msg_note(id, "PL/0 is case insensitive");
 }
 
@@ -64,18 +64,18 @@ static tree_t *get_decl(tree_t *sema, const char *name, const pl0_tag_t *tags, s
     return NULL;
 }
 
+const pl0_tag_t kVarTags[] = { ePl0TagValues, ePl0TagImportedValues };
+
 static tree_t *get_var(tree_t *sema, const char *name)
 {
-    const pl0_tag_t kTags[] = { ePl0TagValues, ePl0TagImportedValues };
-
-    return get_decl(sema, name, kTags, sizeof(kTags) / sizeof(pl0_tag_t));
+    return get_decl(sema, name, kVarTags, sizeof(kVarTags) / sizeof(pl0_tag_t));
 }
+
+const pl0_tag_t kProcTags[] = { ePl0TagProcs, ePl0TagImportedProcs };
 
 static tree_t *get_proc(tree_t *sema, const char *name)
 {
-    const pl0_tag_t kTags[] = { ePl0TagProcs, ePl0TagImportedProcs };
-
-    return get_decl(sema, name, kTags, sizeof(kTags) / sizeof(pl0_tag_t));
+    return get_decl(sema, name, kProcTags, sizeof(kProcTags) / sizeof(pl0_tag_t));
 }
 
 static void set_decl(tree_t *sema, pl0_tag_t tag, const char *name, tree_t *decl)
@@ -90,8 +90,8 @@ static void set_proc(tree_t *sema, pl0_tag_t tag, const char *name, tree_t *proc
     if (other != NULL && other != proc)
     {
         const node_t *node = tree_get_node(proc);
-        const node_t *otherNode = tree_get_node(other);
-        report_pl0_shadowing(sema->reports, name, otherNode, node);
+        const node_t *other_node = tree_get_node(other);
+        report_pl0_shadowing(sema->reports, name, other_node, node);
         return;
     }
 
@@ -104,9 +104,9 @@ static void set_var(tree_t *sema, pl0_tag_t tag, const char *name, tree_t *tree)
     if (other != NULL && other != tree)
     {
         const node_t *node = tree_get_node(tree);
-        const node_t *otherNode = tree_get_node(other);
+        const node_t *other_node = tree_get_node(other);
 
-        report_pl0_shadowing(sema->reports, name, otherNode, node);
+        report_pl0_shadowing(sema->reports, name, other_node, node);
         return;
     }
 
@@ -142,10 +142,10 @@ static tree_t *get_string_type(size_t size)
     return tree_type_pointer(node, "string", tree_type_digit(node, "$", eDigitChar, eSignSigned, eQualConst), size);
 }
 
-static tree_storage_t get_const_storage(void)
+static tree_storage_t get_const_storage(const tree_t *type)
 {
     tree_storage_t storage = {
-        .storage = gIntType,
+        .storage = type,
         .size = 1,
         .quals = eQualConst
     };
@@ -153,10 +153,10 @@ static tree_storage_t get_const_storage(void)
     return storage;
 }
 
-static tree_storage_t get_mutable_storage(void)
+static tree_storage_t get_mutable_storage(const tree_t *type)
 {
     tree_storage_t storage = {
-        .storage = gIntType,
+        .storage = type,
         .size = 1,
         .quals = eQualMutable
     };
@@ -176,10 +176,10 @@ void pl0_init(driver_t *handle)
 
     gIntRef = tree_type_reference(node, "ref", gIntType);
 
-    tree_t *stringType = get_string_type(4);
+    tree_t *string_type = get_string_type(4);
 
     vector_t *params = vector_of(1);
-    vector_set(params, 0, tree_decl_param(node, "fmt", stringType));
+    vector_set(params, 0, tree_decl_param(node, "fmt", string_type));
 
     const tree_storage_t storage = {
         .storage = gCharType,
@@ -187,7 +187,7 @@ void pl0_init(driver_t *handle)
         .quals = eQualConst
     };
 
-    gPrintString = tree_decl_global(node, "$fmt", storage, stringType, tree_expr_string(node, stringType, "%d\n", 4));
+    gPrintString = tree_decl_global(node, "$fmt", storage, string_type, tree_expr_string(node, string_type, "%d\n", 4));
     tree_set_attrib(gPrintString, &kExportAttrib);
 
     tree_t *signature = tree_type_closure(node, "print", gIntType, params, eArityVariable);
@@ -203,7 +203,8 @@ void pl0_init(driver_t *handle)
 
 static void report_pl0_unresolved(logger_t *reports, const node_t *node, const char *name)
 {
-    msg_notify(reports, &kEvent_SymbolNotFound, node, "unresolved reference to `%s`", name);
+    event_t *id = msg_notify(reports, &kEvent_SymbolNotFound, node, "unresolved reference to `%s`", name);
+    msg_note(id, "symbol resolution is case sensitive");
 }
 
 ///
@@ -314,8 +315,8 @@ static tree_t *sema_assign(tree_t *sema, pl0_t *node)
         return tree_error(node->node, &kEvent_VariableNotFound, "unresolved destination variable `%s`", node->dst);
     }
 
-    const tree_t *dstType = tree_get_type(dst);
-    quals_t quals = tree_ty_get_quals(dstType);
+    const tree_t *dst_type = tree_get_type(dst);
+    quals_t quals = tree_ty_get_quals(dst_type);
 
     if (quals & eQualConst)
     {
@@ -375,6 +376,7 @@ static tree_t *sema_global(tree_t *sema, pl0_t *node)
 
 static tree_t *sema_odd(tree_t *sema, pl0_t *node)
 {
+    // desugar odd(n) -> n % 2 == 1
     mpz_t two;
     mpz_init_set_ui(two, 2);
 
@@ -382,10 +384,10 @@ static tree_t *sema_odd(tree_t *sema, pl0_t *node)
     mpz_init_set_ui(one, 1);
 
     tree_t *val = sema_expr(sema, node->operand);
-    tree_t *twoValue = tree_expr_digit(node->node, gIntType, two);
-    tree_t *oneValue = tree_expr_digit(node->node, gIntType, one);
-    tree_t *rem = tree_expr_binary(node->node, gIntType, eBinaryRem, val, twoValue);
-    tree_t *eq = tree_expr_compare(node->node, gBoolType, eCompareEq, rem, oneValue);
+    tree_t *two_value = tree_expr_digit(node->node, gIntType, two);
+    tree_t *one_value = tree_expr_digit(node->node, gIntType, one);
+    tree_t *rem = tree_expr_binary(node->node, gIntType, eBinaryRem, val, two_value);
+    tree_t *eq = tree_expr_compare(node->node, gBoolType, eCompareEq, rem, one_value);
 
     return eq;
 }
@@ -415,10 +417,12 @@ static void sema_proc(tree_t *sema, tree_t *tree, pl0_t *node)
 
     tree_t *nest = tree_module(sema, node->node, node->name, ePl0TagTotal, sizes);
 
+    const tree_storage_t storage = get_mutable_storage(gIntType);
+
     for (size_t i = 0; i < len; i++)
     {
         pl0_t *local = vector_get(node->locals, i);
-        tree_t *it = tree_decl_local(local->node, local->name, get_mutable_storage(), gIntRef);
+        tree_t *it = tree_decl_local(local->node, local->name, storage, gIntRef);
         set_var(nest, ePl0TagValues, local->name, it);
         tree_add_local(tree, it);
     }
@@ -449,20 +453,20 @@ static void resolve_proc(tree_t *sema, tree_t *decl, void *user)
 
 static void insert_module(tree_t *sema, tree_t *other)
 {
-    map_iter_t otherValues = map_iter(tree_module_tag(other, ePl0TagValues));
-    map_iter_t otherProcs = map_iter(tree_module_tag(other, ePl0TagProcs));
+    map_iter_t other_values = map_iter(tree_module_tag(other, ePl0TagValues));
+    map_iter_t other_procs = map_iter(tree_module_tag(other, ePl0TagProcs));
 
-    while (map_has_next(&otherValues))
+    while (map_has_next(&other_values))
     {
-        tree_t *decl = map_next(&otherValues).value;
+        tree_t *decl = map_next(&other_values).value;
         if (!tree_has_vis(decl, eVisiblePublic)) continue;
 
         set_var(sema, ePl0TagImportedValues, tree_get_name(decl), decl);
     }
 
-    while (map_has_next(&otherProcs))
+    while (map_has_next(&other_procs))
     {
-        tree_t *decl = map_next(&otherProcs).value;
+        tree_t *decl = map_next(&other_procs).value;
         if (!tree_has_vis(decl, eVisiblePublic)) continue;
 
         set_proc(sema, ePl0TagImportedProcs, tree_get_name(decl), decl);
@@ -483,25 +487,27 @@ void pl0_forward_decls(context_t *context)
     logger_t *reports = lifetime_get_logger(lifetime);
     cookie_t *cookie = lifetime_get_cookie(lifetime);
 
-    size_t totalConsts = vector_len(root->consts);
-    size_t totalGlobals = vector_len(root->globals);
-    size_t totalFunctions = vector_len(root->procs);
+    size_t const_count = vector_len(root->consts);
+    size_t global_count = vector_len(root->globals);
+    size_t proc_count = vector_len(root->procs);
 
     const char *id = vector_len(root->mod) > 0
         ? vector_tail(root->mod)
         : context_get_name(context);
 
     size_t sizes[ePl0TagTotal] = {
-        [ePl0TagValues] = totalConsts + totalGlobals,
-        [ePl0TagProcs] = totalFunctions,
+        [ePl0TagValues] = const_count + global_count,
+        [ePl0TagProcs] = proc_count,
         [ePl0TagImportedValues] = 64,
         [ePl0TagImportedProcs] = 64
     };
 
     tree_t *sema = tree_module_root(reports, cookie, root->node, id, ePl0TagTotal, sizes);
 
+    const tree_storage_t const_storage = get_const_storage(gIntType);
+
     // forward declare everything
-    for (size_t i = 0; i < totalConsts; i++)
+    for (size_t i = 0; i < const_count; i++)
     {
         pl0_t *it = vector_get(root->consts, i);
 
@@ -512,13 +518,13 @@ void pl0_forward_decls(context_t *context)
         };
 
         tree_t *tree = tree_open_global(it->node, it->name, gIntRef, resolve);
-        tree_set_storage(tree, get_const_storage());
+        tree_set_storage(tree, const_storage);
         tree_set_attrib(tree, &kExportAttrib);
 
         set_var(sema, ePl0TagValues, it->name, tree);
     }
 
-    for (size_t i = 0; i < totalGlobals; i++)
+    for (size_t i = 0; i < global_count; i++)
     {
         pl0_t *it = vector_get(root->globals, i);
 
@@ -529,13 +535,13 @@ void pl0_forward_decls(context_t *context)
         };
 
         tree_t *tree = tree_open_global(it->node, it->name, gIntRef, resolve);
-        tree_set_storage(tree, get_mutable_storage());
+        tree_set_storage(tree, const_storage);
         tree_set_attrib(tree, &kExportAttrib);
 
         set_var(sema, ePl0TagValues, it->name, tree);
     }
 
-    for (size_t i = 0; i < totalFunctions; i++)
+    for (size_t i = 0; i < proc_count; i++)
     {
         pl0_t *it = vector_get(root->procs, i);
 
@@ -552,7 +558,6 @@ void pl0_forward_decls(context_t *context)
         set_proc(sema, ePl0TagProcs, it->name, tree);
     }
 
-
     context_update(context, root, sema);
 }
 
@@ -562,17 +567,17 @@ void pl0_process_imports(context_t *context)
     pl0_t *root = context_get_ast(context);
     tree_t *sema = context_get_module(context);
 
-    size_t totalImports = vector_len(root->imports);
-    for (size_t i = 0; i < totalImports; i++)
+    size_t import_count = vector_len(root->imports);
+    for (size_t i = 0; i < import_count; i++)
     {
-        pl0_t *importDecl = vector_get(root->imports, i);
-        CTASSERT(importDecl->type == ePl0Import);
+        pl0_t *import_decl = vector_get(root->imports, i);
+        CTASSERT(import_decl->type == ePl0Import);
 
-        context_t *ctx = get_context(lifetime, importDecl->path);
+        context_t *ctx = get_context(lifetime, import_decl->path);
 
         if (ctx == NULL)
         {
-            msg_notify(sema->reports, &kEvent_ImportNotFound, importDecl->node, "cannot import `%s`, failed to find module", str_join(".", importDecl->path));
+            msg_notify(sema->reports, &kEvent_ImportNotFound, import_decl->node, "cannot import `%s`, failed to find module", str_join(".", import_decl->path));
             continue;
         }
 
@@ -580,7 +585,7 @@ void pl0_process_imports(context_t *context)
 
         if (lib == sema)
         {
-            msg_notify(sema->reports, &kEvent_CirclularImport, importDecl->node, "module cannot import itself");
+            msg_notify(sema->reports, &kEvent_CirclularImport, import_decl->node, "module cannot import itself");
             continue;
         }
 

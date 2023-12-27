@@ -5,6 +5,7 @@
 #include "cthulhu/util/util.h"
 #include "cthulhu/util/type.h"
 
+#include "oberon/sema/type.h"
 #include "std/str.h"
 
 #include "base/panic.h"
@@ -89,6 +90,17 @@ static tree_t *sema_name_rvalue(tree_t *sema, obr_t *expr)
     return name;
 }
 
+static const tree_t *get_param_checked(vector_t *params, size_t i)
+{
+    if (i >= vector_len(params))
+    {
+        return NULL;
+    }
+
+    tree_t *param = vector_get(params, i);
+    return tree_get_type(param);
+}
+
 static tree_t *sema_call(tree_t *sema, obr_t *expr)
 {
     tree_t *callee = obr_sema_lvalue(sema, expr->expr);
@@ -101,9 +113,10 @@ static tree_t *sema_call(tree_t *sema, obr_t *expr)
     for (size_t i = 0; i < len; i++)
     {
         obr_t *it = vector_get(expr->args, i);
-        tree_t *expected = vector_get(params, i);
-        tree_t *arg = obr_sema_rvalue(sema, it, tree_get_type(expected)); // funky
-        vector_set(args, i, arg);
+        const tree_t *expected = get_param_checked(params, i);
+        tree_t *arg = obr_sema_rvalue(sema, it, expected); // funky
+        tree_t *casted = obr_cast_type(arg, expected);
+        vector_set(args, i, casted);
     }
 
     return tree_expr_call(expr->node, callee, args);
