@@ -220,6 +220,12 @@ foreach lang : get_option('languages')
     subdir('src/driver' / lang)
 endforeach
 
+setargv = []
+if cc.get_id() == 'msvc'
+    setargv = [ 'setargv.obj' ]
+endif
+
+subdir('src/support')
 subdir('src/interface')
 
 if frontend_gui.allowed()
@@ -231,24 +237,24 @@ if unit_tests.allowed()
 endif
 
 if driver_tests.allowed()
-    subdir('src/interface/harness')
+    subdir('src/tools/harness')
     subdir('tests/lang')
 endif
 
 if tool_stacktrace.allowed()
-    subdir('tools/stacktrace')
+    subdir('src/tools/stacktrace')
 endif
 
 if tool_notify.allowed()
-    subdir('tools/notify')
+    subdir('src/tools/notify')
 endif
 
 if tool_diagnostic.allowed()
-    subdir('tools/diagnostic')
+    subdir('src/tools/diagnostic')
 endif
 
 if tool_display.allowed()
-    subdir('tools/display')
+    subdir('src/tools/display')
 endif
 
 doxygen = find_program('doxygen', required : get_option('doxygen'))
