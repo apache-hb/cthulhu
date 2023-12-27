@@ -21,6 +21,7 @@ typedef struct tree_t tree_t;
 typedef struct cookie_t cookie_t;
 typedef struct scan_t scan_t;
 typedef struct logger_t logger_t;
+typedef struct config_t config_t;
 typedef struct callbacks_t callbacks_t;
 
 ///
@@ -37,6 +38,9 @@ typedef void *(*driver_prepass_t)(driver_t *, scan_t *);
 
 /// @brief get the context data from a scanner
 typedef void (*driver_postpass_t)(driver_t *, scan_t *, void *);
+
+/// @brief get the schema for the driver
+typedef config_t *(*driver_config_t)(driver_t *);
 
 typedef enum compile_stage_t
 {
@@ -59,6 +63,8 @@ typedef struct language_t
 
     /// @brief all diagnostics this language can produce
     diagnostic_list_t diagnostics;
+
+    driver_config_t fn_config;
 
     /// @brief called once at startup
     driver_create_t fn_create;
