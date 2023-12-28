@@ -26,12 +26,12 @@
 
 #include <stdio.h>
 
-static const version_info_t kVersion = {
-    .license = "GPLv3",
-    .desc = "Example compiler interface",
-    .author = "Elliot Haisley",
-    .version = NEW_VERSION(0, 0, 1),
-};
+// static const version_info_t kVersion = {
+//     .license = "GPLv3",
+//     .desc = "Example compiler interface",
+//     .author = "Elliot Haisley",
+//     .version = NEW_VERSION(0, 0, 1),
+// };
 
 static int check_reports(logger_t *logger, report_config_t config, const char *title)
 {
@@ -78,7 +78,7 @@ int main(int argc, const char **argv)
 {
     ctu_log_update(true);
     arena_t *arena = ctu_default_alloc();
-    mediator_t *mediator = mediator_new("example", kVersion, arena);
+    mediator_t *mediator = mediator_new(arena);
     lifetime_t *lifetime = lifetime_new(mediator, arena);
     logger_t *logger = lifetime_get_logger(lifetime);
 

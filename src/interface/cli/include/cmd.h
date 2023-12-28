@@ -1,36 +1,28 @@
 #pragma once
 
 #include <stdbool.h>
-#include <stddef.h>
 
 #include "cthulhu/runtime/interface.h"
+
+#include "defaults/defaults.h"
 
 typedef struct logger_t logger_t;
 typedef struct map_t map_t;
 typedef struct ap_t ap_t;
 typedef struct vector_t vector_t;
 
-typedef struct runtime_t
+typedef struct tool_t
 {
-    int argc;
-    const char **argv;
+    config_t *config;
 
-    mediator_t *mediator;
-    lifetime_t *lifetime;
+    cfg_field_t *emit_ssa;
+    cfg_field_t *output_dir;
 
-    logger_t *reports;
-    ap_t *ap;
+    cfg_field_t *warn_as_error;
+    cfg_field_t *report_limit;
+    cfg_field_t *report_style;
 
-    bool emitSSA;
+    default_options_t options;
+} tool_t;
 
-    bool warnAsError;
-    size_t reportLimit;
-
-    const char *sourceOut;
-    const char *headerOut;
-
-    vector_t *sourcePaths;
-} runtime_t;
-
-runtime_t cmd_parse(mediator_t *mediator, lifetime_t *lifetime, int argc,
-                    const char **argv);
+tool_t make_tool(arena_t *arena);

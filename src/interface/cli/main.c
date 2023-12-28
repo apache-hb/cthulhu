@@ -1,7 +1,9 @@
+#include "config/config.h"
 #include "format/colour.h"
 #include "cmd.h"
 
 #include "cthulhu/events/events.h"
+#include "io/console.h"
 #include "memory/memory.h"
 #include "notify/text.h"
 #include "scan/node.h"
@@ -22,6 +24,7 @@
 #include "cthulhu/emit/emit.h"
 
 #include "core/macros.h"
+#include "support/langs.h"
 #include <stdio.h>
 
 static const version_info_t kToolVersion = {
@@ -96,11 +99,40 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
 int main(int argc, const char **argv)
 {
     arena_t *arena = ctu_default_alloc();
-    mediator_t *mediator = mediator_new("cli", kToolVersion, arena);
+    mediator_t *mediator = mediator_new(arena);
     lifetime_t *lifetime = lifetime_new(mediator, arena);
     logger_t *reports = lifetime_get_logger(lifetime);
 
-    runtime_t rt = cmd_parse(mediator, lifetime, argc, argv);
+    langs_t langs = get_langs();
+    for (size_t i = 0; i < langs.size; i++)
+    {
+        lifetime_add_language(lifetime, langs.langs[i]);
+    }
+
+    io_t *io = io_stdout(arena);
+
+    tool_t tool = make_tool(arena);
+
+    tool_config_t config = {
+        .arena = arena,
+        .io = io,
+
+        .group = tool.config,
+        .version = kToolVersion,
+
+        .argc = argc,
+        .argv = argv,
+    };
+
+    ap_t *ap = ap_new(tool.config, arena);
+
+    int parse_err = parse_argparse(ap, tool.options, config);
+    if (parse_err == EXIT_SHOULD_EXIT)
+    {
+        return EXIT_OK;
+    }
+
+    vector_t *paths = ap_get_posargs(ap);
 
     io_t *msg_buffer = io_blob("buffer", 0x1000, eAccessWrite | eAccessText, arena);
 
@@ -115,13 +147,13 @@ int main(int argc, const char **argv)
     };
 
     report_config_t report_config = {
-        .report_format = eTextSimple,
+        .report_format = cfg_enum_value(tool.report_style),
         .text_config = text_config,
     };
 
     CHECK_LOG(reports, "initializing");
 
-    size_t total_sources = vector_len(rt.sourcePaths);
+    size_t total_sources = vector_len(paths);
     if (total_sources == 0)
     {
         msg_notify(reports, &kEvent_NoSourceFiles, node_builtin(), "no source files provided");
@@ -131,7 +163,7 @@ int main(int argc, const char **argv)
 
     for (size_t i = 0; i < total_sources; i++)
     {
-        const char *path = vector_get(rt.sourcePaths, i);
+        const char *path = vector_get(paths, i);
         parse_source(lifetime, path);
     }
 
@@ -166,7 +198,7 @@ int main(int argc, const char **argv)
         .deps = ssa.deps,
     };
 
-    if (rt.emitSSA)
+    if (cfg_bool_value(tool.emit_ssa))
     {
         ssa_emit_options_t emit_options = {.opts = base_emit_options};
 

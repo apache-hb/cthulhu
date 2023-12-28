@@ -66,6 +66,11 @@ node_t *node_new(const scan_t *scan, where_t where);
 NODISCARD CONSTFN
 const node_t *node_builtin(void);
 
+/// @brief check if a node is the builtin node
+///
+/// @param node the node to check
+///
+/// @return whether or not @p node is the builtin node
 NODISCARD CONSTFN
 bool node_is_builtin(const node_t *node);
 

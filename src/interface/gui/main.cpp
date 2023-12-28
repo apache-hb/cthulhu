@@ -28,12 +28,12 @@
 
 #include <csetjmp>
 
-static const version_info_t kVersionInfo = {
-    .license = "GPLv3",
-    .desc = "Cthulhu Compiler Collection GUI",
-    .author = "Elliot Haisley",
-    .version = NEW_VERSION(0, 0, 1)
-};
+// static const version_info_t kVersionInfo = {
+//     .license = "GPLv3",
+//     .desc = "Cthulhu Compiler Collection GUI",
+//     .author = "Elliot Haisley",
+//     .version = NEW_VERSION(0, 0, 1)
+// };
 
 struct CompileRun : ed::CompileInfo
 {
@@ -63,12 +63,12 @@ struct CompileRun : ed::CompileInfo
         .brief = "Test group to demonstrate config"
     };
 
-    constexpr static const char *test_int_args_long[] = { "test-int", NULL };
+    constexpr static const char *kTestIntArgsLong[] = { "test-int", NULL };
 
     cfg_info_t test_int_info = {
         .name = "test_int",
         .brief = "Test integer",
-        .long_args = test_int_args_long
+        .long_args = kTestIntArgsLong
     };
 
     cfg_int_t test_int_config = {
@@ -77,36 +77,36 @@ struct CompileRun : ed::CompileInfo
         .max = 99
     };
 
-    constexpr static const char *test_bool_args[] = { "test-bool", NULL };
+    constexpr static const char *kTestBoolArgs[] = { "test-bool", NULL };
 
     cfg_info_t test_bool_info = {
         .name = "test_bool",
         .brief = "Test boolean",
-        .long_args = test_bool_args
+        .long_args = kTestBoolArgs
     };
 
     cfg_bool_t test_bool_config = {
         .initial = true
     };
 
-    constexpr static const char *test_string_args[] = { "test-string", NULL };
+    constexpr static const char *kTestStringArgs[] = { "test-string", NULL };
 
     cfg_info_t test_string_info = {
         .name = "test_string",
         .brief = "Test string",
-        .long_args = test_string_args
+        .long_args = kTestStringArgs
     };
 
     cfg_string_t test_string_config = {
         .initial = "hello"
     };
 
-    constexpr static const char *test_enum_args[] = { "test-enum", NULL };
+    constexpr static const char *kTestEnumArgs[] = { "test-enum", NULL };
 
     cfg_info_t test_enum_info = {
         .name = "test_enum",
         .brief = "Test enum",
-        .long_args = test_enum_args
+        .long_args = kTestEnumArgs
     };
 
     cfg_choice_t test_enum_choices[3] = {
@@ -121,12 +121,12 @@ struct CompileRun : ed::CompileInfo
         .initial = 2
     };
 
-    constexpr static const char *test_flags_args[] = { "test-flags", NULL };
+    constexpr static const char *kTestFlagsArgs[] = { "test-flags", NULL };
 
     cfg_info_t test_flags_info = {
         .name = "test_flags",
         .brief = "Test flags",
-        .long_args = test_flags_args
+        .long_args = kTestFlagsArgs
     };
 
     cfg_choice_t test_flags_choices[3] = {
@@ -282,7 +282,7 @@ struct EditorUi
 
     void init_mediator()
     {
-        mediator = mediator_new("editor", kVersionInfo, &global);
+        mediator = mediator_new(&global);
     }
 
     static const ImGuiDockNodeFlags kDockFlags

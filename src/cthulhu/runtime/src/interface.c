@@ -1,4 +1,3 @@
-#include "base/log.h"
 #include "common.h"
 
 #include "cthulhu/events/events.h"
@@ -77,15 +76,13 @@ lifetime_t *handle_get_lifetime(driver_t *handle)
     return handle->parent;
 }
 
-mediator_t *mediator_new(const char *id, version_info_t version, arena_t *arena)
+mediator_t *mediator_new(arena_t *arena)
 {
     runtime_init(arena);
 
-    mediator_t *self = ARENA_MALLOC(arena, sizeof(mediator_t), id, NULL);
+    mediator_t *self = ARENA_MALLOC(arena, sizeof(mediator_t), "mediator", NULL);
 
     self->arena = arena;
-    self->id = id;
-    self->version = version;
 
     return self;
 }

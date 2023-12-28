@@ -10,20 +10,17 @@ else
 endif
 
 api_header = 'impl' / os_platform + '.h'
-
-os_args = [
-    '-DOS_API_HEADER="' + api_header + '"',
-]
+os_header = '-DOS_API_HEADER="' + api_header + '"'
 
 lib_oscommon = library('os_common', src,
-    c_args : user_args + os_args,
+    c_args : user_args + [ os_header ],
     dependencies : [ core, base, memory, std ],
     include_directories : [ 'include', 'src' ]
 )
 
 os_common = declare_dependency(
     link_with : lib_oscommon,
-    compile_args : [ os_args ],
+    compile_args : [ os_header ],
     dependencies : [ core ],
     include_directories : [ 'include', 'src' ]
 )
@@ -35,7 +32,7 @@ subdir('src' / os_platform)
 # create the native library
 
 os = declare_dependency(
-    compile_args : [ os_args ],
+    compile_args : [ os_header ],
     link_with : [ lib_osnative, lib_oscommon ],
     include_directories : 'include',
     dependencies : [ core ]

@@ -1,13 +1,10 @@
 #include "cmd.h"
 
-#include "base/log.h"
 #include "config/config.h"
 #include "io/console.h"
 #include "io/io.h"
-#include "support/langs.h"
 
-#include "cthulhu/runtime/interface.h"
-
+#include "notify/text.h"
 #include "std/vector.h"
 #include "std/str.h"
 
@@ -17,204 +14,105 @@
 
 #include <stdio.h>
 
-// errors
-
-const diagnostic_t kDiagUnknownArg = {
-    .severity = eSeverityWarn,
-    .id = "CLI-0001",
-    .brief = "unknown argument",
-    .description = "unknown argument provided to command line"
-};
-
 static const cfg_info_t kConfigInfo = {
     .name = "cli",
     .brief = "Cthulhu CLI configuration options",
 };
 
-/// general
-static cfg_info_t kGroup_GeneralInfo = {
-    .name = "general",
-    .brief = "General options"
-};
-
-static const char *const kGeneralHelpInfoShortArgs[] = { "h", "?", NULL };
-static const char *const kGeneralHelpInfoLongArgs[] = { "help", NULL };
-
-static cfg_info_t kGeneral_HelpInfo = {
-    .name = "help",
-    .brief = "Print help message",
-    .short_args = kGeneralHelpInfoShortArgs,
-    .long_args = kGeneralHelpInfoLongArgs,
-};
-
-static const char *const kGeneralVersionInfoShortArgs[] = { "V", NULL };
-static const char *const kGeneralVersionInfoLongArgs[] = { "version", NULL };
-
-static cfg_info_t kGeneral_VersionInfo = {
-    .name = "version",
-    .brief = "Print version message",
-    .short_args = kGeneralVersionInfoShortArgs,
-    .long_args = kGeneralVersionInfoLongArgs,
-};
-
-/// codegen
-
-static cfg_info_t kGroup_CodegenInfo = {
-    .name = "codegen",
-    .brief = "Code generation options"
-};
-
-static const char *const kCodegenEmitSsaShortArgs[] = { "ssa", NULL };
-static const char *const kCodegenEmitSsaLongArgs[] = { "emit-ssa", NULL };
-
-static cfg_info_t kCodegen_EmitSsa = {
-    .name = "debug-ssa",
-    .brief = "Emit SSA to the output directory",
-    .short_args = kCodegenEmitSsaShortArgs,
-    .long_args = kCodegenEmitSsaLongArgs,
-};
-
-/// compiler debugging, user debugging options should be in codegen
-
-static cfg_info_t kGroup_DebugInfo = {
-    .name = "debug",
-    .brief = "Compiler internal debugging options, for user debugging options see codegen",
-};
-
-static const char *const kDebugVerboseLogsShortArgs[] = { "V", NULL };
-static const char *const kDebugVerboseLogsLongArgs[] = { "verbose", NULL };
-
-static cfg_info_t kDebug_VerboseLogs = {
-    .name = "verbose",
-    .brief = "Enable verbose logging",
-    .short_args = kDebugVerboseLogsShortArgs,
-    .long_args = kDebugVerboseLogsLongArgs,
-};
-
-/// reporting
-
-static cfg_info_t kGroup_ReportInfo = {
+static const cfg_info_t kReportInfo = {
     .name = "reports",
     .brief = "Reporting options"
 };
 
-static const char *const kReportWarnAsErrorArgs[] = { "Werror", NULL };
+static const char *const kIrShortArgs[] = { "ir", NULL };
+static const char *const kIrLongArgs[] = { "emit-ir", NULL };
 
-static cfg_info_t kReport_WarnAsError = {
+static const cfg_info_t kEmitIr = {
+    .name = "emit-ssa",
+    .brief = "Emit SSA IR to the output directory",
+    .short_args = kIrShortArgs,
+    .long_args = kIrLongArgs,
+};
+
+static const char *const kWarnAsErrorShortArgs[] = { "Werror", NULL };
+
+static const cfg_info_t kWarnAsError = {
     .name = "warn-as-error",
     .brief = "Treat warnings as errors",
-    .short_args = kReportWarnAsErrorArgs,
-    .long_args = kReportWarnAsErrorArgs,
+    .short_args = kWarnAsErrorShortArgs
 };
 
-static const char *const kReportLimitArgs[] = { "fmax-errors", NULL };
+static const char *const kReportLimitShortArgs[] = { "fmax-errors", NULL };
 
-static cfg_info_t kReport_Limit = {
+static const cfg_info_t kReportLimit = {
     .name = "max-errors",
     .brief = "Limit the number of reports",
-    .short_args = kReportLimitArgs,
+    .short_args = kReportLimitShortArgs
 };
 
-runtime_t cmd_parse(mediator_t *mediator, lifetime_t *lifetime, int argc, const char **argv)
-{
-    arena_t *arena = lifetime_get_arena(lifetime);
-    io_t *io = io_stdout(arena);
-    langs_t langs = get_langs();
-    for (size_t i = 0; i < langs.size; i++)
-    {
-        lifetime_add_language(lifetime, langs.langs[i]);
-    }
+static const char *const kOutputDirShortArgs[] = { "o", NULL };
+static const char *const kOutputDirLongArgs[] = { "dir", NULL };
 
+static const cfg_info_t kOutputDir = {
+    .name = "output-dir",
+    .brief = "Output directory for generated files",
+    .short_args = kOutputDirShortArgs,
+    .long_args = kOutputDirLongArgs,
+};
+
+static const char *const kReportStyleShortArgs[] = { "r", NULL };
+static const char *const kReportStyleLongArgs[] = { "report", NULL };
+
+static const cfg_info_t kReportStyle = {
+    .name = "report-style",
+    .brief = "Report style to use",
+    .short_args = kReportStyleShortArgs,
+    .long_args = kReportStyleLongArgs,
+};
+
+static const cfg_choice_t kReportStyleChoices[] = {
+    { "simple", eTextSimple },
+    { "complex", eTextComplex },
+};
+
+tool_t make_tool(arena_t *arena)
+{
     config_t *config = config_new(arena, &kConfigInfo);
 
-    // general
-    config_t *general_group = config_group(config, &kGroup_GeneralInfo);
+    default_options_t options = get_default_options(config);
 
-    cfg_bool_t help_options = {.initial = false};
-    cfg_field_t *help_field = config_bool(general_group, &kGeneral_HelpInfo, help_options);
-
-    cfg_bool_t version_options = {.initial = false};
-    cfg_field_t *version_field = config_bool(general_group, &kGeneral_VersionInfo, version_options);
-
-    // codegen
-    config_t *codegen_group = config_group(config, &kGroup_CodegenInfo);
-
-    cfg_bool_t emit_ssa_options = {.initial = false};
-    cfg_field_t *emit_ssa_field = config_bool(codegen_group, &kCodegen_EmitSsa, emit_ssa_options);
-
-    // debug
-    config_t *debug_group = config_group(config, &kGroup_DebugInfo);
-
-    cfg_bool_t verbose_options = {.initial = false};
-    cfg_field_t *verbose_field = config_bool(debug_group, &kDebug_VerboseLogs, verbose_options);
-
-    // reporting
-    config_t *report_group = config_group(config, &kGroup_ReportInfo);
-
-    cfg_int_t report_limit_options = {.initial = 20, .min = 0, .max = 1000};
-    cfg_field_t *report_limit_field = config_int(report_group, &kReport_Limit, report_limit_options);
+    cfg_bool_t emit_ir_options = {.initial = false};
+    cfg_field_t *emit_ir_field = config_bool(config, &kEmitIr, emit_ir_options);
 
     cfg_bool_t warn_as_error_options = {.initial = false};
-    cfg_field_t *warn_as_error_field = config_bool(report_group, &kReport_WarnAsError, warn_as_error_options);
+    cfg_field_t *warn_as_error_field = config_bool(config, &kWarnAsError, warn_as_error_options);
 
-    ap_t *ap = ap_new(config, arena);
+    config_t *report_group = config_group(config, &kReportInfo);
 
-    runtime_t rt = {
-        .argc = argc,
-        .argv = argv,
+    cfg_int_t report_limit_options = {.initial = 20, .min = 0, .max = 1000};
+    cfg_field_t *report_limit_field = config_int(report_group, &kReportLimit, report_limit_options);
 
-        .mediator = mediator,
-        .lifetime = lifetime,
+    cfg_string_t output_dir_options = {.initial = NULL};
+    cfg_field_t *output_dir_field = config_string(report_group, &kOutputDir, output_dir_options);
 
-        .reports = lifetime_get_logger(lifetime),
-        .ap = ap,
+    cfg_enum_t report_style_options = {
+        .options = kReportStyleChoices,
+        .count = (sizeof(kReportStyleChoices) / sizeof(cfg_choice_t)),
+        .initial = eTextSimple,
+    };
+    cfg_field_t *report_style_field = config_enum(report_group, &kReportStyle, report_style_options);
 
-        .warnAsError = false,
-        .reportLimit = 20,
+    tool_t tool = {
+        .config = config,
+        .options = options,
 
-        .sourcePaths = vector_new(16),
+        .emit_ssa = emit_ir_field,
+        .output_dir = output_dir_field,
+
+        .warn_as_error = warn_as_error_field,
+        .report_limit = report_limit_field,
+        .report_style = report_style_field,
     };
 
-    ap_parse_args(ap, argc, argv);
-
-    vector_t *posargs = ap_get_posargs(ap);
-    size_t posarg_count = vector_len(posargs);
-
-    for (size_t i = 0; i < posarg_count; i++)
-    {
-        const char *path = vector_get(posargs, i);
-        vector_push(&rt.sourcePaths, (char*)path);
-    }
-
-    vector_t *unknown = ap_get_unknown(ap);
-    size_t unknown_count = vector_len(unknown);
-
-    if (unknown_count > 0)
-    {
-        io_printf(io, "%zu unknown arguments:\n", unknown_count);
-        for (size_t i = 0; i < unknown_count; i++)
-        {
-            const char *arg = vector_get(unknown, i);
-            io_printf(io, "  %s\n", arg);
-        }
-    }
-
-    ctu_log_update(cfg_bool_value(verbose_field));
-
-    if (cfg_bool_value(help_field))
-    {
-        // print help
-    }
-
-    if (cfg_bool_value(version_field))
-    {
-        // print version
-    }
-
-    rt.reportLimit = cfg_int_value(report_limit_field);
-    rt.warnAsError = cfg_bool_value(warn_as_error_field);
-
-    rt.emitSSA = cfg_bool_value(emit_ssa_field);
-
-    return rt;
+    return tool;
 }

@@ -277,8 +277,9 @@ static void print_field_default(display_options_t options, const cfg_field_t *fi
         const cfg_string_t *info = cfg_string_info(field);
         if (info->initial != NULL)
         {
-            io_printf(options.io, "(default: `%s`)\n", info->initial);
+            io_printf(options.io, "(default: `%s`)", info->initial);
         }
+        io_printf(options.io, "\n");
         break;
     }
 

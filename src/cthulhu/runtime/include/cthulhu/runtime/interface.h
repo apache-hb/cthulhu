@@ -29,7 +29,7 @@ void runtime_init(arena_t *arena);
 /// @param arena the allocator to use
 ///
 /// @return mediator_t* the mediator object
-mediator_t *mediator_new(const char *id, version_info_t version, arena_t *arena);
+mediator_t *mediator_new(arena_t *arena);
 
 // lifetime api
 
