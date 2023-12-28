@@ -125,7 +125,7 @@ static io_t *vfs_io(virtual_file_t *file, os_access_t flags, arena_t *arena)
 static inode_t *virtual_dir(arena_t *arena)
 {
     virtual_dir_t dir = {
-        .dirents = map_new(64)
+        .dirents = map_optimal_arena(64, arena)
     };
 
     return inode_dir(&dir, sizeof(virtual_dir_t), arena);

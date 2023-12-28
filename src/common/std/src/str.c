@@ -416,18 +416,19 @@ char *str_normalizen(const char *str, size_t len)
 }
 
 USE_DECL
-vector_t *str_split(const char *str, const char *sep)
+vector_t *str_split_arena(IN_STRING const char *str, IN_STRING const char *sep, arena_t *arena)
 {
     CTASSERT(str != NULL);
     CTASSERT(sep != NULL);
+    CTASSERT(arena != NULL);
 
     if (strlen(sep) == 0)
     {
         // split into individual characters
-        vector_t *result = vector_new(strlen(str));
+        vector_t *result = vector_new_arena(strlen(str), arena);
         for (size_t i = 0; i < strlen(str); i++)
         {
-            char *c = ARENA_MALLOC(get_global_arena(), 2, "str_split", NULL);
+            char *c = ARENA_MALLOC(arena, 2, "str_split", NULL);
             c[0] = str[i];
             c[1] = '\0';
             vector_push(&result, c);
@@ -436,7 +437,7 @@ vector_t *str_split(const char *str, const char *sep)
     }
 
     size_t seplen = strlen(sep);
-    vector_t *result = vector_new(4);
+    vector_t *result = vector_new_arena(4, arena);
 
     // store the start of the current token
     // continue until a seperator is found
@@ -454,14 +455,21 @@ vector_t *str_split(const char *str, const char *sep)
             continue;
         }
 
-        vector_push(&result, ctu_strndup(token, cursor - token));
+        vector_push(&result, arena_strndup(token, cursor - token, arena));
         token = cursor + seplen;
         cursor += seplen;
     }
 
-    vector_push(&result, ctu_strndup(token, cursor - token));
+    vector_push(&result, arena_strndup(token, cursor - token, arena));
 
     return result;
+}
+
+USE_DECL
+vector_t *str_split(const char *str, const char *sep)
+{
+    arena_t *arena = get_global_arena();
+    return str_split_arena(str, sep, arena);
 }
 
 USE_DECL

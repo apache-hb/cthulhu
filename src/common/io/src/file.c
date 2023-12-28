@@ -88,7 +88,12 @@ USE_DECL
 io_t *io_file(const char *path, os_access_t mode)
 {
     arena_t *arena = get_global_arena();
+    return io_file_arena(path, mode, arena);
+}
 
+USE_DECL
+io_t *io_file_arena(const char *path, os_access_t mode, arena_t *arena)
+{
     os_file_t fd = { 0 };
     os_error_t err = os_file_open(path, mode, &fd);
 

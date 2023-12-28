@@ -73,7 +73,7 @@ void *inode_data(inode_t *inode);
 bool inode_is(inode_t *inode, inode_type_t type);
 
 // helpers
-os_error_t mkdir_recursive(const char *path, bool *success);
+os_error_t mkdir_recursive(const char *path, bool *success, arena_t *arena);
 
 // fs api
 

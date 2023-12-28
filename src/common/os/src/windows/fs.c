@@ -4,8 +4,6 @@
 
 #include "os/os.h"
 
-#include "memory/memory.h"
-
 // TODO: this feels janky
 USE_DECL
 os_error_t os_file_create(const char *path)
@@ -118,22 +116,19 @@ os_dirent_t os_dirent_type(const char *path)
 }
 
 USE_DECL
-os_error_t os_dir_current(const char **cwd)
+os_error_t os_dir_current(char *cwd, size_t size)
 {
     CTASSERT(cwd != NULL);
+    CTASSERT(size > 0);
 
-    DWORD size = GetCurrentDirectoryA(0, NULL);
-    arena_t *arena = get_global_arena();
-    char *buffer = ARENA_MALLOC(arena, size + 1, "os_dir_current", NULL);
+    DWORD ret = GetCurrentDirectoryA((DWORD)size, cwd);
 
-    if (GetCurrentDirectoryA(size, buffer) == 0)
+    if (ret == 0)
     {
         return GetLastError();
     }
 
     // add null terminator
-    buffer[size] = '\0';
-
-    *cwd = buffer;
+    cwd[ret] = '\0';
     return ERROR_SUCCESS;
 }

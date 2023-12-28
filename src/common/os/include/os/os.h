@@ -13,6 +13,8 @@ BEGIN_API
 /// @ingroup Common
 /// @{
 
+typedef struct arena_t arena_t;
+
 /// @brief file handle
 typedef struct os_file_t os_file_t;
 
@@ -119,7 +121,7 @@ os_dirent_t os_dirent_type(IN_STRING const char *path);
 /// @return the current working directory
 /// @return an error if the current working directory could not be retrieved
 NODISCARD
-os_error_t os_dir_current(IN_NOTNULL const char **cwd);
+os_error_t os_dir_current(OUT_WRITES(size) char *cwd, size_t size);
 
 /// directory iteration
 
@@ -131,7 +133,7 @@ os_error_t os_dir_current(IN_NOTNULL const char **cwd);
 ///
 /// @return result containing either a valid iterator or an error, NULL if dir does not exist
 NODISCARD
-os_error_t os_iter_begin(IN_STRING const char *path, os_iter_t *iter);
+os_error_t os_iter_begin(IN_STRING const char *path, os_iter_t *iter, arena_t *arena);
 
 /// @brief close a directory iterator
 ///
@@ -160,7 +162,7 @@ os_error_t os_iter_error(IN_NOTNULL os_iter_t *iter);
 ///
 /// @return the name of the directory entry
 NODISCARD
-const char *os_dir_name(IN_NOTNULL os_dir_t *dir);
+char *os_dir_name(IN_NOTNULL os_dir_t *dir, arena_t *arena);
 
 /// file api
 

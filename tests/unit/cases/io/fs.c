@@ -8,12 +8,13 @@
 int main(void)
 {
     test_install_panic_handler();
+    test_install_electric_fence();
 
     arena_t *arena = ctu_default_alloc();
     test_suite_t suite = test_suite_new("fs", arena);
 
-    const char *cwd = NULL;
-    os_error_t err = os_dir_current(&cwd);
+    char cwd[1024];
+    os_error_t err = os_dir_current(cwd, sizeof(cwd));
     CTASSERTF(err == 0, "os_dir_current() failed with error %s", os_error_string(err));
 
     {
@@ -25,7 +26,7 @@ int main(void)
     {
         test_group_t group = test_group(&suite, "current dir");
 
-        fs_t *fs = fs_physical(format("%s" NATIVE_PATH_SEPARATOR "data" NATIVE_PATH_SEPARATOR "unit-test-data", cwd), arena);
+        fs_t *fs = fs_physical(str_format(arena, "%s" NATIVE_PATH_SEPARATOR "data" NATIVE_PATH_SEPARATOR "unit-test-data", cwd), arena);
 
         GROUP_EXPECT_PASS(group, "fs_physical() should return a valid fs_t pointer", fs != NULL);
     }
@@ -33,7 +34,7 @@ int main(void)
     {
         test_group_t group = test_group(&suite, "other");
 
-        fs_t *fs = fs_physical(format("%s" NATIVE_PATH_SEPARATOR "data" NATIVE_PATH_SEPARATOR "unit-test-data", cwd), arena);
+        fs_t *fs = fs_physical(str_format(arena, "%s" NATIVE_PATH_SEPARATOR "data" NATIVE_PATH_SEPARATOR "unit-test-data", cwd), arena);
 
         GROUP_EXPECT_PASS(group, "fs_physical() should return a valid fs_t pointer", fs != NULL);
 

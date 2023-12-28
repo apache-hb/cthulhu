@@ -120,6 +120,9 @@ char *str_normalizen(IN_READS(len) const char *str, size_t len);
 NODISCARD
 vector_t *str_split(IN_STRING const char *str, IN_STRING const char *sep);
 
+NODISCARD
+vector_t *str_split_arena(IN_STRING const char *str, IN_STRING const char *sep, arena_t *arena);
+
 /// @brief find the longest common prefix of a vector of paths
 ///
 /// @note if no common prefix is found, the empty string is returned.

@@ -1,3 +1,4 @@
+#include "core/macros.h"
 #include "os/os.h"
 #include "os_common.h"
 
@@ -8,10 +9,12 @@
 #include <errno.h>
 
 USE_DECL
-os_error_t os_iter_begin(const char *path, os_iter_t *result)
+os_error_t os_iter_begin(const char *path, os_iter_t *result, arena_t *arena)
 {
     CTASSERT(path != NULL);
     CTASSERT(result != NULL);
+
+    CTU_UNUSED(arena);
 
     DIR *dir = opendir(path);
     if (dir == NULL)
@@ -71,10 +74,10 @@ os_error_t os_iter_error(os_iter_t *iter)
 }
 
 USE_DECL
-const char *os_dir_name(os_dir_t *dir)
+char *os_dir_name(os_dir_t *dir, arena_t *arena)
 {
     CTASSERT(dir != NULL);
 
     // have to copy the string because it's owned by the dirent
-    return ctu_strdup(dir->ent->d_name);
+    return arena_strdup(dir->ent->d_name, arena);
 }

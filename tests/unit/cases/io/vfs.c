@@ -6,6 +6,7 @@
 int main(void)
 {
     test_install_panic_handler();
+    test_install_electric_fence();
 
     arena_t *arena = ctu_default_alloc();
     test_suite_t suite = test_suite_new("vfs", arena);

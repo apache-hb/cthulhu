@@ -10,9 +10,9 @@
 
 #include <string.h>
 
-static vector_t *path_split(const char *path)
+static vector_t *path_split(const char *path, arena_t *arena)
 {
-    return str_split(path, "/");
+    return str_split_arena(path, "/", arena);
 }
 
 // fs interface api
@@ -103,7 +103,7 @@ static void delete_file(fs_t *fs, inode_t *node, const char *name)
 
 void fs_file_create(fs_t *fs, const char *path)
 {
-    vector_t *parts = path_split(path);
+    vector_t *parts = path_split(path, fs->arena);
     size_t len = vector_len(parts);
     inode_t *current = fs->root;
 
@@ -123,7 +123,7 @@ void fs_file_create(fs_t *fs, const char *path)
 
 bool fs_file_exists(fs_t *fs, const char *path)
 {
-    vector_t *parts = path_split(path);
+    vector_t *parts = path_split(path, fs->arena);
     size_t len = vector_len(parts);
     inode_t *current = fs->root;
 
@@ -144,7 +144,7 @@ bool fs_file_exists(fs_t *fs, const char *path)
 
 void fs_file_delete(fs_t *fs, const char *path)
 {
-    vector_t *parts = path_split(path);
+    vector_t *parts = path_split(path, fs->arena);
     size_t len = vector_len(parts);
     inode_t *current = fs->root;
 
@@ -166,7 +166,7 @@ io_t *fs_open(fs_t *fs, const char *path, os_access_t flags)
 {
     // create a file if it doesn't exist then open it
 
-    vector_t *parts = path_split(path);
+    vector_t *parts = path_split(path, fs->arena);
     size_t len = vector_len(parts);
     inode_t *current = fs->root;
 
@@ -236,7 +236,7 @@ void fs_dir_create(fs_t *fs, const char *path)
     CTASSERT(path != NULL);
     CTASSERT(strlen(path) > 0);
 
-    vector_t *parts = path_split(path);
+    vector_t *parts = path_split(path, fs->arena);
     size_t len = vector_len(parts);
     inode_t *current = fs->root;
 
@@ -266,7 +266,7 @@ void fs_dir_create(fs_t *fs, const char *path)
 
 bool fs_dir_exists(fs_t *fs, const char *path)
 {
-    vector_t *parts = path_split(path);
+    vector_t *parts = path_split(path, fs->arena);
     size_t len = vector_len(parts);
     inode_t *current = fs->root;
 
@@ -294,7 +294,7 @@ bool fs_dir_exists(fs_t *fs, const char *path)
 
 void fs_dir_delete(fs_t *fs, const char *path)
 {
-    vector_t *parts = path_split(path);
+    vector_t *parts = path_split(path, fs->arena);
     size_t len = vector_len(parts);
     inode_t *current = fs->root;
 

@@ -35,6 +35,9 @@ void io_close(OUT_PTR_INVALID io_t *io);
 NODISCARD CT_ALLOC(io_close)
 io_t *io_file(const char *path, os_access_t mode);
 
+NODISCARD CT_ALLOC(io_close)
+io_t *io_file_arena(const char *path, os_access_t mode, arena_t *arena);
+
 /// @brief create an IO object from an initial view of memory
 /// @note this copies @p size bytes from @p data into a new buffer
 ///

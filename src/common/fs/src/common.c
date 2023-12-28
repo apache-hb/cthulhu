@@ -50,7 +50,7 @@ bool inode_is(inode_t *inode, inode_type_t type)
 
 // helpers
 
-os_error_t mkdir_recursive(const char *path, bool *create)
+os_error_t mkdir_recursive(const char *path, bool *create, arena_t *arena)
 {
     CTASSERT(path != NULL);
     CTASSERT(create != NULL);
@@ -59,8 +59,8 @@ os_error_t mkdir_recursive(const char *path, bool *create)
     if (index != SIZE_MAX)
     {
         // create parent directory
-        char *parent = ctu_strndup(path, index);
-        os_error_t result = mkdir_recursive(parent, create);
+        char *parent = arena_strndup(path, index, arena);
+        os_error_t result = mkdir_recursive(parent, create, arena);
         if (result != 0) { return result; }
     }
 

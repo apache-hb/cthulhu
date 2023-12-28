@@ -45,18 +45,18 @@ static const char *get_absolute(fs_t *fs, inode_t *node, const char *path)
 
     if (is_special(dir->path) && !is_special(path))
     {
-        return format("%s" NATIVE_PATH_SEPARATOR "%s", self->root, path);
+        return str_format(fs->arena, "%s" NATIVE_PATH_SEPARATOR "%s", self->root, path);
     }
 
     if (!is_special(dir->path) && is_special(path))
     {
-        return format("%s" NATIVE_PATH_SEPARATOR "%s", self->root, dir->path);
+        return str_format(fs->arena, "%s" NATIVE_PATH_SEPARATOR "%s", self->root, dir->path);
     }
 
-    return format("%s" NATIVE_PATH_SEPARATOR "%s" NATIVE_PATH_SEPARATOR "%s", self->root, dir->path, path);
+    return str_format(fs->arena, "%s" NATIVE_PATH_SEPARATOR "%s" NATIVE_PATH_SEPARATOR "%s", self->root, dir->path, path);
 }
 
-static const char *get_relative(inode_t *node, const char *path)
+static const char *get_relative(inode_t *node, const char *path, arena_t *arena)
 {
     const physical_dir_t *dir = inode_data(node);
 
@@ -72,7 +72,7 @@ static const char *get_relative(inode_t *node, const char *path)
 
     CTASSERT(!is_special(dir->path) && !is_special(path));
 
-    return format("%s" NATIVE_PATH_SEPARATOR "%s", dir->path, path);
+    return str_format(arena, "%s" NATIVE_PATH_SEPARATOR "%s", dir->path, path);
 }
 
 static inode_t *physical_dir(const char *path, arena_t *arena)
@@ -99,7 +99,7 @@ static inode_t *pfs_query_node(fs_t *fs, inode_t *self, const char *name)
     os_dirent_t dirent = os_dirent_type(absolute);
     CTASSERTF(dirent != eOsNodeError, "failed to query node %s", absolute);
 
-    const char *relative = get_relative(self, name);
+    const char *relative = get_relative(self, name, fs->arena);
 
     switch (dirent)
     {
@@ -117,17 +117,17 @@ static map_t *pfs_query_dirents(fs_t *fs, inode_t *self)
     const char *absolute = get_absolute(fs, self, NULL);
 
     os_iter_t iter = { 0 };
-    os_error_t err = os_iter_begin(absolute, &iter);
+    os_error_t err = os_iter_begin(absolute, &iter, fs->arena);
     CTASSERTF(err == 0, "failed to query dirents %s (%s)", absolute, os_error_string(err));
 
     os_dir_t dir = { 0 };
 
-    map_t *dirents = map_new(64);
+    map_t *dirents = map_new_arena(64, fs->arena);
 
     while (os_iter_next(&iter, &dir))
     {
         if (os_iter_error(&iter)) { break; }
-        const char *path = os_dir_name(&dir);
+        const char *path = os_dir_name(&dir, fs->arena);
 
         inode_t *inode = pfs_query_node(fs, self, path);
         CTASSERTF(inode != NULL, "failed to query node %s '%s'", absolute, path);
@@ -142,7 +142,7 @@ static map_t *pfs_query_dirents(fs_t *fs, inode_t *self)
 static io_t *pfs_query_file(fs_t *fs, inode_t *self, os_access_t flags)
 {
     const char *absolute = get_absolute(fs, self, NULL);
-    return io_file(absolute, flags);
+    return io_file_arena(absolute, flags, fs->arena);
 }
 
 static inode_t *pfs_file_create(fs_t *fs, inode_t *self, const char *name)
@@ -151,17 +151,17 @@ static inode_t *pfs_file_create(fs_t *fs, inode_t *self, const char *name)
     os_error_t err = os_file_create(absolute);
     CTASSERTF(err == 0, "failed to create file `%s` (%s) %s", absolute, name, os_error_string(err));
 
-    return physical_file(get_relative(self, name), fs->arena);
+    return physical_file(get_relative(self, name, fs->arena), fs->arena);
 }
 
 static inode_t *pfs_dir_create(fs_t *fs, inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
     bool create = false;
-    os_error_t err = mkdir_recursive(absolute, &create);
+    os_error_t err = mkdir_recursive(absolute, &create, fs->arena);
     CTASSERTF(err == 0, "failed to create dir `%s` %s", absolute, os_error_string(err));
 
-    return physical_dir(get_relative(self, name), fs->arena);
+    return physical_dir(get_relative(self, name, fs->arena), fs->arena);
 }
 
 static void pfs_dir_delete(fs_t *fs, inode_t *self, const char *name)
@@ -198,7 +198,7 @@ fs_t *fs_physical(const char *root, arena_t *arena)
     if (exist)
     {
         bool create = false;
-        os_error_t err = mkdir_recursive(root, &create);
+        os_error_t err = mkdir_recursive(root, &create, arena);
 
         // TODO: make this work recursively
         CTASSERTF(err == 0, "error creating root directory: %s. %s", root, os_error_string(err));

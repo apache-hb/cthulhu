@@ -19,12 +19,12 @@ static BOOL find_next(HANDLE handle, WIN32_FIND_DATA *data, DWORD *error)
 }
 
 USE_DECL
-os_error_t os_iter_begin(const char *path, os_iter_t *result)
+os_error_t os_iter_begin(const char *path, os_iter_t *result, arena_t *arena)
 {
     CTASSERT(path != NULL);
     CTASSERT(result != NULL);
 
-    char *wild = format("%s" NATIVE_PATH_SEPARATOR "*", path);
+    char *wild = str_format(arena, "%s" NATIVE_PATH_SEPARATOR "*", path);
 
     WIN32_FIND_DATA data;
     DWORD error = ERROR_SUCCESS;
@@ -99,11 +99,11 @@ os_error_t os_iter_error(os_iter_t *iter)
 }
 
 USE_DECL
-const char *os_dir_name(os_dir_t *dir)
+char *os_dir_name(os_dir_t *dir, arena_t *arena)
 {
     CTASSERT(dir != NULL);
 
     // TODO: does this return the full or relative path?
     // TODO: duplicating this string is not ideal
-    return ctu_strdup(dir->data.cFileName);
+    return arena_strdup(dir->data.cFileName, arena);
 }
