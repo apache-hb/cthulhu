@@ -19,16 +19,17 @@ static const char *const kSetItems[] = {
 int main(void)
 {
     test_install_panic_handler();
+    test_install_electric_fence();
 
     arena_t *arena = ctu_default_alloc();
     test_suite_t suite = test_suite_new("set", arena);
 
     test_group_t set_dedup_group = test_group(&suite, "deduplicates");
 
-    set_t *dedup_set = set_new(3);
+    set_t *dedup_set = set_new_arena(3, arena);
     const char *item = set_add(dedup_set, "duplicate");
     for (size_t i = 0; i < 64; i++) {
-        char *element = ctu_strdup("duplicate");
+        char *element = arena_strdup("duplicate", arena);
         const char *it = set_add(dedup_set, element);
 
         /* pointer equality is on purpose */
@@ -36,13 +37,13 @@ int main(void)
     }
 
     test_group_t set_clash_group = test_group(&suite, "clashes");
-    set_t *set = set_new(3);
+    set_t *set = set_new_arena(3, arena);
     for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
         set_add(set, kSetItems[i]);
     }
 
     for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
-        char *name = format("%s in set", kSetItems[i]);
+        char *name = str_format(arena, "%s in set", kSetItems[i]);
         GROUP_EXPECT_PASS(set_clash_group, name, set_contains(set, kSetItems[i]));
     }
 

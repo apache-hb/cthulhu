@@ -117,7 +117,7 @@ int main(void)
     {
         test_group_t group = test_group(&suite, "str_replace_many");
         GROUP_EXPECT_PASS2(group, "replace many", {
-            map_t *entries = map_optimal(64);
+            map_t *entries = map_optimal_arena(64, arena);
             map_set(entries, "hello", (void *)"world");
             map_set(entries, "world", (void *)"hello");
             map_set(entries, "!", (void *)"?");
@@ -127,7 +127,7 @@ int main(void)
             CTASSERT( str_equal(result, "world___hello?"));
         });
         GROUP_EXPECT_PANIC(group, "null entry", {
-            map_t *entries = map_optimal(64);
+            map_t *entries = map_optimal_arena(64, arena);
             map_set(entries, "hello", NULL);
 
             (void)str_replace_many("hello world!", entries);
@@ -137,7 +137,7 @@ int main(void)
         GROUP_EXPECT_PANIC(group, "null all", (void)str_replace_many(NULL, NULL));
     }
 
-    vector_t *parts = vector_of(STRING_PARTS_LEN);
+    vector_t *parts = vector_of_arena(STRING_PARTS_LEN, arena);
     for (size_t i = 0; i < STRING_PARTS_LEN; i++)
     {
         vector_set(parts, i, (char *)kStringParts[i]);
@@ -150,12 +150,12 @@ int main(void)
             CTASSERT( str_equal(joined, "zero one two three four five six seven eight nine"));
         });
         GROUP_EXPECT_PASS2(group, "joined empty", {
-            vector_t *empty = vector_of(0);
+            vector_t *empty = vector_of_arena(0, arena);
             char *joined = str_join(" ", empty);
             CTASSERT( str_equal(joined, ""));
         });
         GROUP_EXPECT_PASS2(group, "joined one", {
-            vector_t *one = vector_init((char *)"hello");
+            vector_t *one = vector_init_arena((char *)"hello", arena);
             char *joined = str_join(" ", one);
             CTASSERT( str_equal(joined, "hello"));
         });
@@ -274,13 +274,13 @@ int main(void)
     {
         pair_t pair = kEscapes[i];
 
-        char *input = format("hello %s world", pair.escaped);
-        char *expected = format("hello %s world", pair.unescaped);
+        char *input = str_format(arena, "hello %s world", pair.escaped);
+        char *expected = str_format(arena, "hello %s world", pair.unescaped);
 
         char *result = str_normalize(input);
         char *result_n = str_normalizen(input, strlen(input));
 
-        char *name = format("escaped %s equal (`%s` != `%s`)", pair.escaped, expected, result);
+        char *name = str_format(arena, "escaped %s equal (`%s` != `%s`)", pair.escaped, expected, result);
         GROUP_EXPECT_PASS(normalize_group, name, str_equal(result, expected));
         GROUP_EXPECT_PASS(normalizen_group, name, str_equal(result_n, expected));
     }
@@ -289,16 +289,16 @@ int main(void)
     /// common prefix
     ///
 
-    vector_t *one_arg = vector_init((char *)"hello");
+    vector_t *one_arg = vector_init_arena((char *)"hello", arena);
     const char *one_prefix = str_common_prefix(one_arg);
 
-    vector_t *no_common = vector_of(2);
+    vector_t *no_common = vector_of_arena(2, arena);
     vector_set(no_common, 0, (void *)"hello");
     vector_set(no_common, 1, (void *)"world/world2");
 
     const char *no_common_prefix = str_common_prefix(no_common);
 
-    vector_t *common = vector_of(2);
+    vector_t *common = vector_of_arena(2, arena);
     vector_set(common, 0, (void *)"hello" NATIVE_PATH_SEPARATOR "stuff");
     vector_set(common, 1, (void *)"hello" NATIVE_PATH_SEPARATOR " world");
 

@@ -74,6 +74,16 @@ vector_t *vector_of_arena(size_t len, arena_t *arena)
 }
 
 USE_DECL
+vector_t *vector_init_arena(void *value, arena_t *arena)
+{
+    CTASSERT(arena != NULL);
+
+    vector_t *vector = vector_of_arena(1, arena);
+    vector_set(vector, 0, value);
+    return vector;
+}
+
+USE_DECL
 vector_t *vector_new(size_t size)
 {
     return vector_new_arena(size, get_global_arena());
@@ -88,9 +98,7 @@ vector_t *vector_of(size_t len)
 USE_DECL
 vector_t *vector_init(void *value)
 {
-    vector_t *vector = vector_of(1);
-    vector_set(vector, 0, value);
-    return vector;
+    return vector_init_arena(value, get_global_arena());
 }
 
 USE_DECL

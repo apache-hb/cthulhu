@@ -5,7 +5,6 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <limits.h>
 
 BEGIN_API
 
@@ -16,6 +15,10 @@ BEGIN_API
 
 typedef struct set_t set_t;
 typedef struct item_t item_t;
+typedef struct arena_t arena_t;
+
+NODISCARD
+set_t *set_new_arena(size_t size, arena_t *arena);
 
 /**
  * @brief create a new set with a given number of buckets

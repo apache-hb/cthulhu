@@ -18,26 +18,27 @@ static const char *const kSetItems[] = {
 int main(void)
 {
     test_install_panic_handler();
+    test_install_electric_fence();
 
     arena_t *arena = ctu_default_alloc();
     test_suite_t suite = test_suite_new("map", arena);
 
     {
         test_group_t group = test_group(&suite, "construction");
-        GROUP_EXPECT_PASS(group, "not null", map_new(3) != NULL);
+        GROUP_EXPECT_PASS(group, "not null", map_new_arena(3, arena) != NULL);
     }
 
     // insert string
     {
         test_group_t group = test_group(&suite, "insert_str");
 
-        map_t *map = map_new(64);
+        map_t *map = map_new_arena(64, arena);
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
             map_set(map, kSetItems[i], (char*)kSetItems[i]);
         }
 
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
-            char *name = format("%s in map", kSetItems[i]);
+            char *name = str_format(arena, "%s in map", kSetItems[i]);
             GROUP_EXPECT_PASS(group, name, map_get(map, kSetItems[i]) != NULL);
         }
     }
@@ -45,14 +46,14 @@ int main(void)
     // insert ptr
     {
         test_group_t group = test_group(&suite, "insert_ptr");
-        map_t *map = map_new(64);
+        map_t *map = map_new_arena(64, arena);
 
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
             map_set_ptr(map, kSetItems[i], (char*)kSetItems[i]);
         }
 
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
-            char *name = format("%s in map", kSetItems[i]);
+            char *name = str_format(arena, "%s in map", kSetItems[i]);
             GROUP_EXPECT_PASS(group, name, map_get_ptr(map, kSetItems[i]) != NULL);
         }
     }
@@ -60,7 +61,7 @@ int main(void)
     {
         test_group_t group = test_group(&suite, "default value");
         GROUP_EXPECT_PASS2(group, "default value", {
-            map_t *map = map_new(64);
+            map_t *map = map_new_arena(64, arena);
             char world[] = "world";
 
             /* pointer equality is on purpose */
@@ -71,7 +72,7 @@ int main(void)
     // iter
     {
         test_group_t group = test_group(&suite, "iter");
-        map_t *map = map_new(64);
+        map_t *map = map_new_arena(64, arena);
 
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
         {
@@ -97,7 +98,7 @@ int main(void)
     // get
     {
         test_group_t group = test_group(&suite, "get");
-        map_t *map = map_new(64);
+        map_t *map = map_new_arena(64, arena);
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
         {
             map_set(map, kSetItems[i], (char*)kSetItems[i]);
@@ -117,7 +118,7 @@ int main(void)
     // delete
     {
         test_group_t group = test_group(&suite, "delete");
-        map_t *map = map_new(64);
+        map_t *map = map_new_arena(64, arena);
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
         {
             map_set(map, kSetItems[i], (char*)kSetItems[i]);

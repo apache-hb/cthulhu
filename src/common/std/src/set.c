@@ -54,11 +54,10 @@ static item_t *get_bucket_ptr(set_t *set, const void *key)
 }
 
 USE_DECL
-set_t *set_new(size_t size)
+set_t *set_new_arena(size_t size, arena_t *arena)
 {
     CTASSERT(size > 0);
 
-    arena_t *arena = get_global_arena();
     set_t *set = ARENA_MALLOC(arena, set_size(size), "set", NULL);
     set->arena = arena;
     set->size = size;
@@ -70,6 +69,13 @@ set_t *set_new(size_t size)
     }
 
     return set;
+}
+
+USE_DECL
+set_t *set_new(size_t size)
+{
+    arena_t *arena = get_global_arena();
+    return set_new_arena(size, arena);
 }
 
 USE_DECL

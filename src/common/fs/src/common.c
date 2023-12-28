@@ -1,8 +1,8 @@
 #include "common.h"
 
+#include "memory/arena.h"
 #include "std/str.h"
 
-#include "memory/memory.h"
 #include "base/panic.h"
 
 #include <string.h>
