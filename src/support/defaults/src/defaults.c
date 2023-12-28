@@ -1,5 +1,5 @@
 #include "argparse/argparse.h"
-#include "base/colour.h"
+#include "format/colour.h"
 #include "base/log.h"
 #include "base/panic.h"
 #include "core/macros.h"
@@ -172,7 +172,7 @@ int process_default_options(default_options_t options, tool_config_t config)
     bool log_verbose = cfg_bool_value(options.log_verbose);
     if (log_verbose)
     {
-        ctu_log_control(eLogEnable);
+        ctu_log_update(true);
         ctu_log("enabled verbose logging");
     }
 

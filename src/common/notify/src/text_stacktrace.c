@@ -79,19 +79,11 @@ static size_t get_symbol_padding(size_t align, const bt_entry_t *entry)
     return pad;
 }
 
-static const char *fmt_recurse(const colour_pallete_t *colour, const bt_entry_t *entry)
-{
-    if (entry->recurse == 0)
-        return "";
-
-    char *fmt = fmt_coloured(colour, eColourYellow, "%zu", entry->recurse);
-
-    return format(" x %s", fmt);
-}
-
 // state for a backtrace format run
 typedef struct bt_format_t
 {
+    arena_t *arena;
+
     /// symbol name right align width
     size_t symbol_align;
 
@@ -107,15 +99,27 @@ typedef struct bt_format_t
 
     /// current frame index
     size_t index;
+
+    format_context_t fmt;
 } bt_format_t;
+
+static const char *fmt_recurse(bt_format_t *pass, const bt_entry_t *entry)
+{
+    if (entry->recurse == 0)
+        return "";
+
+    char *fmt = colour_format(pass->fmt, eColourYellow, "%zu", entry->recurse);
+
+    return format(" x %s", fmt);
+}
 
 static void print_frame_index(bt_format_t *pass, const bt_entry_t *entry, size_t width)
 {
     text_config_t config = pass->config;
     if (entry->recurse == 0)
     {
-        char *line = fmt_align(width, "%zu", pass->index);
-        char *idx = fmt_coloured(config.colours, eColourCyan, "[%s]", line);
+        char *line = fmt_align(pass->arena, width, "%zu", pass->index);
+        char *idx = colour_format(pass->fmt, eColourCyan, "[%s]", line);
 
         io_printf(config.io, "%s ", idx);
 
@@ -123,8 +127,8 @@ static void print_frame_index(bt_format_t *pass, const bt_entry_t *entry, size_t
     }
     else
     {
-        char *start = fmt_align(width, "%zu..%zu", pass->index, pass->index + entry->recurse);
-        char *idx = fmt_coloured(config.colours, eColourCyan, "[%s]", start);
+        char *start = fmt_align(pass->arena, width, "%zu..%zu", pass->index, pass->index + entry->recurse);
+        char *idx = colour_format(pass->fmt, eColourCyan, "[%s]", start);
 
         io_printf(config.io, "%s ", idx);
 
@@ -140,9 +144,9 @@ static void print_frame(bt_format_t *pass, const bt_entry_t *entry)
     print_frame_index(pass, entry, pass->index_align);
 
     // right align the address
-    char *addr = fmt_align(pass->symbol_align, "0x%p", entry->address);
-    char *coloured = fmt_coloured(config.colours, eColourRed, "%s", addr);
-    io_printf(config.io, "+%s%s\n", coloured, fmt_recurse(config.colours, entry));
+    char *addr = fmt_align(pass->arena, pass->symbol_align, "0x%p", entry->address);
+    char *coloured = colour_text(pass->fmt, eColourRed, addr);
+    io_printf(config.io, "+%s%s\n", coloured, fmt_recurse(pass, entry));
 }
 
 // we know symbol info but not file info
@@ -152,15 +156,15 @@ static void print_simple(bt_format_t *pass, const bt_entry_t *entry)
 
     const char *line = (entry->info & eResolveLine)
         ? format(":%zu", get_offset_line(config.config, entry->line))
-        : format(" @ %s", fmt_coloured(config.colours, eColourRed, "0x%p", entry->address));
+        : format(" @ %s", colour_format(pass->fmt, eColourRed, "0x%p", entry->address));
 
     // right align the symbol
     size_t pad = get_symbol_padding(pass->symbol_align, entry);
     char *padding = str_repeat(" ", pad);
 
-    char *symbol = fmt_coloured(config.colours, eColourBlue, "%s", entry->symbol);
+    char *symbol = colour_text(pass->fmt, eColourBlue, entry->symbol);
 
-    const char *recurse = fmt_recurse(config.colours, entry);
+    const char *recurse = fmt_recurse(pass, entry);
 
     print_frame_index(pass, entry, pass->index_align);
 
@@ -227,8 +231,8 @@ static void print_with_source(bt_format_t *pass, const bt_entry_t *entry, text_c
 
     print_frame_index(pass, entry, 0);
 
-    const char *recurse = fmt_recurse(config.colours, entry);
-    const char *fn = fmt_coloured(config.colours, eColourBlue, "%s", entry->symbol);
+    const char *recurse = fmt_recurse(pass, entry);
+    const char *fn = colour_text(pass->fmt, eColourBlue, entry->symbol);
 
     io_printf(config.io, "inside symbol %s%s\n", fn, recurse);
 
@@ -249,8 +253,8 @@ static void print_with_source(bt_format_t *pass, const bt_entry_t *entry, text_c
     }
 
     text_view_t view = cache_get_line(cache, data_line);
-    char *line_num = fmt_align(align, "%zu", line);
-    char *line_fmt = fmt_coloured(config.colours, eColourWhite, " %s > %.*s\n", line_num, (int)view.size, view.text);
+    char *line_num = fmt_align(pass->arena, align, "%zu", line);
+    char *line_fmt = colour_format(pass->fmt, eColourWhite, " %s > %.*s\n", line_num, (int)view.size, view.text);
     io_printf(config.io, "%s", line_fmt);
 
     size_t len = cache_count_lines(cache);
@@ -290,12 +294,21 @@ void bt_report_finish(text_config_t config, bt_report_t *report)
 {
     CTASSERT(report != NULL);
 
+    arena_t *arena = report->arena;
+
+    format_context_t fmt = {
+        .pallete = config.colours,
+        .arena = arena,
+    };
+
     bt_format_t pass = {
+        .arena = arena,
         .symbol_align = get_max_symbol_width(report),
         .index_align = get_max_index_width(report),
         .config = config,
         .file_cache = cache_map_new(report->total_frames),
         .index = 0,
+        .fmt = fmt,
     };
 
     // print the header

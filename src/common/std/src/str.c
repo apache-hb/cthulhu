@@ -15,6 +15,44 @@
 #include <string.h>
 
 USE_DECL
+char *str_format(arena_t *arena, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+
+    char *str = str_vformat(arena, fmt, args);
+
+    va_end(args);
+
+    return str;
+}
+
+USE_DECL
+char *str_vformat(arena_t *arena, const char *fmt, va_list args)
+{
+    CTASSERT(arena != NULL);
+    CTASSERT(fmt != NULL);
+
+    // make a copy of the args for the second format
+    va_list again;
+    va_copy(again, args);
+
+    // get the number of bytes needed to format
+    int len = vsnprintf(NULL, 0, fmt, args) + 1;
+
+    CTASSERTF(len > 0, "vformat failed to format string: %s", fmt);
+
+    char *out = arena_malloc(len, "vformat", arena, arena);
+
+    int result = vsnprintf(out, len, fmt, again);
+    CTASSERTF(result == len - 1, "vformat failed to format string: %s (%d == %d - 1)", fmt, result, len);
+
+    va_end(again);
+
+    return out;
+}
+
+USE_DECL
 char *format(const char *fmt, ...)
 {
     va_list args;
@@ -28,26 +66,8 @@ char *format(const char *fmt, ...)
 USE_DECL
 char *vformat(const char *fmt, va_list args)
 {
-    CTASSERT(fmt != NULL);
-
-    /* make a copy of the args for the second format */
-    va_list again;
-    va_copy(again, args);
-
-    /* get the number of bytes needed to format */
-    int len = vsnprintf(NULL, 0, fmt, args) + 1;
-
-    CTASSERTF(len > 0, "vformat failed to format string: %s", fmt);
-
     arena_t *arena = get_global_arena();
-    char *out = ARENA_MALLOC(arena, len, "vformat", NULL);
-
-    int result = vsnprintf(out, len, fmt, again);
-    CTASSERTF(result == len - 1, "vformat failed to format string: %s (%d == %d - 1)", fmt, result, len);
-
-    va_end(again);
-
-    return out;
+    return str_vformat(arena, fmt, args);
 }
 
 bool char_is_any_of(char c, const char *chars)

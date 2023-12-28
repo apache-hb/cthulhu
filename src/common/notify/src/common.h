@@ -4,9 +4,11 @@
 #include "notify/text.h"
 #include "notify/notify.h"
 
-#include "base/colour.h"
+#include "format/colour.h"
 
 #include <stddef.h>
+
+/// colour defines
 
 typedef struct map_t map_t;
 typedef struct scan_t scan_t;
@@ -18,11 +20,10 @@ colour_t get_severity_colour(severity_t severity);
 
 const char *get_scan_name(const node_t *node);
 
-typevec_t *all_segments_in_scan(const typevec_t *segments, const node_t *node);
+typevec_t *all_segments_in_scan(const typevec_t *segments, const node_t *node, arena_t *arena);
 void segments_sort(typevec_t *segments);
 
 char *fmt_node(file_config_t config, const node_t *node);
-char *fmt_coloured(const colour_pallete_t *colours, colour_t idx, const char *fmt, ...);
 
 size_t get_line_number(file_config_t config, const node_t *node);
 
@@ -32,7 +33,7 @@ size_t get_offset_line(file_config_t config, size_t line);
 /// @brief get the width of a number if it were printed as base10
 size_t get_num_width(size_t num);
 
-char *fmt_align(size_t width, const char *fmt, ...);
+char *fmt_align(arena_t *arena, size_t width, const char *fmt, ...);
 
 cache_map_t *cache_map_new(size_t size);
 void cache_map_delete(cache_map_t *map);

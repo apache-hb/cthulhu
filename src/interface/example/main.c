@@ -1,4 +1,4 @@
-#include "base/colour.h"
+#include "format/colour.h"
 #include "base/log.h"
 #include "cthulhu/events/events.h"
 #include "cthulhu/runtime/interface.h"
@@ -76,7 +76,7 @@ static io_t *make_file(logger_t *reports, const char *path, os_access_t flags)
 
 int main(int argc, const char **argv)
 {
-    ctu_log_control(eLogEnable);
+    ctu_log_update(true);
     arena_t *arena = ctu_default_alloc();
     mediator_t *mediator = mediator_new("example", kVersion, arena);
     lifetime_t *lifetime = lifetime_new(mediator, arena);

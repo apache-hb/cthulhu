@@ -9,7 +9,7 @@ static void default_verbose(const char *fmt, va_list args)
 }
 
 static verbose_t gVerboseFn = default_verbose;
-static log_control_t gVerboseStatus = eLogDisable;
+static bool gVerboseEnabled = false;
 
 USE_DECL
 verbose_t ctu_default_verbose(void)
@@ -22,16 +22,14 @@ void init_logs(verbose_t callback)
     gVerboseFn = callback;
 }
 
-log_control_t ctu_log_control(log_control_t control)
+void ctu_log_update(bool enable)
 {
-    switch (control)
-    {
-    case eLogEnable: gVerboseStatus = eLogEnable; break;
-    case eLogDisable: gVerboseStatus = eLogDisable; break;
-    default: break;
-    }
+    gVerboseEnabled = enable;
+}
 
-    return gVerboseStatus;
+bool ctu_log_enabled(void)
+{
+    return gVerboseEnabled;
 }
 
 USE_DECL
@@ -48,7 +46,7 @@ void ctu_log(const char *fmt, ...)
 USE_DECL
 void ctu_vlog(const char *fmt, va_list args)
 {
-    if (gVerboseStatus == eLogEnable)
+    if (gVerboseEnabled)
     {
         gVerboseFn(fmt, args);
     }

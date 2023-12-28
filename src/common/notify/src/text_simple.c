@@ -12,18 +12,28 @@
 #include "std/vector.h"
 #include <string.h>
 
-static void print_notes(text_config_t config, const vector_t *notes)
+typedef struct simple_t
+{
+    io_t *io;
+    arena_t *arena;
+
+    text_config_t text;
+    file_config_t file;
+    format_context_t fmt;
+} simple_t;
+
+static void print_notes(simple_t *simple, const vector_t *notes)
 {
     if (notes == NULL)
         return;
 
-    char *star = fmt_coloured(config.colours, eColourGreen, "*");
+    char *star = colour_text(simple->fmt, eColourGreen, "*");
 
     size_t note_count = vector_len(notes);
     for (size_t i = 0; i < note_count; i++)
     {
         const char *note = vector_get(notes, i);
-        io_printf(config.io, "  %s note: %s\n", star, note);
+        io_printf(simple->io, "  %s note: %s\n", star, note);
     }
 }
 
@@ -47,18 +57,18 @@ static int entry_cmp(const void *lhs, const void *rhs)
     return strcmp(path_lhs, path_rhs);
 }
 
-static void print_segment(text_config_t config, const segment_t *segment, size_t scan_idx, size_t segment_idx)
+static void print_segment(simple_t *simple, const segment_t *segment, size_t scan_idx, size_t segment_idx)
 {
     CTASSERT(segment != NULL);
 
     const char *msg = segment->message;
-    const char *path = fmt_node(config.config, segment->node);
-    const char *colour = fmt_coloured(config.colours, eColourBlue, "%s:", path);
+    const char *path = fmt_node(simple->file, segment->node);
+    const char *colour = colour_format(simple->fmt, eColourBlue, "%s:", path);
 
-    io_printf(config.io, " (%zu.%zu) %s %s\n", scan_idx + 1, segment_idx + 1, colour, msg);
+    io_printf(simple->io, " (%zu.%zu) %s %s\n", scan_idx + 1, segment_idx + 1, colour, msg);
 }
 
-static void print_segment_list(text_config_t config, const typevec_t *segments, size_t scan_idx)
+static void print_segment_list(simple_t *simple, const typevec_t *segments, size_t scan_idx)
 {
     CTASSERT(segments != NULL);
 
@@ -66,11 +76,11 @@ static void print_segment_list(text_config_t config, const typevec_t *segments, 
     for (size_t i = 0; i < len; i++)
     {
         const segment_t *segment = typevec_offset(segments, i);
-        print_segment(config, segment, scan_idx, i);
+        print_segment(simple, segment, scan_idx, i);
     }
 }
 
-static void print_segments(text_config_t config, const event_t *event)
+static void print_segments(simple_t *simple, const event_t *event)
 {
     // get all segments not in the same scan as the event
     // first group by segments from the primary report
@@ -86,7 +96,7 @@ static void print_segments(text_config_t config, const event_t *event)
     // map_t<scan_t*, typevec_t<segment_t>>
     map_t *scans = map_optimal(len);
     typevec_t *none = typevec_new(sizeof(segment_t), 4, arena);
-    typevec_t *primary = all_segments_in_scan(event->segments, event->node);
+    typevec_t *primary = all_segments_in_scan(event->segments, event->node, simple->arena);
 
     for (size_t i = 0; i < len; i++)
     {
@@ -115,7 +125,7 @@ static void print_segments(text_config_t config, const event_t *event)
         typevec_push(segments, segment);
     }
 
-    print_segment_list(config, primary, 0);
+    print_segment_list(simple, primary, 0);
 
     typevec_t *entries = map_entries(scans);
     typevec_sort(entries, entry_cmp);
@@ -129,21 +139,21 @@ static void print_segments(text_config_t config, const event_t *event)
         typevec_t *segments = entry->value;
         segments_sort(segments);
 
-        print_segment_list(config, segments, i + 1);
+        print_segment_list(simple, segments, i + 1);
     }
 
-    print_segment_list(config, none, entry_count + 1);
+    print_segment_list(simple, none, entry_count + 1);
 }
 
-static char *fmt_path(file_config_t config, const node_t *node)
+static char *fmt_path(simple_t *simple, const node_t *node)
 {
     if (!node_has_line(node))
     {
-        return fmt_node(config, node);
+        return fmt_node(simple->file, node);
     }
 
     where_t where = node_get_location(node);
-    size_t line = get_offset_line(config, where.first_line);
+    size_t line = get_offset_line(simple->file, where.first_line);
 
     const char *path = get_scan_name(node);
 
@@ -157,20 +167,36 @@ void text_report_simple(text_config_t config, const event_t *event)
     CTASSERT(event != NULL);
     const diagnostic_t *diagnostic = event->diagnostic;
 
+    io_t *io = config.io;
+    arena_t *arena = get_global_arena();
+
+    format_context_t fmt = {
+        .pallete = config.colours,
+        .arena = arena,
+    };
+
+    simple_t simple = {
+        .io = io,
+        .arena = arena,
+        .text = config,
+        .file = config.config,
+        .fmt = fmt
+    };
+
     file_config_t cfg = config.config;
     severity_t severity = get_severity(diagnostic, cfg.override_fatal);
 
     const char *sev = get_severity_name(severity);
     colour_t col = get_severity_colour(severity);
 
-    const char *path = fmt_path(config.config, event->node);
-    const char *lvl = fmt_coloured(config.colours, col, "%s %s:", sev, diagnostic->id);
+    const char *path = fmt_path(&simple, event->node);
+    const char *lvl = colour_format(fmt, col, "%s %s:", sev, diagnostic->id);
 
-    const char *path_coloured = fmt_coloured(config.colours, eColourBlue, "%s:", path);
+    const char *path_coloured = colour_format(fmt, eColourBlue, "%s:", path);
 
-    io_printf(config.io, "%s %s %s:\n", path_coloured, lvl, event->message);
+    io_printf(io, "%s %s %s:\n", path_coloured, lvl, event->message);
 
-    print_segments(config, event);
+    print_segments(&simple, event);
 
-    print_notes(config, event->notes);
+    print_notes(&simple, event->notes);
 }

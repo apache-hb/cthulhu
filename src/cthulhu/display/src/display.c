@@ -1,12 +1,10 @@
 #include "display/display.h"
 
-#include "base/colour.h"
+#include "format/colour.h"
 #include "base/panic.h"
 #include "core/macros.h"
 #include "io/io.h"
 #include "config/config.h"
-
-#include "common.h"
 
 #include "std/str.h"
 #include "std/typed/vector.h"
@@ -117,13 +115,18 @@ static size_t print_field_args(display_options_t options, const cfg_info_t *info
     const char *short_sep = win_style ? "/" : "-";
     const char *long_sep = win_style ? "/" : "--";
 
+    format_context_t ctx = {
+        .arena = options.arena,
+        .pallete = options.colours,
+    };
+
     size_t len = 0;
 
     if (info->short_args)
     {
         for (size_t i = 0; info->short_args[i]; i++)
         {
-            char *coloured = fmt_coloured2(options.colours, eColourWhite, "%s%s", short_sep, info->short_args[i]);
+            char *coloured = colour_format(ctx, eColourWhite, "%s%s", short_sep, info->short_args[i]);
             io_printf(options.io, "%s ", coloured);
             len += strlen(info->short_args[i]) + 2;
         }
@@ -133,8 +136,8 @@ static size_t print_field_args(display_options_t options, const cfg_info_t *info
     {
         for (size_t i = 0; info->long_args[i]; i++)
         {
-            char *long_col = fmt_coloured2(options.colours, eColourWhite, "%s%s", long_sep, info->long_args[i]);
-            io_printf(options.io, "%s ", long_col);
+            char *coloured = colour_format(ctx, eColourWhite, "%s%s", long_sep, info->long_args[i]);
+            io_printf(options.io, "%s ", coloured);
             len += strlen(info->long_args[i]) + 1 + strlen(long_sep);
         }
     }
@@ -181,7 +184,8 @@ static const char *get_enum_option(const cfg_choice_t *choices, size_t len, size
 static void print_enum_default(display_options_t options, const cfg_field_t *field)
 {
     const cfg_enum_t *info = cfg_enum_info(field);
-    io_printf(options.io, "(default: %s)\n", get_enum_option(info->options, info->count, info->initial));
+    const char *option = get_enum_option(info->options, info->count, info->initial);
+    io_printf(options.io, "(default: %s)\n", option);
 }
 
 static void print_enum(display_options_t options, alignment_info_t alignment, const cfg_field_t *field)

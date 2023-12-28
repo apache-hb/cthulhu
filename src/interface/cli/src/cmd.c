@@ -199,10 +199,7 @@ runtime_t cmd_parse(mediator_t *mediator, lifetime_t *lifetime, int argc, const 
         }
     }
 
-    if (cfg_bool_value(verbose_field))
-    {
-        ctu_log_control(eLogEnable);
-    }
+    ctu_log_update(cfg_bool_value(verbose_field));
 
     if (cfg_bool_value(help_field))
     {

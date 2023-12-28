@@ -17,6 +17,19 @@ GFI = good first issue
     - will need a typed map
     - need to move over to a flyweight pattern for some objects to avoid pointer invalidation
 
+- support building source files as both C and C++
+    - we basically require C++20 because of how often designated init is used
+
+- simplify alot of the error formatting code
+
+- update unit tests to require specific error codes
+
+- unit testing for error reporting
+- unit testing for location tracking in frontends
+
+- electric fence allocators for unit tests
+    - make sure common modules dont use global allocator
+
 <h3>Important</h3>
 
 - vendor flex+bison ourselves to always have the best version

@@ -9,6 +9,7 @@
 
 BEGIN_API
 
+typedef struct arena_t arena_t;
 typedef struct vector_t vector_t;
 typedef struct map_t map_t;
 
@@ -16,6 +17,12 @@ typedef struct map_t map_t;
 /// @ingroup Standard
 /// @brief String manipulation and processing
 /// @{
+
+NODISCARD CT_PRINTF(2, 3)
+char *str_format(arena_t *arena, FMT_STRING const char *fmt, ...);
+
+NODISCARD
+char *str_vformat(arena_t *arena, IN_STRING const char *fmt, va_list args);
 
 /// @brief format a string
 ///

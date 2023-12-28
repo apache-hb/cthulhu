@@ -12,6 +12,7 @@
 #include "std/set.h"
 
 #include "std/typed/vector.h"
+#include "std/vector.h"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -90,7 +91,7 @@ void segments_sort(typevec_t *segments)
     typevec_sort(segments, segment_cmp);
 }
 
-typevec_t *all_segments_in_scan(const typevec_t *segments, const node_t *node)
+typevec_t *all_segments_in_scan(const typevec_t *segments, const node_t *node, arena_t *arena)
 {
     CTASSERT(segments != NULL);
     CTASSERT(node != NULL);
@@ -98,7 +99,7 @@ typevec_t *all_segments_in_scan(const typevec_t *segments, const node_t *node)
     const scan_t *scan = node_get_scan(node);
 
     size_t len = typevec_len(segments);
-    typevec_t *result = typevec_new(sizeof(segment_t), len, get_global_arena());
+    typevec_t *result = typevec_new(sizeof(segment_t), len, arena);
 
     for (size_t i = 0; i < len; i++)
     {
@@ -131,16 +132,6 @@ char *fmt_node(file_config_t config, const node_t *node)
     {
         return format("<%s>", path);
     }
-}
-
-char *fmt_coloured(const colour_pallete_t *colours, colour_t idx, const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    char *msg = vformat(fmt, args);
-    va_end(args);
-
-    return format("%s%s%s", colour_get(colours, idx), msg, colour_reset(colours));
 }
 
 size_t get_line_number(file_config_t config, const node_t *node)
@@ -178,7 +169,7 @@ size_t get_num_width(size_t num)
     return width;
 }
 
-char *fmt_align(size_t width, const char *fmt, ...)
+char *fmt_align(arena_t *arena, size_t width, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -188,7 +179,6 @@ char *fmt_align(size_t width, const char *fmt, ...)
     size_t len = strlen(msg);
     if (len >= width) return msg;
 
-    arena_t *arena = get_global_arena();
     size_t size = width - 1;
     char *result = ARENA_MALLOC(arena, size, "align", NULL);
     memset(result, ' ', width);
@@ -592,18 +582,40 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
 
     io_t *io = text.io;
 
+    format_context_t ctx = {
+        .arena = get_global_arena(),
+        .pallete = text.colours,
+    };
+
     if (result != EXIT_OK)
     {
         io_printf(io, "compilation failed during stage: %s\n", title);
-        char *colour_err = fmt_coloured(text.colours, eColourRed, "%zu errors", error_count);
-        char *colour_warn = fmt_coloured(text.colours, eColourYellow, "%zu warnings", warning_count);
-        char *colour_bug = fmt_coloured(text.colours, eColourMagenta, "%zu bugs", bug_count);
-        io_printf(io, "  %s, %s, %s\n", colour_err, colour_warn, colour_bug);
+        vector_t *parts = vector_new(3);
+        if (error_count > 0)
+        {
+            char *colour_err = colour_format(ctx, eColourRed, "%zu errors", error_count);
+            vector_push(&parts, colour_err);
+        }
+
+        if (warning_count > 0)
+        {
+            char *colour_warn = colour_format(ctx, eColourYellow, "%zu warnings", warning_count);
+            vector_push(&parts, colour_warn);
+        }
+
+        if (bug_count > 0)
+        {
+            char *colour_bug = colour_format(ctx, eColourMagenta, "%zu bugs", bug_count);
+            vector_push(&parts, colour_bug);
+        }
+
+        char *msg = str_join(", ", parts);
+        io_printf(io, "  %s\n", msg);
     }
     else if (warning_count > 0)
     {
         io_printf(io, "compilation succeeded with warnings during stage: %s\n", title);
-        char *colour_warn = fmt_coloured(text.colours, eColourYellow, "%zu warnings", warning_count);
+        char *colour_warn = colour_format(ctx, eColourYellow, "%zu warnings", warning_count);
         io_printf(io, "  %s\n", colour_warn);
     }
 

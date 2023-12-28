@@ -1,4 +1,4 @@
-#include "base/colour.h"
+#include "format/colour.h"
 #include "base/log.h"
 #include "cthulhu/events/events.h"
 #include "cthulhu/runtime/interface.h"
@@ -340,7 +340,7 @@ int main(int argc, const char **argv)
     init_global_arena(&user);
     init_gmp_arena(&user);
 
-    ctu_log_control(eLogEnable);
+    ctu_log_update(true);
 
     int result = run_test_harness(argc, argv, &user);
 

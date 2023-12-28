@@ -17,6 +17,8 @@
 
 typedef struct rich_t
 {
+    arena_t *arena;
+
     text_config_t config;
     const event_t *event;
 
@@ -28,6 +30,8 @@ typedef struct rich_t
     cache_map_t *file_cache;
 
     size_t max_columns;
+
+    format_context_t fmt;
 } rich_t;
 
 static void print_report_header(rich_t *rich, const char *message)
@@ -41,7 +45,7 @@ static void print_report_header(rich_t *rich, const char *message)
     const char *sev = get_severity_name(rich->severity);
     colour_t colour = get_severity_colour(rich->severity);
 
-    char *coloured = fmt_coloured(config.colours, colour, "%s [%s]:", sev, diag->id);
+    char *coloured = colour_format(rich->fmt, colour, "%s [%s]:", sev, diag->id);
 
     io_printf(config.io, "%s %s\n", coloured, message);
 }
@@ -89,7 +93,7 @@ static void print_scan_header(rich_t *rich, size_t largest, size_t line, const s
 
     if (scan_is_builtin(scan))
     {
-        char *coloured = fmt_coloured(config.colours, eColourCyan, "<%s>", name);
+        char *coloured = colour_format(rich->fmt, eColourCyan, "<%s>", name);
 
         io_printf(config.io, " %s => %s\n", padding, coloured);
     }
@@ -174,7 +178,7 @@ static void print_file_segment(rich_t *rich, const node_t *node, const char *mes
     size_t display_line = get_line_number(config.config, node);
     size_t width = get_num_width(MAX(display_line, rich->largest_line));
     char *padding = str_repeat(" ", width);
-    char *line = fmt_align(width, "%zu", display_line);
+    char *line = fmt_align(rich->arena, width, "%zu", display_line);
 
     text_cache_t *file = cache_emplace_scan(rich->file_cache, scan);
     text_t source = cache_escape_line(file, data_line, config.colours, rich->max_columns);
@@ -185,12 +189,12 @@ static void print_file_segment(rich_t *rich, const node_t *node, const char *mes
 
     if (vector_len(lines) > 1)
     {
-        char *one = fmt_coloured(config.colours, eColourGreen, "(1)");
+        char *one = colour_text(rich->fmt, eColourGreen, "(1)");
         first = format("%s %s", one, first);
     }
 
     char *underline = fmt_underline(file, node, rich->max_columns);
-    char *coloured_underline = fmt_coloured(config.colours, eColourMagenta, "%s", underline);
+    char *coloured_underline = colour_text(rich->fmt, eColourMagenta, underline);
 
     const char *pretext = !isspace(source.text[0]) ? " " : "";
 
@@ -207,8 +211,8 @@ static void print_file_segment(rich_t *rich, const node_t *node, const char *mes
     for (size_t i = 1; i < len; i++)
     {
         char *it = vector_get(lines, i);
-        char *aligned = fmt_align(align, "(%zu)", i + 1);
-        char *coloured = fmt_coloured(config.colours, eColourGreen, "%s", aligned);
+        char *aligned = fmt_align(rich->arena, align, "(%zu)", i + 1);
+        char *coloured = colour_text(rich->fmt, eColourGreen, aligned);
         io_printf(config.io, " %s |%s%s %s %s.\n", padding, pretext, extra, coloured, it);
     }
 }
@@ -226,7 +230,7 @@ static void print_segment_message(rich_t *rich, const char *message)
     for (size_t i = 0; i < len; i++)
     {
         char *it = vector_get(lines, i);
-        char *coloured = fmt_coloured(config.colours, eColourGreen, "(%zu)", i + 1);
+        char *coloured = colour_format(rich->fmt, eColourGreen, "(%zu)", i + 1);
         io_printf(config.io, "  %s %s\n", coloured, it);
     }
 }
@@ -334,8 +338,6 @@ static join_result_t join_node_messages(rich_t *rich, const segment_t *segment, 
         return result;
     }
 
-    text_config_t config = rich->config;
-
     join_result_t result = {
         .joined_nodes = true,
         .used_primary = false,
@@ -345,14 +347,14 @@ static join_result_t join_node_messages(rich_t *rich, const segment_t *segment, 
     {
         result.used_primary = true;
 
-        char *coloured = fmt_coloured(config.colours, eColourRed, "%s", segment->message);
+        char *coloured = colour_text(rich->fmt, eColourRed, segment->message);
         other->message = format("%s\n%s", coloured, other->message);
     }
     else if (other->message == primary)
     {
         result.used_primary = true;
 
-        char *coloured = fmt_coloured(config.colours, eColourRed, "%s", other->message);
+        char *coloured = colour_text(rich->fmt, eColourRed, other->message);
         other->message = format("%s\n%s", segment->message, coloured);
     }
     else
@@ -500,7 +502,7 @@ static void print_notes(rich_t *rich)
 
     text_config_t config = rich->config;
 
-    char *coloured = fmt_coloured(config.colours, eColourYellow, "*");
+    char *coloured = colour_text(rich->fmt, eColourYellow, "*");
     size_t len = vector_len(event->notes);
     for (size_t i = 0; i < len; i++)
     {
@@ -518,12 +520,21 @@ void text_report_rich(text_config_t config, const event_t *event)
 
     file_config_t info = config.config;
 
+    arena_t *arena = get_global_arena();
+
+    format_context_t fmt = {
+        .pallete = config.colours,
+        .arena = arena,
+    };
+
     rich_t ctx = {
+        .arena = arena,
         .config = config,
         .event = event,
         .severity = get_severity(event->diagnostic, info.override_fatal),
         .file_cache = config.cache != NULL ? config.cache : cache_map_new(4),
         .max_columns = info.max_columns == 0 ? 240 : info.max_columns,
+        .fmt = fmt
     };
 
     print_report_header(&ctx, event->message);

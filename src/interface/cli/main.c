@@ -1,4 +1,4 @@
-#include "base/colour.h"
+#include "format/colour.h"
 #include "cmd.h"
 
 #include "cthulhu/events/events.h"

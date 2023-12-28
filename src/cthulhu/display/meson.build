@@ -1,11 +1,10 @@
 src = [
-    'src/display.c',
-    'src/common.c'
+    'src/display.c'
 ]
 
 libdisplay = library('display', src,
     include_directories : 'include',
-    dependencies : [ memory, io, config, base ]
+    dependencies : [ memory, io, config, base, format ]
 )
 
 display = declare_dependency(
