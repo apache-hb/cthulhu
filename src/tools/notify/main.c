@@ -3,7 +3,7 @@
 #include "config/config.h"
 #include "core/macros.h"
 #include "defaults/defaults.h"
-#include "display/display.h"
+#include "format/config.h"
 #include "io/console.h"
 #include "io/io.h"
 

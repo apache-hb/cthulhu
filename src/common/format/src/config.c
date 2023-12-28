@@ -1,4 +1,7 @@
-#include "display/display.h"
+#include "format/config.h"
+#include "base/panic.h"
+
+#include "io/io.h"
 
 #include "format/colour.h"
 #include "base/panic.h"
@@ -12,22 +15,6 @@
 
 #include <limits.h>
 #include <string.h>
-
-void display_version(version_display_t options)
-{
-    CTASSERT(options.name != NULL);
-
-    display_options_t base = options.options;
-
-    version_info_t version = options.version;
-    int major = VERSION_MAJOR(version.version);
-    int minor = VERSION_MINOR(version.version);
-    int patch = VERSION_PATCH(version.version);
-
-    io_printf(base.io, "%s %d.%d.%d\n", options.name, major, minor, patch);
-    io_printf(base.io, "written by %s and licensed under %s\n", version.author, version.license);
-    io_printf(base.io, "%s\n", version.desc);
-}
 
 static size_t get_arg_length(const cfg_info_t *info, size_t long_arg_stride)
 {
@@ -111,15 +98,10 @@ static alignment_info_t get_group_alignment(const config_t *config, bool win_sty
 
 // print the args for a single field
 // returns the number of characters printed
-static size_t print_field_args(display_options_t options, const cfg_info_t *info, bool win_style)
+static size_t print_field_args(format_config_t options, const cfg_info_t *info, bool win_style)
 {
     const char *short_sep = win_style ? "/" : "-";
     const char *long_sep = win_style ? "/" : "--";
-
-    format_context_t ctx = {
-        .arena = options.arena,
-        .pallete = options.colours,
-    };
 
     size_t len = 0;
 
@@ -127,7 +109,7 @@ static size_t print_field_args(display_options_t options, const cfg_info_t *info
     {
         for (size_t i = 0; info->short_args[i]; i++)
         {
-            char *coloured = colour_format(ctx, eColourWhite, "%s%s", short_sep, info->short_args[i]);
+            char *coloured = colour_format(options.context, eColourWhite, "%s%s", short_sep, info->short_args[i]);
             io_printf(options.io, "%s ", coloured);
             len += strlen(info->short_args[i]) + 2;
         }
@@ -137,7 +119,7 @@ static size_t print_field_args(display_options_t options, const cfg_info_t *info
     {
         for (size_t i = 0; info->long_args[i]; i++)
         {
-            char *coloured = colour_format(ctx, eColourWhite, "%s%s", long_sep, info->long_args[i]);
+            char *coloured = colour_format(options.context, eColourWhite, "%s%s", long_sep, info->long_args[i]);
             io_printf(options.io, "%s ", coloured);
             len += strlen(info->long_args[i]) + 1 + strlen(long_sep);
         }
@@ -182,14 +164,14 @@ static const char *get_enum_option(const cfg_choice_t *choices, size_t len, size
     return "<unknown>";
 }
 
-static void print_enum_default(display_options_t options, const cfg_field_t *field)
+static void print_enum_default(format_config_t options, const cfg_field_t *field)
 {
     const cfg_enum_t *info = cfg_enum_info(field);
     const char *option = get_enum_option(info->options, info->count, info->initial);
     io_printf(options.io, "(default: %s)\n", option);
 }
 
-static void print_enum(display_options_t options, alignment_info_t alignment, const cfg_field_t *field)
+static void print_enum(format_config_t options, alignment_info_t alignment, const cfg_field_t *field)
 {
     const cfg_enum_t *info = cfg_enum_info(field);
 
@@ -210,7 +192,7 @@ static void print_enum(display_options_t options, alignment_info_t alignment, co
     io_printf(options.io, "\n");
 }
 
-static void print_flags_default(display_options_t options, const cfg_field_t *field)
+static void print_flags_default(format_config_t options, const cfg_field_t *field)
 {
     const cfg_flags_t *info = cfg_flags_info(field);
     io_printf(options.io, "flags (default: ");
@@ -234,7 +216,7 @@ static void print_flags_default(display_options_t options, const cfg_field_t *fi
     io_printf(options.io, ")\n");
 }
 
-static void print_flags(display_options_t options, alignment_info_t alignment, const cfg_field_t *field)
+static void print_flags(format_config_t options, alignment_info_t alignment, const cfg_field_t *field)
 {
     const cfg_flags_t *info = cfg_flags_info(field);
 
@@ -255,7 +237,7 @@ static void print_flags(display_options_t options, alignment_info_t alignment, c
     io_printf(options.io, "\n");
 }
 
-static void print_field_default(display_options_t options, const cfg_field_t *field)
+static void print_field_default(format_config_t options, const cfg_field_t *field)
 {
     switch (cfg_get_type(field))
     {
@@ -298,7 +280,7 @@ static void print_field_default(display_options_t options, const cfg_field_t *fi
     }
 }
 
-static bool print_field_details(display_options_t options, alignment_info_t alignment, const cfg_field_t *field)
+static bool print_field_details(format_config_t options, alignment_info_t alignment, const cfg_field_t *field)
 {
     switch (cfg_get_type(field))
     {
@@ -319,7 +301,7 @@ static bool print_field_details(display_options_t options, alignment_info_t alig
 }
 
 // return true if the field needs a second line
-static bool print_field_info(display_options_t options, alignment_info_t alignment, bool win_style, const cfg_field_t *field)
+static bool print_field_info(format_config_t options, alignment_info_t alignment, bool win_style, const cfg_field_t *field)
 {
     const cfg_info_t *info = cfg_get_info(field);
 
@@ -380,7 +362,7 @@ static bool print_field_info(display_options_t options, alignment_info_t alignme
     return print_field_details(options, alignment, field) || needs_second_line;
 }
 
-static void print_config_group(display_options_t options, bool win_style, const config_t *config)
+static void print_config_group(format_config_t options, bool win_style, const config_t *config)
 {
     // we right align the args based on the longest
     alignment_info_t alignment = get_group_alignment(config, win_style);
@@ -413,7 +395,7 @@ static void print_config_group(display_options_t options, bool win_style, const 
     }
 }
 
-static void print_usage(display_options_t options, const char *name)
+static void print_usage(format_config_t options, const char *name)
 {
     CTASSERT(name != NULL);
 
@@ -433,14 +415,12 @@ static void print_usage(display_options_t options, const char *name)
     );
 }
 
-void display_config(config_display_t options)
+void print_config(format_config_t options)
 {
-    display_options_t base = options.options;
-
     if (options.print_usage)
     {
-        print_usage(base, options.name);
+        print_usage(options, options.name);
     }
 
-    print_config_group(base, options.win_style, options.config);
+    print_config_group(options, options.win_style, options.config);
 }

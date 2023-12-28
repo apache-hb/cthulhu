@@ -4,7 +4,8 @@
 #include "base/panic.h"
 #include "core/macros.h"
 #include "defaults/defaults.h"
-#include "display/display.h"
+#include "format/config.h"
+#include "format/version.h"
 #include "io/io.h"
 #include "memory/memory.h"
 #include "notify/notify.h"
@@ -184,37 +185,38 @@ int process_default_options(default_options_t options, tool_config_t config)
     }
 
     bool colour = cfg_bool_value(options.colour_output);
-    display_options_t display = {
+    format_context_t context = {
+        .pallete = colour ? &kColourDefault : &kColourNone,
         .arena = config.arena,
-        .io = config.io,
-        .colours = colour ? &kColourDefault : &kColourNone,
     };
 
-    bool print_help = cfg_bool_value(options.print_help);
-    if (print_help)
+    bool show_help = cfg_bool_value(options.print_help);
+    if (show_help)
     {
-        config_display_t config_display = {
-            .options = display,
+        format_config_t config_display = {
+            .context = context,
+            .io = config.io,
             .config = config.group,
             .print_usage = cfg_bool_value(options.enable_usage),
             .win_style = cfg_bool_value(options.enable_windows_style),
             .name = name
         };
 
-        display_config(config_display);
+        print_config(config_display);
         return EXIT_SHOULD_EXIT;
     }
 
-    bool print_version = cfg_bool_value(options.print_version);
-    if (print_version)
+    bool show_version = cfg_bool_value(options.print_version);
+    if (show_version)
     {
-        version_display_t version_display = {
-            .options = display,
+        format_version_t version_display = {
+            .context = context,
+            .io = config.io,
             .version = config.version,
             .name = name
         };
 
-        display_version(version_display);
+        print_version(version_display);
         return EXIT_SHOULD_EXIT;
     }
 
@@ -285,19 +287,19 @@ static int process_argparse_result(default_options_t options, tool_config_t conf
         io_printf(config.io, "no arguments provided\n");
     }
 
-    config_display_t display = {
-        .options = {
+    format_config_t display = {
+        .context = {
+            .pallete = pallete,
             .arena = config.arena,
-            .io = config.io,
-            .colours = pallete,
         },
+        .io = config.io,
         .config = config.group,
         .print_usage = cfg_bool_value(options.enable_usage),
         .win_style = cfg_bool_value(options.enable_windows_style),
         .name = config.argv[0]
     };
 
-    display_config(display);
+    print_config(display);
     return EXIT_SHOULD_EXIT;
 }
 

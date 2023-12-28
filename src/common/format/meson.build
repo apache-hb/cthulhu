@@ -1,10 +1,12 @@
 src = [
-    'src/colour.c'
+    'src/colour.c',
+    'src/config.c',
+    'src/version.c'
 ]
 
 libformat = library('format', src,
     c_args : user_args,
-    dependencies : [ std, core ],
+    dependencies : [ std, core, io, config ],
     include_directories : [ 'include' ]
 )
 
