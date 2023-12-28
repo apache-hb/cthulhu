@@ -1,6 +1,6 @@
 project('cthulhu', 'c',
     license : 'LGPLv3',
-    version : '0.2.6',
+    version : '0.2.7',
     meson_version : '>=1.3.0',
     default_options : [
         # gcc is picky about POSIX stdlib extensions

@@ -1,5 +1,6 @@
 src = [
     'src/display.c',
+    'src/common.c'
 ]
 
 libdisplay = library('display', src,

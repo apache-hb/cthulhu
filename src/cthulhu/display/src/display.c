@@ -1,13 +1,16 @@
 #include "display/display.h"
 
+#include "base/colour.h"
 #include "base/panic.h"
 #include "core/macros.h"
 #include "io/io.h"
 #include "config/config.h"
+
+#include "common.h"
+
 #include "std/str.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
-#include <stdio.h>
 
 #include <limits.h>
 
@@ -120,7 +123,9 @@ static size_t print_field_args(display_options_t options, const cfg_info_t *info
     {
         for (size_t i = 0; info->short_args[i]; i++)
         {
-            len += io_printf(options.io, "%s%s ", short_sep, info->short_args[i]);
+            char *coloured = fmt_coloured2(options.colours, eColourWhite, "%s%s", short_sep, info->short_args[i]);
+            io_printf(options.io, "%s ", coloured);
+            len += strlen(info->short_args[i]) + 2;
         }
     }
 
@@ -128,7 +133,9 @@ static size_t print_field_args(display_options_t options, const cfg_info_t *info
     {
         for (size_t i = 0; info->long_args[i]; i++)
         {
-            len += io_printf(options.io, "%s%s ", long_sep, info->long_args[i]);
+            char *long_col = fmt_coloured2(options.colours, eColourWhite, "%s%s", long_sep, info->long_args[i]);
+            io_printf(options.io, "%s ", long_col);
+            len += strlen(info->long_args[i]) + 1 + strlen(long_sep);
         }
     }
 
@@ -265,11 +272,7 @@ static void print_field_default(display_options_t options, const cfg_field_t *fi
         const cfg_string_t *info = cfg_string_info(field);
         if (info->initial != NULL)
         {
-            io_printf(options.io, "string (default: `%s`)\n", info->initial);
-        }
-        else
-        {
-            io_printf(options.io, "string (no default)\n");
+            io_printf(options.io, "(default: `%s`)\n", info->initial);
         }
         break;
     }

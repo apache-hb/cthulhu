@@ -77,7 +77,7 @@ static const cfg_info_t kDebugGroupInfo = {
     .brief = "Internal debugging options",
 };
 
-static const char *const kVerboseLoggingInfoShortArgs[] = {"v", NULL};
+static const char *const kVerboseLoggingInfoShortArgs[] = {"V", NULL};
 static const char *const kVerboseLoggingInfoLongArgs[] = {"verbose", NULL};
 
 static const cfg_info_t kVerboseLoggingInfo = {
@@ -87,7 +87,7 @@ static const cfg_info_t kVerboseLoggingInfo = {
     .long_args = kVerboseLoggingInfoLongArgs,
 };
 
-static const char *const kBacktraceInfoLongArgs[] = { "backtrace-complex", NULL };
+static const char *const kBacktraceInfoLongArgs[] = { "bt-complex", NULL };
 
 static const cfg_info_t kBacktraceInfo = {
     .name = "backtrace",
@@ -180,6 +180,7 @@ int process_default_options(default_options_t options, tool_config_t config)
     if (fancy_backtrace)
     {
         gPanicHandler = fancy_panic_handler;
+        ctu_log("installed panic handler");
     }
 
     bool colour = cfg_bool_value(options.colour_output);
@@ -220,6 +221,18 @@ int process_default_options(default_options_t options, tool_config_t config)
     return EXIT_OK;
 }
 
+static void report_unknown_args(io_t *io, const colour_pallete_t *pallete, vector_t *args)
+{
+    size_t count = vector_len(args);
+    if (count == 0) return;
+
+    for (size_t i = 0; i < count; i++)
+    {
+        const char *arg = vector_get(args, i);
+        io_printf(io, "%sunknown argument%s: %s\n", colour_get(pallete, eColourYellow), colour_reset(pallete), arg);
+    }
+}
+
 static int process_argparse_result(default_options_t options, tool_config_t config, ap_t *ap)
 {
     int err = ap_parse(ap, config.argc, config.argv);
@@ -228,11 +241,7 @@ static int process_argparse_result(default_options_t options, tool_config_t conf
     size_t unknown_count = vector_len(unknown);
     bool colour = cfg_bool_value(options.colour_output);
     const colour_pallete_t *pallete = colour ? &kColourDefault : &kColourNone;
-    for (size_t i = 0; i < unknown_count; i++)
-    {
-        const char *arg = vector_get(unknown, i);
-        io_printf(config.io, "unknown argument: %s\n", arg);
-    }
+    report_unknown_args(config.io, pallete, unknown);
 
     size_t count = ap_count_params(ap);
     vector_t *posargs = ap_get_posargs(ap);
