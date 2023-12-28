@@ -1,12 +1,10 @@
 #include "common.h"
 
-#include "base/log.h"
 #include "base/panic.h"
 #include "config/config.h"
 #include "core/macros.h"
 
-#include "memory/memory.h"
-
+#include "memory/arena.h"
 #include "scan/node.h"
 
 #include "std/map.h"
@@ -38,9 +36,19 @@ static void apply_callbacks(scan_t *scan, const cfg_field_t *param, const void *
     }
 }
 
+void ap_add_error(ap_t *self, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    char *error = str_vformat(self->arena, fmt, args);
+    va_end(args);
+
+    vector_push(&self->errors, error);
+}
+
 // flex + bison callbacks
 
-static void update_flags(cfg_field_t *param, const char *value, arena_t *arena)
+static void update_flags(cfg_field_t *param, const char *value, ap_t *self)
 {
     // first split `value` by `,`
     const char *start = value;
@@ -51,7 +59,7 @@ static void update_flags(cfg_field_t *param, const char *value, arena_t *arena)
         if (*end == ',')
         {
             size_t len = end - start;
-            char *flag = arena_strndup(start, len, arena);
+            char *flag = arena_strndup(start, len, self->arena);
 
             // if the flag starts with `-` then it's a negative flag
             // otherwise it's a positive flag
@@ -59,7 +67,10 @@ static void update_flags(cfg_field_t *param, const char *value, arena_t *arena)
             if (negate)
                 flag++;
 
-            cfg_set_flag(param, flag, !negate);
+            if (!cfg_set_flag(param, flag, !negate))
+            {
+                ap_add_error(self, "unknown flag value: %s", flag);
+            }
 
             start = end + 1;
         }
@@ -68,19 +79,23 @@ static void update_flags(cfg_field_t *param, const char *value, arena_t *arena)
     }
 
     // handle the last flag
-    cfg_set_flag(param, start, true);
+    bool negate = *start == '-';
+    if (negate)
+        start++;
+
+    if (!cfg_set_flag(param, start, !negate))
+    {
+        ap_add_error(self, "unknown flag value: %s", start);
+    }
 }
 
-void ap_on_string(scan_t *scan, cfg_field_t *param, const char *value)
+void ap_on_string(scan_t *scan, cfg_field_t *param, char *value)
 {
     ap_t *self = scan_get_context(scan);
     vector_t *callbacks = map_get_ptr(self->event_lookup, param);
 
     if (callbacks)
         apply_callbacks(scan, param, value, callbacks);
-
-    // TODO: handle these failing
-    // how do we get error messages out of here nicely?
 
     cfg_type_t type = cfg_get_type(param);
     switch (type) {
@@ -93,7 +108,7 @@ void ap_on_string(scan_t *scan, cfg_field_t *param, const char *value)
         break;
 
     case eConfigFlags:
-        update_flags(param, value, self->arena);
+        update_flags(param, value, self);
         break;
 
     default:
@@ -123,24 +138,24 @@ void ap_on_int(scan_t *scan, cfg_field_t *param, mpz_t value)
 
     int v = mpz_get_si(value);
 
-    ctu_log("setting %s to %d", cfg_get_info(param)->name, v);
-
-    // TODO: handle the int being out of range
-    //       how do we get error messages out of here nicely?
-    cfg_set_int(param, v);
+    if (!cfg_set_int(param, v))
+    {
+        ap_add_error(self, "value out of range: %d", v);
+    }
 }
 
-void ap_on_posarg(scan_t *scan, const char *value)
+void ap_on_posarg(scan_t *scan, char *value)
 {
     ap_t *self = scan_get_context(scan);
     apply_callbacks(scan, NULL, value, self->posarg_callbacks);
     vector_push(&self->posargs, (char*)value);
 }
 
-void ap_on_error(scan_t *scan, const char *message)
+void ap_on_invalid(scan_t *scan, char *value)
 {
     ap_t *self = scan_get_context(scan);
-    vector_push(&self->unknown, ctu_strdup(message));
+
+    ap_add_error(self, "yuck! dont feed me anything that isnt ascii please: `%s`", value);
 }
 
 void aperror(where_t *where, void *state, scan_t *scan, const char *msg)
@@ -148,5 +163,7 @@ void aperror(where_t *where, void *state, scan_t *scan, const char *msg)
     CTU_UNUSED(state);
     CTU_UNUSED(where);
 
-    ap_on_error(scan, msg);
+    ap_t *self = scan_get_context(scan);
+
+    ap_add_error(self, "%s", msg);
 }

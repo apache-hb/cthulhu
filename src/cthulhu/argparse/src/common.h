@@ -2,6 +2,8 @@
 
 #include "argparse/argparse.h"
 
+#include "core/analyze.h"
+
 #include <gmp.h>
 
 #define APLTYPE where_t
@@ -16,8 +18,10 @@ typedef struct ap_callback_t
     void *data;
 } ap_callback_t;
 
+/// @brief argparse instance
 typedef struct ap_t
 {
+    /// @brief allocation arena
     arena_t *arena;
 
     /// @brief a mapping of names to parameters
@@ -41,8 +45,8 @@ typedef struct ap_t
     vector_t *unknown;
 
     /// @brief all errors
-    /// a `typevec_t<ap_error_t>`
-    typevec_t *errors;
+    /// errors other than unknown arguments
+    vector_t *errors;
 
     /// @brief tracks the number of encountered arguments
     /// only counts arguments that are not positional or unknown
@@ -55,11 +59,15 @@ typedef struct ap_field_t
     bool negate;
 } ap_field_t;
 
-void ap_on_string(scan_t *scan, cfg_field_t *param, const char *value);
+void ap_on_string(scan_t *scan, cfg_field_t *param, char *value);
 void ap_on_bool(scan_t *scan, cfg_field_t *param, bool value);
 void ap_on_int(scan_t *scan, cfg_field_t *param, mpz_t value);
 
-void ap_on_posarg(scan_t *scan, const char *value);
-void ap_on_error(scan_t *scan, const char *message);
+void ap_on_posarg(scan_t *scan, char *value);
+
+CT_PRINTF(2, 3)
+void ap_add_error(ap_t *self, const char *fmt, ...);
+
+void ap_on_invalid(scan_t *scan, char *value);
 
 int ap_get_opt(ap_t *self, const char *name, ap_field_t *param, char **value);

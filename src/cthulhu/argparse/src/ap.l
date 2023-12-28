@@ -68,7 +68,7 @@ OPT [a-zA-Z0-9\-\?]
     return IDENT;
 }
 
-. { ap_on_error(yyextra, yytext); }
+. { ap_on_invalid(yyextra, yytext); }
 
 %%
 

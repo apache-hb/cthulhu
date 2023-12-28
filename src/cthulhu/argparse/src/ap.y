@@ -62,7 +62,7 @@ argument: AP_STRING_OPTION ident { ap_on_string(x, $1.field, $2); }
     | AP_BOOL_OPTION { ap_on_bool(x, $1.field, !$1.negate); }
     | IDENT { ap_on_posarg(x, $1); }
     | NUMBER { ap_on_posarg(x, mpz_get_str(NULL, 10, $1)); }
-    | AP_ERROR { ap_on_error(x, $1); }
+    | AP_ERROR
     ;
 
 ident: IDENT { $$ = $1; }

@@ -112,8 +112,8 @@ typedef struct test_group_t
             group_notify_exception(&GROUP, ID);                                                                        \
             break;                                                                                                     \
         }                                                                                                              \
-        bool result = __VA_ARGS__;                                                                                     \
-        group_notify_result(&GROUP, !result, ID);                                                                      \
+        bool test_result = __VA_ARGS__;                                                                                     \
+        group_notify_result(&GROUP, !test_result, ID);                                                                      \
     } while (0)
 
 #define GROUP_EXPECT_PANIC(GROUP, ID, ...)                                                                             \

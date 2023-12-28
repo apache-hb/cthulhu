@@ -114,9 +114,11 @@ void *typevec_offset(IN_NOTNULL const typevec_t *vec, size_t index);
 NODISCARD
 void *typevec_data(IN_NOTNULL const typevec_t *vec);
 
+/// @brief sort a vector
+///
+/// @param vec the vector to sort
+/// @param cmp the comparison function
 void typevec_sort(IN_NOTNULL typevec_t *vec, int (*cmp)(const void *, const void *));
-
-void typevec_reverse(IN_NOTNULL typevec_t *vec);
 
 void typevec_reset(IN_NOTNULL typevec_t *vec);
 

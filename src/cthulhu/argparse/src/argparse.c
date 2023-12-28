@@ -112,7 +112,7 @@ ap_t *ap_new(config_t *config, arena_t *arena)
 
     self->posargs = vector_new_arena(16, arena);
     self->unknown = vector_new_arena(16, arena);
-    self->errors = typevec_new(sizeof(ap_error_t), 16, arena);
+    self->errors = vector_new_arena(16, arena);
     self->count = 0;
 
     ARENA_IDENTIFY(arena, self->name_lookup, "name_lookup", self);
@@ -161,7 +161,8 @@ vector_t *ap_get_unknown(ap_t *self)
     return self->unknown;
 }
 
-typevec_t *ap_get_errors(ap_t *self)
+USE_DECL
+vector_t *ap_get_errors(ap_t *self)
 {
     CTASSERT(self != NULL);
 

@@ -175,7 +175,7 @@ runtime_t cmd_parse(mediator_t *mediator, lifetime_t *lifetime, int argc, const 
         .sourcePaths = vector_new(16),
     };
 
-    ap_parse(ap, argc, argv);
+    ap_parse_args(ap, argc, argv);
 
     vector_t *posargs = ap_get_posargs(ap);
     size_t posarg_count = vector_len(posargs);

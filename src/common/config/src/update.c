@@ -1,7 +1,5 @@
 #include "common.h"
 
-#include "memory/memory.h"
-
 #include "std/str.h"
 
 bool cfg_set_int(cfg_field_t *field, int value)

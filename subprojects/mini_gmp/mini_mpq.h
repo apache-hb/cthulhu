@@ -53,37 +53,37 @@ typedef __mpq_struct *mpq_ptr;
 #define mpq_numref(Q) (&((Q)->_mp_num))
 #define mpq_denref(Q) (&((Q)->_mp_den))
 
-void mpq_abs (mpq_t, const mpq_t);
-void mpq_add (mpq_t, const mpq_t, const mpq_t);
-void mpq_canonicalize (mpq_t);
-void mpq_clear (mpq_t);
-int mpq_cmp (const mpq_t, const mpq_t);
-int mpq_cmp_si (const mpq_t, signed long, unsigned long);
-int mpq_cmp_ui (const mpq_t, unsigned long, unsigned long);
-int mpq_cmp_z (const mpq_t, const mpz_t);
-void mpq_div (mpq_t, const mpq_t, const mpq_t);
-void mpq_div_2exp (mpq_t, const mpq_t, mp_bitcnt_t);
-int mpq_equal (const mpq_t, const mpq_t);
-double mpq_get_d (const mpq_t);
-void mpq_get_den (mpz_t, const mpq_t);
-void mpq_get_num (mpz_t, const mpq_t);
-char * mpq_get_str (char *, int, const mpq_t q);
-void mpq_init (mpq_t);
-void mpq_inv (mpq_t, const mpq_t);
-void mpq_mul (mpq_t, const mpq_t, const mpq_t);
-void mpq_mul_2exp (mpq_t, const mpq_t, mp_bitcnt_t);
-void mpq_neg (mpq_t, const mpq_t);
-void mpq_set (mpq_t, const mpq_t);
-void mpq_set_d (mpq_t, double);
-void mpq_set_den (mpq_t, const mpz_t);
-void mpq_set_num (mpq_t, const mpz_t);
-void mpq_set_si (mpq_t, signed long, unsigned long);
-int mpq_set_str (mpq_t, const char *, int);
-void mpq_set_ui (mpq_t, unsigned long, unsigned long);
-void mpq_set_z (mpq_t, const mpz_t);
-int mpq_sgn (const mpq_t);
-void mpq_sub (mpq_t, const mpq_t, const mpq_t);
-void mpq_swap (mpq_t, mpq_t);
+MINI_GMP_API void mpq_abs (mpq_t, const mpq_t);
+MINI_GMP_API void mpq_add (mpq_t, const mpq_t, const mpq_t);
+MINI_GMP_API void mpq_canonicalize (mpq_t);
+MINI_GMP_API void mpq_clear (mpq_t);
+MINI_GMP_API int mpq_cmp (const mpq_t, const mpq_t);
+MINI_GMP_API int mpq_cmp_si (const mpq_t, signed long, unsigned long);
+MINI_GMP_API int mpq_cmp_ui (const mpq_t, unsigned long, unsigned long);
+MINI_GMP_API int mpq_cmp_z (const mpq_t, const mpz_t);
+MINI_GMP_API void mpq_div (mpq_t, const mpq_t, const mpq_t);
+MINI_GMP_API void mpq_div_2exp (mpq_t, const mpq_t, mp_bitcnt_t);
+MINI_GMP_API int mpq_equal (const mpq_t, const mpq_t);
+MINI_GMP_API double mpq_get_d (const mpq_t);
+MINI_GMP_API void mpq_get_den (mpz_t, const mpq_t);
+MINI_GMP_API void mpq_get_num (mpz_t, const mpq_t);
+MINI_GMP_API char * mpq_get_str (char *, int, const mpq_t q);
+MINI_GMP_API void mpq_init (mpq_t);
+MINI_GMP_API void mpq_inv (mpq_t, const mpq_t);
+MINI_GMP_API void mpq_mul (mpq_t, const mpq_t, const mpq_t);
+MINI_GMP_API void mpq_mul_2exp (mpq_t, const mpq_t, mp_bitcnt_t);
+MINI_GMP_API void mpq_neg (mpq_t, const mpq_t);
+MINI_GMP_API void mpq_set (mpq_t, const mpq_t);
+MINI_GMP_API void mpq_set_d (mpq_t, double);
+MINI_GMP_API void mpq_set_den (mpq_t, const mpz_t);
+MINI_GMP_API void mpq_set_num (mpq_t, const mpz_t);
+MINI_GMP_API void mpq_set_si (mpq_t, signed long, unsigned long);
+MINI_GMP_API int mpq_set_str (mpq_t, const char *, int);
+MINI_GMP_API void mpq_set_ui (mpq_t, unsigned long, unsigned long);
+MINI_GMP_API void mpq_set_z (mpq_t, const mpz_t);
+MINI_GMP_API int mpq_sgn (const mpq_t);
+MINI_GMP_API void mpq_sub (mpq_t, const mpq_t, const mpq_t);
+MINI_GMP_API void mpq_swap (mpq_t, mpq_t);
 
 /* This long list taken from gmp.h. */
 /* For reference, "defined(EOF)" cannot be used here.  In g++ 2.95.4,
@@ -103,10 +103,10 @@ void mpq_swap (mpq_t, mpq_t);
   || defined (_STDIO_H_INCLUDED)      /* QNX4 */                \
   || defined (_ISO_STDIO_ISO_H)       /* Sun C++ */             \
   || defined (__STDIO_LOADED)         /* VMS */
-size_t mpq_out_str (FILE *, int, const mpq_t);
+MINI_GMP_API size_t mpq_out_str (FILE *, int, const mpq_t);
 #endif
 
-void mpz_set_q (mpz_t, const mpq_t);
+MINI_GMP_API void mpz_set_q (mpz_t, const mpq_t);
 
 #if defined (__cplusplus)
 }

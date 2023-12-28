@@ -221,27 +221,53 @@ int process_default_options(default_options_t options, tool_config_t config)
     return EXIT_OK;
 }
 
-static void report_unknown_args(io_t *io, const colour_pallete_t *pallete, vector_t *args)
+static void report_argparse_errors(io_t *io, format_context_t ctx, vector_t *args)
 {
     size_t count = vector_len(args);
     if (count == 0) return;
 
+    char *err = colour_text(ctx, eColourRed, "error");
+
     for (size_t i = 0; i < count; i++)
     {
         const char *arg = vector_get(args, i);
-        io_printf(io, "%sunknown argument%s: %s\n", colour_get(pallete, eColourYellow), colour_reset(pallete), arg);
+        io_printf(io, "%s: %s\n", err, arg);
+    }
+}
+
+static void report_unknown_args(io_t *io, format_context_t ctx, vector_t *args)
+{
+    size_t count = vector_len(args);
+    if (count == 0) return;
+
+    char *unk = colour_text(ctx, eColourYellow, "unknown argument");
+
+    for (size_t i = 0; i < count; i++)
+    {
+        const char *arg = vector_get(args, i);
+        io_printf(io, "%s: %s\n", unk, arg);
     }
 }
 
 static int process_argparse_result(default_options_t options, tool_config_t config, ap_t *ap)
 {
-    int err = ap_parse(ap, config.argc, config.argv);
+    int err = ap_parse_args(ap, config.argc, config.argv);
+
+    bool colour = cfg_bool_value(options.colour_output);
+    const colour_pallete_t *pallete = colour ? &kColourDefault : &kColourNone;
+
+    vector_t *errors = ap_get_errors(ap);
 
     vector_t *unknown = ap_get_unknown(ap);
     size_t unknown_count = vector_len(unknown);
-    bool colour = cfg_bool_value(options.colour_output);
-    const colour_pallete_t *pallete = colour ? &kColourDefault : &kColourNone;
-    report_unknown_args(config.io, pallete, unknown);
+
+    format_context_t ctx = {
+        .pallete = pallete,
+        .arena = config.arena,
+    };
+
+    report_argparse_errors(config.io, ctx, errors);
+    report_unknown_args(config.io, ctx, unknown);
 
     size_t count = ap_count_params(ap);
     vector_t *posargs = ap_get_posargs(ap);

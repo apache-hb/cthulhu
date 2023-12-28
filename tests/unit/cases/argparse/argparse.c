@@ -7,12 +7,15 @@
 
 #include "std/vector.h"
 #include "std/str.h"
+#include <stdio.h>
 
 typedef struct test_config_t
 {
     config_t *root;
 
     cfg_field_t *bool_field;
+    cfg_field_t *bool_field2;
+
     cfg_field_t *int_field;
     cfg_field_t *string_field;
     cfg_field_t *enum_field;
@@ -30,6 +33,14 @@ static const cfg_info_t kBoolInfo = {
     .name = "bool",
     .brief = "A boolean field",
     .short_args = kBoolInfoShortArgs,
+};
+
+static const char *const kBoolInfo2ShortArgs[] = {"b2", NULL};
+
+static const cfg_info_t kBoolInfo2 = {
+    .name = "bool2",
+    .brief = "A boolean field",
+    .short_args = kBoolInfo2ShortArgs,
 };
 
 static const char *const kIntInfoShortArgs[] = {"i", NULL};
@@ -100,6 +111,9 @@ static test_config_t make_config(arena_t *arena)
     cfg_bool_t bool_initial = {.initial = false};
     config.bool_field = config_bool(config.root, &kBoolInfo, bool_initial);
 
+    cfg_bool_t bool_initial2 = {.initial = false};
+    config.bool_field2 = config_bool(config.root, &kBoolInfo2, bool_initial2);
+
     cfg_int_t int_initial = {.initial = 0};
     config.int_field = config_int(config.root, &kIntInfo, int_initial);
 
@@ -139,6 +153,7 @@ int main(void)
         int result = ap_parse(ap, "-b -i 42 -s hello -e b -f a -f c");
         GROUP_EXPECT_PASS(group, "smoke test parses", result == EXIT_OK);
         GROUP_EXPECT_PASS(group, "no unknown args", vector_len(ap_get_unknown(ap)) == 0);
+        GROUP_EXPECT_PASS(group, "has no errors", vector_len(ap_get_errors(ap)) == 0);
 
         GROUP_EXPECT_PASS(group, "bool", cfg_bool_value(cfg.bool_field));
         GROUP_EXPECT_PASS(group, "int", cfg_int_value(cfg.int_field) == 42);
@@ -160,8 +175,9 @@ int main(void)
         ap_t *ap = ap_new(cfg.root, arena);
         int result = ap_parse(ap, "-f a,c");
 
-        GROUP_EXPECT_PASS(group, "smoke test parses", result == EXIT_OK);
+        GROUP_EXPECT_PASS(group, "test parses", result == EXIT_OK);
         GROUP_EXPECT_PASS(group, "no unknown args", vector_len(ap_get_unknown(ap)) == 0);
+        GROUP_EXPECT_PASS(group, "has no errors", vector_len(ap_get_errors(ap)) == 0);
 
         enum test_flags_t f = cfg_flags_value(cfg.flag_field);
         GROUP_EXPECT_PASS(group, "flag", f == (eTestFlagA | eTestFlagC));
@@ -174,8 +190,9 @@ int main(void)
         ap_t *ap = ap_new(cfg.root, arena);
         int result = ap_parse(ap, "-f \"-a,c\"");
 
-        GROUP_EXPECT_PASS(group, "smoke test parses", result == EXIT_OK);
+        GROUP_EXPECT_PASS(group, "test parses", result == EXIT_OK);
         GROUP_EXPECT_PASS(group, "no unknown args", vector_len(ap_get_unknown(ap)) == 0);
+        GROUP_EXPECT_PASS(group, "has no errors", vector_len(ap_get_errors(ap)) == 0);
 
         enum test_flags_t f = cfg_flags_value(cfg.flag_field);
         GROUP_EXPECT_PASS(group, "flag", f == eTestFlagC);
@@ -188,11 +205,56 @@ int main(void)
         ap_t *ap = ap_new(cfg.root, arena);
         int result = ap_parse(ap, "/b-");
 
-        GROUP_EXPECT_PASS(group, "smoke test parses", result == EXIT_OK);
+        GROUP_EXPECT_PASS(group, "test parses", result == EXIT_OK);
         GROUP_EXPECT_PASS(group, "no unknown args", vector_len(ap_get_unknown(ap)) == 0);
+
+        vector_t *errors = ap_get_errors(ap);
+        size_t len = vector_len(errors);
+        GROUP_EXPECT_PASS(group, "has no errors", len == 0);
 
         bool b = cfg_bool_value(cfg.bool_field);
         GROUP_EXPECT_PASS(group, "bool", b == false);
+    }
+
+    // parse multiple bools
+    {
+        test_group_t group = test_group(&suite, "multiple bools");
+        test_config_t cfg = make_config(arena);
+        ap_t *ap = ap_new(cfg.root, arena);
+        int result = ap_parse(ap, "-b -b2");
+
+        GROUP_EXPECT_PASS(group, "test parses", result == EXIT_OK);
+        GROUP_EXPECT_PASS(group, "no unknown args", vector_len(ap_get_unknown(ap)) == 0);
+
+        vector_t *errors = ap_get_errors(ap);
+        size_t len = vector_len(errors);
+        GROUP_EXPECT_PASS(group, "has no errors", len == 0);
+
+        bool b = cfg_bool_value(cfg.bool_field);
+        GROUP_EXPECT_PASS(group, "bool", b == true);
+
+        bool b2 = cfg_bool_value(cfg.bool_field2);
+        GROUP_EXPECT_PASS(group, "bool2", b2 == true);
+    }
+
+    // test invalid negation
+    {
+        test_group_t group = test_group(&suite, "invalid negation");
+        test_config_t cfg = make_config(arena);
+        ap_t *ap = ap_new(cfg.root, arena);
+        ap_parse(ap, "/i-"); // cant negate an int
+
+        GROUP_EXPECT_FAIL(group, "has errors", vector_len(ap_get_errors(ap)) == 0);
+    }
+
+    // test invalid characters
+    {
+        test_group_t group = test_group(&suite, "invalid characters");
+        test_config_t cfg = make_config(arena);
+        ap_t *ap = ap_new(cfg.root, arena);
+        ap_parse(ap, "-b -i 42 -s hello \x1b -e b -f a -f c");
+
+        GROUP_EXPECT_FAIL(group, "has errors", vector_len(ap_get_errors(ap)) == 0);
     }
 
     return test_suite_finish(&suite);

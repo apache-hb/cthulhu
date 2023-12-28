@@ -11,6 +11,7 @@
 #include "std/vector.h"
 
 #include <limits.h>
+#include <string.h>
 
 void display_version(version_display_t options)
 {
@@ -417,18 +418,17 @@ static void print_usage(display_options_t options, const char *name)
 
     io_printf(options.io, "usage: %s [options] files...\n\n", name);
     io_printf(options.io,
-        "the command line supports both posix and windows flag syntax\n"
-        "meaning that any flag that can be prefixed with a single dash\n"
-        "can also be prefixed with a forward slash\n"
-        "for example: -h and /h are equivalent\n"
-        "string arguments can be quoted to allow spaces\n"
-        "for example: -o \"output file\"\n"
-        "either `:`, `=`, or a space can be used to separate the flag from the value\n"
-        "for example: -o:output.txt, -o=output.txt, -o output.txt\n"
-        "a single flag argument may be specified in multiple parts\n"
-        "for example: /cpp:c++20 /cpp:modules and /cpp:\"c++20,modules\" are equivilent\n"
-        "a leading `-` may be used to disable a flag\n"
-        "for example: /cpp:-modules\n"
+        " +--- About --------------------------------------------------------------------------+\n"
+        " | The command line supports both posix and windows flag syntax                       |\n"
+        " | meaning that any flag that can be prefixed with a single dash                      |\n"
+        " | can also be prefixed with a forward slash. For example: -h and /h are equivalent.  |\n"
+        " | String arguments can be quoted to allow spaces, For example: -o \"output file\"      |\n"
+        " | `:`, `=`, or a space can be used to separate the flag from the value               |\n"
+        " | -o:output.txt, -o=output.txt, -o output.txt                                        |\n"
+        " | A single flag argument may be specified in multiple parts.                         |\n"
+        " | For example: /cpp:c++20 /cpp:modules and /cpp:\"c++20,modules\" are all equivilent   |\n"
+        " | A leading `-` may be used to disable a flag. For example: /cpp:-modules            |\n"
+        " +------------------------------------------------------------------------------------+\n\n"
     );
 }
 

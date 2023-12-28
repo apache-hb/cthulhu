@@ -16,6 +16,8 @@
 #include "base/panic.h"
 #include "core/macros.h"
 
+#include <stdint.h>
+
 typedef struct check_t
 {
     logger_t *reports;

@@ -25,6 +25,7 @@ static char *join_args(int argc, const char **argv, arena_t *arena)
         const char *arg = argv[i];
         size_t len = strlen(arg);
         typevec_append(vec, arg, len);
+        typevec_push(vec, " ");
     }
 
     typevec_push(vec, "\0");
@@ -95,15 +96,6 @@ static const char *get_lookup_name(const char *name, bool *negate, arena_t *aren
         return arena_strndup(name, len, arena);
     }
 
-    // if the name starts with `no-` then its a negation
-    // so we need to strip that off
-
-    if (len > 3 && strncmp(name, "no-", 3) == 0)
-    {
-        *negate = true;
-        return arena_strdup(name + 3, arena);
-    }
-
     return name;
 }
 
@@ -123,6 +115,7 @@ int ap_get_opt(ap_t *self, const char *name, ap_field_t *param, char **value)
     if (result == NULL)
     {
         *value = arena_strdup(name, self->arena);
+        vector_push(&self->unknown, *value);
         return AP_ERROR;
     }
 
@@ -135,14 +128,10 @@ int ap_get_opt(ap_t *self, const char *name, ap_field_t *param, char **value)
     *param = out;
     cfg_type_t type = get_option_type(result);
 
-    // this is fine
-    if (negate && type == eConfigBool)
+    if (negate && cfg_get_type(result) != eConfigBool)
     {
-        return type;
+        ap_add_error(self, "cannot negate non-boolean flag: %s", name);
     }
-
-    // user attempting to negate a non-boolean flag
-    // TODO: report this as an error
 
     return type;
 }
