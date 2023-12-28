@@ -110,7 +110,7 @@ int main(int argc, const char **argv)
     default_init();
     arena_t *arena = get_global_arena();
 
-    io_t *io = io_stdout(arena);
+    io_t *io = io_stdout();
 
     tool_t tool = make_config(arena);
 

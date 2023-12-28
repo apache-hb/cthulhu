@@ -271,7 +271,7 @@ static void print_backtrace(text_config_t base_config)
 {
     text_config_t config = base_config;
     arena_t *arena = ctu_default_alloc();
-    config.io = io_stdout(arena);
+    config.io = io_stdout();
 
     bt_report_t report = bt_report_collect(arena);
 
@@ -348,7 +348,7 @@ static void do_backtrace(io_t *io)
 
 static void do_simple(logger_t *logs)
 {
-    io_t *io = io_stdout(ctu_default_alloc());
+    io_t *io = io_stdout();
 
     text_config_t config2 = {
         .config = {
@@ -378,7 +378,7 @@ static void do_rich(logger_t *logs)
             .zeroth_line = false,
         },
         .colours = &kColourDefault,
-        .io = io_stdout(ctu_default_alloc())
+        .io = io_stdout()
     };
 
     report_config_t report_config = {
@@ -399,7 +399,7 @@ int main(int argc, const char **argv)
     default_init();
 
     arena_t *arena = get_global_arena();
-    io_t *io = io_stdout(arena);
+    io_t *io = io_stdout();
     tool_t tool = make_config(arena);
 
     tool_config_t config = {

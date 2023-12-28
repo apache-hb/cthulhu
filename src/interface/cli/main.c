@@ -109,7 +109,7 @@ int main(int argc, const char **argv)
         lifetime_add_language(lifetime, langs.langs[i]);
     }
 
-    io_t *io = io_stdout(arena);
+    io_t *io = io_stdout();
 
     tool_t tool = make_tool(arena);
 
@@ -149,6 +149,8 @@ int main(int argc, const char **argv)
     report_config_t report_config = {
         .report_format = cfg_enum_value(tool.report_style),
         .text_config = text_config,
+
+        .max_errors = cfg_int_value(tool.report_limit),
     };
 
     CHECK_LOG(reports, "initializing");

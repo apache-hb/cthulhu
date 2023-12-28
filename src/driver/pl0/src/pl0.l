@@ -44,7 +44,8 @@ WS [ \t\r\v\n\f]
 (?i:odd) { return ODD; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
-    yylval->ident = ctu_strdup(yytext);
+    pl0_scan_t *scan = pl0_scan_context(yyextra);
+    yylval->ident = arena_strdup(yytext, scan->arena);
     return IDENT;
 }
 

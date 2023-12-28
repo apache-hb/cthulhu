@@ -1,7 +1,7 @@
 #include "config/config.h"
 #include "core/macros.h"
-#include "memory/memory.h"
 
+#include "memory/arena.h"
 #include "pl0/sema.h"
 #include "pl0/ast.h"
 
@@ -22,12 +22,14 @@ static void *pl0_preparse(driver_t *handle, scan_t *scan)
 
     lifetime_t *lifetime = handle_get_lifetime(handle);
     logger_t *reports = lifetime_get_logger(lifetime);
+    arena_t *arena = lifetime_get_arena(lifetime);
 
     pl0_scan_t info = {
+        .arena = arena,
         .reports = reports
     };
 
-    return ctu_memdup(&info, sizeof(pl0_scan_t));
+    return arena_memdup(&info, sizeof(pl0_scan_t), arena);
 }
 
 static void pl0_postparse(driver_t *handle, scan_t *scan, void *tree)

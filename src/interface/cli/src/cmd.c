@@ -1,7 +1,6 @@
 #include "cmd.h"
 
 #include "config/config.h"
-#include "io/console.h"
 #include "io/io.h"
 
 #include "notify/text.h"

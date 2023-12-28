@@ -5,28 +5,14 @@
 #include "editor/trace.hpp"
 
 #include "core/macros.h"
-#include "core/version_def.h"
 
 #include "cthulhu/runtime/interface.h"
 
 #include "editor/panic.hpp"
-#include "memory/memory.h"
-#include "support/langs.h"
-
-#include "scan/node.h"
-
-#include "os/os.h"
-#include "io/io.h"
 
 #include "config/config.h"
 
 #include "imgui.h"
-
-#include "stacktrace/stacktrace.h"
-#include "std/str.h"
-#include "std/vector.h"
-
-#include <csetjmp>
 
 // static const version_info_t kVersionInfo = {
 //     .license = "GPLv3",

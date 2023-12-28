@@ -3,12 +3,6 @@
 #include "io/impl.h"
 #include <stdio.h>
 
-typedef struct io_console_t
-{
-    // empty for now
-    int dummy;
-} io_console_t;
-
 static size_t con_write(io_t *self, const void *src, size_t size)
 {
     CTU_UNUSED(self);
@@ -27,9 +21,14 @@ static const io_callbacks_t kConsoleCallbacks = {
     .fn_close = NULL
 };
 
-io_t *io_stdout(arena_t *arena)
-{
-    io_console_t console = { 0 };
+static io_t gConsoleIo = {
+    .cb = &kConsoleCallbacks,
+    .flags = eAccessWrite | eAccessText,
+    .arena = NULL,
+    .name = "stdout",
+};
 
-    return io_new(&kConsoleCallbacks, eAccessWrite, "stdout", &console, sizeof(io_console_t), arena);
+io_t *io_stdout(void)
+{
+    return &gConsoleIo;
 }

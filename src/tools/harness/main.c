@@ -192,7 +192,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
         lifetime_add_language(lifetime, lang);
     }
 
-    io_t *msg_buffer = io_stdout(arena);
+    io_t *msg_buffer = io_stdout();
 
     text_config_t text_config = {
         .config = {
