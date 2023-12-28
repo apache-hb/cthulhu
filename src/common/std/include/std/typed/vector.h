@@ -81,6 +81,12 @@ void typevec_tail(IN_NOTNULL const typevec_t *vec, IN_NOTNULL void *dst);
 /// @param src the value to push
 void *typevec_push(IN_NOTNULL typevec_t *vec, IN_NOTNULL const void *src);
 
+/// @brief append multiple values onto the vector
+/// @note this copies @p len * @a type_size bytes from @p src to the vector
+///
+/// @param vec the vector to append the values onto
+/// @param src the values to append
+/// @param len the number of values to append
 void typevec_append(IN_NOTNULL typevec_t *vec, IN_NOTNULL const void *src, size_t len);
 
 /// @brief pop a value from the vector

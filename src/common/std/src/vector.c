@@ -57,7 +57,7 @@ static vector_t *vector_init_inner(size_t size, size_t used, arena_t *arena)
 
 // vector public api
 
-NODISCARD
+USE_DECL
 vector_t *vector_new_arena(size_t size, arena_t *arena)
 {
     CTASSERT(arena != NULL);
@@ -66,15 +66,23 @@ vector_t *vector_new_arena(size_t size, arena_t *arena)
 }
 
 USE_DECL
+vector_t *vector_of_arena(size_t len, arena_t *arena)
+{
+    CTASSERT(arena != NULL);
+
+    return vector_init_inner(len, len, arena);
+}
+
+USE_DECL
 vector_t *vector_new(size_t size)
 {
-    return vector_init_inner(size, 0, get_global_arena());
+    return vector_new_arena(size, get_global_arena());
 }
 
 USE_DECL
 vector_t *vector_of(size_t len)
 {
-    return vector_init_inner(len, len, get_global_arena());
+    return vector_of_arena(len, get_global_arena());
 }
 
 USE_DECL

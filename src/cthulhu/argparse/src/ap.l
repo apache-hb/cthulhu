@@ -26,19 +26,19 @@ OPT [a-zA-Z0-9\-\?]
 [-]{LETTER}{OPT}* {
     /* short opt */
     ap_t *ap = scan_get_context(yyextra);
-    return ap_get_opt(ap, yytext, &yylval->field, &yylval->error);
+    return ap_get_opt(ap, yytext + 1, &yylval->field, &yylval->error);
 }
 
 [-][-]{LETTER}{OPT}* {
     /* long opt */
     ap_t *ap = scan_get_context(yyextra);
-    return ap_get_opt(ap, yytext, &yylval->field, &yylval->error);
+    return ap_get_opt(ap, yytext + 2, &yylval->field, &yylval->error);
 }
 
 [/]{LETTER}{OPT}* {
     /* nt style opt */
     ap_t *ap = scan_get_context(yyextra);
-    return ap_get_opt(ap, yytext, &yylval->field, &yylval->error);
+    return ap_get_opt(ap, yytext + 1, &yylval->field, &yylval->error);
 }
 
 [0-9]+ {
@@ -57,12 +57,14 @@ OPT [a-zA-Z0-9\-\?]
 }
 
 [a-zA-Z0-9_.,/;\\\-]+ {
-    yylval->ident = ctu_strdup(yytext);
+    ap_t *self = scan_get_context(yyextra);
+    yylval->ident = arena_strdup(yytext, self->arena);
     return IDENT;
 }
 
 \"(\\.|[^"\\])*\" {
-    yylval->ident = ctu_strndup(yytext + 1, yyleng - 2);
+    ap_t *self = scan_get_context(yyextra);
+    yylval->ident = arena_strndup(yytext + 1, yyleng - 2, self->arena);
     return IDENT;
 }
 

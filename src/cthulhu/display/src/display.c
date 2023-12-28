@@ -420,7 +420,15 @@ static void print_usage(display_options_t options, const char *name)
         "the command line supports both posix and windows flag syntax\n"
         "meaning that any flag that can be prefixed with a single dash\n"
         "can also be prefixed with a forward slash\n"
-        "for example: -h and /h are equivalent\n\n"
+        "for example: -h and /h are equivalent\n"
+        "string arguments can be quoted to allow spaces\n"
+        "for example: -o \"output file\"\n"
+        "either `:`, `=`, or a space can be used to separate the flag from the value\n"
+        "for example: -o:output.txt, -o=output.txt, -o output.txt\n"
+        "a single flag argument may be specified in multiple parts\n"
+        "for example: /cpp:c++20 /cpp:modules and /cpp:\"c++20,modules\" are equivilent\n"
+        "a leading `-` may be used to disable a flag\n"
+        "for example: /cpp:-modules\n"
     );
 }
 

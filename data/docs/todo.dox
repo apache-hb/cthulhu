@@ -6,8 +6,6 @@ GFI = good first issue
 
 <h3>First priority</h3>
 
-- fix linking to ucrt with clang-cl causing issues (GFI)
-
 - support for feeding sources directly into compilers
     - the intermediate step is annoying to users
 
@@ -30,7 +28,12 @@ GFI = good first issue
 - electric fence allocators for unit tests
     - make sure common modules dont use global allocator
 
+- hash consing for driver asts and trees
+    - should probably incorporate protobuf into this for fuzzing
+
 <h3>Important</h3>
+
+- fix linking to ucrt with clang-cl causing issues (GFI)
 
 - vendor flex+bison ourselves to always have the best version
     - will also allow us to not use winflexbison from chocolatey
@@ -72,7 +75,7 @@ GFI = good first issue
 - add newtypes to tree (GFI)
 
 - C frontend
-    - perhaps support a small subset of C++ so we can use it internally
+    - perhaps support a small subset of C++
 
 - more docs (GFI)
 

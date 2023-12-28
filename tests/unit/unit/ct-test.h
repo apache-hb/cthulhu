@@ -27,7 +27,7 @@ typedef struct test_suite_t
 /// @param suite the name of the test suite
 ///
 /// @return the test suite
-test_suite_t test_suite_new(const char *suite);
+test_suite_t test_suite_new(const char *suite, arena_t *arena);
 
 /// @brief notify the suite that a test result has been received
 ///
@@ -56,6 +56,9 @@ void group_notify_exception(test_group_t *group, const char *msg);
 
 /// @brief install the global panic handler
 void test_install_panic_handler(void);
+
+/// @brief install the electric fence allocator
+void test_install_electric_fence(void);
 
 /// @brief begin expecting a panic
 void test_begin_expect_panic(void);

@@ -1,6 +1,6 @@
 libunit = library('unit', 'unit/ct-test.c',
-    include_directories : include_directories('unit'),
-    dependencies : [ stacktrace, base, std, memory ]
+    include_directories : 'unit',
+    dependencies : [ stacktrace, base, std, memory, os ]
 )
 
 unit = declare_dependency(
@@ -50,9 +50,9 @@ test('fs', fs_exe,
 
 # argparse
 
-# argparse_exe = executable('argparse.argparse', 'cases/argparse/argparse.c',
-#     include_directories : '.',
-#     dependencies : [ unit, memory, base, std, scan, memory, argparse ]
-# )
+argparse_exe = executable('argparse.argparse', 'cases/argparse/argparse.c',
+    include_directories : '.',
+    dependencies : [ unit, memory, base, std, memory, config, argparse ]
+)
 
-# test('argparse', argparse_exe, suite : 'unit')
+test('argparse', argparse_exe, suite : 'unit')

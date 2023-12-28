@@ -52,18 +52,26 @@ typedef enum compile_stage_t
 
 typedef void (*driver_pass_t)(context_t *);
 
+/// @brief a language drivers provided configuration
 typedef struct language_t
 {
-    const char *id;   ///< unique identifier for the language
-    const char *name; ///< human readable name for the language
+    /// @brief the unique id for the language
+    const char *id;
 
-    version_info_t version; ///< version info for the frontend
+    /// @brief the human readable name for the language
+    const char *name;
 
-    const char * const * exts; ///< null terminated list of file extensions
+    /// @brief the version of the language
+    version_info_t version;
+
+    /// @brief the file extensions this language can parse
+    /// @note this is a null terminated array
+    const char * const *exts;
 
     /// @brief all diagnostics this language can produce
     diagnostic_list_t diagnostics;
 
+    /// @brief get the schema for the driver
     driver_config_t fn_config;
 
     /// @brief called once at startup

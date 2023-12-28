@@ -42,7 +42,14 @@ static void add_arg_callback(ap_t *self, const cfg_field_t *param, ap_callback_t
 
 static void add_arg(ap_t *ap, const char *arg, cfg_field_t *field)
 {
-    // lets trust that the config doesnt have any duplicate fields
+    const cfg_field_t *existing = map_get_ptr(ap->name_lookup, arg);
+    if (existing != NULL)
+    {
+        const cfg_info_t *info = cfg_get_info(field);
+        const cfg_info_t *prev = cfg_get_info(existing);
+        NEVER("a flag `%s` already exists (new: %s, old: %s)", arg, info->name, prev->name);
+    }
+
     map_set(ap->name_lookup, arg, field);
 }
 
@@ -58,8 +65,7 @@ static void add_single_field(ap_t *ap, cfg_field_t *field)
     {
         for (size_t i = 0; info->short_args[i]; i++)
         {
-            add_arg(ap, format("-%s", info->short_args[i]), field);
-            add_arg(ap, format("/%s", info->short_args[i]), field);
+            add_arg(ap, info->short_args[i], field);
         }
     }
 
@@ -67,8 +73,7 @@ static void add_single_field(ap_t *ap, cfg_field_t *field)
     {
         for (size_t i = 0; info->long_args[i]; i++)
         {
-            add_arg(ap, format("--%s", info->long_args[i]), field);
-            add_arg(ap, format("/%s", info->long_args[i]), field);
+            add_arg(ap, info->long_args[i], field);
         }
     }
 }
@@ -100,14 +105,14 @@ ap_t *ap_new(config_t *config, arena_t *arena)
 
     self->arena = arena;
 
-    self->name_lookup = map_optimal(256);
-    self->event_lookup = map_optimal(256);
+    self->name_lookup = map_optimal_arena(256, arena);
+    self->event_lookup = map_optimal_arena(256, arena);
 
-    self->posarg_callbacks = vector_new(16);
+    self->posarg_callbacks = vector_new_arena(16, arena);
 
-    self->posargs = vector_new(16);
-    self->unknown = vector_new(16);
-
+    self->posargs = vector_new_arena(16, arena);
+    self->unknown = vector_new_arena(16, arena);
+    self->errors = typevec_new(sizeof(ap_error_t), 16, arena);
     self->count = 0;
 
     ARENA_IDENTIFY(arena, self->name_lookup, "name_lookup", self);
@@ -115,6 +120,7 @@ ap_t *ap_new(config_t *config, arena_t *arena)
     ARENA_IDENTIFY(arena, self->posarg_callbacks, "posarg_callbacks", self);
     ARENA_IDENTIFY(arena, self->posargs, "posargs", self);
     ARENA_IDENTIFY(arena, self->unknown, "unknown", self);
+    ARENA_IDENTIFY(arena, self->errors, "errors", self);
 
     add_config_fields(self, config);
 
@@ -153,6 +159,13 @@ vector_t *ap_get_unknown(ap_t *self)
     CTASSERT(self != NULL);
 
     return self->unknown;
+}
+
+typevec_t *ap_get_errors(ap_t *self)
+{
+    CTASSERT(self != NULL);
+
+    return self->errors;
 }
 
 size_t ap_count_params(ap_t *self)

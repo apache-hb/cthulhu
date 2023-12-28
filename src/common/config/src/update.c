@@ -28,11 +28,11 @@ void cfg_set_bool(cfg_field_t *field, bool value)
     field->bool_value = value;
 }
 
-void cfg_set_string(cfg_field_t *field, const char *value)
+void cfg_set_string(cfg_field_t *field, char *value)
 {
     ASSERT_FIELD_TYPE(field, eConfigString);
 
-    field->string_value = ctu_strdup(value);
+    field->string_value = value;
 }
 
 bool cfg_set_enum(cfg_field_t *field, const char *choice)

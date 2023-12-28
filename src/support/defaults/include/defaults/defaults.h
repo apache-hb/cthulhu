@@ -3,8 +3,9 @@
 #include "core/compiler.h"
 #include "core/version_def.h"
 
-BEGIN_API
+#include <stdbool.h>
 
+BEGIN_API
 
 /// @defgroup Defaults Default options
 /// @brief Default command line options and behaviour

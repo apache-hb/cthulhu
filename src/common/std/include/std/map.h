@@ -5,7 +5,6 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <limits.h>
 
 BEGIN_API
 
@@ -18,6 +17,11 @@ typedef struct vector_t vector_t;
 typedef struct typevec_t typevec_t;
 typedef struct bucket_t bucket_t;
 typedef struct map_t map_t;
+typedef struct arena_t arena_t;
+
+map_t *map_new_arena(size_t size, IN_NOTNULL arena_t *arena);
+
+map_t *map_optimal_arena(size_t size, IN_NOTNULL arena_t *arena);
 
 /**
  * create a new map

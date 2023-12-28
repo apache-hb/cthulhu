@@ -1,9 +1,12 @@
 #include "ct-test.h"
 
+#include "base/log.h"
+#include "core/macros.h"
 #include "memory/memory.h"
 #include "stacktrace/stacktrace.h"
 
 #include "std/str.h"
+#include "os/os.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -93,6 +96,7 @@ static test_result_t test_result_exception(const char *group_name, const char *t
 
 static bool gExpectingPanic = false;
 static test_exception_t gPanicException = { 0 };
+static arena_t *gTestArena = NULL;
 
 jmp_buf gPanicJump = { 0 };
 
@@ -110,7 +114,7 @@ static void test_panic_handler(panic_t panic, const char *fmt, va_list args)
         abort();
     }
 
-    char *msg = vformat(fmt, args);
+    char *msg = str_vformat(gTestArena, fmt, args);
     test_exception_t ex = { panic, msg };
     gPanicException = ex;
     longjmp(gPanicJump, 1);
@@ -118,10 +122,48 @@ static void test_panic_handler(panic_t panic, const char *fmt, va_list args)
 
 void test_install_panic_handler(void)
 {
+    ctu_log_update(true);
     bt_init();
+    os_init();
     gPanicHandler = test_panic_handler;
+    gTestArena = ctu_default_alloc();
 
     init_global_arena(ctu_default_alloc());
+}
+
+static void *ef_malloc(size_t size, void *self)
+{
+    CTU_UNUSED(self);
+
+    NEVER("bzzt! electric fence hit with malloc of size %zu", size);
+}
+
+static void *ef_realloc(void *ptr, size_t new_size, size_t old_size, void *self)
+{
+    CTU_UNUSED(ptr);
+    CTU_UNUSED(self);
+
+    NEVER("bzzt! electric fence hit with realloc of size %zu old %zu", new_size, old_size);
+}
+
+static void ef_free(void *ptr, size_t size, void *self)
+{
+    CTU_UNUSED(ptr);
+    CTU_UNUSED(self);
+
+    NEVER("bzzt! electric fence hit with free of size %zu", size);
+}
+
+static arena_t gElectricFence = {
+    .name = "electric fence",
+    .fn_malloc = ef_malloc,
+    .fn_realloc = ef_realloc,
+    .fn_free = ef_free,
+};
+
+void test_install_electric_fence(void)
+{
+    init_global_arena(&gElectricFence);
 }
 
 void test_begin_expect_panic(void)
@@ -134,9 +176,8 @@ static void test_end_expect_panic(void)
     gExpectingPanic = false;
 }
 
-test_suite_t test_suite_new(const char *suite)
+test_suite_t test_suite_new(const char *suite, arena_t *arena)
 {
-    arena_t *arena = get_global_arena();
     test_suite_t s = {
         .suite_name = suite,
         .results = typevec_new(sizeof(test_result_t), 64, arena)

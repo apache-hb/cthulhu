@@ -40,10 +40,20 @@ typedef struct ap_t
     // vector_t<const char*>
     vector_t *unknown;
 
+    /// @brief all errors
+    /// a `typevec_t<ap_error_t>`
+    typevec_t *errors;
+
     /// @brief tracks the number of encountered arguments
     /// only counts arguments that are not positional or unknown
     size_t count;
 } ap_t;
+
+typedef struct ap_field_t
+{
+    cfg_field_t *field;
+    bool negate;
+} ap_field_t;
 
 void ap_on_string(scan_t *scan, cfg_field_t *param, const char *value);
 void ap_on_bool(scan_t *scan, cfg_field_t *param, bool value);
@@ -52,4 +62,4 @@ void ap_on_int(scan_t *scan, cfg_field_t *param, mpz_t value);
 void ap_on_posarg(scan_t *scan, const char *value);
 void ap_on_error(scan_t *scan, const char *message);
 
-int ap_get_opt(ap_t *self, const char *name, cfg_field_t **param, char **value);
+int ap_get_opt(ap_t *self, const char *name, ap_field_t *param, char **value);

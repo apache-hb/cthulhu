@@ -1,3 +1,4 @@
+#include "memory/memory.h"
 #include "unit/ct-test.h"
 
 #include "std/map.h"
@@ -12,13 +13,14 @@ static const char *const kSetItems[] = {
     "4", "5", "6", "7", "8", "9"
 };
 
-#define SET_ITEMS_COUNT sizeof(kSetItems) / sizeof(char*)
+#define SET_ITEMS_COUNT (sizeof(kSetItems) / sizeof(char*))
 
 int main(void)
 {
     test_install_panic_handler();
 
-    test_suite_t suite = test_suite_new("map");
+    arena_t *arena = ctu_default_alloc();
+    test_suite_t suite = test_suite_new("map", arena);
 
     {
         test_group_t group = test_group(&suite, "construction");

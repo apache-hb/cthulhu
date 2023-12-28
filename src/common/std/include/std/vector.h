@@ -35,6 +35,9 @@ void vector_delete(OUT_PTR_INVALID vector_t *vector);
 NODISCARD
 vector_t *vector_new_arena(size_t size, IN_NOTNULL arena_t *arena);
 
+NODISCARD
+vector_t *vector_of_arena(size_t len, IN_NOTNULL arena_t *arena);
+
 /**
  * @brief create a new vector.
  *

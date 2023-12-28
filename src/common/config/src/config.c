@@ -6,6 +6,8 @@
 #include "std/typed/vector.h"
 #include "std/vector.h"
 
+#include <limits.h>
+
 // all this is put behind the same macro used for asserts
 // because i dont trust compilers to optimize it out
 
@@ -112,9 +114,17 @@ cfg_field_t *config_int(config_t *group, const cfg_info_t *info, cfg_int_t cfg)
     int min = cfg.min;
     int max = cfg.max;
 
-    CTASSERTF(min <= max, "invalid range %d-%d", min, max);
-    CTASSERTF(cfg.initial >= min && cfg.initial <= max, "initial value %d out of range %d-%d",
-              cfg.initial, min, max);
+    if (min == 0 && max == 0)
+    {
+        cfg.min = INT_MIN;
+        cfg.max = INT_MAX;
+    }
+    else
+    {
+        CTASSERTF(min <= max, "invalid range %d-%d", min, max);
+        CTASSERTF(cfg.initial >= min && cfg.initial <= max, "initial value %d out of range %d-%d",
+                cfg.initial, min, max);
+    }
 
     cfg_field_t *field = add_field(group, info, eConfigInt);
     field->int_config = cfg;

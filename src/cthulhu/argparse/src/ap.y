@@ -24,7 +24,7 @@ void aperror(where_t *where, void *state, scan_t *scan, const char *msg);
 %}
 
 %union {
-    cfg_field_t *field;
+    ap_field_t field;
     char *ident;
     char *error;
     mpz_t number;
@@ -57,9 +57,9 @@ void aperror(where_t *where, void *state, scan_t *scan, const char *msg);
 entry: %empty | arguments ;
 arguments: argument | arguments argument ;
 
-argument: AP_STRING_OPTION ident { ap_on_string(x, $1, $2); }
-    | AP_INT_OPTION number { ap_on_int(x, $1, $2); }
-    | AP_BOOL_OPTION { ap_on_bool(x, $1, true); }
+argument: AP_STRING_OPTION ident { ap_on_string(x, $1.field, $2); }
+    | AP_INT_OPTION number { ap_on_int(x, $1.field, $2); }
+    | AP_BOOL_OPTION { ap_on_bool(x, $1.field, !$1.negate); }
     | IDENT { ap_on_posarg(x, $1); }
     | NUMBER { ap_on_posarg(x, mpz_get_str(NULL, 10, $1)); }
     | AP_ERROR { ap_on_error(x, $1); }

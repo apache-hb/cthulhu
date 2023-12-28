@@ -1,5 +1,6 @@
 #include "common.h"
 
+#include "base/log.h"
 #include "base/panic.h"
 #include "config/config.h"
 #include "core/macros.h"
@@ -39,6 +40,37 @@ static void apply_callbacks(scan_t *scan, const cfg_field_t *param, const void *
 
 // flex + bison callbacks
 
+static void update_flags(cfg_field_t *param, const char *value, arena_t *arena)
+{
+    // first split `value` by `,`
+    const char *start = value;
+    const char *end = value;
+
+    while (*end != '\0')
+    {
+        if (*end == ',')
+        {
+            size_t len = end - start;
+            char *flag = arena_strndup(start, len, arena);
+
+            // if the flag starts with `-` then it's a negative flag
+            // otherwise it's a positive flag
+            bool negate = *flag == '-';
+            if (negate)
+                flag++;
+
+            cfg_set_flag(param, flag, !negate);
+
+            start = end + 1;
+        }
+
+        end++;
+    }
+
+    // handle the last flag
+    cfg_set_flag(param, start, true);
+}
+
 void ap_on_string(scan_t *scan, cfg_field_t *param, const char *value)
 {
     ap_t *self = scan_get_context(scan);
@@ -53,7 +85,7 @@ void ap_on_string(scan_t *scan, cfg_field_t *param, const char *value)
     cfg_type_t type = cfg_get_type(param);
     switch (type) {
     case eConfigString:
-        cfg_set_string(param, value);
+        cfg_set_string(param, arena_strdup(value, self->arena));
         break;
 
     case eConfigEnum:
@@ -61,7 +93,7 @@ void ap_on_string(scan_t *scan, cfg_field_t *param, const char *value)
         break;
 
     case eConfigFlags:
-        cfg_set_flag(param, value, true);
+        update_flags(param, value, self->arena);
         break;
 
     default:
@@ -90,6 +122,8 @@ void ap_on_int(scan_t *scan, cfg_field_t *param, mpz_t value)
         apply_callbacks(scan, param, value, callbacks);
 
     int v = mpz_get_si(value);
+
+    ctu_log("setting %s to %d", cfg_get_info(param)->name, v);
 
     // TODO: handle the int being out of range
     //       how do we get error messages out of here nicely?

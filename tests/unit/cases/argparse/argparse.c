@@ -1,129 +1,198 @@
+#include "config/config.h"
+#include "core/macros.h"
 #include "memory/memory.h"
 #include "unit/ct-test.h"
 
-#include "core/macros.h"
-
 #include "argparse/argparse.h"
-#include "argparse/commands.h"
 
 #include "std/vector.h"
 #include "std/str.h"
-#include <stdlib.h>
 
-typedef struct sources_t
+typedef struct test_config_t
 {
-    vector_t *files;
-} sources_t;
+    config_t *root;
 
-typedef struct errors_t
+    cfg_field_t *bool_field;
+    cfg_field_t *int_field;
+    cfg_field_t *string_field;
+    cfg_field_t *enum_field;
+    cfg_field_t *flag_field;
+} test_config_t;
+
+static const cfg_info_t kRootInfo = {
+    .name = "test",
+    .brief = "Test config",
+};
+
+static const char *const kBoolInfoShortArgs[] = {"b", NULL};
+
+static const cfg_info_t kBoolInfo = {
+    .name = "bool",
+    .brief = "A boolean field",
+    .short_args = kBoolInfoShortArgs,
+};
+
+static const char *const kIntInfoShortArgs[] = {"i", NULL};
+
+static const cfg_info_t kIntInfo = {
+    .name = "int",
+    .brief = "An integer field",
+    .short_args = kIntInfoShortArgs,
+};
+
+static const char *const kStringInfoShortArgs[] = {"s", NULL};
+
+static const cfg_info_t kStringInfo = {
+    .name = "string",
+    .brief = "A string field",
+    .short_args = kStringInfoShortArgs,
+};
+
+static const char *const kEnumInfoShortArgs[] = {"e", NULL};
+
+static const cfg_info_t kEnumInfo = {
+    .name = "enum",
+    .brief = "An enum field",
+    .short_args = kEnumInfoShortArgs,
+};
+
+static const char *const kFlagInfoShortArgs[] = {"f", NULL};
+
+static const cfg_info_t kFlagInfo = {
+    .name = "flag",
+    .brief = "A flag field",
+    .short_args = kFlagInfoShortArgs,
+};
+
+enum test_enum_t
 {
-    vector_t *errors;
-} errors_t;
+    eTestEnumA,
+    eTestEnumB,
+    eTestEnumC,
+};
 
-static ap_event_result_t on_file(ap_t *ap, const cfg_field_t *param, const void *value, void *data)
+enum test_flags_t
 {
-    CTU_UNUSED(ap);
-    CTU_UNUSED(param);
+    eTestFlagNone = 0,
+    eTestFlagA = 1 << 0,
+    eTestFlagB = 1 << 1,
+    eTestFlagC = 1 << 2,
+};
 
-    sources_t *sources = (sources_t*)data;
-    const char *path = (char*)value;
+static const cfg_choice_t kEnumChoices[] = {
+    {.text = "a", .value = eTestEnumA},
+    {.text = "b", .value = eTestEnumB},
+    {.text = "c", .value = eTestEnumC},
+};
 
-    if (str_equal(path, "file.txt"))
-    {
-        vector_push(&sources->files, (char*)path);
-        return eEventHandled;
-    }
+static const cfg_choice_t kFlagChoices[] = {
+    {.text = "a", .value = eTestFlagA},
+    {.text = "b", .value = eTestFlagB},
+    {.text = "c", .value = eTestFlagC},
+};
 
-    return eEventContinue;
-}
-
-static ap_event_result_t on_error(ap_t *ap, const node_t *node, const char *message, void *data)
+static test_config_t make_config(arena_t *arena)
 {
-    CTU_UNUSED(ap);
-    CTU_UNUSED(node);
+    test_config_t config = {0};
 
-    errors_t *errors = (errors_t*)data;
-    vector_push(&errors->errors, (char*)message);
-    return eEventHandled;
-}
+    config.root = config_new(arena, &kRootInfo);
 
-typedef struct error_stack_t
-{
-    int levels[5];
-} error_stack_t;
+    cfg_bool_t bool_initial = {.initial = false};
+    config.bool_field = config_bool(config.root, &kBoolInfo, bool_initial);
 
-typedef struct error_filter_t
-{
-    int level;
-    error_stack_t *stack;
-} error_filter_t;
+    cfg_int_t int_initial = {.initial = 0};
+    config.int_field = config_int(config.root, &kIntInfo, int_initial);
 
-static AP_EVENT(count_error, ap, node, message, data)
-{
-    CTU_UNUSED(ap);
-    CTU_UNUSED(node);
+    cfg_string_t string_initial = {.initial = NULL};
+    config.string_field = config_string(config.root, &kStringInfo, string_initial);
 
-    int i = strtol((char*)message, NULL, 10);
-    error_filter_t *filter = (error_filter_t*)data;
-    if (filter->level != i)
-        return eEventContinue;
+    cfg_enum_t enum_initial = {
+        .initial = eTestEnumA,
+        .options = kEnumChoices,
+        .count = (sizeof(kEnumChoices) / sizeof(cfg_choice_t))
+    };
+    config.enum_field = config_enum(config.root, &kEnumInfo, enum_initial);
 
-    error_stack_t *stack = filter->stack;
-    stack->levels[i] += 1;
-    return eEventHandled;
+    cfg_flags_t flag_initial = {
+        .initial = eTestFlagNone,
+        .options = kFlagChoices,
+        .count = (sizeof(kFlagChoices) / sizeof(cfg_choice_t))
+    };
+    config.flag_field = config_flags(config.root, &kFlagInfo, flag_initial);
+
+    return config;
 }
 
 int main(void)
 {
     test_install_panic_handler();
+    test_install_electric_fence();
 
-    test_suite_t suite = test_suite_new("argparse");
     arena_t *arena = ctu_default_alloc();
+    test_suite_t suite = test_suite_new("argparse", arena);
 
-    // posargs
+    // smoke test to make sure it parses at all
     {
-        test_group_t group = test_group(&suite, "posargs");
-        sources_t sources = { vector_new(4) };
-        errors_t errors = { vector_new(4) };
-        ap_t *ap = ap_new("test-argparse-posargs", NEW_VERSION(1, 0, 0), arena);
+        test_group_t group = test_group(&suite, "argparse");
+        test_config_t cfg = make_config(arena);
+        ap_t *ap = ap_new(cfg.root, arena);
+        int result = ap_parse(ap, "-b -i 42 -s hello -e b -f a -f c");
+        GROUP_EXPECT_PASS(group, "smoke test parses", result == EXIT_OK);
+        GROUP_EXPECT_PASS(group, "no unknown args", vector_len(ap_get_unknown(ap)) == 0);
 
-        ap_event(ap, NULL, on_file, &sources);
-        ap_error(ap, on_error, &errors);
+        GROUP_EXPECT_PASS(group, "bool", cfg_bool_value(cfg.bool_field));
+        GROUP_EXPECT_PASS(group, "int", cfg_int_value(cfg.int_field) == 42);
 
-        const char *argv[] = { "argparse-test", "file.txt", "lettuce.wad" };
+        const char *str = cfg_string_value(cfg.string_field);
+        GROUP_EXPECT_PASS(group, "string", str_equal(str, "hello"));
 
-        ap_parse(ap, 3, argv);
+        enum test_enum_t e = cfg_enum_value(cfg.enum_field);
+        GROUP_EXPECT_PASS(group, "enum", e == eTestEnumB);
 
-        GROUP_EXPECT_PASS(group, "has 1 error", vector_len(errors.errors) == 1);
-        GROUP_EXPECT_PASS(group, "has 1 file", vector_len(sources.files) == 1);
-        GROUP_EXPECT_PASS(group, "file is file.txt", str_equal((char*)vector_get(sources.files, 0), "file.txt"));
+        enum test_flags_t f = cfg_flags_value(cfg.flag_field);
+        GROUP_EXPECT_PASS(group, "flag", f == (eTestFlagA | eTestFlagC));
     }
 
-    // error stack
+    // test multiple flag syntax
     {
-        test_group_t group = test_group(&suite, "error stack");
-        error_stack_t errors = { 0 };
+        test_group_t group = test_group(&suite, "multiple flags");
+        test_config_t cfg = make_config(arena);
+        ap_t *ap = ap_new(cfg.root, arena);
+        int result = ap_parse(ap, "-f a,c");
 
-        ap_t *ap = ap_new("test-argparse-error-stack", NEW_VERSION(1, 0, 0), arena);
+        GROUP_EXPECT_PASS(group, "smoke test parses", result == EXIT_OK);
+        GROUP_EXPECT_PASS(group, "no unknown args", vector_len(ap_get_unknown(ap)) == 0);
 
-        error_filter_t f1 = { 1, &errors };
-        error_filter_t f2 = { 2, &errors };
-        error_filter_t f3 = { 3, &errors };
-        error_filter_t f4 = { 4, &errors };
+        enum test_flags_t f = cfg_flags_value(cfg.flag_field);
+        GROUP_EXPECT_PASS(group, "flag", f == (eTestFlagA | eTestFlagC));
+    }
 
-        ap_event(ap, NULL, count_error, &f1);
-        ap_event(ap, NULL, count_error, &f2);
-        ap_event(ap, NULL, count_error, &f3);
-        ap_event(ap, NULL, count_error, &f4);
+    // test flag negation
+    {
+        test_group_t group = test_group(&suite, "flag negation");
+        test_config_t cfg = make_config(arena);
+        ap_t *ap = ap_new(cfg.root, arena);
+        int result = ap_parse(ap, "-f \"-a,c\"");
 
-        const char *argv[] = { "argparse-test", "1", "2", "3", "4" };
+        GROUP_EXPECT_PASS(group, "smoke test parses", result == EXIT_OK);
+        GROUP_EXPECT_PASS(group, "no unknown args", vector_len(ap_get_unknown(ap)) == 0);
 
-        ap_parse(ap, 5, argv);
+        enum test_flags_t f = cfg_flags_value(cfg.flag_field);
+        GROUP_EXPECT_PASS(group, "flag", f == eTestFlagC);
+    }
 
-        GROUP_EXPECT_PASS(group, "level 1 has 1 error", errors.levels[1] == 1);
-        GROUP_EXPECT_PASS(group, "level 2 has 1 error", errors.levels[2] == 1);
-        GROUP_EXPECT_PASS(group, "level 3 has 1 error", errors.levels[3] == 1);
-        GROUP_EXPECT_PASS(group, "level 4 has 1 error", errors.levels[4] == 1);
+    // test bool disable
+    {
+        test_group_t group = test_group(&suite, "bool disable");
+        test_config_t cfg = make_config(arena);
+        ap_t *ap = ap_new(cfg.root, arena);
+        int result = ap_parse(ap, "/b-");
+
+        GROUP_EXPECT_PASS(group, "smoke test parses", result == EXIT_OK);
+        GROUP_EXPECT_PASS(group, "no unknown args", vector_len(ap_get_unknown(ap)) == 0);
+
+        bool b = cfg_bool_value(cfg.bool_field);
+        GROUP_EXPECT_PASS(group, "bool", b == false);
     }
 
     return test_suite_finish(&suite);

@@ -107,7 +107,7 @@ block: module imports consts vars procedures toplevel { $$ = pl0_module(x, @$, $
     ;
 
 imports: %empty { $$ = vector_new(0); }
-    |  IMPORT paths SEMICOLON { $$ = $2; }
+    | IMPORT paths SEMICOLON { $$ = $2; }
     ;
 
 paths: import { $$ = vector_init($1); }

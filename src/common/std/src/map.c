@@ -78,11 +78,10 @@ static void clear_keys(bucket_t *buckets, size_t size)
 }
 
 USE_DECL
-map_t *map_new(size_t size)
+map_t *map_new_arena(size_t size, arena_t *arena)
 {
     CTASSERT(size > 0);
 
-    arena_t *arena = get_global_arena();
     map_t *map = ARENA_MALLOC(arena, sizeof_map(size), "map", NULL);
 
     map->arena = arena;
@@ -91,6 +90,12 @@ map_t *map_new(size_t size)
     clear_keys(map->data, size);
 
     return map;
+}
+
+USE_DECL
+map_t *map_new(size_t size)
+{
+    return map_new_arena(size, get_global_arena());
 }
 
 #define MAP_FOREACH_APPLY(self, item, ...)      \
@@ -222,7 +227,7 @@ void *map_get_default(map_t *map, const char *key, void *other)
         size_t next_index = index + i;
         if (next_index >= map->size)
             break;
-        
+
         // test next bucket
         bucket_t *next = map_bucket_at(map, next_index);
         if (entry_str_equal(next, key))
@@ -255,7 +260,7 @@ static bool try_insert_into_str_bucket(bucket_t *bucket, const char *key, void *
     return false;
 }
 
-// try inserting into the next bucket 
+// try inserting into the next bucket
 // avoids chaining in some cases
 static bool try_insert_next_str_bucket(map_t *map, size_t index, const char *key, void *value)
 {

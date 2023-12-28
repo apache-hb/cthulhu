@@ -342,7 +342,7 @@ void cfg_set_bool(cfg_field_t *field, bool value);
 ///
 /// @param field the field to set the value of
 /// @param value the new value
-void cfg_set_string(cfg_field_t *field, const char *value);
+void cfg_set_string(cfg_field_t *field, char *value);
 
 /// @brief set the current value of an enum field
 /// set the value via a string name

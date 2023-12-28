@@ -1,3 +1,4 @@
+#include "memory/memory.h"
 #include "unit/ct-test.h"
 
 #include "std/map.h"
@@ -33,7 +34,8 @@ int main(void)
 {
     test_install_panic_handler();
 
-    test_suite_t suite = test_suite_new("string");
+    arena_t *arena = ctu_default_alloc();
+    test_suite_t suite = test_suite_new("string", arena);
     {
         test_group_t group = test_group(&suite, "str_equals");
         GROUP_EXPECT_PASS(group, "empty strings", str_equal("", ""));

@@ -10,7 +10,7 @@ int main(void)
     test_install_panic_handler();
 
     arena_t *arena = ctu_default_alloc();
-    test_suite_t suite = test_suite_new("fs");
+    test_suite_t suite = test_suite_new("fs", arena);
 
     const char *cwd = NULL;
     os_error_t err = os_dir_current(&cwd);
