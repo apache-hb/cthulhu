@@ -9,7 +9,7 @@ BEGIN_API
 
 /// @defgroup Defaults Default options
 /// @brief Default command line options and behaviour
-/// @ingroup Runtime
+/// @ingroup Support
 /// @{
 
 typedef struct config_t config_t;

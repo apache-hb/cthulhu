@@ -1,9 +1,8 @@
 #include "std/map.h"
 #include "base/panic.h"
 #include "base/util.h"
-#include "memory/memory.h"
 
-
+#include "memory/arena.h"
 #include "std/str.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
@@ -90,12 +89,6 @@ map_t *map_new_arena(size_t size, arena_t *arena)
     clear_keys(map->data, size);
 
     return map;
-}
-
-USE_DECL
-map_t *map_new(size_t size)
-{
-    return map_new_arena(size, get_global_arena());
 }
 
 #define MAP_FOREACH_APPLY(self, item, ...)      \

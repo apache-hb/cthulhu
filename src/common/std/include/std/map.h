@@ -24,18 +24,6 @@ map_t *map_new_arena(size_t size, IN_NOTNULL arena_t *arena);
 map_t *map_optimal_arena(size_t size, IN_NOTNULL arena_t *arena);
 
 /**
- * create a new map
- *
- * @param size the number of toplevel buckets used.
- *             increasing this value reduces hash collisions
- *             but increases memory usage and initialization time.
- *
- * @return a new map
- */
-NODISCARD
-map_t *map_new(size_t size);
-
-/**
  * create a map with an optimal number of buckets
  * for a given size
  *

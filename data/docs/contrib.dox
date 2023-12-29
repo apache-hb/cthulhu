@@ -4,54 +4,63 @@
 
 <h3>Source tree structure</h3>
 
-  - `data` - various data files
-    - `meson` - cross files for various platforms
-    - `scripts` - automation for arduous setup tasks
-    - `docs` - documentation
+- `data` - various data files
+  - `meson` - cross files for various platforms
+  - `scripts` - automation for arduous setup tasks
+  - `docs` - documentation
 
-  - `driver` - language frontends
-    - `pl0` - pl0 frontend, good for referencing how to use the common framework
-    - `oberon` - oberon-2 frontend (WIP)
-    - `ctu` - cthulhu language frontend (WIP)
-    - `jvm` - jvm classfile consumer (TODO)
-    - `cc` - C11 frontend (TODO)
-    - `example` - example frontend
+- `driver` - language frontends
+  - `pl0` - pl0 frontend, good for referencing how to use the common framework
+  - `oberon` - oberon-2 frontend (WIP)
+  - `ctu` - cthulhu language frontend (WIP)
+  - `jvm` - jvm classfile consumer (TODO)
+  - `cc` - C11 frontend (TODO)
+  - `example` - example frontend
 
-  - `interface` - user facing components used to interact with drivers and the collection
-    - `cli` - command line user interface (TODO)
-    - `gui` - graphical user interface (TODO)
-    - `harness` - end to end test harness
-    - `support` - common interface support library
+- `interface` - user facing components used to interact with drivers and the collection
+  - `cli` - command line user interface
+  - `gui` - graphical user interface (TODO)
 
-  - `common` - common code
-    - `core` - header only compiler specific
-    - `stacktrace` - backtrace retrieval
-    - `base` - base utils
-    - `memory` - memory allocation and arenas
-    - `interop` - flex & bison helper functions
-    - `platform` - platform detail wrappers
-    - `io` - file io abstraction
-    - `notify` - error reporting tools
-    - `scan` - flex & bison scanning tools
-    - `std` - collections and data structures
-    - `config` - configuration schema tools
-    - `display` - text formatting for displaying to a user
+- `common` - common code
+  - `core` - header only compiler specific code
+  - `stacktrace` - backtrace retrieval
+  - `base` - base utils
+  - `memory` - memory allocation and arenas
+  - `interop` - flex & bison helper functions
+  - `platform` - platform detail wrappers
+  - `io` - file io abstraction
+  - `notify` - error reporting tools
+  - `scan` - flex & bison scanning tools
+  - `std` - collections and data structures
+  - `config` - configuration schema tools
+  - `format` - text formatting for displaying to a user
 
-  - `cthulhu` - compiler framework library
-    - `argparse` - command line parsing
-    - `emit` - ssa emitter
-    - `tree` - common typed ast
-    - `util` - common utilities
-    - `mediator` - code required to orchestrate communication between languages, the framework, and frontends
-    - `check` - validates state for various structures
-    - `ssa` - tree to ssa transforms, as well as optimizations
+- `cthulhu` - compiler framework library
+  - `emit` - ssa emitter
+  - `tree` - common typed ast
+  - `util` - common utilities
+  - `mediator` - code required to orchestrate communication between languages, the framework, and frontends
+  - `check` - validates state for various structures
+  - `ssa` - tree to ssa transforms, as well as optimizations
 
-  - `subprojects` - dependencies
-    - `mini-gmp` - fallback gmp library if system gmp isnt installed
+- `support` - libraries shared between tools and frontends
+  - `support` - lists enabled language drivers
+  - `argparse` - command line argument parsing
+  - `defaults` - default options for command line tools
 
-  - `tests` - tests
-    - `lang` - language specific tests
-    - `unit` - compiler code unit tests
+- `tools` - supporting tools and test utilities
+  - `harness` - test harness for end to end language tests
+  - `notify` - testing notification formatting
+  - `diagnostic` - diagnostic listing and querying tool
+  - `display` - example config display
+  - `stacktrace` - stacktrace testing
+
+- `subprojects` - dependencies
+  - `mini-gmp` - fallback gmp library if system gmp isnt installed
+
+- `tests` - tests
+  - `lang` - language specific tests
+  - `unit` - compiler code unit tests
 
 <h3>Coding rules</h3>
 

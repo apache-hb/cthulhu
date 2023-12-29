@@ -130,6 +130,7 @@ os_error_t os_dir_current(OUT_WRITES(size) char *cwd, size_t size);
 ///
 /// @param path path to directory
 /// @param[out] iter iterator to fill
+/// @param arena the arena to allocate from
 ///
 /// @return result containing either a valid iterator or an error, NULL if dir does not exist
 NODISCARD
@@ -159,6 +160,7 @@ os_error_t os_iter_error(IN_NOTNULL os_iter_t *iter);
 /// @brief get the name of a directory entry
 ///
 /// @param dir directory entry to get the name of
+/// @param arena the arena to allocate from
 ///
 /// @return the name of the directory entry
 NODISCARD

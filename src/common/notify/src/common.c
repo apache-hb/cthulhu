@@ -247,7 +247,7 @@ static text_cache_t *text_cache_new(io_t *io, text_view_t source, size_t len, ar
     cache->io = io;
     cache->source = source;
     cache->line_info = typevec_new(sizeof(lineinfo_t), len, arena);
-    cache->cached_lines = map_optimal(len);
+    cache->cached_lines = map_optimal_arena(len, arena);
 
     return cache;
 }
@@ -321,7 +321,7 @@ cache_map_t *cache_map_new(size_t size)
 
     cache_map_t *data = ARENA_MALLOC(arena, sizeof(cache_map_t), "cache_map", NULL);
     data->arena = arena;
-    data->map = map_optimal(size);
+    data->map = map_optimal_arena(size, arena);
 
     return data;
 }

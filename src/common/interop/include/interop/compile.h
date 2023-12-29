@@ -48,7 +48,7 @@ typedef struct callbacks_t
                   scan_path(scanner));                                                          \
         return prefix##_scan_bytes(text, (int)size, scanner);                                   \
     }                                                                                           \
-    static void prefix##_##id##_destroyBuffer(void *buffer, void *scanner)                      \
+    static void prefix##_##id##_destroy_buffer(void *buffer, void *scanner)                     \
     {                                                                                           \
         prefix##_delete_buffer(buffer, scanner);                                                \
     }                                                                                           \
@@ -60,7 +60,7 @@ typedef struct callbacks_t
         .init = prefix##_##id##_##init,                                                         \
         .parse = prefix##_##id##_parse,                                                         \
         .scan = prefix##_##id##_scan,                                                           \
-        .destroy_buffer = prefix##_##id##_destroyBuffer,                                        \
+        .destroy_buffer = prefix##_##id##_destroy_buffer,                                       \
         .destroy = prefix##_##id##_destroy,                                                     \
     }
 

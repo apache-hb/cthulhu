@@ -94,7 +94,7 @@ static void print_segments(simple_t *simple, const event_t *event)
     arena_t *arena = get_global_arena();
 
     // map_t<scan_t*, typevec_t<segment_t>>
-    map_t *scans = map_optimal(len);
+    map_t *scans = map_optimal_arena(len, simple->arena);
     typevec_t *none = typevec_new(sizeof(segment_t), 4, arena);
     typevec_t *primary = all_segments_in_scan(event->segments, event->node, simple->arena);
 

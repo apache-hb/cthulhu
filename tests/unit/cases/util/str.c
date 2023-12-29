@@ -132,7 +132,7 @@ int main(void)
 
             (void)str_replace_many("hello world!", entries);
         });
-        GROUP_EXPECT_PANIC(group, "null str", (void)str_replace_many(NULL, map_new(1)));
+        GROUP_EXPECT_PANIC(group, "null str", (void)str_replace_many(NULL, map_new_arena(1, arena)));
         GROUP_EXPECT_PANIC(group, "null map", (void)str_replace_many("hello world!", NULL));
         GROUP_EXPECT_PANIC(group, "null all", (void)str_replace_many(NULL, NULL));
     }

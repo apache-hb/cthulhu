@@ -11,7 +11,7 @@ BEGIN_API
 /// @brief Command line argument parsing
 /// TODO: reduce the amount of allocations by allowing config to accept string views
 /// TODO: nicely support error propagation out of the parser
-/// @ingroup Runtime
+/// @ingroup Support
 /// @{
 
 typedef struct node_t node_t;

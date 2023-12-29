@@ -231,6 +231,7 @@ if doxygen.found()
     doxy_sources = [
         source_dir / 'interface',
         source_dir / 'common',
+        source_dir / 'support',
         source_dir / 'cthulhu',
         source_dir / 'driver',
 

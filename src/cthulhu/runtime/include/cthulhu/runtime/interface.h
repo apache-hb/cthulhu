@@ -24,8 +24,6 @@ void runtime_init(arena_t *arena);
 
 /// @brief create the global mediator object, must be the first part of cthulhu called
 ///
-/// @param id the name of the mediator
-/// @param version the version of the mediator
 /// @param arena the allocator to use
 ///
 /// @return mediator_t* the mediator object

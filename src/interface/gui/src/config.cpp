@@ -8,7 +8,7 @@
 #include "std/typed/vector.h"
 #include "std/vector.h"
 
-#include <algorithm>
+#include <array>
 
 #include <stdio.h>
 
@@ -42,7 +42,7 @@ const char *get_name(const cfg_field_t *field)
 
 void get_label(char *buf, size_t size, const cfg_field_t *field)
 {
-    snprintf(buf, size, "##%s", get_name(field));
+    (void)snprintf(buf, size, "##%s", get_name(field));
 }
 
 void draw_info_preamble(const cfg_info_t *info)
@@ -396,18 +396,3 @@ void ed::draw_config_panel(config_t *config)
         ImGui::EndTable();
     }
 }
-
-/// logic
-
-ConfigGroup::ConfigGroup(config_t *parent, const cfg_info_t *info)
-    : group(config_group(parent, info))
-{ }
-
-static const cfg_info_t kReportInfo = {
-    .name = "Report",
-    .brief = "Report settings"
-};
-
-ReportConfig::ReportConfig(config_t *parent)
-    : ConfigGroup(parent, &kReportInfo)
-{ }

@@ -19,15 +19,16 @@ os_error_t os_file_open(const char *path, os_access_t access, os_file_t *file)
     CTASSERT(file != NULL);
 
     DWORD dw_access = get_access(access);
-    DWORD dw_disposition = (access & eAccessWrite)
-        ? (OPEN_ALWAYS | TRUNCATE_EXISTING)
+    DWORD dw_disp = (access & eAccessWrite)
+        ? CREATE_ALWAYS
         : OPEN_EXISTING;
+
     HANDLE handle = CreateFile(
         /* lpFileName = */ path,
         /* dwDesiredAccess = */ dw_access,
         /* dwShareMode = */ FILE_SHARE_READ,
         /* lpSecurityAttributes = */ NULL,
-        /* dwCreationDisposition = */ dw_disposition,
+        /* dwCreationDisposition = */ dw_disp,
         /* dwFlagsAndAttributes = */ FILE_ATTRIBUTE_NORMAL,
         /* hTemplateFile = */ NULL);
 
