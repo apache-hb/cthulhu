@@ -4,7 +4,7 @@
 
 using namespace ed;
 
-TraceArena::TraceArena(const char *alloc_name, DrawMode default_mode)
+TraceArena::TraceArena(const char *alloc_name, draw_mode_t default_mode)
     : IArena(alloc_name)
     , draw_mode(default_mode)
 { }
@@ -137,7 +137,7 @@ void TraceArena::update_parent(const void *ptr, const void *parent)
         --it;
         // this may be a child
         const uint8_t *possible_parent = reinterpret_cast<const uint8_t*>(it->first);
-        AllocInfo parent_info = it->second;
+        alloc_info_t parent_info = it->second;
         if (possible_parent <= parent && possible_parent + parent_info.size >= parent)
         {
             // this is a child
@@ -244,7 +244,7 @@ static const ImGuiTreeNodeFlags kValueNodeFlags
     | ImGuiTreeNodeFlags_Bullet
     | ImGuiTreeNodeFlags_NoTreePushOnOpen;
 
-void TraceArena::draw_tree_child(const void *ptr, const AllocInfo& info) const
+void TraceArena::draw_tree_child(const void *ptr, const alloc_info_t& info) const
 {
     ImGui::TreeNodeEx(ptr, kValueNodeFlags, "%p", ptr);
 
@@ -261,7 +261,7 @@ void TraceArena::draw_tree_child(const void *ptr, const AllocInfo& info) const
     }
 }
 
-void TraceArena::draw_tree_group(const void *ptr, const AllocInfo& info) const
+void TraceArena::draw_tree_group(const void *ptr, const alloc_info_t& info) const
 {
     bool is_open = ImGui::TreeNodeEx(ptr, kGroupNodeFlags, "%p", ptr);
 
@@ -288,7 +288,7 @@ void TraceArena::draw_tree_group(const void *ptr, const AllocInfo& info) const
     }
 }
 
-void TraceArena::draw_tree_node_info(const void *ptr, const AllocInfo& info) const
+void TraceArena::draw_tree_node_info(const void *ptr, const alloc_info_t& info) const
 {
     ImGui::TableNextRow();
     ImGui::TableNextColumn();
@@ -339,7 +339,7 @@ void TraceArena::draw_tree() const
 
             if (is_external(root) && !has_parent(root))
             {
-                AllocInfo info = { .name = "extern" };
+                alloc_info_t info = { .name = "extern" };
                 draw_tree_node_info(root, info);
             }
         }

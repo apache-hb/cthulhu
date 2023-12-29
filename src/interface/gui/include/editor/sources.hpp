@@ -10,8 +10,9 @@ typedef struct lifetime_t lifetime_t;
 
 namespace ed
 {
-    struct Source
+    class Source
     {
+    public:
         Source(const char *str);
 
         const char *get_title() const { return basename; }
@@ -29,8 +30,9 @@ namespace ed
         text_view_t source = {};
     };
 
-    struct SourceList
+    class SourceList
     {
+    public:
         void draw();
 
         std::vector<Source> paths;

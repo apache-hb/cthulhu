@@ -6,10 +6,12 @@
 
 namespace ed
 {
-    struct IArena : public arena_t
+    class IArena : public arena_t
     {
+    protected:
         IArena(const char *alloc_name);
 
+    public:
         virtual void *malloc(size_t size) = 0;
         virtual void *realloc(void *ptr, size_t new_size, size_t old_size) = 0;
         virtual void free(void *ptr, size_t size) = 0;

@@ -17,13 +17,13 @@ void ed::install_panic_handler()
 {
     gPanicHandler = [](panic_t panic, const char *fmt, va_list args) {
         gPanicInfo.capture_trace(panic, fmt, args);
-        std::longjmp(gPanicEnv, 1);
+        std::longjmp(gPanicEnv, 1); // NOLINT
     };
 }
 
 CompileError ed::run_compile(CompileInfo& info)
 {
-    if (std::setjmp(gPanicEnv))
+    if (std::setjmp(gPanicEnv)) // NOLINT
     {
         CompileError error = {
             .code = eCompilePanic,
@@ -63,7 +63,7 @@ CompileError ed::run_compile(CompileInfo& info)
     return error;
 }
 
-struct TraceCapture
+struct trace_capture_t
 {
     symbol_t symbol = {};
     PanicInfo *info = nullptr;
@@ -71,11 +71,11 @@ struct TraceCapture
 
 static void trace_callback(void *user, const frame_t *frame)
 {
-    auto& [symbol, info] = *reinterpret_cast<TraceCapture*>(user);
+    auto& [symbol, info] = *reinterpret_cast<trace_capture_t*>(user);
 
     bt_resolve_symbol(frame, &symbol);
 
-    StackFrame stack_frame = {
+    stack_frame_t stack_frame = {
         .address = frame->address,
         .line = symbol.line,
         .symbol = symbol.name,
@@ -87,7 +87,7 @@ static void trace_callback(void *user, const frame_t *frame)
 
 void PanicInfo::capture_trace(panic_t panic, const char *fmt, va_list args)
 {
-    TraceCapture capture = {
+    trace_capture_t capture = {
         .info = this,
     };
 
@@ -129,7 +129,7 @@ void PanicInfo::draw()
 
         ImGui::TableHeadersRow();
 
-        for (const StackFrame& frame : frames)
+        for (const stack_frame_t& frame : frames)
         {
             ImGui::TableNextRow();
 

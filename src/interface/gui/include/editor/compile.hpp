@@ -9,8 +9,9 @@ typedef struct logger_t logger_t;
 
 namespace ed
 {
-    struct CompileInfo
+    class CompileInfo
     {
+    public:
         CompileInfo(mediator_t *mediator, const char *name)
             : name(name)
             , mediator(mediator)

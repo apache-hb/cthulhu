@@ -14,15 +14,59 @@
 
 #include "imgui.h"
 
-// static const version_info_t kVersionInfo = {
-//     .license = "GPLv3",
-//     .desc = "Cthulhu Compiler Collection GUI",
-//     .author = "Elliot Haisley",
-//     .version = NEW_VERSION(0, 0, 1)
-// };
+static const version_info_t kVersionInfo = {
+    .license = "GPLv3",
+    .desc = "Cthulhu Compiler Collection GUI",
+    .author = "Elliot Haisley",
+    .version = NEW_VERSION(0, 0, 1)
+};
 
-struct CompileRun : ed::CompileInfo
+class VersionInfo
 {
+public:
+    VersionInfo(version_info_t info)
+        : info(info)
+    { }
+
+    void draw()
+    {
+        if (!show) return;
+
+        if (ImGui::Begin("Version info", &show))
+        {
+            ImGui::Text("Debug: %s", CTU_DEBUG ? "true" : "false");
+
+            ImGui::Text("Framework version: %d.%d.%d", CTU_MAJOR, CTU_MINOR, CTU_PATCH);
+
+            int major = VERSION_MAJOR(info.version);
+            int minor = VERSION_MINOR(info.version);
+            int patch = VERSION_PATCH(info.version);
+            ImGui::Text("Frontend version: %d.%d.%d", major, minor, patch);
+
+            ImGui::Text("Author: %s", info.author);
+            ImGui::Text("License: %s", info.license);
+            ImGui::Text("Description: %s", info.desc);
+        }
+        ImGui::End();
+    }
+
+public:
+    static void draw_version(const char *id, version_t version)
+    {
+        int major = VERSION_MAJOR(version);
+        int minor = VERSION_MINOR(version);
+        int patch = VERSION_PATCH(version);
+
+        ImGui::Text("%s: %d.%d.%d", id, major, minor, patch);
+    }
+
+    bool show = false;
+    const version_info_t info;
+};
+
+class CompileRun : public ed::CompileInfo
+{
+public:
     CompileRun(mediator_t *mediator, const char *name)
         : CompileInfo(mediator, name)
     {
@@ -148,7 +192,7 @@ struct CompileRun : ed::CompileInfo
         if (!show_config) return;
 
         char label[128] = {};
-        snprintf(label, std::size(label), "%s Config", name.c_str());
+        (void)snprintf(label, std::size(label), "%s Config", name.c_str());
 
         if (ImGui::Begin(label, &show_config))
         {
@@ -163,14 +207,14 @@ struct CompileRun : ed::CompileInfo
 
         char label[128] = {};
 
-        snprintf(label, std::size(label), "%s Global memory", name.c_str());
+        (void)snprintf(label, std::size(label), "%s Global memory", name.c_str());
         if (ImGui::Begin(label, &show_memory))
         {
             global.draw_info();
         }
         ImGui::End();
 
-        snprintf(label, std::size(label), "%s GMP memory", name.c_str());
+        (void)snprintf(label, std::size(label), "%s GMP memory", name.c_str());
         if (ImGui::Begin(label, &show_memory))
         {
             gmp.draw_info();
@@ -213,7 +257,7 @@ struct CompileRun : ed::CompileInfo
         draw_memory();
     }
 
-private:
+public:
     void draw_compile()
     {
         bool can_compile = true;
@@ -257,18 +301,34 @@ private:
     }
 };
 
-struct EditorUi
+class EditorUi
 {
+public:
+    EditorUi()
+    {
+        mediator = mediator_new(&global);
+    }
+
     bool show_demo_window = false;
     std::vector<CompileRun> compile_runs;
+
+    VersionInfo version_info{ kVersionInfo };
 
     ed::TraceArena global{ "global", ed::TraceArena::eDrawTree };
 
     mediator_t *mediator = nullptr;
 
-    void init_mediator()
+    void draw_windows()
     {
-        mediator = mediator_new(&global);
+        draw_demo_window();
+        draw_setup_window();
+
+        version_info.draw();
+
+        for (CompileRun& run : compile_runs)
+        {
+            run.draw();
+        }
     }
 
     static const ImGuiDockNodeFlags kDockFlags
@@ -304,7 +364,7 @@ struct EditorUi
 
         if (ImGui::BeginMenuBar())
         {
-            ImGui::Text("Game2005");
+            ImGui::Text("Cthulhu");
             ImGui::Separator();
 
             if (ImGui::BeginMenu("Style"))
@@ -332,6 +392,9 @@ struct EditorUi
                 ImGui::SeparatorText("ImGui");
                 ImGui::MenuItem("Dear ImGui Demo", nullptr, &show_demo_window);
 
+                ImGui::SeparatorText("Info");
+                ImGui::MenuItem("Version", nullptr, &version_info.show);
+
                 ImGui::SeparatorText("Compiles");
                 for (CompileRun& run : compile_runs)
                 {
@@ -347,7 +410,8 @@ struct EditorUi
         ImGui::End();
     }
 
-    void demo_window()
+private:
+    void draw_demo_window()
     {
         if (show_demo_window)
         {
@@ -373,7 +437,7 @@ struct EditorUi
     const char *duplicate_compile_name_popup = "Duplicate Name";
     const char *empty_compile_name_popup = "Empty Name";
 
-    void setup_window()
+    void draw_setup_window()
     {
         if (ImGui::Begin("Setup"))
         {
@@ -428,21 +492,7 @@ struct EditorUi
         }
         ImGui::End();
     }
-
-    void draw_compiles()
-    {
-        for (CompileRun& run : compile_runs)
-        {
-            run.draw();
-        }
-    }
 };
-
-// init everything that needs to be setup only once
-void init_global()
-{
-    ed::install_panic_handler();
-}
 
 int main(int argc, const char **argv)
 {
@@ -454,18 +504,14 @@ int main(int argc, const char **argv)
         return 1;
     }
 
-    init_global();
+    ed::install_panic_handler();
 
     EditorUi ui;
-
-    ui.init_mediator();
 
     while (draw::begin_frame())
     {
         ui.dock_space();
-        ui.demo_window();
-        ui.setup_window();
-        ui.draw_compiles();
+        ui.draw_windows();
 
         draw::end_frame();
     }

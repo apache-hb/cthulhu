@@ -4,7 +4,6 @@
 
 #include "base/panic.h"
 
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -14,7 +13,7 @@ namespace ed
 {
     void install_panic_handler();
 
-    struct StackFrame
+    struct stack_frame_t
     {
         uintptr_t address;
         size_t line;
@@ -22,13 +21,14 @@ namespace ed
         std::string file;
     };
 
-    struct PanicInfo
+    class PanicInfo
     {
+    public:
         bool has_error = false;
 
         panic_t info = {};
         std::string message;
-        std::vector<StackFrame> frames;
+        std::vector<stack_frame_t> frames;
 
         bool has_info() const { return has_error; }
         void reset();
@@ -37,7 +37,7 @@ namespace ed
         void draw();
     };
 
-    enum CompileCode
+    enum compile_code_t
     {
         eCompileOk,
         eCompileError,
@@ -46,11 +46,12 @@ namespace ed
         eCompileTotal
     };
 
-    struct CompileError
+    class CompileError
     {
+    public:
         bool has_error() const { return code != eCompileOk; }
 
-        CompileCode code = eCompileOk;
+        compile_code_t code = eCompileOk;
 
         ed::PanicInfo panic;
         std::string error;

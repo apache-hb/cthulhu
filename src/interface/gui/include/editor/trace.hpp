@@ -8,17 +8,18 @@
 
 namespace ed
 {
-    struct AllocInfo
+    struct alloc_info_t
     {
         size_t size;
         const char *name;
         const void *parent;
     };
 
-    struct TraceArena final : public IArena
+    class TraceArena final : public IArena
     {
+    public:
         /// @brief the draw mode for the gui view of this allocator
-        enum DrawMode : int
+        enum draw_mode_t : int
         {
             /// @brief draw the allocations as a tree using parent data
             eDrawTree,
@@ -27,7 +28,7 @@ namespace ed
             eDrawFlat
         };
 
-        TraceArena(const char *alloc_name, DrawMode default_mode);
+        TraceArena(const char *alloc_name, draw_mode_t default_mode);
 
         // IArena
         void *malloc(size_t size) override;
@@ -54,7 +55,7 @@ namespace ed
         // peak memory usage
         size_t peak_usage = 0;
 
-        using AllocMap = std::map<const void*, AllocInfo>;
+        using AllocMap = std::map<const void*, alloc_info_t>;
         using AllocTree = std::map<const void*, std::vector<const void*>>;
         using AllocMapIter = AllocMap::iterator;
 
@@ -81,9 +82,9 @@ namespace ed
 
         // tree drawing
         void draw_extern_name(const void *ptr) const;
-        void draw_tree_child(const void *ptr, const AllocInfo& info) const;
-        void draw_tree_group(const void *ptr, const AllocInfo& info) const;
-        void draw_tree_node_info(const void *ptr, const AllocInfo& info) const;
+        void draw_tree_child(const void *ptr, const alloc_info_t& info) const;
+        void draw_tree_group(const void *ptr, const alloc_info_t& info) const;
+        void draw_tree_node_info(const void *ptr, const alloc_info_t& info) const;
         void draw_tree_node(const void *ptr) const;
         void draw_tree() const;
 
