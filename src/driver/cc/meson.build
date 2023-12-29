@@ -1,5 +1,5 @@
 # build the c preprocessor first
-subdir('preproc')
+subdir('c_preproc')
 
 # then build the c driver
 subdir('c_driver')

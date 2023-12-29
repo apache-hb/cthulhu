@@ -103,6 +103,10 @@ void ap_on_string(scan_t *scan, cfg_field_t *param, char *value)
         cfg_set_string(param, arena_strdup(value, self->arena));
         break;
 
+    case eConfigVector:
+        cfg_vector_push(param, arena_strdup(value, self->arena));
+        break;
+
     case eConfigEnum:
         cfg_set_enum(param, value);
         break;

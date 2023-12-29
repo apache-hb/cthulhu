@@ -28,6 +28,9 @@ typedef enum cfg_type_t
     /// a string field
     eConfigString,
 
+    /// a vector of strings
+    eConfigVector,
+
     /// a choice from a set of options
     eConfigEnum,
 
@@ -164,6 +167,8 @@ cfg_field_t *config_bool(config_t *group, const cfg_info_t *info, cfg_bool_t cfg
 ///
 /// @return the new configuration field
 cfg_field_t *config_string(config_t *group, const cfg_info_t *info, cfg_string_t cfg);
+
+cfg_field_t *config_vector(config_t *group, const cfg_info_t *info, vector_t *initial);
 
 /// @brief add a new choice field to a configuration group
 ///
@@ -303,6 +308,8 @@ bool cfg_bool_value(const cfg_field_t *field);
 /// @return the current value of @p field
 const char *cfg_string_value(const cfg_field_t *field);
 
+vector_t *cfg_vector_value(const cfg_field_t *field);
+
 /// @brief get the current enum value of a configuration field
 ///
 /// @param field the field to get the value of
@@ -343,6 +350,12 @@ void cfg_set_bool(cfg_field_t *field, bool value);
 /// @param field the field to set the value of
 /// @param value the new value
 void cfg_set_string(cfg_field_t *field, char *value);
+
+/// @brief push a new value onto an array field
+///
+/// @param field the field to push the value onto
+/// @param value the new value
+void cfg_vector_push(cfg_field_t *field, char *value);
 
 /// @brief set the current value of an enum field
 /// set the value via a string name

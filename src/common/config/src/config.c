@@ -155,6 +155,16 @@ cfg_field_t *config_string(config_t *group, const cfg_info_t *info, cfg_string_t
     return field;
 }
 
+cfg_field_t *config_vector(config_t *group, const cfg_info_t *info, vector_t *initial)
+{
+    ASSERT_CONFIG_VALID(group, info);
+
+    cfg_field_t *field = add_field(group, info, eConfigVector);
+    field->vec_value = initial != NULL ? initial : vector_new_arena(4, group->arena);
+
+    return field;
+}
+
 cfg_field_t *config_enum(config_t *group, const cfg_info_t *info, cfg_enum_t cfg)
 {
     ASSERT_CONFIG_VALID(group, info);

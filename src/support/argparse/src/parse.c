@@ -17,15 +17,54 @@
 
 CTU_CALLBACKS(kCallbacks, ap);
 
+static void push_single_arg(typevec_t *vec, const char *arg)
+{
+    CTASSERT(vec != NULL);
+    CTASSERT(arg != NULL);
+
+    // TODO: this is a bit of a bodge, i should think of a better
+    // way to extract flags from the command line
+    bool is_flag = arg[0] == '-' || arg[0] == '/';
+    size_t len = strlen(arg);
+
+    if (is_flag)
+    {
+        size_t idx = 0;
+        for (size_t i = 0; i < len; i++)
+        {
+            if (arg[i] == ':' || arg[i] == '=')
+            {
+                idx = i + 1;
+                break;
+            }
+        }
+
+        // we found an assignment so we need to split the string
+        if (idx > 0)
+        {
+            typevec_append(vec, arg, idx);
+
+            typevec_append(vec, " \"", 2);
+            typevec_append(vec, arg + idx, len - idx);
+            typevec_push(vec, "\"");
+            return;
+        }
+    }
+
+    // if its not a flag then we just need to wrap it in quotes
+    typevec_push(vec, "\"");
+    typevec_append(vec, arg, len);
+    typevec_push(vec, "\"");
+}
+
 static char *join_args(int argc, const char **argv, arena_t *arena)
 {
     typevec_t *vec = typevec_new(sizeof(char), argc - 1, arena);
     for (int i = 1; i < argc; i++)
     {
         const char *arg = argv[i];
-        size_t len = strlen(arg);
 
-        typevec_append(vec, arg, len);
+        push_single_arg(vec, arg);
 
         typevec_push(vec, " ");
     }
@@ -70,6 +109,7 @@ static int get_option_type(const cfg_field_t *field)
     case eConfigEnum:
     case eConfigFlags:
     case eConfigString:
+    case eConfigVector:
         return AP_STRING_OPTION;
 
     default:

@@ -45,8 +45,7 @@ static tool_t make_tool(arena_t *arena)
 {
     config_t *root = config_new(arena, &kToolInfo);
 
-    cfg_string_t include_dirs_initial = { .initial = NULL };
-    cfg_field_t *include_dirs = config_string(root, &kIncludeDirInfo, include_dirs_initial);
+    cfg_field_t *include_dirs = config_vector(root, &kIncludeDirInfo, NULL);
 
     default_options_t options = get_default_options(root);
 
@@ -68,11 +67,6 @@ int main(int argc, const char **argv)
 
     arena_t *arena = get_global_arena();
     io_t *con = io_stdout();
-
-    for (int i = 0; i < argc; i++)
-    {
-        io_printf(con, "%d: %s\n", i, argv[i]);
-    }
 
     tool_t tool = make_tool(arena);
 
@@ -106,6 +100,14 @@ int main(int argc, const char **argv)
     logger_t *logger = logger_new(arena);
 
     cpp_instance_t instance = cpp_instance_new(arena, logger);
+
+    vector_t *include_dirs = cfg_vector_value(tool.include_dirs);
+    size_t include_len = vector_len(include_dirs);
+    for (size_t i = 0; i < include_len; i++)
+    {
+        const char *path = vector_get(include_dirs, i);
+        cpp_add_include_dir(&instance, path);
+    }
 
     for (size_t i = 0; i < len; i++)
     {

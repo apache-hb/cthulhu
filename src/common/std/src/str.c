@@ -134,6 +134,21 @@ char *str_ext(const char *path)
 }
 
 USE_DECL
+char *str_directory(arena_t *arena, const char *path)
+{
+    CTASSERT(arena != NULL);
+    CTASSERT(path != NULL);
+
+    size_t idx = str_rfind_any(path, PATH_SEPERATORS);
+    if (idx == SIZE_MAX)
+    {
+        return ctu_strdup(".");
+    }
+
+    return arena_strndup(path, idx, arena);
+}
+
+USE_DECL
 char *str_filename_noext(const char *path)
 {
     CTASSERT(path != NULL);

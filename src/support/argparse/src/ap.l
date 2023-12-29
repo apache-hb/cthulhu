@@ -40,12 +40,12 @@ FLAG_TEXT [a-zA-Z0-9\-\?]
     return NUMBER;
 }
 
-"0x"[0-9a-fA-F]+ {
+"0"[xX][0-9a-fA-F]+ {
     mpz_init_set_str(yylval->number, yytext + 2, 16);
     return NUMBER;
 }
 
-"0b"[01]+ {
+"0"[bB][01]+ {
     mpz_init_set_str(yylval->number, yytext + 2, 2);
     return NUMBER;
 }

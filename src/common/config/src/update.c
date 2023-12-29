@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include "std/str.h"
+#include "std/vector.h"
 
 bool cfg_set_int(cfg_field_t *field, int value)
 {
@@ -31,6 +32,13 @@ void cfg_set_string(cfg_field_t *field, char *value)
     ASSERT_FIELD_TYPE(field, eConfigString);
 
     field->string_value = value;
+}
+
+void cfg_vector_push(cfg_field_t *field, char *value)
+{
+    ASSERT_FIELD_TYPE(field, eConfigVector);
+
+    vector_push(&field->vec_value, value);
 }
 
 bool cfg_set_enum(cfg_field_t *field, const char *choice)

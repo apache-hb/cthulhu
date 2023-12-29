@@ -108,6 +108,13 @@ const char *cfg_string_value(const cfg_field_t *field)
     return field->string_value;
 }
 
+vector_t *cfg_vector_value(const cfg_field_t *field)
+{
+    ASSERT_FIELD_TYPE(field, eConfigVector);
+
+    return field->vec_value;
+}
+
 size_t cfg_enum_value(const cfg_field_t *field)
 {
     ASSERT_FIELD_TYPE(field, eConfigEnum);

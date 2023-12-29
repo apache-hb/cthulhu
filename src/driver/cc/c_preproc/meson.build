@@ -1,7 +1,9 @@
-src = [ 'src/cpp.c' ]
+src = [
+    'src/cpp.c'
+]
 
 libpreproc = library('preproc', src,
-    dependencies : [ core, base, scan, std, io ],
+    dependencies : [ core, base, scan, std, io, memory ],
     include_directories : 'include'
 )
 

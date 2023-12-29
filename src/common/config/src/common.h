@@ -25,6 +25,7 @@ typedef struct cfg_field_t
         char *string_value;
         size_t enum_value;
         size_t flags_value;
+        vector_t *vec_value;
     };
 } cfg_field_t;
 

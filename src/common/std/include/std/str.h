@@ -278,6 +278,9 @@ char *str_noext(IN_STRING const char *path);
 NODISCARD
 char *str_ext(IN_STRING const char *path);
 
+NODISCARD
+char *str_directory(arena_t *arena, IN_STRING const char *path);
+
 /// @brief uppercase an ascii string
 ///
 /// @param str the string

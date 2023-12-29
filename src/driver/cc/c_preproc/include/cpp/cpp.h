@@ -1,8 +1,10 @@
 #pragma once
 
-#include "core/text.h"
+#include "core/compiler.h"
 
 #include <stdbool.h>
+
+BEGIN_API
 
 typedef struct arena_t arena_t;
 typedef struct logger_t logger_t;
@@ -16,17 +18,10 @@ typedef struct scan_t scan_t;
 typedef struct cpp_define_t
 {
     /// @brief the plain text of the define
-    const char *text;
+    const char *name;
+
+    const char *value;
 } cpp_define_t;
-
-typedef struct cpp_file_t
-{
-    /// @brief file contents
-    text_view_t text;
-
-    /// @brief the file path
-    const char *path;
-} cpp_file_t;
 
 typedef struct cpp_instance_t
 {
@@ -52,7 +47,7 @@ typedef struct cpp_instance_t
 /// @param text the text of the define
 ///
 /// @return cpp_define_t the new define
-cpp_define_t cpp_define_new(const char *text);
+cpp_define_t *cpp_define_new(arena_t *arena, const char *name, const char *text);
 
 /// @brief creates a new preprocessor instance
 ///
@@ -62,6 +57,8 @@ cpp_define_t cpp_define_new(const char *text);
 /// @return cpp_instance_t the new instance
 cpp_instance_t cpp_instance_new(arena_t *arena, logger_t *logger);
 
+void cpp_add_include_dir(cpp_instance_t *instance, const char *path);
+
 /// @brief process a file and all its includes
 ///
 /// @param instance the preprocessor instance
@@ -69,3 +66,5 @@ cpp_instance_t cpp_instance_new(arena_t *arena, logger_t *logger);
 ///
 /// @return scan_t the preprocessed file
 io_t *cpp_process_file(cpp_instance_t *instance, scan_t *source);
+
+END_API
