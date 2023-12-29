@@ -55,6 +55,7 @@ tool_display = get_option('tool_display').disable_auto_if(is_release or meson.is
 
 # tools like this are user facing, so dont disable them in release mode
 tool_diagnostic = get_option('tool_diagnostic').disable_auto_if(meson.is_subproject())
+tool_cpreproc = get_option('tool_cpreproc').disable_auto_if(meson.is_subproject())
 
 wants_cpp = frontend_gui.allowed() or tool_stacktrace.allowed()
 needs_cpp = frontend_gui.enabled() or tool_stacktrace.enabled()
@@ -290,7 +291,8 @@ summary = {
         'Stacktrace': tool_stacktrace.allowed(),
         'Notify': tool_notify.allowed(),
         'Diagnostics': tool_diagnostic.allowed(),
-        'Display': tool_display.allowed()
+        'Display': tool_display.allowed(),
+        'C preprocessor': tool_cpreproc.allowed()
     },
     'Documentation': {
         'Doxygen': doxygen

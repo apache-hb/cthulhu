@@ -3,7 +3,6 @@
 #include "interop/flex.h"
 
 #include <limits.h>
-#include <string.h>
 
 void flex_action(where_t *where, const char *text)
 {

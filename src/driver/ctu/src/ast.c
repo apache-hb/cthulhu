@@ -4,7 +4,7 @@
 
 static ctu_t *ctu_new(scan_t *scan, where_t where, ctu_kind_t kind)
 {
-    arena_t *arena = scan_alloc(scan);
+    arena_t *arena = scan_get_arena(scan);
     ctu_t *self = ARENA_MALLOC(arena, sizeof(ctu_t), "ctu", scan);
     self->kind = kind;
     self->node = node_new(scan, where);

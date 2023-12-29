@@ -24,7 +24,9 @@ static char *join_args(int argc, const char **argv, arena_t *arena)
     {
         const char *arg = argv[i];
         size_t len = strlen(arg);
+
         typevec_append(vec, arg, len);
+
         typevec_push(vec, " ");
     }
 
@@ -42,7 +44,7 @@ static int ap_parse_common(ap_t *self, const char *text)
     scan_t *scan = scan_io("args", io, self->arena);
 
     scan_set_context(scan, self);
-    parse_result_t result = compile_scanner(scan, &kCallbacks);
+    parse_result_t result = scan_buffer(scan, &kCallbacks);
 
     return result.result == eParseOk ? EXIT_OK : EXIT_ERROR;
 }
@@ -99,11 +101,13 @@ static const char *get_lookup_name(const char *name, bool *negate, arena_t *aren
     return name;
 }
 
-int ap_get_opt(ap_t *self, const char *name, ap_field_t *param, char **value)
+int ap_get_opt(scan_t *scan, const char *name, ap_field_t *param, char **value)
 {
-    CTASSERT(self != NULL);
+    CTASSERT(scan != NULL);
     CTASSERT(name != NULL);
     CTASSERT(param != NULL);
+
+    ap_t *self = scan_get_context(scan);
 
     // if the name ends with `-` then its a negation
     // so we need to strip that off

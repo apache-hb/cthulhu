@@ -81,3 +81,8 @@ option('tool_display', type : 'feature',
     description : 'build format testing tool',
     value : 'auto'
 )
+
+option('tool_cpreproc', type : 'feature',
+    description : 'build c preprocessor',
+    value : 'auto'
+)

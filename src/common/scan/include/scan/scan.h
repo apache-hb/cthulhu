@@ -59,22 +59,6 @@ void scan_set_context(IN_NOTNULL scan_t *scan, void *value);
 /// @return the context of @p scan
 void *scan_get_context(IN_NOTNULL const scan_t *scan);
 
-/// @brief get the current backing text pointer of a scanner
-///
-/// @param scan the scanner to get the text pointer of
-///
-/// @return the text pointer of @p scan
-NODISCARD CONSTFN
-const char *scan_text(IN_NOTNULL const scan_t *scan);
-
-/// @brief get the size of a scanners backing text
-///
-/// @param scan the scanner to get the text size of
-///
-/// @return the text size of @p scan
-NODISCARD CONSTFN
-size_t scan_size(IN_NOTNULL const scan_t *scan);
-
 /// @brief get a text span of the scanners contents
 ///
 /// @param scan the scanner to get the text of
@@ -83,22 +67,13 @@ size_t scan_size(IN_NOTNULL const scan_t *scan);
 NODISCARD CONSTFN
 text_view_t scan_source(IN_NOTNULL const scan_t *scan);
 
-/// @brief get the scanners io source
+/// @brief get the arena of a scanner
 ///
-/// @param scan the scanner to get the io source of
+/// @param scan the scanner to get the arena of
 ///
-/// @return the io source of @p scan
+/// @return the arena of @p scan
 NODISCARD CONSTFN
-io_t *scan_src(IN_NOTNULL scan_t *scan);
-
-NODISCARD CONSTFN
-arena_t *scan_alloc(IN_NOTNULL const scan_t *scan);
-
-/// @brief get an invalid scanner
-///
-/// @return the invalid scanner
-NODISCARD CONSTFN
-scan_t *scan_invalid(void);
+arena_t *scan_get_arena(IN_NOTNULL const scan_t *scan);
 
 /// @brief read data from a scanner
 ///
@@ -122,8 +97,14 @@ scan_t *scan_io(IN_STRING const char *language,
                 IN_NOTNULL io_t *io,
                 IN_NOTNULL arena_t *arena);
 
+/// @brief the builtin scanner
 extern const scan_t kScanBuiltin;
 
+/// @brief check if a scanner is the builtin scanner
+///
+/// @param scan the scanner to check
+///
+/// @return true if @p scan is the builtin scanner
 NODISCARD CONSTFN
 bool scan_is_builtin(const scan_t *scan);
 

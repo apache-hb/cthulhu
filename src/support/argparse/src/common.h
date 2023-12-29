@@ -2,6 +2,7 @@
 
 #include "argparse/argparse.h"
 
+#include "config/config.h"
 #include "core/analyze.h"
 
 #include <gmp.h>
@@ -70,4 +71,4 @@ void ap_add_error(ap_t *self, const char *fmt, ...);
 
 void ap_on_invalid(scan_t *scan, char *value);
 
-int ap_get_opt(ap_t *self, const char *name, ap_field_t *param, char **value);
+int ap_get_opt(scan_t *scan, const char *name, ap_field_t *param, char **value);

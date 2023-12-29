@@ -15,6 +15,7 @@
 
 #include <limits.h>
 #include <string.h>
+#include <stdint.h>
 
 static size_t get_arg_length(const cfg_info_t *info, size_t long_arg_stride)
 {

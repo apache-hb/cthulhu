@@ -55,19 +55,19 @@ const char *scan_path(const scan_t *scan)
 }
 
 USE_DECL
-void *scan_get(scan_t *scan)
-{
-    CTASSERT(scan != NULL);
-
-    return scan->tree;
-}
-
-USE_DECL
 void scan_set(scan_t *scan, void *value)
 {
     CTASSERT(scan != NULL);
 
     scan->tree = value;
+}
+
+USE_DECL
+void *scan_get(scan_t *scan)
+{
+    CTASSERT(scan != NULL);
+
+    return scan->tree;
 }
 
 USE_DECL
@@ -87,14 +87,6 @@ void *scan_get_context(const scan_t *scan)
 }
 
 USE_DECL
-const char *scan_text(const scan_t *scan)
-{
-    CTASSERT(scan != NULL);
-
-    return scan->mapped;
-}
-
-USE_DECL
 text_view_t scan_source(const scan_t *scan)
 {
     CTASSERT(scan != NULL);
@@ -108,14 +100,6 @@ text_view_t scan_source(const scan_t *scan)
 }
 
 USE_DECL
-size_t scan_size(const scan_t *scan)
-{
-    CTASSERT(scan != NULL);
-
-    return scan->size;
-}
-
-USE_DECL
 size_t scan_read(scan_t *scan, void *dst, size_t size)
 {
     CTASSERT(scan != NULL);
@@ -125,7 +109,7 @@ size_t scan_read(scan_t *scan, void *dst, size_t size)
 }
 
 USE_DECL
-arena_t *scan_alloc(const scan_t *scan)
+arena_t *scan_get_arena(const scan_t *scan)
 {
     CTASSERT(scan != NULL);
 
@@ -133,26 +117,22 @@ arena_t *scan_alloc(const scan_t *scan)
 }
 
 USE_DECL
-io_t *scan_src(scan_t *scan)
-{
-    CTASSERT(scan != NULL);
-
-    return scan->io;
-}
-
-USE_DECL
 scan_t *scan_io(const char *language, io_t *io, arena_t *arena)
 {
-    CTASSERT(language != NULL);
     CTASSERT(io != NULL);
-    CTASSERTF(io_error(io) == 0, "io-error(%s) = %zu", io_name(io), io_error(io));
+
+    os_error_t err = io_error(io);
+    const char *path = io_name(io);
+
+    CTASSERTF(err == 0, "io_error(%s) = %s", path, os_error_string(err));
+    CTASSERT(language != NULL);
     CTASSERT(arena != NULL);
 
-    scan_t *self = ARENA_MALLOC(arena, sizeof(scan_t), io_name(io), io);
+    scan_t *self = ARENA_MALLOC(arena, sizeof(scan_t), path, io);
 
     self->language = language;
     self->io = io;
-    self->path = io_name(io);
+    self->path = path;
     self->arena = arena;
 
     self->tree = NULL;

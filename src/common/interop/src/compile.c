@@ -20,7 +20,7 @@ static parse_result_t parse_value(void *tree)
     return res;
 }
 
-parse_result_t compile_scanner(scan_t *extra, const callbacks_t *callbacks)
+parse_result_t scan_buffer(scan_t *extra, const callbacks_t *callbacks)
 {
     int err = 0;
     void *scanner = NULL;
@@ -32,7 +32,8 @@ parse_result_t compile_scanner(scan_t *extra, const callbacks_t *callbacks)
         return parse_error(eParseInitFailed, err);
     }
 
-    state = callbacks->scan(scan_text(extra), scan_size(extra), scanner);
+    text_view_t text = scan_source(extra);
+    state = callbacks->scan(text.text, text.size, scanner);
     if (state == NULL)
     {
         return parse_error(eParseScanFailed, err);

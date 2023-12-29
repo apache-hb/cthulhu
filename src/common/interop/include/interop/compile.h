@@ -28,7 +28,7 @@ typedef struct callbacks_t
 /// @def CTU_CALLBACKS(id, prefix)
 /// @brief callback boilerplate macro
 ///
-/// generate callback boilerplate for @a compile_scanner
+/// generate callback boilerplate for @a scan_buffer
 ///
 /// @param id the name of the generated callback object
 /// @param prefix the prefix assigned to flex and bison functions
@@ -91,6 +91,6 @@ typedef struct parse_result_t
 /// @param callbacks the flex/bison callbacks
 ///
 /// @return the parse result
-parse_result_t compile_scanner(scan_t *extra, const callbacks_t *callbacks);
+parse_result_t scan_buffer(scan_t *extra, const callbacks_t *callbacks);
 
 /// @}

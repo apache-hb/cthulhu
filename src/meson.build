@@ -34,3 +34,7 @@ endif
 if tool_display.allowed()
     subdir('tools/display')
 endif
+
+if tool_cpreproc.allowed()
+    subdir('tools/c_preproc')
+endif

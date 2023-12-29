@@ -201,7 +201,7 @@ void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io)
             scan_set_context(scan, ctx);
         }
 
-        parse_result_t result = compile_scanner(scan, lang->parse_callbacks);
+        parse_result_t result = scan_buffer(scan, lang->parse_callbacks);
         const char *path = scan_path(scan);
         if (parse_failed(lifetime->logger, path, result))
         {

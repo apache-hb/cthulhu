@@ -20,6 +20,8 @@ typedef struct test_config_t
     cfg_field_t *string_field;
     cfg_field_t *enum_field;
     cfg_field_t *flag_field;
+
+    cfg_field_t *include_field;
 } test_config_t;
 
 static const cfg_info_t kRootInfo = {
@@ -65,6 +67,14 @@ static const cfg_info_t kEnumInfo = {
     .name = "enum",
     .brief = "An enum field",
     .short_args = kEnumInfoShortArgs,
+};
+
+static const char *const kIncludeDirShortArgs[] = {"I", NULL};
+
+static const cfg_info_t kIncludeDirInfo = {
+    .name = "include-dir",
+    .brief = "Add an include directory",
+    .short_args = kIncludeDirShortArgs,
 };
 
 static const char *const kFlagInfoShortArgs[] = {"f", NULL};
@@ -119,6 +129,9 @@ static test_config_t make_config(arena_t *arena)
 
     cfg_string_t string_initial = {.initial = NULL};
     config.string_field = config_string(config.root, &kStringInfo, string_initial);
+
+    cfg_string_t include_initial = {.initial = NULL};
+    config.include_field = config_string(config.root, &kIncludeDirInfo, include_initial);
 
     cfg_enum_t enum_initial = {
         .initial = eTestEnumA,
@@ -255,6 +268,59 @@ int main(void)
         ap_parse(ap, "-b -i 42 -s hello \x1b -e b -f a -f c");
 
         GROUP_EXPECT_FAIL(group, "has errors", vector_len(ap_get_errors(ap)) == 0);
+    }
+
+    // colon in file path
+    {
+        test_group_t group = test_group(&suite, "colon in file path");
+        test_config_t cfg = make_config(arena);
+        ap_t *ap = ap_new(cfg.root, arena);
+        ap_parse(ap, "-b -i 42 -s hello -e b -f a -f c -s \"C:\\Users\\test\\file.txt\"");
+
+        GROUP_EXPECT_PASS(group, "has no errors", vector_len(ap_get_errors(ap)) == 0);
+
+        const char *str = cfg_string_value(cfg.string_field);
+        GROUP_EXPECT_PASS(group, "string", str_equal(str, "C:\\Users\\test\\file.txt"));
+    }
+
+    // colon in file path as positional argument
+    {
+        test_group_t group = test_group(&suite, "colon in file path as positional argument");
+        test_config_t cfg = make_config(arena);
+        ap_t *ap = ap_new(cfg.root, arena);
+        ap_parse(ap, "-b -i 42 -s hello -e b -f a -f c \"C:\\Users\\test\\file.txt\"");
+
+        GROUP_EXPECT_PASS(group, "has no errors", vector_len(ap_get_errors(ap)) == 0);
+
+        vector_t *pos = ap_get_posargs(ap);
+        size_t len = vector_len(pos);
+        GROUP_EXPECT_PASS(group, "has positional argument", len == 1);
+
+        const char *str = vector_get(pos, 0);
+        GROUP_EXPECT_PASS(group, "string", str_equal(str, "C:\\Users\\test\\file.txt"));
+    }
+
+    // this one damn regression
+    {
+        const char *input = "\"C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.22621.0\\um\\Windows.h\" /I:\"C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.22621.0\\um\"";
+
+        test_group_t group = test_group(&suite, "regression");
+        test_config_t cfg = make_config(arena);
+        ap_t *ap = ap_new(cfg.root, arena);
+        ap_parse(ap, input);
+
+        GROUP_EXPECT_PASS(group, "has no errors", vector_len(ap_get_errors(ap)) == 0);
+
+        vector_t *pos = ap_get_posargs(ap);
+        size_t len = vector_len(pos);
+        GROUP_EXPECT_PASS(group, "has positional argument", len == 1);
+
+        const char *str = vector_get(pos, 0);
+        GROUP_EXPECT_PASS(group, "string", str_equal(str, "C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.22621.0\\um\\Windows.h"));
+
+        // has include dir
+        const char *include = cfg_string_value(cfg.include_field);
+        GROUP_EXPECT_PASS(group, "include", str_equal(include, "C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.22621.0\\um"));
     }
 
     return test_suite_finish(&suite);

@@ -13,8 +13,8 @@
 #include "scan/node.h"
 %}
 
-LETTER [a-zA-Z?]
-OPT [a-zA-Z0-9\-\?]
+FLAG_BEGIN [a-zA-Z?]
+FLAG_TEXT [a-zA-Z0-9\-\?]
 
 %%
 
@@ -23,22 +23,16 @@ OPT [a-zA-Z0-9\-\?]
 "=" { return ASSIGN; }
 ":" { return ASSIGN; }
 
-[-]{LETTER}{OPT}* {
-    /* short opt */
-    ap_t *ap = scan_get_context(yyextra);
-    return ap_get_opt(ap, yytext + 1, &yylval->field, &yylval->error);
+[-]{FLAG_BEGIN}{FLAG_TEXT}* {
+    return ap_get_opt(yyextra, yytext + 1, &yylval->field, &yylval->error);
 }
 
-[-][-]{LETTER}{OPT}* {
-    /* long opt */
-    ap_t *ap = scan_get_context(yyextra);
-    return ap_get_opt(ap, yytext + 2, &yylval->field, &yylval->error);
+[-][-]{FLAG_BEGIN}{FLAG_TEXT}* {
+    return ap_get_opt(yyextra, yytext + 2, &yylval->field, &yylval->error);
 }
 
-[/]{LETTER}{OPT}* {
-    /* nt style opt */
-    ap_t *ap = scan_get_context(yyextra);
-    return ap_get_opt(ap, yytext + 1, &yylval->field, &yylval->error);
+[/]{FLAG_BEGIN}{FLAG_TEXT}* {
+    return ap_get_opt(yyextra, yytext + 1, &yylval->field, &yylval->error);
 }
 
 [0-9]+ {
