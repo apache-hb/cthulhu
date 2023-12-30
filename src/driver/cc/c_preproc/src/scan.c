@@ -106,8 +106,9 @@ static void set_current_file(void *yyscanner, cpp_file_t *file)
     scan_t *scan = cppget_extra(yyscanner);
     cpp_scan_t *self = cpp_scan_context(scan);
 
-    ctu_log("%s - %s", str_repeat("  ", self->stack_index), file->path);
+    ctu_log("%s - \"%s\" (depth: %zu)", str_repeat("  ", self->stack_index), file->path, self->stack_index);
 
+    self->current_file = file;
     cpp_switch_to_buffer(file->buffer, yyscanner);
 }
 
