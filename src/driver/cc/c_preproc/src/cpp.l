@@ -132,7 +132,8 @@
 }
 
 <<EOF>> {
-    cpp_leave_file(yyscanner);
+    if (cpp_leave_file(yyscanner))
+        yyterminate();
 }
 
 %%

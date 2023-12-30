@@ -74,6 +74,8 @@ bool cpp_check_recursion(scan_t *scan, const char *text)
 {
     cpp_scan_t *self = cpp_scan_context(scan);
 
+    cpp_leave_directive(scan);
+
     if (self->stack_index >= self->stack_size)
     {
         ctu_log("include depth exceeded when trying to process include `%s`", text);

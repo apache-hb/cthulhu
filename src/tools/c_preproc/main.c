@@ -103,7 +103,7 @@ int main(int argc, const char **argv)
 
     cpp_instance_t instance = cpp_instance_new(arena, logger);
 
-    instance.include_depth = 8;
+    instance.include_depth = 16;
 
     // TODO: check if include directories exist
 
