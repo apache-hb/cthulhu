@@ -58,4 +58,4 @@ cpp_file_t *cpp_accept_include(void *yyscanner, const char *text, size_t size);
 // get an include that requires preprocessing the provided name
 cpp_file_t *cpp_accept_define_include(void *yyscanner, const char *text);
 
-int cppwrap(void *yyscanner);
+bool cpp_leave_file(void *yyscanner);

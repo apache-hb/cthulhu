@@ -242,15 +242,15 @@ cpp_file_t *cpp_accept_define_include(void *yyscanner, const char *text)
     return NULL;
 }
 
-int cppwrap(void *yyscanner)
+bool cpp_leave_file(void *yyscanner)
 {
     scan_t *scan = cppget_extra(yyscanner);
     cpp_scan_t *self = cpp_scan_context(scan);
     cpp_file_t *file = cpp_file_pop(self);
 
     if (file == NULL)
-        return 1;
+        return true;
 
     set_current_file(yyscanner, file);
-    return 0;
+    return false;
 }

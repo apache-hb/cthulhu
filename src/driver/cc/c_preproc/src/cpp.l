@@ -2,7 +2,7 @@
 %option 8bit nodefault
 %option noinput nounput
 %option noyyalloc noyyrealloc noyyfree
-%option reentrant stack
+%option reentrant stack noyywrap
 %option never-interactive batch
 %option prefix="cpp"
 
@@ -60,7 +60,7 @@
 <INITIAL>"#" {
     /* TODO: this accepts defines after the first token on the line */
     cpp_enter_directive(yyextra);
-    yy_push_state(DIRECTIVE, yyscanner);
+    BEGIN(DIRECTIVE);
 }
 
 <LINE_COMMENT,DIRECTIVE,INCLUDE,DEFINE,PRAGMA,ERROR>\\\n {
@@ -70,7 +70,12 @@
     /* consume all other (not newline) whitespace */
 }
 
-<DIRECTIVE,INCLUDE,DEFINE,PRAGMA,ERROR><<EOF>>
+<DIRECTIVE,INCLUDE,DEFINE,PRAGMA,ERROR><<EOF>> {
+    /* if we've reached an unescaped newline then the directive is complete */
+    cpp_leave_directive(yyextra);
+    BEGIN(INITIAL);
+}
+
 <DIRECTIVE,INCLUDE,DEFINE,PRAGMA,ERROR>\n {
     /* if we've reached an unescaped newline then the directive is complete */
     cpp_leave_directive(yyextra);
@@ -124,6 +129,10 @@
 .|\n {
     /* all remaining text should be copied verbatim to the output */
     cpp_scan_consume(yyextra, yytext, yyleng);
+}
+
+<<EOF>> {
+    cpp_leave_file(yyscanner);
 }
 
 %%

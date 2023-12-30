@@ -12,6 +12,8 @@
 
 #include "cpp/cpp.h"
 
+// .\build\src\tools\c_preproc\preproc_tool.exe "C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um\Windows.h" /I:"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared"
+
 static const version_info_t kVersionInfo = {
     .license = "GPLv3",
     .author = "Elliot Haisley",
