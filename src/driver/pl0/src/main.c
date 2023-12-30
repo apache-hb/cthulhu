@@ -25,7 +25,6 @@ static void *pl0_preparse(driver_t *handle, scan_t *scan)
     arena_t *arena = lifetime_get_arena(lifetime);
 
     pl0_scan_t info = {
-        .arena = arena,
         .reports = reports
     };
 

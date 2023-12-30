@@ -32,18 +32,20 @@ typedef struct cpp_instance_t
     logger_t *logger;
 
     /// @brief the include directories
+    /// vector_t<const char*>
     vector_t *include_directories;
+
+    /// @brief maximum include depth
+    size_t include_depth;
 
     /// @brief all encountered defines
     map_t *defines;
-
-    /// @brief all encountered files
-    map_t *files;
 } cpp_instance_t;
 
 /// @brief creates a new preprocessor define
 ///
-/// @param context the context
+/// @param arena the arena to allocate from
+/// @param name the name of the define
 /// @param text the text of the define
 ///
 /// @return cpp_define_t the new define
@@ -56,8 +58,6 @@ cpp_define_t *cpp_define_new(arena_t *arena, const char *name, const char *text)
 ///
 /// @return cpp_instance_t the new instance
 cpp_instance_t cpp_instance_new(arena_t *arena, logger_t *logger);
-
-void cpp_add_include_dir(cpp_instance_t *instance, const char *path);
 
 /// @brief process a file and all its includes
 ///

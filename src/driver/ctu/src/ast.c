@@ -5,6 +5,7 @@
 static ctu_t *ctu_new(scan_t *scan, where_t where, ctu_kind_t kind)
 {
     arena_t *arena = scan_get_arena(scan);
+
     ctu_t *self = ARENA_MALLOC(arena, sizeof(ctu_t), "ctu", scan);
     self->kind = kind;
     self->node = node_new(scan, where);
@@ -262,11 +263,11 @@ ctu_t *ctu_type_array(scan_t *scan, where_t where, ctu_t *array, ctu_t *length)
     return ast;
 }
 
-ctu_t *ctu_type_function(scan_t *scan, where_t where, vector_t *params, ctu_t *returnType)
+ctu_t *ctu_type_function(scan_t *scan, where_t where, vector_t *params, ctu_t *return_type)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuTypeFunction);
     ast->params = params;
-    ast->returnType = returnType;
+    ast->returnType = return_type;
     return ast;
 }
 
@@ -281,12 +282,12 @@ ctu_t *ctu_decl_global(scan_t *scan, where_t where, bool exported, bool mut, cha
     return ast;
 }
 
-ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name, vector_t *params, char *variadic, ctu_t *returnType, ctu_t *body)
+ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name, vector_t *params, char *variadic, ctu_t *return_type, ctu_t *body)
 {
     ctu_t *ast = ctu_decl(scan, where, eCtuDeclFunction, name, exported);
     ast->params = params;
     ast->variadic = variadic;
-    ast->returnType = returnType;
+    ast->returnType = return_type;
     ast->body = body;
     return ast;
 }
@@ -347,11 +348,11 @@ ctu_t *ctu_field_init(scan_t *scan, where_t where, char *name, ctu_t *value)
     return ast;
 }
 
-ctu_t *ctu_variant_case(scan_t *scan, where_t where, char *name, bool isDefault, ctu_t *expr)
+ctu_t *ctu_variant_case(scan_t *scan, where_t where, char *name, bool is_default, ctu_t *expr)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuVariantCase);
     ast->name = name;
-    ast->default_case = isDefault;
+    ast->default_case = is_default;
     ast->case_value = expr;
     return ast;
 }

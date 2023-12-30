@@ -1,8 +1,0 @@
-module cthulhu::lang::core;
-
-export variant EntryPoint { cli, gui }
-
-export compile def entry(kind: EntryPoint) for (fn: def): def = switch kind {
-    case EntryPoint::cli = __builtin::entryCli(fn);
-    case EntryPoint::gui = __builtin::entryGui(fn);
-};

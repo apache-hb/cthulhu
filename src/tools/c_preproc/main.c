@@ -101,13 +101,12 @@ int main(int argc, const char **argv)
 
     cpp_instance_t instance = cpp_instance_new(arena, logger);
 
+    instance.include_depth = 8;
+
+    // TODO: check if include directories exist
+
     vector_t *include_dirs = cfg_vector_value(tool.include_dirs);
-    size_t include_len = vector_len(include_dirs);
-    for (size_t i = 0; i < include_len; i++)
-    {
-        const char *path = vector_get(include_dirs, i);
-        cpp_add_include_dir(&instance, path);
-    }
+    instance.include_directories = include_dirs;
 
     for (size_t i = 0; i < len; i++)
     {
@@ -115,6 +114,14 @@ int main(int argc, const char **argv)
         io_printf(con, "Processing `%s`\n", path);
 
         io_t *io = io_file_arena(path, eAccessRead | eAccessText, arena);
+        os_error_t os_err = io_error(io);
+        if (os_err != 0)
+        {
+            io_close(io);
+            io_printf(con, "Failed to open `%s`\n", path);
+            continue;
+        }
+
         scan_t *scan = scan_io("C", io, arena);
 
         io_t *result = cpp_process_file(&instance, scan);

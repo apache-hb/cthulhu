@@ -20,7 +20,7 @@ typedef struct callbacks_t
 {
     int (*init)(scan_t *extra, void *scanner);                   ///< yylex_init_extra
     int (*parse)(void *scanner, scan_t *extra);                  ///< yyparse
-    void *(*scan)(const char *text, size_t size, void *scanner); ///< yy_scan_string
+    void *(*scan)(const char *text, size_t size, void *scanner); ///< yy_scan_bytes
     void (*destroy_buffer)(void *buffer, void *scanner);         ///< yy_delete_buffer
     void (*destroy)(void *scanner);                              ///< yylex_destroy
 } callbacks_t;

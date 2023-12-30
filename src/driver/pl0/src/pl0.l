@@ -10,7 +10,7 @@
 #include "pl0_bison.h"
 #include "pl0/scan.h"
 #include "interop/flex.h"
-#include "memory/memory.h"
+#include "memory/arena.h"
 #include "cthulhu/events/events.h"
 %}
 
@@ -44,8 +44,8 @@ WS [ \t\r\v\n\f]
 (?i:odd) { return ODD; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
-    pl0_scan_t *scan = pl0_scan_context(yyextra);
-    yylval->ident = arena_strdup(yytext, scan->arena);
+    arena_t *arena = scan_get_arena(yyextra);
+    yylval->ident = arena_strdup(yytext, arena);
     return IDENT;
 }
 

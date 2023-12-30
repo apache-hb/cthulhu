@@ -79,11 +79,28 @@
 
 5. All platform specific code must go in the @ref OS module
 
+<h3>Extra rules</h3>
+
+- Forward declare all types where possible rather than including headers
+  - This makes renaming types harder but reduces build times significantly
+  - Also dont export dependencies unless absolutely needed
+
+- Follow single source of truth
+  - Follow it to absurdity
+  - It is acceptable to make massive changes to move common functionality into libraries
+
+- No internal versioning
+  - Breaking source and ABI compatibility every commit is fine
+  - Once plugins are implemented maybe i'll rethink this
+
+- Dont declare delete functions unless managing external resources
+  - All code assumes it is inside an arena that will be cleaned up externally
+  - If memory pressure becomes an issues areas of code may add explicit cleanup
+
 <h3>Styleguide</h3>
 
-<h4>Declarations</h4>
-  - new and delete methods should be named `type_new` and `type_delete` respectivley
-  - files contents should be layed out in the following order
+- new and delete methods should be named `type_new` and `type_delete` respectivley
+- files contents should be layed out in the following order
 
 ```c
 // includes

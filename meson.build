@@ -101,9 +101,6 @@ config_cdata.set10('CTU_TRACE_MEMORY', trace_memory.allowed())
 
 gmp = dependency('gmp', fallback : [ 'mini_gmp', 'gmp' ])
 
-lexargs = []
-parseargs = []
-
 # args for all code
 args = cc.get_supported_arguments(
     # we use flexible array members
@@ -177,6 +174,9 @@ if opt_hardening.enabled()
 endif
 
 add_project_arguments(args, language : [ 'c' ])
+
+lexargs = []
+parseargs = []
 
 # setup required flex/bison args
 if host == 'windows'

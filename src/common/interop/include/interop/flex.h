@@ -2,6 +2,8 @@
 
 #include "scan/node.h"
 
+#include "base/panic.h"
+
 #include "memory/arena.h"
 
 /// @defgroup FlexBisonMacros Helpers for flex and bison driver frontends
@@ -37,9 +39,11 @@ void flex_init(where_t *where);
 void flex_update(where_t *where, where_t *offsets, int steps);
 
 /// track source locations inside flex and bison
-#define YY_USER_ACTION flex_action(yylloc, yytext);
+#ifndef CTU_DISABLE_FLEX_ACTION
+#   define YY_USER_ACTION flex_action(yylloc, yytext);
+#endif
 
-/// read input from flex and bison
+/// read input for flex and bison
 #define YY_INPUT(buffer, result, size)          \
     result = flex_input(yyextra, buffer, size); \
     if ((result) <= 0)                          \
@@ -48,10 +52,16 @@ void flex_update(where_t *where, where_t *offsets, int steps);
     }
 
 /// default source location update function
-#define YYLLOC_DEFAULT(current, rhs, offset) flex_update(&(current), rhs, offset)
+#ifndef CTU_DISABLE_FLEX_DEFAULT
+#   define YYLLOC_DEFAULT(current, rhs, offset) flex_update(&(current), rhs, offset)
+#endif
 
 /// initialize flex and bison
-#define YY_USER_INIT flex_init(yylloc);
+#ifndef CTU_DISBALE_FLEX_INIT
+#   define YY_USER_INIT flex_init(yylloc);
+#endif
+
+#define YY_FATAL_ERROR(msg) NEVER("fatal flex error: %s", msg)
 
 /// route memory for flex and bison though cthulhu allocators
 #define FLEX_MEMORY(fn_malloc, fn_realloc, fn_free)                    \

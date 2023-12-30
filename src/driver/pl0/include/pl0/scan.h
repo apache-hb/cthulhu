@@ -8,7 +8,6 @@ typedef struct logger_t logger_t;
 
 typedef struct pl0_scan_t
 {
-    arena_t *arena;
     logger_t *reports;
 } pl0_scan_t;
 
