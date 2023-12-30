@@ -10,7 +10,7 @@
 #include "obr_bison.h"
 #include "oberon/scan.h"
 #include "interop/flex.h"
-#include "memory/memory.h"
+#include "memory/arena.h"
 #include "cthulhu/util/text.h"
 #include "cthulhu/events/events.h"
 %}
@@ -95,7 +95,8 @@ WS [ \t\r\v\n\f]
 "WITH" { return WITH; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
-    yylval->ident = ctu_strdup(yytext);
+    arena_t *arena = scan_get_arena(yyextra);
+    yylval->ident = arena_strdup(yytext, arena);
     return IDENT;
 }
 
