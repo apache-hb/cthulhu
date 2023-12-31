@@ -12,6 +12,7 @@
 
 %code requires {
     #include "memory/memory.h"
+    #include "std/str.h"
     #include "base/log.h"
     #include "cpp/scan.h"
     #define YYSTYPE CPPSTYPE
@@ -124,6 +125,9 @@ void cpperror(where_t *where, void *state, scan_t *scan, const char *msg);
 %type<text>
     define_param
     macro_arg
+    macro_arg_body
+    macro_arg_item
+    macro_arg_inner
 
 %start entry
 
@@ -150,11 +154,23 @@ macro_args: %empty { $$ = vector_of(0); }
     | macro_arg { $$ = vector_init($1); }
     ;
 
-macro_arg: TOK_PP_STRING { $$ = $1; }
-    | TOK_PP_IDENT { $$ = $1; }
+macro_arg: macro_arg_body { $$ = $1; }
+    ;
+
+macro_arg_body: macro_arg_item { $$ = $1; }
+    | macro_arg_body macro_arg_item { $$ = format("%s%s", $1, $2); }
+    ;
+
+macro_arg_inner: macro_arg_body { $$ = $1; }
+    | macro_arg_inner TOK_COMMA macro_arg_item { $$ = format("%s,%s", $1, $3); }
+    ;
+
+macro_arg_item: TOK_STRING { $$ = $1.text; }
     | TOK_TEXT { $$ = $1.text; }
     | TOK_NUMBER { $$ = $1.text; }
     | TOK_IDENT { $$ = $1.text; }
+    | TOK_WHITESPACE { $$ = $1.text; }
+    | TOK_LPAREN macro_arg_inner TOK_RPAREN { $$ = format("(%s)", $2); }
     ;
 
 directive: directive_include
