@@ -392,8 +392,6 @@ void enter_ifndef(scan_t *scan, where_t where, const char *name)
 
 void enter_branch(scan_t *scan, where_t where, vector_t *condition)
 {
-    CTU_UNUSED(where);
-
     const node_t *node = get_scan_node(scan, where);
     bool truthy = eval_condition(scan, node, condition);
 
@@ -481,6 +479,99 @@ void cpp_accept_pragma(scan_t *scan, where_t where, vector_t *tokens)
     }
 }
 
+static void paste_token(scan_t *scan, const cpp_ast_t *node)
+{
+    switch (node->kind)
+    {
+    case eCppPaste:
+    case eCppString:
+    case eCppIdent:
+        cpp_scan_consume(scan, node->text, strlen(node->text), false);
+        break;
+
+    case eCppNumber:
+        cpp_scan_consume(scan, node->original, strlen(node->original), false);
+        break;
+
+    case eCppLParen:
+        cpp_scan_consume(scan, "(", 1, false);
+        break;
+    case eCppRParen:
+        cpp_scan_consume(scan, ")", 1, false);
+        break;
+
+    case eCppComma:
+        cpp_scan_consume(scan, ",", 1, false);
+        break;
+
+    case eCppColon:
+        cpp_scan_consume(scan, ":", 1, false);
+        break;
+
+    case eCppCompare: {
+        const char *cmp = compare_symbol(node->compare);
+        cpp_scan_consume(scan, cmp, strlen(cmp), false);
+        break;
+    }
+    case eCppBinary: {
+        const char *bin = binary_symbol(node->binary);
+        cpp_scan_consume(scan, bin, strlen(bin), false);
+        break;
+    }
+    case eCppUnary: {
+        const char *un = unary_symbol(node->unary);
+        cpp_scan_consume(scan, un, strlen(un), false);
+        break;
+    }
+
+    default:
+        NEVER("unexpected token %d in paste", node->kind);
+    }
+}
+
+void cpp_expand_ident(scan_t *scan, where_t where, const char *name, size_t size)
+{
+    CTU_UNUSED(where);
+
+    cpp_scan_t *self = cpp_scan_context(scan);
+    cpp_ast_t *ast = map_get(self->defines, name);
+    if (ast == NULL)
+    {
+        cpp_scan_consume(scan, name, size, false);
+        return;
+    }
+
+    if (ast->kind == eCppDefine)
+    {
+        vector_t *body = ast->body;
+        size_t len = vector_len(body);
+        for (size_t i = 0; i < len; i++)
+        {
+            cpp_ast_t *node = vector_get(body, i);
+            paste_token(scan, node);
+        }
+    }
+}
+
+void cpp_expand_macro(scan_t *scan, where_t where, const char *name, size_t size, vector_t *args)
+{
+    CTU_UNUSED(where);
+
+    cpp_scan_t *self = cpp_scan_context(scan);
+    cpp_ast_t *ast = map_get(self->defines, name);
+    if (ast == NULL)
+    {
+        cpp_scan_consume(scan, name, size, false);
+        // also expand the arguments
+        size_t len = vector_len(args);
+        for (size_t i = 0; i < len; i++)
+        {
+            char *arg = vector_get(args, i);
+            cpp_scan_consume(scan, arg, strlen(arg), false);
+        }
+        return;
+    }
+}
 
 void cpperror(where_t *where, void *yyscanner, scan_t *scan, const char *msg)
 {
@@ -488,5 +579,6 @@ void cpperror(where_t *where, void *yyscanner, scan_t *scan, const char *msg)
     CTU_UNUSED(where);
 
     cpp_scan_t *ctx = cpp_scan_context(scan);
+
     evt_scan_error(ctx->instance->logger, cpp_get_node(yyscanner, *where), msg);
 }

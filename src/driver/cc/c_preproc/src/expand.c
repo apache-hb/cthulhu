@@ -393,7 +393,6 @@ static bool eval_unary_expr(eval_t *eval, mpz_t value)
     return eval_primary_expr(eval, value);
 }
 
-
 static const binary_t kMulOps[] = { eBinaryMul, eBinaryDiv, eBinaryRem };
 #define MUL_COUNT (sizeof(kMulOps) / sizeof(binary_t))
 

@@ -252,7 +252,7 @@
     cpp_scan_t *extra = cpp_scan_context(yyextra);
     yylval->text2.text = arena_strndup(yytext, yyleng, extra->instance->arena);
     yylval->text2.size = yyleng;
-    return TOK_TEXT;
+    return TOK_IDENT;
 }
 
 <INITIAL>[ \t\r\v\f]+ {

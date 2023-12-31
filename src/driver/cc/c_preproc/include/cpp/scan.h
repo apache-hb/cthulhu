@@ -96,3 +96,5 @@ vector_t *expand_macro(scan_t *scan, const char *name, vector_t *args);
 cpp_number_t make_number(scan_t *scan, const char *text, size_t len, int base);
 
 void cpp_accept_pragma(scan_t *scan, where_t where, vector_t *tokens);
+void cpp_expand_ident(scan_t *scan, where_t where, const char *name, size_t size);
+void cpp_expand_macro(scan_t *scan, where_t where, const char *name, size_t size, vector_t *args);

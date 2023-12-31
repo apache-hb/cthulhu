@@ -11,6 +11,7 @@
 }
 
 %code requires {
+    #include "memory/memory.h"
     #include "base/log.h"
     #include "cpp/scan.h"
     #define YYSTYPE CPPSTYPE
@@ -112,6 +113,7 @@ void cpperror(where_t *where, void *state, scan_t *scan, const char *msg);
     define_opt_body
     directive_body
     define_params
+    macro_args
 
 %type<params>
     define_opt_params
@@ -121,6 +123,7 @@ void cpperror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %type<text>
     define_param
+    macro_arg
 
 %start entry
 
@@ -131,14 +134,27 @@ entry: %empty
     ;
 
 any: TOK_DIRECTIVE directive
-    | TOK_IDENT { cpp_scan_consume(x, $1.text, $1.size, false); }
+    | TOK_IDENT { cpp_expand_ident(x, @$, $1.text, $1.size); }
+    | TOK_IDENT TOK_LPAREN macro_args TOK_RPAREN { cpp_expand_macro(x, @$, $1.text, $1.size, $3); }
     | TOK_STRING { cpp_scan_consume(x, $1.text, $1.size, false); }
-    | TOK_LPAREN { cpp_scan_consume(x, "(", 1, false); }
-    | TOK_RPAREN { cpp_scan_consume(x, ")", 1, false); }
+    //| TOK_LPAREN { cpp_scan_consume(x, "(", 1, false); }
+    //| TOK_RPAREN { cpp_scan_consume(x, ")", 1, false); }
     | TOK_COMMA { cpp_scan_consume(x, ",", 1, false); }
     | TOK_WHITESPACE { cpp_scan_consume(x, $1.text, $1.size, false); }
-    | TOK_TEXT { cpp_scan_consume(x, $1.text, $1.size, false); }
+    | TOK_TEXT { cpp_expand_ident(x, @$, $1.text, $1.size); }
     | error
+    ;
+
+macro_args: %empty { $$ = vector_of(0); }
+    | macro_args TOK_COMMA macro_arg { vector_push(&$1, $3); $$ = $1; }
+    | macro_arg { $$ = vector_init($1); }
+    ;
+
+macro_arg: TOK_PP_STRING { $$ = $1; }
+    | TOK_PP_IDENT { $$ = $1; }
+    | TOK_TEXT { $$ = $1.text; }
+    | TOK_NUMBER { $$ = $1.text; }
+    | TOK_IDENT { $$ = $1.text; }
     ;
 
 directive: directive_include
@@ -176,7 +192,9 @@ define_params: define_param { $$ = vector_init($1); }
     | define_params TOK_PP_COMMA define_param { vector_push(&$1, $3); $$ = $1; }
     ;
 
-define_param: TOK_PP_IDENT
+define_param: TOK_PP_IDENT { $$ = $1; }
+    | TOK_ERROR { $$ = ctu_strdup("error"); }
+    | TOK_WARNING { $$ = ctu_strdup("warning"); }
     ;
 
 define_opt_body: directive_body { $$ = $1; }
@@ -255,7 +273,9 @@ directive_token: TOK_PP_STRING { $$ = cpp_string(x, @$, $1); }
     | TOK_PP_QUESTION { $$ = cpp_ternary(x, @$); }
     | TOK_PP_COLON  { $$ = cpp_colon(x, @$); }
     | TOK_PP_DEFINED { $$ = cpp_defined(x, @$); }
-    | TOK_WARNING  { $$ = cpp_paste(x, @$, "warning"); }
+    | TOK_WARNING   { $$ = cpp_paste(x, @$, "warning"); }
+    | TOK_ERROR     { $$ = cpp_paste(x, @$, "error"); }
+    | TOK_INCLUDE   { $$ = cpp_paste(x, @$, "include"); }
     ;
 
 message_body: %empty
@@ -299,6 +319,7 @@ message_item: TOK_WARNING
     | TOK_PP_QUESTION
     | TOK_PP_COLON
     | TOK_PP_DEFINED
+    | TOK_INCLUDE
     ;
 
 %%
