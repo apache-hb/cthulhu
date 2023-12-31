@@ -9,7 +9,7 @@ void flex_action(where_t *where, const char *text)
     where->first_line = where->last_line;
     where->first_column = where->last_column;
 
-    for (int64_t i = 0; text[i]; i++)
+    for (int i = 0; text[i]; i++)
     {
         if (text[i] == '\n')
         {

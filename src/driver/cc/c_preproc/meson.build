@@ -2,12 +2,14 @@ src = [
     'src/cpp.c',
     'src/scan.c',
 
-    lex.process('src/cpp.l')
+    lex.process('src/cpp.l'),
+    parse.process('src/cpp.y')
 ]
 
 libpreproc = library('preproc', src,
-    dependencies : [ core, base, scan, std, io, memory, interop, notify ],
-    include_directories : [ 'include', 'src' ]
+    dependencies : [ core, base, scan, std, io, memory, interop, notify, events ],
+    include_directories : [ 'include', 'src' ],
+    c_args : generated_args
 )
 
 preproc = declare_dependency(

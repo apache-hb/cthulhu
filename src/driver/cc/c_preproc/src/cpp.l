@@ -1,8 +1,8 @@
 %option extra-type="scan_t*"
 %option 8bit nodefault
-%option noinput nounput
+%option noyywrap noinput nounput
 %option noyyalloc noyyrealloc noyyfree
-%option reentrant stack noyywrap
+%option reentrant stack bison-bridge
 %option never-interactive batch
 %option prefix="cpp"
 
@@ -11,21 +11,18 @@
 #define CTU_DISABLE_FLEX_DEFAULT
 #define CTU_DISBALE_FLEX_INIT
 
+#include "cpp_bison.h"
 #include "base/log.h"
-#include "interop/flex.h"
 #include "cpp/scan.h"
+#include "cpp/cpp.h"
+#include "interop/flex.h"
 #include "memory/arena.h"
 %}
 
 %x BLOCK_COMMENT
 %x LINE_COMMENT
 %x DIRECTIVE
-
-/* all directive states */
 %x INCLUDE
-%x DEFINE
-%x PRAGMA
-%x ERROR
 
 %%
 
@@ -34,10 +31,8 @@
     cpp_scan_consume(yyextra, yytext, yyleng);
     yy_push_state(LINE_COMMENT, yyscanner);
 }
-
 <LINE_COMMENT>\n {
     cpp_scan_consume(yyextra, yytext, yyleng);
-    cpp_leave_directive(yyextra);
     BEGIN(INITIAL);
 }
 <LINE_COMMENT>. {
@@ -59,72 +54,65 @@
 
 <INITIAL>"#" {
     /* TODO: this accepts defines after the first token on the line */
-    cpp_enter_directive(yyextra);
     BEGIN(DIRECTIVE);
+    return TOK_DIRECTIVE;
 }
 
-<LINE_COMMENT,DIRECTIVE,INCLUDE,DEFINE,PRAGMA,ERROR>\\\n {
-    /* a backslash followed by a newline is a line continuation */
-}
-<DIRECTIVE,INCLUDE,DEFINE,PRAGMA,ERROR>[ \t\r\v\f]+ {
-    /* consume all other (not newline) whitespace */
+<LINE_COMMENT,DIRECTIVE,INCLUDE>\\\n { /* a backslash followed by a newline is a line continuation */ }
+<DIRECTIVE,INCLUDE>[ \t\r\v\f]+ { /* consume all other (not newline) whitespace */ }
+
+<DIRECTIVE,INCLUDE><<EOF>> {
+    /* if we've reached the end of the file then the directive is complete */
+    BEGIN(INITIAL);
+
+    if (cpp_leave_file(yyscanner))
+        yyterminate();
 }
 
-<DIRECTIVE,INCLUDE,DEFINE,PRAGMA,ERROR><<EOF>> {
+<DIRECTIVE,INCLUDE>\n {
     /* if we've reached an unescaped newline then the directive is complete */
-    cpp_leave_directive(yyextra);
     BEGIN(INITIAL);
 }
 
-<DIRECTIVE,INCLUDE,DEFINE,PRAGMA,ERROR>\n {
-    /* if we've reached an unescaped newline then the directive is complete */
-    cpp_leave_directive(yyextra);
-    BEGIN(INITIAL);
-}
+<DIRECTIVE>"include" { BEGIN(INCLUDE); return TOK_INCLUDE; }
+<DIRECTIVE>"define" { return TOK_DEFINE; }
+<DIRECTIVE>"undef" { return TOK_UNDEF; }
+<DIRECTIVE>"pragma" { return TOK_PRAGMA; }
+<DIRECTIVE>"error" { return TOK_ERROR; }
 
-<DIRECTIVE>"include" { BEGIN(INCLUDE); }
-<DIRECTIVE>"define" { BEGIN(DEFINE); }
-<DIRECTIVE>"pragma" { BEGIN(PRAGMA); }
-<DIRECTIVE>"error" { BEGIN(ERROR); }
+<DIRECTIVE>[a-zA-Z0-9_]+ {
+    cpp_scan_t *extra = cpp_scan_context(yyextra);
+    yylval->text = arena_strndup(yytext, yyleng, extra->instance->arena);
+    return TOK_IDENT;
+}
 
 <INCLUDE>[a-zA-Z0-9_]+ {
-    if (cpp_check_recursion(yyextra, yytext))
-        cpp_accept_define_include(yyscanner, yytext);
-
     BEGIN(INITIAL);
+
+    cpp_scan_t *extra = cpp_scan_context(yyextra);
+    yylval->text = arena_strndup(yytext, yyleng, extra->instance->arena);
+    return TOK_IDENT;
 }
 
 <INCLUDE>"\""[^"\n]*"\"" {
-    if (cpp_check_recursion(yyextra, yytext))
-        cpp_accept_include(yyscanner, yytext + 1, yyleng - 2);
-
     BEGIN(INITIAL);
+
+    cpp_scan_t *extra = cpp_scan_context(yyextra);
+    yylval->text = arena_strndup(yytext + 1, yyleng - 2, extra->instance->arena);
+    return TOK_STRING;
 }
 
 <INCLUDE>"<"[^>\n]*">" {
-    if (cpp_check_recursion(yyextra, yytext))
-        cpp_accept_include(yyscanner, yytext + 1, yyleng - 2);
-
     BEGIN(INITIAL);
+
+    cpp_scan_t *extra = cpp_scan_context(yyextra);
+    yylval->text = arena_strndup(yytext + 1, yyleng - 2, extra->instance->arena);
+    return TOK_SYSTEM;
 }
 
-<INCLUDE>. {
-    ctu_log("#include: %s", yytext);
-}
-
-<DEFINE>.+ {
-    //ctu_log("#define: %s", yytext);
-}
-
-<PRAGMA>.+ {
-    //ctu_log("#pragma: %s", yytext);
-}
-
-<ERROR>.+ {
+<DIRECTIVE,INCLUDE>. {
 
 }
-
-<DIRECTIVE>. { }
 
 .|\n {
     /* all remaining text should be copied verbatim to the output */
