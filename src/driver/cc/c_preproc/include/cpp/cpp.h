@@ -35,6 +35,9 @@ typedef struct cpp_instance_t
     /// vector_t<const char*>
     vector_t *include_directories;
 
+    // should we paste comments into the final output?
+    bool paste_comments;
+
     /// @brief maximum include depth
     size_t include_depth;
 

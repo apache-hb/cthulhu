@@ -25,13 +25,15 @@
 
 "\""[^"\n]*"\"" {
     cpp_scan_t *extra = cpp_scan_context(yyextra);
-    yylval->text = arena_strndup(yytext + 1, yyleng - 2, extra->instance->arena);
+    yylval->text2.text = arena_strndup(yytext, yyleng, extra->instance->arena);
+    yylval->text2.size = yyleng;
     return TOK_STRING;
 }
 
 \'[^\n]*\' {
     cpp_scan_t *extra = cpp_scan_context(yyextra);
-    yylval->text = arena_strndup(yytext + 1, yyleng - 2, extra->instance->arena);
+    yylval->text2.text = arena_strndup(yytext, yyleng, extra->instance->arena);
+    yylval->text2.size = yyleng;
     return TOK_STRING;
 }
 
@@ -40,11 +42,11 @@
     avoid matching inside a block comment
     because we leave via `BEGIN` rather than `yy_pop_state`
     */
-    cpp_scan_consume(yyextra, yytext, yyleng);
+    cpp_scan_consume(yyextra, yytext, yyleng, true);
     BEGIN(LINE_COMMENT);
 }
 <LINE_COMMENT>\n {
-    cpp_scan_consume(yyextra, yytext, yyleng);
+    cpp_scan_consume(yyextra, yytext, yyleng, true);
     /*
     we leave via BEGIN because line comments implicitly
     terminate directive statements
@@ -52,20 +54,20 @@
     BEGIN(INITIAL);
 }
 <LINE_COMMENT>. {
-    cpp_scan_consume(yyextra, yytext, yyleng);
+    cpp_scan_consume(yyextra, yytext, yyleng, true);
 }
 
 <*>"/*" {
     /* block comments are handled here */
-    cpp_scan_consume(yyextra, "/*", 2);
+    cpp_scan_consume(yyextra, "/*", 2, true);
     yy_push_state(BLOCK_COMMENT, yyscanner);
 }
 <BLOCK_COMMENT>"*/" {
-    cpp_scan_consume(yyextra, "*/", 2);
+    cpp_scan_consume(yyextra, "*/", 2, true);
     yy_pop_state(yyscanner);
 }
 <BLOCK_COMMENT>.|\n {
-    cpp_scan_consume(yyextra, yytext, yyleng);
+    cpp_scan_consume(yyextra, yytext, yyleng, true);
 }
 
 <INITIAL>"#" {
@@ -92,19 +94,43 @@
     BEGIN(INITIAL);
 }
 
-<DIRECTIVE>"include" { BEGIN(INCLUDE); return TOK_INCLUDE; }
-<DIRECTIVE>"define" { BEGIN(DEFINE); return TOK_DEFINE; }
-<DIRECTIVE>"undef" { return TOK_UNDEF; }
+<DIRECTIVE>"include" {
+    BEGIN(INCLUDE);
+    return TOK_INCLUDE;
+}
+<DIRECTIVE>"define" {
+    BEGIN(DEFINE);
+    return TOK_DEFINE;
+}
+<DIRECTIVE>"undef" {
+    return TOK_UNDEF;
+}
 <DIRECTIVE>"if" { return TOK_IF; }
 <DIRECTIVE>"ifdef" { return TOK_IFDEF; }
 <DIRECTIVE>"ifndef" { return TOK_IFNDEF; }
 <DIRECTIVE>"elif" { return TOK_ELIF; }
 <DIRECTIVE>"else" { return TOK_ELSE; }
-<DIRECTIVE>"endif" { return TOK_ENDIF; }
-<DIRECTIVE>"line" { return TOK_LINE; }
-<DIRECTIVE>"pragma" { return TOK_PRAGMA; }
-<DIRECTIVE>"error" { return TOK_ERROR; }
-<DIRECTIVE>"warning" { return TOK_WARNING; }
+<DIRECTIVE>"endif" {
+    /*
+    TODO: need a way to return these as text when inside a define
+    also need to avoid reporting these when inside a skipping group
+    */
+    return TOK_ENDIF;
+}
+<DIRECTIVE>"line" {
+    return TOK_LINE;
+}
+<DIRECTIVE>"pragma" {
+    return TOK_PRAGMA;
+}
+<DIRECTIVE>"error" {
+    return TOK_ERROR;
+}
+<DIRECTIVE>"warning" {
+    return TOK_WARNING;
+}
+
+<DIRECTIVE>"defined" { return TOK_PP_DEFINED; }
 
 <DEFINE>[a-zA-Z_][a-zA-Z0-9_]*"(" {
     BEGIN(DIRECTIVE);
@@ -172,9 +198,44 @@
 <DIRECTIVE>")" { return TOK_PP_RPAREN; }
 <DIRECTIVE>"," { return TOK_PP_COMMA; }
 <DIRECTIVE>"..." { return TOK_PP_ELLIPSIS; }
+<DIRECTIVE>"!" { return TOK_PP_NOT; }
+<DIRECTIVE>"&&" { return TOK_PP_AND; }
+<DIRECTIVE>"||" { return TOK_PP_OR; }
+<DIRECTIVE>"==" { return TOK_PP_EQ; }
+<DIRECTIVE>"!=" { return TOK_PP_NE; }
+<DIRECTIVE>"<=" { return TOK_PP_LE; }
+<DIRECTIVE>">=" { return TOK_PP_GE; }
+<DIRECTIVE>"<" { return TOK_PP_LT; }
+<DIRECTIVE>">" { return TOK_PP_GT; }
+<DIRECTIVE>"+" { return TOK_PP_PLUS; }
+<DIRECTIVE>"-" { return TOK_PP_MINUS; }
+<DIRECTIVE>"*" { return TOK_PP_MUL; }
+<DIRECTIVE>"/" { return TOK_PP_DIV; }
+<DIRECTIVE>"%" { return TOK_PP_MOD; }
+<DIRECTIVE>"^" { return TOK_PP_XOR; }
+<DIRECTIVE>"&" { return TOK_PP_BITAND; }
+<DIRECTIVE>"|" { return TOK_PP_BITOR; }
+<DIRECTIVE>"~" { return TOK_PP_BITNOT; }
+<DIRECTIVE>"<<" { return TOK_PP_SHL; }
+<DIRECTIVE>">>" { return TOK_PP_SHR; }
+<DIRECTIVE>"?"  { return TOK_PP_QUESTION; }
+<DIRECTIVE>":"  { return TOK_PP_COLON; }
 
 <DEFINE>. {
     BEGIN(DIRECTIVE);
+}
+
+<DIRECTIVE>[0-9]+ {
+    yylval->number = make_number(yyextra, yytext, yyleng, 10);
+    return TOK_NUMBER;
+}
+<DIRECTIVE>"0x"[0-9a-fA-F]+ {
+    yylval->number = make_number(yyextra, yytext + 2, yyleng - 2, 16);
+    return TOK_NUMBER;
+}
+<DIRECTIVE>"0b"[01]+ {
+    yylval->number = make_number(yyextra, yytext + 2, yyleng - 2, 2);
+    return TOK_NUMBER;
 }
 
 <DIRECTIVE,INCLUDE>. {
@@ -187,9 +248,25 @@
 ")" { return TOK_RPAREN; }
 "," { return TOK_COMMA; }
 
+<INITIAL>[a-zA-Z_][a-zA-Z0-9_]* {
+    cpp_scan_t *extra = cpp_scan_context(yyextra);
+    yylval->text2.text = arena_strndup(yytext, yyleng, extra->instance->arena);
+    yylval->text2.size = yyleng;
+    return TOK_TEXT;
+}
+
+<INITIAL>[ \t\r\v\f]+ {
+    cpp_scan_t *extra = cpp_scan_context(yyextra);
+    yylval->text2.text = arena_strndup(yytext, yyleng, extra->instance->arena);
+    yylval->text2.size = yyleng;
+    return TOK_WHITESPACE;
+}
+
 <INITIAL>.|\n {
-    /* all remaining text should be copied verbatim to the output */
-    cpp_scan_consume(yyextra, yytext, yyleng);
+    cpp_scan_t *extra = cpp_scan_context(yyextra);
+    yylval->text2.text = arena_strndup(yytext, yyleng, extra->instance->arena);
+    yylval->text2.size = yyleng;
+    return TOK_TEXT;
 }
 
 <<EOF>> {

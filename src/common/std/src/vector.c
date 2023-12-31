@@ -253,3 +253,11 @@ void vector_reset(vector_t *vec)
 
     vec->used = 0;
 }
+
+USE_DECL
+void **vector_data(vector_t *vec)
+{
+    CTASSERT(vec != NULL);
+
+    return vec->data;
+}

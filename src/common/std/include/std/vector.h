@@ -192,6 +192,8 @@ size_t vector_find(IN_NOTNULL vector_t *vector, const void *element);
  */
 void vector_reset(IN_NOTNULL vector_t *vec);
 
+void **vector_data(IN_NOTNULL vector_t *vec);
+
 /// @}
 
 END_API

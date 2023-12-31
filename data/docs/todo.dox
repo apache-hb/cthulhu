@@ -31,6 +31,15 @@ GFI = good first issue
 - hash consing for driver asts and trees
     - should probably incorporate protobuf into this for fuzzing
 
+- error report merging is really bad
+    - make it optional
+    - make it better
+
+- allow for swapping between error reporting formats
+
+- complete the C preprocessor
+    - at least be able to parse the windows and linux headers
+
 <h3>Important</h3>
 
 - fix linking to ucrt with clang-cl causing issues (GFI)

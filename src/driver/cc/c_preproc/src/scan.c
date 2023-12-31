@@ -47,9 +47,15 @@ cpp_scan_t cpp_scan_new(cpp_instance_t *instance)
     return scan;
 }
 
-void cpp_scan_consume(scan_t *scan, const char *text, size_t size)
+void cpp_scan_consume(scan_t *scan, const char *text, size_t size, bool is_comment)
 {
+    if (is_skipping(scan))
+        return;
+
     cpp_scan_t *self = cpp_scan_context(scan);
+    if (!self->instance->paste_comments && is_comment)
+        return;
+
     typevec_append(self->result, text, size);
 }
 
@@ -256,14 +262,225 @@ bool cpp_leave_file(void *yyscanner)
     return false;
 }
 
-node_t *cpp_get_node(void *yyscanner, where_t where)
+static node_t *get_scan_node(scan_t *scan, where_t where)
 {
-    scan_t *scan = cppget_extra(yyscanner);
-    cpp_scan_t *self = cpp_scan_context(scan);
-    cpp_file_t *file = self->current_file;
+    cpp_scan_t *extra = cpp_scan_context(scan);
+    cpp_file_t *file = extra->current_file;
 
     return node_new(file->scan, where);
 }
+
+node_t *cpp_get_node(void *yyscanner, where_t where)
+{
+    scan_t *scan = cppget_extra(yyscanner);
+
+    return get_scan_node(scan, where);
+}
+
+static void check_old_definition(scan_t *scan, const char *name, where_t where)
+{
+    cpp_scan_t *self = cpp_scan_context(scan);
+
+    cpp_ast_t *old = map_get(self->defines, name);
+    if (old != NULL)
+    {
+        node_t *node = get_scan_node(scan, where);
+        event_t *id = msg_notify(self->instance->logger, &kEvent_MacroRedefinition, node, "macro `%s` redefined", name);
+        msg_append(id, old->node, "previous definition was here");
+    }
+}
+
+void cpp_add_define(scan_t *scan, where_t where, const char *name, vector_t *body)
+{
+    CTASSERT(scan != NULL);
+    CTASSERT(name != NULL);
+
+    cpp_scan_t *self = cpp_scan_context(scan);
+    check_old_definition(scan, name, where);
+
+    cpp_ast_t *ast = cpp_define(scan, where, name, body);
+
+    map_set(self->defines, name, ast);
+}
+
+void cpp_add_macro(scan_t *scan, where_t where, const char *name, cpp_params_t params, vector_t *body)
+{
+    CTASSERT(scan != NULL);
+    CTASSERT(name != NULL);
+    CTASSERT(body != NULL);
+
+    cpp_scan_t *self = cpp_scan_context(scan);
+    check_old_definition(scan, name, where);
+
+    cpp_ast_t *ast = cpp_macro(scan, where, name, params, body);
+
+    map_set(self->defines, name, ast);
+}
+
+cpp_params_t make_params(vector_t *names, bool variadic)
+{
+    CTASSERT(names != NULL);
+
+    cpp_params_t params = {
+        .names = names,
+        .variadic = variadic,
+    };
+
+    return params;
+}
+
+void cpp_remove_define(scan_t *scan, where_t where, const char *name)
+{
+    CTASSERT(scan != NULL);
+    CTASSERT(name != NULL);
+
+    cpp_scan_t *self = cpp_scan_context(scan);
+    cpp_ast_t *ast = map_get(self->defines, name);
+    if (ast == NULL)
+    {
+        node_t *node = get_scan_node(scan, where);
+        msg_notify(self->instance->logger, &kEvent_MacroNotDefined, node, "macro `%s` was not defined", name);
+        return;
+    }
+    map_delete(self->defines, name);
+}
+
+cpp_ast_t *cpp_get_define(scan_t *scan, const char *name)
+{
+    CTASSERT(scan != NULL);
+    CTASSERT(name != NULL);
+
+    cpp_scan_t *self = cpp_scan_context(scan);
+
+    return map_get(self->defines, name);
+}
+
+bool is_skipping(scan_t *scan)
+{
+    cpp_scan_t *self = cpp_scan_context(scan);
+    return self->skipping;
+}
+
+static void do_branch_enter(scan_t *scan, bool truthy)
+{
+    cpp_scan_t *self = cpp_scan_context(scan);
+    if (self->branch_depth == 0)
+    {
+        self->skipping = !truthy;
+    }
+
+    self->branch_depth += 1;
+}
+
+void enter_ifdef(scan_t *scan, where_t where, const char *name)
+{
+    CTU_UNUSED(where);
+
+    bool truthy = cpp_get_define(scan, name) != NULL;
+
+    do_branch_enter(scan, truthy);
+}
+
+void enter_ifndef(scan_t *scan, where_t where, const char *name)
+{
+    CTU_UNUSED(where);
+
+    bool truthy = cpp_get_define(scan, name) == NULL;
+
+    do_branch_enter(scan, truthy);
+}
+
+void enter_branch(scan_t *scan, where_t where, vector_t *condition)
+{
+    CTU_UNUSED(where);
+
+    const node_t *node = get_scan_node(scan, where);
+    bool truthy = eval_condition(scan, node, condition);
+
+    do_branch_enter(scan, truthy);
+}
+
+void else_branch(scan_t *scan, where_t where)
+{
+    cpp_scan_t *self = cpp_scan_context(scan);
+    if (self->branch_depth == 0)
+    {
+        node_t *node = get_scan_node(scan, where);
+        msg_notify(self->instance->logger, &kEvent_UnexpectedElse, node, "unexpected #else");
+    }
+    else
+    {
+        self->skipping = !self->skipping;
+    }
+}
+
+void elif_branch(scan_t *scan, where_t where, vector_t *condition)
+{
+    node_t *node = get_scan_node(scan, where);
+    bool truthy = eval_condition(scan, node, condition);
+
+    cpp_scan_t *self = cpp_scan_context(scan);
+    if (self->branch_depth == 0)
+    {
+        msg_notify(self->instance->logger, &kEvent_UnexpectedElif, node, "unexpected #elif");
+    }
+    else
+    {
+        self->skipping = !truthy;
+    }
+}
+
+void leave_branch(scan_t *scan, where_t where)
+{
+    cpp_scan_t *self = cpp_scan_context(scan);
+    if (self->branch_depth == 0)
+    {
+        node_t *node = get_scan_node(scan, where);
+        msg_notify(self->instance->logger, &kEvent_UnexpectedEndIf, node, "unexpected #endif");
+    }
+    else
+    {
+        self->branch_depth -= 1;
+    }
+
+    if (self->branch_depth == 0)
+    {
+        self->skipping = false;
+    }
+}
+
+cpp_number_t make_number(scan_t *scan, const char *text, size_t len, int base)
+{
+    CTASSERT(scan != NULL);
+    CTASSERT(text != NULL);
+
+    cpp_number_t number = {
+        .text = arena_strndup(text, len, scan_get_arena(scan)),
+        .base = base,
+    };
+
+    return number;
+}
+
+void cpp_accept_pragma(scan_t *scan, where_t where, vector_t *tokens)
+{
+    CTU_UNUSED(where);
+
+    cpp_scan_t *self = cpp_scan_context(scan);
+    if (vector_len(tokens) == 0)
+        return;
+
+    cpp_ast_t *first = vector_get(tokens, 0);
+    if (cpp_ast_is_not(first, eCppIdent))
+        return;
+
+    const char *name = first->text;
+    if (str_equal(name, "once"))
+    {
+        self->current_file->pragma_once = true;
+    }
+}
+
 
 void cpperror(where_t *where, void *yyscanner, scan_t *scan, const char *msg)
 {
