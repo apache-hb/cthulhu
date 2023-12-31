@@ -49,6 +49,11 @@ static void push_single_arg(typevec_t *vec, const char *arg)
             typevec_push(vec, "\"");
             return;
         }
+        else
+        {
+            // otherwise just paste it in
+            typevec_append(vec, arg, len);
+        }
     }
 
     // if its not a flag then we just need to wrap it in quotes

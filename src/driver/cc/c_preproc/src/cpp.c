@@ -71,7 +71,7 @@ io_t *cpp_process_file(cpp_instance_t *instance, scan_t *source)
     const char *initial_path = scan_path(source);
     cpp_file_t *initial = cpp_file_from_scan(source, scanner);
     map_set(extra.files, initial_path, initial);
-    extra.current_file = initial;
+    cpp_set_current_file(&extra, initial);
 
     ctu_log("start: %s", initial_path);
 

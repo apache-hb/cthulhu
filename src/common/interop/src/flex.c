@@ -25,7 +25,7 @@ void flex_action(where_t *where, const char *text)
 
 int flex_input(scan_t *scan, char *out, int size)
 {
-    CTASSERTF(size <= INT_MAX, "flex-input(scan=%s, size=%d > INT_MAX)", scan_path(scan), size);
+    CTASSERTF(size <= INT_MAX, "flex_input() size is too large (scan=%s, size=%d)", scan_path(scan), size);
     return (int)scan_read(scan, out, size);
 }
 

@@ -1,6 +1,5 @@
 #include "cpp/scan.h"
 
-#include "base/log.h"
 #include "base/panic.h"
 #include "core/macros.h"
 #include "cpp/cpp.h"
@@ -54,14 +53,18 @@ void cpp_scan_consume(scan_t *scan, const char *text, size_t size)
     typevec_append(self->result, text, size);
 }
 
-bool cpp_check_recursion(scan_t *scan, const char *text)
+static bool verify_recursion_depth(yyscan_t yyscanner, const char *text)
 {
+    scan_t *scan = cppget_extra(yyscanner);
     cpp_scan_t *self = cpp_scan_context(scan);
+
+    where_t *where = cppget_lloc(yyscanner);
 
     if (self->stack_index >= self->stack_size)
     {
-        ctu_log("include depth exceeded when trying to process include `%s`", text);
-        msg_notify(self->instance->logger, &kEvent_IncludeDepthExceeded, node_builtin(), "include depth exceeded when trying to process include `%s`", text);
+        node_t *node = cpp_get_node(yyscanner, *where);
+        msg_notify(self->instance->logger, &kEvent_IncludeDepthExceeded, node,
+            "include depth exceeded when trying to include file `%s`", text);
         return false;
     }
 
@@ -85,14 +88,26 @@ static cpp_file_t *cpp_file_pop(cpp_scan_t *self)
     return self->stack[--self->stack_index];
 }
 
-static void set_current_buffer(void *yyscanner, cpp_file_t *file)
+void cpp_set_current_file(cpp_scan_t *self, cpp_file_t *file)
+{
+    CTASSERT(self != NULL);
+    CTASSERT(file != NULL);
+
+    self->current_file = file;
+}
+
+static void set_current_buffer(yyscan_t yyscanner, cpp_file_t *file)
 {
     scan_t *scan = cppget_extra(yyscanner);
     cpp_scan_t *self = cpp_scan_context(scan);
 
-    ctu_log("%s - \"%s\" (depth: %zu)", str_repeat("  ", self->stack_index), scan_path(file->scan), self->stack_index);
+    //ctu_log("%s - \"%s\" (depth: %zu)", str_repeat("  ", self->stack_index), scan_path(file->scan), self->stack_index);
 
-    self->current_file = file;
+    // update the location to point to the current files location data
+    where_t *where = cppget_lloc(yyscanner);
+    *where = file->where;
+
+    cpp_set_current_file(self, file);
     cpp_switch_to_buffer(file->buffer, yyscanner);
 }
 
@@ -127,7 +142,18 @@ cpp_file_t *cpp_file_from_io(arena_t *arena, void *yyscanner, io_t *io)
     return file_new(yyscanner, scan);
 }
 
-static void cleanup_include_directive(void *yyscanner, scan_t *scan, cpp_file_t *file)
+static void reset_file_where(cpp_file_t *file)
+{
+    where_t start = {
+        .first_line = 1,
+        .last_line = 1,
+        .first_column = 0,
+        .last_column = 0,
+    };
+    file->where = start;
+}
+
+static void enter_included_file(yyscan_t yyscanner, scan_t *scan, cpp_file_t *file)
 {
     CTASSERT(scan != NULL);
 
@@ -140,6 +166,7 @@ static void cleanup_include_directive(void *yyscanner, scan_t *scan, cpp_file_t 
     cpp_scan_t *self = cpp_scan_context(scan);
 
     cpp_scan_push(scan, self->current_file);
+    reset_file_where(file);
     set_current_buffer(yyscanner, file);
 }
 
@@ -176,7 +203,7 @@ static cpp_file_t *try_include(void *yyscanner, const char *dir, const char *tex
 void cpp_accept_include(void *yyscanner, const char *text)
 {
     scan_t *scan = cppget_extra(yyscanner);
-    if (!cpp_check_recursion(scan, text))
+    if (!verify_recursion_depth(yyscanner, text))
         return;
 
     arena_t *arena = scan_get_arena(scan);
@@ -189,7 +216,7 @@ void cpp_accept_include(void *yyscanner, const char *text)
     cpp_file_t *inc = try_include(yyscanner, dir, text);
     if (inc && inc != current)
     {
-        cleanup_include_directive(yyscanner, scan, inc);
+        enter_included_file(yyscanner, scan, inc);
         return;
     }
 
@@ -202,12 +229,12 @@ void cpp_accept_include(void *yyscanner, const char *text)
 
         if (state != NULL && state != current)
         {
-            cleanup_include_directive(yyscanner, scan, state);
+            enter_included_file(yyscanner, scan, state);
             return;
         }
     }
 
-    cleanup_include_directive(yyscanner, scan, NULL);
+    enter_included_file(yyscanner, scan, NULL);
 }
 
 void cpp_accept_define_include(void *yyscanner, const char *text)
@@ -229,11 +256,20 @@ bool cpp_leave_file(void *yyscanner)
     return false;
 }
 
-void cpperror(void *state, scan_t *scan, const char *msg)
+node_t *cpp_get_node(void *yyscanner, where_t where)
 {
-    CTU_UNUSED(state);
+    scan_t *scan = cppget_extra(yyscanner);
+    cpp_scan_t *self = cpp_scan_context(scan);
+    cpp_file_t *file = self->current_file;
+
+    return node_new(file->scan, where);
+}
+
+void cpperror(where_t *where, void *yyscanner, scan_t *scan, const char *msg)
+{
+    CTU_UNUSED(yyscanner);
+    CTU_UNUSED(where);
 
     cpp_scan_t *ctx = cpp_scan_context(scan);
-    ctu_log("error: %s", msg);
-    evt_scan_error(ctx->instance->logger, node_builtin(), msg);
+    evt_scan_error(ctx->instance->logger, cpp_get_node(yyscanner, *where), msg);
 }

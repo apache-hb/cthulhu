@@ -516,6 +516,7 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
     size_t error_count = 0;
     size_t bug_count = 0;
 
+    event_t *first = NULL;
     const event_t *prev = NULL;
     size_t repeat = 0;
 
@@ -533,7 +534,7 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
             // merge consecutive events with the same message
             if (repeat > 0)
             {
-                event->message = format("%s (repeated %zu times)", event->message, repeat);
+                first->message = format("%s (repeated %zu times)", first->message, repeat);
             }
 
             switch (diag->severity) {
@@ -553,11 +554,15 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
 
             text.config.override_fatal = set_has_option(config.error_warnings, diag);
 
-            fn(text, event);
+            const event_t *chosen = first != NULL ? first : event;
+            fn(text, chosen);
             prev = event;
+            repeat = 0;
+            first = NULL;
         }
         else
         {
+            if (first == NULL) first = event;
             repeat += 1;
         }
 

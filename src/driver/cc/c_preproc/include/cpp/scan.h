@@ -2,6 +2,8 @@
 
 #include "scan/node.h" // IWYU pragma: export
 
+#define CPPLTYPE where_t
+
 typedef struct cpp_instance_t cpp_instance_t;
 typedef struct typevec_t typevec_t;
 typedef struct scan_t scan_t;
@@ -45,12 +47,10 @@ cpp_scan_t *cpp_scan_context(scan_t *scan);
 
 void cpp_scan_consume(scan_t *scan, const char *text, size_t size);
 
-bool cpp_check_recursion(scan_t *scan, const char *text);
-
 cpp_file_t *cpp_file_from_io(arena_t *arena, void *yyscanner, io_t *io);
 cpp_file_t *cpp_file_from_scan(scan_t *scan, void *yyscanner);
 
-void cpp_enter_file(scan_t *scan, cpp_file_t *file);
+void cpp_set_current_file(cpp_scan_t *extra, cpp_file_t *file);
 
 // get an include, either "" or <>
 void cpp_accept_include(void *yyscanner, const char *text);
@@ -59,3 +59,5 @@ void cpp_accept_include(void *yyscanner, const char *text);
 void cpp_accept_define_include(void *yyscanner, const char *text);
 
 bool cpp_leave_file(void *yyscanner);
+
+node_t *cpp_get_node(void *yyscanner, where_t where);
