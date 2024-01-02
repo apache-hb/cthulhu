@@ -15,7 +15,7 @@
 
 CTU_CALLBACKS(kCallbacks, ctu);
 
-static vector_t *find_mod_path(ctu_t *ast, char *fp)
+static vector_t *find_mod_path(ctu_t *ast, const char *fp)
 {
     if (ast == NULL) { return vector_init(str_basename(fp)); }
 
@@ -43,8 +43,7 @@ static void ctu_postparse(driver_t *driver, scan_t *scan, void *tree)
     ctu_t *ast = tree;
     CTASSERT(ast->kind == eCtuModule);
 
-    char *fp = (char*)scan_path(scan);
-    vector_t *path = find_mod_path(ast, fp);
+    vector_t *path = find_mod_path(ast, scan_path(scan));
 
     lifetime_t *lifetime = handle_get_lifetime(driver);
     context_t *ctx = context_new(driver, vector_tail(path), ast, NULL);

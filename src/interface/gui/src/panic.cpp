@@ -75,11 +75,14 @@ static void trace_callback(void *user, const frame_t *frame)
 
     bt_resolve_symbol(frame, &symbol);
 
+    text_t path = symbol.path;
+    text_t name = symbol.name;
+
     stack_frame_t stack_frame = {
         .address = frame->address,
         .line = symbol.line,
-        .symbol = symbol.name,
-        .file = symbol.file,
+        .symbol = std::string(name.text, name.size),
+        .file = std::string(path.text, path.size),
     };
 
     info->frames.push_back(stack_frame);

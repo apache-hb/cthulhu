@@ -3,6 +3,7 @@
 #include "core/win32.h" // IWYU pragma: keep
 
 #include <dbghelp.h>
+#include <stdlib.h>
 
 void bt_init(void)
 {
@@ -74,14 +75,20 @@ frame_resolve_t bt_resolve_inner(const frame_t *frame, symbol_t *symbol)
     union disp_t disp = { 0 };
     IMAGEHLP_LINE64 line = { 0 };
     HANDLE process = GetCurrentProcess();
+    text_t name = symbol->name;
+    text_t path = symbol->path;
 
     symbol->line = 0;
-    strcpy_s(symbol->name, STACKTRACE_NAME_LENGTH, "<unknown>");
+    strcpy_s(name.text, name.size, "<unknown>");
 
-    char buffer[sizeof(SYMBOL_INFO) + (STACKTRACE_NAME_LENGTH - 1) * sizeof(TCHAR)] = { 0 };
+    // TODO: terrible terrible awful
+    // we should not be allocating memory here, this may be called from a signal handler
+    char *buffer = malloc(sizeof(SYMBOL_INFO) + (name.size - 1) * sizeof(TCHAR));
+    memset(buffer, 0, sizeof(SYMBOL_INFO)); // only zero the symbol info struct
+
     PSYMBOL_INFO info = (PSYMBOL_INFO)buffer;
     info->SizeOfStruct = sizeof(SYMBOL_INFO);
-    info->MaxNameLen = STACKTRACE_NAME_LENGTH;
+    info->MaxNameLen = (ULONG)name.size;
 
     frame_resolve_t resolve = eResolveNothing;
 
@@ -93,19 +100,19 @@ frame_resolve_t bt_resolve_inner(const frame_t *frame, symbol_t *symbol)
         {
             // subtract 1 from the line number because dbghelp is 1-indexed
             symbol->line = line.LineNumber - 1;
-            strcpy_s(symbol->file, STACKTRACE_PATH_LENGTH, line.FileName);
+            strcpy_s(path.text, path.size, line.FileName);
 
             resolve |= eResolveLine | eResolveFile;
         }
 
-        if (UnDecorateSymbolName(info->Name, symbol->name, STACKTRACE_NAME_LENGTH, UNDNAME_COMPLETE))
+        if (UnDecorateSymbolName(info->Name, name.text, (DWORD)name.size, UNDNAME_COMPLETE))
         {
             resolve |= eResolveDemangledName;
         }
         else
         {
             // copy the mangled name if we can't demangle it
-            strcpy_s(symbol->name, STACKTRACE_NAME_LENGTH, info->Name);
+            strcpy_s(name.text, name.size, info->Name);
         }
     }
 

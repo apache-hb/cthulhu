@@ -7,15 +7,15 @@ all drivers must conform to the same dir structure
     * include/
     * meson.build
 
-## example module
+## Example module
 
 ```c
 // src/main.c
 
-/// @brief default language extensions
-static const char *kLangNames[] = { "e", "example", NULL };
+/// default language extensions, must be null terminated
+static const char *const kLangNames[] = { "e", "example", NULL };
 
-/// @brief exported driver module
+/// exported driver module
 const language_t kExampleModule = {
     /// the internal name of the driver
     .id = "example",
@@ -61,7 +61,7 @@ const language_t kExampleModule = {
 };
 ```
 
-## build file requirements
+## Build file requirements
 
 to be detected by interfaces each build file must add itself to `langs`
 
@@ -69,7 +69,7 @@ to be detected by interfaces each build file must add itself to `langs`
 # meson.build
 src = [ 'src/main.c' ]
 
-ex = library('example', src,
+libexample = library('example', src,
     dependencies : [ runtime, interop, tree ],
     c_args : user_args,
     include_directories : [ 'src' ]
@@ -77,7 +77,7 @@ ex = library('example', src,
 
 langs += {
     'example': {
-        'dep': declare_dependency(link_with : ex), # dependency object
+        'dep': declare_dependency(link_with : libexample), # dependency object
         'mod': 'kExampleModule', # module definition exported from the object
 
         # an optional fuzz corpus to opt in to fuzzing tools

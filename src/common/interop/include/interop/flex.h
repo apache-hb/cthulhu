@@ -44,12 +44,14 @@ void flex_update(where_t *where, where_t *offsets, int steps);
 #endif
 
 /// read input for flex and bison
-#define YY_INPUT(buffer, result, size)          \
-    result = flex_input(yyextra, buffer, size); \
-    if ((result) <= 0)                          \
-    {                                           \
-        (result) = YY_NULL;                     \
-    }
+#ifndef YY_INPUT
+#   define YY_INPUT(buffer, result, size)          \
+        result = flex_input(yyextra, buffer, size); \
+        if ((result) <= 0)                          \
+        {                                           \
+            (result) = YY_NULL;                     \
+        }
+#endif
 
 /// default source location update function
 #ifndef YYLLOC_DEFAULT

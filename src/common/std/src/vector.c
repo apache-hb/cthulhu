@@ -125,10 +125,8 @@ void vector_push(vector_t **vector, void *value)
 {
     CHECK_VECTOR(vector);
 
-    vector_t *vec = *vector;
-
-    vector_ensure(vector, vec->used + 1);
-    vec->data[vec->used++] = value;
+    vector_ensure(vector, VEC->used + 1);
+    VEC->data[VEC->used++] = value;
 }
 
 USE_DECL

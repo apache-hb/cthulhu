@@ -2,6 +2,7 @@
 
 #include "core/compiler.h"
 #include "core/analyze.h"
+#include "core/text.h"
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -15,8 +16,8 @@ BEGIN_API
 /// @ingroup Common
 /// @{
 
-#define STACKTRACE_NAME_LENGTH 256
-#define STACKTRACE_PATH_LENGTH 1024
+/// @brief an address of a symbol
+typedef uint_least64_t bt_address_t;
 
 /// @brief a symbol
 typedef struct symbol_t
@@ -24,35 +25,38 @@ typedef struct symbol_t
     /// @brief the line number
     size_t line;
 
-    /// @brief the symbol name
-    char name[STACKTRACE_NAME_LENGTH];
+    /// @brief a buffer to hold the name
+    /// when neither @ref eResolveName nor @ref eResolveDemangledName is set this is set to 0
+    text_t name;
 
-    /// @brief the file path
-    char file[STACKTRACE_PATH_LENGTH];
+    /// @brief a buffer to hold the path to the file
+    /// when @ref eResolveFile is not set the first character is set to 0
+    text_t path;
 } symbol_t;
 
 /// @brief a stacktrace frame
 typedef struct frame_t
 {
     /// @brief the frame address
-    uint_least64_t address;
+    bt_address_t address;
 } frame_t;
 
+/// @brief how much of a frame was reconstructed
 typedef enum frame_resolve_t
 {
     /// @brief nothing was resolved
     eResolveNothing         = (0),
 
     /// @brief the line number was found
-    /// @note this does not imply that the file was found
+    /// @note this does not imply @ref eResolveFile
     eResolveLine            = (1 << 0),
 
     /// @brief the symbol name was found
-    /// @note this does not imply it was demangled
+    /// @note this does not imply @ref eResolveDemangledName
     eResolveName            = (1 << 1),
 
     /// @brief the symbol name was demangled
-    eResolveDemangledName   = (1 << 2),
+    eResolveDemangledName   = (1 << 2) | eResolveName,
 
     /// @brief the file path was found
     eResolveFile            = (1 << 3),
@@ -60,6 +64,7 @@ typedef enum frame_resolve_t
     eResolveCount
 } frame_resolve_t;
 
+/// @brief user callback for @ref bt_read
 typedef void (*bt_frame_t)(void *user, const frame_t *frame);
 
 /// @brief initialize the stacktrace backend

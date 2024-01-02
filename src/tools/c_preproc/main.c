@@ -3,18 +3,19 @@
 #include "config/config.h"
 #include "core/macros.h"
 #include "defaults/defaults.h"
-#include "format/colour.h"
+#include "std/colour.h"
 #include "io/console.h"
 #include "io/io.h"
 #include "memory/memory.h"
 #include "notify/text.h"
+#include "std/map.h"
 #include "std/vector.h"
 #include "notify/notify.h"
 #include "scan/scan.h"
 
 #include "cpp/cpp.h"
 
-// .\build\src\tools\c_preproc\preproc_tool.exe "C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um\Windows.h" /I:"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared"
+// .\build\src\tools\c_preproc\preproc_tool.exe "C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um\Windows.h" /I:"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" "C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um"
 
 static const version_info_t kVersionInfo = {
     .license = "GPLv3",
@@ -36,6 +37,16 @@ static const cfg_info_t kIncludeDirInfo = {
     .short_args = kIncludeDirShortArgs,
 };
 
+static const char *const kMaxIncludeDepthShortArgs[] = {"ID", NULL};
+static const char *const kMaxIncludeDepthLongArgs[] = {"include-depth", NULL};
+
+static const cfg_info_t kMaxIncludeDepthInfo = {
+    .name = "max_include_depth",
+    .brief = "Maximum include depth",
+    .short_args = kMaxIncludeDepthShortArgs,
+    .long_args = kMaxIncludeDepthLongArgs,
+};
+
 static const char *const kOutFileShortArgs[] = {"o", NULL};
 static const char *const kOutFileLongArgs[] = {"out", NULL};
 
@@ -50,7 +61,8 @@ typedef struct tool_t
 {
     config_t *config;
 
-    cfg_field_t *include_dirs;
+    cfg_field_t *include_directories;
+    cfg_field_t *max_include_depth;
     cfg_field_t *out_file;
 
     default_options_t options;
@@ -65,18 +77,39 @@ static tool_t make_tool(arena_t *arena)
     cfg_string_t out_file_init = { .initial = "out.c" };
     cfg_field_t *out_file = config_string(root, &kOutFileInfo, out_file_init);
 
+    cfg_int_t max_include_depth_init = { .initial = 32, .min = 0 };
+    cfg_field_t *max_include_depth = config_int(root, &kMaxIncludeDepthInfo, max_include_depth_init);
+
     default_options_t options = get_default_options(root);
 
     tool_t tool = {
         .config = root,
 
-        .include_dirs = include_dirs,
+        .include_directories = include_dirs,
+        .max_include_depth = max_include_depth,
         .out_file = out_file,
 
         .options = options,
     };
 
     return tool;
+}
+
+static void get_valid_include_directories(vector_t **dst, vector_t *dirs, io_t *io)
+{
+    size_t len = vector_len(dirs);
+    for (size_t i = 0; i < len; i++)
+    {
+        const char *dir = vector_get(dirs, i);
+        if (os_dir_exists(dir))
+        {
+            vector_push(dst, (char*)dir);
+        }
+        else
+        {
+            io_printf(io, "Include directory `%s` does not exist\n", dir);
+        }
+    }
 }
 
 int main(int argc, const char **argv)
@@ -117,25 +150,21 @@ int main(int argc, const char **argv)
     }
 
     logger_t *logger = logger_new(arena);
+    vector_t *include_directories = cfg_vector_value(tool.include_directories);
 
-    cpp_instance_t instance = cpp_instance_new(arena, logger);
+    size_t max_include_depth = cfg_int_value(tool.max_include_depth);
 
-    instance.include_depth = 32;
+    cpp_config_t cpp_config = {
+        .arena = arena,
+        .logger = logger,
 
-    // TODO: check if include directories exist
+        .include_directories = vector_new_arena(16, arena),
+        .max_include_depth = max_include_depth,
 
-    vector_t *include_dirs = cfg_vector_value(tool.include_dirs);
-    instance.include_directories = include_dirs;
+        .defines = map_optimal_arena(64, arena),
+    };
 
-    size_t incdir_len = vector_len(include_dirs);
-    for (size_t i = 0; i < incdir_len; i++)
-    {
-        const char *incdir = vector_get(include_dirs, i);
-        if (!os_dir_exists(incdir))
-        {
-            io_printf(con, "Include directory `%s` does not exist\n", incdir);
-        }
-    }
+    get_valid_include_directories(&cpp_config.include_directories, include_directories, con);
 
     text_config_t text_config = {
         .config = {
@@ -179,7 +208,7 @@ int main(int argc, const char **argv)
 
         scan_t *scan = scan_io("C", io, arena);
 
-        io_t *result = cpp_process_file(&instance, scan);
+        io_t *result = cpp_preprocess(cpp_config, scan);
         (void)result;
 
         typevec_t *errors = logger_get_events(logger);

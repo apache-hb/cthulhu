@@ -4,6 +4,8 @@
 
 #include "base/panic.h"
 
+#include "stacktrace/stacktrace.h"
+
 #include <string>
 #include <vector>
 
@@ -15,7 +17,7 @@ namespace ed
 
     struct stack_frame_t
     {
-        uintptr_t address;
+        bt_address_t address;
         size_t line;
         std::string symbol;
         std::string file;

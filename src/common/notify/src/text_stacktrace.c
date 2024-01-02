@@ -410,8 +410,8 @@ void bt_report_add(bt_report_t *report, const frame_t *frame)
     bt_entry_t entry = {
         .info = info,
 
-        .file = arena_strdup(symbol.file, report->arena),
-        .symbol = arena_strdup(symbol.name, report->arena),
+        .file = arena_strndup(symbol.path.text, symbol.path.size, report->arena),
+        .symbol = arena_strndup(symbol.name.text, symbol.name.size, report->arena),
         .line = symbol.line,
         .address = (void*)frame->address,
     };
