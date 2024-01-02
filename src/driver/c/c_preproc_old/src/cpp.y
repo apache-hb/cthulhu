@@ -1,5 +1,6 @@
 %define parse.error verbose
 %define api.pure full
+%define api.push-pull push
 %lex-param { void *scan }
 %parse-param { void *scan } { scan_t *x }
 %locations
@@ -146,6 +147,7 @@ any: TOK_DIRECTIVE directive
     | TOK_COMMA { cpp_scan_consume(x, ",", 1, false); }
     | TOK_WHITESPACE { cpp_scan_consume(x, $1.text, $1.size, false); }
     | TOK_TEXT { cpp_expand_ident(x, @$, $1.text, $1.size); }
+    | TOK_NUMBER { text_t text = $1.text; cpp_scan_consume(x, text.text, text.size, false); }
     | error
     ;
 

@@ -1,9 +1,23 @@
 #pragma once
 
+#include <gmp.h>
+
 #include "cpp/cpp.h"
 #include "scan/node.h" // IWYU pragma: export
 
+#define YY_INPUT(buffer, result, size)         \
+    result = cpp_input(yyextra, buffer, size); \
+    if ((result) <= 0)                         \
+    {                                          \
+        (result) = YY_NULL;                    \
+    }
+
+// include this after defining YY_INPUT so we override it
+#include "interop/flex.h" // IWYU pragma: keep
+
+typedef struct synthetic_token_t synthetic_token_t;
 typedef struct typevec_t typevec_t;
+typedef struct fifo_t fifo_t;
 typedef struct set_t set_t;
 
 #define CPPLTYPE where_t
@@ -18,25 +32,27 @@ typedef struct cpp_file_t
 typedef struct cpp_define_t
 {
     const node_t *node;
-    text_t body;
+    vector_t *body;
 } cpp_define_t;
 
-typedef struct string_buffer_t
+typedef struct cpp_number_t
 {
-    char *buffer;
-    size_t size;
-    size_t capacity;
-} string_buffer_t;
+    text_t text;
+    mpz_t value;
+} cpp_number_t;
 
 typedef struct cpp_extra_t
 {
     cpp_config_t config;
 
     void *yyscanner;
+    void *yypstate;
 
     typevec_t *result;
 
     typevec_t *comment;
+
+    fifo_t *tokens;
 
     // how many branches deep we are
     size_t branch_depth;
@@ -44,6 +60,8 @@ typedef struct cpp_extra_t
     // the index of the branch that disabled output
     // SIZE_MAX if output is enabled
     size_t branch_disable_index;
+
+    bool inside_directive;
 
     map_t *defines;
     map_t *include_cache;
@@ -72,18 +90,27 @@ int cpp_parse(cpp_extra_t *extra);
 void cpp_push_output_single(cpp_extra_t *extra, char c);
 void cpp_push_output(cpp_extra_t *extra, text_t text);
 
+void cpp_push_ident(cpp_extra_t *extra, text_t text);
+
 void cpp_push_comment(cpp_extra_t *extra, const char *text, size_t size);
 text_t cpp_reset_comment(cpp_extra_t *extra);
 
 text_t cpp_text_new(cpp_extra_t *extra, const char *text, size_t size);
 
+void cpp_enter_directive(cpp_extra_t *extra);
+void cpp_leave_directive(cpp_extra_t *extra);
+
+synthetic_token_t *cpp_token_new(cpp_extra_t *extra, int token, void *value, where_t where);
+
+cpp_number_t *cpp_number_new(cpp_extra_t *extra, const char *text, size_t len, int base);
+
 ///
 /// defines
 ///
 
-cpp_define_t *cpp_define_new(cpp_extra_t *extra, where_t where, text_t body);
+cpp_define_t *cpp_define_new(cpp_extra_t *extra, where_t where, vector_t *body);
 
-void cpp_add_define(cpp_extra_t *extra, where_t where, text_t name);
+void cpp_add_define(cpp_extra_t *extra, where_t where, text_t name, vector_t *body);
 void cpp_remove_define(cpp_extra_t *extra, where_t where, text_t name);
 
 void cpp_ifdef(cpp_extra_t *extra, where_t where, text_t name);
@@ -122,13 +149,3 @@ void cpp_include_define(cpp_extra_t *extra, const char *name, size_t length);
 bool cpp_leave_file(cpp_extra_t *extra);
 
 int cpp_input(cpp_extra_t *extra, char *out, int size);
-
-#define YY_INPUT(buffer, result, size)         \
-    result = cpp_input(yyextra, buffer, size); \
-    if ((result) <= 0)                         \
-    {                                          \
-        (result) = YY_NULL;                    \
-    }
-
-// include this after defining YY_INPUT so we override it
-#include "interop/flex.h" // IWYU pragma: export

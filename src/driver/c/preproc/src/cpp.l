@@ -22,6 +22,7 @@
 %x DIRECTIVE
 %x BODY
 %x INCLUDE
+%x MESSAGE
 
 WS [ \t\r\v\f]
 NL (\n|\r\n)
@@ -30,16 +31,59 @@ LC \\{NL}
 %%
 
 "\""[^\n]*"\"" {
-    /* TODO: pass to bison */
     yylval->text = cpp_text_new(yyextra, yytext, yyleng);
     return TOK_STRING;
 }
 
 \'\[^\n]*\' {
-    /* TODO: pass to bison */
     yylval->text = cpp_text_new(yyextra, yytext, yyleng);
     return TOK_STRING;
 }
+
+<INITIAL,BODY>[0-9]+ {
+    yylval->number = cpp_number_new(yyextra, yytext, yyleng, 10);
+    return TOK_NUMBER;
+}
+
+<INITIAL,BODY>0[xX][0-9a-fA-F]+ {
+    yylval->number = cpp_number_new(yyextra, yytext + 2, yyleng - 2, 16);
+    return TOK_NUMBER;
+}
+
+<INITIAL,BODY>0[bB][01]+ {
+    yylval->number = cpp_number_new(yyextra, yytext + 2, yyleng - 2, 2);
+    return TOK_NUMBER;
+}
+
+<INITIAL,BODY>"(" { return TOK_LPAREN; }
+<INITIAL,BODY>")" { return TOK_RPAREN; }
+
+<INITIAL,BODY>"&&" { return TOK_AND; }
+<INITIAL,BODY>"||" { return TOK_OR; }
+<INITIAL,BODY>"==" { return TOK_EQ; }
+<INITIAL,BODY>"!=" { return TOK_NEQ; }
+
+<INITIAL,BODY>"<=" { return TOK_LTE; }
+<INITIAL,BODY>">=" { return TOK_GTE; }
+<INITIAL,BODY>"<" { return TOK_LT; }
+<INITIAL,BODY>">" { return TOK_GT; }
+
+<INITIAL,BODY>"+" { return TOK_PLUS; }
+<INITIAL,BODY>"-" { return TOK_MINUS; }
+<INITIAL,BODY>"*" { return TOK_MUL; }
+<INITIAL,BODY>"/" { return TOK_DIV; }
+<INITIAL,BODY>"%" { return TOK_MOD; }
+<INITIAL,BODY>"<<" { return TOK_SHL; }
+<INITIAL,BODY>">>" { return TOK_SHR; }
+<INITIAL,BODY>"&" { return TOK_BITAND; }
+<INITIAL,BODY>"|" { return TOK_BITOR; }
+<INITIAL,BODY>"^" { return TOK_XOR; }
+<INITIAL,BODY>"~" { return TOK_BITNOT; }
+<INITIAL,BODY>"!" { return TOK_NOT; }
+
+<INITIAL,BODY>"?" { return TOK_QUESTION; }
+<INITIAL,BODY>":" { return TOK_COLON; }
+<INITIAL,BODY>"," { return TOK_COMMA; }
 
 <INITIAL>"#" { BEGIN(DIRECTIVE); return TOK_BEGIN_DIRECTIVE; }
 <DIRECTIVE>"include" { BEGIN(INCLUDE); return TOK_INCLUDE; }
@@ -52,11 +96,13 @@ LC \\{NL}
 <DIRECTIVE>"else" { BEGIN(BODY); return TOK_ELSE; }
 <DIRECTIVE>"endif" { BEGIN(BODY); return TOK_ENDIF; }
 <DIRECTIVE>"line" { BEGIN(BODY); return TOK_LINE; }
-<DIRECTIVE>"error" { BEGIN(BODY); return TOK_ERROR; }
-<DIRECTIVE>"pragma" { BEGIN(BODY); return TOK_PRAGMA; }
-<DIRECTIVE>"warning" { BEGIN(BODY); return TOK_WARNING; }
+<DIRECTIVE>"error" { BEGIN(MESSAGE); return TOK_ERROR; }
+<DIRECTIVE>"pragma" { BEGIN(MESSAGE); return TOK_PRAGMA; }
+<DIRECTIVE>"warning" { BEGIN(MESSAGE); return TOK_WARNING; }
 
-<INITIAL,DIRECTIVE,BODY>[a-zA-Z_][a-zA-Z0-9_]* {
+<BODY>"defined" { return TOK_DEFINED; }
+
+<INITIAL,DIRECTIVE,BODY,MESSAGE>[a-zA-Z_][a-zA-Z0-9_]* {
     yylval->text = cpp_text_new(yyextra, yytext, yyleng);
     return TOK_IDENT;
 }
@@ -80,7 +126,7 @@ LC \\{NL}
     return TOK_END_INCLUDE;
 }
 
-<INITIAL,DIRECTIVE,INCLUDE,BODY>"//" {
+<INITIAL,DIRECTIVE,INCLUDE,BODY,MESSAGE>"//" {
     cpp_push_comment(yyextra, "//", 2);
     BEGIN(LINE_COMMENT);
 }
@@ -93,7 +139,7 @@ LC \\{NL}
     cpp_push_comment(yyextra, yytext, yyleng);
 }
 
-<INITIAL,DIRECTIVE,INCLUDE,BODY>"/*" {
+<INITIAL,DIRECTIVE,INCLUDE,BODY,MESSAGE>"/*" {
     cpp_push_comment(yyextra, "/*", 2);
     // use push state here because block comments can appear in directives
     // and not end the directive
@@ -111,12 +157,11 @@ LC \\{NL}
     cpp_push_comment(yyextra, yytext, yyleng);
 }
 
-<LINE_COMMENT,DIRECTIVE,BODY>({LC}|{WS})+ {
-    yylval->text = cpp_text_new(yyextra, yytext, yyleng);
-    return TOK_WHITESPACE;
+<DIRECTIVE,BODY,MESSAGE>({LC}|{WS})+ {
+   // yylval->text = cpp_text_new(yyextra, yytext, yyleng);
 }
 
-<DIRECTIVE,BODY>{NL} {
+<DIRECTIVE,BODY,MESSAGE>{NL} {
     BEGIN(INITIAL);
     return TOK_END_DIRECTIVE;
 }

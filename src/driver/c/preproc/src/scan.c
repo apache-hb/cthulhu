@@ -2,6 +2,7 @@
 #include "core/macros.h"
 #include "cthulhu/events/events.h"
 #include "io/io.h"
+#include "std/fifo.h"
 #include "std/map.h"
 #include "std/set.h"
 #include "std/str.h"
@@ -11,10 +12,19 @@
 #include "cpp_flex.h" // IWYU pragma: keep
 #include "std/vector.h"
 
+typedef struct synthetic_token_t
+{
+    int token;
+    YYSTYPE value;
+    YYLTYPE where;
+} synthetic_token_t;
+
 int cpp_extra_init(cpp_config_t config, cpp_extra_t *extra)
 {
     typevec_t *result = typevec_new(sizeof(char), 0x1000, config.arena);
     typevec_t *comment = typevec_new(sizeof(char), 256, config.arena);
+
+    fifo_t *tokens = fifo_new(sizeof(synthetic_token_t), 256, config.arena);
 
     map_t *defines = map_optimal_arena(1024, config.arena);
     map_t *include_cache = map_optimal_arena(1024, config.arena);
@@ -28,8 +38,11 @@ int cpp_extra_init(cpp_config_t config, cpp_extra_t *extra)
     cpp_extra_t builder = {
         .config = config,
 
+        .yypstate = cpppstate_new(),
+
         .result = result,
         .comment = comment,
+        .tokens = tokens,
 
         .branch_disable_index = SIZE_MAX,
 
@@ -50,23 +63,54 @@ int cpp_extra_init(cpp_config_t config, cpp_extra_t *extra)
     return 0;
 }
 
-int cpp_parse(cpp_extra_t *extra)
+static int get_next_token(cpp_extra_t *extra, CPPSTYPE *value, where_t *where)
 {
-    return cppparse(extra->yyscanner, extra);
+    if (fifo_is_empty(extra->tokens))
+    {
+        return cpplex(value, where, extra->yyscanner);
+    }
+
+    synthetic_token_t token = { 0 };
+    fifo_remove(extra->tokens, &token);
+
+    *value = token.value;
+    *where = token.where;
+
+    return token.token;
 }
 
-static bool output_enabled(cpp_extra_t *extra)
+int cpp_parse(cpp_extra_t *extra)
+{
+    int status = 0;
+    CPPSTYPE value = { 0 };
+    do {
+        cpp_file_t *file = extra->current_file;
+        int tok = get_next_token(extra, &value, &file->where);
+        status = cpppush_parse(extra->yypstate, tok, &value, &file->where, extra->yyscanner, extra);
+    } while (status == YYPUSH_MORE);
+
+    return status;
+}
+
+static bool output_disabled(cpp_extra_t *extra)
 {
     CTASSERT(extra != NULL);
 
-    return extra->branch_disable_index == SIZE_MAX;
+    return extra->branch_disable_index != SIZE_MAX;
+}
+
+static bool inside_directive(cpp_extra_t *extra)
+{
+    CTASSERT(extra != NULL);
+
+    return extra->inside_directive;
 }
 
 static void push_inner(cpp_extra_t *extra, text_t text)
 {
     CTASSERT(extra != NULL);
 
-    if (!output_enabled(extra))
+    if (output_disabled(extra) || inside_directive(extra))
         return;
 
     typevec_append(extra->result, text.text, text.size);
@@ -84,10 +128,50 @@ void cpp_push_output(cpp_extra_t *extra, text_t text)
     push_inner(extra, text);
 }
 
+void cpp_push_token(cpp_extra_t *extra, int token, void *value, where_t where)
+{
+    synthetic_token_t synthetic = {
+        .token = token,
+        .where = where,
+    };
+
+    memcpy(&synthetic.value, value, sizeof(YYSTYPE));
+
+    fifo_insert(extra->tokens, &synthetic);
+}
+
+void cpp_push_ident(cpp_extra_t *extra, text_t text)
+{
+    CTASSERT(extra != NULL);
+    CTASSERT(text.text != NULL);
+
+    cpp_config_t config = extra->config;
+
+    char *data = arena_strndup(text.text, text.size, config.arena);
+    cpp_define_t *define = map_get(extra->defines, data);
+
+    if (define == NULL)
+    {
+        push_inner(extra, text);
+        return;
+    }
+
+    size_t len = vector_len(define->body);
+    for (size_t i = 0; i < len; i++)
+    {
+        synthetic_token_t *token = vector_get(define->body, i);
+        cpp_push_token(extra, token->token, &token->value, token->where);
+    }
+}
+
 void cpp_push_comment(cpp_extra_t *extra, const char *text, size_t size)
 {
     CTASSERT(extra != NULL);
     CTASSERT(text != NULL);
+
+    // TODO: do we want to emit comments inside falsey branches?
+    if (inside_directive(extra))
+        return;
 
     typevec_append(extra->comment, text, size);
 }
@@ -126,10 +210,57 @@ text_t cpp_text_new(cpp_extra_t *extra, const char *text, size_t size)
     return result;
 }
 
-cpp_define_t *cpp_define_new(cpp_extra_t *extra, where_t where, text_t body)
+void cpp_enter_directive(cpp_extra_t *extra)
 {
     CTASSERT(extra != NULL);
-    CTASSERT(body.text != NULL);
+    CTASSERT(!extra->inside_directive);
+
+    extra->inside_directive = true;
+}
+
+void cpp_leave_directive(cpp_extra_t *extra)
+{
+    CTASSERT(extra != NULL);
+    CTASSERT(extra->inside_directive);
+
+    extra->inside_directive = false;
+}
+
+synthetic_token_t *cpp_token_new(cpp_extra_t *extra, int token, void *value, where_t where)
+{
+    CTASSERT(extra != NULL);
+
+    cpp_config_t config = extra->config;
+
+    synthetic_token_t synthetic = {
+        .token = token,
+        .where = where,
+    };
+
+    memcpy(&synthetic.value, value, sizeof(YYSTYPE));
+
+    return arena_memdup(&synthetic, sizeof(synthetic_token_t), config.arena);
+}
+
+cpp_number_t *cpp_number_new(cpp_extra_t *extra, const char *text, size_t len, int base)
+{
+    CTASSERT(extra != NULL);
+    CTASSERT(text != NULL);
+
+    cpp_config_t config = extra->config;
+
+    char *data = arena_strndup(text, len, config.arena);
+    cpp_number_t *number = ARENA_MALLOC(config.arena, sizeof(cpp_number_t), "cpp_number_t", NULL);
+    number->text = cpp_text_new(extra, data, len);
+    mpz_init_set_str(number->value, data, base);
+
+    return number;
+}
+
+cpp_define_t *cpp_define_new(cpp_extra_t *extra, where_t where, vector_t *body)
+{
+    CTASSERT(extra != NULL);
+    CTASSERT(body != NULL);
 
     cpp_config_t config = extra->config;
     cpp_file_t *file = extra->current_file;
@@ -144,15 +275,14 @@ cpp_define_t *cpp_define_new(cpp_extra_t *extra, where_t where, text_t body)
     return arena_memdup(&define, sizeof(cpp_define_t), config.arena);
 }
 
-void cpp_add_define(cpp_extra_t *extra, where_t where, text_t name)
+void cpp_add_define(cpp_extra_t *extra, where_t where, text_t name, vector_t *body)
 {
     CTASSERT(extra != NULL);
     CTASSERT(name.text != NULL);
 
     cpp_config_t config = extra->config;
 
-    text_t text = cpp_text_new(extra, "", 0);
-    cpp_define_t *define = cpp_define_new(extra, where, text);
+    cpp_define_t *define = cpp_define_new(extra, where, body);
 
     char *data = arena_strndup(name.text, name.size, config.arena);
     map_set(extra->defines, data, define);
@@ -186,7 +316,8 @@ static void enter_branch(cpp_extra_t *extra, bool disable)
 static void leave_branch(cpp_extra_t *extra)
 {
     CTASSERT(extra != NULL);
-    CTASSERT(extra->branch_depth > 0);
+    if (extra->branch_depth == 0)
+        return;
 
     extra->branch_depth -= 1;
 
@@ -255,7 +386,7 @@ void cpp_else(cpp_extra_t *extra, where_t where)
 
     CTASSERT(extra != NULL);
 
-    bool enabled = output_enabled(extra);
+    bool enabled = output_disabled(extra);
 
     leave_branch(extra);
     enter_branch(extra, !enabled);
@@ -308,7 +439,7 @@ void update_flex_location(cpp_extra_t *extra, where_t where)
 {
     CTASSERT(extra != NULL);
 
-    where_t *loc = cppget_lloc(extra->yyscanner);
+    CPPLTYPE *loc = cppget_lloc(extra->yyscanner);
     *loc = where;
 }
 
@@ -395,6 +526,15 @@ static void setup_new_file(cpp_extra_t *extra, cpp_file_t *file)
     CTASSERT(file != NULL);
 
     // we have this for once we support pragma once
+
+    if (extra->include_depth >= extra->max_include_depth)
+    {
+        ctu_log("max include depth reached");
+        return;
+    }
+
+    if (output_disabled(extra))
+        return;
 
     cpp_push_file(extra, file);
 }
