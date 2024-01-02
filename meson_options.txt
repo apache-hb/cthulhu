@@ -1,7 +1,18 @@
 option('languages', type : 'array',
     description : 'select which languages to compile',
-    choices : [ 'ctu', 'pl0', 'oberon', 'jvm', 'cc', 'example' ],
-    value : [ 'ctu', 'pl0', 'oberon', 'cc', 'example' ]
+    choices : [ 'ctu', 'pl0', 'oberon', 'jvm', 'example' ],
+    value : [ 'ctu', 'pl0', 'oberon', 'example' ]
+)
+
+# TODO: move away from languages to options per language
+option('lang_cc', type : 'feature',
+    description : 'build the c compiler frontend, implies lang_cpp',
+    value : 'auto'
+)
+
+option('lang_cpp', type : 'feature',
+    description : 'build the c preprocessor',
+    value : 'auto'
 )
 
 option('interfaces', type : 'array',
@@ -83,6 +94,6 @@ option('tool_display', type : 'feature',
 )
 
 option('tool_cpreproc', type : 'feature',
-    description : 'build c preprocessor',
+    description : 'build c preprocessor test tool, requires lang_cpp',
     value : 'auto'
 )

@@ -5,6 +5,8 @@ foreach lang : get_option('languages')
     subdir('driver' / lang)
 endforeach
 
+subdir('driver/c')
+
 subdir('support')
 
 foreach interface : get_option('interfaces')

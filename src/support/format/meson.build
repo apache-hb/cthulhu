@@ -1,5 +1,4 @@
 src = [
-    'src/colour.c',
     'src/config.c',
     'src/version.c'
 ]

@@ -149,7 +149,7 @@ char *str_directory(arena_t *arena, const char *path)
 }
 
 USE_DECL
-char *str_filename_noext(const char *path)
+char *str_basename(const char *path)
 {
     CTASSERT(path != NULL);
 

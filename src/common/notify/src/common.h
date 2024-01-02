@@ -4,7 +4,7 @@
 #include "notify/text.h"
 #include "notify/notify.h"
 
-#include "format/colour.h"
+#include "std/colour.h"
 
 #include <stddef.h>
 

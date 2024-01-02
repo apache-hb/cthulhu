@@ -1,5 +1,5 @@
 #include "config/config.h"
-#include "format/colour.h"
+#include "std/colour.h"
 #include "cmd.h"
 
 #include "cthulhu/events/events.h"

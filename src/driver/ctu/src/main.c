@@ -17,11 +17,11 @@ CTU_CALLBACKS(kCallbacks, ctu);
 
 static vector_t *find_mod_path(ctu_t *ast, char *fp)
 {
-    if (ast == NULL) { return vector_init(str_filename_noext(fp)); }
+    if (ast == NULL) { return vector_init(str_basename(fp)); }
 
     return vector_len(ast->modspec) > 0
         ? ast->modspec
-        : vector_init(str_filename_noext(fp));
+        : vector_init(str_basename(fp));
 }
 
 static void *ctu_preparse(driver_t *driver, scan_t *scan)

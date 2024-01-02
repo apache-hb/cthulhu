@@ -169,6 +169,7 @@ macro_arg_item: TOK_STRING { $$ = $1.text; }
     | TOK_TEXT { $$ = $1.text; }
     | TOK_NUMBER { $$ = $1.text; }
     | TOK_IDENT { $$ = $1.text; }
+    | TOK_PP_IDENT { $$ = $1; }
     | TOK_WHITESPACE { $$ = $1.text; }
     | TOK_LPAREN macro_arg_inner TOK_RPAREN { $$ = format("(%s)", $2); }
     ;

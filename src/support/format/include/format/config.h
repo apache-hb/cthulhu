@@ -1,6 +1,6 @@
 #pragma once
 
-#include "format/colour.h"
+#include "std/colour.h"
 
 #include <stdbool.h>
 

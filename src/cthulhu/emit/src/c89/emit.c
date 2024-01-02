@@ -808,7 +808,7 @@ c89_emit_result_t emit_c89(const c89_emit_options_t *options)
 
         .fs = opts.fs,
         .deps = opts.deps,
-        .sources = vector_new(32)
+        .sources = vector_new_arena(32, opts.arena)
     };
 
     for (size_t i = 0; i < len; i++)

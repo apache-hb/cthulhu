@@ -252,7 +252,7 @@ bool str_equal(IN_STRING const char *lhs, IN_STRING const char *rhs);
 ///
 /// @return the filename extracted from @p path
 NODISCARD
-char *str_filename_noext(IN_STRING const char *path);
+char *str_basename(IN_STRING const char *path);
 
 /// @brief get the filename from a path
 ///

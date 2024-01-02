@@ -106,14 +106,14 @@ static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const tree_t *tree, ssa_s
 
     symbol->locals = NULL;
     symbol->params = NULL;
-    symbol->consts = vector_new(4);
+    symbol->consts = vector_new_arena(4, ssa->arena);
 
     symbol->name = name;
     symbol->type = type;
     symbol->value = NULL;
     symbol->entry = NULL;
 
-    symbol->blocks = vector_new(4);
+    symbol->blocks = vector_new_arena(4, ssa->arena);
 
     return symbol;
 }
@@ -182,9 +182,9 @@ static ssa_module_t *module_create(ssa_compile_t *ssa, const char *name)
     mod->name = name;
     mod->path = path;
 
-    mod->globals = vector_new(32);
-    mod->functions = vector_new(32);
-    mod->types = vector_new(32);
+    mod->globals    = vector_new_arena(32, ssa->arena);
+    mod->functions  = vector_new_arena(32, ssa->arena);
+    mod->types      = vector_new_arena(32, ssa->arena);
 
     return mod;
 }
@@ -825,10 +825,12 @@ ssa_result_t ssa_compile(map_t *mods)
 {
     ssa_map_sizes_t sizes = predict_maps(mods);
 
-    ssa_compile_t ssa = {
-        .arena = get_global_arena(),
+    arena_t *arena = get_global_arena();
 
-        .modules = vector_new(sizes.modules),
+    ssa_compile_t ssa = {
+        .arena = arena,
+
+        .modules = vector_new_arena(sizes.modules, arena),
         .symbol_deps = map_optimal(sizes.deps),
 
         .globals = map_optimal(sizes.globals),

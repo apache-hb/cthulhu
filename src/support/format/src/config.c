@@ -3,7 +3,7 @@
 
 #include "io/io.h"
 
-#include "format/colour.h"
+#include "std/colour.h"
 #include "base/panic.h"
 #include "core/macros.h"
 #include "io/io.h"

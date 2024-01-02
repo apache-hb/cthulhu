@@ -53,9 +53,12 @@ tool_stacktrace = get_option('tool_stacktrace').disable_auto_if(is_release or me
 tool_notify = get_option('tool_notify').disable_auto_if(is_release or meson.is_subproject())
 tool_display = get_option('tool_display').disable_auto_if(is_release or meson.is_subproject())
 
+opt_lang_cc = get_option('lang_cc')
+opt_lang_cpp = get_option('lang_cpp').require(opt_lang_cc.allowed())
+
 # tools like this are user facing, so dont disable them in release mode
 tool_diagnostic = get_option('tool_diagnostic').disable_auto_if(meson.is_subproject())
-tool_cpreproc = get_option('tool_cpreproc').disable_auto_if(meson.is_subproject())
+tool_cpreproc = get_option('tool_cpreproc').disable_auto_if(meson.is_subproject() or not opt_lang_cpp.allowed())
 
 wants_cpp = frontend_gui.allowed() or tool_stacktrace.allowed()
 needs_cpp = frontend_gui.enabled() or tool_stacktrace.enabled()
@@ -274,6 +277,8 @@ summary = {
         'Debug': is_debug,
         'Interfaces': ', '.join(get_option('interfaces')),
         'Languages': ', '.join(get_option('languages')),
+        'C language driver': opt_lang_cc.allowed(),
+        'C preprocessor': opt_lang_cpp.allowed(),
         'Memory tracing': trace_memory.allowed(),
         'Analyze': opt_analyze.enabled(),
         'Hardening': opt_hardening.enabled(),
@@ -292,7 +297,7 @@ summary = {
         'Notify': tool_notify.allowed(),
         'Diagnostics': tool_diagnostic.allowed(),
         'Display': tool_display.allowed(),
-        'C preprocessor': tool_cpreproc.allowed()
+        'C preprocessor tool': tool_cpreproc.allowed()
     },
     'Documentation': {
         'Doxygen': doxygen

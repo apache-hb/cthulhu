@@ -125,8 +125,10 @@ void vector_push(vector_t **vector, void *value)
 {
     CHECK_VECTOR(vector);
 
-    vector_ensure(vector, VEC->used + 1);
-    VEC->data[VEC->used++] = value;
+    vector_t *vec = *vector;
+
+    vector_ensure(vector, vec->used + 1);
+    vec->data[vec->used++] = value;
 }
 
 USE_DECL
@@ -189,23 +191,6 @@ size_t vector_find(vector_t *vector, const void *element)
 }
 
 USE_DECL
-vector_t *vector_merge(const vector_t *lhs, const vector_t *rhs)
-{
-    size_t lhs_len = vector_len(lhs);
-    size_t rhs_len = vector_len(rhs);
-
-    size_t len = lhs_len + rhs_len;
-
-    vector_t *out = vector_new(len);
-    out->used = len;
-
-    memcpy(out->data, lhs->data, lhs_len * sizeof(void *));
-    memcpy(out->data + lhs_len, rhs->data, rhs_len * sizeof(void *));
-
-    return out;
-}
-
-USE_DECL
 void vector_append(vector_t **vector, const vector_t *other)
 {
     CHECK_VECTOR(vector);
@@ -215,35 +200,6 @@ void vector_append(vector_t **vector, const vector_t *other)
     vector_ensure(vector, VEC->used + len);
     memcpy(VEC->data + VEC->used, other->data, len * sizeof(void *));
     VEC->used += len;
-}
-
-USE_DECL
-vector_t *vector_join(vector_t *vectors)
-{
-    CTASSERT(vectors != NULL);
-
-    // find the total length for less memory allocations
-    size_t total_len = 0;
-    size_t len = vector_len(vectors);
-
-    for (size_t i = 0; i < len; i++)
-    {
-        total_len += vector_len(vector_get(vectors, i));
-    }
-
-    vector_t *result = vector_of(total_len);
-    size_t offset = 0;
-
-    for (size_t i = 0; i < len; i++)
-    {
-        vector_t *vector = vector_get(vectors, i);
-        size_t inner_len = vector_len(vector);
-
-        memcpy(result->data + offset, vector->data, inner_len * sizeof(void *));
-        offset += inner_len;
-    }
-
-    return result;
 }
 
 USE_DECL

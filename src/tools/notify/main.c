@@ -1,5 +1,5 @@
 #include "argparse/argparse.h"
-#include "format/colour.h"
+#include "std/colour.h"
 #include "config/config.h"
 #include "core/macros.h"
 #include "defaults/defaults.h"

@@ -151,27 +151,12 @@ NODISCARD CONSTFN
 size_t vector_len(IN_NOTNULL const vector_t *vector);
 
 /**
- * @brief join two vectors
- *
- * join two vectors together into a new vector.
- *
- * @param lhs the left vector
- * @param rhs the right vector
- * @return the new vector
- */
-NODISCARD
-vector_t *vector_merge(IN_NOTNULL const vector_t *lhs, IN_NOTNULL const vector_t *rhs);
-
-/**
  * @brief append a vector to the end of another
  *
  * @param vector the vector to append to
  * @param other the vector to append
  */
 void vector_append(IN_NOTNULL vector_t **vector, IN_NOTNULL const vector_t *other);
-
-NODISCARD
-vector_t *vector_join(IN_NOTNULL vector_t *vectors);
 
 /**
  * @brief find an element in a vector
