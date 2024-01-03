@@ -40,17 +40,17 @@ LC \\{NL}
     return TOK_STRING;
 }
 
-<INITIAL,BODY>[0-9]+ {
+<INITIAL,BODY,MESSAGE>[0-9]+ {
     yylval->number = cpp_number_new(yyextra, yytext, yyleng, 10);
     return TOK_NUMBER;
 }
 
-<INITIAL,BODY>0[xX][0-9a-fA-F]+ {
+<INITIAL,BODY,MESSAGE>0[xX][0-9a-fA-F]+ {
     yylval->number = cpp_number_new(yyextra, yytext + 2, yyleng - 2, 16);
     return TOK_NUMBER;
 }
 
-<INITIAL,BODY>0[bB][01]+ {
+<INITIAL,BODY,MESSAGE>0[bB][01]+ {
     yylval->number = cpp_number_new(yyextra, yytext + 2, yyleng - 2, 2);
     return TOK_NUMBER;
 }
@@ -157,7 +157,7 @@ LC \\{NL}
     cpp_push_comment(yyextra, yytext, yyleng);
 }
 
-<DIRECTIVE,BODY,MESSAGE>({LC}|{WS})+ {
+<DIRECTIVE,BODY,MESSAGE>({LC}|{WS}) {
    // yylval->text = cpp_text_new(yyextra, yytext, yyleng);
 }
 

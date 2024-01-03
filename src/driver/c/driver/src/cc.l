@@ -18,10 +18,15 @@
 ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 WS [ \t\r\v\n\f]
 
+%x COMMENT
+
 %%
 
 {WS} ;
 "//".* ;
+"/*" { BEGIN(COMMENT); }
+<COMMENT>"*/" { BEGIN(INITIAL); }
+<COMMENT>.|\n ;
 
 "*=" { return MULEQ; }
 "*" { return MUL; }

@@ -33,7 +33,9 @@ void cpperror(where_t *where, void *state, cpp_extra_t *extra, const char *msg);
 
     cpp_number_t *number;
 
-    void *ast;
+    cpp_ast_t *ast;
+
+    synthetic_token_t *token;
 }
 
 %token<text>
@@ -97,11 +99,15 @@ void cpperror(where_t *where, void *state, cpp_extra_t *extra, const char *msg);
     TOK_COMMA
 
 %type<vec>
-    directive_body
+    directive_body opt_directive_body
     expr_list opt_expr_list
 
 %type<ast>
     condition
+    primary
+
+%type<token>
+    directive_item
 
 %start entry
 
@@ -137,12 +143,13 @@ end_include: TOK_END_INCLUDE
     ;
 
 directive: TOK_IDENT directive_body
-    | TOK_DEFINE ws TOK_IDENT directive_body { cpp_add_define(x, @$, $3, $4); }
+    | TOK_DEFINE TOK_IDENT { cpp_add_define(x, @$, $2, vector_of(0)); }
+    | TOK_DEFINE TOK_IDENT directive_body { cpp_add_define(x, @$, $2, $3); }
     | TOK_UNDEF ws TOK_IDENT ws { cpp_remove_define(x, @$, $3); }
     | TOK_IFDEF ws TOK_IDENT ws { cpp_ifdef(x, @$, $3); }
     | TOK_IFNDEF ws TOK_IDENT ws { cpp_ifndef(x, @$, $3); }
-    | TOK_IF condition { cpp_if(x, @$); }
-    | TOK_ELIF condition { cpp_elif(x, @$); }
+    | TOK_IF condition { cpp_if(x, @$, $2); }
+    | TOK_ELIF condition { cpp_elif(x, @$, $2); }
     | TOK_ELSE ws { cpp_else(x, @$); }
     | TOK_ENDIF ws { cpp_endif(x, @$); }
     | TOK_ERROR directive_body
@@ -151,11 +158,11 @@ directive: TOK_IDENT directive_body
     | TOK_LINE directive_body
     ;
 
-primary: TOK_LPAREN condition TOK_RPAREN
-    | TOK_IDENT
-    | TOK_IDENT TOK_LPAREN opt_expr_list TOK_RPAREN
-    | TOK_NUMBER
-    | TOK_PASTE
+primary: TOK_LPAREN condition TOK_RPAREN { $$ = $2; }
+    | TOK_IDENT { $$ = cpp_expand_ident(x, @$, $1); }
+    | TOK_IDENT TOK_LPAREN opt_expr_list TOK_RPAREN { $$ = cpp_expand_macro(x, @$, $1, $3); }
+    | TOK_NUMBER { $$ = NULL; }
+    | TOK_PASTE { $$ = NULL; }
     ;
 
 opt_expr_list: %empty { $$ = vector_of(0); }
@@ -166,17 +173,13 @@ expr_list: condition { $$ = vector_init($1); }
     | expr_list TOK_COMMA condition { vector_push(&$1, $3); $$ = $1; }
     ;
 
-text: TOK_IDENT
-    | TOK_PASTE
-    ;
-
 unary_expr: ws primary ws
     | ws TOK_MINUS unary_expr
     | ws TOK_PLUS unary_expr
     | ws TOK_NOT unary_expr
     | ws TOK_BITNOT unary_expr
-    | ws TOK_DEFINED ws text
-    | ws TOK_DEFINED ws TOK_LPAREN ws text ws TOK_RPAREN
+    | ws TOK_DEFINED ws TOK_IDENT
+    | ws TOK_DEFINED ws TOK_LPAREN ws TOK_IDENT ws TOK_RPAREN
     ;
 
 mul_expr: unary_expr
@@ -234,38 +237,45 @@ ternary: or_expr
 condition: ternary { $$ = NULL; }
     ;
 
-directive_body: %empty { $$ = vector_of(0); }
-    | directive_body TOK_NUMBER { vector_push(&$1, cpp_token_new(x, TOK_NUMBER, &$2, @$)); $$ = $1; }
-    | directive_body TOK_IDENT { vector_push(&$1, cpp_token_new(x, TOK_IDENT, &$2, @$)); $$ = $1; }
-    | directive_body TOK_STRING { vector_push(&$1, cpp_token_new(x, TOK_STRING, &$2, @$)); $$ = $1; }
-    | directive_body TOK_PASTE { vector_push(&$1, cpp_token_new(x, TOK_PASTE, &$2, @$)); $$ = $1; }
-    | directive_body TOK_WHITESPACE { vector_push(&$1, cpp_token_new(x, TOK_WHITESPACE, &$2, @$)); $$ = $1; }
-    | directive_body TOK_BLOCK_COMMENT { vector_push(&$1, cpp_token_new(x, TOK_BLOCK_COMMENT, &$2, @$)); $$ = $1; }
-    | directive_body TOK_LPAREN
-    | directive_body TOK_RPAREN
-    | directive_body TOK_PLUS
-    | directive_body TOK_MINUS
-    | directive_body TOK_MUL
-    | directive_body TOK_DIV
-    | directive_body TOK_MOD
-    | directive_body TOK_SHL
-    | directive_body TOK_SHR
-    | directive_body TOK_LT
-    | directive_body TOK_GT
-    | directive_body TOK_LTE
-    | directive_body TOK_GTE
-    | directive_body TOK_EQ
-    | directive_body TOK_NEQ
-    | directive_body TOK_AND
-    | directive_body TOK_OR
-    | directive_body TOK_XOR
-    | directive_body TOK_BITAND
-    | directive_body TOK_BITOR
-    | directive_body TOK_NOT
-    | directive_body TOK_BITNOT
-    | directive_body TOK_QUESTION
-    | directive_body TOK_COLON
-    | directive_body TOK_COMMA
+opt_directive_body: %empty { $$ = vector_of(0); }
+    | directive_body { $$ = $1; }
+    ;
+
+directive_body: directive_item { $$ = vector_init($1); }
+    | directive_body directive_item { vector_push(&$1, $2); $$ = $1; }
+    ;
+
+directive_item: TOK_NUMBER { $$ = cpp_token_new(x, TOK_NUMBER, &$1, @$); }
+    | TOK_IDENT { $$ = cpp_token_new(x, TOK_IDENT, &$1, @$); }
+    | TOK_STRING { $$ = cpp_token_new(x, TOK_STRING, &$1, @$); }
+    | TOK_PASTE { $$ = cpp_token_new(x, TOK_PASTE, &$1, @$); }
+    | TOK_WHITESPACE { $$ = cpp_token_new(x, TOK_WHITESPACE, &$1, @$); }
+    | TOK_BLOCK_COMMENT { $$ = cpp_token_new(x, TOK_BLOCK_COMMENT, &$1, @$); }
+    | TOK_LPAREN { $$ = NULL; }
+    | TOK_RPAREN { $$ = NULL; }
+    | TOK_PLUS { $$ = NULL; }
+    | TOK_MINUS { $$ = NULL; }
+    | TOK_MUL { $$ = NULL; }
+    | TOK_DIV { $$ = NULL; }
+    | TOK_MOD { $$ = NULL; }
+    | TOK_SHL { $$ = NULL; }
+    | TOK_SHR { $$ = NULL; }
+    | TOK_LT { $$ = NULL; }
+    | TOK_GT { $$ = NULL; }
+    | TOK_LTE { $$ = NULL; }
+    | TOK_GTE { $$ = NULL; }
+    | TOK_EQ { $$ = NULL; }
+    | TOK_NEQ { $$ = NULL; }
+    | TOK_AND { $$ = NULL; }
+    | TOK_OR { $$ = NULL; }
+    | TOK_XOR { $$ = NULL; }
+    | TOK_BITAND { $$ = NULL; }
+    | TOK_BITOR { $$ = NULL; }
+    | TOK_NOT { $$ = NULL; }
+    | TOK_BITNOT { $$ = NULL; }
+    | TOK_QUESTION { $$ = NULL; }
+    | TOK_COLON { $$ = NULL; }
+    | TOK_COMMA { $$ = NULL; }
     ;
 
 ws: %empty

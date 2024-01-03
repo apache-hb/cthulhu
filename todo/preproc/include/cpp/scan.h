@@ -3,6 +3,7 @@
 #include <gmp.h>
 
 #include "cpp/cpp.h"
+#include "cpp/ast.h"
 #include "scan/node.h" // IWYU pragma: export
 
 #define YY_INPUT(buffer, result, size)         \
@@ -92,6 +93,9 @@ void cpp_push_output(cpp_extra_t *extra, text_t text);
 
 void cpp_push_ident(cpp_extra_t *extra, text_t text);
 
+cpp_ast_t *cpp_expand_ident(cpp_extra_t *extra, where_t where, text_t text);
+cpp_ast_t *cpp_expand_macro(cpp_extra_t *extra, where_t where, text_t text, vector_t *args);
+
 void cpp_push_comment(cpp_extra_t *extra, const char *text, size_t size);
 text_t cpp_reset_comment(cpp_extra_t *extra);
 
@@ -116,8 +120,8 @@ void cpp_remove_define(cpp_extra_t *extra, where_t where, text_t name);
 void cpp_ifdef(cpp_extra_t *extra, where_t where, text_t name);
 void cpp_ifndef(cpp_extra_t *extra, where_t where, text_t name);
 
-void cpp_if(cpp_extra_t *extra, where_t where);
-void cpp_elif(cpp_extra_t *extra, where_t where);
+void cpp_if(cpp_extra_t *extra, where_t where, cpp_ast_t *ast);
+void cpp_elif(cpp_extra_t *extra, where_t where, cpp_ast_t *ast);
 
 void cpp_else(cpp_extra_t *extra, where_t where);
 void cpp_endif(cpp_extra_t *extra, where_t where);

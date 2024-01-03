@@ -164,6 +164,47 @@ void cpp_push_ident(cpp_extra_t *extra, text_t text)
     }
 }
 
+cpp_ast_t *cpp_expand_ident(cpp_extra_t *extra, where_t where, text_t text)
+{
+    CTU_UNUSED(where);
+
+    CTASSERT(extra != NULL);
+    CTASSERT(text.text != NULL);
+
+    cpp_config_t config = extra->config;
+
+    char *data = arena_strndup(text.text, text.size, config.arena);
+    cpp_define_t *define = map_get(extra->defines, data);
+
+    if (define == NULL)
+    {
+        cpp_file_t *file = extra->current_file;
+        return cpp_ast_ident(file->scan, where, text);
+    }
+
+    size_t len = vector_len(define->body);
+    for (size_t i = 0; i < len; i++)
+    {
+        synthetic_token_t *token = vector_get(define->body, i);
+        cpp_push_token(extra, token->token, &token->value, token->where);
+    }
+
+    // TODO: return the next token
+    return NULL;
+}
+
+cpp_ast_t *cpp_expand_macro(cpp_extra_t *extra, where_t where, text_t text, vector_t *args)
+{
+    // TODO: expand macro nicely
+
+    CTU_UNUSED(extra);
+    CTU_UNUSED(where);
+    CTU_UNUSED(text);
+    CTU_UNUSED(args);
+
+    return NULL;
+}
+
 void cpp_push_comment(cpp_extra_t *extra, const char *text, size_t size)
 {
     CTASSERT(extra != NULL);
@@ -361,18 +402,20 @@ void cpp_ifndef(cpp_extra_t *extra, where_t where, text_t name)
     enter_branch(extra, disable);
 }
 
-void cpp_if(cpp_extra_t *extra, where_t where)
+void cpp_if(cpp_extra_t *extra, where_t where, cpp_ast_t *ast)
 {
     CTU_UNUSED(where);
+    CTU_UNUSED(ast);
 
     CTASSERT(extra != NULL);
 
     enter_branch(extra, true);
 }
 
-void cpp_elif(cpp_extra_t *extra, where_t where)
+void cpp_elif(cpp_extra_t *extra, where_t where, cpp_ast_t *ast)
 {
     CTU_UNUSED(where);
+    CTU_UNUSED(ast);
 
     CTASSERT(extra != NULL);
 
@@ -647,6 +690,8 @@ void cpperror(where_t *where, void *yyscanner, cpp_extra_t *extra, const char *m
 
     cpp_config_t config = extra->config;
     cpp_file_t *file = extra->current_file;
+
+    ctu_log("%s:%zu:%zu: %s", scan_path(file->scan), where->first_line, where->first_column, msg);
 
     evt_scan_error(config.logger, node_new(file->scan, *where), msg);
 }
