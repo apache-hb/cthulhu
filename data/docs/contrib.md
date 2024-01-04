@@ -1,4 +1,4 @@
-# Contributing
+# Contributing {#contrib}
 
 ## Source tree structure
 
@@ -30,7 +30,7 @@
   - `notify` - error reporting tools
   - `scan` - flex & bison scanning tools
   - `std` - collections and data structures
-  - `config` - configuration schema tools
+  - `config` - configuration schema
 
 - `cthulhu` - compiler framework library
   - `emit` - ssa emitter
@@ -60,6 +60,10 @@
   - `lang` - language specific tests
   - `unit` - compiler code unit tests
 
+### Where to put new code
+
+When adding a new module consider how much of the compiler needs access to it. Treat levels of access as if they were permission levels, with @ref Common being the highest level. If a library will only ever be used by a user facing tool, it should be part of the @ref Support set of modules. When a module needs to be available to drivers it should be in @ref Runtime, the core compiler set. And if a module is going to be used extensively, and perhaps outside of the cthulhu project it should be placed in @ref Common.
+
 ## Coding rules
 
 - Follow single source of truth
@@ -86,6 +90,7 @@
 - The build process must only rely on C and meson
   - Optional features may require python/C++
   - To aid porting to systems that may not have a big ecosystem
+  - We should never rely on an older version of cthulhu, the version - 1 problem is not a fun one.
 
 - All platform specific code must go in the @ref OS module
 

@@ -2,7 +2,10 @@
 
 #include "base/panic.h"
 
-#include "memory/memory.h"
+#include "memory/arena.h"
+
+#include "std/typed/typeinfo.h"
+
 #include <string.h>
 
 typedef struct item_t
@@ -46,7 +49,7 @@ static item_t *item_new(size_t key_size, arena_t *arena)
 
 static item_t *get_bucket_ptr(typeset_t *set, const void *value)
 {
-    size_t hash = set->info->pfn_hash(value);
+    size_t hash = set->info->fn_hash(value);
     size_t index = hash % set->size;
 
     return item_at(set, index);
@@ -54,20 +57,17 @@ static item_t *get_bucket_ptr(typeset_t *set, const void *value)
 
 static bool item_equals(typeset_t *set, item_t *item, const void *value)
 {
-    return set->info->pfn_equals(item->key, value);
+    return set->info->fn_compare(item->key, value) == eStrongOrderingEqual;
 }
 
-typeset_t *typeset_new(const typeinfo_t *info, size_t len)
+typeset_t *typeset_new(const typeinfo_t *info, size_t len, arena_t *arena)
 {
     CTASSERT(info != NULL);
     CTASSERT(info->size > 0);
-    CTASSERT(info->pfn_equals != NULL);
-    CTASSERT(info->pfn_hash != NULL);
-    CTASSERT(info->empty_value != NULL);
+    CTASSERT(info->fn_compare != NULL);
+    CTASSERT(info->fn_hash != NULL);
 
     CTASSERT(len > 0);
-
-    arena_t *arena = get_global_arena();
 
     typeset_t *set = ARENA_MALLOC(arena, typeset_size(len, info->size), "typeset", NULL);
     set->arena = arena;
@@ -86,7 +86,7 @@ const void *typeset_add(typeset_t *set, const void *value)
 
     item_t *bucket = get_bucket_ptr(set, value);
 
-    if (item_equals(set, bucket, set->info->empty_value))
+    if (item_equals(set, bucket, set->info->empty))
     {
         memcpy(bucket->key, value, set->info->size);
         return bucket->key;
@@ -134,6 +134,6 @@ void typeset_reset(typeset_t *set)
     {
         item_t *item = item_at(set, i);
         item->next = NULL;
-        memcpy(item->key, set->info->empty_value, set->info->size);
+        memcpy(item->key, set->info->empty, set->info->size);
     }
 }

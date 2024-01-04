@@ -1,4 +1,5 @@
 #include "argparse/argparse.h"
+#include "format/backtrace.h"
 #include "format/colour.h"
 #include "config/config.h"
 #include "core/macros.h"
@@ -67,10 +68,9 @@ static tool_t make_config(arena_t *arena)
 {
     config_t *config = config_new(arena, &kToolInfo);
 
-    cfg_bool_t initial = { .initial = false };
-    cfg_field_t *test_backtrace = config_bool(config, &kBacktraceInfo, initial);
-    cfg_field_t *test_simple = config_bool(config, &kSimpleInfo, initial);
-    cfg_field_t *test_rich = config_bool(config, &kRichInfo, initial);
+    cfg_field_t *test_backtrace = config_bool(config, &kBacktraceInfo, false);
+    cfg_field_t *test_simple = config_bool(config, &kSimpleInfo, false);
+    cfg_field_t *test_rich = config_bool(config, &kRichInfo, false);
 
     default_options_t defaults = get_default_options(config);
 
@@ -270,7 +270,7 @@ static scan_t *scan_string(const char *name, const char *lang, const char *sourc
 static void print_backtrace(text_config_t base_config)
 {
     text_config_t config = base_config;
-    arena_t *arena = ctu_default_alloc();
+    arena_t *arena = get_global_arena();
     config.io = io_stdout();
 
     bt_report_t report = bt_report_collect(arena);

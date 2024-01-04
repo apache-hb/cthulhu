@@ -115,20 +115,12 @@ public:
         .long_args = kTestBoolArgs
     };
 
-    cfg_bool_t test_bool_config = {
-        .initial = true
-    };
-
     constexpr static const char *kTestStringArgs[] = { "test-string", NULL };
 
     cfg_info_t test_string_info = {
         .name = "test_string",
         .brief = "Test string",
         .long_args = kTestStringArgs
-    };
-
-    cfg_string_t test_string_config = {
-        .initial = "hello"
     };
 
     constexpr static const char *kTestEnumArgs[] = { "test-enum", NULL };
@@ -178,8 +170,8 @@ public:
         config_t *test_group = config_group(config, &test_group_info);
 
         cfg_int = config_int(test_group, &test_int_info, test_int_config);
-        cfg_bool = config_bool(test_group, &test_bool_info, test_bool_config);
-        cfg_string = config_string(test_group, &test_string_info, test_string_config);
+        cfg_bool = config_bool(test_group, &test_bool_info, true);
+        cfg_string = config_string(test_group, &test_string_info, "hello world");
         cfg_enum = config_enum(test_group, &test_enum_info, test_enum_config);
         cfg_flags = config_flags(test_group, &test_flags_info, test_flags_config);
     }

@@ -1,27 +1,24 @@
 #pragma once
 
 #include "core/compiler.h"
-#include "core/analyze.h"
 
 #include <stdbool.h>
 
 BEGIN_API
 
+typedef struct arena_t arena_t;
+typedef struct typeinfo_t typeinfo_t;
 typedef struct typeset_t typeset_t;
 
-typedef bool (*type_equals_t)(const void *lhs, const void *rhs);
-typedef size_t (*type_hash_t)(const void *value);
-
-typedef struct typeinfo_t
-{
-    FIELD_RANGE(>, 0) size_t size;
-
-    type_equals_t pfn_equals;
-    type_hash_t pfn_hash;
-    const void *empty_value;
-} typeinfo_t;
-
-typeset_t *typeset_new(const typeinfo_t *info, size_t len);
+/// @brief create a new typed set
+/// @note @p info must contain a @a fn_hash and @a fn_compare function
+///
+/// @param info the type information for the set
+/// @param len the length of the set
+/// @param arena the arena to allocate the set from
+///
+/// @return the new set
+typeset_t *typeset_new(const typeinfo_t *info, size_t len, arena_t *arena);
 
 const void *typeset_add(typeset_t *set, const void *value);
 

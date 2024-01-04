@@ -2,6 +2,7 @@
 
 #include "cthulhu/events/events.h"
 
+#include "memory/memory.h"
 #include "std/set.h"
 #include "std/map.h"
 #include "std/vector.h"
@@ -15,6 +16,7 @@ typedef struct ssa_vm_t
 {
     // externally provided values
     logger_t *reports;
+    arena_t *arena;
     map_t *deps;
 
     // all globals
@@ -286,7 +288,7 @@ static void ssa_opt_global(ssa_vm_t *vm, ssa_symbol_t *global)
         .vm = vm,
         .symbol = global,
         .return_value = NULL,
-        .step_values = map_optimal(64)
+        .step_values = map_optimal_arena(64, vm->arena)
     };
 
     ssa_opt_block(&scope, global->entry);
@@ -297,11 +299,13 @@ static void ssa_opt_global(ssa_vm_t *vm, ssa_symbol_t *global)
 
 void ssa_opt(logger_t *reports, ssa_result_t result)
 {
+    arena_t *arena = get_global_arena();
     ssa_vm_t vm = {
         .reports = reports,
+        .arena = arena,
         .deps = result.deps,
 
-        .globals = set_new(64),
+        .globals = set_new_arena(64, arena),
     };
 
     size_t len = vector_len(result.modules);

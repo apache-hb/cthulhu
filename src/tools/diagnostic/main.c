@@ -103,13 +103,11 @@ static tool_t make_config(arena_t *arena, langs_t langs)
 
     default_options_t options = get_default_options(root);
 
-    cfg_bool_t langs_options = { .initial = false };
-    cfg_field_t *print_all_langs = config_bool(root, &kPrintLangsInfo, langs_options);
+    cfg_field_t *print_all_langs = config_bool(root, &kPrintLangsInfo, false);
 
     cfg_field_t *print_one_lang = config_enum(root, &kPrintSingleLangInfo, lang_options);
 
-    cfg_bool_t diags_options = { .initial = false };
-    cfg_field_t *print_all_diags = config_bool(root, &kPrintDiagsInfo, diags_options);
+    cfg_field_t *print_all_diags = config_bool(root, &kPrintDiagsInfo, false);
 
     cfg_field_t *print_one_diag = config_enum(root, &kPrintSingleDiagInfo, lang_options);
 

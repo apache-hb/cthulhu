@@ -7,6 +7,7 @@
 #include "format/notify.h"
 
 #include "stacktrace/stacktrace.h"
+#include "format/backtrace.h"
 
 #include "std/str.h"
 #include "std/typed/vector.h"

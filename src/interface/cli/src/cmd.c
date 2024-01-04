@@ -80,19 +80,16 @@ tool_t make_tool(arena_t *arena)
 
     default_options_t options = get_default_options(config);
 
-    cfg_bool_t emit_ir_options = {.initial = false};
-    cfg_field_t *emit_ir_field = config_bool(config, &kEmitIr, emit_ir_options);
+    cfg_field_t *emit_ir_field = config_bool(config, &kEmitIr, false);
 
-    cfg_bool_t warn_as_error_options = {.initial = false};
-    cfg_field_t *warn_as_error_field = config_bool(config, &kWarnAsError, warn_as_error_options);
+    cfg_field_t *warn_as_error_field = config_bool(config, &kWarnAsError, false);
 
     config_t *report_group = config_group(config, &kReportInfo);
 
     cfg_int_t report_limit_options = {.initial = 20, .min = 0, .max = 1000};
     cfg_field_t *report_limit_field = config_int(report_group, &kReportLimit, report_limit_options);
 
-    cfg_string_t output_dir_options = {.initial = NULL};
-    cfg_field_t *output_dir_field = config_string(report_group, &kOutputDir, output_dir_options);
+    cfg_field_t *output_dir_field = config_string(report_group, &kOutputDir, NULL);
 
     cfg_enum_t report_style_options = {
         .options = kReportStyleChoices,

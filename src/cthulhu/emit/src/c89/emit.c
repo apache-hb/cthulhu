@@ -791,19 +791,21 @@ c89_emit_result_t emit_c89(const c89_emit_options_t *options)
     emit_options_t opts = options->opts;
     size_t len = vector_len(opts.modules);
 
+    arena_t *arena = opts.arena;
+
     c89_emit_t emit = {
-        .arena = opts.arena,
+        .arena = arena,
         .emit = {
             .reports = opts.reports,
             .block_names = names_new(64),
             .vreg_names = names_new(64),
         },
-        .modmap = map_optimal(len * 2),
-        .srcmap = map_optimal(len),
-        .hdrmap = map_optimal(len),
+        .modmap = map_optimal_arena(len * 2, arena),
+        .srcmap = map_optimal_arena(len, arena),
+        .hdrmap = map_optimal_arena(len, arena),
 
-        .stepmap = map_optimal(64),
-        .strmap = map_optimal(64),
+        .stepmap = map_optimal_arena(64, arena),
+        .strmap = map_optimal_arena(64, arena),
         .defined = set_new(64),
 
         .fs = opts.fs,

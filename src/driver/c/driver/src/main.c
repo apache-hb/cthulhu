@@ -44,7 +44,7 @@ const language_t kCModule = {
     .name = "C",
     .version = {
         .license = "LGPLv3",
-        .desc = "C11 language driver",
+        .desc = "C language driver",
         .author = "Elliot Haisley",
         .version = NEW_VERSION(0, 0, 1),
     },

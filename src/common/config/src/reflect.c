@@ -42,18 +42,18 @@ const cfg_int_t *cfg_int_info(const cfg_field_t *field)
     return &field->int_config;
 }
 
-const cfg_bool_t *cfg_bool_info(const cfg_field_t *field)
+bool cfg_bool_info(const cfg_field_t *field)
 {
     ASSERT_FIELD_TYPE(field, eConfigBool);
 
-    return &field->bool_config;
+    return field->bool_config;
 }
 
-const cfg_string_t *cfg_string_info(const cfg_field_t *field)
+const char *cfg_string_info(const cfg_field_t *field)
 {
     ASSERT_FIELD_TYPE(field, eConfigString);
 
-    return &field->string_config;
+    return field->string_config;
 }
 
 const cfg_enum_t *cfg_enum_info(const cfg_field_t *field)

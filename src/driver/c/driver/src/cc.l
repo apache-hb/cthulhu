@@ -93,6 +93,7 @@ WS [ \t\r\v\n\f]
 
 "_Module" { return MODULE; }
 "_Import" { return IMPORT; }
+"_Export" { return EXPORT; }
 
 "0"[0-7]+ {
     mpz_init_set_str(yylval->mpz, yytext + 1, 8);

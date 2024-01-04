@@ -14,7 +14,7 @@
 #endif
 
 #if __cplusplus >= 201402L
-#   define DEPRECATED(msg) [[deprecated(msg)]]
+#   define CTU_DEPRECATED(msg) [[deprecated(msg)]]
 #elif CC_MSVC
 #   define CTU_DEPRECATED(msg) __declspec(deprecated(msg))
 #elif CC_CLANG || CC_GNU
@@ -22,6 +22,10 @@
 #else
 #   define CTU_DEPRECATED(msg)
 #endif
+
+/// @def CTU_DEPRECATED(msg)
+/// @brief mark a function as deprecated
+/// @param msg the message to display when the function is used
 
 /// @def MAX(lhs, rhs)
 /// returns the maximum of @a lhs and @a rhs

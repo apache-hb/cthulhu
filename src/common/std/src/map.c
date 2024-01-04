@@ -153,21 +153,6 @@ size_t map_count(map_t *map)
     return count;
 }
 
-USE_DECL
-bool map_empty(map_t *map)
-{
-    CTASSERT(map != NULL);
-
-    MAP_FOREACH_APPLY(map, entry, {
-        if (entry->key != NULL)
-        {
-            return false;
-        }
-    });
-
-    return true;
-}
-
 // string key map functions
 
 static size_t map_bucket_str_index(map_t *map, const char *key)

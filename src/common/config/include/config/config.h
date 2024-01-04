@@ -76,20 +76,6 @@ typedef struct cfg_int_t
     int max;
 } cfg_int_t;
 
-/// @brief a yes/no field
-typedef struct cfg_bool_t
-{
-    /// @brief default value
-    bool initial;
-} cfg_bool_t;
-
-/// @brief a string field
-typedef struct cfg_string_t
-{
-    /// @brief default value
-    const char *initial;
-} cfg_string_t;
-
 /// @brief a choice in a set of options
 typedef struct cfg_choice_t
 {
@@ -154,20 +140,27 @@ cfg_field_t *config_int(config_t *group, const cfg_info_t *info, cfg_int_t cfg);
 ///
 /// @param group the configuration group to add the field to
 /// @param info the information about this field
-/// @param cfg the configuration information for this field
+/// @param initial the initial value for this field
 ///
 /// @return the new configuration field
-cfg_field_t *config_bool(config_t *group, const cfg_info_t *info, cfg_bool_t cfg);
+cfg_field_t *config_bool(config_t *group, const cfg_info_t *info, bool initial);
 
 /// @brief add a new string field to a configuration group
 ///
 /// @param group the configuration group to add the field to
 /// @param info the information about this field
-/// @param cfg the configuration information for this field
+/// @param initial the initial value for this field
 ///
 /// @return the new configuration field
-cfg_field_t *config_string(config_t *group, const cfg_info_t *info, cfg_string_t cfg);
+cfg_field_t *config_string(config_t *group, const cfg_info_t *info, const char *initial);
 
+/// @brief add a new vector field to a configuration group
+///
+/// @param group the configuration group to add the field to
+/// @param info the information about this field
+/// @param initial the initial values for this field
+///
+/// @return the new configuration field
 cfg_field_t *config_vector(config_t *group, const cfg_info_t *info, vector_t *initial);
 
 /// @brief add a new choice field to a configuration group
@@ -236,14 +229,14 @@ const cfg_int_t *cfg_int_info(const cfg_field_t *field);
 /// @param field the field to get the information about
 ///
 /// @return the information about @p field
-const cfg_bool_t *cfg_bool_info(const cfg_field_t *field);
+bool cfg_bool_info(const cfg_field_t *field);
 
 /// @brief get the information about a string field
 ///
 /// @param field the field to get the information about
 ///
 /// @return the information about @p field
-const cfg_string_t *cfg_string_info(const cfg_field_t *field);
+const char *cfg_string_info(const cfg_field_t *field);
 
 /// @brief get the information about a choice field
 ///
@@ -308,6 +301,11 @@ bool cfg_bool_value(const cfg_field_t *field);
 /// @return the current value of @p field
 const char *cfg_string_value(const cfg_field_t *field);
 
+/// @brief get the current vector value of a configuration field
+///
+/// @param field the field to get the value of
+///
+/// @return the current value of @p field
 vector_t *cfg_vector_value(const cfg_field_t *field);
 
 /// @brief get the current enum value of a configuration field

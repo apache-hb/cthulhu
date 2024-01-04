@@ -115,12 +115,47 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
     MODULE "_Module"
     IMPORT "_Import"
+    EXPORT "_Export"
+    PRIVATE "_Private"
 
 %start unit
 
 %%
 
-unit: %empty
+unit: module_decl SEMICOLON decl_list
+    | decl_list
+    ;
+
+decl_list: decl
+    | decl_list decl
+    ;
+
+module_decl: MODULE
+    | MODULE module_path module_partition
+    | EXPORT MODULE module_path module_partition
+    | MODULE COLON PRIVATE
+    ;
+
+module_partition: %empty
+    | COLON module_path
+    ;
+
+module_path: IDENT
+    | module_path DOT IDENT
+    ;
+
+opt_export: %empty
+    | EXPORT
+    ;
+
+decl: opt_export simple_decl SEMICOLON
+    | error
+    ;
+
+simple_decl: STRUCT IDENT
+    | UNION IDENT
+    | ENUM IDENT
+    | IMPORT module_path module_partition
     ;
 
 %%

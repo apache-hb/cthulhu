@@ -1,4 +1,5 @@
 #include "argparse/argparse.h"
+#include "format/backtrace.h"
 #include "format/colour.h"
 #include "base/log.h"
 #include "base/panic.h"
@@ -102,28 +103,21 @@ default_options_t get_default_options(config_t *group)
 
     config_t *general = config_group(group, &kGroupInfo);
 
-    cfg_bool_t help_initial = { .initial = false };
-    cfg_field_t *help = config_bool(general, &kHelpInfo, help_initial);
+    cfg_field_t *help = config_bool(general, &kHelpInfo, false);
 
-    cfg_bool_t version_initial = { .initial = false };
-    cfg_field_t *version = config_bool(general, &kVersionInfo, version_initial);
+    cfg_field_t *version = config_bool(general, &kVersionInfo, false);
 
-    cfg_bool_t argparse_usage_initial = { .initial = false };
-    cfg_field_t *argparse_usage = config_bool(general, &kArgparseUsageInfo, argparse_usage_initial);
+    cfg_field_t *argparse_usage = config_bool(general, &kArgparseUsageInfo, false);
 
-    cfg_bool_t windows_style_initial = { .initial = DISPLAY_WIN_STYLE };
-    cfg_field_t *windows_style = config_bool(general, &kWindowsStyleInfo, windows_style_initial);
+    cfg_field_t *windows_style = config_bool(general, &kWindowsStyleInfo, DISPLAY_WIN_STYLE);
 
-    cfg_bool_t colour_initial = { .initial = false };
-    cfg_field_t *colour = config_bool(general, &kColourInfo, colour_initial);
+    cfg_field_t *colour = config_bool(general, &kColourInfo, false);
 
     config_t *debug = config_group(group, &kDebugGroupInfo);
 
-    cfg_bool_t verbose_initial = { .initial = false };
-    cfg_field_t *verbose = config_bool(debug, &kVerboseLoggingInfo, verbose_initial);
+    cfg_field_t *verbose = config_bool(debug, &kVerboseLoggingInfo, false);
 
-    cfg_bool_t backtrace_initial = { .initial = false };
-    cfg_field_t *backtrace = config_bool(debug, &kBacktraceInfo, backtrace_initial);
+    cfg_field_t *backtrace = config_bool(debug, &kBacktraceInfo, false);
 
     default_options_t options = {
         .general_group = general,

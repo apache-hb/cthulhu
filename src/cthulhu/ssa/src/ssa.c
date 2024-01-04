@@ -831,15 +831,15 @@ ssa_result_t ssa_compile(map_t *mods)
         .arena = arena,
 
         .modules = vector_new_arena(sizes.modules, arena),
-        .symbol_deps = map_optimal(sizes.deps),
+        .symbol_deps = map_optimal_arena(sizes.deps, arena),
 
-        .globals = map_optimal(sizes.globals),
-        .functions = map_optimal(sizes.functions),
-        .types = map_optimal(sizes.types),
+        .globals = map_optimal_arena(sizes.globals, arena),
+        .functions = map_optimal_arena(sizes.functions, arena),
+        .types = map_optimal_arena(sizes.types, arena),
 
         // TODO: these should be per symbol rather than persistent global
-        .symbol_locals = map_optimal(sizes.deps * 4),
-        .symbol_loops = map_optimal(32),
+        .symbol_locals = map_optimal_arena(sizes.deps * 4, arena),
+        .symbol_loops = map_optimal_arena(32, arena),
     };
 
     map_iter_t iter = map_iter(mods);

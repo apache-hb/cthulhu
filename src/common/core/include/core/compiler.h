@@ -54,20 +54,20 @@
 
 /// @def CTU_ASSUME(expr)
 /// @brief assume that @a expr is true
-/// @note this is a compiler hint that can be used to optimize code
+/// @warning this is a compiler hint that can be used to optimize code
 ///       use with caution
 
 #ifdef CC_MSVC
 #   define CTU_ASSUME(expr) __assume(expr)
 #else
 #   define CTU_ASSUME(expr)                                                                                            \
-       do                                                                                                              \
-       {                                                                                                               \
-           if (!(expr))                                                                                                \
-           {                                                                                                           \
-               __builtin_unreachable();                                                                                \
-           }                                                                                                           \
-       } while (0)
+        do                                                                                                              \
+        {                                                                                                               \
+            if (!(expr))                                                                                                \
+            {                                                                                                           \
+                __builtin_unreachable();                                                                                \
+            }                                                                                                           \
+        } while (0)
 #endif
 
 // clang-format off
@@ -82,7 +82,7 @@
 
 /// @def FUNCNAME
 /// @brief the name of the current function
-/// @note the format of the string is compiler dependant, please dont try and parse it
+/// @warning the format of the string is compiler dependant, please dont try and parse it
 
 #if CC_GNU && CTU_HAS_PRETTY_FUNCTION
 #   define FUNCNAME __PRETTY_FUNCTION__

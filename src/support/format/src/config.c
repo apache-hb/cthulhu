@@ -243,8 +243,7 @@ static void print_field_default(format_config_t options, const cfg_field_t *fiel
     switch (cfg_get_type(field))
     {
     case eConfigBool: {
-        const cfg_bool_t *info = cfg_bool_info(field);
-        io_printf(options.io, "(default: %s)\n", info->initial ? "true" : "false");
+        io_printf(options.io, "(default: %s)\n", cfg_bool_info(field) ? "true" : "false");
         break;
     }
 
@@ -257,10 +256,10 @@ static void print_field_default(format_config_t options, const cfg_field_t *fiel
     }
 
     case eConfigString: {
-        const cfg_string_t *info = cfg_string_info(field);
-        if (info->initial != NULL)
+        const char *info = cfg_string_info(field);
+        if (info != NULL)
         {
-            io_printf(options.io, "(default: `%s`)", info->initial);
+            io_printf(options.io, "(default: `%s`)", info);
         }
         io_printf(options.io, "\n");
         break;

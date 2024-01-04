@@ -13,8 +13,8 @@ typedef struct cfg_field_t
 
     union {
         cfg_int_t int_config;
-        cfg_bool_t bool_config;
-        cfg_string_t string_config;
+        bool bool_config;
+        const char *string_config;
         cfg_enum_t enum_config;
         cfg_flags_t flags_config;
     };

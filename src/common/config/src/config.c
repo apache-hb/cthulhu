@@ -133,24 +133,24 @@ cfg_field_t *config_int(config_t *group, const cfg_info_t *info, cfg_int_t cfg)
     return field;
 }
 
-cfg_field_t *config_bool(config_t *group, const cfg_info_t *info, cfg_bool_t cfg)
+cfg_field_t *config_bool(config_t *group, const cfg_info_t *info, bool initial)
 {
     ASSERT_CONFIG_VALID(group, info);
 
     cfg_field_t *field = add_field(group, info, eConfigBool);
-    field->bool_config = cfg;
-    field->bool_value = cfg.initial;
+    field->bool_config = initial;
+    field->bool_value = initial;
 
     return field;
 }
 
-cfg_field_t *config_string(config_t *group, const cfg_info_t *info, cfg_string_t cfg)
+cfg_field_t *config_string(config_t *group, const cfg_info_t *info, const char *initial)
 {
     ASSERT_CONFIG_VALID(group, info);
 
     cfg_field_t *field = add_field(group, info, eConfigString);
-    field->string_config = cfg;
-    field->string_value = cfg.initial != NULL ? ctu_strdup(cfg.initial) : NULL;
+    field->string_config = initial;
+    field->string_value = initial != NULL ? ctu_strdup(initial) : NULL;
 
     return field;
 }

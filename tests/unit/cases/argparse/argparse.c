@@ -118,20 +118,16 @@ static test_config_t make_config(arena_t *arena)
 
     config.root = config_new(arena, &kRootInfo);
 
-    cfg_bool_t bool_initial = {.initial = false};
-    config.bool_field = config_bool(config.root, &kBoolInfo, bool_initial);
+    config.bool_field = config_bool(config.root, &kBoolInfo, false);
 
-    cfg_bool_t bool_initial2 = {.initial = false};
-    config.bool_field2 = config_bool(config.root, &kBoolInfo2, bool_initial2);
+    config.bool_field2 = config_bool(config.root, &kBoolInfo2, false);
 
     cfg_int_t int_initial = {.initial = 0};
     config.int_field = config_int(config.root, &kIntInfo, int_initial);
 
-    cfg_string_t string_initial = {.initial = NULL};
-    config.string_field = config_string(config.root, &kStringInfo, string_initial);
+    config.string_field = config_string(config.root, &kStringInfo, NULL);
 
-    cfg_string_t include_initial = {.initial = NULL};
-    config.include_field = config_string(config.root, &kIncludeDirInfo, include_initial);
+    config.include_field = config_string(config.root, &kIncludeDirInfo, NULL);
 
     cfg_enum_t enum_initial = {
         .initial = eTestEnumA,

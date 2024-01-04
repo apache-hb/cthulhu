@@ -128,7 +128,7 @@ void test_install_panic_handler(void)
     gPanicHandler = test_panic_handler;
     gTestArena = ctu_default_alloc();
 
-    init_global_arena(ctu_default_alloc());
+    init_global_arena(gTestArena);
 }
 
 static void *ef_malloc(size_t size, void *self)
