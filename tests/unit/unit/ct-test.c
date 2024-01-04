@@ -4,7 +4,7 @@
 #include "core/macros.h"
 #include "memory/memory.h"
 #include "defaults/memory.h"
-#include "stacktrace/stacktrace.h"
+#include "backtrace/backtrace.h"
 
 #include "std/str.h"
 #include "os/os.h"

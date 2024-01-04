@@ -1,4 +1,4 @@
-#include "stacktrace/stacktrace.h"
+#include "backtrace/backtrace.h"
 
 #include <inttypes.h>
 

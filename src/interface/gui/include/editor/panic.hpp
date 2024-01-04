@@ -4,7 +4,7 @@
 
 #include "base/panic.h"
 
-#include "stacktrace/stacktrace.h"
+#include "backtrace/backtrace.h"
 
 #include <string>
 #include <vector>

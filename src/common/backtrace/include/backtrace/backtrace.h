@@ -11,8 +11,8 @@
 
 BEGIN_API
 
-/// @defgroup Stacktrace Stacktrace library
-/// @brief Stacktrace library
+/// @defgroup backtrace Stacktrace library
+/// @brief Backtrace library
 /// @ingroup Common
 /// @{
 
@@ -34,7 +34,7 @@ typedef struct symbol_t
     text_t path;
 } symbol_t;
 
-/// @brief a stacktrace frame
+/// @brief a backtrace frame
 typedef struct frame_t
 {
     /// @brief the frame address
@@ -67,16 +67,16 @@ typedef enum frame_resolve_t
 /// @brief user callback for @a bt_read
 typedef void (*bt_frame_t)(void *user, const frame_t *frame);
 
-/// @brief initialize the stacktrace backend
-/// @note this function must be called before any other stacktrace function
+/// @brief initialize the backtrace backend
+/// @note this function must be called before any other backtrace function
 void bt_init(void);
 
-/// @brief get the stacktrace backend name
-/// @return the stacktrace backend name
+/// @brief get the backtrace backend name
+/// @return the backtrace backend name
 RET_STRING
 const char *bt_backend(void);
 
-/// @brief get a stacktrace from the current location using a callback
+/// @brief get a backtrace from the current location using a callback
 /// @note this function is not thread safe
 /// @note @a bt_init must be called before calling this function
 ///
@@ -92,7 +92,7 @@ void bt_read(bt_frame_t callback, void *user);
 /// @param symbol the symbol to fill
 frame_resolve_t bt_resolve_symbol(IN_NOTNULL const frame_t *frame, symbol_t *symbol);
 
-/// @brief print a stacktrace to a file
+/// @brief print a backtrace to a file
 /// @note this follows the same precondition as @a bt_read
 ///
 /// @param file the file to print to

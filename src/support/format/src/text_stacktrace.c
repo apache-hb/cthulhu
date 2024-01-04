@@ -6,7 +6,7 @@
 #include "memory/arena.h"
 #include "format/notify.h"
 
-#include "stacktrace/stacktrace.h"
+#include "backtrace/backtrace.h"
 #include "format/backtrace.h"
 
 #include "std/str.h"

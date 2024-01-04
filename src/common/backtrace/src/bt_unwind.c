@@ -1,4 +1,4 @@
-#include "stacktrace/stacktrace.h"
+#include "backtrace/backtrace.h"
 
 #define UNW_LOCAL_ONLY
 #include <unwind.h>

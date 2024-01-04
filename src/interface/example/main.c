@@ -11,7 +11,7 @@
 #include "scan/node.h"
 #include "support/langs.h"
 
-#include "memory/memory.h"
+#include "memory/arena.h"
 #include "defaults/memory.h"
 
 #include "std/map.h"

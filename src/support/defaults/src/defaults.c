@@ -13,7 +13,7 @@
 #include "notify/notify.h"
 #include "format/notify.h"
 #include "os/os.h"
-#include "stacktrace/stacktrace.h"
+#include "backtrace/backtrace.h"
 
 #include "config/config.h"
 #include "std/str.h"

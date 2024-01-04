@@ -2,7 +2,7 @@
 
 #include "core/macros.h"
 
-#include "stacktrace/stacktrace.h"
+#include "backtrace/backtrace.h"
 
 #include <stdio.h>
 #include <stdlib.h>

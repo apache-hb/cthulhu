@@ -1,3 +1,3 @@
 executable('tool_stacktrace', 'main.cpp',
-    dependencies : [ stacktrace ]
+    dependencies : [ backtrace ]
 )

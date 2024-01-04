@@ -7,12 +7,12 @@ src = [
 
 libbase = library('base', src,
     c_args : user_args,
-    dependencies : [ stacktrace ],
+    dependencies : [ backtrace ],
     include_directories : [ 'include' ]
 )
 
 base = declare_dependency(
     link_with : libbase,
-    dependencies : [ stacktrace ],
+    dependencies : [ backtrace ],
     include_directories : [ 'include' ]
 )

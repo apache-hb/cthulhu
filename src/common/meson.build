@@ -1,5 +1,5 @@
 subdir('core')
-subdir('stacktrace')
+subdir('backtrace')
 subdir('base')
 subdir('memory')
 subdir('std')

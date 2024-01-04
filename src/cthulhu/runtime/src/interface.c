@@ -19,7 +19,7 @@
 
 #include "os/os.h"
 
-#include "stacktrace/stacktrace.h"
+#include "backtrace/backtrace.h"
 
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"

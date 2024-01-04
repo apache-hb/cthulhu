@@ -7,7 +7,7 @@ libruntime = library('runtime', src,
     include_directories : 'include',
     c_args : user_args,
     dependencies : [
-        memory, base, std, stacktrace,
+        memory, base, std,
         scan, events, tree, interop, notify
     ]
 )

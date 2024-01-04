@@ -1,6 +1,6 @@
 #include "editor/panic.hpp"
 
-#include "stacktrace/stacktrace.h"
+#include "backtrace/backtrace.h"
 
 #include "std/str.h"
 
