@@ -3,7 +3,7 @@
 #include "config/config.h"
 #include "io/io.h"
 
-#include "notify/text.h"
+#include "format/notify.h"
 #include "std/vector.h"
 #include "std/str.h"
 

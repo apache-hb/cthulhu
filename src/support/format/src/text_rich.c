@@ -1,7 +1,7 @@
 #include "core/macros.h"
 #include "io/io.h"
 #include "memory/memory.h"
-#include "notify/text.h"
+#include "format/notify.h"
 
 #include "base/panic.h"
 #include "scan/node.h"

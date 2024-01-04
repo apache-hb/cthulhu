@@ -66,4 +66,4 @@ FLAG_TEXT [a-zA-Z0-9\-\?]
 
 %%
 
-FLEX_MEMORY(apalloc, aprealloc, apfree)
+FLEX_MEMORY(ap)

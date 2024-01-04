@@ -1,4 +1,5 @@
-#include "std/colour.h"
+#include "format/colour.h"
+#include "format/notify.h"
 #include "base/log.h"
 #include "cthulhu/events/events.h"
 #include "cthulhu/runtime/interface.h"
@@ -7,7 +8,6 @@
 #include "cthulhu/ssa/ssa.h"
 
 #include "notify/notify.h"
-#include "notify/text.h"
 #include "scan/node.h"
 #include "support/langs.h"
 

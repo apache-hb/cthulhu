@@ -4,7 +4,7 @@
 #include "core/macros.h"
 #include "io/io.h"
 #include "memory/arena.h"
-#include "notify/text.h"
+#include "format/notify.h"
 
 #include "stacktrace/stacktrace.h"
 

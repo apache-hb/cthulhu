@@ -9,6 +9,8 @@
 typedef struct io_t io_t;
 typedef struct scan_t scan_t;
 
+BEGIN_API
+
 /// @defgroup Interop flex/bison interop utils
 /// @brief flex/bison interop utils
 /// @ingroup Common
@@ -56,7 +58,7 @@ typedef struct callbacks_t
     {                                                                                           \
         prefix##lex_destroy(scanner);                                                           \
     }                                                                                           \
-    static callbacks_t id = {                                                                   \
+    static const callbacks_t id = {                                                             \
         .init = prefix##_##id##_##init,                                                         \
         .parse = prefix##_##id##_parse,                                                         \
         .scan = prefix##_##id##_scan,                                                           \
@@ -94,3 +96,5 @@ typedef struct parse_result_t
 parse_result_t scan_buffer(scan_t *extra, const callbacks_t *callbacks);
 
 /// @}
+
+END_API

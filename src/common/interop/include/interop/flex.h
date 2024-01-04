@@ -6,6 +6,8 @@
 
 #include "memory/arena.h"
 
+BEGIN_API
+
 /// @defgroup FlexBisonMacros Helpers for flex and bison driver frontends
 /// @ingroup Interop
 /// @{
@@ -69,19 +71,19 @@ void flex_update(where_t *where, where_t *offsets, int steps);
 #endif
 
 /// route memory for flex and bison though cthulhu allocators
-#define FLEX_MEMORY(fn_malloc, fn_realloc, fn_free)                    \
-    inline void *fn_malloc(size_t size, yyscan_t scanner)              \
+#define FLEX_MEMORY(prefix)                    \
+    inline void *prefix##alloc(size_t size, yyscan_t scanner)              \
     {                                                                  \
         scan_t *scan = yyget_extra(scanner);                           \
         arena_t *arena = scan_get_arena(scan);                             \
         return ARENA_MALLOC(arena, size, "yyalloc", scan);             \
     }                                                                  \
-    inline void *fn_realloc(void *ptr, size_t bytes, yyscan_t scanner) \
+    inline void *prefix##realloc(void *ptr, size_t bytes, yyscan_t scanner) \
     {                                                                  \
         arena_t *arena = scan_get_arena(yyget_extra(scanner));             \
         return arena_realloc(ptr, bytes, ALLOC_SIZE_UNKNOWN, arena);   \
     }                                                                  \
-    inline void fn_free(void *ptr, yyscan_t scanner)                   \
+    inline void prefix##free(void *ptr, yyscan_t scanner)                   \
     {                                                                  \
         arena_t *arena = scan_get_arena(yyget_extra(scanner));             \
         if (ptr == NULL)                                               \
@@ -92,3 +94,5 @@ void flex_update(where_t *where, where_t *offsets, int steps);
     }
 
 /// @}
+
+END_API

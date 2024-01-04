@@ -1,11 +1,11 @@
 #include "config/config.h"
-#include "std/colour.h"
+#include "format/colour.h"
 #include "cmd.h"
 
 #include "cthulhu/events/events.h"
 #include "io/console.h"
 #include "memory/memory.h"
-#include "notify/text.h"
+#include "format/notify.h"
 #include "scan/node.h"
 #include "std/map.h"
 #include "std/str.h"

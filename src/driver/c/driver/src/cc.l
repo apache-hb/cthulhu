@@ -132,4 +132,4 @@ WS [ \t\r\v\n\f]
 
 %%
 
-FLEX_MEMORY(ccalloc, ccrealloc, ccfree)
+FLEX_MEMORY(cc)

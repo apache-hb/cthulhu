@@ -1,20 +1,15 @@
 src = [
-    'src/notify.c',
-    'src/common.c',
-
-    'src/text_rich.c',
-    'src/text_simple.c',
-    'src/text_stacktrace.c'
+    'src/notify.c'
 ]
 
 libnotify = library('notify', src,
     c_args : user_args,
-    dependencies : [ scan, std, memory, io ],
+    dependencies : [ std, memory ],
     include_directories : 'include'
 )
 
 notify = declare_dependency(
     link_with : libnotify,
-    dependencies : [ core, base, os ],
+    dependencies : [ core, base ],
     include_directories : 'include'
 )

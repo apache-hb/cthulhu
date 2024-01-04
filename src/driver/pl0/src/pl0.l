@@ -83,4 +83,4 @@ WS [ \t\r\v\n\f]
 
 %%
 
-FLEX_MEMORY(pl0alloc, pl0realloc, pl0free)
+FLEX_MEMORY(pl0)

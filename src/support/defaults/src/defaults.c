@@ -1,5 +1,5 @@
 #include "argparse/argparse.h"
-#include "std/colour.h"
+#include "format/colour.h"
 #include "base/log.h"
 #include "base/panic.h"
 #include "core/macros.h"
@@ -9,7 +9,7 @@
 #include "io/io.h"
 #include "memory/memory.h"
 #include "notify/notify.h"
-#include "notify/text.h"
+#include "format/notify.h"
 #include "os/os.h"
 #include "stacktrace/stacktrace.h"
 

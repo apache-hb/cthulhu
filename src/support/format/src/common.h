@@ -1,10 +1,10 @@
 #pragma once
 
 #include "core/text.h"
-#include "notify/text.h"
 #include "notify/notify.h"
 
-#include "std/colour.h"
+#include "format/notify.h"
+#include "format/colour.h"
 
 #include <stddef.h>
 

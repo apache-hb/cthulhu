@@ -6,7 +6,7 @@ cli = executable('cli', src,
     dependencies : [
         memory, runtime, argparse, support,
         tree, ssa, emit, io, fs,
-        scan, notify, config, events, defaults
+        scan, notify, config, events, defaults, format
     ],
     export_dynamic : true
 )

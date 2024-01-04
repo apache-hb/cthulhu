@@ -118,4 +118,4 @@ WS [ \t\r\v\n\f]
 
 %%
 
-FLEX_MEMORY(obralloc, obrrealloc, obrfree)
+FLEX_MEMORY(obr)

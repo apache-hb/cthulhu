@@ -149,4 +149,4 @@ WS [ \t\r\v\n\f]
 
 %%
 
-FLEX_MEMORY(ctualloc, cturealloc, ctufree)
+FLEX_MEMORY(ctu)

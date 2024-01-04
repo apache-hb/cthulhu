@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/version_def.h"
-#include "std/colour.h"
+#include "format/colour.h"
 
 BEGIN_API
 

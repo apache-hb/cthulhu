@@ -6,7 +6,6 @@ src = [
     'src/str.c',
     'src/vector.c',
     'src/fifo.c',
-    'src/colour.c',
 
     'src/typed/vector.c'
 ]
