@@ -158,8 +158,6 @@ static char *fmt_underline(text_cache_t *cache, const node_t *node, size_t limit
     const char *lines = (underline_width > 1) ? str_repeat("~", underline_width - 1) : "";
     char *underline = format("%s^%s", (char*)typevec_data(padding), lines);
 
-    typevec_delete(padding);
-
     return underline;
 }
 

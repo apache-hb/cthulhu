@@ -304,7 +304,6 @@ static void text_cache_delete(text_cache_t *cache)
     CTASSERT(cache != NULL);
 
     if (cache->io != NULL) io_close(cache->io);
-    typevec_delete(cache->line_info);
     arena_free(cache, sizeof(text_cache_t), cache->arena);
 }
 

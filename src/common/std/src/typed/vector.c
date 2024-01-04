@@ -23,7 +23,7 @@ typedef struct typevec_t
     size_t type_size;
 
     /// @brief The data of the vector.
-    void *data;
+    FIELD_SIZE(size) void *data;
 } typevec_t;
 
 // seperate from typevec_offset because we want to be able to get offsets
@@ -64,14 +64,6 @@ static typevec_t *typevec_create(size_t type_size, size_t len, arena_t *arena)
     ARENA_IDENTIFY(arena, vec->data, "data", vec);
 
     return vec;
-}
-
-void typevec_delete(typevec_t *vec)
-{
-    CTASSERT(vec != NULL);
-
-    arena_free(vec->data, vec->type_size * vec->size, vec->arena);
-    arena_free(vec, sizeof(typevec_t), vec->arena);
 }
 
 USE_DECL

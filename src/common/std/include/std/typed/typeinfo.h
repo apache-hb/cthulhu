@@ -54,9 +54,6 @@ typedef struct typeinfo_t
 
     /// @brief the compare function for the type
     type_compare_strong_t fn_compare;
-
-    /// @brief the copy function for the type
-    type_copy_t fn_copy;
 } typeinfo_t;
 
 extern const typeinfo_t kPointerTypeInfo;
