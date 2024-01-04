@@ -14,21 +14,21 @@ const cfg_info_t *cfg_get_info(const cfg_field_t *field)
     return field->info;
 }
 
-const cfg_info_t *cfg_group_info(const config_t *config)
+const cfg_info_t *cfg_group_info(const cfg_group_t *config)
 {
     CTASSERT(config != NULL);
 
     return config->info;
 }
 
-typevec_t *cfg_get_groups(const config_t *config)
+typevec_t *cfg_get_groups(const cfg_group_t *config)
 {
     CTASSERT(config != NULL);
 
     return config->groups;
 }
 
-vector_t *cfg_get_fields(const config_t *config)
+vector_t *cfg_get_fields(const cfg_group_t *config)
 {
     CTASSERT(config != NULL);
 

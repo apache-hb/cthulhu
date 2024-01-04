@@ -87,7 +87,7 @@ void draw_field_info(const cfg_field_t *field)
     }
 }
 
-void draw_group_info(const config_t *group)
+void draw_group_info(const cfg_group_t *group)
 {
     const cfg_info_t *info = cfg_group_info(group);
 
@@ -325,21 +325,21 @@ void draw_config_entry(cfg_field_t *field)
     draw_field_info(field);
 }
 
-void draw_config_group(config_t *group);
+void draw_config_group(cfg_group_t *group);
 
-void draw_config_group_children(config_t *group)
+void draw_config_group_children(cfg_group_t *group)
 {
     typevec_t *children = cfg_get_groups(group);
     size_t child_count = typevec_len(children);
     for (size_t i = 0; i < child_count; ++i)
     {
         ImGui::TableNextRow();
-        config_t *child = reinterpret_cast<config_t*>(typevec_offset(children, i));
+        cfg_group_t *child = reinterpret_cast<cfg_group_t*>(typevec_offset(children, i));
         draw_config_group(child);
     }
 }
 
-void draw_config_group_fields(config_t *group)
+void draw_config_group_fields(cfg_group_t *group)
 {
     vector_t *fields = cfg_get_fields(group);
     size_t field_count = vector_len(fields);
@@ -351,7 +351,7 @@ void draw_config_group_fields(config_t *group)
     }
 }
 
-void draw_config_group(config_t *group)
+void draw_config_group(cfg_group_t *group)
 {
     ImGui::PushID(group);
 
@@ -379,7 +379,7 @@ void draw_config_group(config_t *group)
     ImGui::PopID();
 }
 
-void ed::draw_config_panel(config_t *config)
+void ed::draw_config_panel(cfg_group_t *config)
 {
     if (ImGui::BeginTable("Config", 5, kTableFlags))
     {

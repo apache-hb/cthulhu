@@ -78,7 +78,7 @@ static void add_single_field(ap_t *ap, cfg_field_t *field)
     }
 }
 
-static void add_config_fields(ap_t *ap, const config_t *config)
+static void add_config_fields(ap_t *ap, const cfg_group_t *config)
 {
     vector_t *fields = cfg_get_fields(config);
     size_t field_count = vector_len(fields);
@@ -92,12 +92,12 @@ static void add_config_fields(ap_t *ap, const config_t *config)
     size_t group_count = typevec_len(groups);
     for (size_t i = 0; i < group_count; i++)
     {
-        const config_t *group = typevec_offset(groups, i);
+        const cfg_group_t *group = typevec_offset(groups, i);
         add_config_fields(ap, group);
     }
 }
 
-ap_t *ap_new(config_t *config, arena_t *arena)
+ap_t *ap_new(cfg_group_t *config, arena_t *arena)
 {
     CTASSERT(config != NULL);
 

@@ -13,7 +13,7 @@ typedef struct vector_t vector_t;
 
 typedef struct tool_t
 {
-    config_t *config;
+    cfg_group_t *config;
 
     cfg_field_t *emit_ssa;
     cfg_field_t *output_dir;

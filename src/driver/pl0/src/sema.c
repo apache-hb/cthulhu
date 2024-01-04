@@ -191,7 +191,7 @@ void pl0_init(driver_t *handle)
     tree_set_attrib(gPrintString, &kExportAttrib);
 
     tree_t *signature = tree_type_closure(node, "print", gIntType, params, eArityVariable);
-    gPrint = tree_decl_function(node, "print", signature, params, vector_of(0), NULL);
+    gPrint = tree_decl_function(node, "print", signature, params, &kEmptyVector, NULL);
     tree_set_attrib(gPrint, &kPrintAttrib);
 
     tree_t *runtime = make_runtime_mod(lifetime);
@@ -545,7 +545,7 @@ void pl0_forward_decls(context_t *context)
     {
         pl0_t *it = vector_get(root->procs, i);
 
-        tree_t *signature = tree_type_closure(it->node, it->name, gVoidType, vector_of(0), eArityFixed);
+        tree_t *signature = tree_type_closure(it->node, it->name, gVoidType, &kEmptyVector, eArityFixed);
         tree_resolve_info_t resolve = {
             .sema = sema,
             .user = it,
@@ -604,8 +604,8 @@ void pl0_compile_module(context_t *context)
         vector_push(&body->stmts, tree_stmt_return(root->node, tree_expr_unit(root->node, gVoidType)));
 
         // this is the entry point, we only support cli entry points in pl/0 for now
-        tree_t *signature = tree_type_closure(root->node, tree_get_name(mod), gVoidType, vector_of(0), eArityFixed);
-        tree_t *tree = tree_decl_function(root->node, tree_get_name(mod), signature, vector_of(0), vector_of(0), body);
+        tree_t *signature = tree_type_closure(root->node, tree_get_name(mod), gVoidType, &kEmptyVector, eArityFixed);
+        tree_t *tree = tree_decl_function(root->node, tree_get_name(mod), signature, &kEmptyVector, &kEmptyVector, body);
         tree_set_attrib(tree, &kEntryAttrib);
 
         set_decl(mod, ePl0TagProcs, tree_get_name(mod), tree); // TODO: this is a hack

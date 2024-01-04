@@ -13,7 +13,7 @@ BEGIN_API
 #endif
 
 typedef struct io_t io_t;
-typedef struct config_t config_t;
+typedef struct cfg_group_t cfg_group_t;
 
 /// @brief config format options
 typedef struct format_config_t
@@ -25,7 +25,7 @@ typedef struct format_config_t
     io_t *io;
 
     /// @brief the config object to format
-    const config_t *config;
+    const cfg_group_t *config;
 
     /// @brief should the command line usage header be printed
     bool print_usage;

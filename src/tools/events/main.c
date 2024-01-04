@@ -51,7 +51,7 @@ static const cfg_info_t kHeaderOutInfo = {
 
 typedef struct tool_t
 {
-    config_t *config;
+    cfg_group_t *config;
 
     cfg_field_t *setup_in;
     cfg_field_t *prefix_in;
@@ -64,7 +64,7 @@ typedef struct tool_t
 
 static tool_t make_tool(arena_t *arena)
 {
-    config_t *root = config_new(arena, &kToolInfo);
+    cfg_group_t *root = config_root(arena, &kToolInfo);
 
     cfg_string_t setup_in_initial = { .initial = NULL };
     cfg_field_t *setup_in = config_string(root, &kSetupInInfo, setup_in_initial);

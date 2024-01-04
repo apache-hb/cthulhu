@@ -68,7 +68,7 @@ static size_t longest_line(const char *str)
     return MAX(longest, current);
 }
 
-static alignment_info_t get_group_alignment(const config_t *config, bool win_style)
+static alignment_info_t get_group_alignment(const cfg_group_t *config, bool win_style)
 {
     // +1 for a forward slash, otherwise +2 for 2 dashes
     size_t long_arg_stride = win_style ? 1 : 2;
@@ -362,7 +362,7 @@ static bool print_field_info(format_config_t options, alignment_info_t alignment
     return print_field_details(options, alignment, field) || needs_second_line;
 }
 
-static void print_config_group(format_config_t options, bool win_style, const config_t *config)
+static void print_config_group(format_config_t options, bool win_style, const cfg_group_t *config)
 {
     // we right align the args based on the longest
     alignment_info_t alignment = get_group_alignment(config, win_style);
@@ -390,7 +390,7 @@ static void print_config_group(format_config_t options, bool win_style, const co
 
     for (size_t i = 0; i < group_count; i++)
     {
-        const config_t *group = typevec_offset(groups, i);
+        const cfg_group_t *group = typevec_offset(groups, i);
         print_config_group(options, win_style, group);
     }
 }

@@ -163,7 +163,7 @@ optInit: %empty { $$ = NULL; }
 
 /* imports */
 
-importList: %empty { $$ = vector_of(0); }
+importList: %empty { $$ = &kEmptyVector; }
     | IMPORT importBodyList SEMI { $$ = $2; }
     ;
 
@@ -213,7 +213,7 @@ optReceiver: %empty { $$ = NULL; }
 receiver: LPAREN mut IDENT COLON IDENT RPAREN { $$ = obr_receiver(x, @$, $2, $3, $5); }
     ;
 
-optParams: %empty { $$ = vector_of(0); }
+optParams: %empty { $$ = &kEmptyVector; }
     | params { $$ = $1; }
     ;
 
@@ -363,7 +363,7 @@ optExpr: %empty { $$ = NULL; }
 
 /* extra */
 
-optExprList: %empty { $$ = vector_of(0); }
+optExprList: %empty { $$ = &kEmptyVector; }
     | exprList { $$ = $1; }
     ;
 

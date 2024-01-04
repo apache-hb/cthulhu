@@ -22,6 +22,8 @@ typedef struct vector_t
     FIELD_SIZE(size) void *data[]; ///< the data
 } vector_t;
 
+vector_t kEmptyVector = { NULL, 0, 0 };
+
 // get the size of the vector struct given a number of elements
 static size_t vector_typesize(size_t size)
 {

@@ -41,7 +41,7 @@ typedef enum cfg_type_t
 } cfg_type_t;
 
 typedef struct cfg_field_t cfg_field_t;
-typedef struct config_t config_t;
+typedef struct cfg_group_t cfg_group_t;
 
 /// @brief information about a configuration field
 /// @note either @a short_args or @a long_args must have at least
@@ -120,12 +120,20 @@ typedef struct cfg_flags_t
 /// @param info the information about this group
 ///
 /// @return the new configuration group
-config_t *config_new(arena_t *arena, const cfg_info_t *info);
+cfg_group_t *config_root(arena_t *arena, const cfg_info_t *info);
 
 /// @defgroup ConfigAdd Construction
 /// @brief Configuration construction API
 /// @ingroup Config
 /// @{
+
+/// @brief add a new configuration group to a configuration group
+///
+/// @param group the configuration group to add the group to
+/// @param info the information about this group
+///
+/// @return the new subgroup
+cfg_group_t *config_group(cfg_group_t *group, const cfg_info_t *info);
 
 /// @brief add a new integer field to a configuration group
 ///
@@ -134,7 +142,7 @@ config_t *config_new(arena_t *arena, const cfg_info_t *info);
 /// @param cfg the configuration information for this field
 ///
 /// @return the new configuration field
-cfg_field_t *config_int(config_t *group, const cfg_info_t *info, cfg_int_t cfg);
+cfg_field_t *config_int(cfg_group_t *group, const cfg_info_t *info, cfg_int_t cfg);
 
 /// @brief add a new yes/no field to a configuration group
 ///
@@ -143,7 +151,7 @@ cfg_field_t *config_int(config_t *group, const cfg_info_t *info, cfg_int_t cfg);
 /// @param initial the initial value for this field
 ///
 /// @return the new configuration field
-cfg_field_t *config_bool(config_t *group, const cfg_info_t *info, bool initial);
+cfg_field_t *config_bool(cfg_group_t *group, const cfg_info_t *info, bool initial);
 
 /// @brief add a new string field to a configuration group
 ///
@@ -152,7 +160,7 @@ cfg_field_t *config_bool(config_t *group, const cfg_info_t *info, bool initial);
 /// @param initial the initial value for this field
 ///
 /// @return the new configuration field
-cfg_field_t *config_string(config_t *group, const cfg_info_t *info, const char *initial);
+cfg_field_t *config_string(cfg_group_t *group, const cfg_info_t *info, const char *initial);
 
 /// @brief add a new vector field to a configuration group
 ///
@@ -161,7 +169,7 @@ cfg_field_t *config_string(config_t *group, const cfg_info_t *info, const char *
 /// @param initial the initial values for this field
 ///
 /// @return the new configuration field
-cfg_field_t *config_vector(config_t *group, const cfg_info_t *info, vector_t *initial);
+cfg_field_t *config_vector(cfg_group_t *group, const cfg_info_t *info, vector_t *initial);
 
 /// @brief add a new choice field to a configuration group
 ///
@@ -170,7 +178,7 @@ cfg_field_t *config_vector(config_t *group, const cfg_info_t *info, vector_t *in
 /// @param cfg the configuration information for this field
 ///
 /// @return the new configuration field
-cfg_field_t *config_enum(config_t *group, const cfg_info_t *info, cfg_enum_t cfg);
+cfg_field_t *config_enum(cfg_group_t *group, const cfg_info_t *info, cfg_enum_t cfg);
 
 /// @brief add a new flags field to a configuration group
 ///
@@ -179,15 +187,7 @@ cfg_field_t *config_enum(config_t *group, const cfg_info_t *info, cfg_enum_t cfg
 /// @param cfg the configuration information for this field
 ///
 /// @return the new configuration field
-cfg_field_t *config_flags(config_t *group, const cfg_info_t *info, cfg_flags_t cfg);
-
-/// @brief add a new configuration group to a configuration group
-///
-/// @param group the configuration group to add the group to
-/// @param info the information about this group
-///
-/// @return the new subgroup
-config_t *config_group(config_t *group, const cfg_info_t *info);
+cfg_field_t *config_flags(cfg_group_t *group, const cfg_info_t *info, cfg_flags_t cfg);
 
 /// @} // ConfigAdd
 
@@ -215,7 +215,7 @@ const cfg_info_t *cfg_get_info(const cfg_field_t *field);
 /// @param config the configuration group to get the information about
 ///
 /// @return the information about @p config
-const cfg_info_t *cfg_group_info(const config_t *config);
+const cfg_info_t *cfg_group_info(const cfg_group_t *config);
 
 /// @brief get the information about an integer field
 ///
@@ -264,14 +264,14 @@ const char *cfg_type_name(cfg_type_t type);
 /// @param config the configuration group to get the subgroups from
 ///
 /// @return the subgroups in @p config
-typevec_t *cfg_get_groups(const config_t *config);
+typevec_t *cfg_get_groups(const cfg_group_t *config);
 
 /// @brief get all fields in a configuration group
 ///
 /// @param config the configuration group to get the fields from
 ///
 /// @return the fields in @p config
-vector_t *cfg_get_fields(const config_t *config);
+vector_t *cfg_get_fields(const cfg_group_t *config);
 
 /// @} // ConfigReflect
 

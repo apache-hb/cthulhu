@@ -184,13 +184,13 @@ program: modspec imports decls { scan_set(x, ctu_module(x, @$, $1, $2, $3)); }
 
 /* modules */
 
-modspec: %empty { $$ = vector_of(0); }
+modspec: %empty { $$ = &kEmptyVector; }
     | MODULE path SEMI { $$ = $2; }
     ;
 
 /* imports */
 
-imports: %empty { $$ = vector_of(0); }
+imports: %empty { $$ = &kEmptyVector; }
     | importList { $$ = $1; }
     ;
 
@@ -222,8 +222,8 @@ attribList: singleAttrib { $$ = vector_init($1); }
     | attribList COMMA singleAttrib { vector_push(&$1, $3); $$ = $1; }
     ;
 
-singleAttrib: path { $$ = ctu_attrib(x, @$, $1, vector_of(0)); }
-    | path LPAREN RPAREN { $$ = ctu_attrib(x, @$, $1, vector_of(0)); }
+singleAttrib: path { $$ = ctu_attrib(x, @$, $1, &kEmptyVector); }
+    | path LPAREN RPAREN { $$ = ctu_attrib(x, @$, $1, &kEmptyVector); }
     | path LPAREN attribArgs RPAREN { $$ = ctu_attrib(x, @$, $1, $3); }
     ;
 
@@ -233,7 +233,7 @@ attribArgs: expr { $$ = vector_init($1); }
 
 /* toplevel decls */
 
-decls: %empty { $$ = vector_of(0); }
+decls: %empty { $$ = &kEmptyVector; }
     | declList { $$ = $1; }
     ;
 
@@ -261,7 +261,7 @@ underlying: %empty { $$ = NULL; }
     | COLON type { $$ = $2; }
     ;
 
-optVariantFields: %empty { $$ = vector_of(0); }
+optVariantFields: %empty { $$ = &kEmptyVector; }
     | variantFields { $$ = $1; }
     ;
 
@@ -285,7 +285,7 @@ fnResult: %empty { $$ = NULL; }
     | COLON type { $$ = $2; }
     ;
 
-fnParams: %empty { $$ = ctu_params_new(vector_of(0), NULL); }
+fnParams: %empty { $$ = ctu_params_new(&kEmptyVector, NULL); }
     | LPAREN fnParamList variadic RPAREN { $$ = ctu_params_new($2, $3); }
     ;
 
@@ -357,7 +357,7 @@ typeList: type { $$ = vector_init($1); }
     | typeList COMMA type { vector_push(&$1, $3); $$ = $1; }
     ;
 
-optTypeList: %empty { $$ = vector_of(0); }
+optTypeList: %empty { $$ = &kEmptyVector; }
     | typeList { $$ = $1; }
     ;
 
@@ -422,7 +422,7 @@ maybeExpr: NOINIT { $$ = NULL; }
     | expr { $$ = $1; }
     ;
 
-optExprList: %empty { $$ = vector_of(0); }
+optExprList: %empty { $$ = &kEmptyVector; }
     | exprList { $$ = $1; }
     ;
 

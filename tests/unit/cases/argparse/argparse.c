@@ -12,7 +12,7 @@
 
 typedef struct test_config_t
 {
-    config_t *root;
+    cfg_group_t *root;
 
     cfg_field_t *bool_field;
     cfg_field_t *bool_field2;
@@ -117,7 +117,7 @@ static test_config_t make_config(arena_t *arena)
 {
     test_config_t config = {0};
 
-    config.root = config_new(arena, &kRootInfo);
+    config.root = config_root(arena, &kRootInfo);
 
     config.bool_field = config_bool(config.root, &kBoolInfo, false);
 

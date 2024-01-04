@@ -98,11 +98,11 @@ static const cfg_info_t kBacktraceInfo = {
     .long_args = kBacktraceInfoLongArgs,
 };
 
-default_options_t get_default_options(config_t *group)
+default_options_t get_default_options(cfg_group_t *group)
 {
     CTASSERT(group != NULL);
 
-    config_t *general = config_group(group, &kGroupInfo);
+    cfg_group_t *general = config_group(group, &kGroupInfo);
 
     cfg_field_t *help = config_bool(general, &kHelpInfo, false);
 
@@ -114,7 +114,7 @@ default_options_t get_default_options(config_t *group)
 
     cfg_field_t *colour = config_bool(general, &kColourInfo, false);
 
-    config_t *debug = config_group(group, &kDebugGroupInfo);
+    cfg_group_t *debug = config_group(group, &kDebugGroupInfo);
 
     cfg_field_t *verbose = config_bool(debug, &kVerboseLoggingInfo, false);
 

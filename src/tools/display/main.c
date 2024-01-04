@@ -14,7 +14,7 @@ static const version_info_t kToolVersion = {
 
 typedef struct tool_t
 {
-    config_t *config;
+    cfg_group_t *config;
 
     cfg_field_t *enum_argument;
     cfg_field_t *flag_argument;
@@ -75,7 +75,7 @@ static const cfg_info_t kFlagInfo = {
 
 static tool_t make_config(arena_t *arena)
 {
-    config_t *config = config_new(arena, &kToolInfo);
+    cfg_group_t *config = config_root(arena, &kToolInfo);
 
     default_options_t options = get_default_options(config);
 

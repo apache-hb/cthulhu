@@ -76,7 +76,7 @@ static const cfg_choice_t kReportStyleChoices[] = {
 
 tool_t make_tool(arena_t *arena)
 {
-    config_t *config = config_new(arena, &kConfigInfo);
+    cfg_group_t *config = config_root(arena, &kConfigInfo);
 
     default_options_t options = get_default_options(config);
 
@@ -84,7 +84,7 @@ tool_t make_tool(arena_t *arena)
 
     cfg_field_t *warn_as_error_field = config_bool(config, &kWarnAsError, false);
 
-    config_t *report_group = config_group(config, &kReportInfo);
+    cfg_group_t *report_group = config_group(config, &kReportInfo);
 
     cfg_int_t report_limit_options = {.initial = 20, .min = 0, .max = 1000};
     cfg_field_t *report_limit_field = config_int(report_group, &kReportLimit, report_limit_options);

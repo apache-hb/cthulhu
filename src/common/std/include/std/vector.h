@@ -23,6 +23,13 @@ typedef struct arena_t arena_t;
  */
 typedef struct vector_t vector_t;
 
+/// @brief a global empty vector
+/// used to avoid allocating alot of empty vectors
+/// TODO: make this a const global
+/// holding off on making it const until all the parsers are updated to handle it
+/// @warning doing anything with this vector aside from getting its length is invalid
+extern vector_t kEmptyVector;
+
 /**
  * @brief release a vector
  *

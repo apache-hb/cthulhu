@@ -12,7 +12,7 @@
 // because i dont trust compilers to optimize it out
 
 #if CTU_DEBUG
-static const cfg_field_t *config_find(const config_t *config, const char *name)
+static const cfg_field_t *config_find(const cfg_group_t *config, const char *name)
 {
     size_t field_len = vector_len(config->fields);
     for (size_t i = 0; i < field_len; i++)
@@ -73,7 +73,7 @@ static void info_validate(const cfg_info_t *info)
 #   define ASSERT_CONFIG_VALID(config, info)
 #endif
 
-static cfg_field_t *add_field(config_t *config, const cfg_info_t *info, cfg_type_t type)
+static cfg_field_t *add_field(cfg_group_t *config, const cfg_info_t *info, cfg_type_t type)
 {
     cfg_field_t *field = ARENA_MALLOC(config->arena, sizeof(cfg_field_t), info->name, config);
 
@@ -85,7 +85,7 @@ static cfg_field_t *add_field(config_t *config, const cfg_info_t *info, cfg_type
     return field;
 }
 
-static void config_init(config_t *config, arena_t *arena, const cfg_info_t *info)
+static void config_init(cfg_group_t *config, arena_t *arena, const cfg_info_t *info)
 {
     CTASSERT(config != NULL);
     ASSERT_INFO_VALID_GROUP(info);
@@ -93,21 +93,21 @@ static void config_init(config_t *config, arena_t *arena, const cfg_info_t *info
     config->arena = arena;
     config->info = info;
 
-    config->groups = typevec_new(sizeof(config_t), 4, arena);
+    config->groups = typevec_new(sizeof(cfg_group_t), 4, arena);
     config->fields = vector_new_arena(4, arena);
 
     ARENA_IDENTIFY(arena, config->groups, "groups", config);
     ARENA_IDENTIFY(arena, config->fields, "fields", config);
 }
 
-config_t *config_new(arena_t *arena, const cfg_info_t *info)
+cfg_group_t *config_root(arena_t *arena, const cfg_info_t *info)
 {
-    config_t *config = ARENA_MALLOC(arena, sizeof(config_t), "config", NULL);
+    cfg_group_t *config = ARENA_MALLOC(arena, sizeof(cfg_group_t), "config", NULL);
     config_init(config, arena, info);
     return config;
 }
 
-cfg_field_t *config_int(config_t *group, const cfg_info_t *info, cfg_int_t cfg)
+cfg_field_t *config_int(cfg_group_t *group, const cfg_info_t *info, cfg_int_t cfg)
 {
     ASSERT_CONFIG_VALID(group, info);
 
@@ -133,7 +133,7 @@ cfg_field_t *config_int(config_t *group, const cfg_info_t *info, cfg_int_t cfg)
     return field;
 }
 
-cfg_field_t *config_bool(config_t *group, const cfg_info_t *info, bool initial)
+cfg_field_t *config_bool(cfg_group_t *group, const cfg_info_t *info, bool initial)
 {
     ASSERT_CONFIG_VALID(group, info);
 
@@ -144,7 +144,7 @@ cfg_field_t *config_bool(config_t *group, const cfg_info_t *info, bool initial)
     return field;
 }
 
-cfg_field_t *config_string(config_t *group, const cfg_info_t *info, const char *initial)
+cfg_field_t *config_string(cfg_group_t *group, const cfg_info_t *info, const char *initial)
 {
     ASSERT_CONFIG_VALID(group, info);
 
@@ -155,7 +155,7 @@ cfg_field_t *config_string(config_t *group, const cfg_info_t *info, const char *
     return field;
 }
 
-cfg_field_t *config_vector(config_t *group, const cfg_info_t *info, vector_t *initial)
+cfg_field_t *config_vector(cfg_group_t *group, const cfg_info_t *info, vector_t *initial)
 {
     ASSERT_CONFIG_VALID(group, info);
 
@@ -165,7 +165,7 @@ cfg_field_t *config_vector(config_t *group, const cfg_info_t *info, vector_t *in
     return field;
 }
 
-cfg_field_t *config_enum(config_t *group, const cfg_info_t *info, cfg_enum_t cfg)
+cfg_field_t *config_enum(cfg_group_t *group, const cfg_info_t *info, cfg_enum_t cfg)
 {
     ASSERT_CONFIG_VALID(group, info);
     ASSERT_OPTIONS_VALID(cfg.options, cfg.count);
@@ -177,7 +177,7 @@ cfg_field_t *config_enum(config_t *group, const cfg_info_t *info, cfg_enum_t cfg
     return field;
 }
 
-cfg_field_t *config_flags(config_t *group, const cfg_info_t *info, cfg_flags_t cfg)
+cfg_field_t *config_flags(cfg_group_t *group, const cfg_info_t *info, cfg_flags_t cfg)
 {
     ASSERT_CONFIG_VALID(group, info);
     ASSERT_OPTIONS_VALID(cfg.options, cfg.count);
@@ -189,14 +189,14 @@ cfg_field_t *config_flags(config_t *group, const cfg_info_t *info, cfg_flags_t c
     return field;
 }
 
-config_t *config_group(config_t *group, const cfg_info_t *info)
+cfg_group_t *config_group(cfg_group_t *group, const cfg_info_t *info)
 {
     CTASSERT(group != NULL);
 
-    config_t config = {0};
+    cfg_group_t config = {0};
     config_init(&config, group->arena, info);
 
-    config_t *result = typevec_push(group->groups, &config);
+    cfg_group_t *result = typevec_push(group->groups, &config);
 
     ARENA_REPARENT(group->arena, result, group);
 

@@ -29,13 +29,13 @@ typedef struct cfg_field_t
     };
 } cfg_field_t;
 
-typedef struct config_t
+typedef struct cfg_group_t
 {
     arena_t *arena;
     const cfg_info_t *info;
 
     typevec_t *groups;
     vector_t *fields;
-} config_t;
+} cfg_group_t;
 
 #define ASSERT_FIELD_TYPE(field, type) CTASSERT(cfg_get_type(field) == (type))

@@ -12,7 +12,7 @@ BEGIN_API
 /// @ingroup Support
 /// @{
 
-typedef struct config_t config_t;
+typedef struct cfg_group_t cfg_group_t;
 typedef struct cfg_field_t cfg_field_t;
 typedef struct io_t io_t;
 typedef struct arena_t arena_t;
@@ -28,7 +28,7 @@ typedef struct tool_config_t
     io_t *io;
 
     /// @brief the root config group
-    config_t *group;
+    cfg_group_t *group;
 
     /// @brief this tools version
     version_info_t version;
@@ -44,7 +44,7 @@ typedef struct tool_config_t
 typedef struct default_options_t
 {
     // default config group
-    config_t *general_group;
+    cfg_group_t *general_group;
 
     // print help and quit
     cfg_field_t *print_help;
@@ -62,7 +62,7 @@ typedef struct default_options_t
     cfg_field_t *colour_output;
 
     // debug config group
-    config_t *debug_group;
+    cfg_group_t *debug_group;
 
     // enable debug verbosity
     cfg_field_t *log_verbose;
@@ -76,7 +76,7 @@ typedef struct default_options_t
 /// @param group the config group to use
 ///
 /// @return the default options
-default_options_t get_default_options(config_t *group);
+default_options_t get_default_options(cfg_group_t *group);
 
 /// @brief process the default options
 /// @note if this function does not return @a EXIT_OK, the program should exit

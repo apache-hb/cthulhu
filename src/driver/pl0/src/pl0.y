@@ -121,7 +121,7 @@ path: IDENT { $$ = vector_init($1); }
     | path DOT IDENT { vector_push(&$1, $3); $$ = $1; }
     ;
 
-module: %empty { $$ = vector_of(0); }
+module: %empty { $$ = &kEmptyVector; }
     | MODULE path SEMICOLON { $$ = $2; }
     ;
 

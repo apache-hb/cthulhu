@@ -17,7 +17,7 @@
 
 typedef struct tool_t
 {
-    config_t *config;
+    cfg_group_t *config;
 
     cfg_field_t *test_backtrace;
     cfg_field_t *test_simple;
@@ -66,7 +66,7 @@ static const cfg_info_t kRichInfo = {
 
 static tool_t make_config(arena_t *arena)
 {
-    config_t *config = config_new(arena, &kToolInfo);
+    cfg_group_t *config = config_root(arena, &kToolInfo);
 
     cfg_field_t *test_backtrace = config_bool(config, &kBacktraceInfo, false);
     cfg_field_t *test_simple = config_bool(config, &kSimpleInfo, false);

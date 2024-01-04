@@ -61,7 +61,7 @@ static const cfg_info_t kPrintSingleDiagInfo = {
 
 typedef struct tool_t
 {
-    config_t *root;
+    cfg_group_t *root;
 
     cfg_field_t *print_all_langs;
     cfg_field_t *print_one_lang;
@@ -74,7 +74,7 @@ typedef struct tool_t
 
 static tool_t make_config(arena_t *arena, langs_t langs)
 {
-    config_t *root = config_new(arena, &kGroupInfo);
+    cfg_group_t *root = config_root(arena, &kGroupInfo);
 
     cfg_choice_t *lang_choices = ARENA_MALLOC(arena, sizeof(cfg_choice_t) * (langs.size + 1), "lang_choices", root);
     cfg_choice_t none_choice = {

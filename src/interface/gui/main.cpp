@@ -76,7 +76,7 @@ public:
     bool show = true;
     ed::CompileError error = {};
 
-    config_t *config = nullptr;
+    cfg_group_t *config = nullptr;
     cfg_field_t *cfg_int = nullptr;
     cfg_field_t *cfg_bool = nullptr;
     cfg_field_t *cfg_string = nullptr;
@@ -165,9 +165,9 @@ public:
 
     void init_config()
     {
-        config = config_new(&global, &root_info);
+        config = config_root(&global, &root_info);
 
-        config_t *test_group = config_group(config, &test_group_info);
+        cfg_group_t *test_group = config_group(config, &test_group_info);
 
         cfg_int = config_int(test_group, &test_int_info, test_int_config);
         cfg_bool = config_bool(test_group, &test_bool_info, true);

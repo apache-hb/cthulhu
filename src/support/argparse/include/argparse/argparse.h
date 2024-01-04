@@ -19,7 +19,7 @@ typedef struct vector_t vector_t;
 typedef struct typevec_t typevec_t;
 typedef struct arena_t arena_t;
 
-typedef struct config_t config_t;
+typedef struct cfg_group_t cfg_group_t;
 typedef struct cfg_field_t cfg_field_t;
 
 typedef struct ap_t ap_t;
@@ -55,7 +55,7 @@ typedef ap_event_result_t (*ap_event_t)(ap_t *ap, const cfg_field_t *param, cons
 /// @param arena the arena to allocate from
 ///
 /// @return the created parser instance
-ap_t *ap_new(config_t *config, arena_t *arena);
+ap_t *ap_new(cfg_group_t *config, arena_t *arena);
 
 /// @brief add a callback event to a parameter
 ///

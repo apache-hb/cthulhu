@@ -21,7 +21,7 @@ typedef struct tree_t tree_t;
 typedef struct cookie_t cookie_t;
 typedef struct scan_t scan_t;
 typedef struct logger_t logger_t;
-typedef struct config_t config_t;
+typedef struct cfg_group_t cfg_group_t;
 typedef struct callbacks_t callbacks_t;
 
 ///
@@ -40,7 +40,7 @@ typedef void *(*driver_prepass_t)(driver_t *, scan_t *);
 typedef void (*driver_postpass_t)(driver_t *, scan_t *, void *);
 
 /// @brief get the schema for the driver
-typedef config_t *(*driver_config_t)(driver_t *, config_t *);
+typedef cfg_group_t *(*driver_config_t)(driver_t *, cfg_group_t *);
 
 typedef enum compile_stage_t
 {
