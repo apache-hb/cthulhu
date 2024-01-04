@@ -262,6 +262,7 @@ if doxygen.found()
     doxy_cdata.set('INCLUDE_PATHS', ' '.join(doxy_includes))
     doxy_cdata.set('EXTRA_STYLESHEET', ' '.join(stylesheets))
     doxy_cdata.set('CLANG_DATABASE', meson.global_build_root() / 'compile_commands.json')
+    doxy_cdata.set('HTML_HEADER', data_dir / 'header.html')
 
     doxy_cfg = configure_file(
         input : 'data/Doxyfile.in',
