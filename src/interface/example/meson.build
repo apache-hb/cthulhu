@@ -5,7 +5,7 @@ example = executable('example', src,
     dependencies : [
         runtime, argparse, support,
         tree, ssa, emit, io, fs,
-        scan, notify, memory, events, format
+        scan, notify, memory, events, format, defaults
     ],
     export_dynamic : true
 )

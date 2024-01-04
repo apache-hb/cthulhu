@@ -3,6 +3,7 @@
 #include "base/log.h"
 #include "core/macros.h"
 #include "memory/memory.h"
+#include "defaults/memory.h"
 #include "stacktrace/stacktrace.h"
 
 #include "std/str.h"

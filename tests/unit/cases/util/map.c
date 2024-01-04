@@ -1,5 +1,6 @@
-#include "memory/memory.h"
+#include "memory/arena.h"
 #include "unit/ct-test.h"
+#include "defaults/memory.h"
 
 #include "std/map.h"
 #include "std/str.h"

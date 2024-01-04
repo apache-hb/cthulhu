@@ -1,4 +1,5 @@
 #include "argparse/argparse.h"
+#include "defaults/memory.h"
 #include "format/backtrace.h"
 #include "format/colour.h"
 #include "base/log.h"

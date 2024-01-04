@@ -1,49 +1,11 @@
 #include "memory/memory.h"
 
 #include "base/panic.h"
-#include "core/macros.h"
 
 #include <gmp.h>
 
 #include <string.h>
 #include <stdlib.h>
-
-/// default global allocator
-
-static void *default_malloc(size_t size, void *user)
-{
-    CTU_UNUSED(user);
-
-    return malloc(size);
-}
-
-static void *default_realloc(void *ptr, size_t new_size, size_t old_size, void *user)
-{
-    CTU_UNUSED(user);
-    CTU_UNUSED(old_size);
-
-    return realloc(ptr, new_size);
-}
-
-static void default_free(void *ptr, size_t size, void *user)
-{
-    CTU_UNUSED(user);
-    CTU_UNUSED(size);
-
-    free(ptr);
-}
-
-static arena_t gDefaultAlloc = {
-    .name = "default global allocator",
-    .fn_malloc = default_malloc,
-    .fn_realloc = default_realloc,
-    .fn_free = default_free
-};
-
-arena_t *ctu_default_alloc(void)
-{
-    return &gDefaultAlloc;
-}
 
 ///
 /// global allocator
@@ -62,22 +24,6 @@ void init_global_arena(arena_t *arena)
 
     gGlobalArena = arena;
 }
-
-void *ctu_malloc(size_t size)
-{
-    return arena_malloc(size, "global", gGlobalArena, get_global_arena());
-}
-
-void *ctu_realloc(void *ptr, size_t new_size, size_t old_size)
-{
-    return arena_realloc(ptr, new_size, old_size, get_global_arena());
-}
-
-void ctu_free(void *ptr, size_t size)
-{
-    arena_free(ptr, size, get_global_arena());
-}
-
 
 USE_DECL
 void *ctu_memdup(const void *ptr, size_t size)

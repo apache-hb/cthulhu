@@ -26,5 +26,5 @@ libstacktrace = library('stacktrace', src,
 stacktrace = declare_dependency(
     link_with : libstacktrace,
     include_directories : 'include',
-    dependencies : [ core, stacktrace_deps ]
+    dependencies : [ core ]
 )

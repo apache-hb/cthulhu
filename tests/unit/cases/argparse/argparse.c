@@ -1,7 +1,8 @@
 #include "config/config.h"
 #include "core/macros.h"
-#include "memory/memory.h"
+#include "memory/arena.h"
 #include "unit/ct-test.h"
+#include "defaults/memory.h"
 
 #include "argparse/argparse.h"
 

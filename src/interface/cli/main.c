@@ -1,4 +1,5 @@
 #include "config/config.h"
+#include "defaults/memory.h"
 #include "format/colour.h"
 #include "cmd.h"
 

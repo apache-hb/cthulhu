@@ -1,5 +1,6 @@
 #include "memory/memory.h"
 #include "unit/ct-test.h"
+#include "defaults/memory.h"
 
 #include "fs/fs.h"
 

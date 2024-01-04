@@ -12,6 +12,7 @@
 #include "support/langs.h"
 
 #include "memory/memory.h"
+#include "defaults/memory.h"
 
 #include "std/map.h"
 #include "std/str.h"

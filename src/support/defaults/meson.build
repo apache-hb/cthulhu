@@ -1,5 +1,6 @@
 src = [
-    'src/defaults.c'
+    'src/defaults.c',
+    'src/memory.c'
 ]
 
 libdefaults = library('defaults', src,
