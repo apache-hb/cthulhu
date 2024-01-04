@@ -1,8 +1,6 @@
-/**
-@page building Building Cthulhu
-@addindex building
+# Building Cthulhu {#building}
 
-<h3>Prerequisites</h3>
+## Prerequisites
 
 Configuring and building Cthulhu requires the following tools:
     - <a href="https://mesonbuild.com/Getting-meson.html">Meson</a>
@@ -22,7 +20,9 @@ Cthulhu can optionally use the following tools to enable additional features:
 Cthulhus current runtime dependencies are:
     - <a href="https://gmp.org/">GMP</a>; only if the compiler is built with GMP support.
 
-<h3>Configuration</h3>
+## Configuration
+
+All available build options are listed in the `meson_options.txt` file found in the projects root directory.
 
 ```sh
 meson setup build
@@ -30,4 +30,3 @@ ninja -C build
 ninja -C build docs # build documentation, requires doxygen
 ninja -C build test # run tests
 ```
-*/

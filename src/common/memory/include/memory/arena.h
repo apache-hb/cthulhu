@@ -180,7 +180,7 @@ void arena_reparent(IN_NOTNULL const void *ptr, const void *parent, IN_NOTNULL a
 
 /// @def ARENA_RENAME(arena, ptr, name)
 /// @brief rename a pointer in a custom allocator
-/// @note this is a no-op if @ref CTU_TRACE_MEMORY is not defined
+/// @note this is a no-op if @a CTU_TRACE_MEMORY is not defined
 ///
 /// @param arena the allocator to use
 /// @param ptr the pointer to rename
@@ -188,7 +188,7 @@ void arena_reparent(IN_NOTNULL const void *ptr, const void *parent, IN_NOTNULL a
 
 /// @def ARENA_REPARENT(arena, ptr, parent)
 /// @brief reparent a pointer in a custom allocator
-/// @note this is a no-op if @ref CTU_TRACE_MEMORY is not defined
+/// @note this is a no-op if @a CTU_TRACE_MEMORY is not defined
 ///
 /// @param arena the allocator to use
 /// @param ptr the pointer to reparent
@@ -196,7 +196,7 @@ void arena_reparent(IN_NOTNULL const void *ptr, const void *parent, IN_NOTNULL a
 
 /// @def ARENA_MALLOC(arena, size, name, parent)
 /// @brief allocate memory from a custom allocator
-/// @note this is converted to @ref arena_malloc if @ref CTU_TRACE_MEMORY is not defined
+/// @note this is converted to @a arena_malloc if @a CTU_TRACE_MEMORY is not defined
 ///
 /// @param arena the allocator to use
 /// @param size the size of the allocation, must be greater than 0
@@ -217,12 +217,16 @@ void arena_reparent(IN_NOTNULL const void *ptr, const void *parent, IN_NOTNULL a
 
 /// @def ARENA_IDENTIFY(arena, ptr, name, parent)
 /// @brief rename and reparent a pointer in a custom allocator
-/// @note this is a no-op if @ref CTU_TRACE_MEMORY is not defined
+/// @note this is a no-op if @a CTU_TRACE_MEMORY is not defined
 /// @warning identifying a pointer is not an atomic call and is implemented as
-///          two separate calls to @ref ARENA_RENAME and @ref ARENA_REPARENT
+///          two separate calls to @a ARENA_RENAME and @a ARENA_REPARENT
+/// @warning @p name must be an expression that is evaluated in the argument list
+/// @warning @p parent must be an address on the heap
 ///
 /// @param arena the allocator to use
 /// @param ptr the pointer to rename
+/// @param name the new name of the pointer
+/// @param parent the new parent of the pointer
 
 #define ARENA_IDENTIFY(arena, ptr, name, parent)                                                                       \
     do                                                                                                                 \
