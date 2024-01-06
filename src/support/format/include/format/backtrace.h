@@ -1,8 +1,10 @@
 #pragma once
 
 #include "core/analyze.h"
-#include "core/compiler.h"
-#include "format/notify.h"
+
+#include "format/format.h"
+
+#include <stdbool.h>
 
 BEGIN_API
 
@@ -10,56 +12,50 @@ typedef struct frame_t frame_t;
 typedef struct arena_t arena_t;
 typedef struct typevec_t typevec_t;
 
-/// @brief a backtrace report context
-/// @warning this is an internal structure and should not be used directly
-typedef struct bt_report_t
+typedef struct print_backtrace_t
 {
-    /// @brief memory pool
-    arena_t *arena;
+    /// @brief basic print options
+    print_options_t options;
 
-    /// @brief all entries
-    /// @note sequentially recursive frames are combined into a single entry
-    typevec_t *entries;
+    /// @brief should we attempt to load the source code and print it
+    /// this means that print_backtrace will make calls to the io subsystem
+    /// this may not be desirable inside panic handlers
+    bool print_source;
 
-    /// @brief the longest symbol name
-    size_t longest_symbol;
+    heading_style_t heading_style;
 
-    /// @brief the largest number of consecutive frames
-    size_t max_consecutive_frames;
+    /// @brief is the first line of the file line 0 or line 1
+    bool zero_indexed_lines;
 
-    /// @brief the total number of frames consumed
-    /// this is not the same as the number of entries as it includes recursed frames
-    size_t total_frames;
+    /// @brief the header message to print at the start of the backtrace
+    /// set to NULL to disable
+    const char *header_message;
+} print_backtrace_t;
 
-    /// @brief the index of the last consecutive frame
-    size_t last_consecutive_index;
-} bt_report_t;
+/// @brief a backtrace report context
+typedef struct bt_report_t bt_report_t;
 
 /// @brief create a new backtrace report
 ///
 /// @return the new backtrace report
-bt_report_t bt_report_new(arena_t *arena);
+bt_report_t *bt_report_new(arena_t *arena);
 
 /// @brief collect a backtrace into a report
 /// this is equivalent to calling bt_report_new() and then bt_report_add()
 ///
 /// @return the new backtrace report
-bt_report_t bt_report_collect(arena_t *arena);
+bt_report_t *bt_report_collect(arena_t *arena);
 
 /// @brief add a frame to a backtrace report
 ///
 /// @param report the report to add the frame to
 /// @param frame the frame to add to the report
-void bt_report_add(
-    IN_NOTNULL bt_report_t *report,
-    IN_NOTNULL const frame_t *frame);
+void bt_report_add(IN_NOTNULL bt_report_t *report, IN_NOTNULL const frame_t *frame);
 
 /// @brief print a backtrace report
 ///
 /// @param config the configuration to use
 /// @param report the report to print
-void bt_report_finish(
-    text_config_t config,
-    IN_NOTNULL bt_report_t *report);
+void print_backtrace(print_backtrace_t config, IN_NOTNULL bt_report_t *report);
 
 END_API

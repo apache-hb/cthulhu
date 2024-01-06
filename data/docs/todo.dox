@@ -22,6 +22,10 @@ GFI = good first issue
 
 - update unit tests to require specific error codes
 
+- unify all the format interfaces
+    - very annoying to have to pass these massive structs everywhere
+    - also make struct constructors
+
 - unit testing for error reporting
 - unit testing for location tracking in frontends
 

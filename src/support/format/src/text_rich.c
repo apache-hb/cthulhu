@@ -15,6 +15,12 @@
 #include <ctype.h>
 #include <string.h>
 
+#define COLOUR_PATH eColourBlue
+#define COLOUR_UNDERLINE eColourMagenta
+#define COLOUR_SEGMENT eColourGreen
+#define COLOUR_NOTE eColourYellow
+#define COLOUR_MESSAGE eColourRed
+
 typedef struct rich_t
 {
     arena_t *arena;
@@ -93,13 +99,13 @@ static void print_scan_header(rich_t *rich, size_t largest, size_t line, const s
 
     if (scan_is_builtin(scan))
     {
-        char *coloured = colour_format(rich->fmt, eColourCyan, "<%s>", name);
+        char *coloured = colour_format(rich->fmt, COLOUR_PATH, "<%s>", name);
 
         io_printf(config.io, " %s => %s\n", padding, coloured);
     }
     else
     {
-        size_t display_line = get_offset_line(config.config, line);
+        size_t display_line = get_offset_line(config.config.zeroth_line, line);
 
         io_printf(config.io, " %s => %s [%s:%zu]\n", padding, lang, name, display_line);
     }
@@ -117,7 +123,7 @@ static void print_file_header(rich_t *rich, const node_t *node)
 
     if (node_has_line(node))
     {
-        const char *name = get_scan_name(node);
+        const char *name = scan_path(scan);
         const char *lang = scan_language(scan);
 
         char *padding = str_repeat(" ", width);
@@ -187,12 +193,12 @@ static void print_file_segment(rich_t *rich, const node_t *node, const char *mes
 
     if (vector_len(lines) > 1)
     {
-        char *one = colour_text(rich->fmt, eColourGreen, "(1)");
+        char *one = colour_text(rich->fmt, COLOUR_SEGMENT, "(1)");
         first = format("%s %s", one, first);
     }
 
     char *underline = fmt_underline(file, node, rich->max_columns);
-    char *coloured_underline = colour_text(rich->fmt, eColourMagenta, underline);
+    char *coloured_underline = colour_text(rich->fmt, COLOUR_UNDERLINE, underline);
 
     const char *pretext = !isspace(source.text[0]) ? " " : "";
 
@@ -210,7 +216,7 @@ static void print_file_segment(rich_t *rich, const node_t *node, const char *mes
     {
         char *it = vector_get(lines, i);
         char *aligned = fmt_align(rich->arena, align, "(%zu)", i + 1);
-        char *coloured = colour_text(rich->fmt, eColourGreen, aligned);
+        char *coloured = colour_text(rich->fmt, COLOUR_SEGMENT, aligned);
         io_printf(config.io, " %s |%s%s %s %s.\n", padding, pretext, extra, coloured, it);
     }
 }
@@ -228,7 +234,7 @@ static void print_segment_message(rich_t *rich, const char *message)
     for (size_t i = 0; i < len; i++)
     {
         char *it = vector_get(lines, i);
-        char *coloured = colour_format(rich->fmt, eColourGreen, "(%zu)", i + 1);
+        char *coloured = colour_format(rich->fmt, COLOUR_SEGMENT, "(%zu)", i + 1);
         io_printf(config.io, "  %s %s\n", coloured, it);
     }
 }
@@ -345,14 +351,14 @@ static join_result_t join_node_messages(rich_t *rich, const segment_t *segment, 
     {
         result.used_primary = true;
 
-        char *coloured = colour_text(rich->fmt, eColourRed, segment->message);
+        char *coloured = colour_text(rich->fmt, COLOUR_MESSAGE, segment->message);
         other->message = format("%s\n%s", coloured, other->message);
     }
     else if (other->message == primary)
     {
         result.used_primary = true;
 
-        char *coloured = colour_text(rich->fmt, eColourRed, other->message);
+        char *coloured = colour_text(rich->fmt, COLOUR_MESSAGE, other->message);
         other->message = format("%s\n%s", segment->message, coloured);
     }
     else
@@ -500,7 +506,7 @@ static void print_notes(rich_t *rich)
 
     text_config_t config = rich->config;
 
-    char *coloured = colour_text(rich->fmt, eColourYellow, "*");
+    char *coloured = colour_text(rich->fmt, COLOUR_NOTE, "*");
     size_t len = vector_len(event->notes);
     for (size_t i = 0; i < len; i++)
     {

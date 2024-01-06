@@ -66,9 +66,6 @@ typedef struct default_options_t
 
     // enable debug verbosity
     cfg_field_t *log_verbose;
-
-    // enable nicer backtraces
-    cfg_field_t *fancy_backtrace;
 } default_options_t;
 
 /// @brief get the default options

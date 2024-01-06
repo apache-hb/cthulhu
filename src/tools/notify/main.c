@@ -5,6 +5,7 @@
 #include "core/macros.h"
 #include "defaults/defaults.h"
 #include "format/config.h"
+#include "format/notify2.h"
 #include "io/console.h"
 #include "io/io.h"
 
@@ -20,8 +21,9 @@ typedef struct tool_t
     cfg_group_t *config;
 
     cfg_field_t *test_backtrace;
-    cfg_field_t *test_simple;
-    cfg_field_t *test_rich;
+    cfg_field_t *notify_style;
+    cfg_field_t *heading_style;
+    cfg_field_t *zero_indexed;
 
     default_options_t options;
 } tool_t;
@@ -48,20 +50,47 @@ static const cfg_info_t kBacktraceInfo = {
     .long_args = kBacktraceArgsLong,
 };
 
-static const char *const kSimpleArgsShort[] = { "simple", NULL };
+static const cfg_choice_t kNotifyOptions[] = {
+    { .text = "brief", .value = eNotifyBrief },
+    { .text = "full", .value = eNotifyFull },
+    { .text = "none", .value = eNotifyCount },
+};
+#define NOTIFY_OPTION_COUNT (sizeof(kNotifyOptions) / sizeof(cfg_choice_t))
 
-static const cfg_info_t kSimpleInfo = {
-    .name = "simple",
-    .brief = "Print a simple report",
-    .short_args = kSimpleArgsShort,
+static const char *const kNotifyArgsShort[] = { "notify", NULL };
+
+static const cfg_info_t kNotifyInfo = {
+    .name = "notify",
+    .brief = "Notification style",
+    .short_args = kNotifyArgsShort,
 };
 
-static const char *const kRichArgsShort[] = { "rich", NULL };
+static const cfg_choice_t kHeadingOptions[] = {
+    { .text = "generic", .value = eHeadingGeneric },
+    { .text = "microsoft", .value = eHeadingMicrosoft },
+};
+#define HEADING_OPTION_COUNT (sizeof(kHeadingOptions) / sizeof(cfg_choice_t))
 
-static const cfg_info_t kRichInfo = {
-    .name = "rich",
-    .brief = "Print a rich report",
-    .short_args = kRichArgsShort,
+#if OS_WINDOWS
+#   define HEADING_DEFAULT_OPTION eHeadingMicrosoft
+#else
+#   define HEADING_DEFAULT_OPTION eHeadingGeneric
+#endif
+
+static const char *const kHeadingArgsShort[] = { "heading", NULL };
+
+static const cfg_info_t kHeadingInfo = {
+    .name = "heading",
+    .brief = "Heading style",
+    .short_args = kHeadingArgsShort,
+};
+
+static const char *const kZeroIndexedArgsShort[] = { "zl", NULL };
+
+static const cfg_info_t kZeroIndexedInfo = {
+    .name = "zero_indexed",
+    .brief = "Print zero indexed line numbers",
+    .short_args = kZeroIndexedArgsShort,
 };
 
 static tool_t make_config(arena_t *arena)
@@ -69,16 +98,33 @@ static tool_t make_config(arena_t *arena)
     cfg_group_t *config = config_root(arena, &kToolInfo);
 
     cfg_field_t *test_backtrace = config_bool(config, &kBacktraceInfo, false);
-    cfg_field_t *test_simple = config_bool(config, &kSimpleInfo, false);
-    cfg_field_t *test_rich = config_bool(config, &kRichInfo, false);
+    cfg_enum_t notify_info = {
+        .options = kNotifyOptions,
+        .count = NOTIFY_OPTION_COUNT,
+        .initial = eNotifyCount,
+    };
+
+    cfg_field_t *notify_style = config_enum(config, &kNotifyInfo, notify_info);
+
+    cfg_enum_t heading_info = {
+        .options = kHeadingOptions,
+        .count = HEADING_OPTION_COUNT,
+        .initial = HEADING_DEFAULT_OPTION,
+    };
+
+    cfg_field_t *heading = config_enum(config, &kHeadingInfo, heading_info);
+
+    cfg_field_t *zero_indexed = config_bool(config, &kZeroIndexedInfo, false);
 
     default_options_t defaults = get_default_options(config);
 
     tool_t tool = {
         .config = config,
         .test_backtrace = test_backtrace,
-        .test_simple = test_simple,
-        .test_rich = test_rich,
+        .notify_style = notify_style,
+        .heading_style = heading,
+        .zero_indexed = zero_indexed,
+
         .options = defaults,
     };
 
@@ -267,131 +313,81 @@ static scan_t *scan_string(const char *name, const char *lang, const char *sourc
     return scan_io(lang, io, arena);
 }
 
-static void print_backtrace(text_config_t base_config)
+static void do_print_backtrace(print_backtrace_t config)
 {
-    text_config_t config = base_config;
     arena_t *arena = get_global_arena();
-    config.io = io_stdout();
 
-    bt_report_t report = bt_report_collect(arena);
+    bt_report_t *report = bt_report_collect(arena);
 
-    bt_report_finish(config, &report);
+    print_backtrace(config, report);
 }
 
-int recurse(int x, text_config_t base_config)
+int recurse(int x, print_backtrace_t config)
 {
     if (x == 0)
     {
-        print_backtrace(base_config);
+        do_print_backtrace(config);
         return 0;
     }
 
-    return recurse(x - 1, base_config);
+    return recurse(x - 1, config);
 }
 
-static int rec3(int x, text_config_t base_config)
+static int rec3(int x, print_backtrace_t config)
 {
     if (x == 0)
     {
-        print_backtrace(base_config);
+        do_print_backtrace(config);
         return 0;
     }
 
-    return recurse(x - 1, base_config);
+    return recurse(x - 1, config);
 }
 
-static int inner(int x, text_config_t base_config)
+static int inner(int x, print_backtrace_t config)
 {
-    return rec3(x, base_config);
+    return rec3(x, config);
 }
 
-static int rec2(int x, int y, text_config_t base_config)
+static int rec2(int x, int y, print_backtrace_t config)
 {
     if (x == 0)
     {
-        return inner(y, base_config);
+        return inner(y, config);
     }
 
-    return rec2(x - 1, y, base_config);
+    return rec2(x - 1, y, config);
 }
 
 static void do_backtrace(io_t *io)
 {
     io_printf(io, "\n=== backtrace ===\n\n");
 
-    text_config_t bt_config2 = {
-        .config = {
-            .zeroth_line = false,
-            .print_source = true,
-            .print_header = true
-        },
-        .colours = &kColourDefault,
-        .io = io
+    print_options_t options = {
+        .arena = get_global_arena(),
+        .io = io,
+        .pallete = &kColourDefault,
     };
 
-    text_config_t bt_config1 = {
-        .config = {
-            .zeroth_line = false,
-            .print_source = false,
-            .print_header = true
-        },
-        .colours = &kColourDefault,
-        .io = io
+    print_backtrace_t config1 = {
+        .options = options,
+        .print_source = true,
+        .zero_indexed_lines = false,
+        .header_message = "backtrace 1",
     };
 
-    recurse(15, bt_config1);
-    recurse(1000, bt_config2);
-
-    rec2(200, 100, bt_config1);
-    rec2(5, 100, bt_config2);
-}
-
-static void do_simple(logger_t *logs)
-{
-    io_t *io = io_stdout();
-
-    text_config_t config2 = {
-        .config = {
-            .zeroth_line = false,
-        },
-        .colours = &kColourDefault,
-        .io = io
+    print_backtrace_t config2 = {
+        .options = options,
+        .print_source = true,
+        .zero_indexed_lines = true,
+        .header_message = "backtrace 2",
     };
 
-    report_config_t report_config = {
-        .max_errors = SIZE_MAX,
-        .max_warnings = SIZE_MAX,
-        .report_format = eTextSimple,
+    recurse(15, config1);
+    recurse(1000, config2);
 
-        .text_config = config2,
-    };
-
-    typevec_t *events = logger_get_events(logs);
-
-    text_report(events, report_config, "simple text");
-}
-
-static void do_rich(logger_t *logs)
-{
-    text_config_t config = {
-        .config = {
-            .zeroth_line = false,
-        },
-        .colours = &kColourDefault,
-        .io = io_stdout()
-    };
-
-    report_config_t report_config = {
-        .max_errors = SIZE_MAX,
-        .max_warnings = SIZE_MAX,
-        .report_format = eTextComplex,
-
-        .text_config = config,
-    };
-
-    typevec_t *events = logger_get_events(logs);
-
-    text_report(events, report_config, "rich text");
+    rec2(200, 100, config1);
+    rec2(5, 100, config2);
 }
 
 int main(int argc, const char **argv)
@@ -399,12 +395,12 @@ int main(int argc, const char **argv)
     default_init();
 
     arena_t *arena = get_global_arena();
-    io_t *io = io_stdout();
+    io_t *con = io_stdout();
     tool_t tool = make_config(arena);
 
     tool_config_t config = {
         .arena = arena,
-        .io = io,
+        .io = con,
 
         .group = tool.config,
         .version = kToolVersion,
@@ -420,8 +416,11 @@ int main(int argc, const char **argv)
     }
 
     bool backtraces = cfg_bool_value(tool.test_backtrace);
-    bool simple = cfg_bool_value(tool.test_simple);
-    bool rich = cfg_bool_value(tool.test_rich);
+
+    notify_style_t style = cfg_enum_value(tool.notify_style);
+    heading_style_t heading = cfg_enum_value(tool.heading_style);
+    bool zero_indexed = cfg_bool_value(tool.zero_indexed);
+    bool colour = cfg_bool_value(tool.options.colour_output);
 
     logger_t *logs = logger_new(arena);
 
@@ -434,21 +433,29 @@ int main(int argc, const char **argv)
     event_invalid_import(logs, scan_main, scan_rhs);
     event_invalid_function(logs, scan_main);
 
-    if (!rich && !simple && !backtraces)
+    if (style != eNotifyCount)
     {
-        rich = true;
-        simple = true;
-        backtraces = true;
+        print_options_t options = {
+            .arena = arena,
+            .io = con,
+            .pallete = colour ? &kColourDefault : &kColourNone,
+        };
+
+        print_notify_t notify_options = {
+            .options = options,
+            .heading_style = heading,
+            .notify_style = style,
+            .zero_indexed_lines = zero_indexed,
+        };
+
+        const typevec_t *events = logger_get_events(logs);
+        print_notify_many(notify_options, events);
     }
 
-    if (rich)
-        do_rich(logs);
-
-    if (simple)
-        do_simple(logs);
-
     if (backtraces)
-        do_backtrace(io);
+    {
+        do_backtrace(con);
+    }
 
-    io_close(io);
+    io_close(con);
 }

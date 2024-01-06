@@ -20,6 +20,12 @@
 #include "std/vector.h"
 #include <stdlib.h>
 
+#if OS_WINDOWS
+#   define DISPLAY_WIN_STYLE true
+#else
+#   define DISPLAY_WIN_STYLE false
+#endif
+
 static const cfg_info_t kGroupInfo = {
     .name = "general",
     .brief = "General options",
@@ -90,14 +96,6 @@ static const cfg_info_t kVerboseLoggingInfo = {
     .long_args = kVerboseLoggingInfoLongArgs,
 };
 
-static const char *const kBacktraceInfoLongArgs[] = { "bt-complex", NULL };
-
-static const cfg_info_t kBacktraceInfo = {
-    .name = "backtrace",
-    .brief = "Enable complex backtraces",
-    .long_args = kBacktraceInfoLongArgs,
-};
-
 default_options_t get_default_options(cfg_group_t *group)
 {
     CTASSERT(group != NULL);
@@ -118,8 +116,6 @@ default_options_t get_default_options(cfg_group_t *group)
 
     cfg_field_t *verbose = config_bool(debug, &kVerboseLoggingInfo, false);
 
-    cfg_field_t *backtrace = config_bool(debug, &kBacktraceInfo, false);
-
     default_options_t options = {
         .general_group = general,
         .print_help = help,
@@ -129,36 +125,10 @@ default_options_t get_default_options(cfg_group_t *group)
         .colour_output = colour,
 
         .debug_group = debug,
-        .log_verbose = verbose,
-        .fancy_backtrace = backtrace,
+        .log_verbose = verbose
     };
 
     return options;
-}
-
-static void fancy_panic_handler(panic_t panic, const char *msg, va_list args)
-{
-    bt_report_t report = bt_report_collect(get_global_arena());
-
-    char *info = vformat(msg, args);
-
-    char *detail = format("[%s:%zu] %s: %s", panic.file, panic.line, panic.function, info);
-
-    file_config_t file_config = {
-        .zeroth_line = false,
-        .print_source = true,
-        .print_header = true,
-        .header_message = detail,
-    };
-
-    text_config_t config = {
-        .config = file_config,
-        .colours = &kColourDefault,
-    };
-
-    bt_report_finish(config, &report);
-
-    abort();
 }
 
 int process_default_options(default_options_t options, tool_config_t config)
@@ -166,31 +136,22 @@ int process_default_options(default_options_t options, tool_config_t config)
     const char *name = config.argv[0];
 
     bool log_verbose = cfg_bool_value(options.log_verbose);
-    if (log_verbose)
-    {
-        ctu_log_update(true);
-        ctu_log("enabled verbose logging");
-    }
-
-    bool fancy_backtrace = cfg_bool_value(options.fancy_backtrace);
-    if (fancy_backtrace)
-    {
-        gPanicHandler = fancy_panic_handler;
-        ctu_log("installed panic handler");
-    }
+    ctu_log_update(log_verbose);
+    ctu_log("verbose logging enabled");
 
     bool colour = cfg_bool_value(options.colour_output);
-    format_context_t context = {
-        .pallete = colour ? &kColourDefault : &kColourNone,
+
+    print_options_t base = {
         .arena = config.arena,
+        .io = config.io,
+        .pallete = colour ? &kColourDefault : &kColourNone,
     };
 
     bool show_help = cfg_bool_value(options.print_help);
     if (show_help)
     {
-        format_config_t config_display = {
-            .context = context,
-            .io = config.io,
+        print_config_t config_display = {
+            .options = base,
             .config = config.group,
             .print_usage = cfg_bool_value(options.enable_usage),
             .win_style = cfg_bool_value(options.enable_windows_style),
@@ -204,9 +165,8 @@ int process_default_options(default_options_t options, tool_config_t config)
     bool show_version = cfg_bool_value(options.print_version);
     if (show_version)
     {
-        format_version_t version_display = {
-            .context = context,
-            .io = config.io,
+        print_version_t version_display = {
+            .options = base,
             .version = config.version,
             .name = name
         };
@@ -282,12 +242,14 @@ static int process_argparse_result(default_options_t options, tool_config_t conf
         io_printf(config.io, "no arguments provided\n");
     }
 
-    format_config_t display = {
-        .context = {
-            .pallete = pallete,
-            .arena = config.arena,
-        },
+    print_options_t base = {
+        .arena = config.arena,
         .io = config.io,
+        .pallete = colour ? &kColourDefault : &kColourNone,
+    };
+
+    print_config_t display = {
+        .options = base,
         .config = config.group,
         .print_usage = cfg_bool_value(options.enable_usage),
         .win_style = cfg_bool_value(options.enable_windows_style),

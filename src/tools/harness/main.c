@@ -197,8 +197,6 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     text_config_t text_config = {
         .config = {
             .zeroth_line = false,
-            .print_source = true,
-            .print_header = true,
             .max_columns = 80,
         },
         .colours = &kColourNone,

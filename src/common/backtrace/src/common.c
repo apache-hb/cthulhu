@@ -4,8 +4,14 @@
 
 frame_resolve_t bt_resolve_symbol(const frame_t *frame, symbol_t *symbol)
 {
-    if (frame == NULL) return false;
-    if (symbol == NULL) return false;
+    if (frame == NULL) return eResolveNothing;
+    if (symbol == NULL) return eResolveNothing;
+
+    text_t name = symbol->name;
+    text_t path = symbol->path;
+
+    if (name.text == NULL || path.text == NULL)
+        return eResolveNothing;
 
     return bt_resolve_inner(frame, symbol);
 }

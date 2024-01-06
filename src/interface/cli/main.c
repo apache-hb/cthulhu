@@ -140,8 +140,6 @@ int main(int argc, const char **argv)
     text_config_t text_config = {
         .config = {
             .zeroth_line = false,
-            .print_source = true,
-            .print_header = true,
         },
         .colours = &kColourDefault,
         .io = msg_buffer,

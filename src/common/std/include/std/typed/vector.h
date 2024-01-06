@@ -46,6 +46,8 @@ typevec_t *typevec_of(IN_RANGE(>, 0) size_t type_size, size_t len);
 NODISCARD
 typevec_t *typevec_init(IN_RANGE(>, 0) size_t type_size, IN_NOTNULL const void *value);
 
+typevec_t *typevec_slice(IN_NOTNULL const typevec_t *vec, size_t start, size_t end);
+
 /// @brief get the length of a vector
 ///
 /// @param vec the vector to get the length of

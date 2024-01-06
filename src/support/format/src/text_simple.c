@@ -12,6 +12,9 @@
 #include "std/vector.h"
 #include <string.h>
 
+#define COLOUR_NOTE eColourGreen
+#define COLOUR_PATH eColourBlue
+
 typedef struct simple_t
 {
     io_t *io;
@@ -27,7 +30,7 @@ static void print_notes(simple_t *simple, const vector_t *notes)
     if (notes == NULL)
         return;
 
-    char *star = colour_text(simple->fmt, eColourGreen, "*");
+    char *star = colour_text(simple->fmt, COLOUR_NOTE, "*");
 
     size_t note_count = vector_len(notes);
     for (size_t i = 0; i < note_count; i++)
@@ -61,11 +64,17 @@ static void print_segment(simple_t *simple, const segment_t *segment, size_t sca
 {
     CTASSERT(segment != NULL);
 
-    const char *msg = segment->message;
-    const char *path = fmt_node(simple->file, segment->node);
-    const char *colour = colour_format(simple->fmt, eColourBlue, "%s:", path);
+    source_config_t source_config = {
+        .context = simple->fmt,
+        .heading_style = eHeadingGeneric,
+        .zero_indexed_lines = simple->file.zeroth_line,
+    };
 
-    io_printf(simple->io, " (%zu.%zu) %s %s\n", scan_idx + 1, segment_idx + 1, colour, msg);
+    const char *path = fmt_node_location(source_config, segment->node);
+
+    const char *msg = segment->message;
+
+    io_printf(simple->io, " (%zu.%zu) %s %s\n", scan_idx + 1, segment_idx + 1, path, msg);
 }
 
 static void print_segment_list(simple_t *simple, const typevec_t *segments, size_t scan_idx)
@@ -145,21 +154,6 @@ static void print_segments(simple_t *simple, const event_t *event)
     print_segment_list(simple, none, entry_count + 1);
 }
 
-static char *fmt_path(simple_t *simple, const node_t *node)
-{
-    if (!node_has_line(node))
-    {
-        return fmt_node(simple->file, node);
-    }
-
-    where_t where = node_get_location(node);
-    size_t line = get_offset_line(simple->file, where.first_line);
-
-    const char *path = get_scan_name(node);
-
-    return format("%s(%zu)", path, line);
-}
-
 USE_DECL
 void text_report_simple(text_config_t config, const event_t *event)
 {
@@ -189,12 +183,16 @@ void text_report_simple(text_config_t config, const event_t *event)
     const char *sev = get_severity_name(severity);
     colour_t col = get_severity_colour(severity);
 
-    const char *path = fmt_path(&simple, event->node);
+    source_config_t source_config = {
+        .context = fmt,
+        .heading_style = eHeadingGeneric,
+        .zero_indexed_lines = cfg.zeroth_line,
+    };
+
+    const char *path = fmt_node_location(source_config, event->node);
     const char *lvl = colour_format(fmt, col, "%s %s:", sev, diagnostic->id);
 
-    const char *path_coloured = colour_format(fmt, eColourBlue, "%s:", path);
-
-    io_printf(io, "%s %s %s:\n", path_coloured, lvl, event->message);
+    io_printf(io, "%s %s %s:\n", path, lvl, event->message);
 
     print_segments(&simple, event);
 

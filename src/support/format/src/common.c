@@ -8,8 +8,8 @@
 #include "base/panic.h"
 #include "scan/node.h"
 #include "std/map.h"
-#include "std/str.h"
 #include "std/set.h"
+#include "std/str.h"
 
 #include "std/typed/vector.h"
 #include "std/vector.h"
@@ -17,6 +17,14 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+
+#define COLOUR_UNKNOWN eColourMagenta
+#define COLOUR_SORRY eColourMagenta
+#define COLOUR_INTERNAL eColourCyan
+#define COLOUR_FATAL eColourRed
+#define COLOUR_WARN eColourYellow
+#define COLOUR_INFO eColourGreen
+#define COLOUR_DEBUG eColourGreen
 
 severity_t get_severity(const diagnostic_t *diag, bool override_fatal)
 {
@@ -44,22 +52,14 @@ colour_t get_severity_colour(severity_t severity)
 {
     switch (severity)
     {
-    case eSeveritySorry: return eColourMagenta;
-    case eSeverityInternal: return eColourCyan;
-    case eSeverityFatal: return eColourRed;
-    case eSeverityWarn: return eColourYellow;
+    case eSeveritySorry: return COLOUR_SORRY;
+    case eSeverityInternal: return COLOUR_INTERNAL;
+    case eSeverityFatal: return COLOUR_FATAL;
+    case eSeverityWarn: return COLOUR_WARN;
     case eSeverityInfo:
-    case eSeverityDebug: return eColourGreen;
-    default: return eColourMagenta;
+    case eSeverityDebug: return COLOUR_INFO;
+    default: return COLOUR_UNKNOWN;
     }
-}
-
-const char *get_scan_name(const node_t *node)
-{
-    if (node_is_builtin(node)) return "builtin";
-
-    const scan_t *scan = node_get_scan(node);
-    return scan_path(scan);
 }
 
 // assumes all segments are in the same file
@@ -117,23 +117,6 @@ typevec_t *all_segments_in_scan(const typevec_t *segments, const node_t *node, a
     return result;
 }
 
-char *fmt_node(file_config_t config, const node_t *node)
-{
-    where_t where = node_get_location(node);
-    const char *path = get_scan_name(node);
-
-    if (!node_is_builtin(node))
-    {
-        size_t first_line = get_line_number(config, node);
-
-        return format("%s:%zu:%" PRI_COLUMN "", path, first_line, where.first_column);
-    }
-    else
-    {
-        return format("<%s>", path);
-    }
-}
-
 size_t get_line_number(file_config_t config, const node_t *node)
 {
     where_t where = node_get_location(node);
@@ -147,10 +130,10 @@ bool node_has_line(const node_t *node)
     return !node_is_builtin(node);
 }
 
-size_t get_offset_line(file_config_t config, size_t line)
+size_t get_offset_line(bool zero_indexed_lines, size_t line)
 {
     // if the first line is 0, then we don't need to do anything
-    if (config.zeroth_line) return line;
+    if (zero_indexed_lines) return line;
 
     // otherwise, we need to subtract 1 from the line number
     return line == 0 ? line : line - 1;
@@ -256,18 +239,12 @@ static text_view_t get_io_view(io_t *io)
 {
     if (io_error(io) != 0)
     {
-        text_view_t view = {
-            .text = "",
-            .size = 0
-        };
+        text_view_t view = {.text = "", .size = 0};
 
         return view;
     }
 
-    text_view_t view = {
-        .text = io_map(io),
-        .size = io_size(io)
-    };
+    text_view_t view = {.text = io_map(io), .size = io_size(io)};
 
     return view;
 }
@@ -280,8 +257,7 @@ static text_cache_t *text_cache_io(io_t *io, arena_t *arena)
 
     text_cache_t *cache = text_cache_new(io, view, 32, arena);
 
-    if (io_error(io) == 0)
-        load_lineinfo(cache);
+    if (io_error(io) == 0) load_lineinfo(cache);
 
     return cache;
 }
@@ -381,20 +357,14 @@ text_view_t cache_get_line(text_cache_t *cache, size_t line)
 
     if (!has_line)
     {
-        text_view_t view = {
-            .text = "",
-            .size = 0
-        };
+        text_view_t view = {.text = "", .size = 0};
 
         return view; // line is out of bounds. why?
     }
 
     lineinfo_t *info = typevec_offset(cache->line_info, line);
 
-    text_view_t view = {
-        .text = cache->source.text + info->offset,
-        .size = info->length
-    };
+    text_view_t view = {.text = cache->source.text + info->offset, .size = info->length};
 
     return view;
 }
@@ -425,11 +395,12 @@ static bool get_escaped_char(char *buf, char c)
     return true;
 }
 
-text_t cache_escape_line(text_cache_t *cache, size_t line, const colour_pallete_t *colours, size_t column_limit)
+text_t cache_escape_line(text_cache_t *cache, size_t line, const colour_pallete_t *colours,
+                         size_t column_limit)
 {
     CTASSERT(colours != NULL);
 
-    text_t *cached = map_get_ptr(cache->cached_lines, (void*)(uintptr_t)(line + 1));
+    text_t *cached = map_get_ptr(cache->cached_lines, (void *)(uintptr_t)(line + 1));
     if (cached != NULL) return *cached;
 
     text_view_t view = cache_get_line(cache, line);
@@ -445,7 +416,7 @@ text_t cache_escape_line(text_cache_t *cache, size_t line, const colour_pallete_
         bool is_notprint = get_escaped_char(buffer, c);
         if (is_notprint && !in_colour)
         {
-            const char *colour = colour_get(colours, eColourMagenta);
+            const char *colour = colour_get(colours, COLOUR_UNKNOWN);
             typevec_append(result, colour, strlen(colour));
             in_colour = true;
         }
@@ -468,7 +439,7 @@ text_t cache_escape_line(text_cache_t *cache, size_t line, const colour_pallete_
     ptr->text = typevec_data(result);
     ptr->size = typevec_len(result);
 
-    map_set_ptr(cache->cached_lines, (void*)(uintptr_t)(line + 1), ptr);
+    map_set_ptr(cache->cached_lines, (void *)(uintptr_t)(line + 1), ptr);
 
     return *ptr;
 }
@@ -508,7 +479,8 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
     text.cache = cache;
 
     size_t len = typevec_len(events);
-    void (*fn)(text_config_t, const event_t*) = fmt == eTextComplex ? text_report_rich : text_report_simple;
+    void (*fn)(text_config_t, const event_t *) = fmt == eTextComplex ? text_report_rich
+                                                                     : text_report_simple;
 
     int result = EXIT_OK;
     size_t warning_count = 0;
@@ -536,7 +508,8 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
                 first->message = format("%s (repeated %zu times)", first->message, repeat);
             }
 
-            switch (diag->severity) {
+            switch (diag->severity)
+            {
             case eSeverityWarn:
                 warn_budget -= 1;
                 if (warn_budget == 0) continue;
@@ -547,8 +520,7 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
                 if (error_budget == 0) continue;
                 break;
 
-            default:
-                break;
+            default: break;
             }
 
             text.config.override_fatal = set_has_option(config.error_warnings, diag);
@@ -579,8 +551,7 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
         case eSeverityWarn:
             warning_count += 1;
             /* fallthrough */
-        default:
-            break;
+        default: break;
         }
     }
 
@@ -597,19 +568,19 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
         vector_t *parts = vector_new(3);
         if (error_count > 0)
         {
-            char *colour_err = colour_format(ctx, eColourRed, "%zu errors", error_count);
+            char *colour_err = colour_format(ctx, COLOUR_FATAL, "%zu errors", error_count);
             vector_push(&parts, colour_err);
         }
 
         if (warning_count > 0)
         {
-            char *colour_warn = colour_format(ctx, eColourYellow, "%zu warnings", warning_count);
+            char *colour_warn = colour_format(ctx, COLOUR_WARN, "%zu warnings", warning_count);
             vector_push(&parts, colour_warn);
         }
 
         if (bug_count > 0)
         {
-            char *colour_bug = colour_format(ctx, eColourMagenta, "%zu bugs", bug_count);
+            char *colour_bug = colour_format(ctx, COLOUR_INTERNAL, "%zu bugs", bug_count);
             vector_push(&parts, colour_bug);
         }
 
@@ -619,9 +590,60 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
     else if (warning_count > 0)
     {
         io_printf(io, "compilation succeeded with warnings during stage: %s\n", title);
-        char *colour_warn = colour_format(ctx, eColourYellow, "%zu warnings", warning_count);
+        char *colour_warn = colour_format(ctx, COLOUR_WARN, "%zu warnings", warning_count);
         io_printf(io, "  %s\n", colour_warn);
     }
 
     return result;
+}
+
+#define COLOUR_PATH eColourBlue
+
+static const char *const kFormatBuiltinHeading[eHeadingCount] = {
+    [eHeadingGeneric] = "<builtin>:%" PRI_LINE "",
+    [eHeadingMicrosoft] = "<builtin>(%" PRI_LINE ")",
+};
+
+static line_t calc_line_number(bool zero_indexed_lines, line_t line)
+{
+    if (zero_indexed_lines) return line;
+
+    return line + 1;
+}
+
+static char *fmt_any_location(source_config_t config, const char *path, line_t line, column_t column)
+{
+    if (path == NULL)
+    {
+        const char *fmt = kFormatBuiltinHeading[config.heading_style];
+        return colour_format(config.context, COLOUR_PATH, fmt, line);
+    }
+
+    // we branch here because msvc doesnt report column numbers, only lines
+    if (config.heading_style == eHeadingGeneric)
+    {
+        return colour_format(config.context, COLOUR_PATH, "%s:%" PRI_LINE ":%" PRI_COLUMN "",
+                                path, line, column);
+    }
+    else
+    {
+        return colour_format(config.context, COLOUR_PATH, "%s(%" PRI_LINE ")", path, line);
+    }
+}
+
+char *fmt_source_location(source_config_t config, const char *path, where_t where)
+{
+    line_t first_line = calc_line_number(config.zero_indexed_lines, where.first_line);
+
+    char *result = fmt_any_location(config, path, first_line, where.first_column);
+    return format("%s:", result); // we dont want the colon to be coloured
+}
+
+char *fmt_node_location(source_config_t config, const node_t *node)
+{
+    const scan_t *scan = node_get_scan(node);
+    const char *path = scan_is_builtin(scan) ? NULL : scan_path(scan);
+    where_t where = node_get_location(node);
+
+    return fmt_source_location(config, path, where);
 }

@@ -1,10 +1,12 @@
 #pragma once
 
 #include "core/text.h"
+#include "format/format.h"
 #include "notify/notify.h"
 
 #include "format/notify.h"
 #include "format/colour.h"
+#include "scan/node.h"
 
 #include <stddef.h>
 
@@ -18,17 +20,13 @@ severity_t get_severity(const diagnostic_t *diag, bool override_fatal);
 const char *get_severity_name(severity_t severity);
 colour_t get_severity_colour(severity_t severity);
 
-const char *get_scan_name(const node_t *node);
-
 typevec_t *all_segments_in_scan(const typevec_t *segments, const node_t *node, arena_t *arena);
 void segments_sort(typevec_t *segments);
-
-char *fmt_node(file_config_t config, const node_t *node);
 
 size_t get_line_number(file_config_t config, const node_t *node);
 
 bool node_has_line(const node_t *node);
-size_t get_offset_line(file_config_t config, size_t line);
+size_t get_offset_line(bool zero_indexed_lines, size_t line);
 
 /// @brief get the width of a number if it were printed as base10
 size_t get_num_width(size_t num);
@@ -47,3 +45,27 @@ size_t cache_count_lines(text_cache_t *cache);
 // extract a line of text, converting non-printable characters to their escape codes
 // and highlighting the escaped characters
 text_t cache_escape_line(text_cache_t *cache, size_t line, const colour_pallete_t *colours, size_t column_limit);
+
+///
+/// version 2 of the common stuff
+///
+
+typedef struct source_config_t
+{
+    format_context_t context;
+    heading_style_t heading_style;
+    bool zero_indexed_lines;
+} source_config_t;
+
+inline format_context_t format_context_make(print_options_t options)
+{
+    format_context_t context = {
+        .arena = options.arena,
+        .pallete = options.pallete,
+    };
+
+    return context;
+}
+
+char *fmt_source_location(source_config_t config, const char *path, where_t where);
+char *fmt_node_location(source_config_t config, const node_t *node);

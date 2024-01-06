@@ -10,11 +10,6 @@ option('lang_cc', type : 'feature',
     value : 'auto'
 )
 
-# option('lang_cpp', type : 'feature',
-#     description : 'build the c preprocessor',
-#     value : 'auto'
-# )
-
 option('interfaces', type : 'array',
     description : 'select which compiler frontends to enable',
     choices : [ 'cli', 'example' ],
@@ -66,11 +61,6 @@ option('analyze', type : 'feature',
     value : 'disabled'
 )
 
-option('hardening', type : 'feature',
-    description : 'enable hardening flags',
-    value : 'disabled'
-)
-
 # tools
 
 option('tool_stacktrace', type : 'feature',
@@ -90,10 +80,5 @@ option('tool_diagnostic', type : 'feature',
 
 option('tool_display', type : 'feature',
     description : 'build format testing tool',
-    value : 'auto'
-)
-
-option('tool_cpreproc', type : 'feature',
-    description : 'build c preprocessor test tool, requires lang_cpp',
     value : 'auto'
 )

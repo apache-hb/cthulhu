@@ -114,6 +114,7 @@ cfg_field_t *config_int(cfg_group_t *group, const cfg_info_t *info, cfg_int_t cf
     int min = cfg.min;
     int max = cfg.max;
 
+    // TODO: this is iffy, need a better way to handle this
     if (min == 0 && max == 0)
     {
         cfg.min = INT_MIN;

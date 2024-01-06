@@ -42,7 +42,6 @@ unit_tests = get_option('unit_tests').disable_auto_if(is_release or meson.is_sub
 driver_tests = get_option('driver_tests').disable_auto_if(meson.is_subproject())
 
 opt_analyze = get_option('analyze')
-opt_hardening = get_option('hardening')
 
 warning_level = get_option('warning_level').to_int()
 
@@ -96,7 +95,7 @@ config_cdata.set10('CTU_DEBUG', opt_assert.allowed())
 # msvc and clang dont mind, but gcc does. so we disable the attributes for gcc
 config_cdata.set10('CTU_DISABLE_FN_PURITY', unit_tests.allowed() and cc.get_id() == 'gcc')
 
-# gcc warns about __PRETY_FUNCTION__ not being ISO C when on warning level 3
+# gcc warns about __PRETY_FUNCTION__ not being ISO C when warning_leve=3
 # which is weird seeing as we specify gnu11, maybe its a gcc bug?
 config_cdata.set10('CTU_HAS_PRETTY_FUNCTION', warning_level < 3)
 
@@ -153,27 +152,13 @@ analyze_user_args = [
     '-Wno-analyzer-malloc-leak',
 
     # this one looks like a gcc bug
-    '-Wno-analyzer-double-free'
+    '-Wno-analyzer-double-free',
+
+    '-D_FORTIFY_SOURCE=2'
 ]
 
 if opt_analyze.enabled()
     user_args += cc.get_supported_arguments(analyze_user_args)
-endif
-
-harden_args = [
-    # msvc hardening args
-    '/GS', '/Gs', '/guard:cf',
-
-    # gcc hardening args
-    '-fstack-protector-all', '-fstack-clash-protection',
-    '-fcf-protection=full',
-
-    # other hardening args
-    '-D_FORTIFY_SOURCE=2'
-]
-
-if opt_hardening.enabled()
-    args += cc.get_supported_arguments(harden_args)
 endif
 
 add_project_arguments(args, language : [ 'c' ])
@@ -278,10 +263,8 @@ summary = {
         'Interfaces': ', '.join(get_option('interfaces')),
         'Languages': ', '.join(get_option('languages')),
         'C language driver': opt_lang_cc.allowed(),
-        # 'C preprocessor': opt_lang_cpp.allowed(),
         'Memory tracing': trace_memory.allowed(),
         'Analyze': opt_analyze.enabled(),
-        'Hardening': opt_hardening.enabled(),
         'Assertions': opt_assert.allowed()
     },
     'Graphical Interface': {
@@ -296,8 +279,7 @@ summary = {
         'Stacktrace': tool_stacktrace.allowed(),
         'Notify': tool_notify.allowed(),
         'Diagnostics': tool_diagnostic.allowed(),
-        'Display': tool_display.allowed(),
-        # 'C preprocessor tool': tool_cpreproc.allowed()
+        'Display': tool_display.allowed()
     },
     'Documentation': {
         'Doxygen': doxygen

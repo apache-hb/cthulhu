@@ -89,6 +89,22 @@ typevec_t *typevec_init(size_t type_size, const void *value)
 }
 
 USE_DECL
+typevec_t *typevec_slice(const typevec_t *vec, size_t start, size_t end)
+{
+    CTASSERT(vec != NULL);
+    CTASSERTF(start <= end, "start %zu > end %zu", start, end);
+    CTASSERTF(end <= typevec_len(vec), "end %zu out of bounds %zu", end, typevec_len(vec));
+
+    size_t len = end - start;
+    typevec_t *self = typevec_create(vec->type_size, len, vec->arena);
+    self->used = len;
+
+    memcpy(self->data, typevec_offset(vec, start), len * vec->type_size);
+
+    return self;
+}
+
+USE_DECL
 size_t typevec_len(const typevec_t *vec)
 {
     CTASSERT(vec != NULL);

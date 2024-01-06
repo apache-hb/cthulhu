@@ -1,28 +1,17 @@
 #pragma once
 
-#include "format/colour.h"
+#include "format/format.h"
 
 #include <stdbool.h>
 
 BEGIN_API
 
-#if OS_WINDOWS
-#   define DISPLAY_WIN_STYLE true
-#else
-#   define DISPLAY_WIN_STYLE false
-#endif
-
-typedef struct io_t io_t;
 typedef struct cfg_group_t cfg_group_t;
 
 /// @brief config format options
-typedef struct format_config_t
+typedef struct print_config_t
 {
-    /// @brief basic format options
-    format_context_t context;
-
-    /// @brief the io buffer to write to
-    io_t *io;
+    print_options_t options;
 
     /// @brief the config object to format
     const cfg_group_t *config;
@@ -38,8 +27,8 @@ typedef struct format_config_t
     /// @brief command line name of this program
     /// @note can be null if @a print_usage is false
     const char *name;
-} format_config_t;
+} print_config_t;
 
-void print_config(format_config_t config);
+void print_config(print_config_t config);
 
 END_API

@@ -9,6 +9,7 @@
 #include "io/io.h"
 #include "config/config.h"
 
+#include "common.h"
 #include "std/str.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
@@ -17,30 +18,13 @@
 #include <string.h>
 #include <stdint.h>
 
-static size_t get_arg_length(const cfg_info_t *info, size_t long_arg_stride)
+#define COLOUR_ARG eColourWhite
+
+typedef struct format_config_t
 {
-    size_t len = 0;
-    if (info->short_args)
-    {
-        for (size_t i = 0; info->short_args[i]; i++)
-        {
-            // +1 for the dash or slash
-            // +1 for the space
-            len += strlen(info->short_args[i]) + 2;
-        }
-    }
-
-    if (info->long_args)
-    {
-        for (size_t i = 0; info->long_args[i]; i++)
-        {
-            // +1 for the space
-            len += strlen(info->long_args[i]) + 1 + long_arg_stride;
-        }
-    }
-
-    return len;
-}
+    io_t *io;
+    format_context_t context;
+} format_config_t;
 
 typedef struct alignment_info_t
 {
@@ -66,6 +50,31 @@ static size_t longest_line(const char *str)
     }
 
     return MAX(longest, current);
+}
+
+static size_t get_arg_length(const cfg_info_t *info, size_t long_arg_stride)
+{
+    size_t len = 0;
+    if (info->short_args)
+    {
+        for (size_t i = 0; info->short_args[i]; i++)
+        {
+            // +1 for the dash or slash
+            // +1 for the space
+            len += strlen(info->short_args[i]) + 2;
+        }
+    }
+
+    if (info->long_args)
+    {
+        for (size_t i = 0; info->long_args[i]; i++)
+        {
+            // +1 for the space
+            len += strlen(info->long_args[i]) + 1 + long_arg_stride;
+        }
+    }
+
+    return len;
 }
 
 static alignment_info_t get_group_alignment(const cfg_group_t *config, bool win_style)
@@ -99,7 +108,7 @@ static alignment_info_t get_group_alignment(const cfg_group_t *config, bool win_
 
 // print the args for a single field
 // returns the number of characters printed
-static size_t print_field_args(format_config_t options, const cfg_info_t *info, bool win_style)
+static size_t print_field_args(format_config_t config, const cfg_info_t *info, bool win_style)
 {
     const char *short_sep = win_style ? "/" : "-";
     const char *long_sep = win_style ? "/" : "--";
@@ -110,8 +119,8 @@ static size_t print_field_args(format_config_t options, const cfg_info_t *info, 
     {
         for (size_t i = 0; info->short_args[i]; i++)
         {
-            char *coloured = colour_format(options.context, eColourWhite, "%s%s", short_sep, info->short_args[i]);
-            io_printf(options.io, "%s ", coloured);
+            char *coloured = colour_format(config.context, COLOUR_ARG, "%s%s", short_sep, info->short_args[i]);
+            io_printf(config.io, "%s ", coloured);
             len += strlen(info->short_args[i]) + 2;
         }
     }
@@ -120,8 +129,8 @@ static size_t print_field_args(format_config_t options, const cfg_info_t *info, 
     {
         for (size_t i = 0; info->long_args[i]; i++)
         {
-            char *coloured = colour_format(options.context, eColourWhite, "%s%s", long_sep, info->long_args[i]);
-            io_printf(options.io, "%s ", coloured);
+            char *coloured = colour_format(config.context, COLOUR_ARG, "%s%s", long_sep, info->long_args[i]);
+            io_printf(config.io, "%s ", coloured);
             len += strlen(info->long_args[i]) + 1 + strlen(long_sep);
         }
     }
@@ -415,12 +424,18 @@ static void print_usage(format_config_t options, const char *name)
     );
 }
 
-void print_config(format_config_t options)
+void print_config(print_config_t config)
 {
-    if (options.print_usage)
+    print_options_t options = config.options;
+    format_config_t format_config = {
+        .io = options.io,
+        .context = format_context_make(options)
+    };
+
+    if (config.print_usage)
     {
-        print_usage(options, options.name);
+        print_usage(format_config, config.name);
     }
 
-    print_config_group(options, options.win_style, options.config);
+    print_config_group(format_config, config.win_style, config.config);
 }

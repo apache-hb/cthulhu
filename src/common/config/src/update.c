@@ -86,6 +86,18 @@ void cfg_set_enum_value(cfg_field_t *field, size_t value)
     field->enum_value = value;
 }
 
+static void set_flag(cfg_field_t *field, size_t value, bool set)
+{
+    if (set)
+    {
+        field->flags_value |= value;
+    }
+    else
+    {
+        field->flags_value &= ~value;
+    }
+}
+
 bool cfg_set_flag(cfg_field_t *field, const char *choice, bool set)
 {
     ASSERT_FIELD_TYPE(field, eConfigFlags);
@@ -98,15 +110,7 @@ bool cfg_set_flag(cfg_field_t *field, const char *choice, bool set)
         cfg_choice_t option = cfg.options[i];
         if (str_equal(choice, option.text))
         {
-            if (set)
-            {
-                field->flags_value |= option.value;
-            }
-            else
-            {
-                field->flags_value &= ~option.value;
-            }
-
+            set_flag(field, option.value, set);
             return true;
         }
     }

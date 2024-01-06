@@ -5,9 +5,9 @@ Wow this project got out of hand.
 @tableofcontents
 
 <h2>A brief overview</h2>
-Cthulhu was born out of frustrating with existing compilers and their tooling.
-Cthulhu is a set of tools for building compilers. It is designed to be as
-low friction as possible to get started with and easily extensible.
+Cthulhu was born out of frustration with existing compilers and tooling.
+Cthulhu is a set of tools for building compilers, designed to be
+low friction to start with and easily extensible.
 
 Started in 2019, Cthulhu now contains 2 complete language frontends:
     - [PL0](https://en.wikipedia.org/wiki/PL/0).
@@ -21,10 +21,11 @@ And 1 language frontend in progress:
     - [Oberon-2](https://en.wikipedia.org/wiki/Oberon-2)
         - Currently has partial support, but is missing the standard library and object oriented features.
 
+Long term language support is planned for both jvm bytecode and the ifc c++ modules that msvc produces.
+
 <h2>Compelling features</h2>
 
-Currently cthulhu is the only compiler (to my knowledge) that supports
-language interop between languages without boilerplate.
+Currently cthulhu is the only compiler (to my knowledge) that supports language interop between languages without boilerplate.
 This is achieved by using common interfaces between language drivers.
     - All drivers follow the same compilation phases, allowing for symbol visibility.
     - All languages use the same intermediate form, called `tree`. allowing for interop between languages.

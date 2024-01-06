@@ -35,8 +35,8 @@ const char *colour_reset(const colour_pallete_t *colours);
 
 typedef struct format_context_t
 {
-    const colour_pallete_t *pallete;
     arena_t *arena;
+    const colour_pallete_t *pallete;
 } format_context_t;
 
 char *colour_text(format_context_t context, colour_t idx, const char *text);

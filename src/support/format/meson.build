@@ -6,7 +6,8 @@ src = [
     'src/common.c',
     'src/text_rich.c',
     'src/text_simple.c',
-    'src/text_stacktrace.c'
+    'src/backtrace.c',
+    'src/notify.c'
 ]
 
 libformat = library('format', src,

@@ -1,5 +1,6 @@
 #include "common.h"
 
+#include "core/macros.h"
 #include "cthulhu/tree/query.h"
 
 #include "std/vector.h"
@@ -17,6 +18,8 @@ static tree_t *tree_module_new(const node_t *node, const char *name,
     CTASSERT(reports != NULL);
 
     arena_t *arena = get_global_arena();
+    CTU_UNUSED(arena); // arena is only used when memory tracking is enabled
+
     tree_t *self = tree_decl(eTreeDeclModule, node, NULL, name, eQualUnknown);
     self->parent = parent;
     self->cookie = cookie;
