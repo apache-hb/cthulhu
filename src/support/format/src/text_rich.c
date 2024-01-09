@@ -182,7 +182,7 @@ static void print_file_segment(rich_t *rich, const node_t *node, const char *mes
     size_t display_line = get_line_number(config.config, node);
     size_t width = get_num_width(MAX(display_line, rich->largest_line));
     char *padding = str_repeat(" ", width);
-    char *line = fmt_align(rich->arena, width, "%zu", display_line);
+    char *line = fmt_left_align(rich->arena, width, "%zu", display_line);
 
     text_cache_t *file = cache_emplace_scan(rich->file_cache, scan);
     text_t source = cache_escape_line(file, data_line, config.colours, rich->max_columns);
@@ -215,7 +215,7 @@ static void print_file_segment(rich_t *rich, const node_t *node, const char *mes
     for (size_t i = 1; i < len; i++)
     {
         char *it = vector_get(lines, i);
-        char *aligned = fmt_align(rich->arena, align, "(%zu)", i + 1);
+        char *aligned = fmt_left_align(rich->arena, align, "(%zu)", i + 1);
         char *coloured = colour_text(rich->fmt, COLOUR_SEGMENT, aligned);
         io_printf(config.io, " %s |%s%s %s %s.\n", padding, pretext, extra, coloured, it);
     }

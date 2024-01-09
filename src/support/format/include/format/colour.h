@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/compiler.h"
+#include "core/analyze.h"
 
 #include <stdarg.h>
 
@@ -17,6 +18,8 @@ typedef enum colour_t
     eColourMagenta,
     eColourCyan,
     eColourWhite,
+
+    eColourDefault,
 
     eColourCount
 } colour_t;
@@ -40,7 +43,9 @@ typedef struct format_context_t
 } format_context_t;
 
 char *colour_text(format_context_t context, colour_t idx, const char *text);
-char *colour_format(format_context_t context, colour_t idx, const char *fmt, ...);
+
+CT_PRINTF(3, 4)
+char *colour_format(format_context_t context, colour_t idx, FMT_STRING const char *fmt, ...);
 char *colour_vformat(format_context_t context, colour_t idx, const char *fmt, va_list args);
 
 END_API

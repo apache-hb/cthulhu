@@ -22,6 +22,8 @@
 #define COLOUR_RECURSE eColourYellow
 #define COLOUR_LINE eColourWhite
 
+static const char *const kUnknownSymbol = "<unknown>";
+
 typedef struct bt_report_t
 {
     /// @brief memory pool
@@ -32,14 +34,10 @@ typedef struct bt_report_t
 } bt_report_t;
 
 /// @brief a single backtrace entry
-typedef struct bt_entry_t
+typedef struct entry_t
 {
     /// @brief what symbol info has been resolved by the backend?
     frame_resolve_t info;
-
-    /// @brief recursion count for this symbol
-    /// the number of times this frame has recursed in sequence
-    size_t recurse;
 
     /// @brief the file name
     /// @note dont use this if @a info does not have @a eResolveFile
@@ -55,341 +53,489 @@ typedef struct bt_entry_t
 
     /// @brief the address of the frame
     bt_address_t address;
-} bt_entry_t;
+} entry_t;
 
 // state for a backtrace format run
-typedef struct bt_format_t
+typedef struct backtrace_t
 {
     print_backtrace_t options;
 
+    /// format context
     format_context_t format_context;
 
-    /// symbol name right align width
-    size_t symbol_align;
+    /// the collapsed frames
+    typevec_t *frames;
 
-    /// frame index number align width
     size_t index_align;
+    size_t symbol_align;
 
     /// the file cache
     /// map_t<const char*, text_cache_t*>
     cache_map_t *file_cache;
+} backtrace_t;
 
-    /// current frame index
-    size_t index;
-} bt_format_t;
-
-typedef struct search_t
+typedef struct collapsed_t
 {
-    arena_t *arena;
-    size_t len;
-    typevec_t *longest;
-} search_t;
+    // the sequence of frames
+    typevec_t *sequence;
 
-typedef struct suffix_tree_t
+    // how many times the sequence repeats
+    size_t repeat;
+
+    // a single entry if collapsed is empty
+    entry_t *entry;
+} collapsed_t;
+
+// stacktrace collapsing
+
+// this approach is O(n^2) but it is simple
+// we scan along the trace and collect the current sequence
+// we collect the current sequence into a buffer, and if we reach the end we discard it
+// and start again with the next frame
+// we compare the current symbol with the start of the sequence, if they match we start collecting
+// we store the collapsed frames and unmatched frames in a new buffer
+// the final buffer is what we print
+
+static size_t match_sequence(typevec_t *sequence, const typevec_t *entries, size_t start, collapsed_t *collapsed)
 {
-    bt_address_t address;
-    map_t *children;
-    typevec_t *indices;
-} suffix_tree_t;
+    size_t seq_len = typevec_len(sequence);
+    size_t ent_len = typevec_len(entries);
 
-static suffix_tree_t *suffix_tree_new(bt_address_t address, arena_t *arena)
-{
-    suffix_tree_t *tree = ARENA_MALLOC(arena, sizeof(suffix_tree_t), "suffix_tree", NULL);
-    tree->address = address;
-    tree->children = map_new_arena(4, arena);
-    tree->indices = typevec_new(sizeof(size_t), 4, arena);
-
-    return tree;
-}
-
-static void insert_suffix(search_t *longest, suffix_tree_t *tree, typevec_t *slice, size_t index, typevec_t *original, size_t level)
-{
-    if (tree->indices == NULL)
+    // see how many times the sequence repeats
+    // if it doesnt repeat then return false
+    size_t count = 0;
+    size_t j = 0;
+    for (size_t i = start; i < ent_len; i++)
     {
-        tree->indices = typevec_new(sizeof(size_t), 4, longest->arena);
+        const entry_t *a = typevec_offset(entries, i);
+        const entry_t *b = typevec_offset(sequence, j);
+
+        if (a->address != b->address)
+            break;
+
+        j += 1;
+
+        if (j == seq_len)
+        {
+            count += 1;
+            j = 0;
+        }
     }
 
-    typevec_push(tree->indices, &index);
-    size_t slice_len = typevec_len(slice);
-    size_t longest_len = typevec_len(longest->longest);
-    if (slice_len > 1 && longest_len < level)
-    {
-        longest->len = level;
-        longest->longest = typevec_slice(original, 0, level);
-    }
+    if (count == 0)
+        return 0;
 
-    if (slice_len == 0)
-        return;
+    // we have a match
+    // we need to store the sequence and the repeat count
+    collapsed->sequence = typevec_slice(sequence, 0, seq_len);
+    collapsed->repeat = count;
+    return count * seq_len;
 }
 
-static typevec_t *longest_repeated_sequence(typevec_t *symbols, arena_t *arena)
+static size_t collapse_frame(const typevec_t *entries, size_t start, arena_t *arena, collapsed_t *collapsed)
 {
-    search_t search = {
-        .arena = arena,
-        .longest = typevec_new(sizeof(size_t), 4, arena),
-    };
-    suffix_tree_t *root = suffix_tree_new(0, arena);
-    size_t len = typevec_len(symbols);
+    size_t len = typevec_len(entries);
+    typevec_t *buffer = typevec_new(sizeof(entry_t), len, arena);
+    if (start <= len)
+    {
+        // push the first entry
+        const entry_t *first = typevec_offset(entries, start);
+        typevec_push(buffer, first);
+
+        for (size_t i = start + 1; i < len; i++)
+        {
+            const entry_t *entry = typevec_offset(entries, i);
+            CTASSERTF(entry != NULL, "entry at %zu is NULL", i);
+
+            // we might have a match
+            if (entry->address == first->address)
+            {
+                size_t count = match_sequence(buffer, entries, i, collapsed);
+                if (count) return count;
+
+                // i think this is correct...
+                break;
+            }
+            else
+            {
+                // we dont have a match, so we push the entry and start again
+                typevec_push(buffer, entry);
+            }
+        }
+    }
+
+    // if we get here then no match was found
+    collapsed->entry = typevec_offset(entries, start);
+    return 1;
+}
+
+static typevec_t *collapse_frames(const typevec_t *frames, arena_t *arena)
+{
+    size_t len = typevec_len(frames);
+    typevec_t *result = typevec_new(sizeof(collapsed_t), len, arena);
+
     for (size_t i = 0; i < len; i++)
     {
-        typevec_t *slice = typevec_slice(symbols, i, len);
-        insert_suffix(&search, root, slice, i, symbols, 0);
+        collapsed_t collapsed = {0};
+        size_t count = collapse_frame(frames, i, arena, &collapsed);
+
+        CTASSERTF(count > 0, "count of 0 at %zu", i);
+
+        typevec_push(result, &collapsed);
+
+        // skip the frames we collapsed
+        i += count - 1;
     }
 
-    return NULL;
+    return result;
 }
 
-static size_t get_max_symbol_width(const bt_report_t *report)
-{
-    CTASSERT(report != NULL);
+// text formatting
 
-    size_t len = typevec_len(report->entries);
+// special case recursions with only a single frame repeated to the form of
+//
+// symbol x repeat (file:line)
+//
+// all other recursions are printed as
+//
+// repeats N times
+// | [1] symbol (file:line)
+// | [2] symbol (file:line)
+// | [N] symbol (file:line)
+
+// static void print_frame_index(backtrace_t *pass, const bt_entry_t *entry, size_t width)
+// {
+//     print_backtrace_t config = pass->options;
+//     print_options_t options = config.options;
+
+//     if (entry->recurse == 0)
+//     {
+//         char *line = fmt_left_align(options.arena, width, "%zu", pass->index);
+//         char *idx = colour_format(pass->format_context, COLOUR_INDEX, "[%s]", line);
+
+//         io_printf(options.io, "%s ", idx);
+
+//         pass->index += 1;
+//     }
+//     else
+//     {
+//         char *start = fmt_left_align(options.arena, width, "%zu..%zu", pass->index, pass->index + entry->recurse);
+//         char *idx = colour_format(pass->format_context, COLOUR_INDEX, "[%s]", start);
+
+//         io_printf(options.io, "%s ", idx);
+
+//         pass->index += entry->recurse + 1;
+//     }
+// }
+
+// // print a symbol with no extra info
+// static void print_frame(backtrace_t *pass, const bt_entry_t *entry)
+// {
+//     print_backtrace_t config = pass->options;
+//     print_options_t options = config.options;
+
+//     print_frame_index(pass, entry, pass->index_align);
+
+//     // right align the address
+//     char *addr = fmt_left_align(options.arena, pass->symbol_align, "0x%p", entry->address);
+//     char *coloured = colour_text(pass->format_context, COLOUR_ADDR, addr);
+//     io_printf(options.io, "+%s%s\n", coloured, fmt_recurse(pass, entry));
+// }
+
+// // we know symbol info but not file info
+// static void print_simple(backtrace_t *pass, const bt_entry_t *entry)
+// {
+//     print_backtrace_t config = pass->options;
+//     print_options_t options = config.options;
+
+//     const char *line = (entry->info & eResolveLine)
+//         ? format(":%zu", get_offset_line(config.zero_indexed_lines, entry->line))
+//         : format(" @ %s", colour_format(pass->format_context, COLOUR_ADDR, "0x%p", entry->address));
+
+//     // right align the symbol
+//     size_t pad = get_symbol_padding(pass->symbol_align, entry);
+//     char *padding = str_repeat(" ", pad);
+
+//     char *symbol = colour_text(pass->format_context, COLOUR_SYMBOL, entry->symbol);
+
+//     const char *recurse = fmt_recurse(pass, entry);
+
+//     print_frame_index(pass, entry, pass->index_align);
+
+//     if (entry->info & eResolveFile)
+//     {
+//         io_printf(options.io, "%s%s%s (%s%s)\n", padding, symbol, recurse, entry->file, line);
+//     }
+//     else
+//     {
+//         io_printf(options.io, "%s%s%s%s\n", padding, symbol, recurse, line);
+//     }
+// }
+
+// static text_cache_t *get_file(backtrace_t *format, const char *path)
+// {
+//     CTASSERT(format != NULL);
+//     CTASSERT(path != NULL);
+
+//     print_backtrace_t config = format->options;
+//     if (!config.print_source) return NULL;
+
+//     return cache_emplace_file(format->file_cache, path);
+// }
+
+// static bool is_text_empty(const text_view_t *view)
+// {
+//     CTASSERT(view != NULL);
+
+//     for (size_t i = 0; i < view->size; i++)
+//         if (!isspace(view->text[i]))
+//             return false;
+
+//     return true;
+// }
+
+// static bool is_line_empty(text_cache_t *cache, size_t line)
+// {
+//     CTASSERT(cache != NULL);
+
+//     text_view_t view = cache_get_line(cache, line);
+//     return is_text_empty(&view);
+// }
+
+// static bool print_single_line(io_t *io, text_cache_t *cache, size_t data_line, size_t align, bool always_print)
+// {
+//     text_view_t text = cache_get_line(cache, data_line);
+//     if (!always_print && is_text_empty(&text))
+//         return false;
+
+//     char *line_padding = str_repeat(" ", align + 1);
+//     io_printf(io, "%s | %.*s\n", line_padding, (int)text.size, text.text);
+
+//     return true;
+// }
+
+// static void print_with_source(backtrace_t *pass, const bt_entry_t *entry, text_cache_t *cache)
+// {
+//     print_backtrace_t config = pass->options;
+//     print_options_t options = config.options;
+
+//     size_t line = get_offset_line(config.zero_indexed_lines, entry->line);
+//     size_t data_line = entry->line - 1;
+
+//     size_t align = get_num_width(line + 2);
+
+//     print_frame_index(pass, entry, 0);
+
+//     const char *recurse = fmt_recurse(pass, entry);
+//     const char *fn = colour_text(pass->format_context, COLOUR_SYMBOL, entry->symbol);
+
+//     io_printf(options.io, "inside symbol %s%s\n", fn, recurse);
+
+//     source_config_t source_config = {
+//         .context = pass->format_context,
+//         .heading_style = config.heading_style,
+//         .zero_indexed_lines = config.zero_indexed_lines,
+//     };
+
+//     where_t where = {
+//         .first_line = line,
+//         .first_column = 0,
+//     };
+
+//     char *arrow = format("%s =>", str_repeat(" ", align - 2));
+//     char *header = fmt_source_location(source_config, entry->file, where);
+//     io_printf(options.io, "%s %s\n", arrow, header);
+
+//     // if this line is not empty, we need to print the next line unconditionally
+//     bool was_empty = false;
+//     if (data_line > 2)
+//     {
+//         was_empty = print_single_line(options.io, cache, data_line - 2, align, false);
+//     }
+
+//     // if there is 1 line before the line we are printing
+//     if (data_line > 1)
+//     {
+//         print_single_line(options.io, cache, data_line - 1, align, was_empty);
+//     }
+
+//     text_view_t view = cache_get_line(cache, data_line);
+//     char *line_num = fmt_left_align(options.arena, align, "%zu", line);
+//     char *line_fmt = colour_format(pass->format_context, COLOUR_LINE, " %s > %.*s\n", line_num, (int)view.size, view.text);
+//     io_printf(options.io, "%s", line_fmt);
+
+//     size_t len = cache_count_lines(cache);
+//     bool print_after = (data_line + 2 < len) && !is_line_empty(cache, data_line + 2);
+
+//     if (data_line + 1 < len)
+//     {
+//         print_single_line(options.io, cache, data_line + 1, align, print_after);
+//     }
+
+//     if (data_line + 2 < len)
+//     {
+//         // the final line is always optional
+//         print_single_line(options.io, cache, data_line + 2, align, false);
+//     }
+// }
+
+// // we may have source information
+// static void print_source(backtrace_t *pass, const bt_entry_t *entry)
+// {
+//     // we found the file for this entry
+//     text_cache_t *cache = (entry->info & eResolveFile) ? get_file(pass, entry->file) : NULL;
+//     if (cache == NULL)
+//     {
+//         // we dont have the file on disk
+//         print_simple(pass, entry);
+//     }
+//     else
+//     {
+//         // we have the file on disk
+//         print_with_source(pass, entry, cache);
+//     }
+// }
+
+static size_t get_largest_entry(const typevec_t *entries)
+{
+    size_t len = typevec_len(entries);
     size_t largest = 0;
+
     for (size_t i = 0; i < len; i++)
     {
-        const bt_entry_t *entry = typevec_offset(report->entries, i);
-        CTASSERT(entry != NULL);
+        const entry_t *entry = typevec_offset(entries, i);
+        CTASSERTF(entry != NULL, "entry at %zu is NULL", i);
 
         size_t width = strlen(entry->symbol);
-        if (width > largest)
-            largest = width;
+        largest = MAX(width, largest);
     }
 
-    if (report->max_consecutive_frames == 0)
-        return report->longest_symbol;
-
-    // +3 for the ` x ` suffix
-    return report->longest_symbol + 3 + get_num_width(report->max_consecutive_frames);
+    return largest;
 }
 
-static size_t get_max_index_width(const bt_report_t *report)
+static size_t get_largest_collapsed_symbol(const typevec_t *entries)
 {
-    CTASSERT(report != NULL);
+    size_t len = typevec_len(entries);
+    size_t largest = strlen(kUnknownSymbol);
 
-    size_t width = get_num_width(report->total_frames);
+    for (size_t i = 0; i < len; i++)
+    {
+        const collapsed_t *entry = typevec_offset(entries, i);
+        CTASSERTF(entry != NULL, "entry at %zu is NULL", i);
 
-    if (report->max_consecutive_frames == 0)
-        return width;
+        if (entry->entry == NULL)
+            continue;
 
-    size_t span = get_num_width(report->last_consecutive_index - report->max_consecutive_frames) + 2 + get_num_width(report->last_consecutive_index);
+        size_t width = strlen(entry->entry->symbol);
+        largest = MAX(width, largest);
+    }
 
-    return span;
+    return largest;
 }
 
-static size_t get_symbol_padding(size_t align, const bt_entry_t *entry)
+static char *fmt_entry_location(backtrace_t *pass, const entry_t *entry)
 {
-    if (align == 0) return 0;
+    print_backtrace_t config = pass->options;
 
-    size_t pad = align - strlen(entry->symbol);
+    frame_resolve_t resolved = entry->info;
 
-    if (entry->recurse == 0)
-        return pad;
+    if (resolved & eResolveFile)
+    {
+        if (resolved & eResolveLine)
+        {
+            where_t where = {
+                .first_line = entry->line,
+            };
+            source_config_t source_config = {
+                .context = pass->format_context,
+                .colour = eColourDefault,
+                .heading_style = config.heading_style,
+                .zero_indexed_lines = config.zero_indexed_lines,
+            };
+            char *out = fmt_source_location(source_config, entry->file, where);
+            return str_format(pass->format_context.arena, "(%s)", out);
+        }
 
-    pad -= 3 + get_num_width(entry->recurse);
+        return entry->file;
+    }
 
-    return pad;
+    return colour_format(pass->format_context, COLOUR_ADDR, "0x%" PRI_ADDRESS, entry->address);
 }
 
-static const char *fmt_recurse(bt_format_t *pass, const bt_entry_t *entry)
-{
-    if (entry->recurse == 0)
-        return "";
-
-    char *fmt = colour_format(pass->format_context, COLOUR_RECURSE, "%zu", entry->recurse);
-
-    return format(" x %s", fmt);
-}
-
-static void print_frame_index(bt_format_t *pass, const bt_entry_t *entry, size_t width)
+static char *fmt_entry(backtrace_t *pass, size_t symbol_align, const entry_t *entry)
 {
     print_backtrace_t config = pass->options;
     print_options_t options = config.options;
 
-    if (entry->recurse == 0)
+    frame_resolve_t resolved = entry->info;
+
+    bool needs_seperator = !((resolved & eResolveFile) && (resolved & eResolveLine));
+    char *where = fmt_entry_location(pass, entry);
+    const char *name = (resolved & eResolveName) ? entry->symbol : kUnknownSymbol;
+
+    char *it = fmt_right_align(options.arena, symbol_align, "%s", name);
+    char *coloured = colour_text(pass->format_context, COLOUR_SYMBOL, it);
+
+    if (needs_seperator)
     {
-        char *line = fmt_align(options.arena, width, "%zu", pass->index);
-        char *idx = colour_format(pass->format_context, COLOUR_INDEX, "[%s]", line);
-
-        io_printf(options.io, "%s ", idx);
-
-        pass->index += 1;
+        return str_format(options.arena, "%s @ %s", coloured, where);
     }
     else
     {
-        char *start = fmt_align(options.arena, width, "%zu..%zu", pass->index, pass->index + entry->recurse);
-        char *idx = colour_format(pass->format_context, COLOUR_INDEX, "[%s]", start);
-
-        io_printf(options.io, "%s ", idx);
-
-        pass->index += entry->recurse + 1;
+        return str_format(options.arena, "%s %s", coloured, where);
     }
 }
 
-// print a symbol with no extra info
-static void print_frame(bt_format_t *pass, const bt_entry_t *entry)
+static char *fmt_index(backtrace_t *pass, size_t index)
 {
     print_backtrace_t config = pass->options;
     print_options_t options = config.options;
 
-    print_frame_index(pass, entry, pass->index_align);
-
-    // right align the address
-    char *addr = fmt_align(options.arena, pass->symbol_align, "0x%p", entry->address);
-    char *coloured = colour_text(pass->format_context, COLOUR_ADDR, addr);
-    io_printf(options.io, "+%s%s\n", coloured, fmt_recurse(pass, entry));
+    char *idx = fmt_left_align(options.arena, pass->index_align, "%zu", index);
+    return colour_format(pass->format_context, COLOUR_INDEX, "[%s]", idx);
 }
 
-// we know symbol info but not file info
-static void print_simple(bt_format_t *pass, const bt_entry_t *entry)
+static void print_single_frame(backtrace_t *pass, size_t index, const entry_t *entry)
 {
-    print_backtrace_t config = pass->options;
-    print_options_t options = config.options;
+    print_backtrace_t options = pass->options;
+    print_options_t base = options.options;
+    char *idx = fmt_index(pass, index);
+    io_printf(base.io, "%s %s\n", idx, fmt_entry(pass, pass->symbol_align, entry));
+}
 
-    const char *line = (entry->info & eResolveLine)
-        ? format(":%zu", get_offset_line(config.zero_indexed_lines, entry->line))
-        : format(" @ %s", colour_format(pass->format_context, COLOUR_ADDR, "0x%p", entry->address));
+static void print_frame_sequence(backtrace_t *pass, size_t index, const typevec_t *sequence, size_t repeat)
+{
+    print_backtrace_t options = pass->options;
+    print_options_t base = options.options;
 
-    // right align the symbol
-    size_t pad = get_symbol_padding(pass->symbol_align, entry);
-    char *padding = str_repeat(" ", pad);
+    size_t len = typevec_len(sequence);
 
-    char *symbol = colour_text(pass->format_context, COLOUR_SYMBOL, entry->symbol);
+    size_t largest = get_largest_entry(sequence);
 
-    const char *recurse = fmt_recurse(pass, entry);
+    char *idx = fmt_index(pass, index);
+    char *coloured = colour_format(pass->format_context, COLOUR_RECURSE, "%zu", repeat);
+    io_printf(base.io, "%s repeats %s times\n", idx, coloured);
 
-    print_frame_index(pass, entry, pass->index_align);
-
-    if (entry->info & eResolveFile)
+    for (size_t i = 0; i < len; i++)
     {
-        io_printf(options.io, "%s%s%s (%s%s)\n", padding, symbol, recurse, entry->file, line);
+        const entry_t *entry = typevec_offset(sequence, i);
+        CTASSERTF(entry != NULL, "entry at %zu is NULL", i);
+
+        char *it = fmt_entry(pass, largest, entry);
+        char *inner = colour_format(pass->format_context, COLOUR_RECURSE, "[%zu]", i);
+        io_printf(base.io, " - %s %s\n", inner, it);
+    }
+}
+
+static void print_collapsed(backtrace_t *pass, size_t index, const collapsed_t *collapsed)
+{
+    if (collapsed->entry != NULL)
+    {
+        print_single_frame(pass, index, collapsed->entry);
     }
     else
     {
-        io_printf(options.io, "%s%s%s%s\n", padding, symbol, recurse, line);
-    }
-}
-
-static text_cache_t *get_file(bt_format_t *format, const char *path)
-{
-    CTASSERT(format != NULL);
-    CTASSERT(path != NULL);
-
-    print_backtrace_t config = format->options;
-    if (!config.print_source) return NULL;
-
-    return cache_emplace_file(format->file_cache, path);
-}
-
-static bool is_text_empty(const text_view_t *view)
-{
-    CTASSERT(view != NULL);
-
-    for (size_t i = 0; i < view->size; i++)
-        if (!isspace(view->text[i]))
-            return false;
-
-    return true;
-}
-
-static bool is_line_empty(text_cache_t *cache, size_t line)
-{
-    CTASSERT(cache != NULL);
-
-    text_view_t view = cache_get_line(cache, line);
-    return is_text_empty(&view);
-}
-
-static bool print_single_line(io_t *io, text_cache_t *cache, size_t data_line, size_t align, bool always_print)
-{
-    text_view_t text = cache_get_line(cache, data_line);
-    if (!always_print && is_text_empty(&text))
-        return false;
-
-    char *line_padding = str_repeat(" ", align + 1);
-    io_printf(io, "%s | %.*s\n", line_padding, (int)text.size, text.text);
-
-    return true;
-}
-
-static void print_with_source(bt_format_t *pass, const bt_entry_t *entry, text_cache_t *cache)
-{
-    print_backtrace_t config = pass->options;
-    print_options_t options = config.options;
-
-    size_t line = get_offset_line(config.zero_indexed_lines, entry->line);
-    size_t data_line = entry->line - 1;
-
-    size_t align = get_num_width(line + 2);
-
-    print_frame_index(pass, entry, 0);
-
-    const char *recurse = fmt_recurse(pass, entry);
-    const char *fn = colour_text(pass->format_context, COLOUR_SYMBOL, entry->symbol);
-
-    io_printf(options.io, "inside symbol %s%s\n", fn, recurse);
-
-    source_config_t source_config = {
-        .context = pass->format_context,
-        .heading_style = config.heading_style,
-        .zero_indexed_lines = config.zero_indexed_lines,
-    };
-
-    where_t where = {
-        .first_line = line,
-        .first_column = 0,
-    };
-
-    char *arrow = format("%s =>", str_repeat(" ", align - 2));
-    char *header = fmt_source_location(source_config, entry->file, where);
-    io_printf(options.io, "%s %s\n", arrow, header);
-
-    // if this line is not empty, we need to print the next line unconditionally
-    bool was_empty = false;
-    if (data_line > 2)
-    {
-        was_empty = print_single_line(options.io, cache, data_line - 2, align, false);
-    }
-
-    // if there is 1 line before the line we are printing
-    if (data_line > 1)
-    {
-        print_single_line(options.io, cache, data_line - 1, align, was_empty);
-    }
-
-    text_view_t view = cache_get_line(cache, data_line);
-    char *line_num = fmt_align(options.arena, align, "%zu", line);
-    char *line_fmt = colour_format(pass->format_context, COLOUR_LINE, " %s > %.*s\n", line_num, (int)view.size, view.text);
-    io_printf(options.io, "%s", line_fmt);
-
-    size_t len = cache_count_lines(cache);
-    bool print_after = (data_line + 2 < len) && !is_line_empty(cache, data_line + 2);
-
-    if (data_line + 1 < len)
-    {
-        print_single_line(options.io, cache, data_line + 1, align, print_after);
-    }
-
-    if (data_line + 2 < len)
-    {
-        // the final line is always optional
-        print_single_line(options.io, cache, data_line + 2, align, false);
-    }
-}
-
-// we may have source information
-static void print_source(bt_format_t *pass, const bt_entry_t *entry)
-{
-    // we found the file for this entry
-    text_cache_t *cache = (entry->info & eResolveFile) ? get_file(pass, entry->file) : NULL;
-    if (cache == NULL)
-    {
-        // we dont have the file on disk
-        print_simple(pass, entry);
-    }
-    else
-    {
-        // we have the file on disk
-        print_with_source(pass, entry, cache);
+        print_frame_sequence(pass, index, collapsed->sequence, collapsed->repeat);
     }
 }
 
@@ -401,38 +547,27 @@ void print_backtrace(print_backtrace_t config, bt_report_t *report)
     print_options_t options = config.options;
 
     size_t len = typevec_len(report->entries);
+    typevec_t *frames = collapse_frames(report->entries, options.arena);
 
-    bt_format_t pass = {
+    size_t symbol_align = get_largest_collapsed_symbol(frames);
+    size_t frame_count = typevec_len(frames);
+    size_t align = get_num_width(frame_count);
+
+    backtrace_t pass = {
         .options = config,
         .format_context = format_context_make(options),
-        .symbol_align = get_max_symbol_width(report),
-        .index_align = get_max_index_width(report),
+        .frames = frames,
+        .index_align = align,
+        .symbol_align = symbol_align,
         .file_cache = cache_map_new(len),
-        .index = 0,
     };
 
-    // print the header
-    if (config.header_message)
+    for (size_t i = 0; i < frame_count; i++)
     {
-        io_printf(options.io, " === backtrace (%zu frames) ===\n", len);
+        const collapsed_t *collapsed = typevec_offset(frames, i);
+        CTASSERTF(collapsed != NULL, "collapsed at %zu is NULL", i);
 
-        if (config.header_message != NULL)
-            io_printf(options.io, "%s\n", config.header_message);
-    }
-
-    for (size_t i = 0; i < len; i++)
-    {
-        bt_entry_t *entry = typevec_offset(report->entries, i);
-        CTASSERT(entry != NULL);
-
-        if (entry->info == eResolveNothing)
-        {
-            print_frame(&pass, entry);
-        }
-        else
-        {
-            print_source(&pass, entry);
-        }
+        print_collapsed(&pass, i, collapsed);
     }
 
     // close all the files
@@ -443,7 +578,7 @@ bt_report_t *bt_report_new(arena_t *arena)
 {
     bt_report_t result = {
         .arena = arena,
-        .entries = typevec_new(sizeof(bt_entry_t), 4, arena),
+        .entries = typevec_new(sizeof(entry_t), 4, arena),
     };
 
     bt_report_t *report = ARENA_MALLOC(arena, sizeof(bt_report_t), "bt_report", NULL);
@@ -486,7 +621,7 @@ void bt_report_add(bt_report_t *report, const frame_t *frame)
     };
     frame_resolve_t info = bt_resolve_symbol(frame, &symbol);
 
-    bt_entry_t entry = {
+    entry_t entry = {
         .info = info,
         .file = arena_strndup(symbol.path.text, symbol.path.size, report->arena),
         .symbol = arena_strndup(symbol.name.text, symbol.name.size, report->arena),

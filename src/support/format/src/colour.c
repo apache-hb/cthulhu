@@ -14,6 +14,7 @@ const colour_pallete_t kColourNone = {
         [eColourMagenta] = "",
         [eColourCyan] = "",
         [eColourWhite] = "",
+        [eColourDefault] = "",
     },
     .reset = ""
 };
@@ -27,6 +28,7 @@ const colour_pallete_t kColourDefault = {
         [eColourMagenta] = ANSI_MAGENTA,
         [eColourCyan] = ANSI_CYAN,
         [eColourWhite] = ANSI_WHITE,
+        [eColourDefault] = "",
     },
     .reset = ANSI_RESET
 };

@@ -66,6 +66,7 @@ static void print_segment(simple_t *simple, const segment_t *segment, size_t sca
 
     source_config_t source_config = {
         .context = simple->fmt,
+        .colour = COLOUR_PATH,
         .heading_style = eHeadingGeneric,
         .zero_indexed_lines = simple->file.zeroth_line,
     };
@@ -74,7 +75,7 @@ static void print_segment(simple_t *simple, const segment_t *segment, size_t sca
 
     const char *msg = segment->message;
 
-    io_printf(simple->io, " (%zu.%zu) %s %s\n", scan_idx + 1, segment_idx + 1, path, msg);
+    io_printf(simple->io, " (%zu.%zu) %s: %s\n", scan_idx + 1, segment_idx + 1, path, msg);
 }
 
 static void print_segment_list(simple_t *simple, const typevec_t *segments, size_t scan_idx)
@@ -185,12 +186,13 @@ void text_report_simple(text_config_t config, const event_t *event)
 
     source_config_t source_config = {
         .context = fmt,
+        .colour = COLOUR_PATH,
         .heading_style = eHeadingGeneric,
         .zero_indexed_lines = cfg.zeroth_line,
     };
 
     const char *path = fmt_node_location(source_config, event->node);
-    const char *lvl = colour_format(fmt, col, "%s %s:", sev, diagnostic->id);
+    const char *lvl = colour_format(fmt, col, "%s: %s:", sev, diagnostic->id);
 
     io_printf(io, "%s %s %s:\n", path, lvl, event->message);
 

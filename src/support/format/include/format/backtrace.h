@@ -17,19 +17,11 @@ typedef struct print_backtrace_t
     /// @brief basic print options
     print_options_t options;
 
-    /// @brief should we attempt to load the source code and print it
-    /// this means that print_backtrace will make calls to the io subsystem
-    /// this may not be desirable inside panic handlers
-    bool print_source;
-
+    /// @brief
     heading_style_t heading_style;
 
     /// @brief is the first line of the file line 0 or line 1
     bool zero_indexed_lines;
-
-    /// @brief the header message to print at the start of the backtrace
-    /// set to NULL to disable
-    const char *header_message;
 } print_backtrace_t;
 
 /// @brief a backtrace report context

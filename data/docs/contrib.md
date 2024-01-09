@@ -79,7 +79,7 @@ When adding a new module consider how much of the compiler needs access to it. T
   - For user facing error reporting look at @ref Notify
 
 - All features that require platform specific code must have a reasonable fallback implementation.
-  - See @ref Stacktrace for an example of this, doing nothing can be a reasonable fallback.
+  - See @ref backtrace for an example of this, doing nothing can be a reasonable fallback.
 
 - Everything must be implemented in standard C11
   - No compiler extensions in common code.

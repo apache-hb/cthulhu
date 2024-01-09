@@ -152,11 +152,11 @@ size_t get_num_width(size_t num)
     return width;
 }
 
-char *fmt_align(arena_t *arena, size_t width, const char *fmt, ...)
+char *fmt_left_align(arena_t *arena, size_t width, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    char *msg = vformat(fmt, args);
+    char *msg = str_vformat(arena, fmt, args);
     va_end(args);
 
     size_t len = strlen(msg);
@@ -166,6 +166,28 @@ char *fmt_align(arena_t *arena, size_t width, const char *fmt, ...)
     char *result = ARENA_MALLOC(arena, size, "align", NULL);
     memset(result, ' ', width);
     memcpy(result, msg, len);
+
+    result[width] = '\0';
+
+    arena_free(msg, size, arena);
+
+    return result;
+}
+
+char *fmt_right_align(arena_t *arena, size_t width, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    char *msg = str_vformat(arena, fmt, args);
+    va_end(args);
+
+    size_t len = strlen(msg);
+    if (len >= width) return msg;
+
+    size_t size = width - 1;
+    char *result = ARENA_MALLOC(arena, size, "align", NULL);
+    memset(result, ' ', width);
+    memcpy(result + (width - len), msg, len);
 
     result[width] = '\0';
 
@@ -597,8 +619,6 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
     return result;
 }
 
-#define COLOUR_PATH eColourBlue
-
 static const char *const kFormatBuiltinHeading[eHeadingCount] = {
     [eHeadingGeneric] = "<builtin>:%" PRI_LINE "",
     [eHeadingMicrosoft] = "<builtin>(%" PRI_LINE ")",
@@ -616,18 +636,18 @@ static char *fmt_any_location(source_config_t config, const char *path, line_t l
     if (path == NULL)
     {
         const char *fmt = kFormatBuiltinHeading[config.heading_style];
-        return colour_format(config.context, COLOUR_PATH, fmt, line);
+        return colour_format(config.context, config.colour, fmt, line);
     }
 
     // we branch here because msvc doesnt report column numbers, only lines
     if (config.heading_style == eHeadingGeneric)
     {
-        return colour_format(config.context, COLOUR_PATH, "%s:%" PRI_LINE ":%" PRI_COLUMN "",
+        return colour_format(config.context, config.colour, "%s:%" PRI_LINE ":%" PRI_COLUMN "",
                                 path, line, column);
     }
     else
     {
-        return colour_format(config.context, COLOUR_PATH, "%s(%" PRI_LINE ")", path, line);
+        return colour_format(config.context, config.colour, "%s(%" PRI_LINE ")", path, line);
     }
 }
 
@@ -635,8 +655,7 @@ char *fmt_source_location(source_config_t config, const char *path, where_t wher
 {
     line_t first_line = calc_line_number(config.zero_indexed_lines, where.first_line);
 
-    char *result = fmt_any_location(config, path, first_line, where.first_column);
-    return format("%s:", result); // we dont want the colon to be coloured
+    return fmt_any_location(config, path, first_line, where.first_column);
 }
 
 char *fmt_node_location(source_config_t config, const node_t *node)

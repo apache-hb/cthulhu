@@ -12,6 +12,10 @@ typedef struct notify_config_t
     print_notify_t config;
 } notify_config_t;
 
+// TODO: all this
+
+#define COLOUR_PATH eColourBlue
+
 static void print_notify_segment_simple(notify_config_t *config, const segment_t *segment)
 {
     print_notify_t options = config->config;
@@ -21,13 +25,14 @@ static void print_notify_segment_simple(notify_config_t *config, const segment_t
 
     source_config_t source_config = {
         .context = format_context,
+        .colour = COLOUR_PATH,
         .heading_style = options.heading_style,
         .zero_indexed_lines = options.zero_indexed_lines,
     };
 
     char *path = fmt_node_location(source_config, segment->node);
 
-    io_printf(base.io, "%s %s\n", path, segment->message);
+    io_printf(base.io, "%s: %s\n", path, segment->message);
 }
 
 static void print_notify_note_simple(notify_config_t *config, const char *path, const char *note)
@@ -47,6 +52,7 @@ static void print_notify_simple(notify_config_t *config, const event_t *event)
 
     source_config_t source_config = {
         .context = format_context,
+        .colour = COLOUR_PATH,
         .heading_style = options.heading_style,
         .zero_indexed_lines = options.zero_indexed_lines,
     };
@@ -62,7 +68,7 @@ static void print_notify_simple(notify_config_t *config, const event_t *event)
 
     char *level = colour_format(format_context, severity_colour, "%s %s:", severity_name, id);
 
-    io_printf(base.io, "%s %s %s\n", path, level, event->message);
+    io_printf(base.io, "%s: %s %s\n", path, level, event->message);
 
     if (event->segments != NULL)
     {

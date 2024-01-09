@@ -19,6 +19,8 @@ BEGIN_API
 /// @brief an address of a symbol
 typedef uint_least64_t bt_address_t;
 
+#define PRI_ADDRESS PRIuLEAST64
+
 /// @brief a symbol
 typedef struct symbol_t
 {

@@ -359,6 +359,43 @@ static int rec2(int x, int y, print_backtrace_t config)
     return rec2(x - 1, y, config);
 }
 
+static int recurse_head(int x, print_backtrace_t config);
+static int recurse_middle(int x, print_backtrace_t config);
+static int recurse_tail(int x, print_backtrace_t config);
+
+static int recurse_head(int x, print_backtrace_t config)
+{
+    if (x == 0)
+    {
+        do_print_backtrace(config);
+        return 0;
+    }
+
+    return recurse_middle(x - 1, config);
+}
+
+static int recurse_middle(int x, print_backtrace_t config)
+{
+    if (x == 0)
+    {
+        do_print_backtrace(config);
+        return 0;
+    }
+
+    return recurse_tail(x - 1, config);
+}
+
+static int recurse_tail(int x, print_backtrace_t config)
+{
+    if (x == 0)
+    {
+        do_print_backtrace(config);
+        return 0;
+    }
+
+    return recurse_head(x - 1, config);
+}
+
 static void do_backtrace(io_t *io)
 {
     io_printf(io, "\n=== backtrace ===\n\n");
@@ -371,16 +408,14 @@ static void do_backtrace(io_t *io)
 
     print_backtrace_t config1 = {
         .options = options,
-        .print_source = true,
+        .heading_style = eHeadingGeneric,
         .zero_indexed_lines = false,
-        .header_message = "backtrace 1",
     };
 
     print_backtrace_t config2 = {
         .options = options,
-        .print_source = true,
+        .heading_style = eHeadingMicrosoft,
         .zero_indexed_lines = true,
-        .header_message = "backtrace 2",
     };
 
     recurse(15, config1);
@@ -388,6 +423,8 @@ static void do_backtrace(io_t *io)
 
     rec2(200, 100, config1);
     rec2(5, 100, config2);
+
+    recurse_head(25, config1);
 }
 
 int main(int argc, const char **argv)
