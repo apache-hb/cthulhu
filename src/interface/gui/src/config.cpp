@@ -10,8 +10,6 @@
 
 #include <array>
 
-#include <stdio.h>
-
 using namespace ed;
 
 /// drawing

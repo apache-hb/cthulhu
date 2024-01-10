@@ -1,10 +1,8 @@
-/**
-@page todo Todo list
-@addindex todo
+# TODO {#todo}
 
 GFI = good first issue
 
-<h3>First priority</h3>
+## First priority
 
 - support for feeding sources directly into compilers
     - the intermediate step is annoying to users
@@ -44,7 +42,7 @@ GFI = good first issue
 - complete the C preprocessor
     - at least be able to parse the windows and linux headers
 
-<h3>Important</h3>
+### Important
 
 - fix linking to ucrt with clang-cl causing issues (GFI)
 
@@ -92,7 +90,7 @@ GFI = good first issue
 
 - more docs (GFI)
 
-<h3>Backlog</h3>
+### Backlog
 
 - make backtrace formats prettier
     - fix the frame index formatting
@@ -107,7 +105,7 @@ GFI = good first issue
 - profile startup time during testing (GFI)
     - something is afoot since commit `c64ef228a2a4edd01bd7eb1544e1a2cc05274e1b`
 
-<h3>Bikeshedding</h3>
+#### Bikeshedding
 
 - generic interface compilation option
     - use dynamic libraries rather than static linking
@@ -140,5 +138,3 @@ GFI = good first issue
     - JVM
     - CLR
     - python
-
-*/

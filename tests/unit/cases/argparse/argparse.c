@@ -8,7 +8,6 @@
 
 #include "std/vector.h"
 #include "std/str.h"
-#include <stdio.h>
 
 typedef struct test_config_t
 {

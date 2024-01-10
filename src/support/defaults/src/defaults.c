@@ -278,7 +278,7 @@ int parse_argparse(ap_t *ap, default_options_t options, tool_config_t config)
     return process_default_options(options, config);
 }
 
-static void panic_handler(panic_t panic, const char *fmt, va_list args)
+static void pretty_panic_handler(panic_t panic, const char *fmt, va_list args)
 {
     arena_t *arena = get_global_arena();
     bt_report_t *report = bt_report_collect(arena);
@@ -304,6 +304,53 @@ static void panic_handler(panic_t panic, const char *fmt, va_list args)
     exit(EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
 }
 
+static void *default_error_begin(size_t error)
+{
+    io_t *io = io_stdout();
+    io_printf(io, "a fatal error has occured 0x%zX\n", error);
+    return io;
+}
+
+static void default_error_frame(void *user, const frame_t *frame)
+{
+    io_t *io = user;
+
+    char name_buffer[256] = { 0 };
+    char path_buffer[512] = { 0 };
+
+    symbol_t symbol = {
+        .name = text_make(name_buffer, sizeof(name_buffer)),
+        .path = text_make(path_buffer, sizeof(path_buffer))
+    };
+
+    frame_resolve_t resolve = bt_resolve_symbol(frame, &symbol);
+
+    text_t name = symbol.name;
+    text_t path = symbol.path;
+
+    if (resolve & (eResolveLine | eResolveFile))
+    {
+        io_printf(io, "%s (%s:%zu)\n", name.text, path.text, symbol.line);
+    }
+    else
+    {
+        io_printf(io, "%s\n", name.text);
+    }
+}
+
+static void default_error_end(void *user)
+{
+    io_t *io = user;
+    io_printf(io, "exiting\n");
+    exit(EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
+}
+
+static void default_verbose(const char *fmt, va_list args)
+{
+    io_t *io = io_stdout();
+    io_vprintf(io, fmt, args);
+}
+
 void default_init(void)
 {
     bt_init();
@@ -313,5 +360,13 @@ void default_init(void)
     init_global_arena(arena);
     init_gmp_arena(arena);
 
-    gPanicHandler = panic_handler;
+    bt_error_t error = {
+        .begin = default_error_begin,
+        .end = default_error_end,
+        .frame = default_error_frame,
+    };
+
+    gErrorReport = error;
+    gPanicHandler = pretty_panic_handler;
+    gVerboseCallback = default_verbose;
 }

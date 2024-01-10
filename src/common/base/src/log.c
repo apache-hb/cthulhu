@@ -1,25 +1,19 @@
 #include "base/log.h"
-
-#include <stdio.h>
+#include "core/macros.h"
 
 static void default_verbose(const char *fmt, va_list args)
 {
-    (void)vprintf(fmt, args);
-    (void)printf("\n");
+    CTU_UNUSED(fmt);
+    CTU_UNUSED(args);
 }
 
-static verbose_t gVerboseFn = default_verbose;
+verbose_t gVerboseCallback = default_verbose;
 static bool gVerboseEnabled = false;
 
 USE_DECL
 verbose_t ctu_default_verbose(void)
 {
     return default_verbose;
-}
-
-void init_logs(verbose_t callback)
-{
-    gVerboseFn = callback;
 }
 
 void ctu_log_update(bool enable)
@@ -48,6 +42,6 @@ void ctu_vlog(const char *fmt, va_list args)
 {
     if (gVerboseEnabled)
     {
-        gVerboseFn(fmt, args);
+        gVerboseCallback(fmt, args);
     }
 }

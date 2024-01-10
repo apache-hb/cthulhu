@@ -2,6 +2,10 @@
 
 #include "base/log.h"
 #include "core/macros.h"
+#include "io/console.h"
+#include "format/backtrace.h"
+#include "format/colour.h"
+#include "io/io.h"
 #include "memory/memory.h"
 #include "defaults/memory.h"
 #include "backtrace/backtrace.h"
@@ -9,7 +13,6 @@
 #include "std/str.h"
 #include "os/os.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 
 typedef enum test_error_t
@@ -105,12 +108,25 @@ static void test_panic_handler(panic_t panic, const char *fmt, va_list args)
 {
     if (!gExpectingPanic)
     {
+        io_t *io = io_stdout();
 
-        (void)printf("unexpected panic: %s:%zu: %s: ", panic.file, panic.line, panic.function);
-        (void)vprintf(fmt, args);
-        (void)printf("\n");
+        io_printf(io, "unexpected panic [%s:%zu] => %s: ", panic.file, panic.line, panic.function);
+        io_vprintf(io, fmt, args);
+        io_printf(io, "\n");
 
-        bt_print_trace(stdout);
+        bt_report_t *report = bt_report_collect(gTestArena);
+
+        print_backtrace_t config = {
+            .options = {
+                .arena = gTestArena,
+                .io = io,
+                .pallete = &kColourDefault,
+            },
+            .heading_style = eHeadingGeneric,
+            .zero_indexed_lines = false,
+        };
+
+        print_backtrace(config, report);
 
         abort();
     }
@@ -191,24 +207,25 @@ test_suite_t test_suite_new(const char *suite, arena_t *arena)
 
 int test_suite_finish(test_suite_t *suite)
 {
-    printf("test suite %s\n", suite->suite_name);
-    printf("status, name, message, exception\n");
+    io_t *io = io_stdout();
+    io_printf(io, "test suite %s\n", suite->suite_name);
+    io_printf(io, "status, name, message, exception\n");
     int result = 0;
 
     test_result_t res;
     for (size_t i = 0; i < typevec_len(suite->results); i++)
     {
         typevec_get(suite->results, i, &res);
-        printf("%s, %s, %s", get_test_result_id(res.result), res.group_name, res.test_msg);
+        io_printf(io, "%s, %s, %s", get_test_result_id(res.result), res.group_name, res.test_msg);
         if (res.has_exception)
         {
-            printf(", %s", res.ex.msg);
+            io_printf(io, ", %s", res.ex.msg);
         }
-        printf("\n");
+        io_printf(io, "\n");
         int code = get_test_result_code(res.result);
         result = (code > result) ? code : result;
     }
-    printf("test suite %s %s (exit %d)\n", suite->suite_name, (result == 0) ? "PASSED" : "FAILED", result);
+    io_printf(io, "test suite %s %s (exit %d)\n", suite->suite_name, (result == 0) ? "PASSED" : "FAILED", result);
     return result;
 }
 

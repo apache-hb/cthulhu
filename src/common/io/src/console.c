@@ -1,6 +1,7 @@
 #include "io/console.h"
 #include "core/macros.h"
 #include "io/impl.h"
+
 #include <stdio.h>
 
 static size_t con_write(io_t *self, const void *src, size_t size)

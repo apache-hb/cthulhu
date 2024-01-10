@@ -11,8 +11,6 @@
 
 #include "argparse/argparse.h"
 
-#include <stdio.h>
-
 static const cfg_info_t kConfigInfo = {
     .name = "cli",
     .brief = "Cthulhu CLI configuration options",

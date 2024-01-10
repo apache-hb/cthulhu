@@ -21,10 +21,6 @@ if driver_tests.allowed()
     subdir('tools/harness')
 endif
 
-if tool_stacktrace.allowed()
-    subdir('tools/stacktrace')
-endif
-
 if tool_notify.allowed()
     subdir('tools/notify')
 endif

@@ -63,11 +63,6 @@ option('analyze', type : 'feature',
 
 # tools
 
-option('tool_stacktrace', type : 'feature',
-    description : 'build stacktrace test tool',
-    value : 'auto'
-)
-
 option('tool_notify', type : 'feature',
     description : 'build notify test tool',
     value : 'auto'

@@ -17,16 +17,7 @@ BEGIN_API
 /// @brief a logging callback
 typedef void (*verbose_t)(const char *fmt, va_list args);
 
-/// @brief get the default verbose callback
-///
-/// @return the default verbose callback
-NODISCARD CONSTFN
-verbose_t ctu_default_verbose(void);
-
-/// @brief initialize the logging system with a callback
-///
-/// @param callback the callback to use for logging
-void init_logs(IN_NOTNULL verbose_t callback);
+extern verbose_t gVerboseCallback;
 
 /// @brief update the verbosity of the logging system
 ///

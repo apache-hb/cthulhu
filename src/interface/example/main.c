@@ -7,6 +7,7 @@
 #include "cthulhu/emit/emit.h"
 #include "cthulhu/ssa/ssa.h"
 
+#include "io/console.h"
 #include "notify/notify.h"
 #include "scan/node.h"
 #include "support/langs.h"
@@ -38,14 +39,8 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
 {
     int err = text_report(logger_get_events(logger), config, title);
 
-    text_config_t inner = config.text_config;
-
     if (err != EXIT_OK)
     {
-        const void *buffer = io_map(inner.io);
-        size_t size = io_size(inner.io);
-        (void)fwrite(buffer, size, 1, stderr);
-
         return err;
     }
 
@@ -89,14 +84,14 @@ int main(int argc, const char **argv)
         lifetime_add_language(lifetime, langs.langs[i]);
     }
 
-    io_t *msg_buffer = io_blob("buffer", 0x1000, eAccessWrite | eAccessText, arena);
+    io_t *con = io_stdout();
 
     text_config_t text_config = {
         .config = {
             .zeroth_line = false,
         },
         .colours = &kColourDefault,
-        .io = msg_buffer,
+        .io = con,
     };
 
     report_config_t report_config = {
@@ -114,7 +109,7 @@ int main(int argc, const char **argv)
 
         if (lang == NULL)
         {
-            printf("no language found for file: %s\n", path);
+            io_printf(con, "no language found for file: %s\n", path);
         }
 
         io_t *io = make_file(logger, path, eAccessRead | eAccessText);
@@ -171,7 +166,7 @@ int main(int argc, const char **argv)
     for (size_t i = 0; i < len; i++)
     {
         const char *path = vector_get(c89_emit_result.sources, i);
-        printf("%s\n", path);
+        io_printf(con, "%s\n", path);
     }
 
     fs_t *out = fs_physical("out", arena);

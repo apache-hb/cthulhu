@@ -4,7 +4,6 @@
 #include "core/analyze.h"
 #include "core/text.h"
 
-#include <stdio.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -109,12 +108,6 @@ void bt_read(bt_frame_t callback, void *user);
 /// @param frame the frame to resolve
 /// @param symbol the symbol to fill
 frame_resolve_t bt_resolve_symbol(IN_NOTNULL const frame_t *frame, symbol_t *symbol);
-
-/// @brief print a backtrace to a file
-/// @note this follows the same precondition as @a bt_read
-///
-/// @param file the file to print to
-void bt_print_trace(IN_NOTNULL FILE *file);
 
 /// @}
 

@@ -1,17 +1,16 @@
 #include "base/panic.h"
 
-#include "backtrace/backtrace.h"
+#include "core/macros.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 
 static void default_panic_handler(panic_t panic, const char *fmt, va_list args)
 {
-    (void)fprintf(stderr, "[panic][%s:%zu] => %s: ", panic.file, panic.line, panic.function);
-    (void)vfprintf(stderr, fmt, args);
-    (void)fprintf(stderr, "\n");
+    CTU_UNUSED(panic);
+    CTU_UNUSED(fmt);
+    CTU_UNUSED(args);
 
-    bt_print_trace(stderr);
+    exit(EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
 }
 
 panic_handler_t gPanicHandler = default_panic_handler;

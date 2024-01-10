@@ -26,7 +26,6 @@
 
 #include "core/macros.h"
 #include "support/langs.h"
-#include <stdio.h>
 
 static const version_info_t kToolVersion = {
     .license = "GPLv3",
@@ -73,14 +72,8 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
 {
     int err = text_report(logger_get_events(logger), config, title);
 
-    text_config_t inner = config.text_config;
-
     if (err != EXIT_OK)
     {
-        const void *buffer = io_map(inner.io);
-        size_t size = io_size(inner.io);
-        (void)fwrite(buffer, size, 1, stderr);
-
         return err;
     }
 
