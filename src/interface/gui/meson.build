@@ -4,7 +4,7 @@
 
 cpp = meson.get_compiler('cpp')
 
-gui_args = cpp.get_supported_arguments('/wd4611', '-D_HAS_EXCEPTIONS=0')
+gui_args = cpp.get_supported_arguments('/wd4611', '/wd4201', '-D_HAS_EXCEPTIONS=0')
 
 src = [
     'imgui/imgui.cpp',
@@ -53,6 +53,6 @@ executable('gui', src,
     dependencies : [
         imgui, core, os, scan,
         memory, notify, config,
-        io, runtime, support
+        io, runtime, support, ssa, tree
     ]
 )

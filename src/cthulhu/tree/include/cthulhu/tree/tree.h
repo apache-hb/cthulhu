@@ -16,6 +16,8 @@ typedef struct tree_t tree_t;
 typedef struct cookie_t cookie_t;
 typedef struct diagnostic_t diagnostic_t;
 
+BEGIN_API
+
 typedef void (*resolve_t)(tree_t *sema, tree_t *self, void *user);
 typedef void (*resolve_type_t)(tree_t *sema, tree_t *self, void *user);
 
@@ -553,3 +555,5 @@ map_t *tree_module_tag(const tree_t *self, size_t tag);
  * @return the cookie
  */
 cookie_t *tree_get_cookie(tree_t *sema);
+
+END_API

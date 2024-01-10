@@ -17,6 +17,7 @@ BEGIN_API
 /// @brief a logging callback
 typedef void (*verbose_t)(const char *fmt, va_list args);
 
+/// @brief the global verbose logging callback
 extern verbose_t gVerboseCallback;
 
 /// @brief update the verbosity of the logging system

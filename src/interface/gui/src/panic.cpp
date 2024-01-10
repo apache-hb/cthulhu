@@ -2,6 +2,7 @@
 
 #include "backtrace/backtrace.h"
 
+#include "cthulhu/runtime/interface.h"
 #include "std/str.h"
 
 #include "imgui/imgui.h"
@@ -55,6 +56,35 @@ CompileError ed::run_compile(CompileInfo& info)
             };
             return error;
         }
+    }
+
+    if (!info.check_reports())
+    {
+        CompileError error = {
+            .code = eCompileError,
+        };
+        return error;
+    }
+
+    for (size_t stage = 0; stage < eStageTotal; stage++)
+    {
+        lifetime_run_stage(info.lifetime, compile_stage_t(stage));
+        if (!info.check_reports())
+        {
+            CompileError error = {
+                .code = eCompileError,
+            };
+            return error;
+        }
+    }
+
+    lifetime_resolve(info.lifetime);
+    if (!info.check_reports())
+    {
+        CompileError error = {
+            .code = eCompileError,
+        };
+        return error;
     }
 
     CompileError error = {

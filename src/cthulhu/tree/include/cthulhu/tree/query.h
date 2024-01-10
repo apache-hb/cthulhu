@@ -1,9 +1,12 @@
 #pragma once
 
+#include "core/compiler.h"
 #include "cthulhu/tree/tree.h"
 
 typedef struct node_t node_t;
 typedef struct tree_t tree_t;
+
+BEGIN_API
 
 const char *tree_kind_to_string(tree_kind_t kind);
 const char *tree_to_string(const tree_t *self);
@@ -51,3 +54,5 @@ quals_t tree_ty_get_quals(const tree_t *self);
  * @return const tree_t* the loaded type
  */
 const tree_t *tree_ty_load_type(const tree_t *self);
+
+END_API

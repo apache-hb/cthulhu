@@ -1,5 +1,9 @@
 #pragma once
 
+#include "core/compiler.h"
+
+BEGIN_API
+
 typedef enum quals_t
 {
     eQualUnknown = (0 << 0), ///< defer to the inner type for the qualifiers
@@ -113,3 +117,5 @@ const char *digit_name(digit_t digit);
 const char *quals_name(quals_t quals);
 const char *link_name(tree_link_t link);
 const char *vis_name(visibility_t vis);
+
+END_API
