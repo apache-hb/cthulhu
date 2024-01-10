@@ -8,6 +8,7 @@
 #include "defaults/defaults.h"
 #include "format/config.h"
 #include "format/version.h"
+#include "io/console.h"
 #include "io/io.h"
 #include "memory/memory.h"
 #include "notify/notify.h"
@@ -277,6 +278,32 @@ int parse_argparse(ap_t *ap, default_options_t options, tool_config_t config)
     return process_default_options(options, config);
 }
 
+static void panic_handler(panic_t panic, const char *fmt, va_list args)
+{
+    arena_t *arena = get_global_arena();
+    bt_report_t *report = bt_report_collect(arena);
+    io_t *io = io_stdout();
+
+    print_options_t print_options = {
+        .arena = arena,
+        .io = io,
+        .pallete = &kColourDefault, // TODO: some of these should be globals
+    };
+
+    print_backtrace_t backtrace_config = {
+        .options = print_options,
+        .heading_style = eHeadingGeneric,
+        .zero_indexed_lines = false,
+    };
+
+    char *msg = str_vformat(arena, fmt, args);
+
+    io_printf(io, "[panic][%s:%zu] => %s: %s\n", panic.file, panic.line, panic.function, msg);
+
+    print_backtrace(backtrace_config, report);
+    exit(EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
+}
+
 void default_init(void)
 {
     bt_init();
@@ -285,4 +312,6 @@ void default_init(void)
     arena_t *arena = ctu_default_alloc();
     init_global_arena(arena);
     init_gmp_arena(arena);
+
+    gPanicHandler = panic_handler;
 }

@@ -1,7 +1,5 @@
 #include "base/panic.h"
 
-#include "core/macros.h"
-
 #include "backtrace/backtrace.h"
 
 #include <stdio.h>
@@ -9,21 +7,11 @@
 
 static void default_panic_handler(panic_t panic, const char *fmt, va_list args)
 {
-    (void)fprintf(stderr, ANSI_CYAN "[panic]" ANSI_RESET "[%s:%zu] => " ANSI_RED "%s" ANSI_RESET ": ", panic.file, panic.line, panic.function);
+    (void)fprintf(stderr, "[panic][%s:%zu] => %s: ", panic.file, panic.line, panic.function);
     (void)vfprintf(stderr, fmt, args);
     (void)fprintf(stderr, "\n");
 
-#if ADDRSAN_ENABLED
-    volatile char *ptr = NULL;
-    *ptr = 0;
-#else
     bt_print_trace(stderr);
-#endif
-}
-
-panic_handler_t ctu_default_panic(void)
-{
-    return default_panic_handler;
 }
 
 panic_handler_t gPanicHandler = default_panic_handler;

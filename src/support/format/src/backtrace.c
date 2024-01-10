@@ -13,7 +13,6 @@
 #include "std/str.h"
 #include "std/typed/vector.h"
 
-#include <ctype.h>
 #include <string.h>
 
 #define COLOUR_ADDR eColourRed
@@ -68,10 +67,6 @@ typedef struct backtrace_t
 
     size_t index_align;
     size_t symbol_align;
-
-    /// the file cache
-    /// map_t<const char*, text_cache_t*>
-    cache_map_t *file_cache;
 } backtrace_t;
 
 typedef struct collapsed_t
@@ -203,199 +198,6 @@ static typevec_t *collapse_frames(const typevec_t *frames, arena_t *arena)
 // | [2] symbol (file:line)
 // | [N] symbol (file:line)
 
-// static void print_frame_index(backtrace_t *pass, const bt_entry_t *entry, size_t width)
-// {
-//     print_backtrace_t config = pass->options;
-//     print_options_t options = config.options;
-
-//     if (entry->recurse == 0)
-//     {
-//         char *line = fmt_left_align(options.arena, width, "%zu", pass->index);
-//         char *idx = colour_format(pass->format_context, COLOUR_INDEX, "[%s]", line);
-
-//         io_printf(options.io, "%s ", idx);
-
-//         pass->index += 1;
-//     }
-//     else
-//     {
-//         char *start = fmt_left_align(options.arena, width, "%zu..%zu", pass->index, pass->index + entry->recurse);
-//         char *idx = colour_format(pass->format_context, COLOUR_INDEX, "[%s]", start);
-
-//         io_printf(options.io, "%s ", idx);
-
-//         pass->index += entry->recurse + 1;
-//     }
-// }
-
-// // print a symbol with no extra info
-// static void print_frame(backtrace_t *pass, const bt_entry_t *entry)
-// {
-//     print_backtrace_t config = pass->options;
-//     print_options_t options = config.options;
-
-//     print_frame_index(pass, entry, pass->index_align);
-
-//     // right align the address
-//     char *addr = fmt_left_align(options.arena, pass->symbol_align, "0x%p", entry->address);
-//     char *coloured = colour_text(pass->format_context, COLOUR_ADDR, addr);
-//     io_printf(options.io, "+%s%s\n", coloured, fmt_recurse(pass, entry));
-// }
-
-// // we know symbol info but not file info
-// static void print_simple(backtrace_t *pass, const bt_entry_t *entry)
-// {
-//     print_backtrace_t config = pass->options;
-//     print_options_t options = config.options;
-
-//     const char *line = (entry->info & eResolveLine)
-//         ? format(":%zu", get_offset_line(config.zero_indexed_lines, entry->line))
-//         : format(" @ %s", colour_format(pass->format_context, COLOUR_ADDR, "0x%p", entry->address));
-
-//     // right align the symbol
-//     size_t pad = get_symbol_padding(pass->symbol_align, entry);
-//     char *padding = str_repeat(" ", pad);
-
-//     char *symbol = colour_text(pass->format_context, COLOUR_SYMBOL, entry->symbol);
-
-//     const char *recurse = fmt_recurse(pass, entry);
-
-//     print_frame_index(pass, entry, pass->index_align);
-
-//     if (entry->info & eResolveFile)
-//     {
-//         io_printf(options.io, "%s%s%s (%s%s)\n", padding, symbol, recurse, entry->file, line);
-//     }
-//     else
-//     {
-//         io_printf(options.io, "%s%s%s%s\n", padding, symbol, recurse, line);
-//     }
-// }
-
-// static text_cache_t *get_file(backtrace_t *format, const char *path)
-// {
-//     CTASSERT(format != NULL);
-//     CTASSERT(path != NULL);
-
-//     print_backtrace_t config = format->options;
-//     if (!config.print_source) return NULL;
-
-//     return cache_emplace_file(format->file_cache, path);
-// }
-
-// static bool is_text_empty(const text_view_t *view)
-// {
-//     CTASSERT(view != NULL);
-
-//     for (size_t i = 0; i < view->size; i++)
-//         if (!isspace(view->text[i]))
-//             return false;
-
-//     return true;
-// }
-
-// static bool is_line_empty(text_cache_t *cache, size_t line)
-// {
-//     CTASSERT(cache != NULL);
-
-//     text_view_t view = cache_get_line(cache, line);
-//     return is_text_empty(&view);
-// }
-
-// static bool print_single_line(io_t *io, text_cache_t *cache, size_t data_line, size_t align, bool always_print)
-// {
-//     text_view_t text = cache_get_line(cache, data_line);
-//     if (!always_print && is_text_empty(&text))
-//         return false;
-
-//     char *line_padding = str_repeat(" ", align + 1);
-//     io_printf(io, "%s | %.*s\n", line_padding, (int)text.size, text.text);
-
-//     return true;
-// }
-
-// static void print_with_source(backtrace_t *pass, const bt_entry_t *entry, text_cache_t *cache)
-// {
-//     print_backtrace_t config = pass->options;
-//     print_options_t options = config.options;
-
-//     size_t line = get_offset_line(config.zero_indexed_lines, entry->line);
-//     size_t data_line = entry->line - 1;
-
-//     size_t align = get_num_width(line + 2);
-
-//     print_frame_index(pass, entry, 0);
-
-//     const char *recurse = fmt_recurse(pass, entry);
-//     const char *fn = colour_text(pass->format_context, COLOUR_SYMBOL, entry->symbol);
-
-//     io_printf(options.io, "inside symbol %s%s\n", fn, recurse);
-
-//     source_config_t source_config = {
-//         .context = pass->format_context,
-//         .heading_style = config.heading_style,
-//         .zero_indexed_lines = config.zero_indexed_lines,
-//     };
-
-//     where_t where = {
-//         .first_line = line,
-//         .first_column = 0,
-//     };
-
-//     char *arrow = format("%s =>", str_repeat(" ", align - 2));
-//     char *header = fmt_source_location(source_config, entry->file, where);
-//     io_printf(options.io, "%s %s\n", arrow, header);
-
-//     // if this line is not empty, we need to print the next line unconditionally
-//     bool was_empty = false;
-//     if (data_line > 2)
-//     {
-//         was_empty = print_single_line(options.io, cache, data_line - 2, align, false);
-//     }
-
-//     // if there is 1 line before the line we are printing
-//     if (data_line > 1)
-//     {
-//         print_single_line(options.io, cache, data_line - 1, align, was_empty);
-//     }
-
-//     text_view_t view = cache_get_line(cache, data_line);
-//     char *line_num = fmt_left_align(options.arena, align, "%zu", line);
-//     char *line_fmt = colour_format(pass->format_context, COLOUR_LINE, " %s > %.*s\n", line_num, (int)view.size, view.text);
-//     io_printf(options.io, "%s", line_fmt);
-
-//     size_t len = cache_count_lines(cache);
-//     bool print_after = (data_line + 2 < len) && !is_line_empty(cache, data_line + 2);
-
-//     if (data_line + 1 < len)
-//     {
-//         print_single_line(options.io, cache, data_line + 1, align, print_after);
-//     }
-
-//     if (data_line + 2 < len)
-//     {
-//         // the final line is always optional
-//         print_single_line(options.io, cache, data_line + 2, align, false);
-//     }
-// }
-
-// // we may have source information
-// static void print_source(backtrace_t *pass, const bt_entry_t *entry)
-// {
-//     // we found the file for this entry
-//     text_cache_t *cache = (entry->info & eResolveFile) ? get_file(pass, entry->file) : NULL;
-//     if (cache == NULL)
-//     {
-//         // we dont have the file on disk
-//         print_simple(pass, entry);
-//     }
-//     else
-//     {
-//         // we have the file on disk
-//         print_with_source(pass, entry, cache);
-//     }
-// }
-
 static size_t get_largest_entry(const typevec_t *entries)
 {
     size_t len = typevec_len(entries);
@@ -446,12 +248,14 @@ static char *fmt_entry_location(backtrace_t *pass, const entry_t *entry)
             where_t where = {
                 .first_line = entry->line,
             };
+
             source_config_t source_config = {
                 .context = pass->format_context,
                 .colour = eColourDefault,
                 .heading_style = config.heading_style,
                 .zero_indexed_lines = config.zero_indexed_lines,
             };
+
             char *out = fmt_source_location(source_config, entry->file, where);
             return str_format(pass->format_context.arena, "(%s)", out);
         }
@@ -546,7 +350,6 @@ void print_backtrace(print_backtrace_t config, bt_report_t *report)
 
     print_options_t options = config.options;
 
-    size_t len = typevec_len(report->entries);
     typevec_t *frames = collapse_frames(report->entries, options.arena);
 
     size_t symbol_align = get_largest_collapsed_symbol(frames);
@@ -559,7 +362,6 @@ void print_backtrace(print_backtrace_t config, bt_report_t *report)
         .frames = frames,
         .index_align = align,
         .symbol_align = symbol_align,
-        .file_cache = cache_map_new(len),
     };
 
     for (size_t i = 0; i < frame_count; i++)
@@ -569,9 +371,6 @@ void print_backtrace(print_backtrace_t config, bt_report_t *report)
 
         print_collapsed(&pass, i, collapsed);
     }
-
-    // close all the files
-    cache_map_delete(pass.file_cache);
 }
 
 bt_report_t *bt_report_new(arena_t *arena)

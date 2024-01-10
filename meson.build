@@ -51,6 +51,7 @@ trace_memory = get_option('trace_memory').disable_auto_if(is_release or meson.is
 tool_stacktrace = get_option('tool_stacktrace').disable_auto_if(is_release or meson.is_subproject())
 tool_notify = get_option('tool_notify').disable_auto_if(is_release or meson.is_subproject())
 tool_display = get_option('tool_display').disable_auto_if(is_release or meson.is_subproject())
+tool_error = get_option('tool_error').disable_auto_if(is_release or meson.is_subproject())
 
 opt_lang_cc = get_option('lang_cc')
 # opt_lang_cpp = get_option('lang_cpp').require(opt_lang_cc.allowed())

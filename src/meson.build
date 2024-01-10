@@ -36,3 +36,7 @@ endif
 if tool_display.allowed()
     subdir('tools/display')
 endif
+
+if tool_error.allowed()
+    subdir('tools/error')
+endif

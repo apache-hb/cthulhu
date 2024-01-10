@@ -5,12 +5,6 @@
 #include <dbghelp.h>
 #include <stdlib.h>
 
-void bt_init(void)
-{
-    SymInitialize(GetCurrentProcess(), NULL, TRUE);
-    SymSetOptions(SYMOPT_LOAD_LINES);
-}
-
 USE_DECL
 const char *bt_backend(void)
 {
@@ -37,30 +31,27 @@ union disp_t {
     DWORD64 disp64;
 };
 
-void bt_read_inner(bt_frame_t callback, void *user)
+void read_context_stack(CONTEXT *ctx, bt_frame_t callback, void *user)
 {
     HANDLE thread = GetCurrentThread();
     HANDLE process = GetCurrentProcess();
 
-    CONTEXT ctx = { 0 };
-    RtlCaptureContext(&ctx);
-
     STACKFRAME stackframe = {
         .AddrPC = {
-            .Offset = ctx.Rip,
+            .Offset = ctx->Rip,
             .Mode = AddrModeFlat
         },
         .AddrFrame = {
-            .Offset = ctx.Rbp,
+            .Offset = ctx->Rbp,
             .Mode = AddrModeFlat
         },
         .AddrStack = {
-            .Offset = ctx.Rsp,
+            .Offset = ctx->Rsp,
             .Mode = AddrModeFlat
         }
     };
 
-    while (walk_stack(&stackframe, &ctx, process, thread))
+    while (walk_stack(&stackframe, ctx, process, thread))
     {
         frame_t frame = {
             .address = stackframe.AddrPC.Offset,
@@ -68,6 +59,14 @@ void bt_read_inner(bt_frame_t callback, void *user)
 
         callback(user, &frame);
     }
+}
+
+void bt_read_inner(bt_frame_t callback, void *user)
+{
+    CONTEXT ctx = { 0 };
+    RtlCaptureContext(&ctx);
+
+    read_context_stack(&ctx, callback, user);
 }
 
 frame_resolve_t bt_resolve_inner(const frame_t *frame, symbol_t *symbol)
@@ -117,4 +116,23 @@ frame_resolve_t bt_resolve_inner(const frame_t *frame, symbol_t *symbol)
     }
 
     return resolve;
+}
+
+static LONG WINAPI bt_exception_handler(EXCEPTION_POINTERS *exception)
+{
+    void *ctx = gErrorReport.begin(exception->ExceptionRecord->ExceptionCode);
+
+    read_context_stack(exception->ContextRecord, gErrorReport.frame, ctx);
+
+    gErrorReport.end(ctx);
+
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
+void bt_init(void)
+{
+    SymInitialize(GetCurrentProcess(), NULL, TRUE);
+    SymSetOptions(SYMOPT_LOAD_LINES);
+
+    SetUnhandledExceptionFilter(bt_exception_handler);
 }

@@ -82,3 +82,8 @@ option('tool_display', type : 'feature',
     description : 'build format testing tool',
     value : 'auto'
 )
+
+option('tool_error', type : 'feature',
+    description : 'build backtrace exception testing tool',
+    value : 'auto'
+)

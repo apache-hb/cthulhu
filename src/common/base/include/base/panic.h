@@ -49,11 +49,6 @@ typedef void (*panic_handler_t)(panic_t panic, const char *fmt, va_list args);
 /// it can be overridden for testing purposes or to add more functionality
 extern panic_handler_t gPanicHandler;
 
-/// @brief get the default panic handler
-///
-/// @return the default panic handler
-panic_handler_t ctu_default_panic(void);
-
 /// @brief panic with a message, file, and line
 ///
 /// @param panic the panic information

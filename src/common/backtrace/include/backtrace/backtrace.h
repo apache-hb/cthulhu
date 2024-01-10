@@ -69,6 +69,22 @@ typedef enum frame_resolve_t
 /// @brief user callback for @a bt_read
 typedef void (*bt_frame_t)(void *user, const frame_t *frame);
 
+/// @brief system level fatal error callback
+/// called on events such as segfaults
+typedef void (*bt_fatal_callback_t)(void);
+
+typedef void *(*bt_error_begin_t)(size_t error);
+typedef void (*bt_error_end_t)(void *error);
+
+typedef struct bt_error_t
+{
+    bt_error_begin_t begin;
+    bt_error_end_t end;
+    bt_frame_t frame;
+} bt_error_t;
+
+extern bt_error_t gErrorReport;
+
 /// @brief initialize the backtrace backend
 /// @note this function must be called before any other backtrace function
 void bt_init(void);

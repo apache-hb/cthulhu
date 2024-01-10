@@ -77,10 +77,4 @@
 
 /// @}
 
-#ifndef __has_feature
-#   define __has_feature(...) 0
-#endif
-
-#define ADDRSAN_ENABLED ((__SANITIZE_ADDRESS__ != 0) || __has_feature(address_sanitizer))
-
 /// @}
