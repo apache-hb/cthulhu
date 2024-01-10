@@ -6,6 +6,7 @@
 #include "notify/diagnostic.h"
 
 #include <stdarg.h>
+#include <stdbool.h>
 
 BEGIN_API
 
@@ -13,6 +14,7 @@ typedef struct node_t node_t;
 typedef struct typevec_t typevec_t;
 typedef struct vector_t vector_t;
 typedef struct arena_t arena_t;
+typedef struct set_t set_t;
 
 typedef struct logger_t logger_t;
 typedef struct event_t event_t;
@@ -45,6 +47,12 @@ typedef struct segment_t
     char *message;
 } segment_t;
 
+typedef struct notify_rules_t
+{
+    set_t *warnings_as_errors;
+    set_t *ignored_warnings;
+} notify_rules_t;
+
 /// @brief create a new logger
 ///
 /// @return the new logger
@@ -59,6 +67,9 @@ logger_t *logger_new(IN_NOTNULL arena_t *arena);
 /// @return the events
 NODISCARD
 typevec_t *logger_get_events(IN_NOTNULL const logger_t *logs);
+
+NODISCARD
+bool logger_has_errors(IN_NOTNULL const logger_t *logs, notify_rules_t rules);
 
 /// @brief reset the loggers messages
 /// @warning this invalidates the events returned by @a logger_get_events

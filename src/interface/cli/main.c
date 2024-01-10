@@ -92,6 +92,8 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
 
 int main(int argc, const char **argv)
 {
+    default_init();
+
     arena_t *arena = ctu_default_alloc();
     mediator_t *mediator = mediator_new(arena);
     lifetime_t *lifetime = lifetime_new(mediator, arena);
@@ -103,13 +105,13 @@ int main(int argc, const char **argv)
         lifetime_add_language(lifetime, langs.langs[i]);
     }
 
-    io_t *io = io_stdout();
+    io_t *con = io_stdout();
 
     tool_t tool = make_tool(arena);
 
     tool_config_t config = {
         .arena = arena,
-        .io = io,
+        .io = con,
 
         .group = tool.config,
         .version = kToolVersion,
@@ -128,14 +130,12 @@ int main(int argc, const char **argv)
 
     vector_t *paths = ap_get_posargs(ap);
 
-    io_t *msg_buffer = io_blob("buffer", 0x1000, eAccessWrite | eAccessText, arena);
-
     text_config_t text_config = {
         .config = {
             .zeroth_line = false,
         },
         .colours = &kColourDefault,
-        .io = msg_buffer,
+        .io = con,
     };
 
     report_config_t report_config = {

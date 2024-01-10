@@ -462,4 +462,11 @@ CTU_EVENT(UnknownToken, {
     .description = "The scanner encountered an unknown token",
 })
 
+CTU_EVENT(SyntaxError, {
+    .severity = eSeverityFatal,
+    .id = "M0065",
+    .brief = "Syntax error",
+    .description = "The parser encountered a syntax error",
+})
+
 #undef CTU_EVENT

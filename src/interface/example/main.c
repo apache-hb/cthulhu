@@ -1,3 +1,4 @@
+#include "defaults/defaults.h"
 #include "format/colour.h"
 #include "format/notify.h"
 #include "base/log.h"
@@ -72,6 +73,8 @@ static io_t *make_file(logger_t *reports, const char *path, os_access_t flags)
 
 int main(int argc, const char **argv)
 {
+    default_init();
+
     ctu_log_update(true);
     arena_t *arena = ctu_default_alloc();
     mediator_t *mediator = mediator_new(arena);

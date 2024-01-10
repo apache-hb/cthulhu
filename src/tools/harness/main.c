@@ -1,3 +1,4 @@
+#include "defaults/defaults.h"
 #include "format/colour.h"
 #include "base/log.h"
 #include "cthulhu/events/events.h"
@@ -331,6 +332,8 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
 
 int main(int argc, const char **argv)
 {
+    default_init();
+
     size_t size = (size_t)(1024U * 1024U * 64U);
     user_arena_t arena = new_user_arena(size);
     arena_t user = new_alloc(&arena);

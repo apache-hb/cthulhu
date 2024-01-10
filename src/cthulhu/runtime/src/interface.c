@@ -1,3 +1,4 @@
+#include "base/log.h"
 #include "common.h"
 
 #include "cthulhu/events/events.h"
@@ -5,7 +6,6 @@
 #include "cthulhu/runtime/interface.h"
 #include "cthulhu/runtime/driver.h"
 
-#include "memory/memory.h"
 #include "base/panic.h"
 
 #include "notify/notify.h"
@@ -14,26 +14,14 @@
 
 #include "interop/compile.h"
 
+#include "std/typed/vector.h"
 #include "std/vector.h"
 #include "std/str.h"
 
 #include "os/os.h"
 
-#include "backtrace/backtrace.h"
-
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"
-
-void runtime_init(arena_t *arena)
-{
-    GLOBAL_INIT();
-
-    os_init();
-    bt_init();
-
-    init_global_arena(arena);
-    init_gmp_arena(arena);
-}
 
 static const language_t *add_language_extension(lifetime_t *lifetime, const char *ext, const language_t *lang)
 {
@@ -78,8 +66,6 @@ lifetime_t *handle_get_lifetime(driver_t *handle)
 
 mediator_t *mediator_new(arena_t *arena)
 {
-    runtime_init(arena);
-
     mediator_t *self = ARENA_MALLOC(arena, sizeof(mediator_t), "mediator", NULL);
 
     self->arena = arena;
@@ -178,6 +164,13 @@ static bool parse_failed(logger_t *reports, const char *path, parse_result_t res
         return true;
 
     default:
+        // TODO: this needs another rewrite
+        typevec_t *events = logger_get_events(reports);
+        if (typevec_len(events) > 0)
+        {
+            return true;
+        }
+
         return false;
     }
 }
@@ -205,6 +198,7 @@ void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io)
         const char *path = scan_path(scan);
         if (parse_failed(lifetime->logger, path, result))
         {
+            ctu_log("parse failed for %s", path);
             return;
         }
 

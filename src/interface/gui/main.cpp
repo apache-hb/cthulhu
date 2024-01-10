@@ -1,3 +1,4 @@
+#include "defaults/defaults.h"
 #include "editor/compile.hpp"
 #include "editor/config.hpp"
 #include "editor/draw.hpp"
@@ -496,6 +497,7 @@ int main(int argc, const char **argv)
         return 1;
     }
 
+    default_init();
     ed::install_panic_handler();
 
     EditorUi ui;

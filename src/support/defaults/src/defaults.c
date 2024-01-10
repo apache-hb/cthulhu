@@ -349,6 +349,7 @@ static void default_verbose(const char *fmt, va_list args)
 {
     io_t *io = io_stdout();
     io_vprintf(io, fmt, args);
+    io_printf(io, "\n");
 }
 
 void default_init(void)

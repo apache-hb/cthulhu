@@ -4,32 +4,50 @@
 
 #include <stdio.h>
 
-static size_t con_write(io_t *self, const void *src, size_t size)
+static size_t con_out_write(io_t *self, const char *fmt, va_list args)
 {
     CTU_UNUSED(self);
 
-    return fwrite(src, 1, size, stdout);
+    return vfprintf(stdout, fmt, args);
 }
 
-static const io_callbacks_t kConsoleCallbacks = {
-    .fn_read = NULL,
-    .fn_write = con_write,
+static size_t con_error_write(io_t *self, const char *fmt, va_list args)
+{
+    CTU_UNUSED(self);
 
-    .fn_get_size = NULL,
-    .fn_seek = NULL,
+    return vfprintf(stderr, fmt, args);
+}
 
-    .fn_map = NULL,
-    .fn_close = NULL
+// TODO: find a way to simplify this down to a single io_t
+
+static const io_callbacks_t kConsoleOutCallbacks = {
+    .fn_write_format = con_out_write,
 };
 
-static io_t gConsoleIo = {
-    .cb = &kConsoleCallbacks,
+static const io_callbacks_t kConsoleErrorCallbacks = {
+    .fn_write_format = con_error_write,
+};
+
+static io_t gConsoleOutIo = {
+    .cb = &kConsoleOutCallbacks,
     .flags = eAccessWrite | eAccessText,
     .arena = NULL,
     .name = "stdout",
 };
 
+static io_t gConsoleErrorIo = {
+    .cb = &kConsoleErrorCallbacks,
+    .flags = eAccessWrite | eAccessText,
+    .arena = NULL,
+    .name = "stderr",
+};
+
 io_t *io_stdout(void)
 {
-    return &gConsoleIo;
+    return &gConsoleOutIo;
+}
+
+io_t *io_stderr(void)
+{
+    return &gConsoleErrorIo;
 }

@@ -9,6 +9,7 @@
 %{
 #include "ctu_bison.h"
 #include "interop/flex.h"
+#include "interop/memory.h"
 #include "memory/memory.h"
 #include "cthulhu/util/text.h"
 #include "cthulhu/events/events.h"

@@ -38,6 +38,8 @@ size_t io_write(io_t *io, const void *src, size_t size)
 USE_DECL
 size_t io_printf(io_t *io, const char *fmt, ...)
 {
+    CTASSERT(io != NULL);
+
     va_list args;
     va_start(args, fmt);
 
@@ -51,7 +53,15 @@ size_t io_printf(io_t *io, const char *fmt, ...)
 USE_DECL
 size_t io_vprintf(io_t *io, const char *fmt, va_list args)
 {
-    char *buffer = vformat(fmt, args);
+    CTASSERT(io != NULL);
+
+    const io_callbacks_t *cb = io->cb;
+    if (cb->fn_write_format)
+    {
+        return cb->fn_write_format(io, fmt, args);
+    }
+
+    char *buffer = str_vformat(io->arena, fmt, args);
 
     size_t size = io_write(io, buffer, strlen(buffer));
 

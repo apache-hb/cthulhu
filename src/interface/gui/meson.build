@@ -52,7 +52,7 @@ executable('gui', src,
     include_directories : 'include',
     dependencies : [
         imgui, core, os, scan,
-        memory, notify, config,
+        memory, notify, config, defaults,
         io, runtime, support, ssa, tree
     ]
 )

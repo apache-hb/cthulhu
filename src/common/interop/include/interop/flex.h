@@ -4,8 +4,6 @@
 
 #include "base/panic.h"
 
-#include "memory/arena.h"
-
 BEGIN_API
 
 /// @defgroup FlexBisonMacros Helpers for flex and bison driver frontends
@@ -69,29 +67,6 @@ void flex_update(where_t *where, where_t *offsets, int steps);
 #ifndef YY_FATAL_ERROR
 #   define YY_FATAL_ERROR(msg) NEVER("fatal flex error: %s", msg)
 #endif
-
-/// route memory for flex and bison though cthulhu allocators
-#define FLEX_MEMORY(prefix)                    \
-    inline void *prefix##alloc(size_t size, yyscan_t scanner)              \
-    {                                                                  \
-        scan_t *scan = yyget_extra(scanner);                           \
-        arena_t *arena = scan_get_arena(scan);                             \
-        return ARENA_MALLOC(arena, size, "yyalloc", scan);             \
-    }                                                                  \
-    inline void *prefix##realloc(void *ptr, size_t bytes, yyscan_t scanner) \
-    {                                                                  \
-        arena_t *arena = scan_get_arena(yyget_extra(scanner));             \
-        return arena_realloc(ptr, bytes, ALLOC_SIZE_UNKNOWN, arena);   \
-    }                                                                  \
-    inline void prefix##free(void *ptr, yyscan_t scanner)                   \
-    {                                                                  \
-        arena_t *arena = scan_get_arena(yyget_extra(scanner));             \
-        if (ptr == NULL)                                               \
-        {                                                              \
-            return;                                                    \
-        }                                                              \
-        arena_free(ptr, ALLOC_SIZE_UNKNOWN, arena);                    \
-    }
 
 /// @}
 

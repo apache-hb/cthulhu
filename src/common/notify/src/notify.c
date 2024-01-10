@@ -5,6 +5,7 @@
 
 #include "memory/memory.h"
 #include "std/map.h"
+#include "std/set.h"
 #include "std/str.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
@@ -37,6 +38,51 @@ typevec_t *logger_get_events(const logger_t *logs)
     CTASSERT(logs != NULL);
 
     return logs->messages;
+}
+
+USE_DECL
+bool logger_has_errors(const logger_t *logs, notify_rules_t rules)
+{
+    CTASSERT(logs != NULL);
+    CTASSERT(rules.ignored_warnings != NULL);
+    CTASSERT(rules.warnings_as_errors != NULL);
+
+    const typevec_t *events = logger_get_events(logs);
+    size_t len = typevec_len(events);
+
+    for (size_t i = 0; i < len; i++)
+    {
+        event_t event;
+        typevec_get(events, i, &event);
+
+        const diagnostic_t *diagnostic = event.diagnostic;
+        CTASSERTF(diagnostic != NULL, "event %zu has no diagnostic", i);
+
+        switch (diagnostic->severity)
+        {
+        case eSeverityFatal:
+        case eSeverityInternal:
+        case eSeveritySorry:
+            return true;
+
+        case eSeverityWarn:
+            if (set_contains_ptr(rules.ignored_warnings, diagnostic))
+            {
+                continue;
+            }
+
+            if (set_contains_ptr(rules.warnings_as_errors, diagnostic))
+            {
+                return true;
+            }
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    return false;
 }
 
 USE_DECL
