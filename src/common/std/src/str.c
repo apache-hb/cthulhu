@@ -265,15 +265,16 @@ USE_DECL
 char *str_repeat(const char *str, size_t times)
 {
     CTASSERT(str != NULL);
+    arena_t *arena = get_global_arena();
 
     if (times == 0)
     {
-        return ctu_strdup("");
+        return arena_strdup("", arena);
     }
 
     size_t len = strlen(str);
     size_t outlen = len * times;
-    char *out = ARENA_MALLOC(get_global_arena(), outlen + 1, "str_repeat", NULL);
+    char *out = ARENA_MALLOC(arena, outlen + 1, "str_repeat", NULL);
     size_t remaining = outlen;
     for (size_t i = 0; i < times; i++)
     {
@@ -497,6 +498,20 @@ size_t strhash(const char *str)
     while (*str)
     {
         hash = (hash << 5) - hash + *str++;
+    }
+
+    return hash;
+}
+
+USE_DECL
+size_t text_hash(text_view_t text)
+{
+    CTASSERT(text.text != NULL);
+
+    size_t hash = 0;
+    for (size_t i = 0; i < text.size; i++)
+    {
+        hash = (hash << 5) - hash + text.text[i];
     }
 
     return hash;

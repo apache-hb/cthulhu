@@ -230,7 +230,6 @@ void c89_proto_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_sym
 
     io_t *dst = func->visibility == eVisiblePublic ? hdr->io : src->io;
     write_string(dst, "%s%s(%s);\n", link, result, params);
-
 }
 
 static void proto_symbols(c89_emit_t *emit, const ssa_module_t *mod, vector_t *vec, void (*fn)(c89_emit_t*, const ssa_module_t*, const ssa_symbol_t*))
@@ -373,7 +372,6 @@ static const char *c89_format_local(c89_emit_t *emit, size_t local)
     typevec_t *locals = emit->current->locals;
     CTASSERTF(local < typevec_len(locals), "local(%zu) > locals(%zu)", local, typevec_len(locals));
 
-
     const ssa_local_t *it = typevec_offset(locals, local);
     return format("l_%s", it->name);
 }
@@ -412,9 +410,6 @@ static const char *c89_format_operand(c89_emit_t *emit, ssa_operand_t operand)
 
     case eOperandParam:
         return c89_format_param(emit, operand.param);
-
-    case eOperandConst:
-        return format("const%zu", operand.constant);
 
     default: NEVER("unknown operand kind %d", operand.kind);
     }
@@ -805,7 +800,6 @@ c89_emit_result_t emit_c89(const c89_emit_options_t *options)
         .hdrmap = map_optimal(len, kTypeInfoPtr, arena),
 
         .stepmap = map_optimal(64, kTypeInfoPtr, arena),
-        .strmap = map_optimal(64, kTypeInfoPtr, arena),
         .defined = set_new(64, kTypeInfoPtr, arena),
 
         .fs = opts.fs,

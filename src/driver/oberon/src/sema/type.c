@@ -173,6 +173,17 @@ tree_t *obr_cast_type(tree_t *expr, const tree_t *type)
         }
     }
 
+    if (tree_is(exprtype, eTreeTypeArray) && tree_is(type, eTreeTypeArray))
+    {
+        if (exprtype->length >= type->length || !util_length_bounded(exprtype->length) || !util_length_bounded(type->length))
+        {
+            if (util_types_equal(exprtype->ptr, type->ptr))
+            {
+                return tree_expr_cast(expr->node, type, expr);
+            }
+        }
+    }
+
     // TODO: deal with other casts
     return expr;
 }

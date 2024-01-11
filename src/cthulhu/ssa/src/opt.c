@@ -65,7 +65,6 @@ static const ssa_value_t *ssa_opt_operand(ssa_scope_t *vm, ssa_operand_t operand
     case eOperandEmpty: return NULL;
     case eOperandImm: return operand.value;
     case eOperandReg: return map_get(vm->step_values, get_step_indexed(operand.vreg_context, operand.vreg_index));
-    case eOperandConst: return vector_get(vm->symbol->consts, operand.constant);
     case eOperandGlobal: {
         const ssa_symbol_t *global = operand.global;
         ssa_opt_global(vm->vm, (void*)global); // TODO: find a nice way to follow const
@@ -222,13 +221,26 @@ static const ssa_value_t *ssa_opt_binary(ssa_scope_t *vm, ssa_binary_t step)
 
 static const ssa_value_t *cast_to_opaque(const ssa_type_t *type, const ssa_value_t *value)
 {
-    const ssa_type_t *src = type;
+    const ssa_type_t *src = value->type;
     switch (src->kind)
     {
     case eTypeOpaque: return value;
 
     case eTypeDigit:
         return ssa_value_pointer(type, (void*)(uintptr_t)mpz_get_ui(value->digit_value));
+
+    default: NEVER("unhandled type %s", ssa_type_name(src->kind));
+    }
+}
+
+static const ssa_value_t *cast_to_pointer(const ssa_type_t *type, const ssa_value_t *value)
+{
+    const ssa_type_t *src = value->type;
+    switch (src->kind)
+    {
+    case eTypeOpaque:
+    case eTypePointer:
+        return ssa_value_pointer(type, value->ptr_value);
 
     default: NEVER("unhandled type %s", ssa_type_name(src->kind));
     }
@@ -242,6 +254,9 @@ static const ssa_value_t *ssa_opt_cast(ssa_scope_t *vm, ssa_cast_t cast)
     {
     case eTypeOpaque:
         return cast_to_opaque(type, value);
+
+    case eTypePointer:
+        return cast_to_pointer(type, value);
 
     default:
         NEVER("unhandled type %s", ssa_type_name(type->kind));

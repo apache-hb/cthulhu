@@ -2,6 +2,7 @@
 
 #include "core/analyze.h"
 #include "core/compiler.h"
+#include "core/text.h"
 
 #include <stdarg.h>
 #include <stdbool.h>
@@ -235,6 +236,9 @@ char *str_erase(IN_READS(len) char *str, size_t len, IN_STRING const char *lette
 /// @return the hash
 NODISCARD CONSTFN
 size_t strhash(IN_STRING const char *str);
+
+NODISCARD CONSTFN
+size_t text_hash(text_view_t text);
 
 /// @brief compare strings equality
 ///

@@ -177,7 +177,7 @@ int main(int argc, const char **argv)
     CHECK_LOG(reports, "compiling sources");
 
     map_t *modmap = lifetime_get_modules(lifetime);
-    ssa_result_t ssa = ssa_compile(modmap);
+    ssa_result_t ssa = ssa_compile(modmap, arena);
     CHECK_LOG(reports, "compiling ssa");
 
     ssa_opt(reports, ssa);

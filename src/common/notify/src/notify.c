@@ -112,7 +112,7 @@ event_t *msg_vnotify(logger_t *logs, const diagnostic_t *diagnostic, const node_
     CTASSERT(logs != NULL);
     CTASSERT(diagnostic != NULL);
 
-    char *msg = vformat(fmt, args);
+    char *msg = str_vformat(logs->arena, fmt, args);
 
     event_t event = {
         .diagnostic = diagnostic,

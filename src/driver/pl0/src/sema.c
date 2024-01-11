@@ -23,7 +23,6 @@ static const tree_t *gIntRef = NULL;
 
 static tree_t *gPrint = NULL; // pl0_print
 static tree_t *gRuntimePrint = NULL; // printf
-static tree_t *gPrintString = NULL;
 
 static const tree_attribs_t kPrintAttrib = {
     .link = eLinkImport,
@@ -34,11 +33,6 @@ static const tree_attribs_t kPrintAttrib = {
 static const tree_attribs_t kExportAttrib = {
     .link = eLinkExport,
     .visibility = eVisiblePublic
-};
-
-static const tree_attribs_t kPrivateAttrib = {
-    .link = eLinkModule,
-    .visibility = eVisiblePrivate
 };
 
 static const tree_attribs_t kEntryAttrib = {
@@ -131,7 +125,6 @@ static tree_t *make_runtime_mod(lifetime_t *lifetime)
     tree_t *mod = lifetime_sema_new(lifetime, "runtime", ePl0TagTotal, decls);
     set_proc(mod, ePl0TagProcs, "pl0_print", gPrint);
     set_proc(mod, ePl0TagProcs, "printf", gRuntimePrint);
-    set_decl(mod, ePl0TagValues, "$fmt", gPrintString); // TODO: move string handling into the backend
     return mod;
 }
 
@@ -146,7 +139,8 @@ static vector_t *make_runtime_path(void)
 static tree_t *get_string_type(size_t size)
 {
     const node_t *node = node_builtin();
-    return tree_type_pointer(node, "string", tree_type_digit(node, "$", eDigitChar, eSignSigned, eQualConst), size);
+    tree_t *char_type = tree_type_digit(node, "PL0_CHAR", eDigitChar, eSignSigned, eQualConst);
+    return tree_type_pointer(node, "PL0_STRING", char_type, size);
 }
 
 static tree_storage_t get_const_storage(const tree_t *type)
@@ -188,15 +182,6 @@ void pl0_init(driver_t *handle)
     vector_t *params = vector_of(1);
     vector_set(params, 0, tree_decl_param(node, "fmt", string_type));
 
-    const tree_storage_t storage = {
-        .storage = gCharType,
-        .size = 4,
-        .quals = eQualConst
-    };
-
-    gPrintString = tree_decl_global(node, "$fmt", storage, string_type, tree_expr_string(node, string_type, "%d\n", 4));
-    tree_set_attrib(gPrintString, &kPrivateAttrib);
-
     tree_t *signature = tree_type_closure(node, "printf", gIntType, params, eArityVariable);
     gRuntimePrint = tree_decl_function(node, "printf", signature, params, &kEmptyVector, NULL);
     tree_set_attrib(gRuntimePrint, &kPrintAttrib);
@@ -205,7 +190,7 @@ void pl0_init(driver_t *handle)
     vector_t *rt_print_params = vector_init(param);
 
     vector_t *args = vector_of(2);
-    vector_set(args, 0, gPrintString);
+    vector_set(args, 0, tree_expr_string(node, string_type, "%d\n", 4));
     vector_set(args, 1, param);
     tree_t *call = tree_expr_call(node, gRuntimePrint, args);
 

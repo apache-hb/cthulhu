@@ -71,7 +71,7 @@ char *colour_vformat(format_context_t context, colour_t idx, const char *fmt, va
     const char *colour = colour_get(context.pallete, idx);
     const char *reset = colour_reset(context.pallete);
 
-    char *msg = vformat(fmt, args);
+    char *msg = str_vformat(context.arena, fmt, args);
 
     return str_format(context.arena, "%s%s%s", colour, msg, reset);
 }

@@ -1,5 +1,6 @@
 #include "ctu/sema/decl.h"
 #include "cthulhu/events/events.h"
+#include "ctu/driver.h"
 #include "ctu/sema/type.h"
 #include "ctu/sema/expr.h"
 
@@ -16,15 +17,6 @@
 #include "std/str.h"
 
 #include "base/panic.h"
-
-const diagnostic_t kEvent_DuplicateDefaultCases = {
-    .severity = eSeverityFatal,
-    .id = "CTU-0001",
-    .brief = "duplicate default cases",
-    .description =
-        "enum has multiple default cases.\n"
-        "Enums are only allowed to have one or zero default cases.\n",
-};
 
 ///
 /// attributes

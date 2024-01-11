@@ -1,6 +1,7 @@
 src = [
     'src/main.c',
     'src/driver.c',
+    'src/events.c',
 
     'src/sema/type.c',
     'src/sema/sema.c',

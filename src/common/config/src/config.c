@@ -1,6 +1,6 @@
 #include "common.h"
 
-#include "memory/memory.h"
+#include "memory/arena.h"
 
 #include "std/str.h"
 #include "std/typed/vector.h"
@@ -151,7 +151,7 @@ cfg_field_t *config_string(cfg_group_t *group, const cfg_info_t *info, const cha
 
     cfg_field_t *field = add_field(group, info, eConfigString);
     field->string_config = initial;
-    field->string_value = initial != NULL ? ctu_strdup(initial) : NULL;
+    field->string_value = initial != NULL ? arena_strdup(initial, group->arena) : NULL;
 
     return field;
 }

@@ -9,11 +9,33 @@
 
 #include "std/typed/vector.h"
 
-#include "memory/memory.h"
+#include "memory/arena.h"
 #include "base/panic.h"
-#include "core/macros.h"
 
 #include <string.h>
+
+static size_t info_text_hash(const void *it)
+{
+    text_view_t *view = (text_view_t*)it;
+    return text_hash(*view);
+}
+
+static bool info_text_equals(const void *lhs, const void *rhs)
+{
+    text_view_t *lhs_view = (text_view_t*)lhs;
+    text_view_t *rhs_view = (text_view_t*)rhs;
+    if (lhs_view->size != rhs_view->size)
+    {
+        return false;
+    }
+
+    return strncmp(lhs_view->text, rhs_view->text, lhs_view->size) == 0;
+}
+
+static const type_info_t kTypeInfoText = {
+    .hash = info_text_hash,
+    .equals = info_text_equals,
+};
 
 /// @brief the ssa compilation context
 typedef struct ssa_compile_t
@@ -32,6 +54,11 @@ typedef struct ssa_compile_t
     /// internal data
 
     arena_t *arena;
+
+    /// @brief all strings in the program
+    /// map_t<text_view_t*, ssa_symbol>
+    size_t string_count;
+    map_t *strings;
 
     /// @brief all globals in the program
     /// map<tree, ssa_symbol>
@@ -61,7 +88,12 @@ typedef struct ssa_compile_t
     ssa_symbol_t *current_symbol;
 
     /// @brief the current module being compiled
-    ssa_module_t *current_sodule;
+    ssa_module_t *current_module;
+
+    /// @brief map of symbol to its source module
+    /// map<ssa_symbol, ssa_module>
+    /// TODO: this is stupid
+    map_t *module_lookup;
 
     /// @brief the path to the current module
     /// used for name mangling. vector<const char *>
@@ -90,18 +122,14 @@ static void add_dep(ssa_compile_t *ssa, const ssa_symbol_t *symbol, const ssa_sy
     set_add(set, dep);
 }
 
-static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const tree_t *tree, ssa_storage_t storage)
+static ssa_symbol_t *symbol_new(ssa_compile_t *ssa, const char *name, const tree_t *type, tree_attribs_t attribs, ssa_storage_t storage)
 {
-    CTU_UNUSED(ssa);
-
-    const char *name = tree_get_name(tree);
-    const ssa_type_t *type = ssa_type_create_cached(ssa->types, tree_get_type(tree));
-    const tree_attribs_t *attrib = tree_get_attrib(tree);
+    const ssa_type_t *ssa_type = ssa_type_create_cached(ssa->types, type);
 
     ssa_symbol_t *symbol = ARENA_MALLOC(ssa->arena, sizeof(ssa_symbol_t), name, ssa);
-    symbol->linkage = attrib->link;
-    symbol->visibility = attrib->visibility;
-    symbol->link_name = attrib->mangle;
+    symbol->linkage = attribs.link;
+    symbol->visibility = attribs.visibility;
+    symbol->link_name = attribs.mangle;
     symbol->storage = storage;
 
     symbol->locals = NULL;
@@ -109,7 +137,7 @@ static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const tree_t *tree, ssa_s
     symbol->consts = vector_new_arena(4, ssa->arena);
 
     symbol->name = name;
-    symbol->type = type;
+    symbol->type = ssa_type;
     symbol->value = NULL;
     symbol->entry = NULL;
 
@@ -118,29 +146,45 @@ static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const tree_t *tree, ssa_s
     return symbol;
 }
 
-static ssa_storage_t create_storage_type(map_t *types, const tree_t *decl)
+static ssa_symbol_t *symbol_create_decl(ssa_compile_t *ssa, const tree_t *tree, ssa_storage_t storage)
+{
+    const char *name = tree_get_name(tree);
+    const tree_attribs_t *attrib = tree_get_attrib(tree);
+
+    return symbol_new(ssa, name, tree_get_type(tree), *attrib, storage);
+}
+
+static ssa_storage_t create_new_storage(map_t *types, const tree_t *type, size_t size, quals_t quals)
 {
     ssa_storage_t storage = {
-        .type = ssa_type_create_cached(types, tree_get_storage_type(decl)),
-        .size = tree_get_storage_size(decl),
-        .quals = tree_get_storage_quals(decl)
+        .type = ssa_type_create_cached(types, type),
+        .size = size,
+        .quals = quals
     };
 
     return storage;
+}
+
+static ssa_storage_t create_storage_for_decl(map_t *types, const tree_t *decl)
+{
+    const tree_t *type = tree_get_storage_type(decl);
+    size_t size = tree_get_storage_size(decl);
+    quals_t quals = tree_get_storage_quals(decl);
+    return create_new_storage(types, type, size, quals);
 }
 
 static ssa_symbol_t *function_create(ssa_compile_t *ssa, const tree_t *tree)
 {
     CTASSERTF(tree_is(tree, eTreeDeclFunction), "expected function, got %s", tree_to_string(tree));
     ssa_storage_t storage = { .type = NULL, .size = 0, .quals = eQualUnknown };
-    ssa_symbol_t *self = symbol_create(ssa, tree, storage);
+    ssa_symbol_t *self = symbol_create_decl(ssa, tree, storage);
 
     size_t locals = vector_len(tree->locals);
     self->locals = typevec_of(sizeof(ssa_local_t), locals);
     for (size_t i = 0; i < locals; i++)
     {
         const tree_t *local = vector_get(tree->locals, i);
-        ssa_storage_t type_storage = create_storage_type(ssa->types, local);
+        ssa_storage_t type_storage = create_storage_for_decl(ssa->types, local);
         const ssa_type_t *type = ssa_type_create_cached(ssa->types, tree_get_type(local));
         const char *name = tree_get_name(local);
 
@@ -174,6 +218,41 @@ static ssa_symbol_t *function_create(ssa_compile_t *ssa, const tree_t *tree)
     return self;
 }
 
+static ssa_symbol_t *intern_string(ssa_compile_t *ssa, const tree_t *tree)
+{
+    CTASSERT(ssa != NULL);
+
+    text_view_t view = tree->string_value;
+    CTASSERT(view.text != NULL);
+
+    // see if we already have this string
+    ssa_symbol_t *symbol = map_get(ssa->strings, &view);
+    if (symbol != NULL)
+    {
+        return symbol;
+    }
+
+    // otherwise create all the data we need
+    tree_attribs_t attribs = {
+        .link = eLinkModule,
+        .visibility = eVisiblePrivate,
+    };
+    const tree_t *type = tree_get_type(tree);
+
+    // we need the load type here because we're creating storage for this string
+    const tree_t *inner = tree_ty_load_type(type);
+    ssa_storage_t storage = create_new_storage(ssa->types, inner, view.size + 1, eQualConst);
+    char *name = str_format(ssa->arena, "__string%zu", ssa->string_count++);
+    ssa_symbol_t *it = symbol_new(ssa, name, type, attribs, storage);
+    it->value = ssa_value_string(it->type, view);
+    text_view_t *ptr = arena_memdup(&view, sizeof(text_view_t), ssa->arena);
+    map_set(ssa->strings, ptr, it);
+
+    vector_push(&ssa->current_module->globals, it);
+
+    return it;
+}
+
 static ssa_module_t *module_create(ssa_compile_t *ssa, const char *name)
 {
     vector_t *path = vector_clone(ssa->path);
@@ -187,20 +266,6 @@ static ssa_module_t *module_create(ssa_compile_t *ssa, const char *name)
     mod->types      = vector_new_arena(32, ssa->arena);
 
     return mod;
-}
-
-static ssa_operand_t add_const(ssa_compile_t *ssa, ssa_value_t *value)
-{
-    ssa_symbol_t *symbol = ssa->current_symbol;
-    size_t index = vector_len(ssa->current_symbol->consts);
-    vector_push(&symbol->consts, value);
-
-    ssa_operand_t operand = {
-        .kind = eOperandConst,
-        .constant = index
-    };
-
-    return operand;
 }
 
 static ssa_operand_t bb_add_step(ssa_block_t *bb, ssa_step_t step)
@@ -449,7 +514,13 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
     }
 
     case eTreeExprString: {
-        return add_const(ssa, ssa_value_from(ssa->types, tree));
+        ssa_symbol_t *string = intern_string(ssa, tree);
+        add_dep(ssa, ssa->current_symbol, string);
+        ssa_operand_t operand = {
+            .kind = eOperandGlobal,
+            .global = string
+        };
+        return operand;
     }
 
     case eTreeExprCast: {
@@ -681,10 +752,11 @@ static void add_module_globals(ssa_compile_t *ssa, ssa_module_t *mod, map_t *glo
         const tree_t *tree = entry.value;
         CTASSERTF(tree_is(tree, eTreeDeclGlobal), "expected global, got %s", tree_to_string(tree));
 
-        ssa_symbol_t *global = symbol_create(ssa, tree, create_storage_type(ssa->types, tree));
+        ssa_symbol_t *global = symbol_create_decl(ssa, tree, create_storage_for_decl(ssa->types, tree));
 
         vector_push(&mod->globals, global);
         map_set(ssa->globals, tree, global);
+        map_set(ssa->module_lookup, global, mod);
     }
 }
 
@@ -700,6 +772,7 @@ static void add_module_functions(ssa_compile_t *ssa, ssa_module_t *mod, map_t *f
 
         vector_push(&mod->functions, symbol);
         map_set(ssa->functions, tree, symbol);
+        map_set(ssa->module_lookup, symbol, mod);
     }
 }
 
@@ -718,7 +791,7 @@ static void add_module_types(ssa_compile_t *ssa, ssa_module_t *mod, map_t *types
     }
 }
 
-static void compile_module(ssa_compile_t *ssa, const tree_t *tree)
+static void forward_module(ssa_compile_t *ssa, const tree_t *tree)
 {
     const char *id = tree_get_name(tree);
     ssa_module_t *mod = module_create(ssa, id);
@@ -736,7 +809,7 @@ static void compile_module(ssa_compile_t *ssa, const tree_t *tree)
     {
         map_entry_t entry = map_next(&iter);
 
-        compile_module(ssa, entry.value);
+        forward_module(ssa, entry.value);
     }
 
     vector_drop(ssa->path);
@@ -821,17 +894,17 @@ ssa_map_sizes_t predict_maps(map_t *mods)
     return sizes;
 }
 
-ssa_result_t ssa_compile(map_t *mods)
+ssa_result_t ssa_compile(map_t *mods, arena_t *arena)
 {
     ssa_map_sizes_t sizes = predict_maps(mods);
-
-    arena_t *arena = get_global_arena();
 
     ssa_compile_t ssa = {
         .arena = arena,
 
         .modules = vector_new_arena(sizes.modules, arena),
         .symbol_deps = map_optimal(sizes.deps, kTypeInfoPtr, arena),
+
+        .strings = map_optimal(sizes.globals + sizes.functions, kTypeInfoText, arena),
 
         .globals = map_optimal(sizes.globals, kTypeInfoPtr, arena),
         .functions = map_optimal(sizes.functions, kTypeInfoPtr, arena),
@@ -840,6 +913,8 @@ ssa_result_t ssa_compile(map_t *mods)
         // TODO: these should be per symbol rather than persistent global
         .symbol_locals = map_optimal(sizes.deps * 4, kTypeInfoPtr, arena),
         .symbol_loops = map_optimal(32, kTypeInfoPtr, arena),
+
+        .module_lookup = map_optimal(sizes.deps, kTypeInfoPtr, arena),
     };
 
     map_iter_t iter = map_iter(mods);
@@ -848,7 +923,7 @@ ssa_result_t ssa_compile(map_t *mods)
         map_entry_t entry = map_next(&iter);
 
         ssa.path = str_split_arena(entry.key, ".", arena);
-        compile_module(&ssa, entry.value);
+        forward_module(&ssa, entry.value);
     }
 
     map_iter_t globals = map_iter(ssa.globals);
@@ -858,6 +933,9 @@ ssa_result_t ssa_compile(map_t *mods)
 
         const tree_t *tree = entry.key;
         ssa_symbol_t *global = entry.value;
+
+        ssa.current_module = map_get(ssa.module_lookup, global);
+        CTASSERTF(ssa.current_module != NULL, "global `%s` has no module", global->name);
 
         begin_compile(&ssa, global);
 
@@ -895,6 +973,9 @@ ssa_result_t ssa_compile(map_t *mods)
 
         const tree_t *tree = entry.key;
         ssa_symbol_t *symbol = entry.value;
+
+        ssa.current_module = map_get(ssa.module_lookup, symbol);
+        CTASSERTF(ssa.current_module != NULL, "symbol `%s` has no module", symbol->name);
 
         begin_compile(&ssa, symbol);
 

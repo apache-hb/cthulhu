@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/compiler.h"
-#include "base/text.h"
+#include "core/text.h"
 
 #include <stddef.h>
 

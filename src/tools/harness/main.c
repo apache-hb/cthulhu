@@ -254,7 +254,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     check_tree(reports, modmap);
     CHECK_LOG(reports, "validations failed");
 
-    ssa_result_t ssa = ssa_compile(modmap);
+    ssa_result_t ssa = ssa_compile(modmap, arena);
     CHECK_LOG(reports, "generating ssa");
 
     ssa_opt(reports, ssa);

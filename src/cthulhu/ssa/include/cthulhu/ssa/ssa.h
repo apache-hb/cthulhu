@@ -19,6 +19,7 @@ typedef struct vector_t vector_t;
 typedef struct typevec_t typevec_t;
 typedef struct map_t map_t;
 typedef struct set_t set_t;
+typedef struct arena_t arena_t;
 
 typedef struct tree_t tree_t;
 
@@ -94,6 +95,16 @@ typedef struct ssa_type_digit_t {
     digit_t digit;
 } ssa_type_digit_t;
 
+typedef struct ssa_case_t {
+    const char *name;
+    mpz_t value;
+} ssa_case_t;
+
+typedef struct ssa_type_enum_t {
+    ssa_type_digit_t underlying;
+    typevec_t *cases; // typevec_t<ssa_case_t>
+} ssa_type_enum_t;
+
 typedef struct ssa_type_closure_t {
     const ssa_type_t *result;
     typevec_t *params; // typevec_t<ssa_param_t *>
@@ -119,6 +130,7 @@ typedef struct ssa_type_t {
         ssa_type_closure_t closure;
         ssa_type_pointer_t pointer;
         ssa_type_record_t record;
+        ssa_type_enum_t sum;
     };
 } ssa_type_t;
 
@@ -156,9 +168,6 @@ typedef struct ssa_operand_t {
 
         /* eOperandParam */
         size_t param;
-
-        /* eOperandConst */
-        size_t constant;
 
         /* eOperandGlobal */
         const ssa_symbol_t *global;
@@ -301,7 +310,7 @@ typedef struct ssa_result_t {
     map_t *deps; // map<ssa_symbol, set<ssa_symbol>>
 } ssa_result_t;
 
-ssa_result_t ssa_compile(map_t *mods);
+ssa_result_t ssa_compile(map_t *mods, arena_t *arena);
 
 ///
 /// optimization api

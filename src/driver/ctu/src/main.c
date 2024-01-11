@@ -51,6 +51,11 @@ static void ctu_postparse(driver_t *driver, scan_t *scan, void *tree)
     add_context(lifetime, path, ctx);
 }
 
+static const diagnostic_t * const kDiagnosticTable[] = {
+#define NEW_EVENT(name, ...) &kEvent_##name,
+#include "ctu/events.inc"
+};
+
 static const char *const kLangNames[] = { "ct", "ctu", "cthulhu", NULL };
 
 const language_t kCtuModule = {
@@ -64,6 +69,11 @@ const language_t kCtuModule = {
     },
 
     .exts = kLangNames,
+
+    .diagnostics = {
+        .diagnostics = kDiagnosticTable,
+        .count = sizeof(kDiagnosticTable) / sizeof(diagnostic_t*),
+    },
 
     .fn_create = ctu_init,
 

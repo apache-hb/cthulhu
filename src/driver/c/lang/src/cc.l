@@ -181,7 +181,8 @@ WS [ \t\r\v\n\f]
 }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
-    yylval->ident = ctu_strdup(yytext);
+    arena_t *arena = scan_get_arena(yyextra);
+    yylval->ident = arena_strndup(yytext, yyleng, arena);
     return IDENT;
 }
 

@@ -22,7 +22,6 @@ typedef struct c89_emit_t
     const ssa_symbol_t *current;
 
     map_t *stepmap; // map<ssa_step, c89_source>
-    map_t *strmap; // map<const char*, const char*>
 
     set_t *defined; // set<ssa_type>
 

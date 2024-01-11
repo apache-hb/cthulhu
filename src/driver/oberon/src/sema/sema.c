@@ -85,6 +85,12 @@ tree_t *obr_get_integer_type(void)
     return gTypeInteger;
 }
 
+tree_t *obr_get_string_type(const node_t *node, size_t length)
+{
+    CTASSERT(gTypeChar != NULL);
+    return tree_type_array(node, "STRING", gTypeChar, length + 1);
+}
+
 tree_t *obr_get_longint_type(void)
 {
     CTASSERT(gTypeLong != NULL);

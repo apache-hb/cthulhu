@@ -35,6 +35,7 @@ tree_t *obr_get_bool_type(void); // BOOLEAN
 tree_t *obr_get_char_type(void); // CHAR
 tree_t *obr_get_shortint_type(void); // SHORTINT
 tree_t *obr_get_integer_type(void); // INTEGER
+tree_t *obr_get_string_type(const node_t *node, size_t length); // STRING
 tree_t *obr_get_longint_type(void); // LONGINT
 tree_t *obr_get_real_type(void); // REAL
 tree_t *obr_get_longreal_type(void); // LONGREAL

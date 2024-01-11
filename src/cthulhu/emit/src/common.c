@@ -1,5 +1,6 @@
 #include "common.h"
 
+#include "io/io.h"
 #include "std/str.h"
 #include "std/map.h"
 #include "std/vector.h"
@@ -100,10 +101,8 @@ void write_string(io_t *io, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    char *msg = vformat(fmt, args);
+    io_vprintf(io, fmt, args);
     va_end(args);
-
-    io_write(io, msg, strlen(msg));
 }
 
 static char *digit_to_string(ssa_type_digit_t digit)

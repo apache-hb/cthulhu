@@ -54,13 +54,30 @@ const char *tree_kind_to_string(tree_kind_t kind)
     }
 }
 
+static const char *length_name(size_t length)
+{
+    if (length == SIZE_MAX) return "unbounded";
+    return format("%zu", length);
+}
+
 const char *tree_to_string(const tree_t *self)
 {
     if (self == NULL) { return "nil"; }
 
-    if (tree_is(self, eTreeError))
+    tree_kind_t kind = tree_get_kind(self);
+    switch (kind)
     {
+    case eTreeError:
         return format("{ error: %s }", self->message);
+
+    case eTreeTypeArray:
+        return format("array %s { element: %s, length: %zu }", tree_get_name(self), tree_to_string(self->ptr), self->length);
+
+    case eTreeTypePointer:
+        return format("pointer %s { pointer: %s, length: %s }", tree_get_name(self), tree_to_string(self->ptr), length_name(self->length));
+
+    default:
+        break;
     }
 
     if (has_name(self->kind))
@@ -268,6 +285,7 @@ const tree_t *tree_ty_load_type(const tree_t *self)
 {
     switch (tree_get_kind(self))
     {
+    case eTreeTypeArray:
     case eTreeTypePointer:
     case eTreeTypeReference:
         return self->ptr;

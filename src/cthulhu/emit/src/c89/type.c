@@ -29,7 +29,6 @@ static const char *get_c89_digit(ssa_type_digit_t ty)
 
 static const char *get_quals(quals_t quals, bool emit_const)
 {
-    // const is the default
     if (quals & eQualConst) { return emit_const ? "const " : ""; }
 
     vector_t *vec = vector_new(3);

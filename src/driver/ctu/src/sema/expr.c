@@ -1,6 +1,8 @@
 #include "ctu/sema/expr.h"
 #include "cthulhu/events/events.h"
+#include "ctu/sema/decl/resolve.h"
 #include "ctu/sema/type.h"
+#include "ctu/driver.h"
 
 #include "cthulhu/util/type.h"
 #include "cthulhu/util/util.h"
@@ -158,9 +160,19 @@ static tree_t *sema_cast(ctu_sema_t *sema, const ctu_t *expr)
     return cast;
 }
 
-static tree_t *sema_string(tree_t *sema, const ctu_t *expr)
+static tree_t *sema_string(tree_t *sema, const ctu_t *expr, const tree_t *implicit_type)
 {
-    return util_create_string(sema, expr->node, ctu_get_char_type(), expr->text, expr->length);
+    CTU_UNUSED(sema);
+
+    // +1 length for the nul terminator
+    tree_t *type = tree_type_array(expr->node, "str", ctu_get_char_type(), expr->length + 1);
+    tree_t *str = tree_expr_string(expr->node, type, expr->text, expr->length);
+    if (implicit_type != NULL)
+    {
+        return ctu_cast_type(sema, str, implicit_type);
+    }
+
+    return str;
 }
 
 static tree_t *sema_name(tree_t *sema, const ctu_t *expr)
@@ -169,14 +181,21 @@ static tree_t *sema_name(tree_t *sema, const ctu_t *expr)
     return sema_decl_name(sema, expr->node, expr->path, &needs_load);
 }
 
-static tree_t *sema_load(tree_t *sema, const ctu_t *expr)
+static tree_t *sema_load(tree_t *sema, const ctu_t *expr, const tree_t *implicit_type)
 {
     bool needs_load = true;
+
     tree_t *name = sema_decl_name(sema, expr->node, expr->path, &needs_load);
 
     if (needs_load)
     {
-        return tree_expr_load(expr->node, name);
+        name = tree_expr_load(expr->node, name);
+    }
+
+    if (implicit_type != NULL)
+    {
+        name = tree_resolve_type(name);
+        return ctu_cast_type(sema, name, implicit_type);
     }
 
     return name;
@@ -291,6 +310,16 @@ static tree_t *sema_call(ctu_sema_t *sema, const ctu_t *expr)
     return tree_expr_call(expr->node, callee, result);
 }
 
+static const tree_t *get_ptr_type(const tree_t *ty)
+{
+    if (tree_is(ty, eTreeTypeReference))
+    {
+        return ty->ptr;
+    }
+
+    return ty;
+}
+
 static tree_t *sema_deref_lvalue(ctu_sema_t *sema, const ctu_t *expr)
 {
     tree_t *inner = ctu_sema_rvalue(sema, expr->expr, NULL);
@@ -299,7 +328,18 @@ static tree_t *sema_deref_lvalue(ctu_sema_t *sema, const ctu_t *expr)
         return inner;
     }
 
-    return tree_expr_ref(expr->node, inner);
+    tree_t *index = ctu_sema_rvalue(sema, expr->index, ctu_get_int_type(eDigitSize, eSignUnsigned));
+
+    const tree_t *type = tree_get_type(inner);
+    const tree_t *ty = get_ptr_type(type);
+    if (!tree_is(ty, eTreeTypePointer))
+    {
+        return tree_raise(expr->node, ctu_sema_reports(sema), &kEvent_InvalidDereference,
+                          "cannot dereference non-pointer type `%s` inside lvalue", tree_to_string(ty));
+    }
+
+    tree_t *ref = tree_type_reference(expr->node, tree_get_name(type), ty->ptr);
+    return tree_expr_offset(expr->node, ref, inner, index);
 }
 
 static tree_t *sema_deref_rvalue(ctu_sema_t *sema, const ctu_t *expr)
@@ -330,16 +370,6 @@ static tree_t *sema_ref(ctu_sema_t *sema, const ctu_t *expr)
     }
 
     return tree_expr_address(expr->node, inner);
-}
-
-static const tree_t *get_ptr_type(const tree_t *ty)
-{
-    if (tree_is(ty, eTreeTypeReference))
-    {
-        return ty->ptr;
-    }
-
-    return ty;
 }
 
 static bool can_index_type(const tree_t *ty)
@@ -558,11 +588,11 @@ tree_t *ctu_sema_rvalue(ctu_sema_t *sema, const ctu_t *expr, const tree_t *impli
     {
     case eCtuExprBool: return sema_bool(sema->sema, expr, inner);
     case eCtuExprInt: return sema_int(sema->sema, expr, inner);
-    case eCtuExprString: return sema_string(sema->sema, expr);
+    case eCtuExprString: return sema_string(sema->sema, expr, inner);
     case eCtuExprCast: return sema_cast(sema, expr);
     case eCtuExprInit: return sema_init(sema, expr, inner);
 
-    case eCtuExprName: return sema_load(sema->sema, expr);
+    case eCtuExprName: return sema_load(sema->sema, expr, inner);
     case eCtuExprCall: return sema_call(sema, expr);
 
     case eCtuExprRef: return sema_ref(sema, expr);

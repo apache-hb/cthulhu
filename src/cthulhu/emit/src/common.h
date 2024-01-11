@@ -3,8 +3,6 @@
 #include "cthulhu/emit/emit.h"
 #include "cthulhu/ssa/ssa.h"
 
-#include "io/io.h"
-
 typedef struct names_t
 {
     size_t counter;
