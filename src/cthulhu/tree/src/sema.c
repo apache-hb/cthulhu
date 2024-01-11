@@ -10,7 +10,7 @@
 
 static tree_t *tree_module_new(const node_t *node, const char *name,
                                tree_t *parent, cookie_t *cookie,
-                               logger_t *reports, map_t *extra,
+                               logger_t *reports,
                                size_t decls, const size_t *sizes)
 {
     CTASSERTF(decls >= eSemaTotal, "module cannot be constructed with less than %d tags (%zu given)", eSemaTotal, decls);
@@ -22,8 +22,6 @@ static tree_t *tree_module_new(const node_t *node, const char *name,
     self->parent = parent;
     self->cookie = cookie;
     self->reports = reports;
-    self->extra = extra;
-    ARENA_IDENTIFY(arena, self->extra, "module_extra", self);
 
     self->tags = vector_of(decls);
     ARENA_IDENTIFY(arena, self->tags, "module_tags", self);
@@ -40,14 +38,11 @@ static tree_t *tree_module_new(const node_t *node, const char *name,
 
 tree_t *tree_module_root(logger_t *reports, cookie_t *cookie, const node_t *node, const char *name, size_t decls, const size_t *sizes)
 {
-    arena_t *arena = get_global_arena();
-
     return tree_module_new(
         node, name,
         /* parent = */ NULL,
         /* cookie = */ cookie,
         /* reports = */ reports,
-        /* extra = */ map_optimal(64, kTypeInfoPtr, arena),
         decls, sizes);
 }
 
@@ -55,7 +50,7 @@ tree_t *tree_module(tree_t *parent, const node_t *node, const char *name, size_t
 {
     TREE_EXPECT(parent, eTreeDeclModule);
 
-    return tree_module_new(node, name, parent, parent->cookie, parent->reports, parent->extra, decls, sizes);
+    return tree_module_new(node, name, parent, parent->cookie, parent->reports, decls, sizes);
 }
 
 void *tree_module_get(tree_t *self, size_t tag, const char *name)
@@ -103,18 +98,4 @@ cookie_t *tree_get_cookie(tree_t *self)
     TREE_EXPECT(self, eTreeDeclModule);
 
     return self->cookie;
-}
-
-void *tree_get_extra(tree_t *self, const void *key)
-{
-    TREE_EXPECT(self, eTreeDeclModule);
-
-    return map_get(self->extra, key);
-}
-
-void tree_set_extra(tree_t *self, const void *key, void *data)
-{
-    TREE_EXPECT(self, eTreeDeclModule);
-
-    map_set(self->extra, key, data);
 }

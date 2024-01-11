@@ -1,4 +1,5 @@
 #include "oberon/sema/decl.h"
+#include "core/macros.h"
 #include "notify/notify.h"
 #include "oberon/sema/type.h"
 #include "oberon/sema/expr.h"
@@ -45,8 +46,8 @@ static obr_t *begin_resolve(tree_t *sema, tree_t *self, void *user, obr_kind_t k
     obr_t *decl = user;
     CTASSERTF(decl->kind == kind, "decl %s is not a %d", decl->name, kind);
 
-    util_set_current_module(sema, sema);
-    util_set_current_symbol(sema, self);
+    CTU_UNUSED(sema);
+    CTU_UNUSED(self);
 
     return decl;
 }

@@ -2,11 +2,7 @@
 #include "cthulhu/events/events.h"
 #include "cthulhu/util/type.h"
 
-
 #include "cthulhu/tree/query.h"
-#include "cthulhu/tree/sema.h"
-
-#include "scan/node.h"
 
 #include "std/str.h"
 
@@ -29,35 +25,6 @@ void *util_select_decl(tree_t *sema, const size_t *tags, size_t len, const char 
     }
 
     return NULL;
-}
-
-static const char *const kCurrentModule = "util:current-module";
-static const char *const kCurrentSymbol = "util:current-symbol";
-
-tree_t *util_current_module(tree_t *sema)
-{
-    tree_t *current = tree_get_extra(sema, kCurrentModule);
-    CTASSERT(current != NULL);
-    return current;
-}
-
-void util_set_current_module(tree_t *sema, tree_t *module)
-{
-    CTASSERTF(module != NULL, "(module=%p)", (void *)module);
-    tree_set_extra(sema, kCurrentModule, module);
-}
-
-tree_t *util_current_symbol(tree_t *sema)
-{
-    tree_t *current = tree_get_extra(sema, kCurrentSymbol);
-    CTASSERT(current != NULL);
-    return current;
-}
-
-void util_set_current_symbol(tree_t *sema, tree_t *symbol)
-{
-    CTASSERTF(symbol != NULL, "(symbol=%p)", (void *)symbol);
-    tree_set_extra(sema, kCurrentSymbol, symbol);
 }
 
 bool util_types_equal(const tree_t *lhs, const tree_t *rhs)
@@ -293,29 +260,6 @@ bool util_eval_digit(mpz_t value, const tree_t *expr)
 
     default: return false;
     }
-}
-
-tree_t *util_create_string(tree_t *sema, const node_t *node, tree_t *letter, const char *text,
-                           size_t length)
-{
-    // get basic info
-    where_t where = node_get_location(node);
-
-    // get current context
-    tree_t *mod = util_current_module(sema);
-    tree_t *symbol = util_current_symbol(sema);
-
-    // create type and storage
-    const tree_t *type = tree_type_pointer(node, "$", letter, length + 1);
-    tree_storage_t storage = {.storage = letter, .size = length + 1, .quals = eQualConst};
-    const char *id = format("%s$%" PRI_LINE "$%" PRI_COLUMN, tree_get_name(symbol),
-                            where.first_line, where.first_column);
-    tree_t *str = tree_expr_string(node, type, text, length);
-    tree_t *decl = tree_decl_global(node, id, storage, type, str);
-
-    tree_module_set(mod, eSemaValues, id, decl);
-
-    return decl;
 }
 
 bool util_length_bounded(size_t length)

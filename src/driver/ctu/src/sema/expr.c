@@ -1,4 +1,5 @@
 #include "ctu/sema/expr.h"
+#include "base/log.h"
 #include "cthulhu/events/events.h"
 #include "ctu/sema/decl/resolve.h"
 #include "ctu/sema/type.h"
@@ -652,7 +653,7 @@ static tree_t *sema_stmts(ctu_sema_t *sema, const ctu_t *stmt)
     size_t sizes[eCtuTagTotal] = {[eCtuTagTypes] = 4, [eCtuTagValues] = 4, [eCtuTagFunctions] = 4,};
 
     tree_t *ctx = tree_module(sema->sema, stmt->node, decl->name, eCtuTagTotal, sizes);
-    ctu_sema_t inner = ctu_sema_init(ctx, sema->decl, vector_new(len));
+    ctu_sema_t inner = ctu_sema_nested(sema, ctx, sema->decl, vector_new(len));
     for (size_t i = 0; i < len; i++)
     {
         ctu_t *it = vector_get(stmt->stmts, i);
@@ -679,7 +680,8 @@ static tree_t *sema_return(ctu_sema_t *sema, const ctu_t *stmt)
 
 static tree_t *sema_while(ctu_sema_t *sema, const ctu_t *stmt)
 {
-    tree_t *save = ctu_current_loop(sema->sema);
+    tree_t *save = ctu_current_loop(sema);
+    ctu_log("save loop %p on %p", save, sema);
 
     tree_t *cond = ctu_sema_rvalue(sema, stmt->cond, ctu_get_bool_type());
     tree_t *loop = tree_stmt_loop(stmt->node, cond, tree_stmt_block(stmt->node, &kEmptyVector),
@@ -690,12 +692,13 @@ static tree_t *sema_while(ctu_sema_t *sema, const ctu_t *stmt)
         ctu_add_decl(sema->sema, eCtuTagLabels, stmt->name, loop);
     }
 
-    ctu_set_current_loop(sema->sema, loop);
+    ctu_set_current_loop(sema, loop);
+    ctu_log("set loop %p on %p", loop, sema);
 
     loop->then = ctu_sema_stmt(sema, stmt->then);
-    loop->other = stmt->other == NULL ? NULL : ctu_sema_stmt(sema, stmt->other);
+    ctu_set_current_loop(sema, save);
 
-    ctu_set_current_loop(sema->sema, save);
+    loop->other = stmt->other == NULL ? NULL : ctu_sema_stmt(sema, stmt->other);
 
     return loop;
 }
@@ -719,8 +722,9 @@ static tree_t *sema_branch(ctu_sema_t *sema, const ctu_t *stmt)
     return tree_stmt_branch(stmt->node, cond, then, other);
 }
 
-static tree_t *get_label_loop(tree_t *sema, const ctu_t *stmt)
+static tree_t *get_label_loop(ctu_sema_t *sema, const ctu_t *stmt)
 {
+    tree_t *ctx = sema->sema;
     if (stmt->label == NULL)
     {
         tree_t *loop = ctu_current_loop(sema);
@@ -729,26 +733,27 @@ static tree_t *get_label_loop(tree_t *sema, const ctu_t *stmt)
             return loop;
         }
 
-        return tree_raise(stmt->node, sema->reports, &kEvent_InvalidControlFlow, "loop control statement not within a loop");
+        ctu_log("no loop found for %p", sema);
+        return tree_raise(stmt->node, ctx->reports, &kEvent_InvalidControlFlow, "loop control statement not within a loop");
     }
 
-    tree_t *decl = ctu_get_loop(sema, stmt->label);
+    tree_t *decl = ctu_get_loop(ctx, stmt->label);
     if (decl != NULL)
     {
         return decl;
     }
 
-    return tree_raise(stmt->node, sema->reports, &kEvent_SymbolNotFound, "label `%s` not found",
+    return tree_raise(stmt->node, ctx->reports, &kEvent_SymbolNotFound, "label `%s` not found",
                       stmt->label);
 }
 
-static tree_t *sema_break(tree_t *sema, const ctu_t *stmt)
+static tree_t *sema_break(ctu_sema_t *sema, const ctu_t *stmt)
 {
     tree_t *loop = get_label_loop(sema, stmt);
     return tree_stmt_jump(stmt->node, loop, eJumpBreak);
 }
 
-static tree_t *sema_continue(tree_t *sema, const ctu_t *stmt)
+static tree_t *sema_continue(ctu_sema_t *sema, const ctu_t *stmt)
 {
     tree_t *loop = get_label_loop(sema, stmt);
     return tree_stmt_jump(stmt->node, loop, eJumpContinue);
@@ -771,8 +776,8 @@ tree_t *ctu_sema_stmt(ctu_sema_t *sema, const ctu_t *stmt)
     case eCtuStmtAssign: return sema_assign(sema, stmt);
     case eCtuStmtBranch: return sema_branch(sema, stmt);
 
-    case eCtuStmtBreak: return sema_break(sema->sema, stmt);
-    case eCtuStmtContinue: return sema_continue(sema->sema, stmt);
+    case eCtuStmtBreak: return sema_break(sema, stmt);
+    case eCtuStmtContinue: return sema_continue(sema, stmt);
 
     case eCtuExprCompare:
     case eCtuExprBinary:

@@ -3,7 +3,6 @@
 #include "cthulhu/events/events.h"
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"
-#include "cthulhu/tree/sema.h"
 
 #include "cthulhu/runtime/driver.h"
 
@@ -26,6 +25,36 @@ ctu_sema_t ctu_sema_init(tree_t *sema, tree_t *decl, vector_t *block)
         .sema = sema,
         .decl = decl,
         .block = block
+    };
+
+    return it;
+}
+
+ctu_sema_t ctu_sema_nested(ctu_sema_t *parent, tree_t *sema, tree_t *decl, vector_t *block)
+{
+    CTASSERT(parent != NULL);
+    CTASSERT(decl != NULL);
+    CTASSERT(block != NULL);
+
+    ctu_sema_t it = {
+        .sema = sema,
+        .decl = decl,
+        .block = block,
+        .current_loop = parent->current_loop,
+    };
+
+    return it;
+}
+
+ctu_sema_t ctu_sema_child(ctu_sema_t *sema)
+{
+    CTASSERT(sema != NULL);
+
+    ctu_sema_t it = {
+        .sema = sema->sema,
+        .decl = sema->decl,
+        .block = sema->block,
+        .current_loop = sema->current_loop,
     };
 
     return it;
@@ -108,16 +137,18 @@ void ctu_add_decl(tree_t *sema, ctu_tag_t tag, const char *name, tree_t *decl)
 /// extras
 ///
 
-static const char * const kCurrentLoop = "ctu:current-loop";
-
-tree_t *ctu_current_loop(tree_t *sema)
+tree_t *ctu_current_loop(ctu_sema_t *sema)
 {
-    return tree_get_extra(sema, kCurrentLoop);
+    CTASSERT(sema != NULL);
+
+    return sema->current_loop;
 }
 
-void ctu_set_current_loop(tree_t *sema, tree_t *loop)
+void ctu_set_current_loop(ctu_sema_t *sema, tree_t *loop)
 {
-    tree_set_extra(sema, kCurrentLoop, loop);
+    CTASSERT(sema != NULL);
+
+    sema->current_loop = loop;
 }
 
 ///

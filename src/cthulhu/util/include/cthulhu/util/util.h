@@ -74,16 +74,6 @@ tree_t *util_search_path(tree_t *sema, const decl_search_t *search, const node_t
 /// @return tree_t*
 tree_t *util_search_qualified(tree_t *sema, const decl_search_t *search, const node_t *node, const char *mod, const char *name);
 
-///
-/// context
-///
-
-tree_t *util_current_module(tree_t *sema);
-void util_set_current_module(tree_t *sema, tree_t *module);
-
-tree_t *util_current_symbol(tree_t *sema);
-void util_set_current_symbol(tree_t *sema, tree_t *symbol);
-
 /// @brief evaluate a digit expression
 ///
 /// @param[out] value the value to set
@@ -91,8 +81,6 @@ void util_set_current_symbol(tree_t *sema, tree_t *symbol);
 ///
 /// @return true if the expression was evaluated, false otherwise
 bool util_eval_digit(mpz_t value, const tree_t *expr);
-
-tree_t *util_create_string(tree_t *sema, const node_t *node, tree_t *letter, const char *text, size_t length);
 
 /// @}
 

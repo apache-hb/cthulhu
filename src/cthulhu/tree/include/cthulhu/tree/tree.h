@@ -219,7 +219,6 @@ typedef struct tree_t {
 
                     logger_t *reports;
                     vector_t *tags; ///< vector_t<map_t<const char*, void*>*>
-                    map_t *extra;
                 };
             };
         };
