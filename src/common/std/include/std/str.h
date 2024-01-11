@@ -218,13 +218,13 @@ char *str_replace_many(IN_STRING const char *str, IN_NOTNULL const map_t *repl);
 NODISCARD
 char *str_trim(IN_STRING const char *str, IN_STRING const char *letters);
 
-/// @brief remove all instances of @a letters from @a str
+/// @brief remove all instances of @p letters from @p str
 ///
 /// @param str the string to erase letters from
 /// @param len the length of @p str
 /// @param letters the letters to erase
 ///
-/// @param @p str with all instances of @p letters removed
+/// @return @p str with all instances of @p letters removed
 NODISCARD
 char *str_erase(IN_READS(len) char *str, size_t len, IN_STRING const char *letters);
 

@@ -463,7 +463,7 @@ static void print_extra_files(rich_t *rich)
         return;
 
     // find all remaining files
-    set_t *scans = set_new_info(10, kTypeInfoPtr, rich->arena);
+    set_t *scans = set_new(10, kTypeInfoPtr, rich->arena);
     size_t len = typevec_len(event->segments);
     for (size_t i = 0; i < len; i++)
     {
@@ -471,7 +471,7 @@ static void print_extra_files(rich_t *rich)
         CTASSERT(segment != NULL);
 
         const scan_t *scan = node_get_scan(segment->node);
-        set_add_ex(scans, scan);
+        set_add(scans, scan);
     }
 
     const scan_t *root = node_get_scan(event->node);

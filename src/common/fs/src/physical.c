@@ -122,7 +122,7 @@ static map_t *pfs_query_dirents(fs_t *fs, inode_t *self)
 
     os_dir_t dir = { 0 };
 
-    map_t *dirents = map_new_info(64, kTypeInfoString, fs->arena);
+    map_t *dirents = map_new(64, kTypeInfoString, fs->arena);
 
     while (os_iter_next(&iter, &dir))
     {
@@ -131,7 +131,7 @@ static map_t *pfs_query_dirents(fs_t *fs, inode_t *self)
 
         inode_t *inode = pfs_query_node(fs, self, path);
         CTASSERTF(inode != NULL, "failed to query node %s '%s'", absolute, path);
-        map_set_ex(dirents, path, inode);
+        map_set(dirents, path, inode);
     }
 
     os_iter_end(&iter);

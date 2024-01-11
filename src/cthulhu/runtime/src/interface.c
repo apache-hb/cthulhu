@@ -29,13 +29,13 @@ static const language_t *add_language_extension(lifetime_t *lifetime, const char
     CTASSERT(ext != NULL);
     CTASSERT(lang != NULL);
 
-    const language_t *old = map_get_ex(lifetime->extensions, ext);
+    const language_t *old = map_get(lifetime->extensions, ext);
     if (old != NULL)
     {
         return old;
     }
 
-    map_set_ex(lifetime->extensions, ext, (void*)lang);
+    map_set(lifetime->extensions, ext, (void*)lang);
     return NULL;
 }
 
@@ -87,8 +87,8 @@ lifetime_t *lifetime_new(mediator_t *mediator, arena_t *arena)
     self->logger = logger;
     self->arena = arena;
 
-    self->extensions = map_optimal_info(16, kTypeInfoString, arena);
-    self->modules = map_optimal_info(64, kTypeInfoString, arena);
+    self->extensions = map_optimal(16, kTypeInfoString, arena);
+    self->modules = map_optimal(64, kTypeInfoString, arena);
 
     cookie_t cookie = {
         .reports = logger,
@@ -145,7 +145,7 @@ const language_t *lifetime_get_language(lifetime_t *lifetime, const char *ext)
     CTASSERT(lifetime != NULL);
     CTASSERT(ext != NULL);
 
-    return map_get_ex(lifetime->extensions, ext);
+    return map_get(lifetime->extensions, ext);
 }
 
 static bool parse_failed(logger_t *reports, const char *path, parse_result_t result)
@@ -290,7 +290,7 @@ map_t *lifetime_get_modules(lifetime_t *lifetime)
 
     arena_t *arena = lifetime->arena;
 
-    map_t *mods = map_optimal_info(64, kTypeInfoString, arena);
+    map_t *mods = map_optimal(64, kTypeInfoString, arena);
     ARENA_IDENTIFY(arena, mods, "modules", lifetime);
 
     map_iter_t iter = map_iter(lifetime->modules);
@@ -303,7 +303,7 @@ map_t *lifetime_get_modules(lifetime_t *lifetime)
         CTASSERTF(ctx != NULL, "module `%s` is NULL", name);
         CTASSERTF(ctx->root != NULL, "module `%s` has NULL root", name);
 
-        map_set_ex(mods, name, ctx->root);
+        map_set(mods, name, ctx->root);
     }
 
     return mods;

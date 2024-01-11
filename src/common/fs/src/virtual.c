@@ -125,7 +125,7 @@ static io_t *vfs_io(virtual_file_t *file, os_access_t flags, arena_t *arena)
 static inode_t *virtual_dir(arena_t *arena)
 {
     virtual_dir_t dir = {
-        .dirents = map_optimal_info(64, kTypeInfoString, arena)
+        .dirents = map_optimal(64, kTypeInfoString, arena)
     };
 
     return inode_dir(&dir, sizeof(virtual_dir_t), arena);
@@ -136,7 +136,7 @@ static inode_t *vfs_query_node(fs_t *fs, inode_t *self, const char *name)
     CTU_UNUSED(fs);
 
     virtual_dir_t *dir = inode_data(self);
-    return map_get_default_ex(dir->dirents, name, &gInvalidINode);
+    return map_get_default(dir->dirents, name, &gInvalidINode);
 }
 
 static map_t *vfs_query_dirents(fs_t *fs, inode_t *self)
@@ -161,7 +161,7 @@ static inode_t *vfs_create_dir(fs_t *fs, inode_t *self, const char *name)
 
     virtual_dir_t *dir = inode_data(self);
     inode_t *node = virtual_dir(fs->arena);
-    map_set_ex(dir->dirents, name, node);
+    map_set(dir->dirents, name, node);
     return node;
 }
 
@@ -170,7 +170,7 @@ static void vfs_delete_dir(fs_t *fs, inode_t *self, const char *name)
     CTU_UNUSED(fs);
 
     virtual_dir_t *dir = inode_data(self);
-    map_delete_ex(dir->dirents, name);
+    map_delete(dir->dirents, name);
 }
 
 static inode_t *vfs_create_file(fs_t *fs, inode_t *self, const char *name)
@@ -188,7 +188,7 @@ static inode_t *vfs_create_file(fs_t *fs, inode_t *self, const char *name)
     };
 
     inode_t *node = inode_file(&file, sizeof(virtual_file_t), fs->arena);
-    map_set_ex(dir->dirents, name, node);
+    map_set(dir->dirents, name, node);
     return node;
 }
 
@@ -197,7 +197,7 @@ static void vfs_delete_file(fs_t *fs, inode_t *self, const char *name)
     CTU_UNUSED(fs);
 
     virtual_dir_t *dir = inode_data(self);
-    map_delete_ex(dir->dirents, name);
+    map_delete(dir->dirents, name);
 }
 
 static const fs_callbacks_t kVirtualInterface = {

@@ -180,11 +180,11 @@ static ssa_type_t *ssa_type_create(map_t *cache, const tree_t *type)
 
 ssa_type_t *ssa_type_create_cached(map_t *cache, const tree_t *type)
 {
-    ssa_type_t *old = map_get_ex(cache, type);
+    ssa_type_t *old = map_get(cache, type);
     if (old != NULL) { return old; }
 
     ssa_type_t *temp = ssa_type_empty(tree_get_name(type), eQualUnknown);
-    map_set_ex(cache, type, temp);
+    map_set(cache, type, temp);
 
     ssa_type_t *result = ssa_type_create(cache, type);
     memcpy(temp, result, sizeof(ssa_type_t));

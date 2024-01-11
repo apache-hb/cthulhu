@@ -27,25 +27,25 @@ int main(void)
 
     test_group_t set_dedup_group = test_group(&suite, "deduplicates");
 
-    set_t *dedup_set = set_new_info(3, kTypeInfoString, arena);
-    const char *item = set_add_ex(dedup_set, "duplicate");
+    set_t *dedup_set = set_new(3, kTypeInfoString, arena);
+    const char *item = set_add(dedup_set, "duplicate");
     for (size_t i = 0; i < 64; i++) {
         char *element = arena_strdup("duplicate", arena);
-        const char *it = set_add_ex(dedup_set, element);
+        const char *it = set_add(dedup_set, element);
 
         /* pointer equality is on purpose */
         GROUP_EXPECT_PASS(set_dedup_group, "items deduplicated", it == item);
     }
 
     test_group_t set_clash_group = test_group(&suite, "clashes");
-    set_t *set = set_new_info(3, kTypeInfoString, arena);
+    set_t *set = set_new(3, kTypeInfoString, arena);
     for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
-        set_add_ex(set, kSetItems[i]);
+        set_add(set, kSetItems[i]);
     }
 
     for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
         char *name = str_format(arena, "%s in set", kSetItems[i]);
-        GROUP_EXPECT_PASS(set_clash_group, name, set_contains_ex(set, kSetItems[i]));
+        GROUP_EXPECT_PASS(set_clash_group, name, set_contains(set, kSetItems[i]));
     }
 
     return test_suite_finish(&suite);

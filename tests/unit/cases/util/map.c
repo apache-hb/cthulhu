@@ -26,58 +26,58 @@ int main(void)
 
     {
         test_group_t group = test_group(&suite, "construction");
-        GROUP_EXPECT_PASS(group, "not null", map_new_info(3, kTypeInfoString, arena) != NULL);
+        GROUP_EXPECT_PASS(group, "not null", map_new(3, kTypeInfoString, arena) != NULL);
     }
 
     // insert string
     {
         test_group_t group = test_group(&suite, "insert_str");
 
-        map_t *map = map_new_info(64, kTypeInfoString, arena);
+        map_t *map = map_new(64, kTypeInfoString, arena);
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
-            map_set_ex(map, kSetItems[i], (char*)kSetItems[i]);
+            map_set(map, kSetItems[i], (char*)kSetItems[i]);
         }
 
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
             char *name = str_format(arena, "%s in map", kSetItems[i]);
-            GROUP_EXPECT_PASS(group, name, map_get_ex(map, kSetItems[i]) != NULL);
+            GROUP_EXPECT_PASS(group, name, map_get(map, kSetItems[i]) != NULL);
         }
     }
 
     // insert ptr
     {
         test_group_t group = test_group(&suite, "insert_ptr");
-        map_t *map = map_new_info(64, kTypeInfoPtr, arena);
+        map_t *map = map_new(64, kTypeInfoPtr, arena);
 
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
-            map_set_ex(map, kSetItems[i], (char*)kSetItems[i]);
+            map_set(map, kSetItems[i], (char*)kSetItems[i]);
         }
 
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
             char *name = str_format(arena, "%s in map", kSetItems[i]);
-            GROUP_EXPECT_PASS(group, name, map_get_ex(map, kSetItems[i]) != NULL);
+            GROUP_EXPECT_PASS(group, name, map_get(map, kSetItems[i]) != NULL);
         }
     }
 
     {
         test_group_t group = test_group(&suite, "default value");
         GROUP_EXPECT_PASS2(group, "default value", {
-            map_t *map = map_new_info(64, kTypeInfoString, arena);
+            map_t *map = map_new(64, kTypeInfoString, arena);
             char world[] = "world";
 
             /* pointer equality is on purpose */
-            CTASSERT(map_get_default_ex(map, "hello", world) == world);
+            CTASSERT(map_get_default(map, "hello", world) == world);
         });
     }
 
     // iter
     {
         test_group_t group = test_group(&suite, "iter");
-        map_t *map = map_new_info(64, kTypeInfoString, arena);
+        map_t *map = map_new(64, kTypeInfoString, arena);
 
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
         {
-            map_set_ex(map, kSetItems[i], (char*)kSetItems[i]);
+            map_set(map, kSetItems[i], (char*)kSetItems[i]);
         }
 
         size_t items = 0;
@@ -99,10 +99,10 @@ int main(void)
     // get
     {
         test_group_t group = test_group(&suite, "get");
-        map_t *map = map_new_info(64, kTypeInfoString, arena);
+        map_t *map = map_new(64, kTypeInfoString, arena);
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
         {
-            map_set_ex(map, kSetItems[i], (char*)kSetItems[i]);
+            map_set(map, kSetItems[i], (char*)kSetItems[i]);
         }
 
         typevec_t *entries = map_entries(map);
@@ -119,15 +119,15 @@ int main(void)
     // delete
     {
         test_group_t group = test_group(&suite, "delete");
-        map_t *map = map_new_info(64, kTypeInfoString, arena);
+        map_t *map = map_new(64, kTypeInfoString, arena);
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
         {
-            map_set_ex(map, kSetItems[i], (char*)kSetItems[i]);
+            map_set(map, kSetItems[i], (char*)kSetItems[i]);
         }
 
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
         {
-            map_delete_ex(map, kSetItems[i]);
+            map_delete(map, kSetItems[i]);
         }
 
         typevec_t *entries = map_entries(map);
@@ -136,7 +136,7 @@ int main(void)
 
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
         {
-            GROUP_EXPECT_PASS(group, "map entry correct", map_get_ex(map, kSetItems[i]) == NULL);
+            GROUP_EXPECT_PASS(group, "map entry correct", map_get(map, kSetItems[i]) == NULL);
         }
     }
 

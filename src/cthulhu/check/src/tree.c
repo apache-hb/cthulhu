@@ -429,7 +429,7 @@ static void check_expr_recursion(check_t *check, const tree_t *tree)
 
 static void check_global_recursion(check_t *check, const tree_t *global)
 {
-    if (set_contains_ex(check->checked_exprs, global))
+    if (set_contains(check->checked_exprs, global))
     {
         return;
     }
@@ -458,7 +458,7 @@ static void check_global_recursion(check_t *check, const tree_t *global)
         }
     }
 
-    set_add_ex(check->checked_exprs, global);
+    set_add(check->checked_exprs, global);
 }
 
 ///
@@ -493,7 +493,7 @@ static void check_struct_type_recursion(check_t *check, const tree_t *type)
 
 static void check_aggregate_recursion(check_t *check, const tree_t *type)
 {
-    if (set_contains_ex(check->checked_types, type))
+    if (set_contains(check->checked_types, type))
     {
         return;
     }
@@ -524,7 +524,7 @@ static void check_aggregate_recursion(check_t *check, const tree_t *type)
         }
     }
 
-    set_add_ex(check->checked_types, type);
+    set_add(check->checked_types, type);
 }
 
 ///
@@ -572,7 +572,7 @@ static void check_inner_type_recursion(check_t *check, const tree_t *type)
 
 static void check_type_recursion(check_t *check, const tree_t *type)
 {
-    if (set_contains_ex(check->checked_types, type))
+    if (set_contains(check->checked_types, type))
     {
         return;
     }
@@ -598,7 +598,7 @@ static void check_type_recursion(check_t *check, const tree_t *type)
         }
     }
 
-    set_add_ex(check->checked_types, type);
+    set_add(check->checked_types, type);
 }
 
 static void check_any_type_recursion(check_t *check, const tree_t *type)
@@ -672,8 +672,8 @@ void check_tree(logger_t *reports, map_t *mods)
         .expr_stack = vector_new(64),
         .type_stack = vector_new(64),
 
-        .checked_exprs = set_new_info(64, kTypeInfoPtr, arena),
-        .checked_types = set_new_info(64, kTypeInfoPtr, arena),
+        .checked_exprs = set_new(64, kTypeInfoPtr, arena),
+        .checked_types = set_new(64, kTypeInfoPtr, arena),
     };
 
     map_iter_t iter = map_iter(mods);

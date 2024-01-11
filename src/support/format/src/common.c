@@ -255,7 +255,7 @@ static text_cache_t *text_cache_new(io_t *io, text_view_t source, size_t len, ar
     cache->io = io;
     cache->source = source;
     cache->line_info = typevec_new(sizeof(lineinfo_t), len, arena);
-    cache->cached_lines = map_optimal_info(len, kTypeInfoString, arena);
+    cache->cached_lines = map_optimal(len, kTypeInfoString, arena);
 
     return cache;
 }
@@ -321,7 +321,7 @@ cache_map_t *cache_map_new(size_t size)
 
     cache_map_t *data = ARENA_MALLOC(arena, sizeof(cache_map_t), "cache_map", NULL);
     data->arena = arena;
-    data->map = map_optimal_info(size, kTypeInfoString, arena);
+    data->map = map_optimal(size, kTypeInfoString, arena);
 
     return data;
 }
@@ -345,7 +345,7 @@ text_cache_t *cache_emplace_file(cache_map_t *map, const char *path)
     CTASSERT(path != NULL);
 
     // TODO: is using the name stable?
-    text_cache_t *cache = map_get_ex(map->map, path);
+    text_cache_t *cache = map_get(map->map, path);
     if (cache != NULL && cache_is_valid(cache)) return cache;
 
     io_t *io = io_file(path, eAccessRead | eAccessText);
@@ -353,7 +353,7 @@ text_cache_t *cache_emplace_file(cache_map_t *map, const char *path)
 
     // always insert the cache, even if it is invalid.
     // this way we avoid trying to open the file again
-    map_set_ex(map->map, path, text);
+    map_set(map->map, path, text);
     if (cache_is_valid(text)) return text;
 
     return NULL;
@@ -364,12 +364,12 @@ text_cache_t *cache_emplace_scan(cache_map_t *map, const scan_t *scan)
     CTASSERT(map != NULL);
     CTASSERT(scan != NULL);
 
-    text_cache_t *cache = map_get_ex(map->map, scan);
+    text_cache_t *cache = map_get(map->map, scan);
     if (cache != NULL && cache_is_valid(cache)) return cache;
 
     // scan caches will never be invalid, so we can just insert them
     text_cache_t *text = text_cache_scan(scan, map->arena);
-    map_set_ex(map->map, scan, text);
+    map_set(map->map, scan, text);
 
     return text;
 }
@@ -425,7 +425,7 @@ text_t cache_escape_line(text_cache_t *cache, size_t line, const colour_pallete_
 {
     CTASSERT(colours != NULL);
 
-    text_t *cached = map_get_ex(cache->cached_lines, (void *)(uintptr_t)(line + 1));
+    text_t *cached = map_get(cache->cached_lines, (void *)(uintptr_t)(line + 1));
     if (cached != NULL) return *cached;
 
     text_view_t view = cache_get_line(cache, line);
@@ -464,7 +464,7 @@ text_t cache_escape_line(text_cache_t *cache, size_t line, const colour_pallete_
     ptr->text = typevec_data(result);
     ptr->size = typevec_len(result);
 
-    map_set_ex(cache->cached_lines, (void *)(uintptr_t)(line + 1), ptr);
+    map_set(cache->cached_lines, (void *)(uintptr_t)(line + 1), ptr);
 
     return *ptr;
 }
@@ -484,7 +484,7 @@ static bool set_has_option(set_t *set, const diagnostic_t *diag)
 {
     if (set == NULL) return false;
 
-    return set_contains_ex(set, diag);
+    return set_contains(set, diag);
 }
 
 USE_DECL

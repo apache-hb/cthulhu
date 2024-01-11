@@ -119,22 +119,22 @@ int main(void)
     {
         test_group_t group = test_group(&suite, "str_replace_many");
         GROUP_EXPECT_PASS2(group, "replace many", {
-            map_t *entries = map_optimal_info(64, kTypeInfoString, arena);
-            map_set_ex(entries, "hello", (void *)"world");
-            map_set_ex(entries, "world", (void *)"hello");
-            map_set_ex(entries, "!", (void *)"?");
-            map_set_ex(entries, " ", (void *)"___");
+            map_t *entries = map_optimal(64, kTypeInfoString, arena);
+            map_set(entries, "hello", (void *)"world");
+            map_set(entries, "world", (void *)"hello");
+            map_set(entries, "!", (void *)"?");
+            map_set(entries, " ", (void *)"___");
 
             char *result = str_replace_many("hello world!", entries);
             CTASSERT(str_equal(result, "world___hello?"));
         });
         GROUP_EXPECT_PANIC(group, "null entry", {
-            map_t *entries = map_optimal_info(64, kTypeInfoString, arena);
-            map_set_ex(entries, "hello", NULL);
+            map_t *entries = map_optimal(64, kTypeInfoString, arena);
+            map_set(entries, "hello", NULL);
 
             (void)str_replace_many("hello world!", entries);
         });
-        GROUP_EXPECT_PANIC(group, "null str", (void)str_replace_many(NULL, map_new_info(1, kTypeInfoString, arena)));
+        GROUP_EXPECT_PANIC(group, "null str", (void)str_replace_many(NULL, map_new(1, kTypeInfoString, arena)));
         GROUP_EXPECT_PANIC(group, "null map", (void)str_replace_many("hello world!", NULL));
         GROUP_EXPECT_PANIC(group, "null all", (void)str_replace_many(NULL, NULL));
     }

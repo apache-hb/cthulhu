@@ -50,6 +50,7 @@ typedef size_t os_error_t;
 /// @brief convert an os error code to a string
 ///
 /// @param error the error code to convert
+/// @param arena the arena to allocate from
 ///
 /// @return the string representation of the error code
 NODISCARD RET_STRING

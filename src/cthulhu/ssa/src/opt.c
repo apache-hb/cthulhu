@@ -36,8 +36,8 @@ typedef struct ssa_scope_t
 
 static void add_global(ssa_vm_t *vm, ssa_symbol_t *global)
 {
-    CTASSERTF(!set_contains_ex(vm->globals, global), "global %s already exists", global->name);
-    set_add_ex(vm->globals, global);
+    CTASSERTF(!set_contains(vm->globals, global), "global %s already exists", global->name);
+    set_add(vm->globals, global);
 }
 
 static void add_globals(ssa_vm_t *vm, const ssa_module_t *module)
@@ -64,7 +64,7 @@ static const ssa_value_t *ssa_opt_operand(ssa_scope_t *vm, ssa_operand_t operand
     {
     case eOperandEmpty: return NULL;
     case eOperandImm: return operand.value;
-    case eOperandReg: return map_get_ex(vm->step_values, get_step_indexed(operand.vreg_context, operand.vreg_index));
+    case eOperandReg: return map_get(vm->step_values, get_step_indexed(operand.vreg_context, operand.vreg_index));
     case eOperandConst: return vector_get(vm->symbol->consts, operand.constant);
     case eOperandGlobal: {
         const ssa_symbol_t *global = operand.global;
@@ -270,7 +270,7 @@ static void ssa_opt_block(ssa_scope_t *vm, const ssa_block_t *block)
     {
         const ssa_step_t *step = typevec_offset(block->steps, i);
         const ssa_value_t *value = ssa_opt_step(vm, step);
-        map_set_ex(vm->step_values, step, (void*)value);
+        map_set(vm->step_values, step, (void*)value);
 
         if (vm->return_value != NULL) { return; }
     }
@@ -278,7 +278,7 @@ static void ssa_opt_block(ssa_scope_t *vm, const ssa_block_t *block)
 
 static void ssa_opt_global(ssa_vm_t *vm, ssa_symbol_t *global)
 {
-    CTASSERTF(set_contains_ex(vm->globals, global), "global %s does not exist", global->name);
+    CTASSERTF(set_contains(vm->globals, global), "global %s does not exist", global->name);
 
     if (global->value != NULL)
     {
@@ -289,7 +289,7 @@ static void ssa_opt_global(ssa_vm_t *vm, ssa_symbol_t *global)
         .vm = vm,
         .symbol = global,
         .return_value = NULL,
-        .step_values = map_optimal_info(64, kTypeInfoPtr, vm->arena)
+        .step_values = map_optimal(64, kTypeInfoPtr, vm->arena)
     };
 
     ssa_opt_block(&scope, global->entry);
@@ -306,7 +306,7 @@ void ssa_opt(logger_t *reports, ssa_result_t result)
         .arena = arena,
         .deps = result.deps,
 
-        .globals = set_new_info(64, kTypeInfoPtr, arena),
+        .globals = set_new(64, kTypeInfoPtr, arena),
     };
 
     size_t len = vector_len(result.modules);

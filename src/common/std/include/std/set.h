@@ -15,38 +15,53 @@ typedef struct set_t set_t;
 typedef struct item_t item_t;
 typedef struct arena_t arena_t;
 
-set_t *set_new_info(size_t size, type_info_t info, arena_t *arena);
+/// @brief create a new set
+///
+/// @param size the initial size of the set
+/// @param info the type info for the key type
+/// @param arena the arena to allocate from
+///
+/// @return the new set
+NODISCARD
+set_t *set_new(IN_RANGE(>, 0) size_t size, type_info_t info, IN_NOTNULL arena_t *arena);
 
-const void *set_add_ex(IN_NOTNULL set_t *set, const void *key);
-bool set_contains_ex(IN_NOTNULL const set_t *set, const void *key);
-void set_delete_ex(IN_NOTNULL set_t *set, const void *key);
+/// @brief add a key to a set
+/// @pre @p key is not NULL
+///
+/// @param set the set to add the key to
+/// @param key the key to add
+///
+/// @return the key that was added, or the existing key if it already exists
+const void *set_add(IN_NOTNULL set_t *set, IN_NOTNULL const void *key);
 
-/**
- * @brief check if a set contains a ptr key
- *
- * @param set the set to check
- * @param key the key to check
- * @return true if the set contains the key
- * @return false if the set does not contain the key
- */
+/// @brief check if a set contains a key
+/// @pre @p key is not NULL
+///
+/// @param set the set to check
+/// @param key the key to check for
+///
+/// @return true if the set contains the key
 NODISCARD CONSTFN
-bool set_contains_ptr(IN_NOTNULL set_t *set, const void *key);
+bool set_contains(IN_NOTNULL const set_t *set, IN_NOTNULL const void *key);
 
-/**
- * @brief check if a set is empty
- *
- * @param set the set to check
- * @return true if the set is empty
- * @return false if the set is not empty
- */
+/// @brief remove a key from a set
+/// @pre @p key is not NULL
+///
+/// @param set the set to remove the key from
+/// @param key the key to remove
+void set_delete(IN_NOTNULL set_t *set, IN_NOTNULL const void *key);
+
+/// @brief check if a set is empty
+///
+/// @param set the set to check
+///
+/// @return true if the set is empty
 NODISCARD CONSTFN
 bool set_empty(IN_NOTNULL set_t *set);
 
-/**
- * @brief reset a set to empty
- *
- * @param set the set to reset
- */
+/// @brief clear all keys from a set
+///
+/// @param set the set to clear
 void set_reset(IN_NOTNULL set_t *set);
 
 typedef struct set_iter_t

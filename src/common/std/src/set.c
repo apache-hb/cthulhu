@@ -45,7 +45,7 @@ static void clear_items(set_t *set)
     }
 }
 
-set_t *set_new_info(size_t size, type_info_t info, arena_t *arena)
+set_t *set_new(size_t size, type_info_t info, arena_t *arena)
 {
     CTASSERT(size > 0);
     CTASSERT(arena != NULL);
@@ -78,7 +78,7 @@ static bool impl_keys_equal(const set_t *set, const void *lhs, const void *rhs)
     return info.equals(lhs, rhs);
 }
 
-const void *set_add_ex(set_t *set, const void *key)
+const void *set_add(set_t *set, const void *key)
 {
     item_t *item = impl_get_bucket(set, key);
 
@@ -110,7 +110,7 @@ const void *set_add_ex(set_t *set, const void *key)
     NEVER("unreachable");
 }
 
-bool set_contains_ex(const set_t *set, const void *key)
+bool set_contains(const set_t *set, const void *key)
 {
     item_t *item = impl_get_bucket((set_t*)set, key);
 
@@ -139,7 +139,7 @@ bool set_contains_ex(const set_t *set, const void *key)
     NEVER("unreachable");
 }
 
-void set_delete_ex(set_t *set, const void *key)
+void set_delete(set_t *set, const void *key)
 {
     item_t *item = impl_get_bucket(set, key);
 

@@ -108,7 +108,7 @@ static vector_t *ctu_collect_fields(tree_t *sema, tree_t *self, ctu_t *decl)
     size_t len = vector_len(decl->fields);
 
     arena_t *arena = get_global_arena();
-    map_t *fields = map_optimal_info(len, kTypeInfoString, arena);
+    map_t *fields = map_optimal(len, kTypeInfoString, arena);
 
     vector_t *items = vector_of(len);
     for (size_t i = 0; i < len; i++)
@@ -118,14 +118,14 @@ static vector_t *ctu_collect_fields(tree_t *sema, tree_t *self, ctu_t *decl)
         char *name = field->name == NULL ? format("field%zu", i) : field->name;
         tree_t *item = tree_decl_field(field->node, name, type);
 
-        tree_t *prev = map_get_ex(fields, name);
+        tree_t *prev = map_get(fields, name);
         if (prev != NULL)
         {
             msg_notify(sema->reports, &kEvent_DuplicateField, field->node, "aggregate decl `%s` has duplicate field `%s`", decl->name, name);
         }
 
         vector_set(items, i, item);
-        map_set_ex(fields, name, item);
+        map_set(fields, name, item);
     }
 
     return items;

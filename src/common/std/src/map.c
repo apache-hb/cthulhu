@@ -83,7 +83,7 @@ static void clear_keys(bucket_t *buckets, size_t size)
 }
 
 USE_DECL
-map_t *map_new_info(size_t size, type_info_t info, arena_t *arena)
+map_t *map_new(size_t size, type_info_t info, arena_t *arena)
 {
     CTASSERT(size > 0);
 
@@ -258,7 +258,7 @@ static void impl_resize(map_t *map, size_t new_size)
         {
             if (entry->key != NULL)
             {
-                map_set_ex(map, entry->key, entry->value);
+                map_set(map, entry->key, entry->value);
             }
 
             entry = entry->next;
@@ -269,7 +269,7 @@ static void impl_resize(map_t *map, size_t new_size)
 }
 
 USE_DECL
-void map_set_ex(map_t *map, const void *key, void *value)
+void map_set(map_t *map, const void *key, void *value)
 {
     CTASSERT(map != NULL);
     CTASSERT(key != NULL);
@@ -299,16 +299,16 @@ void map_set_ex(map_t *map, const void *key, void *value)
 }
 
 USE_DECL
-void *map_get_ex(const map_t *map, const void *key)
+void *map_get(const map_t *map, const void *key)
 {
     CTASSERT(map != NULL);
     CTASSERT(key != NULL);
 
-    return map_get_default_ex(map, key, NULL);
+    return map_get_default(map, key, NULL);
 }
 
 USE_DECL
-void *map_get_default_ex(const map_t *map, const void *key, void *other)
+void *map_get_default(const map_t *map, const void *key, void *other)
 {
     CTASSERT(map != NULL);
     CTASSERT(key != NULL);
@@ -326,7 +326,7 @@ void *map_get_default_ex(const map_t *map, const void *key, void *other)
 }
 
 USE_DECL
-bool map_contains_ex(const map_t *map, const void *key)
+bool map_contains(const map_t *map, const void *key)
 {
     CTASSERT(map != NULL);
     CTASSERT(key != NULL);
@@ -336,7 +336,7 @@ bool map_contains_ex(const map_t *map, const void *key)
 }
 
 USE_DECL
-void map_delete_ex(map_t *map, const void *key)
+void map_delete(map_t *map, const void *key)
 {
     CTASSERT(map != NULL);
     CTASSERT(key != NULL);

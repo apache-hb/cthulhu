@@ -80,14 +80,14 @@ typedef struct ssa_loop_t
 
 static void add_dep(ssa_compile_t *ssa, const ssa_symbol_t *symbol, const ssa_symbol_t *dep)
 {
-    set_t *set = map_get_ex(ssa->symbol_deps, symbol);
+    set_t *set = map_get(ssa->symbol_deps, symbol);
     if (set == NULL)
     {
-        set = set_new_info(8, kTypeInfoPtr, ssa->arena);
-        map_set_ex(ssa->symbol_deps, symbol, set);
+        set = set_new(8, kTypeInfoPtr, ssa->arena);
+        map_set(ssa->symbol_deps, symbol, set);
     }
 
-    set_add_ex(set, dep);
+    set_add(set, dep);
 }
 
 static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const tree_t *tree, ssa_storage_t storage)
@@ -151,7 +151,7 @@ static ssa_symbol_t *function_create(ssa_compile_t *ssa, const tree_t *tree)
         };
 
         typevec_set(self->locals, i, &it);
-        map_set_ex(ssa->symbol_locals, local, (void*)(uintptr_t)i);
+        map_set(ssa->symbol_locals, local, (void*)(uintptr_t)i);
     }
 
     size_t params = vector_len(tree->params);
@@ -168,7 +168,7 @@ static ssa_symbol_t *function_create(ssa_compile_t *ssa, const tree_t *tree)
         };
 
         typevec_set(self->params, i, &it);
-        map_set_ex(ssa->symbol_locals, param, (void*)(uintptr_t)i);
+        map_set(ssa->symbol_locals, param, (void*)(uintptr_t)i);
     }
 
     return self;
@@ -323,7 +323,7 @@ static ssa_operand_t compile_loop(ssa_compile_t *ssa, const tree_t *tree)
     ssa_loop_t *save = ARENA_MALLOC(ssa->arena, sizeof(ssa_loop_t), "ssa_loop", ssa);
     save->enter_loop = body_block;
     save->exit_loop = tail_block;
-    map_set_ex(ssa->symbol_loops, tree, save);
+    map_set(ssa->symbol_loops, tree, save);
 
     ssa_operand_t loop = {
         .kind = eOperandBlock,
@@ -509,7 +509,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
     }
 
     case eTreeDeclGlobal: {
-        ssa_symbol_t *symbol = map_get_ex(ssa->globals, tree);
+        ssa_symbol_t *symbol = map_get(ssa->globals, tree);
         CTASSERTF(symbol != NULL, "symbol table missing `%s` (%p)", tree_to_string(tree), (void*)tree);
 
         add_dep(ssa, ssa->current_symbol, symbol);
@@ -534,7 +534,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
     }
 
     case eTreeStmtJump: {
-        ssa_loop_t *target = map_get_ex(ssa->symbol_loops, tree->label);
+        ssa_loop_t *target = map_get(ssa->symbol_loops, tree->label);
         CTASSERTF(target != NULL, "loop not found");
 
         return add_jump(ssa, target, tree->jump);
@@ -578,7 +578,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
     }
 
     case eTreeDeclLocal: {
-        size_t idx = (uintptr_t)map_get_default_ex(ssa->symbol_locals, tree, (void*)UINTPTR_MAX);
+        size_t idx = (uintptr_t)map_get_default(ssa->symbol_locals, tree, (void*)UINTPTR_MAX);
         CTASSERTF(idx != UINTPTR_MAX, "local `%s` not found", tree_get_name(tree));
 
         ssa_operand_t local = {
@@ -589,7 +589,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
     }
 
     case eTreeDeclParam: {
-        size_t idx = (uintptr_t)map_get_default_ex(ssa->symbol_locals, tree, (void*)UINTPTR_MAX);
+        size_t idx = (uintptr_t)map_get_default(ssa->symbol_locals, tree, (void*)UINTPTR_MAX);
         CTASSERTF(idx != UINTPTR_MAX, "param `%s` not found", tree_get_name(tree));
 
         ssa_operand_t param = {
@@ -633,7 +633,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
     }
 
     case eTreeDeclFunction: {
-        ssa_symbol_t *fn = map_get_ex(ssa->functions, tree);
+        ssa_symbol_t *fn = map_get(ssa->functions, tree);
         CTASSERT(fn != NULL);
 
         add_dep(ssa, ssa->current_symbol, fn);
@@ -684,7 +684,7 @@ static void add_module_globals(ssa_compile_t *ssa, ssa_module_t *mod, map_t *glo
         ssa_symbol_t *global = symbol_create(ssa, tree, create_storage_type(ssa->types, tree));
 
         vector_push(&mod->globals, global);
-        map_set_ex(ssa->globals, tree, global);
+        map_set(ssa->globals, tree, global);
     }
 }
 
@@ -699,7 +699,7 @@ static void add_module_functions(ssa_compile_t *ssa, ssa_module_t *mod, map_t *f
         ssa_symbol_t *symbol = function_create(ssa, tree);
 
         vector_push(&mod->functions, symbol);
-        map_set_ex(ssa->functions, tree, symbol);
+        map_set(ssa->functions, tree, symbol);
     }
 }
 
@@ -714,7 +714,7 @@ static void add_module_types(ssa_compile_t *ssa, ssa_module_t *mod, map_t *types
         ssa_type_t *type = ssa_type_create_cached(ssa->types, tree);
 
         vector_push(&mod->types, type);
-        map_set_ex(ssa->types, tree, type);
+        map_set(ssa->types, tree, type);
     }
 }
 
@@ -831,15 +831,15 @@ ssa_result_t ssa_compile(map_t *mods)
         .arena = arena,
 
         .modules = vector_new_arena(sizes.modules, arena),
-        .symbol_deps = map_optimal_info(sizes.deps, kTypeInfoPtr, arena),
+        .symbol_deps = map_optimal(sizes.deps, kTypeInfoPtr, arena),
 
-        .globals = map_optimal_info(sizes.globals, kTypeInfoPtr, arena),
-        .functions = map_optimal_info(sizes.functions, kTypeInfoPtr, arena),
-        .types = map_optimal_info(sizes.types, kTypeInfoPtr, arena),
+        .globals = map_optimal(sizes.globals, kTypeInfoPtr, arena),
+        .functions = map_optimal(sizes.functions, kTypeInfoPtr, arena),
+        .types = map_optimal(sizes.types, kTypeInfoPtr, arena),
 
         // TODO: these should be per symbol rather than persistent global
-        .symbol_locals = map_optimal_info(sizes.deps * 4, kTypeInfoPtr, arena),
-        .symbol_loops = map_optimal_info(32, kTypeInfoPtr, arena),
+        .symbol_locals = map_optimal(sizes.deps * 4, kTypeInfoPtr, arena),
+        .symbol_loops = map_optimal(32, kTypeInfoPtr, arena),
     };
 
     map_iter_t iter = map_iter(mods);

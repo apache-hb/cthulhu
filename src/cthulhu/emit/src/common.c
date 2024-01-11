@@ -52,7 +52,7 @@ names_t names_new(size_t size, arena_t *arena)
 {
     names_t names = {
         .counter = 0,
-        .names = map_optimal_info(size, kTypeInfoPtr, arena)
+        .names = map_optimal(size, kTypeInfoPtr, arena)
     };
 
     return names;
@@ -66,17 +66,17 @@ void counter_reset(emit_t *emit)
 
 static char *name_increment(names_t *names, const void *obj, char *existing)
 {
-    char *name = map_get_ex(names->names, obj);
+    char *name = map_get(names->names, obj);
     if (name != NULL) { return name; }
 
     if (existing != NULL)
     {
-        map_set_ex(names->names, obj, existing);
+        map_set(names->names, obj, existing);
         return existing;
     }
 
     char *id = format("%zu", names->counter++);
-    map_set_ex(names->names, obj, id);
+    map_set(names->names, obj, id);
     return id;
 }
 
