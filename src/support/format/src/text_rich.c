@@ -188,7 +188,7 @@ static void print_file_segment(rich_t *rich, const node_t *node, const char *mes
     text_t source = cache_escape_line(file, data_line, config.colours, rich->max_columns);
 
     // get the first line of the message
-    vector_t *lines = str_split(message, "\n");
+    vector_t *lines = str_split_arena(message, "\n", rich->arena);
     char *first = vector_get(lines, 0);
 
     if (vector_len(lines) > 1)
@@ -228,7 +228,7 @@ static void print_segment_message(rich_t *rich, const char *message)
 
     text_config_t config = rich->config;
 
-    vector_t *lines = str_split(message, "\n");
+    vector_t *lines = str_split_arena(message, "\n", rich->arena);
     size_t len = vector_len(lines);
 
     for (size_t i = 0; i < len; i++)
@@ -463,7 +463,7 @@ static void print_extra_files(rich_t *rich)
         return;
 
     // find all remaining files
-    set_t *scans = set_new(sizeof(const scan_t*));
+    set_t *scans = set_new_info(10, kTypeInfoPtr, rich->arena);
     size_t len = typevec_len(event->segments);
     for (size_t i = 0; i < len; i++)
     {
@@ -471,7 +471,7 @@ static void print_extra_files(rich_t *rich)
         CTASSERT(segment != NULL);
 
         const scan_t *scan = node_get_scan(segment->node);
-        set_add_ptr(scans, scan);
+        set_add_ex(scans, scan);
     }
 
     const scan_t *root = node_get_scan(event->node);

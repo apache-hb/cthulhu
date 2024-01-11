@@ -92,7 +92,7 @@ static void update_flags(cfg_field_t *param, const char *value, ap_t *self)
 void ap_on_string(scan_t *scan, cfg_field_t *param, char *value)
 {
     ap_t *self = scan_get_context(scan);
-    vector_t *callbacks = map_get_ptr(self->event_lookup, param);
+    vector_t *callbacks = map_get_ex(self->event_lookup, param);
 
     if (callbacks)
         apply_callbacks(scan, param, value, callbacks);
@@ -123,7 +123,7 @@ void ap_on_string(scan_t *scan, cfg_field_t *param, char *value)
 void ap_on_bool(scan_t *scan, cfg_field_t *param, bool value)
 {
     ap_t *self = scan_get_context(scan);
-    vector_t *callbacks = map_get_ptr(self->event_lookup, param);
+    vector_t *callbacks = map_get_ex(self->event_lookup, param);
 
     if (callbacks)
         apply_callbacks(scan, param, &value, callbacks);
@@ -135,7 +135,7 @@ void ap_on_int(scan_t *scan, cfg_field_t *param, mpz_t value)
 {
     ap_t *self = scan_get_context(scan);
 
-    vector_t *callbacks = map_get_ptr(self->event_lookup, param);
+    vector_t *callbacks = map_get_ex(self->event_lookup, param);
 
     if (callbacks)
         apply_callbacks(scan, param, value, callbacks);

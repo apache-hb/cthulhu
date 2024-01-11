@@ -1,6 +1,5 @@
 #pragma once
 
-#include "core/text.h"
 #include "format/format.h"
 #include "notify/notify.h"
 
@@ -59,15 +58,6 @@ typedef struct source_config_t
     bool zero_indexed_lines;
 } source_config_t;
 
-inline format_context_t format_context_make(print_options_t options)
-{
-    format_context_t context = {
-        .arena = options.arena,
-        .pallete = options.pallete,
-    };
-
-    return context;
-}
-
+format_context_t format_context_make(print_options_t options);
 char *fmt_source_location(source_config_t config, const char *path, where_t where);
 char *fmt_node_location(source_config_t config, const node_t *node);

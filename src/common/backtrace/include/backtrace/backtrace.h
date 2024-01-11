@@ -2,8 +2,10 @@
 
 #include "core/compiler.h"
 #include "core/analyze.h"
+
 #include "core/text.h"
 
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

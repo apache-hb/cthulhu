@@ -29,13 +29,13 @@ static const language_t *add_language_extension(lifetime_t *lifetime, const char
     CTASSERT(ext != NULL);
     CTASSERT(lang != NULL);
 
-    const language_t *old = map_get(lifetime->extensions, ext);
+    const language_t *old = map_get_ex(lifetime->extensions, ext);
     if (old != NULL)
     {
         return old;
     }
 
-    map_set(lifetime->extensions, ext, (void*)lang);
+    map_set_ex(lifetime->extensions, ext, (void*)lang);
     return NULL;
 }
 
@@ -87,8 +87,8 @@ lifetime_t *lifetime_new(mediator_t *mediator, arena_t *arena)
     self->logger = logger;
     self->arena = arena;
 
-    self->extensions = map_optimal(16, arena);
-    self->modules = map_optimal(64, arena);
+    self->extensions = map_optimal_info(16, kTypeInfoString, arena);
+    self->modules = map_optimal_info(64, kTypeInfoString, arena);
 
     cookie_t cookie = {
         .reports = logger,
@@ -145,11 +145,13 @@ const language_t *lifetime_get_language(lifetime_t *lifetime, const char *ext)
     CTASSERT(lifetime != NULL);
     CTASSERT(ext != NULL);
 
-    return map_get(lifetime->extensions, ext);
+    return map_get_ex(lifetime->extensions, ext);
 }
 
 static bool parse_failed(logger_t *reports, const char *path, parse_result_t result)
 {
+    typevec_t *events = logger_get_events(reports);
+
     switch (result.result)
     {
     case eParseInitFailed:
@@ -164,8 +166,7 @@ static bool parse_failed(logger_t *reports, const char *path, parse_result_t res
         return true;
 
     default:
-        // TODO: this needs another rewrite
-        typevec_t *events = logger_get_events(reports);
+        // TODO: this needs another rewrite of the mediator module
         if (typevec_len(events) > 0)
         {
             return true;
@@ -289,7 +290,7 @@ map_t *lifetime_get_modules(lifetime_t *lifetime)
 
     arena_t *arena = lifetime->arena;
 
-    map_t *mods = map_optimal(64, arena);
+    map_t *mods = map_optimal_info(64, kTypeInfoString, arena);
     ARENA_IDENTIFY(arena, mods, "modules", lifetime);
 
     map_iter_t iter = map_iter(lifetime->modules);
@@ -302,7 +303,7 @@ map_t *lifetime_get_modules(lifetime_t *lifetime)
         CTASSERTF(ctx != NULL, "module `%s` is NULL", name);
         CTASSERTF(ctx->root != NULL, "module `%s` has NULL root", name);
 
-        map_set(mods, name, ctx->root);
+        map_set_ex(mods, name, ctx->root);
     }
 
     return mods;

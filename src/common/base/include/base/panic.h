@@ -101,7 +101,7 @@ NORETURN ctpanic(panic_t panic, FMT_STRING const char *msg, ...) CT_PRINTF(2, 3)
 ///
 /// @param expr the condition to assert
 /// @param msg the message to print
-#define CTASSERTM(expr, msg) CTASSERTF(expr, msg)
+#define CTASSERTM(expr, msg) CTASSERTF(expr, "%s", msg)
 
 /// @def CTASSERT(expr)
 /// @brief assert a condition, prints the condition as a message

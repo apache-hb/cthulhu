@@ -5,15 +5,15 @@
 #include <string.h>
 
 USE_DECL
-const char *os_error_string(os_error_t error)
+char *os_error_string(os_error_t error, arena_t *arena)
 {
     int err = (int)error;
 
     const char *str = strerror(err);
     if (str == NULL)
     {
-        return format("errno: %d", err);
+        return str_format(arena, "errno: %d", err);
     }
 
-    return format("%s (%d)", str, err);
+    return str_format(arena, "%s (%d)", str, err);
 }

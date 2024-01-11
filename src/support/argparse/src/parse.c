@@ -160,7 +160,7 @@ int ap_get_opt(scan_t *scan, const char *name, ap_field_t *param, char **value)
     bool negate = false;
     const char *lookup = get_lookup_name(name, &negate, self->arena);
 
-    cfg_field_t *result = map_get(self->name_lookup, lookup);
+    cfg_field_t *result = map_get_ex(self->name_lookup, lookup);
     if (result == NULL)
     {
         *value = arena_strdup(name, self->arena);

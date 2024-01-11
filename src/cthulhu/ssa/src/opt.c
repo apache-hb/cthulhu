@@ -36,8 +36,8 @@ typedef struct ssa_scope_t
 
 static void add_global(ssa_vm_t *vm, ssa_symbol_t *global)
 {
-    CTASSERTF(!set_contains_ptr(vm->globals, global), "global %s already exists", global->name);
-    set_add_ptr(vm->globals, global);
+    CTASSERTF(!set_contains_ex(vm->globals, global), "global %s already exists", global->name);
+    set_add_ex(vm->globals, global);
 }
 
 static void add_globals(ssa_vm_t *vm, const ssa_module_t *module)
@@ -96,6 +96,7 @@ static const ssa_value_t *ssa_opt_load(ssa_scope_t *vm, ssa_load_t step)
 static const ssa_value_t *ssa_opt_return(ssa_scope_t *vm, ssa_return_t step)
 {
     const ssa_value_t *value = ssa_opt_operand(vm, step.value);
+    CTASSERTF(value != NULL, "return value is NULL (inside %s)", vm->symbol->name);
     vm->return_value = value;
     return value;
 }
@@ -277,7 +278,7 @@ static void ssa_opt_block(ssa_scope_t *vm, const ssa_block_t *block)
 
 static void ssa_opt_global(ssa_vm_t *vm, ssa_symbol_t *global)
 {
-    CTASSERTF(set_contains_ptr(vm->globals, global), "global %s does not exist", global->name);
+    CTASSERTF(set_contains_ex(vm->globals, global), "global %s does not exist", global->name);
 
     if (global->value != NULL)
     {
@@ -288,7 +289,7 @@ static void ssa_opt_global(ssa_vm_t *vm, ssa_symbol_t *global)
         .vm = vm,
         .symbol = global,
         .return_value = NULL,
-        .step_values = map_optimal_info(64, kMapInfoPtr, vm->arena)
+        .step_values = map_optimal_info(64, kTypeInfoPtr, vm->arena)
     };
 
     ssa_opt_block(&scope, global->entry);
@@ -305,7 +306,7 @@ void ssa_opt(logger_t *reports, ssa_result_t result)
         .arena = arena,
         .deps = result.deps,
 
-        .globals = set_new_arena(64, arena),
+        .globals = set_new_info(64, kTypeInfoPtr, arena),
     };
 
     size_t len = vector_len(result.modules);

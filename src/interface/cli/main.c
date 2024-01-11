@@ -37,6 +37,7 @@ static const version_info_t kToolVersion = {
 static void parse_source(lifetime_t *lifetime, const char *path)
 {
     logger_t *reports = lifetime_get_logger(lifetime);
+    arena_t *arena = lifetime_get_arena(lifetime);
     const char *ext = str_ext(path);
     if (ext == NULL)
     {
@@ -56,12 +57,13 @@ static void parse_source(lifetime_t *lifetime, const char *path)
         return;
     }
 
-    io_t *io = io_file(path, eAccessRead);
-    if (io_error(io) != 0)
+    io_t *io = io_file_arena(path, eAccessRead, arena);
+    os_error_t err = io_error(io);
+    if (err != 0)
     {
         event_t *id = msg_notify(reports, &kEvent_FailedToOpenSourceFile, node_builtin(),
                                  "failed to open source `%s`", path);
-        msg_note(id, "error: %s", os_error_string(io_error(io)));
+        msg_note(id, "error: %s", os_error_string(err, arena));
         return;
     }
 

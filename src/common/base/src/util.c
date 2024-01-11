@@ -1,4 +1,5 @@
 #include "base/util.h"
+#include "base/text.h"
 
 #include <stdint.h>
 
@@ -13,4 +14,18 @@ size_t ptrhash(const void *ptr)
     key += key << 6;
     key ^= key >> 22;
     return key & SIZE_MAX;
+}
+
+text_t text_make(char *text, size_t size)
+{
+    text_t result = { text, size };
+
+    return result;
+}
+
+text_view_t text_view_make(const char *text, size_t size)
+{
+    text_view_t result = { text, size };
+
+    return result;
 }

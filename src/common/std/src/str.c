@@ -1,5 +1,4 @@
 #include "std/str.h"
-#include "base/log.h"
 #include "std/map.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
@@ -513,7 +512,7 @@ bool str_contains(const char *str, const char *search)
 }
 
 USE_DECL
-char *str_replace(const char *str, const char *search, const char *repl)
+char *str_replace(const char *str, const char *search, const char *repl, arena_t *arena)
 {
     CTASSERT(str != NULL);
     CTASSERT(search != NULL);
@@ -521,10 +520,10 @@ char *str_replace(const char *str, const char *search, const char *repl)
 
     if (strlen(search) == 0)
     {
-        return ctu_strdup(str);
+        return arena_strdup(str, arena);
     }
 
-    vector_t *split = str_split(str, search);
+    vector_t *split = str_split_arena(str, search, arena);
     return str_join(repl, split);
 }
 
@@ -547,13 +546,13 @@ static const map_entry_t *find_matching_key(typevec_t *pairs, const char *str)
 }
 
 USE_DECL
-char *str_replace_many(const char *str, map_t *repl)
+char *str_replace_many(const char *str, const map_t *repl)
 {
     CTASSERT(str != NULL);
     CTASSERT(repl != NULL);
 
     size_t len = 0;
-    typevec_t *pairs = map_entries(repl);
+    typevec_t *pairs = map_entries((map_t*)repl); // TODO: map_entries should have a const version
 
     const char *iter = str;
     while (*iter)
@@ -784,25 +783,31 @@ char *str_trim(const char *str, const char *letters)
 }
 
 USE_DECL
-char *str_erase(const char *str, size_t len, const char *letters)
+char *str_erase(char *str, size_t len, const char *letters)
 {
     CTASSERT(str != NULL);
     CTASSERT(letters != NULL);
 
-    char *result = ctu_strndup(str, len);
+    // start at the back of str and remove letters,
+    // if a letter is removed then the offset doesnt get updated
+    // if a letter isnt removed then the offset gets updated
+    // push any characters that arent removed to the offset and update it
 
-    size_t used = len;
-    for (size_t i = 0; i < used; i++)
+    size_t remaining = len;
+    size_t offset = len;
+    while (remaining > 0)
     {
-        if (char_is_any_of(result[i], letters))
+        if (char_is_any_of(str[remaining - 1], letters))
         {
-            memcpy(result + i, result + i + 1, len - i);
-            used--;
-            i--;
+            remaining--;
+        }
+        else
+        {
+            str[--offset] = str[--remaining];
         }
     }
 
-    return result;
+    return str + offset;
 }
 
 USE_DECL

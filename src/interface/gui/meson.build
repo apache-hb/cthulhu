@@ -53,6 +53,6 @@ executable('gui', src,
     dependencies : [
         imgui, core, os, scan,
         memory, notify, config, defaults,
-        io, runtime, support, ssa, tree
+        io, runtime, support, ssa, tree, backtrace
     ]
 )

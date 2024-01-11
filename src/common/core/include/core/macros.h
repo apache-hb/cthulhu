@@ -36,7 +36,7 @@
 #define MIN(L, R) ((L) < (R) ? (L) : (R))
 
 /// @def ALIGN_POW2(x, align)
-/// aligns @a x to the next power of 2 of @a align
+/// aligns @p X to the next power of 2 of @p ALIGN
 #define ALIGN_POW2(X, ALIGN) (((X) + (ALIGN)-1) & ~((ALIGN)-1))
 
 #define CTU_UNUSED(x) ((void)(x))

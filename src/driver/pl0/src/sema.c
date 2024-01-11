@@ -473,17 +473,18 @@ static void insert_module(tree_t *sema, tree_t *other)
     map_iter_t other_values = map_iter(tree_module_tag(other, ePl0TagValues));
     map_iter_t other_procs = map_iter(tree_module_tag(other, ePl0TagProcs));
 
-    while (map_has_next(&other_values))
+    const char *name = NULL;
+    tree_t *decl = NULL;
+
+    while (CTU_MAP_NEXT(&other_values, &name, &decl))
     {
-        tree_t *decl = map_next(&other_values).value;
         if (!tree_has_vis(decl, eVisiblePublic)) continue;
 
         set_var(sema, ePl0TagImportedValues, tree_get_name(decl), decl);
     }
 
-    while (map_has_next(&other_procs))
+    while (CTU_MAP_NEXT(&other_procs, &name, &decl))
     {
-        tree_t *decl = map_next(&other_procs).value;
         if (!tree_has_vis(decl, eVisiblePublic)) continue;
 
         set_proc(sema, ePl0TagImportedProcs, tree_get_name(decl), decl);

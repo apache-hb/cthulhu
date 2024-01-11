@@ -5,6 +5,7 @@
 #include <vector>
 
 typedef struct io_t io_t;
+typedef struct arena_t arena_t;
 typedef struct language_t language_t;
 typedef struct lifetime_t lifetime_t;
 
@@ -13,7 +14,7 @@ namespace ed
     class Source
     {
     public:
-        Source(const char *str);
+        Source(const char *str, arena_t *arena);
 
         const char *get_title() const { return basename; }
         const char *get_path() const { return path.c_str(); }
@@ -33,6 +34,10 @@ namespace ed
     class SourceList
     {
     public:
+        SourceList(arena_t *arena)
+            : arena(arena)
+        { }
+
         void draw();
 
         std::vector<Source> paths;
@@ -43,6 +48,7 @@ namespace ed
         io_t *get_io(size_t index) const { return paths[index].io; }
 
     private:
+        arena_t *arena;
         char buffer[1024] = {};
     };
 }

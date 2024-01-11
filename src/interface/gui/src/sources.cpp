@@ -10,7 +10,7 @@ using namespace ed;
 
 static constexpr os_access_t kAccess = os_access_t(eAccessRead | eAccessText);
 
-Source::Source(const char *str)
+Source::Source(const char *str, arena_t *arena)
     : path(str)
     , io(io_file(path.c_str(), kAccess))
 {
@@ -24,7 +24,7 @@ Source::Source(const char *str)
     }
     else
     {
-        error_string = os_error_string(err);
+        error_string = os_error_string(err, arena);
     }
 }
 
@@ -54,7 +54,7 @@ void SourceList::draw()
 
     if (open || add)
     {
-        paths.emplace_back(buffer);
+        paths.emplace_back(buffer, arena);
         buffer[0] = '\0';
     }
 

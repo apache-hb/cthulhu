@@ -7,9 +7,9 @@
 #define FORMAT_FLAGS (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS)
 
 USE_DECL
-const char *os_error_string(os_error_t error)
+char *os_error_string(os_error_t error, arena_t *arena)
 {
-    char buffer[0x1000] = {0};
+    char buffer[0x1000];
 
     DWORD written = FormatMessage(
         /* dwFlags = */ FORMAT_FLAGS,
@@ -22,9 +22,9 @@ const char *os_error_string(os_error_t error)
 
     if (written == 0)
     {
-        return format("unknown error (0x%08lX)", (DWORD)error);
+        return str_format(arena, "unknown error (0x%08lX)", (DWORD)error);
     }
 
     char *cleaned = str_erase(buffer, written, "\n\r.");
-    return format("%s (0x%08lX)", cleaned, (DWORD)error);
+    return str_format(arena, "%s (0x%08lX)", cleaned, (DWORD)error);
 }

@@ -15,6 +15,7 @@ namespace ed
         CompileInfo(mediator_t *mediator, const char *name)
             : name(name)
             , mediator(mediator)
+            , sources(&global)
         { }
 
         // run state

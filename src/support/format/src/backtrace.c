@@ -1,4 +1,3 @@
-#include "base/log.h"
 #include "base/panic.h"
 #include "common.h"
 
@@ -280,8 +279,6 @@ static char *fmt_entry(backtrace_t *pass, size_t symbol_align, const entry_t *en
 
     char *it = fmt_right_align(options.arena, symbol_align, "%s", name);
     char *coloured = colour_text(pass->format_context, COLOUR_SYMBOL, it);
-
-    ctu_log("entry: %s", it);
 
     if (needs_seperator)
     {

@@ -2,7 +2,7 @@
 
 #include "core/analyze.h"
 #include "core/compiler.h"
-#include "core/text.h"
+#include "base/text.h"
 
 #include <stddef.h>
 #include <stdbool.h>

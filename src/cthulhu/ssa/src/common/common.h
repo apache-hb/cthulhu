@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/text.h"
+#include "base/text.h"
 #include "cthulhu/ssa/ssa.h"
 
 ///

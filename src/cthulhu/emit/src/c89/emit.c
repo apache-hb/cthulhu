@@ -30,7 +30,7 @@ static c89_source_t *header_for(c89_emit_t *emit, const ssa_module_t *mod, const
 
     io_t *io = fs_open(emit->fs, it, eAccessWrite | eAccessText);
     c89_source_t *source = source_new(io, format("%s.h", path), emit->arena);
-    map_set_ptr(emit->hdrmap, mod, source);
+    map_set_ex(emit->hdrmap, mod, source);
     return source;
 }
 
@@ -41,7 +41,7 @@ static c89_source_t *source_for(c89_emit_t *emit, const ssa_module_t *mod, const
 
     io_t *io = fs_open(emit->fs, it, eAccessWrite | eAccessText);
     c89_source_t *source = source_new(io, it, emit->arena);
-    map_set_ptr(emit->srcmap, mod, source);
+    map_set_ex(emit->srcmap, mod, source);
     return source;
 }
 
@@ -59,7 +59,7 @@ static void collect_deps(c89_emit_t *emit, const ssa_module_t *mod, vector_t *sy
     for (size_t i = 0; i < len; i++)
     {
         const ssa_symbol_t *global = vector_get(symbols, i);
-        map_set_ptr(emit->modmap, global, (ssa_module_t*)mod);
+        map_set_ex(emit->modmap, global, (ssa_module_t*)mod);
     }
 }
 
@@ -111,17 +111,17 @@ static void get_required_headers(c89_emit_t *emit, set_t *requires, const ssa_mo
     for (size_t i = 0; i < len; i++)
     {
         const ssa_symbol_t *global = vector_get(symbols, i);
-        set_t *deps = map_get_ptr(emit->deps, global);
+        set_t *deps = map_get_ex(emit->deps, global);
         if (deps == NULL) { continue; }
 
         set_iter_t iter = set_iter(deps);
         while (set_has_next(&iter))
         {
             const ssa_symbol_t *dep = set_next(&iter);
-            const ssa_module_t *dep_mod = map_get_ptr(emit->modmap, dep);
+            const ssa_module_t *dep_mod = map_get_ex(emit->modmap, dep);
             if (dep_mod != root)
             {
-                set_add_ptr(requires, dep_mod);
+                set_add_ex(requires, dep_mod);
             }
         }
     }
@@ -133,17 +133,17 @@ static void emit_required_headers(c89_emit_t *emit, const ssa_module_t *mod)
     // for symbols that are externally visible
 
     size_t len = vector_len(mod->globals);
-    set_t *requires = set_new(MAX(len, 1)); // set of modules required by this module
+    set_t *requires = set_new_info(MAX(len, 1), kTypeInfoPtr, emit->arena); // set of modules required by this module
 
     get_required_headers(emit, requires, mod, mod->globals);
     get_required_headers(emit, requires, mod, mod->functions);
 
-    c89_source_t *header = map_get_ptr(emit->hdrmap, mod);
+    c89_source_t *header = map_get_ex(emit->hdrmap, mod);
     set_iter_t iter = set_iter(requires);
     while (set_has_next(&iter))
     {
         const ssa_module_t *item = set_next(&iter);
-        c89_source_t *dep = map_get_ptr(emit->hdrmap, item);
+        c89_source_t *dep = map_get_ex(emit->hdrmap, item);
         write_string(header->io, "#include \"%s\"\n", dep->path);
     }
 }
@@ -173,7 +173,7 @@ static const char *format_symbol(c89_emit_t *emit, const ssa_type_t *type, const
 
 void c89_proto_type(c89_emit_t *emit, const ssa_module_t *mod, const ssa_type_t *type)
 {
-    c89_source_t *hdr = map_get_ptr(emit->hdrmap, mod);
+    c89_source_t *hdr = map_get_ex(emit->hdrmap, mod);
     switch (type->kind)
     {
     case eTypeStruct:
@@ -199,13 +199,13 @@ void c89_proto_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbo
     {
         CTASSERT(global->linkage != eLinkModule); // TODO: move this check into the checker
 
-        c89_source_t *hdr = map_get_ptr(emit->hdrmap, mod);
+        c89_source_t *hdr = map_get_ex(emit->hdrmap, mod);
         write_global(emit, hdr->io, global);
         write_string(hdr->io, ";\n");
     }
     else
     {
-        c89_source_t *src = map_get_ptr(emit->srcmap, mod);
+        c89_source_t *src = map_get_ex(emit->srcmap, mod);
         write_global(emit, src->io, global);
         write_string(src->io, ";\n");
     }
@@ -216,8 +216,8 @@ void c89_proto_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_sym
     // dont generate prototypes for entry points
     if (is_entry_point(func->linkage)) { return; }
 
-    c89_source_t *src = map_get_ptr(emit->srcmap, mod);
-    c89_source_t *hdr = map_get_ptr(emit->hdrmap, mod);
+    c89_source_t *src = map_get_ex(emit->srcmap, mod);
+    c89_source_t *hdr = map_get_ex(emit->hdrmap, mod);
 
     const ssa_type_t *type = func->type;
     CTASSERTF(type->kind == eTypeClosure, "expected closure type on %s, got %d", func->name, type->kind);
@@ -287,7 +287,7 @@ static const ssa_type_t *get_operand_type(c89_emit_t *emit, ssa_operand_t operan
     case eOperandReg: {
         const ssa_block_t *bb = operand.vreg_context;
         const ssa_step_t *step = typevec_offset(bb->steps, operand.vreg_index);
-        const ssa_type_t *type = map_get_ptr(emit->stepmap, step);
+        const ssa_type_t *type = map_get_ex(emit->stepmap, step);
         return type;
     }
 
@@ -297,7 +297,7 @@ static const ssa_type_t *get_operand_type(c89_emit_t *emit, ssa_operand_t operan
 
 static void set_step_type(c89_emit_t *emit, const ssa_step_t *step, const ssa_type_t *type)
 {
-    map_set_ptr(emit->stepmap, step, (ssa_type_t*)type);
+    map_set_ex(emit->stepmap, step, (ssa_type_t*)type);
 }
 
 static const char *c89_name_vreg(c89_emit_t *emit, const ssa_step_t *step, const ssa_type_t *type)
@@ -642,7 +642,7 @@ static void define_record(c89_emit_t *emit, io_t *io, const ssa_type_t *type)
 
 void c89_define_type(c89_emit_t *emit, const ssa_module_t *mod, const ssa_type_t *type)
 {
-    c89_source_t *hdr = map_get_ptr(emit->hdrmap, mod);
+    c89_source_t *hdr = map_get_ex(emit->hdrmap, mod);
     switch (type->kind)
     {
     case eTypeStruct:
@@ -671,7 +671,7 @@ static void write_init(c89_emit_t *emit, io_t *io, const ssa_value_t *value)
 
 void c89_define_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *symbol)
 {
-    c89_source_t *src = map_get_ptr(emit->srcmap, mod);
+    c89_source_t *src = map_get_ex(emit->srcmap, mod);
 
     if (symbol->linkage != eLinkImport)
     {
@@ -712,7 +712,7 @@ static void write_consts(c89_emit_t *emit, io_t *io, vector_t *consts)
 
 void c89_define_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *func)
 {
-    c89_source_t *src = map_get_ptr(emit->srcmap, mod);
+    c89_source_t *src = map_get_ex(emit->srcmap, mod);
 
     const ssa_type_t *type = func->type;
     CTASSERTF(type->kind == eTypeClosure, "expected closure type on %s, got %d", func->name, type->kind);
@@ -755,8 +755,8 @@ static void define_symbols(c89_emit_t *emit, const ssa_module_t *mod, vector_t *
 
 static void define_type_ordererd(c89_emit_t *emit, const ssa_module_t *mod, const ssa_type_t *type)
 {
-    if (set_contains_ptr(emit->defined, type)) { return; }
-    set_add_ptr(emit->defined, type);
+    if (set_contains_ex(emit->defined, type)) { return; }
+    set_add_ex(emit->defined, type);
 
     // TODO: this is probably a touch broken, types may be put into the wrong translation
     if (type->kind == eTypeStruct)
@@ -800,13 +800,13 @@ c89_emit_result_t emit_c89(const c89_emit_options_t *options)
             .block_names = names_new(64, arena),
             .vreg_names = names_new(64, arena),
         },
-        .modmap = map_optimal(len * 2, arena),
-        .srcmap = map_optimal(len, arena),
-        .hdrmap = map_optimal(len, arena),
+        .modmap = map_optimal_info(len * 2, kTypeInfoPtr, arena),
+        .srcmap = map_optimal_info(len, kTypeInfoPtr, arena),
+        .hdrmap = map_optimal_info(len, kTypeInfoPtr, arena),
 
-        .stepmap = map_optimal(64, arena),
-        .strmap = map_optimal(64, arena),
-        .defined = set_new(64),
+        .stepmap = map_optimal_info(64, kTypeInfoPtr, arena),
+        .strmap = map_optimal_info(64, kTypeInfoPtr, arena),
+        .defined = set_new_info(64, kTypeInfoPtr, arena),
 
         .fs = opts.fs,
         .deps = opts.deps,

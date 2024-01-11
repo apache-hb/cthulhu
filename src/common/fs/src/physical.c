@@ -118,11 +118,11 @@ static map_t *pfs_query_dirents(fs_t *fs, inode_t *self)
 
     os_iter_t iter = { 0 };
     os_error_t err = os_iter_begin(absolute, &iter, fs->arena);
-    CTASSERTF(err == 0, "failed to query dirents %s (%s)", absolute, os_error_string(err));
+    CTASSERTF(err == 0, "failed to query dirents %s (%s)", absolute, os_error_string(err, fs->arena));
 
     os_dir_t dir = { 0 };
 
-    map_t *dirents = map_new(64, fs->arena);
+    map_t *dirents = map_new_info(64, kTypeInfoString, fs->arena);
 
     while (os_iter_next(&iter, &dir))
     {
@@ -131,7 +131,7 @@ static map_t *pfs_query_dirents(fs_t *fs, inode_t *self)
 
         inode_t *inode = pfs_query_node(fs, self, path);
         CTASSERTF(inode != NULL, "failed to query node %s '%s'", absolute, path);
-        map_set(dirents, path, inode);
+        map_set_ex(dirents, path, inode);
     }
 
     os_iter_end(&iter);
@@ -149,7 +149,7 @@ static inode_t *pfs_file_create(fs_t *fs, inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
     os_error_t err = os_file_create(absolute);
-    CTASSERTF(err == 0, "failed to create file `%s` (%s) %s", absolute, name, os_error_string(err));
+    CTASSERTF(err == 0, "failed to create file `%s` (%s) %s", absolute, name, os_error_string(err, fs->arena));
 
     return physical_file(get_relative(self, name, fs->arena), fs->arena);
 }
@@ -159,7 +159,7 @@ static inode_t *pfs_dir_create(fs_t *fs, inode_t *self, const char *name)
     const char *absolute = get_absolute(fs, self, name);
     bool create = false;
     os_error_t err = mkdir_recursive(absolute, &create, fs->arena);
-    CTASSERTF(err == 0, "failed to create dir `%s` %s", absolute, os_error_string(err));
+    CTASSERTF(err == 0, "failed to create dir `%s` %s", absolute, os_error_string(err, fs->arena));
 
     return physical_dir(get_relative(self, name, fs->arena), fs->arena);
 }
@@ -201,7 +201,7 @@ fs_t *fs_physical(const char *root, arena_t *arena)
         os_error_t err = mkdir_recursive(root, &create, arena);
 
         // TODO: make this work recursively
-        CTASSERTF(err == 0, "error creating root directory: %s. %s", root, os_error_string(err));
+        CTASSERTF(err == 0, "error creating root directory: %s. %s", root, os_error_string(err, arena));
 
         if (!create)
         {

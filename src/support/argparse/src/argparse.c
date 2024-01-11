@@ -30,19 +30,19 @@ static void add_pos_callback(ap_t *self, ap_callback_t *cb)
 
 static void add_arg_callback(ap_t *self, const cfg_field_t *param, ap_callback_t *cb)
 {
-    vector_t *events = map_get_ptr(self->event_lookup, param);
+    vector_t *events = map_get_ex(self->event_lookup, param);
     CTASSERT(events != NULL);
 
     vector_push(&events, cb);
 
-    map_set_ptr(self->event_lookup, param, events);
+    map_set_ex(self->event_lookup, param, events);
 }
 
 /// public api
 
 static void add_arg(ap_t *ap, const char *arg, cfg_field_t *field)
 {
-    const cfg_field_t *existing = map_get_ptr(ap->name_lookup, arg);
+    const cfg_field_t *existing = map_get_ex(ap->name_lookup, arg);
     if (existing != NULL)
     {
         const cfg_info_t *info = cfg_get_info(field);
@@ -50,7 +50,7 @@ static void add_arg(ap_t *ap, const char *arg, cfg_field_t *field)
         NEVER("a flag `%s` already exists (new: %s, old: %s)", arg, info->name, prev->name);
     }
 
-    map_set(ap->name_lookup, arg, field);
+    map_set_ex(ap->name_lookup, arg, field);
 }
 
 static void add_single_field(ap_t *ap, cfg_field_t *field)
@@ -105,8 +105,8 @@ ap_t *ap_new(cfg_group_t *config, arena_t *arena)
 
     self->arena = arena;
 
-    self->name_lookup = map_optimal(256, arena);
-    self->event_lookup = map_optimal(256, arena);
+    self->name_lookup = map_optimal_info(256, kTypeInfoString, arena);
+    self->event_lookup = map_optimal_info(256, kTypeInfoPtr, arena);
 
     self->posarg_callbacks = vector_new_arena(16, arena);
 

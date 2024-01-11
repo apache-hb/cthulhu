@@ -53,7 +53,7 @@ typedef size_t os_error_t;
 ///
 /// @return the string representation of the error code
 NODISCARD RET_STRING
-const char *os_error_string(os_error_t error);
+char *os_error_string(os_error_t error, arena_t *arena);
 
 /// @brief initialize the os api
 /// @note this must be called before using any other os api

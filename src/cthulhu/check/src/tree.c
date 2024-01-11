@@ -8,6 +8,7 @@
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"
 
+#include "memory/memory.h"
 #include "std/vector.h"
 #include "std/set.h"
 #include "std/map.h"
@@ -428,7 +429,7 @@ static void check_expr_recursion(check_t *check, const tree_t *tree)
 
 static void check_global_recursion(check_t *check, const tree_t *global)
 {
-    if (set_contains_ptr(check->checked_exprs, global))
+    if (set_contains_ex(check->checked_exprs, global))
     {
         return;
     }
@@ -457,7 +458,7 @@ static void check_global_recursion(check_t *check, const tree_t *global)
         }
     }
 
-    set_add_ptr(check->checked_exprs, global);
+    set_add_ex(check->checked_exprs, global);
 }
 
 ///
@@ -492,7 +493,7 @@ static void check_struct_type_recursion(check_t *check, const tree_t *type)
 
 static void check_aggregate_recursion(check_t *check, const tree_t *type)
 {
-    if (set_contains_ptr(check->checked_types, type))
+    if (set_contains_ex(check->checked_types, type))
     {
         return;
     }
@@ -523,7 +524,7 @@ static void check_aggregate_recursion(check_t *check, const tree_t *type)
         }
     }
 
-    set_add_ptr(check->checked_types, type);
+    set_add_ex(check->checked_types, type);
 }
 
 ///
@@ -571,7 +572,7 @@ static void check_inner_type_recursion(check_t *check, const tree_t *type)
 
 static void check_type_recursion(check_t *check, const tree_t *type)
 {
-    if (set_contains_ptr(check->checked_types, type))
+    if (set_contains_ex(check->checked_types, type))
     {
         return;
     }
@@ -597,7 +598,7 @@ static void check_type_recursion(check_t *check, const tree_t *type)
         }
     }
 
-    set_add_ptr(check->checked_types, type);
+    set_add_ex(check->checked_types, type);
 }
 
 static void check_any_type_recursion(check_t *check, const tree_t *type)
@@ -664,22 +665,22 @@ static void check_module_valid(check_t *check, const tree_t *mod)
 
 void check_tree(logger_t *reports, map_t *mods)
 {
+    arena_t *arena = get_global_arena();
     check_t check = {
         .reports = reports,
 
         .expr_stack = vector_new(64),
         .type_stack = vector_new(64),
 
-        .checked_exprs = set_new(64),
-        .checked_types = set_new(64)
+        .checked_exprs = set_new_info(64, kTypeInfoPtr, arena),
+        .checked_types = set_new_info(64, kTypeInfoPtr, arena),
     };
 
     map_iter_t iter = map_iter(mods);
-    while (map_has_next(&iter))
+    const char *name = NULL;
+    tree_t *mod = NULL;
+    while (CTU_MAP_NEXT(&iter, &name, &mod))
     {
-        map_entry_t entry = map_next(&iter);
-        tree_t *mod = entry.value;
-
         // TODO: required checks
         // 0. no nodes are of the wrong type
         // 1. no identifiers are invalid

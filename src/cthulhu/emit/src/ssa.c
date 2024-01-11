@@ -298,7 +298,7 @@ static void emit_ssa_locals(ssa_emit_t *emit, io_t *io, typevec_t *locals)
 
 static void emit_symbol_deps(io_t *io, const ssa_symbol_t *symbol, map_t *deps)
 {
-    set_t *all = map_get_ptr(deps, symbol);
+    set_t *all = map_get_ex(deps, symbol);
     if (all != NULL)
     {
         write_string(io, "deps: (");

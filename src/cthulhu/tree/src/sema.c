@@ -30,7 +30,7 @@ static tree_t *tree_module_new(const node_t *node, const char *name,
 
     for (size_t i = 0; i < decls; i++)
     {
-        map_t *map = map_optimal(sizes[i], arena);
+        map_t *map = map_optimal_info(sizes[i], kTypeInfoString, arena);
         ARENA_IDENTIFY(arena, map, "module_tag", self);
         vector_set(self->tags, i, map);
     }
@@ -47,7 +47,7 @@ tree_t *tree_module_root(logger_t *reports, cookie_t *cookie, const node_t *node
         /* parent = */ NULL,
         /* cookie = */ cookie,
         /* reports = */ reports,
-        /* extra = */ map_optimal(64, arena),
+        /* extra = */ map_optimal_info(64, kTypeInfoPtr, arena),
         decls, sizes);
 }
 
@@ -63,7 +63,7 @@ void *tree_module_get(tree_t *self, size_t tag, const char *name)
     CTASSERT(name != NULL);
 
     map_t *map = tree_module_tag(self, tag);
-    tree_t *old = map_get(map, name);
+    tree_t *old = map_get_ex(map, name);
     if (old != NULL)
     {
         return old;
@@ -86,7 +86,7 @@ void *tree_module_set(tree_t *self, size_t tag, const char *name, void *value)
     }
 
     map_t *map = tree_module_tag(self, tag);
-    map_set(map, name, value);
+    map_set_ex(map, name, value);
 
     return NULL;
 }
@@ -109,12 +109,12 @@ void *tree_get_extra(tree_t *self, const void *key)
 {
     TREE_EXPECT(self, eTreeDeclModule);
 
-    return map_get_ptr(self->extra, key);
+    return map_get_ex(self->extra, key);
 }
 
 void tree_set_extra(tree_t *self, const void *key, void *data)
 {
     TREE_EXPECT(self, eTreeDeclModule);
 
-    map_set_ptr(self->extra, key, data);
+    map_set_ex(self->extra, key, data);
 }

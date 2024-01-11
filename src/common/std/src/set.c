@@ -1,9 +1,8 @@
 #include "std/set.h"
 #include "std/str.h"
 
-#include "memory/memory.h"
+#include "memory/arena.h"
 #include "base/panic.h"
-#include "base/util.h"
 
 /**
  * @brief a node in a chain of set entries
@@ -17,15 +16,10 @@ typedef struct item_t
 typedef struct set_t
 {
     arena_t *arena; ///< the arena this set is allocated in
+    type_info_t info;
     FIELD_RANGE(>, 0) size_t size;   ///< the number of buckets
-    FIELD_SIZE(size) item_t items[]; ///< the buckets
+    FIELD_SIZE(size) item_t *items; ///< the buckets
 } set_t;
-
-NODISCARD
-static size_t set_size(size_t size)
-{
-    return sizeof(set_t) + (sizeof(item_t) * size);
-}
 
 static item_t *item_new(const char *key, arena_t *arena)
 {
@@ -41,50 +35,52 @@ static item_t *get_bucket_from_hash(set_t *set, size_t hash)
     return &set->items[index];
 }
 
-static item_t *get_bucket_str(set_t *set, const char *key)
+static void clear_items(set_t *set)
 {
-    size_t hash = strhash(key);
-    return get_bucket_from_hash(set, hash);
+    for (size_t i = 0; i < set->size; i++)
+    {
+        item_t *item = &set->items[i];
+        item->key = NULL;
+        item->next = NULL;
+    }
 }
 
-static item_t *get_bucket_ptr(set_t *set, const void *key)
-{
-    size_t hash = ptrhash(key);
-    return get_bucket_from_hash(set, hash);
-}
-
-USE_DECL
-set_t *set_new_arena(size_t size, arena_t *arena)
+set_t *set_new_info(size_t size, type_info_t info, arena_t *arena)
 {
     CTASSERT(size > 0);
+    CTASSERT(arena != NULL);
 
-    set_t *set = ARENA_MALLOC(arena, set_size(size), "set", NULL);
+    set_t *set = ARENA_MALLOC(arena, sizeof(set_t), "set", NULL);
     set->arena = arena;
+    set->info = info;
     set->size = size;
+    set->items = ARENA_MALLOC(arena, sizeof(item_t) * size, "items", set);
 
-    for (size_t i = 0; i < size; i++)
-    {
-        set->items[i].key = NULL;
-        set->items[i].next = NULL;
-    }
+    clear_items(set);
 
     return set;
 }
 
-USE_DECL
-set_t *set_new(size_t size)
+static item_t *impl_get_bucket(set_t *set, const void *key)
 {
-    arena_t *arena = get_global_arena();
-    return set_new_arena(size, arena);
+    type_info_t info = set->info;
+    CTASSERT(info.hash != NULL);
+
+    size_t hash = info.hash(key);
+    return get_bucket_from_hash(set, hash);
 }
 
-USE_DECL
-const char *set_add(set_t *set, const char *key)
+static bool impl_keys_equal(const set_t *set, const void *lhs, const void *rhs)
 {
-    CTASSERT(set != NULL);
-    CTASSERT(key != NULL);
+    type_info_t info = set->info;
+    CTASSERT(info.equals != NULL);
 
-    item_t *item = get_bucket_str(set, key);
+    return info.equals(lhs, rhs);
+}
+
+const void *set_add_ex(set_t *set, const void *key)
+{
+    item_t *item = impl_get_bucket(set, key);
 
     while (true)
     {
@@ -94,7 +90,7 @@ const char *set_add(set_t *set, const char *key)
             return key;
         }
 
-        if (str_equal(item->key, key))
+        if (impl_keys_equal(set, item->key, key))
         {
             return item->key;
         }
@@ -110,15 +106,13 @@ const char *set_add(set_t *set, const char *key)
             return key;
         }
     }
+
+    NEVER("unreachable");
 }
 
-USE_DECL
-bool set_contains(set_t *set, const char *key)
+bool set_contains_ex(const set_t *set, const void *key)
 {
-    CTASSERT(set != NULL);
-    CTASSERT(key != NULL);
-
-    item_t *item = get_bucket_str(set, key);
+    item_t *item = impl_get_bucket((set_t*)set, key);
 
     while (true)
     {
@@ -127,7 +121,7 @@ bool set_contains(set_t *set, const char *key)
             return false;
         }
 
-        if (str_equal(item->key, key))
+        if (impl_keys_equal(set, item->key, key))
         {
             return true;
         }
@@ -141,26 +135,25 @@ bool set_contains(set_t *set, const char *key)
             return false;
         }
     }
+
+    NEVER("unreachable");
 }
 
-USE_DECL
-const void *set_add_ptr(set_t *set, const void *key)
+void set_delete_ex(set_t *set, const void *key)
 {
-    CTASSERT(set != NULL);
-
-    item_t *item = get_bucket_ptr(set, key);
+    item_t *item = impl_get_bucket(set, key);
 
     while (true)
     {
         if (item->key == NULL)
         {
-            item->key = key;
-            return key;
+            return;
         }
 
-        if (item->key == key)
+        if (impl_keys_equal(set, item->key, key))
         {
-            return item->key;
+            item->key = NULL;
+            return;
         }
 
         if (item->next != NULL)
@@ -169,41 +162,11 @@ const void *set_add_ptr(set_t *set, const void *key)
         }
         else
         {
-            item->next = item_new(key, set->arena);
-            ARENA_REPARENT(set->arena, item->next, item);
-            return key;
+            return;
         }
     }
-}
 
-USE_DECL
-bool set_contains_ptr(set_t *set, const void *key)
-{
-    CTASSERT(set != NULL);
-
-    item_t *item = get_bucket_ptr(set, key);
-
-    while (true)
-    {
-        if (item->key == NULL)
-        {
-            return false;
-        }
-
-        if (item->key == key)
-        {
-            return true;
-        }
-
-        if (item->next != NULL)
-        {
-            item = item->next;
-        }
-        else
-        {
-            return false;
-        }
-    }
+    NEVER("unreachable");
 }
 
 USE_DECL

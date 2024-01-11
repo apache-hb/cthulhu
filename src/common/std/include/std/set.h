@@ -1,10 +1,8 @@
 #pragma once
 
 #include "core/analyze.h"
-#include "core/compiler.h"
 
-#include <stdbool.h>
-#include <stddef.h>
+#include "std/typed/info.h"
 
 BEGIN_API
 
@@ -17,45 +15,11 @@ typedef struct set_t set_t;
 typedef struct item_t item_t;
 typedef struct arena_t arena_t;
 
-NODISCARD
-set_t *set_new_arena(size_t size, arena_t *arena);
+set_t *set_new_info(size_t size, type_info_t info, arena_t *arena);
 
-/**
- * @brief create a new set with a given number of buckets
- *
- * @param size the number of buckets
- * @return the created set
- */
-NODISCARD
-set_t *set_new(size_t size);
-
-/**
- * @brief add a string to a set
- *
- * @param set the set to add to
- * @param key the key to add
- * @return a pointer to the deduplicated key
- */
-const char *set_add(IN_NOTNULL set_t *set, IN_NOTNULL const char *key);
-
-/**
- * @brief add a pointer to a set
- *
- * @param set the set to add to
- * @param key the key to add
- * @return a pointer to the deduplicated key
- */
-const void *set_add_ptr(IN_NOTNULL set_t *set, const void *key);
-
-/**
- * @brief check if a set contains a key
- *
- * @param set the set to check
- * @param key the key to check
- * @return true if the set contains the key
- */
-NODISCARD CONSTFN
-bool set_contains(IN_NOTNULL set_t *set, IN_STRING const char *key);
+const void *set_add_ex(IN_NOTNULL set_t *set, const void *key);
+bool set_contains_ex(IN_NOTNULL const set_t *set, const void *key);
+void set_delete_ex(IN_NOTNULL set_t *set, const void *key);
 
 /**
  * @brief check if a set contains a ptr key

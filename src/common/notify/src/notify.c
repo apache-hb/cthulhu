@@ -66,12 +66,12 @@ bool logger_has_errors(const logger_t *logs, notify_rules_t rules)
             return true;
 
         case eSeverityWarn:
-            if (set_contains_ptr(rules.ignored_warnings, diagnostic))
+            if (set_contains_ex(rules.ignored_warnings, diagnostic))
             {
                 continue;
             }
 
-            if (set_contains_ptr(rules.warnings_as_errors, diagnostic))
+            if (set_contains_ex(rules.warnings_as_errors, diagnostic))
             {
                 return true;
             }

@@ -1,6 +1,6 @@
 #include "backtrace/backtrace.h"
 
-#include <inttypes.h>
+#include <stdio.h>
 
 void bt_init(void) { }
 
@@ -18,5 +18,6 @@ void bt_read_inner(bt_frame_t callback, void *user)
 
 void bt_resolve_inner(const frame_t *frame, symbol_t *symbol)
 {
-    snprintf(symbol->name, sizeof(symbol->name), "0x%016" PRIXLEAST64, frame->address);
+    text_t name = symbol->name;
+    snprintf(name.text, name.size, "%" PRI_ADDRESS, frame->address);
 }

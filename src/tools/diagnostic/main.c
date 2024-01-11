@@ -134,10 +134,10 @@ typedef struct diag_search_t
 
 static void add_diagnostic(diag_search_t *ctx, const diagnostic_t *diag)
 {
-    const diagnostic_t *old = map_get(ctx->ids, diag->id);
-    CTASSERTF(old == NULL, "duplicate diagnostic id: %s", diag->id);
+    const diagnostic_t *old = map_get_ex(ctx->ids, diag->id);
+    CTASSERTF(old == NULL, "duplicate diagnostic id: %s (old message %s)", diag->id, old->brief);
 
-    map_set(ctx->ids, diag->id, (diagnostic_t*)diag);
+    map_set_ex(ctx->ids, diag->id, (diagnostic_t*)diag);
     typevec_push(ctx->diagnostics, diag);
 }
 
@@ -281,7 +281,7 @@ int main(int argc, const char **argv)
     size_t count = count_diagnostics(&langs) + common.count;
 
     diag_search_t ctx = {
-        .ids = map_optimal(count, arena),
+        .ids = map_optimal_info(count, kTypeInfoString, arena),
         .diagnostics = typevec_new(sizeof(diagnostic_t), count, arena),
     };
 
@@ -348,7 +348,7 @@ int main(int argc, const char **argv)
     for (size_t i = 0; i < posarg_count; i++)
     {
         const char *arg = vector_get(posargs, i);
-        const diagnostic_t *diag = map_get(ctx.ids, arg);
+        const diagnostic_t *diag = map_get_ex(ctx.ids, arg);
         if (diag == NULL)
         {
             io_printf(io, "unknown diagnostic: %s\n", arg);

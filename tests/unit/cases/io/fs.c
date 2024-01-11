@@ -17,7 +17,7 @@ int main(void)
 
     char cwd[1024];
     os_error_t err = os_dir_current(cwd, sizeof(cwd));
-    CTASSERTF(err == 0, "os_dir_current() failed with error %s", os_error_string(err));
+    CTASSERTF(err == 0, "os_dir_current() failed with error %s", os_error_string(err, arena));
 
     {
         test_group_t group = test_group(&suite, "physical");

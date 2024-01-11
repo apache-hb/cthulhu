@@ -6,7 +6,8 @@ src = [
     'src/str.c',
     'src/vector.c',
 
-    'src/typed/vector.c'
+    'src/typed/vector.c',
+    'src/typed/info.c'
 ]
 
 libstd = library('std', src,

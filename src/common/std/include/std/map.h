@@ -1,10 +1,8 @@
 #pragma once
 
 #include "core/analyze.h"
-#include "core/compiler.h"
 
-#include <stdbool.h>
-#include <stddef.h>
+#include "std/typed/info.h"
 
 BEGIN_API
 
@@ -19,18 +17,6 @@ typedef struct bucket_t bucket_t;
 typedef struct map_t map_t;
 typedef struct arena_t arena_t;
 
-typedef size_t (*hash_fn_t)(const void *key);
-typedef bool (*equals_fn_t)(const void *lhs, const void *rhs);
-
-typedef struct map_info_t
-{
-    hash_fn_t hash;
-    equals_fn_t equals;
-} map_info_t;
-
-extern const map_info_t kMapInfoString;
-extern const map_info_t kMapInfoPtr;
-
 ///
 /// the map makes some assumptions about keys
 /// - identical pointers are equal
@@ -38,8 +24,6 @@ extern const map_info_t kMapInfoPtr;
 /// - NULL is the empty value
 /// - key lifetimes are externally managed and valid for the lifetime of the map
 ///
-
-map_t *map_new(size_t size, IN_NOTNULL arena_t *arena);
 
 /**
  * create a map with an optimal number of buckets
@@ -49,66 +33,15 @@ map_t *map_new(size_t size, IN_NOTNULL arena_t *arena);
  *
  * @return a new map
  */
-map_t *map_optimal(size_t size, IN_NOTNULL arena_t *arena);
 
-map_t *map_new_info(size_t size, map_info_t info, IN_NOTNULL arena_t *arena);
-map_t *map_optimal_info(size_t size, map_info_t info, IN_NOTNULL arena_t *arena);
-
-/**
- * set or overwrite a value in a map
- *
- * @param map the map to set the value in
- * @param key the key to set the value for
- * @param value the value to set
- */
-void map_set(IN_NOTNULL map_t *map, IN_STRING const char *key, void *value);
-void map_set_ptr(IN_NOTNULL map_t *map, const void *key, void *value);
+map_t *map_new_info(size_t size, type_info_t info, IN_NOTNULL arena_t *arena);
+map_t *map_optimal_info(size_t size, type_info_t info, IN_NOTNULL arena_t *arena);
 
 void map_set_ex(IN_NOTNULL map_t *map, IN_NOTNULL const void *key, void *value);
 void *map_get_ex(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key);
 void *map_get_default_ex(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key, void *other);
 bool map_contains_ex(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key);
 void map_delete_ex(IN_NOTNULL map_t *map, IN_NOTNULL const void *key);
-
-/**
- * get a value from a map
- *
- * @param map the map to get the value from
- * @param key the key to get the value for
- *
- * @return the value for the key or NULL if the key is not found
- */
-NODISCARD CONSTFN
-void *map_get(IN_NOTNULL map_t *map, IN_STRING const char *key);
-
-
-NODISCARD CONSTFN
-void *map_get_ptr(IN_NOTNULL map_t *map, const void *key);
-
-/**
- * @brief get a value from a map or a default value if the key is not found
- *
- * @param map the map to get the value from
- * @param key the key to get the value for
- * @param other the default value to return if the key is not found
- *
- * @return the value for the key or the default value if the key is not found
- */
-NODISCARD CONSTFN
-void *map_get_default(IN_NOTNULL map_t *map, IN_STRING const char *key, void *other);
-
-NODISCARD CONSTFN
-void *map_get_default_ptr(IN_NOTNULL map_t *map, const void *key, void *other);
-
-NODISCARD CONSTFN
-bool map_contains(IN_NOTNULL map_t *map, IN_STRING const char *key);
-
-NODISCARD CONSTFN
-bool map_contains_ptr(IN_NOTNULL map_t *map, const void *key);
-
-void map_delete(IN_NOTNULL map_t *map, IN_STRING const char *key);
-
-void map_delete_ptr(IN_NOTNULL map_t *map, const void *key);
 
 /**
  * @brief collect all the values in a map into a vector
@@ -151,6 +84,11 @@ map_iter_t map_iter(IN_NOTNULL map_t *map);
 
 NODISCARD
 map_entry_t map_next(IN_NOTNULL map_iter_t *iter);
+
+NODISCARD
+bool map_next_ex(IN_NOTNULL map_iter_t *iter, const void **key, void **value);
+
+#define CTU_MAP_NEXT(iter, key, value) map_next_ex(iter, (const void **)(key), (void **)(value))
 
 NODISCARD CONSTFN
 bool map_has_next(IN_NOTNULL map_iter_t *iter);

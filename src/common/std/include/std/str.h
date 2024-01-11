@@ -194,10 +194,11 @@ bool str_contains(IN_STRING const char *str, IN_STRING const char *search);
 /// @param str the string to replace elements in
 /// @param search the substring to replace
 /// @param repl the replacement substring
+/// @param arena the arena to allocate the new string in
 ///
 /// @return a copy of @p str with all instances of @p search replaced with @p repl
 NODISCARD
-char *str_replace(IN_STRING const char *str, IN_STRING const char *search, IN_STRING const char *repl);
+char *str_replace(IN_STRING const char *str, IN_STRING const char *search, IN_STRING const char *repl, arena_t *arena);
 
 /// @brief replace all instances of a each substring in a string with provided replacement
 ///
@@ -206,7 +207,7 @@ char *str_replace(IN_STRING const char *str, IN_STRING const char *search, IN_ST
 ///
 /// @return a copy of @p str with all instances of substrings in @p repl replaced
 NODISCARD
-char *str_replace_many(IN_STRING const char *str, IN_NOTNULL map_t *repl);
+char *str_replace_many(IN_STRING const char *str, IN_NOTNULL const map_t *repl);
 
 /// @brief trim leading and trailing characters from a string
 ///
@@ -223,9 +224,9 @@ char *str_trim(IN_STRING const char *str, IN_STRING const char *letters);
 /// @param len the length of @p str
 /// @param letters the letters to erase
 ///
-/// @return the string with letters removed
+/// @param @p str with all instances of @p letters removed
 NODISCARD
-char *str_erase(IN_READS(len) const char *str, size_t len, IN_STRING const char *letters);
+char *str_erase(IN_READS(len) char *str, size_t len, IN_STRING const char *letters);
 
 /// @brief hash a string
 ///

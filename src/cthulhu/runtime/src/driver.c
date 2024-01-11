@@ -55,13 +55,13 @@ context_t *add_context(lifetime_t *lifetime, vector_t *path, context_t *mod)
 
     char *name = path_to_string(path);
 
-    context_t *old = map_get(lifetime->modules, name);
+    context_t *old = map_get_ex(lifetime->modules, name);
     if (old != NULL)
     {
         return old;
     }
 
-    map_set(lifetime->modules, name, mod);
+    map_set_ex(lifetime->modules, name, mod);
     return NULL;
 }
 
@@ -71,7 +71,7 @@ context_t *get_context(lifetime_t *lifetime, vector_t *path)
 
     char *name = path_to_string(path);
 
-    return map_get(lifetime->modules, name);
+    return map_get_ex(lifetime->modules, name);
 }
 
 USE_DECL

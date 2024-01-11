@@ -28,6 +28,7 @@
 
 #include "argparse/argparse.h"
 
+#include <stdalign.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -59,8 +60,14 @@ static io_t *make_file(const char *path, os_access_t flags)
 typedef struct user_ptr_t
 {
     uint32_t size;
+    uint32_t pad0;
+    uint32_t pad1;
+    uint32_t pad2;
+
     FIELD_SIZE(size) char data[];
 } user_ptr_t;
+
+STATIC_ASSERT(sizeof(user_ptr_t) == 16, "user_ptr_t must be 16 byte aligned");
 
 typedef struct user_arena_t
 {
@@ -75,14 +82,18 @@ typedef struct user_arena_t
 
 static user_ptr_t *get_memory(user_arena_t *arena, size_t size)
 {
-    CTASSERTF(arena->memory_cursor + size + sizeof(user_ptr_t) < arena->memory_end,
+    size_t aligned = ALIGN_POW2(size, 16);
+    size_t space = aligned + sizeof(user_ptr_t); // required space
+
+    CTASSERTF(arena->memory_cursor + space < arena->memory_end,
               "out of memory");
 
-    // TODO: align all allocations to 16 bytes
-
     user_ptr_t *ptr = (user_ptr_t *)arena->memory_cursor;
+
+    // align the pointer itself
+    ptr = (user_ptr_t *)ALIGN_POW2((uintptr_t)ptr, 16);
     ptr->size = (uint32_t)size;
-    arena->memory_cursor += size + sizeof(user_ptr_t);
+    arena->memory_cursor = (char *)ptr + aligned + sizeof(user_ptr_t);
 
     arena->alloc_count++;
 
@@ -272,7 +283,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
 
     char cwd[1024];
     os_error_t err = os_dir_current(cwd, 1024);
-    CTASSERTF(err == 0, "failed to get cwd %s", os_error_string(err));
+    CTASSERTF(err == 0, "failed to get cwd %s", os_error_string(err, arena));
 
     const char *test_dir = format("%s" NATIVE_PATH_SEPARATOR "test-out", cwd);
     const char *run_dir = format("%s" NATIVE_PATH_SEPARATOR "%s", test_dir, argv[1]);
@@ -307,7 +318,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
 
     bool create = false;
     os_error_t cwd_err = os_dir_create(lib_dir, &create);
-    CTASSERTF(cwd_err == 0, "failed to create dir `%s` %s", lib_dir, os_error_string(cwd_err));
+    CTASSERTF(cwd_err == 0, "failed to create dir `%s` %s", lib_dir, os_error_string(cwd_err, arena));
 
     int status = system(
         format("cl /nologo /c %s /I%s\\include /Fo%s\\", str_join(" ", sources), run_dir, lib_dir));

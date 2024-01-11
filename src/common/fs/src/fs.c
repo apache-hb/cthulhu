@@ -349,12 +349,10 @@ static sync_result_t sync_dir(fs_t *dst, fs_t *src, inode_t *dst_node, inode_t *
 {
     map_t *dirents = query_dirents(src, src_node);
     map_iter_t iter = map_iter(dirents);
-    while (map_has_next(&iter))
+    const char *name = NULL;
+    inode_t *child = NULL;
+    while (CTU_MAP_NEXT(&iter, &name, &child))
     {
-        map_entry_t entry = map_next(&iter);
-        const char *name = entry.key;
-        inode_t *child = entry.value;
-
         inode_t *other = get_inode_for(dst, dst_node, name, child->type);
         if (other == NULL)
         {
