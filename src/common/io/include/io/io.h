@@ -11,11 +11,8 @@
 
 BEGIN_API
 
-/// @defgroup IO Generic IO objects
-/// @ingroup Common
+/// @ingroup IO
 /// @{
-
-typedef struct arena_t arena_t;
 
 /// @brief destroy an IO object
 ///

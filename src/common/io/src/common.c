@@ -9,6 +9,10 @@ void *io_data(io_t *io)
 {
     CTASSERT(io != NULL);
 
+    // return past the end of the object to get the user data region.
+    // we do this rather than have a flexible array member because
+    // C requires structs with flexible arrays are always the last
+    // member of a struct, but io_t is a header struct.
     return io + 1;
 }
 
