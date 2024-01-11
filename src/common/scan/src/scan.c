@@ -1,6 +1,7 @@
 #include "base/panic.h"
 
 #include "base/text.h"
+#include "core/text.h"
 #include "io/io.h"
 #include "memory/arena.h"
 
@@ -91,12 +92,7 @@ text_view_t scan_source(const scan_t *scan)
 {
     CTASSERT(scan != NULL);
 
-    text_view_t text = {
-        .text = scan->mapped,
-        .size = scan->size
-    };
-
-    return text;
+    return text_view_make(scan->mapped, scan->size);
 }
 
 USE_DECL
@@ -124,9 +120,9 @@ scan_t *scan_io(const char *language, io_t *io, arena_t *arena)
     os_error_t err = io_error(io);
     const char *path = io_name(io);
 
+    CTASSERT(arena != NULL);
     CTASSERTF(err == 0, "io_error(%s) = %s", path, os_error_string(err, arena));
     CTASSERT(language != NULL);
-    CTASSERT(arena != NULL);
 
     scan_t *self = ARENA_MALLOC(arena, sizeof(scan_t), path, io);
 

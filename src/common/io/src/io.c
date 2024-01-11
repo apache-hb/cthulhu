@@ -1,3 +1,4 @@
+#include "io/io.h"
 #include "io/impl.h"
 
 #include "base/panic.h"
@@ -56,7 +57,7 @@ size_t io_vprintf(io_t *io, const char *fmt, va_list args)
     CTASSERT(io != NULL);
 
     const io_callbacks_t *cb = io->cb;
-    if (cb->fn_write_format)
+    if (cb->fn_write_format != NULL)
     {
         return cb->fn_write_format(io, fmt, args);
     }

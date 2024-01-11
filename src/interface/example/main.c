@@ -60,7 +60,7 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
 
 static io_t *make_file(logger_t *reports, const char *path, os_access_t flags, arena_t *arena)
 {
-    io_t *io = io_file_arena(path, flags, arena);
+    io_t *io = io_file(path, flags, arena);
     os_error_t err = io_error(io);
     if (err != 0)
     {

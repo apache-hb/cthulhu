@@ -7,6 +7,8 @@
 #include <stddef.h>
 #include <stdarg.h>
 
+#include "io/impl.h"
+
 BEGIN_API
 
 /// @defgroup IO Generic IO objects
@@ -14,12 +16,6 @@ BEGIN_API
 /// @{
 
 typedef struct arena_t arena_t;
-
-/// @brief an opaque handle to an IO object
-typedef struct io_t io_t;
-
-/// @brief an io error code
-typedef os_error_t io_error_t;
 
 /// @brief destroy an IO object
 ///
@@ -30,13 +26,11 @@ void io_close(OUT_PTR_INVALID io_t *io);
 ///
 /// @param path the path to the file
 /// @param mode the access mode of the file
+/// @param arena the arena to allocate from
 ///
 /// @return the io object, or NULL on error
 NODISCARD CT_ALLOC(io_close)
-io_t *io_file(const char *path, os_access_t mode);
-
-NODISCARD CT_ALLOC(io_close)
-io_t *io_file_arena(const char *path, os_access_t mode, arena_t *arena);
+io_t *io_file(const char *path, os_access_t mode, arena_t *arena);
 
 /// @brief create an IO object from an initial view of memory
 /// @note this copies @p size bytes from @p data into a new buffer
@@ -150,7 +144,6 @@ size_t io_size(IN_NOTNULL io_t *io);
 /// @return the offset after seeking
 NODISCARD
 size_t io_seek(IN_NOTNULL io_t *io, size_t offset);
-
 
 /// @brief map an io objects backing into memory
 ///

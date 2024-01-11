@@ -9,7 +9,7 @@ void *io_data(io_t *io)
 {
     CTASSERT(io != NULL);
 
-    return io->data;
+    return io + 1;
 }
 
 io_t *io_new(const io_callbacks_t *cb, os_access_t flags, const char *name, const void *data,
@@ -30,7 +30,7 @@ io_t *io_new(const io_callbacks_t *cb, os_access_t flags, const char *name, cons
     if (size > 0)
     {
         CTASSERT(data != NULL);
-        memcpy(io->data, data, size);
+        memcpy(io_data(io), data, size);
     }
 
     io->cb = cb;

@@ -348,7 +348,7 @@ text_cache_t *cache_emplace_file(cache_map_t *map, const char *path)
     text_cache_t *cache = map_get(map->map, path);
     if (cache != NULL && cache_is_valid(cache)) return cache;
 
-    io_t *io = io_file(path, eAccessRead | eAccessText);
+    io_t *io = io_file(path, eAccessRead | eAccessText, map->arena);
     text_cache_t *text = text_cache_io(io, map->arena);
 
     // always insert the cache, even if it is invalid.

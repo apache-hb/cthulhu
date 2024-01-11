@@ -50,10 +50,11 @@
 //     .version = NEW_VERSION(0, 0, 1),
 // };
 
-static io_t *make_file(const char *path, os_access_t flags)
+static io_t *make_file(const char *path, os_access_t flags, arena_t *arena)
 {
-    io_t *io = io_file(path, flags);
-    CTASSERTF(io_error(io) == 0, "failed to open file `%s`", path);
+    io_t *io = io_file(path, flags, arena);
+    os_error_t err = io_error(io);
+    CTASSERTF(err == 0, "failed to open file `%s` (%s)", path, os_error_string(err, arena));
     return io;
 }
 
@@ -230,7 +231,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
         const char *ext = str_ext(path);
         const language_t *lang = lifetime_get_language(lifetime, ext);
 
-        io_t *io = make_file(path, eAccessRead | eAccessText);
+        io_t *io = make_file(path, eAccessRead | eAccessText, arena);
 
         lifetime_parse(lifetime, lang, io);
 

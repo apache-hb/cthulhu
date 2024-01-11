@@ -9,7 +9,7 @@ typedef struct node_t
     where_t where; ///< the location of this node in the source file
 } node_t;
 
-static const node_t kBuiltinNode = {
+static const node_t kNodeBuiltin = {
     .scan = &kScanBuiltin,
     .where = { 0, 0, 0, 0 }
 };
@@ -17,7 +17,7 @@ static const node_t kBuiltinNode = {
 USE_DECL
 const node_t *node_builtin(void)
 {
-    return &kBuiltinNode;
+    return &kNodeBuiltin;
 }
 
 USE_DECL

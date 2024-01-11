@@ -57,7 +57,7 @@ static void parse_source(lifetime_t *lifetime, const char *path)
         return;
     }
 
-    io_t *io = io_file_arena(path, eAccessRead, arena);
+    io_t *io = io_file(path, eAccessRead, arena);
     os_error_t err = io_error(io);
     if (err != 0)
     {

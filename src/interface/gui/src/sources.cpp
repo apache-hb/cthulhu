@@ -1,6 +1,5 @@
 #include "editor/sources.hpp"
 
-#include "cthulhu/runtime/interface.h"
 #include "imgui/imgui.h"
 
 #include "io/io.h"
@@ -12,7 +11,7 @@ static constexpr os_access_t kAccess = os_access_t(eAccessRead | eAccessText);
 
 Source::Source(const char *str, arena_t *arena)
     : path(str)
-    , io(io_file(path.c_str(), kAccess))
+    , io(io_file(path.c_str(), kAccess, arena))
 {
     basename = str_filename(path.c_str());
 

@@ -1,9 +1,16 @@
 #pragma once
 
-#include "io/io.h"
+#include "os/os.h"
+#include <stddef.h>
+#include <stdarg.h>
 
 /// @ingroup IO
 /// @{
+
+typedef struct io_t io_t;
+
+/// @brief an io error code
+typedef os_error_t io_error_t;
 
 /// @brief io object read callback
 ///
@@ -23,6 +30,15 @@ typedef size_t (*io_read_t)(io_t *self, void *dst, size_t size);
 /// @return the total number of bytes copied into the io object
 typedef size_t (*io_write_t)(io_t *self, const void *src, size_t size);
 
+/// @brief io write format callback
+/// seperate from @a io_write_t to allow for more efficient implementations
+/// if this is not provided, @a io_write_t will be used instead
+///
+/// @param self the invoked io object
+/// @param fmt the format string
+/// @param args the format arguments
+///
+/// @return the total number of bytes copied into the io object
 typedef size_t (*io_write_format_t)(io_t *self, const char *fmt, va_list args);
 
 /// @brief io size callback
@@ -54,7 +70,7 @@ typedef const void *(*io_map_t)(io_t *self);
 /// destroy an io objects backing data and any associated resources
 ///
 /// @param self the io object
-typedef void (*io_close_t)(OUT_PTR_INVALID io_t *self);
+typedef void (*io_close_t)(io_t *self);
 
 /// @brief io callback interface
 typedef struct io_callbacks_t
@@ -67,6 +83,9 @@ typedef struct io_callbacks_t
     /// may be NULL on non-writable objects
     io_write_t fn_write;
 
+    /// @brief write format callback
+    /// may be NULL on non-writable objects
+    /// @note if this is NULL, @a fn_write will be used instead
     io_write_format_t fn_write_format;
 
     /// @brief total size callback
@@ -98,13 +117,11 @@ typedef struct io_t
     /// @brief the access flags for this object
     os_access_t flags;
 
+    /// @brief the arena this object was allocated from
     arena_t *arena;
 
     /// @brief the name of this object
     const char *name;
-
-    /// @brief user data space
-    char data[];
 } io_t;
 
 /// @brief get the user data from an io object
@@ -134,6 +151,6 @@ io_t *io_new(
     IN_STRING const char *name,
     IN_READS(size) const void *data,
     IN_RANGE(>, 0) size_t size,
-    arena_t *arena);
+    IN_NOTNULL arena_t *arena);
 
 /// @}

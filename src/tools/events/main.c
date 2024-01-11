@@ -142,7 +142,7 @@ int main(int argc, const char **argv)
         return EXIT_ERROR;
     }
 
-    io_t *source_io = io_file_arena(source_out, eAccessWrite | eAccessText, arena);
+    io_t *source_io = io_file(source_out, eAccessWrite | eAccessText, arena);
     os_error_t source_err = io_error(source_io);
     if (source_err)
     {
@@ -154,7 +154,7 @@ int main(int argc, const char **argv)
     io_printf(source_io, "#define NEW_EVENT(id, ...) const diagnostic_t kEvent##_id = __VA_ARGS__;\n");
     io_printf(source_io, "#include \"%s\"\n\n", setup_in);
 
-    io_t *header_io = io_file_arena(header_out, eAccessWrite | eAccessText, arena);
+    io_t *header_io = io_file(header_out, eAccessWrite | eAccessText, arena);
     os_error_t header_err = io_error(header_io);
     if (header_err)
     {
