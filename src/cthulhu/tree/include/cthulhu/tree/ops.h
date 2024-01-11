@@ -6,12 +6,8 @@ BEGIN_API
 
 typedef enum quals_t
 {
-    eQualUnknown = (0 << 0), ///< defer to the inner type for the qualifiers
-
-    eQualConst = (1 << 0),
-    eQualMutable = (1 << 1),
-    eQualVolatile = (1 << 2),
-    eQualAtomic = (1 << 3),
+#define TYPE_QUALIFIER(ID, NAME, FLAG) ID = (FLAG),
+#include "tree.inc"
 } quals_t;
 
 /**

@@ -1,6 +1,5 @@
 #include "common.h"
 
-#include "core/macros.h"
 #include "cthulhu/tree/query.h"
 
 #include "std/vector.h"
@@ -18,7 +17,6 @@ static tree_t *tree_module_new(const node_t *node, const char *name,
     CTASSERT(reports != NULL);
 
     arena_t *arena = get_global_arena();
-    CTU_UNUSED(arena); // arena is only used when memory tracking is enabled
 
     tree_t *self = tree_decl(eTreeDeclModule, node, NULL, name, eQualUnknown);
     self->parent = parent;
@@ -32,7 +30,7 @@ static tree_t *tree_module_new(const node_t *node, const char *name,
 
     for (size_t i = 0; i < decls; i++)
     {
-        map_t *map = map_optimal(sizes[i]);
+        map_t *map = map_optimal(sizes[i], arena);
         ARENA_IDENTIFY(arena, map, "module_tag", self);
         vector_set(self->tags, i, map);
     }
@@ -42,12 +40,14 @@ static tree_t *tree_module_new(const node_t *node, const char *name,
 
 tree_t *tree_module_root(logger_t *reports, cookie_t *cookie, const node_t *node, const char *name, size_t decls, const size_t *sizes)
 {
+    arena_t *arena = get_global_arena();
+
     return tree_module_new(
         node, name,
         /* parent = */ NULL,
         /* cookie = */ cookie,
         /* reports = */ reports,
-        /* extra = */ map_optimal(64),
+        /* extra = */ map_optimal(64, arena),
         decls, sizes);
 }
 

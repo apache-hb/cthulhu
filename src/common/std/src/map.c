@@ -7,6 +7,22 @@
 #include "std/typed/vector.h"
 #include "std/vector.h"
 
+static size_t info_ptr_hash(const void *key) { return ptrhash(key); }
+static bool info_ptr_equal(const void *lhs, const void *rhs) { return lhs == rhs; }
+
+static size_t info_str_hash(const void *key) { return strhash(key); }
+static bool info_str_equal(const void *lhs, const void *rhs) { return str_equal(lhs, rhs); }
+
+const map_info_t kMapInfoPtr = {
+    .hash = info_ptr_hash,
+    .equals = info_ptr_equal,
+};
+
+const map_info_t kMapInfoString = {
+    .hash = info_str_hash,
+    .equals = info_str_equal,
+};
+
 /// @brief how many buckets to search for after the current bucket
 /// with open addressing
 #define MAP_OPEN_ADDRESS_LENGTH 2
@@ -30,6 +46,7 @@ typedef struct bucket_t
 typedef struct map_t
 {
     arena_t *arena;                   ///< the arena this map is allocated in
+    map_info_t info;                  ///< the key info for this map
     size_t size;                      ///< the number of buckets in the toplevel
     FIELD_SIZE(size) bucket_t data[]; ///< the buckets
 } map_t;
@@ -67,6 +84,12 @@ static bucket_t *map_get_bucket(map_t *map, size_t hash)
     return map_bucket_at(map, index);
 }
 
+static const bucket_t *map_get_bucket_const(const map_t *map, size_t hash)
+{
+    size_t index = hash % map->size;
+    return &map->data[index];
+}
+
 static void clear_keys(bucket_t *buckets, size_t size)
 {
     for (size_t i = 0; i < size; i++)
@@ -77,7 +100,26 @@ static void clear_keys(bucket_t *buckets, size_t size)
 }
 
 USE_DECL
-map_t *map_new_arena(size_t size, arena_t *arena)
+map_t *map_new_info(size_t size, map_info_t info, arena_t *arena)
+{
+    CTASSERT(size > 0);
+
+    CTASSERT(info.equals != NULL);
+    CTASSERT(info.hash != NULL);
+
+    map_t *map = ARENA_MALLOC(arena, sizeof_map(size), "map", NULL);
+
+    map->arena = arena;
+    map->info = info;
+    map->size = size;
+
+    clear_keys(map->data, size);
+
+    return map;
+}
+
+USE_DECL
+map_t *map_new(size_t size, arena_t *arena)
 {
     CTASSERT(size > 0);
 
@@ -110,7 +152,7 @@ vector_t *map_values(map_t *map)
 {
     CTASSERT(map != NULL);
 
-    vector_t *result = vector_new(map->size);
+    vector_t *result = vector_new_arena(map->size, map->arena);
 
     MAP_FOREACH_APPLY(map, entry, { vector_push(&result, entry->value); });
 
@@ -152,6 +194,167 @@ size_t map_count(map_t *map)
 
     return count;
 }
+
+
+// info functions
+
+static size_t impl_key_hash(const map_t *map, const void *key)
+{
+    const map_info_t *info = &map->info;
+    CTASSERTM(info->hash != NULL, "map is missing typeinfo, did you use map_new_info?");
+    return info->hash(key);
+}
+
+static bool impl_key_equal(const map_t *map, const void *lhs, const void *rhs)
+{
+    const map_info_t *info = &map->info;
+    CTASSERTM(info->equals != NULL, "map is missing typeinfo, did you use map_new_info?");
+    return info->equals(lhs, rhs);
+}
+
+static const bucket_t *impl_bucket_get_const(const map_t *map, const void *key)
+{
+    size_t hash = impl_key_hash(map, key);
+    return map_get_bucket_const(map, hash);
+}
+
+static bucket_t *impl_bucket_get(map_t *map, const void *key)
+{
+    size_t hash = impl_key_hash(map, key);
+    return map_get_bucket(map, hash);
+}
+
+static bool impl_entry_exists(const map_t *map, const bucket_t *bucket, const void *key)
+{
+    CTASSERT(bucket != NULL);
+
+    if (impl_key_equal(map, bucket->key, key))
+        return true;
+
+    if (bucket->next != NULL)
+        return impl_entry_exists(map, bucket->next, key);
+
+    return false;
+}
+
+// delete a bucket and reparent the next bucket
+static void impl_delete_bucket(bucket_t *previous, bucket_t *entry)
+{
+    CTASSERT(entry != NULL);
+
+    entry->key = NULL;
+    entry->value = NULL;
+
+    if (previous != NULL)
+    {
+        previous->next = entry->next;
+    }
+}
+
+static bool impl_insert_into_bucket(const map_t *map, bucket_t *bucket, const void *key, void *value)
+{
+    if (bucket->key != NULL)
+        return false;
+
+    if (!impl_key_equal(map, bucket->key, key))
+        return false;
+
+    bucket->key = key;
+    bucket->value = value;
+    return true;
+}
+
+USE_DECL
+void map_set_ex(map_t *map, const void *key, void *value)
+{
+    CTASSERT(map != NULL);
+    CTASSERT(key != NULL);
+
+    // follow the chain
+    bucket_t *bucket = impl_bucket_get(map, key);
+    while (true)
+    {
+        if (impl_insert_into_bucket(map, bucket, key, value))
+            return;
+
+        if (bucket->next == NULL)
+        {
+            bucket->next = bucket_new(key, value, map->arena);
+            ARENA_REPARENT(map->arena, bucket->next, bucket);
+            return;
+        }
+
+        bucket = bucket->next;
+    }
+}
+
+USE_DECL
+void *map_get_ex(const map_t *map, const void *key)
+{
+    CTASSERT(map != NULL);
+    CTASSERT(key != NULL);
+
+    return map_get_default_ex(map, key, NULL);
+}
+
+USE_DECL
+void *map_get_default_ex(const map_t *map, const void *key, void *other)
+{
+    CTASSERT(map != NULL);
+    CTASSERT(key != NULL);
+
+    const bucket_t *bucket = impl_bucket_get_const(map, key);
+    while (bucket != NULL)
+    {
+        if (impl_key_equal(map, bucket, key))
+            return bucket->value;
+
+        bucket = bucket->next;
+    }
+
+    return other;
+}
+
+USE_DECL
+bool map_contains_ex(const map_t *map, const void *key)
+{
+    CTASSERT(map != NULL);
+    CTASSERT(key != NULL);
+
+    const bucket_t *bucket = impl_bucket_get_const(map, key);
+    return impl_entry_exists(map, bucket, key);
+}
+
+USE_DECL
+void map_delete_ex(map_t *map, const void *key)
+{
+    CTASSERT(map != NULL);
+    CTASSERT(key != NULL);
+
+    bucket_t *entry = impl_bucket_get(map, key);
+    bucket_t *previous = entry;
+
+    while (entry != NULL)
+    {
+        if (entry->key == NULL)
+            break;
+
+        if (impl_key_equal(map, entry->key, key))
+        {
+            impl_delete_bucket(previous, entry);
+            break;
+        }
+
+        previous = entry;
+        entry = entry->next;
+    }
+}
+
+
+
+
+
+
 
 // string key map functions
 
@@ -321,19 +524,6 @@ static void *entry_get_ptr(const bucket_t *entry, const void *key, void *other)
     return other;
 }
 
-static void delete_bucket(bucket_t *previous, bucket_t *entry)
-{
-    CTASSERT(entry != NULL);
-
-    entry->key = NULL;
-    entry->value = NULL;
-
-    if (previous != NULL)
-    {
-        previous->next = entry->next;
-    }
-}
-
 static bool try_insert_into_ptr_bucket(bucket_t *bucket, const void *key, void *value)
 {
     if (bucket->key == NULL || bucket->key == key)
@@ -490,7 +680,7 @@ void map_delete(map_t *map, const char *key)
     {
         if (entry->key && str_equal(entry->key, key))
         {
-            delete_bucket(previous, entry);
+            impl_delete_bucket(previous, entry);
             break;
         }
 
@@ -513,7 +703,7 @@ void map_delete_ptr(map_t *map, const void *key)
     {
         if (entry->key == key)
         {
-            delete_bucket(previous, entry);
+            impl_delete_bucket(previous, entry);
             break;
         }
 

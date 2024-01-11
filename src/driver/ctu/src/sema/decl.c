@@ -10,6 +10,7 @@
 #include "cthulhu/util/util.h"
 #include "cthulhu/util/type.h"
 
+#include "memory/memory.h"
 #include "std/map.h"
 #include "std/vector.h"
 #include "std/str.h"
@@ -75,17 +76,17 @@ static void ctu_resolve_global(tree_t *sema, tree_t *self, void *user)
 
     CTASSERT(expr != NULL || type != NULL);
 
-    const tree_t *realType = expr == NULL ? type : tree_get_type(expr);
+    const tree_t *real_type = expr == NULL ? type : tree_get_type(expr);
 
-    size_t size = ctu_resolve_storage_size(realType);
-    const tree_t *ty = ctu_resolve_storage_type(realType);
+    size_t size = ctu_resolve_storage_size(real_type);
+    const tree_t *ty = ctu_resolve_storage_type(real_type);
 
     tree_storage_t storage = {
         .storage = ty,
         .size = size,
         .quals = decl->mut ? eQualMutable : eQualConst
     };
-    self->type = tree_type_reference(self->node, self->name, realType);
+    self->type = tree_type_reference(self->node, self->name, real_type);
     tree_set_storage(self, storage);
     tree_close_global(self, expr);
 }
@@ -106,7 +107,8 @@ static vector_t *ctu_collect_fields(tree_t *sema, tree_t *self, ctu_t *decl)
     ctu_sema_t inner = ctu_sema_init(sema, self, vector_new(0));
     size_t len = vector_len(decl->fields);
 
-    map_t *fields = map_optimal(len);
+    arena_t *arena = get_global_arena();
+    map_t *fields = map_optimal(len, arena);
 
     vector_t *items = vector_of(len);
     for (size_t i = 0; i < len; i++)

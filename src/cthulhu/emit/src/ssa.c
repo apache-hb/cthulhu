@@ -375,11 +375,12 @@ static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
 ssa_emit_result_t emit_ssa(const ssa_emit_options_t *options)
 {
     const emit_options_t opts = options->opts;
+    arena_t *arena = opts.arena;
     ssa_emit_t emit = {
         .emit = {
             .reports = opts.reports,
-            .block_names = names_new(64),
-            .vreg_names = names_new(64),
+            .block_names = names_new(64, arena),
+            .vreg_names = names_new(64, arena),
         },
         .fs = opts.fs,
         .deps = opts.deps

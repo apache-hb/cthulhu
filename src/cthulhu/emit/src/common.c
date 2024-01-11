@@ -48,11 +48,11 @@ static void names_reset(names_t *names)
     names->counter = 0;
 }
 
-names_t names_new(size_t size)
+names_t names_new(size_t size, arena_t *arena)
 {
     names_t names = {
         .counter = 0,
-        .names = map_optimal(size)
+        .names = map_optimal(size, arena)
     };
 
     return names;

@@ -122,7 +122,7 @@ static map_t *pfs_query_dirents(fs_t *fs, inode_t *self)
 
     os_dir_t dir = { 0 };
 
-    map_t *dirents = map_new_arena(64, fs->arena);
+    map_t *dirents = map_new(64, fs->arena);
 
     while (os_iter_next(&iter, &dir))
     {

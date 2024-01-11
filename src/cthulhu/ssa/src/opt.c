@@ -64,7 +64,7 @@ static const ssa_value_t *ssa_opt_operand(ssa_scope_t *vm, ssa_operand_t operand
     {
     case eOperandEmpty: return NULL;
     case eOperandImm: return operand.value;
-    case eOperandReg: return map_get_ptr(vm->step_values, get_step_indexed(operand.vreg_context, operand.vreg_index));
+    case eOperandReg: return map_get_ex(vm->step_values, get_step_indexed(operand.vreg_context, operand.vreg_index));
     case eOperandConst: return vector_get(vm->symbol->consts, operand.constant);
     case eOperandGlobal: {
         const ssa_symbol_t *global = operand.global;
@@ -269,7 +269,7 @@ static void ssa_opt_block(ssa_scope_t *vm, const ssa_block_t *block)
     {
         const ssa_step_t *step = typevec_offset(block->steps, i);
         const ssa_value_t *value = ssa_opt_step(vm, step);
-        map_set_ptr(vm->step_values, step, (void*)value);
+        map_set_ex(vm->step_values, step, (void*)value);
 
         if (vm->return_value != NULL) { return; }
     }
@@ -288,7 +288,7 @@ static void ssa_opt_global(ssa_vm_t *vm, ssa_symbol_t *global)
         .vm = vm,
         .symbol = global,
         .return_value = NULL,
-        .step_values = map_optimal_arena(64, vm->arena)
+        .step_values = map_optimal_info(64, kMapInfoPtr, vm->arena)
     };
 
     ssa_opt_block(&scope, global->entry);

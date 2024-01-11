@@ -1,4 +1,5 @@
 #include "std/str.h"
+#include "base/log.h"
 #include "std/map.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
@@ -38,14 +39,14 @@ char *str_vformat(arena_t *arena, const char *fmt, va_list args)
     va_copy(again, args);
 
     // get the number of bytes needed to format
-    int len = vsnprintf(NULL, 0, fmt, args) + 1;
+    int len = vsnprintf(NULL, 0, fmt, args);
 
     CTASSERTF(len > 0, "vformat failed to format string: %s", fmt);
 
-    char *out = arena_malloc(len, "vformat", arena, arena);
+    char *out = ARENA_MALLOC(arena, len + 1, "vformat", NULL);
 
-    int result = vsnprintf(out, len, fmt, again);
-    CTASSERTF(result == len - 1, "vformat failed to format string: %s (%d == %d - 1)", fmt, result, len);
+    int result = vsnprintf(out, len + 1, fmt, again);
+    CTASSERTF(result == len, "vformat failed to format string: %s expected (%d == %d)", fmt, result, len);
 
     va_end(again);
 

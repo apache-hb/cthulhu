@@ -19,9 +19,27 @@ typedef struct bucket_t bucket_t;
 typedef struct map_t map_t;
 typedef struct arena_t arena_t;
 
-map_t *map_new_arena(size_t size, IN_NOTNULL arena_t *arena);
+typedef size_t (*hash_fn_t)(const void *key);
+typedef bool (*equals_fn_t)(const void *lhs, const void *rhs);
 
-map_t *map_optimal_arena(size_t size, IN_NOTNULL arena_t *arena);
+typedef struct map_info_t
+{
+    hash_fn_t hash;
+    equals_fn_t equals;
+} map_info_t;
+
+extern const map_info_t kMapInfoString;
+extern const map_info_t kMapInfoPtr;
+
+///
+/// the map makes some assumptions about keys
+/// - identical pointers are equal
+/// - copying the pointer is allowed
+/// - NULL is the empty value
+/// - key lifetimes are externally managed and valid for the lifetime of the map
+///
+
+map_t *map_new(size_t size, IN_NOTNULL arena_t *arena);
 
 /**
  * create a map with an optimal number of buckets
@@ -31,8 +49,10 @@ map_t *map_optimal_arena(size_t size, IN_NOTNULL arena_t *arena);
  *
  * @return a new map
  */
-NODISCARD
-map_t *map_optimal(size_t size);
+map_t *map_optimal(size_t size, IN_NOTNULL arena_t *arena);
+
+map_t *map_new_info(size_t size, map_info_t info, IN_NOTNULL arena_t *arena);
+map_t *map_optimal_info(size_t size, map_info_t info, IN_NOTNULL arena_t *arena);
 
 /**
  * set or overwrite a value in a map
@@ -43,6 +63,12 @@ map_t *map_optimal(size_t size);
  */
 void map_set(IN_NOTNULL map_t *map, IN_STRING const char *key, void *value);
 void map_set_ptr(IN_NOTNULL map_t *map, const void *key, void *value);
+
+void map_set_ex(IN_NOTNULL map_t *map, IN_NOTNULL const void *key, void *value);
+void *map_get_ex(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key);
+void *map_get_default_ex(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key, void *other);
+bool map_contains_ex(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key);
+void map_delete_ex(IN_NOTNULL map_t *map, IN_NOTNULL const void *key);
 
 /**
  * get a value from a map

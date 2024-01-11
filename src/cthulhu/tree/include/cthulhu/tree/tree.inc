@@ -119,8 +119,10 @@ SIGN_KIND(eSignSigned,   "signed")
 #   define TREE_BUILTIN(ID, STR)
 #endif
 
-TREE_BUILTIN(eBuiltinSizeOf, "sizeof")
-TREE_BUILTIN(eBuiltinAlignOf, "alignof")
+TREE_BUILTIN(eBuiltinSizeOf,    "sizeof")
+TREE_BUILTIN(eBuiltinAlignOf,   "alignof")
+TREE_BUILTIN(eBuiltinOffsetOf,  "offsetof")
+TREE_BUILTIN(eBuiltinUUIDOf,    "uuidof") // __uuidof from msvc
 
 #undef TREE_BUILTIN
 
@@ -128,10 +130,12 @@ TREE_BUILTIN(eBuiltinAlignOf, "alignof")
 #   define TYPE_QUALIFIER(ID, STR, BIT)
 #endif
 
-TYPE_QUALIFIER(eQualDefault, "default", (0 << 0))
+TYPE_QUALIFIER(eQualUnknown, "unknown", (0 << 0))
 TYPE_QUALIFIER(eQualConst, "const", (1 << 0))
-TYPE_QUALIFIER(eQualVolatile, "volatile", (1 << 1))
-TYPE_QUALIFIER(eQualAtomic, "atomic", (1 << 2))
+TYPE_QUALIFIER(eQualMutable, "mutable", (1 << 1))
+TYPE_QUALIFIER(eQualVolatile, "volatile", (1 << 2))
+TYPE_QUALIFIER(eQualAtomic, "atomic", (1 << 3))
+TYPE_QUALIFIER(eQualRestrict, "restrict", (1 << 4))
 
 #undef TYPE_QUALIFIER
 
@@ -230,3 +234,11 @@ TREE_JUMP(eJumpBreak, "break")
 TREE_JUMP(eJumpContinue, "continue")
 
 #undef TREE_JUMP
+
+#ifndef ATTRIB_KIND
+#   define ATTRIB_KIND(ID, NAME)
+#endif
+
+ATTRIB_KIND(eAttribEmitName, "emit_name")
+
+#undef ATTRIB_KIND

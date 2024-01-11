@@ -22,7 +22,7 @@ typedef struct emit_t
 char *begin_module(emit_t *emit, fs_t *fs, const ssa_module_t *mod);
 void end_module(emit_t *emit);
 
-names_t names_new(size_t size);
+names_t names_new(size_t size, arena_t *arena);
 void counter_reset(emit_t *emit);
 
 char *get_step_name(emit_t *emit, const ssa_step_t *step);

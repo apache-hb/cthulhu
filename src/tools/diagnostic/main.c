@@ -281,7 +281,7 @@ int main(int argc, const char **argv)
     size_t count = count_diagnostics(&langs) + common.count;
 
     diag_search_t ctx = {
-        .ids = map_optimal_arena(count, arena),
+        .ids = map_optimal(count, arena),
         .diagnostics = typevec_new(sizeof(diagnostic_t), count, arena),
     };
 

@@ -105,8 +105,8 @@ ap_t *ap_new(cfg_group_t *config, arena_t *arena)
 
     self->arena = arena;
 
-    self->name_lookup = map_optimal_arena(256, arena);
-    self->event_lookup = map_optimal_arena(256, arena);
+    self->name_lookup = map_optimal(256, arena);
+    self->event_lookup = map_optimal(256, arena);
 
     self->posarg_callbacks = vector_new_arena(16, arena);
 

@@ -87,8 +87,8 @@ lifetime_t *lifetime_new(mediator_t *mediator, arena_t *arena)
     self->logger = logger;
     self->arena = arena;
 
-    self->extensions = map_optimal_arena(16, arena);
-    self->modules = map_optimal_arena(64, arena);
+    self->extensions = map_optimal(16, arena);
+    self->modules = map_optimal(64, arena);
 
     cookie_t cookie = {
         .reports = logger,
@@ -289,7 +289,7 @@ map_t *lifetime_get_modules(lifetime_t *lifetime)
 
     arena_t *arena = lifetime->arena;
 
-    map_t *mods = map_optimal_arena(64, arena);
+    map_t *mods = map_optimal(64, arena);
     ARENA_IDENTIFY(arena, mods, "modules", lifetime);
 
     map_iter_t iter = map_iter(lifetime->modules);

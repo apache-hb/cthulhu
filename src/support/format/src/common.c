@@ -1,5 +1,6 @@
 #include "common.h"
 
+#include "base/log.h"
 #include "core/macros.h"
 #include "core/text.h"
 #include "io/io.h"
@@ -154,6 +155,8 @@ size_t get_num_width(size_t num)
 
 char *fmt_left_align(arena_t *arena, size_t width, const char *fmt, ...)
 {
+    CTASSERT(width >= 1);
+
     va_list args;
     va_start(args, fmt);
     char *msg = str_vformat(arena, fmt, args);
@@ -176,6 +179,8 @@ char *fmt_left_align(arena_t *arena, size_t width, const char *fmt, ...)
 
 char *fmt_right_align(arena_t *arena, size_t width, const char *fmt, ...)
 {
+    CTASSERTF(width >= 1, "width must be at least 1 (%zu given)", width);
+
     va_list args;
     va_start(args, fmt);
     char *msg = str_vformat(arena, fmt, args);
@@ -192,6 +197,8 @@ char *fmt_right_align(arena_t *arena, size_t width, const char *fmt, ...)
     result[width] = '\0';
 
     arena_free(msg, size, arena);
+
+    ctu_log("fmt_right_align: %s", result);
 
     return result;
 }
@@ -252,7 +259,7 @@ static text_cache_t *text_cache_new(io_t *io, text_view_t source, size_t len, ar
     cache->io = io;
     cache->source = source;
     cache->line_info = typevec_new(sizeof(lineinfo_t), len, arena);
-    cache->cached_lines = map_optimal_arena(len, arena);
+    cache->cached_lines = map_optimal(len, arena);
 
     return cache;
 }
@@ -318,7 +325,7 @@ cache_map_t *cache_map_new(size_t size)
 
     cache_map_t *data = ARENA_MALLOC(arena, sizeof(cache_map_t), "cache_map", NULL);
     data->arena = arena;
-    data->map = map_optimal_arena(size, arena);
+    data->map = map_optimal(size, arena);
 
     return data;
 }

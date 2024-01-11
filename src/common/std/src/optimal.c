@@ -1,9 +1,10 @@
-#include "memory/memory.h"
 #include "std/map.h"
+
+#include "memory/arena.h"
 
 #include <stdint.h>
 
-static size_t kSizeAnchors[] = {
+static const size_t kSizeAnchors[] = {
     10, 100, 1000,
     10000, 50000, 100000,
     250000, 500000, 750000, 1000000
@@ -79,14 +80,15 @@ static size_t select_best_size(size_t size)
 }
 
 USE_DECL
-map_t *map_optimal_arena(size_t size, arena_t *arena)
+map_t *map_optimal(size_t size, arena_t *arena)
 {
     size_t bucket = select_best_size(size);
-    return map_new_arena(bucket, arena);
+    return map_new(bucket, arena);
 }
 
 USE_DECL
-map_t *map_optimal(size_t size)
+map_t *map_optimal_info(size_t size, map_info_t info, arena_t *arena)
 {
-    return map_optimal_arena(size, get_global_arena());
+    size_t bucket = select_best_size(size);
+    return map_new_info(bucket, info, arena);
 }

@@ -26,14 +26,14 @@ int main(void)
 
     {
         test_group_t group = test_group(&suite, "construction");
-        GROUP_EXPECT_PASS(group, "not null", map_new_arena(3, arena) != NULL);
+        GROUP_EXPECT_PASS(group, "not null", map_new(3, arena) != NULL);
     }
 
     // insert string
     {
         test_group_t group = test_group(&suite, "insert_str");
 
-        map_t *map = map_new_arena(64, arena);
+        map_t *map = map_new(64, arena);
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
             map_set(map, kSetItems[i], (char*)kSetItems[i]);
         }
@@ -47,7 +47,7 @@ int main(void)
     // insert ptr
     {
         test_group_t group = test_group(&suite, "insert_ptr");
-        map_t *map = map_new_arena(64, arena);
+        map_t *map = map_new(64, arena);
 
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
             map_set_ptr(map, kSetItems[i], (char*)kSetItems[i]);
@@ -62,7 +62,7 @@ int main(void)
     {
         test_group_t group = test_group(&suite, "default value");
         GROUP_EXPECT_PASS2(group, "default value", {
-            map_t *map = map_new_arena(64, arena);
+            map_t *map = map_new(64, arena);
             char world[] = "world";
 
             /* pointer equality is on purpose */
@@ -73,7 +73,7 @@ int main(void)
     // iter
     {
         test_group_t group = test_group(&suite, "iter");
-        map_t *map = map_new_arena(64, arena);
+        map_t *map = map_new(64, arena);
 
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
         {
@@ -99,7 +99,7 @@ int main(void)
     // get
     {
         test_group_t group = test_group(&suite, "get");
-        map_t *map = map_new_arena(64, arena);
+        map_t *map = map_new(64, arena);
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
         {
             map_set(map, kSetItems[i], (char*)kSetItems[i]);
@@ -119,7 +119,7 @@ int main(void)
     // delete
     {
         test_group_t group = test_group(&suite, "delete");
-        map_t *map = map_new_arena(64, arena);
+        map_t *map = map_new(64, arena);
         for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
         {
             map_set(map, kSetItems[i], (char*)kSetItems[i]);

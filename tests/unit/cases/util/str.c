@@ -119,7 +119,7 @@ int main(void)
     {
         test_group_t group = test_group(&suite, "str_replace_many");
         GROUP_EXPECT_PASS2(group, "replace many", {
-            map_t *entries = map_optimal_arena(64, arena);
+            map_t *entries = map_optimal(64, arena);
             map_set(entries, "hello", (void *)"world");
             map_set(entries, "world", (void *)"hello");
             map_set(entries, "!", (void *)"?");
@@ -129,12 +129,12 @@ int main(void)
             CTASSERT( str_equal(result, "world___hello?"));
         });
         GROUP_EXPECT_PANIC(group, "null entry", {
-            map_t *entries = map_optimal_arena(64, arena);
+            map_t *entries = map_optimal(64, arena);
             map_set(entries, "hello", NULL);
 
             (void)str_replace_many("hello world!", entries);
         });
-        GROUP_EXPECT_PANIC(group, "null str", (void)str_replace_many(NULL, map_new_arena(1, arena)));
+        GROUP_EXPECT_PANIC(group, "null str", (void)str_replace_many(NULL, map_new(1, arena)));
         GROUP_EXPECT_PANIC(group, "null map", (void)str_replace_many("hello world!", NULL));
         GROUP_EXPECT_PANIC(group, "null all", (void)str_replace_many(NULL, NULL));
     }

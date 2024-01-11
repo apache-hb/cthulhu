@@ -83,6 +83,19 @@ const char *digit_name(digit_t digit)
     }
 }
 
+#define STRING_LENGTH kQualStringLen
+#define FLAG_COUNT kQualFlagsCount
+
+static const size_t kQualFlagsCount = 1
+#define TYPE_QUALIFIER(ID, STR, BIT) + 1
+#include "cthulhu/tree/tree.inc"
+;
+
+static const size_t kQualStringLen = sizeof(
+#define TYPE_QUALIFIER(ID, STR, BIT) STR
+#include "cthulhu/tree/tree.inc"
+);
+
 const char *quals_name(quals_t quals)
 {
 #define TYPE_QUALIFIER(ID, STR, BIT) if (quals & (BIT)) { vector_push(&names, (char*)(STR)); }
