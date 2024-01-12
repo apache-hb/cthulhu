@@ -1,5 +1,5 @@
 def setPtr(ptr: *int) {
-    ptr[0] = 25;
+    *ptr = 25;
 }
 
 @entry(cli)

@@ -329,7 +329,9 @@ static tree_t *sema_deref_lvalue(ctu_sema_t *sema, const ctu_t *expr)
         return inner;
     }
 
-    tree_t *index = ctu_sema_rvalue(sema, expr->index, ctu_get_int_type(eDigitSize, eSignUnsigned));
+    mpz_t zero;
+    mpz_init_set_ui(zero, 0);
+    tree_t *index = tree_expr_digit(expr->node, ctu_get_int_type(eDigitSize, eSignUnsigned), zero);
 
     const tree_t *type = tree_get_type(inner);
     const tree_t *ty = get_ptr_type(type);
