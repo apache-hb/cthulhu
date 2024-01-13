@@ -13,7 +13,7 @@ elif has_unwind
     src += [ 'src/unwind.c' ]
     backtrace_deps = [ unwind ]
 else
-    src += [ 'src/null.c' ]
+    src += [ 'src/stub.c' ]
     backtrace_deps = [ ]
 endif
 

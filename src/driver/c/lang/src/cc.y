@@ -120,6 +120,7 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
     SEMICOLON ";"
 
     COLON ":"
+    COLON2 "::"
 
     COMMA ","
     DOT3 "..."
@@ -191,6 +192,7 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
     THISCALL "__thiscall"
     VECTORCALL "__vectorcall"
     ATTRIBUTE "__attribute__"
+    DECLSPEC "__declspec"
 
 %type<vector>
     block_item_list
@@ -201,6 +203,8 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
     attribute_specifier_seq
     specifier_qualifier_list
     expression
+    balanced_token_seq
+    attribute_argument_clause
 
 %type<storage_class>
     storage_class_specifier
@@ -238,6 +242,8 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
     cast_expression
     assignment_expression
     conditional_expression
+    type_specifier
+    balanced_token
 
 %type<boolean>
     opt_export
@@ -338,10 +344,10 @@ iteration_statement: WHILE LPAREN expression RPAREN secondary_block { $$ = NULL;
     | FOR LPAREN declaration opt_expression SEMICOLON opt_expression RPAREN secondary_block { $$ = NULL; }
     ;
 
-jump_statement: GOTO IDENT SEMICOLON { $$ = NULL; }
-    | CONTINUE SEMICOLON { $$ = NULL; }
-    | BREAK SEMICOLON { $$ = NULL; }
-    | RETURN opt_expression SEMICOLON { $$ = NULL; }
+jump_statement: GOTO IDENT SEMICOLON { $$ = c_ast_goto(x, @$, $2); }
+    | CONTINUE SEMICOLON { $$ = c_ast_continue(x, @$); }
+    | BREAK SEMICOLON { $$ = c_ast_break(x, @$); }
+    | RETURN opt_expression SEMICOLON { $$ = c_ast_return(x, @$, $2); }
     ;
 
 secondary_block: statement
@@ -564,6 +570,7 @@ attribute_specifier_seq: attribute_specifier { $$ = vector_init($1); }
 
 attribute_specifier: LBRACKET LBRACKET attribute_list RBRACKET RBRACKET { $$ = NULL; }
     | ATTRIBUTE LPAREN LPAREN attribute_list RPAREN RPAREN { $$ = NULL; }
+    | DECLSPEC LPAREN attribute_list RPAREN { $$ = NULL; }
     | ext_attribute_callconv { $$ = c_ast_attribute_callconv(x, @$, $1); }
     | NRETURN { $$ = c_ast_attribute_noreturn(x, @$); }
     ;
@@ -579,29 +586,49 @@ attribute_list: attribute
     | attribute_list COMMA attribute
     ;
 
-attribute: IDENT
+attribute: attribute_token
+    | attribute_token attribute_argument_clause
+    ;
+
+attribute_token: IDENT
+    | IDENT COLON2 IDENT
+    ;
+
+attribute_argument_clause: LPAREN balanced_token_seq RPAREN { $$ = $2; }
+    ;
+
+balanced_token_seq: balanced_token { $$ = vector_init($1); }
+    | balanced_token_seq balanced_token { vector_push(&$1, $2); $$ = $1; }
+    ;
+
+balanced_token: LPAREN balanced_token_seq RPAREN { $$ = NULL; }
+    | LBRACKET balanced_token_seq RBRACKET { $$ = NULL; }
+    | LBRACE balanced_token_seq RBRACE { $$ = NULL; }
+    | IDENT { $$ = NULL; }
+    | STRING { $$ = NULL; }
+    | DIGIT { $$ = NULL; }
     ;
 
     /* types */
-type_name: specifier_qualifier_list { $$ = c_ast_typename(x, @$, $1); }
+type_name: specifier_qualifier_list { $$ = c_ast_type(x, @$, $1); }
     ;
 
 specifier_qualifier_list: type_specifier_qualifier { $$ = vector_init($1); }
     | specifier_qualifier_list type_specifier_qualifier { vector_push(&$1, $2); $$ = $1; }
     ;
 
-type_specifier: VOID
-    | CHAR
-    | SHORT
-    | INT
-    | LONG
-    | FLOAT
-    | DOUBLE
-    | SIGNED
-    | UNSIGNED
-    | BOOL
-    | COMPLEX
-    | TYPEDEF_NAME
+type_specifier: VOID { $$ = c_ast_type_specifier(x, @$, eTypeSpecifierVoid); }
+    | CHAR { $$ = c_ast_type_specifier(x, @$, eTypeSpecifierChar); }
+    | SHORT { $$ = c_ast_type_specifier(x, @$, eTypeSpecifierShort); }
+    | INT { $$ = c_ast_type_specifier(x, @$, eTypeSpecifierInt); }
+    | LONG { $$ = c_ast_type_specifier(x, @$, eTypeSpecifierLong); }
+    | FLOAT { $$ = c_ast_type_specifier(x, @$, eTypeSpecifierFloat); }
+    | DOUBLE { $$ = c_ast_type_specifier(x, @$, eTypeSpecifierDouble); }
+    | SIGNED { $$ = c_ast_type_specifier(x, @$, eTypeSpecifierSigned); }
+    | UNSIGNED { $$ = c_ast_type_specifier(x, @$, eTypeSpecifierUnsigned); }
+    | BOOL { $$ = c_ast_type_specifier(x, @$, eTypeSpecifierBool); }
+    | COMPLEX { $$ = c_ast_type_specifier(x, @$, eTypeSpecifierComplex); }
+    | TYPEDEF_NAME { $$ = c_ast_typedef_name(x, @$, $1); }
     ;
 
 type_qualifier: CONST { $$ = eTypeQualifierConst; }

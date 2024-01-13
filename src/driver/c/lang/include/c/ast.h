@@ -47,7 +47,7 @@ typedef struct c_ast_t
     c_kind_t kind;
 
     union {
-        // eAstLabel
+        // eAstLabel, eAstGoto
         const char *label;
 
         // eAstCase
@@ -61,6 +61,12 @@ typedef struct c_ast_t
 
         // eAstTypeQualifier
         c_type_qualifier_t type_qualifier;
+
+        // eAstTypeSpecifier
+        c_type_specifier_t type_specifier;
+
+        // eAstTypedefName
+        char *typedef_name;
 
         // eAstTypeSpecifier
         vector_t *typename_parts;
@@ -96,6 +102,9 @@ typedef struct c_ast_t
 
         // eAstString
         typevec_t *string;
+
+        // eAstReturn
+        struct c_ast_t *result;
 
         struct {
             bool exported;
@@ -139,13 +148,13 @@ c_ast_t *c_ast_init_declarator(scan_t *scan, where_t where, c_ast_t *declarator,
 
 c_ast_t *c_ast_storage_class(scan_t *scan, where_t where, c_storage_class_t storage_class);
 c_ast_t *c_ast_type_qualifier(scan_t *scan, where_t where, c_type_qualifier_t qualifier);
+c_ast_t *c_ast_type_specifier(scan_t *scan, where_t where, c_type_specifier_t specifier);
+c_ast_t *c_ast_typedef_name(scan_t *scan, where_t where, char *name);
+c_ast_t *c_ast_type(scan_t *scan, where_t where, vector_t *parts);
 
 c_ast_t *c_ast_alignas(scan_t *scan, where_t where, c_ast_t *body);
-c_ast_t *c_ast_typename(scan_t *scan, where_t where, vector_t *parts);
-
 
 // expressions
-
 c_ast_t *c_ast_expr_compare(scan_t *scan, where_t where, c_ast_t *lhs, c_ast_t *rhs, compare_t compare);
 c_ast_t *c_ast_expr_binary(scan_t *scan, where_t where, c_ast_t *lhs, c_ast_t *rhs, binary_t binary);
 c_ast_t *c_ast_expr_unary(scan_t *scan, where_t where, c_ast_t *expr, unary_t unary);
@@ -158,7 +167,14 @@ c_ast_t *c_ast_cast(scan_t *scan, where_t where, c_ast_t *expr, c_ast_t *type);
 c_ast_t *c_ast_string(scan_t *scan, where_t where, text_t text);
 c_ast_t *c_ast_append_string(scan_t *scan, where_t where, c_ast_t *string, text_t text);
 
+// statements
+c_ast_t *c_ast_goto(scan_t *scan, where_t where, char *label);
+c_ast_t *c_ast_continue(scan_t *scan, where_t where);
+c_ast_t *c_ast_break(scan_t *scan, where_t where);
+c_ast_t *c_ast_return(scan_t *scan, where_t where, c_ast_t *value);
+
 // attributes
+c_ast_t *c_ast_attribute(scan_t *scan, where_t where, vector_t *body);
 c_ast_t *c_ast_attribute_noreturn(scan_t *scan, where_t where);
 c_ast_t *c_ast_attribute_callconv(scan_t *scan, where_t where, c_callconv_t callconv);
 

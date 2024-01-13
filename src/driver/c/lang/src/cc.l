@@ -87,6 +87,7 @@ WS [ \t\r\v\n\f]
 "." { return DOT; }
 "," { return COMMA; }
 
+"::" { return COLON2; }
 ":" { return COLON; }
 
 "#" { return HASH; }
@@ -158,6 +159,7 @@ WS [ \t\r\v\n\f]
 "__thiscall" { return THISCALL; }
 "__vectorcall" { return VECTORCALL; }
 "__attribute__" { return ATTRIBUTE; }
+"__declspec" { return DECLSPEC; }
 
 "0"[0-7]+ {
     mpz_init_set_str(yylval->mpz, yytext + 1, 8);

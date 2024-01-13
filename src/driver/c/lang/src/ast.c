@@ -77,6 +77,22 @@ c_ast_t *c_ast_type_qualifier(scan_t *scan, where_t where, c_type_qualifier_t qu
     return ast;
 }
 
+c_ast_t *c_ast_type_specifier(scan_t *scan, where_t where, c_type_specifier_t specifier)
+{
+    c_ast_t *ast = c_ast_new(scan, where, eAstTypeSpecifier);
+    ast->type_specifier = specifier;
+    return ast;
+}
+
+c_ast_t *c_ast_typedef_name(scan_t *scan, where_t where, char *name)
+{
+    CTASSERT(name != NULL);
+
+    c_ast_t *ast = c_ast_new(scan, where, eAstTypedefName);
+    ast->typedef_name = name;
+    return ast;
+}
+
 c_ast_t *c_ast_alignas(scan_t *scan, where_t where, c_ast_t *body)
 {
     CTASSERT(body != NULL);
@@ -86,11 +102,13 @@ c_ast_t *c_ast_alignas(scan_t *scan, where_t where, c_ast_t *body)
     return ast;
 }
 
-c_ast_t *c_ast_typename(scan_t *scan, where_t where, vector_t *parts)
+c_ast_t *c_ast_type(scan_t *scan, where_t where, vector_t *parts)
 {
     CTASSERT(parts != NULL);
 
-    c_ast_t *ast = c_ast_new(scan, where, eAstTypename);
+    // TODO: merge parts and report errors
+
+    c_ast_t *ast = c_ast_new(scan, where, eAstType);
     ast->typename_parts = parts;
     return ast;
 }
@@ -151,6 +169,34 @@ c_ast_t *c_ast_append_string(scan_t *scan, where_t where, c_ast_t *string, text_
     return string;
 }
 
+
+// statements
+
+c_ast_t *c_ast_goto(scan_t *scan, where_t where, char *label)
+{
+    CTASSERT(label != NULL);
+
+    c_ast_t *ast = c_ast_new(scan, where, eAstGoto);
+    ast->label = label;
+    return ast;
+}
+
+c_ast_t *c_ast_continue(scan_t *scan, where_t where)
+{
+    return c_ast_new(scan, where, eAstContinue);
+}
+
+c_ast_t *c_ast_break(scan_t *scan, where_t where)
+{
+    return c_ast_new(scan, where, eAstBreak);
+}
+
+c_ast_t *c_ast_return(scan_t *scan, where_t where, c_ast_t *value)
+{
+    c_ast_t *ast = c_ast_new(scan, where, eAstReturn);
+    ast->result = value;
+    return ast;
+}
 
 // attributes
 

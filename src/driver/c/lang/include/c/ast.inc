@@ -13,7 +13,8 @@ C_AST_KIND(eAstTypeField, "type_field")
 C_AST_KIND(eAstAlignas, "alignas")
 C_AST_KIND(eAstSizeof, "sizeof")
 C_AST_KIND(eAstAlignof, "alignof")
-C_AST_KIND(eAstTypename, "typename")
+C_AST_KIND(eAstType, "type")
+C_AST_KIND(eAstTypedefName, "typedef_name")
 
 C_AST_KIND(eAstInitDeclarator, "init_declarator")
 C_AST_KIND(eAstDeclaratorList, "declarator_list")
@@ -22,6 +23,17 @@ C_AST_KIND(eAstDeclaratorList, "declarator_list")
 C_AST_KIND(eAstExprList, "expr_list")
 C_AST_KIND(eAstCast, "cast")
 C_AST_KIND(eAstString, "string")
+
+// statements
+C_AST_KIND(eAstGoto, "goto")
+C_AST_KIND(eAstContinue, "continue")
+C_AST_KIND(eAstBreak, "break")
+
+C_AST_KIND(eAstReturn, "return")
+C_AST_KIND(eAstBranch, "branch") // if/else
+C_AST_KIND(eAstWhile, "while")
+C_AST_KIND(eAstDoWhile, "do_while")
+C_AST_KIND(eAstFor, "for")
 
 // intermediate type
 C_AST_KIND(eAstOpaque, "opaque")
@@ -32,6 +44,7 @@ C_AST_KIND(eAstDefault, "default")
 
 C_AST_KIND(eAstStorageClass, "storage_class")
 C_AST_KIND(eAstTypeQualifier, "type_qualifier")
+C_AST_KIND(eAstTypeSpecifier, "type_specifier")
 
 C_AST_KIND(eAstAttributeNoreturn, "attribute_noreturn")
 C_AST_KIND(eAstAttributeCallConv, "attribute_callconv")
