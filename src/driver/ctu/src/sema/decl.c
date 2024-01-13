@@ -107,7 +107,7 @@ static vector_t *ctu_collect_fields(tree_t *sema, tree_t *self, ctu_t *decl)
     for (size_t i = 0; i < len; i++)
     {
         ctu_t *field = vector_get(decl->fields, i);
-        tree_t *type = ctu_sema_type(&inner, field->fieldType);
+        tree_t *type = ctu_sema_type(&inner, field->field_type);
         char *name = field->name == NULL ? format("field%zu", i) : field->name;
         tree_t *item = tree_decl_field(field->node, name, type);
 

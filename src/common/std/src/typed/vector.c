@@ -2,7 +2,7 @@
 
 #include "core/macros.h"
 
-#include "memory/memory.h"
+#include "memory/arena.h"
 #include "base/panic.h"
 
 #include <stdlib.h>
@@ -51,6 +51,7 @@ static void typevec_ensure(typevec_t *vec, size_t extra)
 
 static typevec_t *typevec_create(size_t type_size, size_t len, arena_t *arena)
 {
+    CTASSERT(arena != NULL);
     CTASSERT(type_size > 0);
 
     size_t size = MAX(len, 1);
@@ -73,18 +74,23 @@ typevec_t *typevec_new(size_t type_size, size_t len, arena_t *arena)
 }
 
 USE_DECL
-typevec_t *typevec_of(size_t type_size, size_t len)
+typevec_t *typevec_of(size_t type_size, size_t len, arena_t *arena)
 {
-    typevec_t *self = typevec_create(type_size, len, get_global_arena());
+    typevec_t *self = typevec_create(type_size, len, arena);
     self->used = len;
     return self;
 }
 
 USE_DECL
-typevec_t *typevec_init(size_t type_size, const void *value)
+typevec_t *typevec_of_array(size_t type_size, const void *src, size_t count, arena_t *arena)
 {
-    typevec_t *self = typevec_create(type_size, 1, get_global_arena());
-    typevec_push(self, value);
+    CTASSERT(src != NULL);
+
+    typevec_t *self = typevec_create(type_size, count, arena);
+    self->used = count;
+
+    memcpy(self->data, src, type_size * count);
+
     return self;
 }
 

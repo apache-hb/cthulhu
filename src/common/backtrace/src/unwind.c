@@ -1,4 +1,5 @@
 #include "backtrace/backtrace.h"
+#include <stdio.h>
 
 #define UNW_LOCAL_ONLY
 #include <unwind.h>
@@ -16,7 +17,7 @@ const char *bt_backend(void)
     return "libunwind";
 }
 
-void bt_read_inner(bt_frame_t callback, void *user)
+void bt_read_inner(bt_trace_t callback, void *user)
 {
     unw_cursor_t cursor;
     unw_word_t ip, sp;
@@ -28,7 +29,7 @@ void bt_read_inner(bt_frame_t callback, void *user)
         unw_get_reg(&cursor, UNW_REG_IP, &ip);
         unw_get_reg(&cursor, UNW_REG_SP, &sp);
 
-        frame_t frame = {
+        bt_frame_t frame = {
             .address = ip
         };
 
@@ -36,9 +37,10 @@ void bt_read_inner(bt_frame_t callback, void *user)
     }
 }
 
-frame_resolve_t bt_resolve_inner(const frame_t *frame, symbol_t *symbol)
+frame_resolve_t bt_resolve_inner(const bt_frame_t *frame, bt_symbol_t *symbol)
 {
-    snprintf(symbol->name, sizeof(symbol->name), "0x%016" PRIxPTR, frame->address);
+    text_t name = symbol->name;
+    (void)snprintf(name.text, name.size, "0x%" PRIxPTR, frame->address);
 
     return eResolveNothing;
 }

@@ -95,11 +95,11 @@ CompileError ed::run_compile(CompileInfo& info)
 
 struct trace_capture_t
 {
-    symbol_t symbol = {};
+    bt_symbol_t symbol = {};
     PanicInfo *info = nullptr;
 };
 
-static void trace_callback(void *user, const frame_t *frame)
+static void trace_callback(void *user, const bt_frame_t *frame)
 {
     auto& [symbol, info] = *reinterpret_cast<trace_capture_t*>(user);
 

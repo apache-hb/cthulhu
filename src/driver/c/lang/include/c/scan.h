@@ -14,6 +14,6 @@ typedef struct cc_scan_t
 
 cc_scan_t *cc_scan_context(scan_t *scan);
 
-c_ast_t *cc_get_type(cc_scan_t *scan, const char *name);
+c_ast_t *cc_get_typedef_name(cc_scan_t *scan, const char *name);
 
 void cc_on_error(scan_t *scan, const char *msg, where_t where);

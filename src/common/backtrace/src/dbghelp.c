@@ -1,5 +1,6 @@
 #include "backtrace/backtrace.h"
 
+#include "core/macros.h"
 #include "core/win32.h" // IWYU pragma: keep
 
 #include <dbghelp.h>
@@ -31,7 +32,7 @@ union disp_t {
     DWORD64 disp64;
 };
 
-void read_context_stack(CONTEXT *ctx, bt_frame_t callback, void *user)
+void read_context_stack(CONTEXT *ctx, bt_trace_t callback, void *user)
 {
     HANDLE thread = GetCurrentThread();
     HANDLE process = GetCurrentProcess();
@@ -53,7 +54,7 @@ void read_context_stack(CONTEXT *ctx, bt_frame_t callback, void *user)
 
     while (walk_stack(&stackframe, ctx, process, thread))
     {
-        frame_t frame = {
+        bt_frame_t frame = {
             .address = stackframe.AddrPC.Offset,
         };
 
@@ -61,7 +62,7 @@ void read_context_stack(CONTEXT *ctx, bt_frame_t callback, void *user)
     }
 }
 
-void bt_read_inner(bt_frame_t callback, void *user)
+void bt_read_inner(bt_trace_t callback, void *user)
 {
     CONTEXT ctx = { 0 };
     RtlCaptureContext(&ctx);
@@ -69,7 +70,9 @@ void bt_read_inner(bt_frame_t callback, void *user)
     read_context_stack(&ctx, callback, user);
 }
 
-frame_resolve_t bt_resolve_inner(const frame_t *frame, symbol_t *symbol)
+#define MAX_NAME_SIZE 512
+
+frame_resolve_t bt_resolve_inner(const bt_frame_t *frame, bt_symbol_t *symbol)
 {
     union disp_t disp = { 0 };
     IMAGEHLP_LINE64 line = { 0 };
@@ -80,14 +83,15 @@ frame_resolve_t bt_resolve_inner(const frame_t *frame, symbol_t *symbol)
     symbol->line = 0;
     strcpy_s(name.text, name.size, "<unknown>");
 
-    // TODO: terrible terrible awful
-    // we should not be allocating memory here, this may be called from a signal handler
-    char *buffer = malloc(sizeof(SYMBOL_INFO) + (name.size - 1) * sizeof(TCHAR));
+    // cap the name size to a known maximum so we can put it on the stack rather than call malloc
+    // we do this because this may be called in a signal handler and we don't want to allocate
+    ULONG name_size = MIN((ULONG)name.size, MAX_NAME_SIZE);
+    char buffer[sizeof(SYMBOL_INFO) + (MAX_NAME_SIZE - 1) * sizeof(TCHAR)];
     memset(buffer, 0, sizeof(SYMBOL_INFO)); // only zero the symbol info struct
 
     PSYMBOL_INFO info = (PSYMBOL_INFO)buffer;
     info->SizeOfStruct = sizeof(SYMBOL_INFO);
-    info->MaxNameLen = (ULONG)name.size;
+    info->MaxNameLen = name_size;
 
     frame_resolve_t resolve = eResolveNothing;
 
@@ -104,14 +108,14 @@ frame_resolve_t bt_resolve_inner(const frame_t *frame, symbol_t *symbol)
             resolve |= eResolveLine | eResolveFile;
         }
 
-        if (UnDecorateSymbolName(info->Name, name.text, (DWORD)name.size, UNDNAME_COMPLETE))
+        if (UnDecorateSymbolName(info->Name, name.text, name_size, UNDNAME_COMPLETE))
         {
             resolve |= eResolveDemangledName;
         }
         else
         {
             // copy the mangled name if we can't demangle it
-            strcpy_s(name.text, name.size, info->Name);
+            strcpy_s(name.text, name_size, info->Name);
         }
     }
 

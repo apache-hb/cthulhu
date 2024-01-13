@@ -240,13 +240,13 @@ void ctu_apply_attribs(tree_t *sema, tree_t *decl, vector_t *attribs)
         ctu_t *attrib = vector_get(attribs, i);
         CTASSERTF(attrib->kind == eCtuAttrib, "expected attrib but got %d", attrib->kind);
 
-        ctu_attrib_t *it = get_attrib(sema, attrib->attribPath);
+        ctu_attrib_t *it = get_attrib(sema, attrib->attrib_path);
         if (it == NULL)
         {
-            msg_notify(sema->reports, &kEvent_AttribNotFound, attrib->node, "attrib '%s' not found", attrib_name(attrib->attribPath));
+            msg_notify(sema->reports, &kEvent_AttribNotFound, attrib->node, "attrib '%s' not found", attrib_name(attrib->attrib_path));
             continue;
         }
 
-        it->fn_apply(sema, decl, attrib->attribArgs);
+        it->fn_apply(sema, decl, attrib->attrib_args);
     }
 }

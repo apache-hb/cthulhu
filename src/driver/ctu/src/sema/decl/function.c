@@ -96,15 +96,15 @@ void ctu_resolve_function_type(tree_t *sema, tree_t *self, void *user)
     for (size_t i = 0; i < len; i++)
     {
         ctu_t *param = vector_get(decl->params, i);
-        tree_t *type = ctu_sema_type(&inner, param->paramType);
+        tree_t *type = ctu_sema_type(&inner, param->param_type);
         tree_t *it = tree_decl_param(param->node, param->name, type);
         vector_set(params, i, it);
     }
 
     arity_t arity = (decl->variadic != NULL) ? eArityVariable : eArityFixed;
-    tree_t *return_type = decl->returnType == NULL
+    tree_t *return_type = decl->return_type == NULL
         ? ctu_get_void_type()
-        : ctu_sema_type(&inner, decl->returnType);
+        : ctu_sema_type(&inner, decl->return_type);
 
     tree_t *signature = tree_type_closure(decl->node, decl->name, return_type, params, arity);
 

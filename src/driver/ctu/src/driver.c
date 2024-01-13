@@ -71,11 +71,11 @@ void ctu_forward_decls(context_t *context)
 static void import_module(lifetime_t *lifetime, tree_t *sema, ctu_t *include)
 {
     CTASSERT(include->kind == eCtuImport);
-    context_t *ctx = get_context(lifetime, include->importPath);
+    context_t *ctx = get_context(lifetime, include->import_path);
 
     if (ctx == NULL)
     {
-        msg_notify(sema->reports, &kEvent_ImportNotFound, include->node, "import `%s` not found", str_join("::", include->importPath));
+        msg_notify(sema->reports, &kEvent_ImportNotFound, include->node, "import `%s` not found", str_join("::", include->import_path));
         return;
     }
 
@@ -91,7 +91,7 @@ static void import_module(lifetime_t *lifetime, tree_t *sema, ctu_t *include)
     {
         event_t *id = evt_symbol_shadowed(sema->reports, include->name, tree_get_node(old), tree_get_node(lib));
         msg_note(id, "consider using import aliases; eg. `import %s as my_%s`",
-            str_join("::", include->importPath),
+            str_join("::", include->import_path),
             include->name
         );
     }

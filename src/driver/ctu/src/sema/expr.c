@@ -144,7 +144,7 @@ static tree_t *sema_int(tree_t *sema, const ctu_t *expr, const tree_t *implicit_
                           tree_to_string(type));
     }
 
-    tree_t *it = tree_expr_digit(expr->node, type, expr->intValue);
+    tree_t *it = tree_expr_digit(expr->node, type, expr->int_value);
 
     return verify_expr_type(sema, eTreeTypeDigit, type, "integer literal", it);
 }

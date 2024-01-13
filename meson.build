@@ -52,8 +52,8 @@ tool_notify = get_option('tool_notify').disable_auto_if(is_release or meson.is_s
 tool_display = get_option('tool_display').disable_auto_if(is_release or meson.is_subproject())
 tool_error = get_option('tool_error').disable_auto_if(is_release or meson.is_subproject())
 
-opt_lang_cc = get_option('lang_cc')
-# opt_lang_cpp = get_option('lang_cpp').require(opt_lang_cc.allowed())
+opt_lang_c = get_option('lang_c')
+opt_lang_cpp = get_option('lang_cpp').require(opt_lang_c.allowed())
 
 # tools like this are user facing, so dont disable them in release mode
 tool_diagnostic = get_option('tool_diagnostic').disable_auto_if(meson.is_subproject())
@@ -261,7 +261,8 @@ summary = {
         'Debug': is_debug,
         'Interfaces': ', '.join(get_option('interfaces')),
         'Languages': ', '.join(get_option('languages')),
-        'C language driver': opt_lang_cc.allowed(),
+        'C language driver': opt_lang_c.allowed(),
+        'C preprocessor': opt_lang_cpp.allowed(),
         'Memory tracing': trace_memory.allowed(),
         'Analyze': opt_analyze.enabled(),
         'Assertions': opt_assert.allowed()

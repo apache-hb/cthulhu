@@ -208,16 +208,17 @@ char *str_join(const char *sep, vector_t *parts)
     CTASSERT(parts != NULL);
 
     size_t all = vector_len(parts);
+    arena_t *arena = get_global_arena();
 
     if (all == 0)
     {
-        return ctu_strdup("");
+        return arena_strndup("", 0, arena);
     }
     else if (all == 1)
     {
         char *it = vector_get(parts, 0);
         CTASSERT(it != NULL);
-        return ctu_strdup(it);
+        return arena_strdup(it, arena);
     }
 
     size_t len = 0;
@@ -237,7 +238,7 @@ char *str_join(const char *sep, vector_t *parts)
 
     CTASSERTF(len > 0, "len = %zu", len);
 
-    char *out = ARENA_MALLOC(get_global_arena(), len + 1, "str_join", NULL);
+    char *out = ARENA_MALLOC(arena, len + 1, "str_join", NULL);
     size_t idx = 0;
 
     size_t remaining = len;
@@ -374,6 +375,8 @@ char *str_normalize(const char *input)
 {
     CTASSERT(input != NULL);
 
+    arena_t *arena = get_global_arena();
+
     size_t input_length = 0;
     size_t result_length = 0;
     const char *length_iter = input;
@@ -387,11 +390,11 @@ char *str_normalize(const char *input)
     // if the string is already normalized, just return a copy
     if (input_length == result_length)
     {
-        return ctu_strndup(input, input_length);
+        return arena_strndup(input, input_length, arena);
     }
 
     const char *repl_iter = input;
-    char *buf = ARENA_MALLOC(get_global_arena(), result_length + 1, "str_normalize", NULL);
+    char *buf = ARENA_MALLOC(arena, result_length + 1, "str_normalize", NULL);
     char *result = buf;
     while (*repl_iter != '\0')
     {
@@ -406,6 +409,7 @@ USE_DECL
 char *str_normalizen(const char *str, size_t len)
 {
     CTASSERT(str != NULL);
+    arena_t *arena = get_global_arena();
 
     size_t length = 1;
     for (size_t i = 0; i < len; i++)
@@ -416,10 +420,10 @@ char *str_normalizen(const char *str, size_t len)
     // if the string is already normalized, just return a copy
     if (length == len)
     {
-        return ctu_strndup(str, len);
+        return arena_strndup(str, len, arena);
     }
 
-    char *buf = ARENA_MALLOC(get_global_arena(), length + 1, "str_normalizen", NULL);
+    char *buf = ARENA_MALLOC(arena, length + 1, "str_normalizen", NULL);
     size_t offset = 0;
     for (size_t i = 0; i < len; i++)
     {
@@ -585,7 +589,8 @@ char *str_replace_many(const char *str, const map_t *repl)
         }
     }
 
-    char *out = ARENA_MALLOC(get_global_arena(), len + 1, "str_replace_many", NULL);
+    arena_t *arena = get_global_arena();
+    char *out = ARENA_MALLOC(arena, len + 1, "str_replace_many", NULL);
 
     size_t offset = 0; // offset into input string
     for (size_t i = 0; i < len;)

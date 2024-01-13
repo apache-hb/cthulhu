@@ -1,5 +1,6 @@
 #include "c/scan.h"
 
+#include "base/panic.h"
 #include "cthulhu/events/events.h"
 #include "scan/node.h"
 
@@ -8,6 +9,14 @@
 cc_scan_t *cc_scan_context(scan_t *scan)
 {
     return scan_get_context(scan);
+}
+
+c_ast_t *cc_get_typedef_name(cc_scan_t *scan, const char *name)
+{
+    CTASSERT(scan != NULL);
+    CTASSERT(name != NULL);
+
+    return NULL;
 }
 
 void ccerror(where_t *where, void *state, scan_t *scan, const char *msg)

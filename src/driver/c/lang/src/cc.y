@@ -31,7 +31,13 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
     text_t text;
 
+    bool boolean;
+
     mpz_t mpz;
+
+    c_type_qualifier_t type_qualifier;
+    c_storage_class_t storage_class;
+    c_callconv_t callconv;
 
     vector_t *vector;
 
@@ -43,6 +49,7 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %token<ident>
     IDENT "identifier"
+    TYPEDEF_NAME "typedef name"
 
 %token<mpz>
     DIGIT "digit"
@@ -112,7 +119,6 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
     SEMICOLON ";"
 
-    COLON2 "::"
     COLON ":"
 
     COMMA ","
@@ -184,9 +190,26 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
     FASTCALL "__fastcall"
     THISCALL "__thiscall"
     VECTORCALL "__vectorcall"
+    ATTRIBUTE "__attribute__"
 
 %type<vector>
     block_item_list
+    translation_unit
+    module_path
+    declaration_specifiers
+    init_declarator_list
+    attribute_specifier_seq
+    specifier_qualifier_list
+    expression
+
+%type<storage_class>
+    storage_class_specifier
+
+%type<callconv>
+    ext_attribute_callconv
+
+%type<type_qualifier>
+    type_qualifier
 
 %type<ast>
     block_item
@@ -199,33 +222,68 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
     constant_expression
     selection_statement
     iteration_statement
+    module_declaration
+    function_definition
+    external_declaration
+    init_declarator
+    initializer
+    declarator
+    declaration_specifier
+    attribute_specifier
+    type_specifier_qualifier
+    alignment_specifier
+    type_name
+    opt_expression
+    string_list
+    cast_expression
+    assignment_expression
+    conditional_expression
 
-%start translation_unit
+%type<boolean>
+    opt_export
+
+%start start
 
 %%
 
-translation_unit: external_declaration
-    | translation_unit external_declaration
+start: translation_unit { scan_set(x, $1); }
     ;
 
-opt_export: %empty
-    | EXPORT
+translation_unit: external_declaration { $$ = vector_init($1); }
+    | translation_unit external_declaration { vector_push(&$1, $2); $$ = $1; }
     ;
 
-module_declaration: MODULE
-    | MODULE module_path
-    | MODULE COLON PRIVATE
-    | IMPORT module_path
+opt_export: %empty { $$ = false; }
+    | EXPORT { $$ = true; }
     ;
 
-external_declaration: opt_export function_definition
-    | opt_export declaration
-    | opt_export module_declaration SEMICOLON
-    | directive { ctu_log("directive"); }
-    | error { cc_on_error(x, "invalid declaration", @$); }
+module_declaration: MODULE { $$ = c_ast_module_private_fragment(x, @$); }
+    | MODULE module_path { $$ = c_ast_module_public_fragment(x, @$, $2); }
+    | MODULE COLON PRIVATE { $$ = c_ast_module_private_fragment(x, @$); }
+    | IMPORT module_path { $$ = c_ast_module_import(x, @$, $2); }
     ;
 
-function_definition: declaration_specifiers declarator function_body
+external_declaration: opt_export function_definition { $$ = $2; }
+    | opt_export declaration { $$ = NULL; }
+    | opt_export module_declaration SEMICOLON {
+        c_ast_apply_export($2, $1);
+        $$ = $2;
+    }
+    | directive {
+        ctu_log("directive");
+        $$ = NULL;
+    }
+    | STATIC_ASSERT LPAREN constant_expression COMMA string_list RPAREN SEMICOLON {
+        ctu_log("static assert");
+        $$ = NULL;
+    }
+    | error {
+        cc_on_error(x, "error", @$);
+        $$ = NULL;
+    }
+    ;
+
+function_definition: declaration_specifiers declarator function_body { $$ = NULL; }
     ;
 
 function_body: compound_statement
@@ -270,8 +328,8 @@ selection_statement: IF LPAREN expression RPAREN secondary_block { $$ = NULL; }
     | SWITCH LPAREN expression RPAREN secondary_block { $$ = NULL; }
     ;
 
-opt_expression: %empty
-    | expression
+opt_expression: %empty { $$ = NULL; }
+    | expression { $$ = c_ast_expand_exprs(x, @$, $1); }
     ;
 
 iteration_statement: WHILE LPAREN expression RPAREN secondary_block { $$ = NULL; }
@@ -300,8 +358,12 @@ opt_expression_list: %empty
 
 primary_expression: IDENT
     | DIGIT
-    | STRING
+    | string_list
     | LPAREN expression RPAREN
+    ;
+
+string_list: STRING { $$ = c_ast_string(x, @$, $1); }
+    | string_list STRING { $$ = c_ast_append_string(x, @$, $1, $2); }
     ;
 
 postfix_expression: primary_expression
@@ -325,8 +387,8 @@ unary_expression: postfix_expression
 unary_operator: AND | MUL | ADD | SUB | NOT | BITNOT
     ;
 
-cast_expression: unary_expression
-    | LPAREN type_name RPAREN cast_expression
+cast_expression: unary_expression { $$ = NULL; }
+    | LPAREN type_name RPAREN cast_expression { $$ = c_ast_cast(x, @$, $4, $2); }
     ;
 
 multiplicative_expression: cast_expression
@@ -377,12 +439,12 @@ logical_or_expression: logical_and_expression
     | logical_or_expression OR logical_and_expression
     ;
 
-conditional_expression: logical_or_expression
-    | logical_or_expression QUESTION expression COLON conditional_expression
+conditional_expression: logical_or_expression { $$ = NULL; }
+    | logical_or_expression QUESTION expression COLON conditional_expression { $$ = NULL; }
     ;
 
-assignment_expression: conditional_expression
-    | unary_expression assignment_operator assignment_expression
+assignment_expression: conditional_expression { $$ = NULL; }
+    | unary_expression assignment_operator assignment_expression { $$ = NULL; }
     ;
 
 assignment_operator: ASSIGN
@@ -390,19 +452,19 @@ assignment_operator: ASSIGN
     | SHLEQ | SHREQ | ANDEQ | OREQ | XOREQ
     ;
 
-expression: assignment_expression
-    | expression COMMA assignment_expression
+expression: assignment_expression { $$ = vector_init($1); }
+    | expression COMMA assignment_expression { vector_push(&$1, $3); $$ = $1; }
     ;
 
-constant_expression: conditional_expression { $$ = NULL; }
+constant_expression: conditional_expression { $$ = $1; }
     ;
 
 expression_statement: SEMICOLON { $$ = NULL; }
-    | expression SEMICOLON { $$ = NULL; }
+    | expression SEMICOLON { $$ = c_ast_expand_exprs(x, @$, $1); }
     ;
 
-module_path: IDENT
-    | module_path DOT IDENT
+module_path: IDENT { $$ = vector_init($1); }
+    | module_path DOT IDENT { vector_push(&$1, $3); $$ = $1; }
     ;
 
     /* this is for parsing out all the pragmas and line directives */
@@ -411,22 +473,45 @@ directive_body: %empty | directive_body directive_item ;
 directive_item: IDENT | STRING | DIGIT ;
 
     /* declarations */
-declaration: declaration_specifiers init_declarator_list SEMICOLON { $$ = NULL; }
+declaration: declaration_specifiers init_declarator_list SEMICOLON {
+        $$ = c_ast_declarator_list(x, @$, $1, $2);
+    }
+    | attribute_specifier_seq declaration_specifiers init_declarator_list SEMICOLON {
+        c_ast_t *decl = c_ast_declarator_list(x, @$, $2, $3);
+        c_ast_apply_attributes(decl, $1);
+        $$ = decl;
+    }
     ;
 
-init_declarator_list: init_declarator
-    | init_declarator_list COMMA init_declarator
+init_declarator_list: init_declarator { $$ = vector_init($1); }
+    | init_declarator_list COMMA init_declarator { vector_push(&$1, $3); $$ = $1; }
     ;
 
-init_declarator: declarator
-    | declarator ASSIGN initializer
+init_declarator: declarator { $$ = $1; }
+    | declarator ASSIGN initializer { $$ = c_ast_init_declarator(x, @$, $1, $3); }
     ;
 
-initializer: constant_expression
+initializer: constant_expression { $$ = $1; }
     ;
 
-    /* for now we dont handle pointer 6.7.6 */
-declarator: direct_declarator
+declarator: opt_pointer direct_declarator { $$ = NULL; }
+    | attribute_specifier_seq opt_pointer direct_declarator { $$ = NULL; }
+    ;
+
+opt_pointer: %empty
+    | pointer
+    ;
+
+pointer: MUL opt_type_qualifier_list
+    | MUL opt_type_qualifier_list pointer
+    ;
+
+opt_type_qualifier_list: %empty
+    | type_qualifier_list
+    ;
+
+type_qualifier_list: type_qualifier
+    | type_qualifier_list type_qualifier
     ;
 
 direct_declarator: IDENT
@@ -449,35 +534,60 @@ parameter_list: parameter_declaration
 parameter_declaration: declaration_specifiers declarator
     ;
 
-declaration_specifiers: declaration_specifier
-    | declaration_specifiers declaration_specifier
+declaration_specifiers: declaration_specifier { $$ = vector_init($1); }
+    | declaration_specifiers declaration_specifier { vector_push(&$1, $2); $$ = $1; }
     ;
 
-declaration_specifier: storage_class_specifier
-    | type_specifier_qualifier
+declaration_specifier: storage_class_specifier { $$ = c_ast_storage_class(x, @$, $1); }
+    | type_specifier_qualifier { $$ = $1; }
     ;
 
-storage_class_specifier: AUTO
-    | CONSTEXPR
-    | EXTERN
-    | INLINE
-    | REGISTER
-    | STATIC
-    | THREAD_LOCAL
-    | TYPEDEF
+storage_class_specifier: AUTO { $$ = eStorageClassAuto; }
+    | CONSTEXPR { $$ = eStorageClassConstexpr; }
+    | EXTERN { $$ = eStorageClassExtern; }
+    | INLINE { $$ = eStorageClassInline; }
+    | REGISTER { $$ = eStorageClassRegister; }
+    | STATIC { $$ = eStorageClassStatic; }
+    | THREAD_LOCAL { $$ = eStorageClassThreadLocal; }
+    | TYPEDEF { $$ = eStorageClassTypedef; }
     ;
 
-type_specifier_qualifier: type_specifier
-    | type_qualifier
-    | alignment_specifier
+type_specifier_qualifier: type_specifier { $$ = NULL; }
+    | type_qualifier { $$ = c_ast_type_qualifier(x, @$, $1); }
+    | alignment_specifier { $$ = $1; }
+    ;
+
+    /* attributes */
+attribute_specifier_seq: attribute_specifier { $$ = vector_init($1); }
+    | attribute_specifier_seq attribute_specifier { vector_push(&$1, $2); $$ = $1; }
+    ;
+
+attribute_specifier: LBRACKET LBRACKET attribute_list RBRACKET RBRACKET { $$ = NULL; }
+    | ATTRIBUTE LPAREN LPAREN attribute_list RPAREN RPAREN { $$ = NULL; }
+    | ext_attribute_callconv { $$ = c_ast_attribute_callconv(x, @$, $1); }
+    | NRETURN { $$ = c_ast_attribute_noreturn(x, @$); }
+    ;
+
+ext_attribute_callconv: STDCALL { $$ = eCallStdcall; }
+    | CDECL { $$ = eCallCdecl; }
+    | FASTCALL { $$ = eCallFastcall; }
+    | THISCALL { $$ = eCallThiscall; }
+    | VECTORCALL { $$ = eCallVectorcall; }
+    ;
+
+attribute_list: attribute
+    | attribute_list COMMA attribute
+    ;
+
+attribute: IDENT
     ;
 
     /* types */
-type_name: specifier_qualifier_list
+type_name: specifier_qualifier_list { $$ = c_ast_typename(x, @$, $1); }
     ;
 
-specifier_qualifier_list: type_specifier_qualifier
-    | specifier_qualifier_list type_specifier_qualifier
+specifier_qualifier_list: type_specifier_qualifier { $$ = vector_init($1); }
+    | specifier_qualifier_list type_specifier_qualifier { vector_push(&$1, $2); $$ = $1; }
     ;
 
 type_specifier: VOID
@@ -491,16 +601,17 @@ type_specifier: VOID
     | UNSIGNED
     | BOOL
     | COMPLEX
+    | TYPEDEF_NAME
     ;
 
-type_qualifier: CONST
-    | RESTRICT
-    | VOLATILE
-    | ATOMIC
+type_qualifier: CONST { $$ = eTypeQualifierConst; }
+    | RESTRICT { $$ = eTypeQualifierRestrict; }
+    | VOLATILE { $$ = eTypeQualifierVolatile; }
+    | ATOMIC { $$ = eTypeQualifierAtomic; }
     ;
 
-alignment_specifier: ALIGNAS LPAREN type_name RPAREN
-    | ALIGNAS LPAREN constant_expression RPAREN
+alignment_specifier: ALIGNAS LPAREN type_name RPAREN { $$ = c_ast_alignas(x, @$, $3); }
+    | ALIGNAS LPAREN constant_expression RPAREN { $$ = c_ast_alignas(x, @$, $3); }
     ;
 
 %%

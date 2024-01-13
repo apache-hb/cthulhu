@@ -24,7 +24,7 @@ typedef struct typevec_t typevec_t;
 ///
 /// @return the new vector
 NODISCARD
-typevec_t *typevec_new(IN_RANGE(>, 0) size_t type_size, size_t len, arena_t *arena);
+typevec_t *typevec_new(IN_RANGE(>, 0) size_t type_size, size_t len, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new typed vector with an initial size and length
 /// @note it is expected that the user will fill the vector up to @a len using @a typevec_set
@@ -32,21 +32,41 @@ typevec_t *typevec_new(IN_RANGE(>, 0) size_t type_size, size_t len, arena_t *are
 ///
 /// @param type_size the size of the type
 /// @param len the initial length of the vector
+/// @param arena the arena to allocate from
 ///
 /// @return the new vector
 NODISCARD
-typevec_t *typevec_of(IN_RANGE(>, 0) size_t type_size, size_t len);
+typevec_t *typevec_of(IN_RANGE(>, 0) size_t type_size, size_t len, IN_NOTNULL arena_t *arena);
 
-/// @brief create a new typed vector with an initial first value
+/// @brief create a new typed vector from an array
+/// this copies @p count * @a type_size bytes from @p src to the vector
 ///
 /// @param type_size the size of the type
-/// @param value the initial value
+/// @param src the array to copy from
+/// @param count the number of elements in the array
+/// @param arena the arena to allocate from
 ///
 /// @return the new vector
 NODISCARD
-typevec_t *typevec_init(IN_RANGE(>, 0) size_t type_size, IN_NOTNULL const void *value);
+typevec_t *typevec_of_array(
+    IN_RANGE(>, 0) size_t type_size,
+    IN_READS(count * type_size) const void *src,
+    size_t count,
+    IN_NOTNULL arena_t *arena);
 
-typevec_t *typevec_slice(IN_NOTNULL const typevec_t *vec, size_t start, size_t end);
+/// @brief create a new typevec from an existing typevec
+/// @pre @p start < @p end and @p end <= @a typevec_len(@p vec)
+///
+/// @param vec the vector to copy
+/// @param start the start index
+/// @param end the end index
+///
+/// @return the new vector
+NODISCARD
+typevec_t *typevec_slice(
+    IN_NOTNULL const typevec_t *vec,
+    IN_RANGE(<, end) size_t start,
+    IN_RANGE(>, start) size_t end);
 
 /// @brief get the length of a vector
 ///

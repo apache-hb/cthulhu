@@ -10,7 +10,6 @@
 #include "ap_bison.h"
 #include "interop/flex.h"
 #include "interop/memory.h"
-#include "memory/memory.h"
 #include "scan/node.h"
 %}
 

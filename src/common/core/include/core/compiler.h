@@ -92,4 +92,14 @@
 #   define FUNCNAME __func__
 #endif
 
+#if CC_MSVC
+#   define BYTESWAP_U16(x) _byteswap_ushort(x)
+#   define BYTESWAP_U32(x) _byteswap_ulong(x)
+#   define BYTESWAP_U64(x) _byteswap_uint64(x)
+#else
+#   define BYTESWAP_U16(x) __builtin_bswap16(x)
+#   define BYTESWAP_U32(x) __builtin_bswap32(x)
+#   define BYTESWAP_U64(x) __builtin_bswap64(x)
+#endif
+
 /// @}

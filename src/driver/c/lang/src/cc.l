@@ -11,7 +11,6 @@
 #include "c/scan.h"
 #include "interop/flex.h"
 #include "interop/memory.h"
-#include "memory/memory.h"
 #include "cthulhu/util/text.h"
 #include "cthulhu/events/events.h"
 %}
@@ -88,7 +87,6 @@ WS [ \t\r\v\n\f]
 "." { return DOT; }
 "," { return COMMA; }
 
-"::" { return COLON2; }
 ":" { return COLON; }
 
 "#" { return HASH; }
@@ -159,6 +157,7 @@ WS [ \t\r\v\n\f]
 "__fastcall" { return FASTCALL; }
 "__thiscall" { return THISCALL; }
 "__vectorcall" { return VECTORCALL; }
+"__attribute__" { return ATTRIBUTE; }
 
 "0"[0-7]+ {
     mpz_init_set_str(yylval->mpz, yytext + 1, 8);
@@ -181,9 +180,10 @@ WS [ \t\r\v\n\f]
 }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
+    cc_scan_t *ctx = cc_scan_context(yyextra);
     arena_t *arena = scan_get_arena(yyextra);
     yylval->ident = arena_strndup(yytext, yyleng, arena);
-    return IDENT;
+    return (cc_get_typedef_name(ctx, yytext) != NULL) ? TYPEDEF_NAME : IDENT;
 }
 
 \"([^"\\\n]|{ESCAPES})*\" {

@@ -312,14 +312,14 @@ static void *default_error_begin(size_t error)
     return io;
 }
 
-static void default_error_frame(void *user, const frame_t *frame)
+static void default_error_frame(void *user, const bt_frame_t *frame)
 {
     io_t *io = user;
 
     char name_buffer[256] = { 0 };
     char path_buffer[512] = { 0 };
 
-    symbol_t symbol = {
+    bt_symbol_t symbol = {
         .name = text_make(name_buffer, sizeof(name_buffer)),
         .path = text_make(path_buffer, sizeof(path_buffer))
     };

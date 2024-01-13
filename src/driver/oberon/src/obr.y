@@ -60,7 +60,7 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
     constExpr expr optExpr
     designator factor term simpleExpr simpleExprInner qualified
 
-    optReceiver receiver returnType
+    optReceiver receiver return_type
 
 %type<symbol> identDef
 %type<ident> end
@@ -190,19 +190,19 @@ decl: valueDeclSeq { $$ = $1; }
 
 /* procedures */
 
-procDecl: PROCEDURE optReceiver identDef optParams returnType SEMI declSeq START stmtSeq end
+procDecl: PROCEDURE optReceiver identDef optParams return_type SEMI declSeq START stmtSeq end
     {
         $$ = obr_decl_procedure(x, @$, $3, $2, $4, $5, $7, $9, $10);
     }
     ;
 
-forward: PROCEDURE CARET optReceiver identDef optParams returnType
+forward: PROCEDURE CARET optReceiver identDef optParams return_type
     {
         $$ = obr_decl_procedure(x, @$, $4, $3, $5, $6, NULL, NULL, NULL);
     }
     ;
 
-returnType: %empty { $$ = NULL; }
+return_type: %empty { $$ = NULL; }
     | COLON type { $$ = $2; }
     ;
 

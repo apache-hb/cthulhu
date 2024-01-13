@@ -36,7 +36,7 @@ ctu_t *ctu_module(scan_t *scan, where_t where, vector_t *modspec, vector_t *impo
 ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, char *name)
 {
     ctu_t *ast = ctu_decl(scan, where, eCtuImport, name, false);
-    ast->importPath = path;
+    ast->import_path = path;
     return ast;
 }
 
@@ -45,8 +45,8 @@ ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, char *name)
 ctu_t *ctu_attrib(scan_t *scan, where_t where, vector_t *path, vector_t *args)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuAttrib);
-    ast->attribPath = path;
-    ast->attribArgs = args;
+    ast->attrib_path = path;
+    ast->attrib_args = args;
     return ast;
 }
 
@@ -126,7 +126,7 @@ ctu_t *ctu_stmt_branch(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then, ct
 ctu_t *ctu_expr_int(scan_t *scan, where_t where, mpz_t value)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuExprInt);
-    mpz_init_set(ast->intValue, value);
+    mpz_init_set(ast->int_value, value);
     return ast;
 }
 
@@ -244,7 +244,7 @@ ctu_t *ctu_expr_compare(scan_t *scan, where_t where, compare_t compare, ctu_t *l
 ctu_t *ctu_type_name(scan_t *scan, where_t where, vector_t *path)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuTypeName);
-    ast->typeName = path;
+    ast->type_name = path;
     return ast;
 }
 
@@ -258,8 +258,8 @@ ctu_t *ctu_type_pointer(scan_t *scan, where_t where, ctu_t *pointer)
 ctu_t *ctu_type_array(scan_t *scan, where_t where, ctu_t *array, ctu_t *length)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuTypeArray);
-    ast->arrayType = array;
-    ast->arrayLength = length;
+    ast->array_type = array;
+    ast->array_length = length;
     return ast;
 }
 
@@ -267,7 +267,7 @@ ctu_t *ctu_type_function(scan_t *scan, where_t where, vector_t *params, ctu_t *r
 {
     ctu_t *ast = ctu_new(scan, where, eCtuTypeFunction);
     ast->params = params;
-    ast->returnType = return_type;
+    ast->return_type = return_type;
     return ast;
 }
 
@@ -287,7 +287,7 @@ ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name,
     ctu_t *ast = ctu_decl(scan, where, eCtuDeclFunction, name, exported);
     ast->params = params;
     ast->variadic = variadic;
-    ast->returnType = return_type;
+    ast->return_type = return_type;
     ast->body = body;
     return ast;
 }
@@ -328,7 +328,7 @@ ctu_t *ctu_field(scan_t *scan, where_t where, char *name, ctu_t *type)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuField);
     ast->name = name;
-    ast->fieldType = type;
+    ast->field_type = type;
     return ast;
 }
 
@@ -336,7 +336,7 @@ ctu_t *ctu_param(scan_t *scan, where_t where, char *name, ctu_t *type)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuParam);
     ast->name = name;
-    ast->paramType = type;
+    ast->param_type = type;
     return ast;
 }
 

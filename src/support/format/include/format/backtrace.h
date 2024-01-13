@@ -8,7 +8,7 @@
 
 BEGIN_API
 
-typedef struct frame_t frame_t;
+typedef struct bt_frame_t bt_frame_t;
 typedef struct arena_t arena_t;
 typedef struct typevec_t typevec_t;
 
@@ -42,7 +42,7 @@ bt_report_t *bt_report_collect(arena_t *arena);
 ///
 /// @param report the report to add the frame to
 /// @param frame the frame to add to the report
-void bt_report_add(IN_NOTNULL bt_report_t *report, IN_NOTNULL const frame_t *frame);
+void bt_report_add(IN_NOTNULL bt_report_t *report, IN_NOTNULL const bt_frame_t *frame);
 
 /// @brief print a backtrace report
 ///

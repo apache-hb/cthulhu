@@ -47,6 +47,12 @@ typedef struct segment_t
     char *message;
 } segment_t;
 
+typedef struct event_builder_t
+{
+    event_t *event;
+    arena_t *arena;
+} event_builder_t;
+
 typedef struct notify_rules_t
 {
     set_t *warnings_as_errors;

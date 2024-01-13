@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-typedef struct frame_t frame_t;
+typedef struct bt_frame_t bt_frame_t;
 
 namespace ed
 {

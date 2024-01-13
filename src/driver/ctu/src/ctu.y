@@ -126,13 +126,13 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     path modspec
     imports importList
     decls declList
-    recordFields
-    stmtList
-    fnParamList
-    attribArgs
-    exprList optExprList
-    typeList optTypeList
-    variantFields optVariantFields
+    record_fields
+    stmt_list
+    fn_param_list
+    attrib_args
+    expr_list opt_expr_list
+    type_list opt_type_list
+    variant_field_list opt_variant_field_list
     initList
     attribs attrib attribBody attribList
 
@@ -156,26 +156,26 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %type<ast>
     import
-    decl innerDecl globalDecl functionDecl structDecl unionDecl recordField typeAliasDecl
-    functionBody
+    decl innerDecl global_decl fn_decl struct_decl union_decl record_field type_alias_decl
+    fn_body
     type
-    primary expr
-    orExpr andExpr eqExpr cmpExpr xorExpr bitExpr shiftExpr addExpr mulExpr unaryExpr postExpr
-    maybeExpr
-    stmt stmts localDecl returnStmt whileStmt assignStmt branchStmt
-    fnParam fnResult
-    variantDecl variantField underlying
-    fieldInit init
+    primary_expr expr
+    or_expr and_expr eq_expr compare_expr xor_expr bit_expr shift_expr add_expr mul_expr unary_expr postfix_expr
+    opt_expr
+    stmt stmts local_decl return_stmt while_stmt assign_stmt branch_stmt
+    fn_param fn_result
+    variantDecl variant_field underlying
+    field_init init
     singleAttrib
 
 %type<ident>
-    importAlias ident optIdent whileName variadic
+    importAlias ident opt_ident while_name variadic
 
 %type<boolean>
-    exported mut isDefault
+    exported mut is_default
 
 %type<params>
-    fnParams
+    fn_params
 
 %%
 
@@ -224,11 +224,11 @@ attribList: singleAttrib { $$ = vector_init($1); }
 
 singleAttrib: path { $$ = ctu_attrib(x, @$, $1, &kEmptyVector); }
     | path LPAREN RPAREN { $$ = ctu_attrib(x, @$, $1, &kEmptyVector); }
-    | path LPAREN attribArgs RPAREN { $$ = ctu_attrib(x, @$, $1, $3); }
+    | path LPAREN attrib_args RPAREN { $$ = ctu_attrib(x, @$, $1, $3); }
     ;
 
-attribArgs: expr { $$ = vector_init($1); }
-    | attribArgs COMMA expr { vector_push(&$1, $3); $$ = $1; }
+attrib_args: expr { $$ = vector_init($1); }
+    | attrib_args COMMA expr { vector_push(&$1, $3); $$ = $1; }
     ;
 
 /* toplevel decls */
@@ -244,72 +244,72 @@ declList: decl { $$ = vector_init($1); }
 decl: attribs innerDecl { $$ = ctu_apply($2, $1); }
     ;
 
-innerDecl: globalDecl { $$ = $1; }
-    | functionDecl { $$ = $1; }
-    | structDecl { $$ = $1; }
-    | typeAliasDecl { $$ = $1; }
+innerDecl: global_decl { $$ = $1; }
+    | fn_decl { $$ = $1; }
+    | struct_decl { $$ = $1; }
+    | type_alias_decl { $$ = $1; }
     | variantDecl { $$ = $1; }
-    | unionDecl { $$ = $1; }
+    | union_decl { $$ = $1; }
     ;
 
 /* variants/enums */
 
-variantDecl: exported VARIANT IDENT underlying LBRACE optVariantFields RBRACE { $$ = ctu_decl_variant(x, @$, $1, $3, $4, $6); }
+variantDecl: exported VARIANT IDENT underlying LBRACE opt_variant_field_list RBRACE { $$ = ctu_decl_variant(x, @$, $1, $3, $4, $6); }
     ;
 
 underlying: %empty { $$ = NULL; }
     | COLON type { $$ = $2; }
     ;
 
-optVariantFields: %empty { $$ = &kEmptyVector; }
-    | variantFields { $$ = $1; }
+opt_variant_field_list: %empty { $$ = &kEmptyVector; }
+    | variant_field_list { $$ = $1; }
     ;
 
-variantFields: variantField { $$ = vector_init($1); }
-    | variantFields variantField { vector_push(&$1, $2); $$ = $1; }
+variant_field_list: variant_field { $$ = vector_init($1); }
+    | variant_field_list variant_field { vector_push(&$1, $2); $$ = $1; }
     ;
 
-variantField: isDefault ident ASSIGN expr { $$ = ctu_variant_case(x, @$, $2, $1, $4); }
+variant_field: is_default ident ASSIGN expr { $$ = ctu_variant_case(x, @$, $2, $1, $4); }
     ;
 
-isDefault: DEFAULT { $$ = true; }
+is_default: DEFAULT { $$ = true; }
     | CASE { $$ = false; }
     ;
 
 /* functions */
 
-functionDecl: exported DEF IDENT fnParams fnResult functionBody { $$ = ctu_decl_function(x, @$, $1, $3, $4.params, $4.variadic, $5, $6); }
+fn_decl: exported DEF IDENT fn_params fn_result fn_body { $$ = ctu_decl_function(x, @$, $1, $3, $4.params, $4.variadic, $5, $6); }
     ;
 
-fnResult: %empty { $$ = NULL; }
+fn_result: %empty { $$ = NULL; }
     | COLON type { $$ = $2; }
     ;
 
-fnParams: %empty { $$ = ctu_params_new(&kEmptyVector, NULL); }
-    | LPAREN fnParamList variadic RPAREN { $$ = ctu_params_new($2, $3); }
+fn_params: %empty { $$ = ctu_params_new(&kEmptyVector, NULL); }
+    | LPAREN fn_param_list variadic RPAREN { $$ = ctu_params_new($2, $3); }
     ;
 
 variadic: %empty { $$ = NULL; }
     | COMMA IDENT COLON DOT3 { $$ = $2; }
     ;
 
-fnParamList: fnParam { $$ = vector_init($1); }
-    | fnParamList COMMA fnParam { vector_push(&$1, $3); $$ = $1; }
+fn_param_list: fn_param { $$ = vector_init($1); }
+    | fn_param_list COMMA fn_param { vector_push(&$1, $3); $$ = $1; }
     ;
 
-fnParam: IDENT COLON type { $$ = ctu_param(x, @$, $1, $3); }
+fn_param: IDENT COLON type { $$ = ctu_param(x, @$, $1, $3); }
     ;
 
-functionBody: ASSIGN expr SEMI { $$ = ctu_stmt_return(x, @$, $2); }
+fn_body: ASSIGN expr SEMI { $$ = ctu_stmt_return(x, @$, $2); }
     | stmts { $$ = $1; }
     | SEMI { $$ = NULL; }
     ;
 
 /* globals */
 
-globalDecl: EXPORT mut IDENT COLON type ASSIGN maybeExpr SEMI { $$ = ctu_decl_global(x, @$, true, $2, $3, $5, $7); }
+global_decl: EXPORT mut IDENT COLON type ASSIGN opt_expr SEMI { $$ = ctu_decl_global(x, @$, true, $2, $3, $5, $7); }
     | mut IDENT ASSIGN expr SEMI { $$ = ctu_decl_global(x, @$, false, $1, $2, NULL, $4); }
-    | mut IDENT COLON type ASSIGN maybeExpr SEMI { $$ = ctu_decl_global(x, @$, false, $1, $2, $4, $6); }
+    | mut IDENT COLON type ASSIGN opt_expr SEMI { $$ = ctu_decl_global(x, @$, false, $1, $2, $4, $6); }
     ;
 
 exported: %empty { $$ = false; }
@@ -322,26 +322,26 @@ mut: CONST { $$ = false; }
 
 /* type aliases */
 
-typeAliasDecl: exported TYPE IDENT ASSIGN type SEMI { $$ = ctu_decl_typealias(x, @$, $1, $3, false, $5); }
+type_alias_decl: exported TYPE IDENT ASSIGN type SEMI { $$ = ctu_decl_typealias(x, @$, $1, $3, false, $5); }
     ;
 
 /* structs */
 
-structDecl: exported STRUCT IDENT LBRACE recordFields RBRACE { $$ = ctu_decl_struct(x, @$, $1, $3, $5); }
+struct_decl: exported STRUCT IDENT LBRACE record_fields RBRACE { $$ = ctu_decl_struct(x, @$, $1, $3, $5); }
     ;
 
 /* unions */
 
-unionDecl: exported UNION IDENT LBRACE recordFields RBRACE { $$ = ctu_decl_union(x, @$, $1, $3, $5); }
+union_decl: exported UNION IDENT LBRACE record_fields RBRACE { $$ = ctu_decl_union(x, @$, $1, $3, $5); }
     ;
 
 /* fields */
 
-recordFields: recordField { $$ = vector_init($1); }
-    | recordFields recordField { vector_push(&$1, $2); $$ = $1; }
+record_fields: record_field { $$ = vector_init($1); }
+    | record_fields record_field { vector_push(&$1, $2); $$ = $1; }
     ;
 
-recordField: ident COLON type SEMI { $$ = ctu_field(x, @$, $1, $3); }
+record_field: ident COLON type SEMI { $$ = ctu_field(x, @$, $1, $3); }
     ;
 
 /* types */
@@ -349,59 +349,59 @@ recordField: ident COLON type SEMI { $$ = ctu_field(x, @$, $1, $3); }
 type: path { $$ = ctu_type_name(x, @$, $1); }
     | STAR type { $$ = ctu_type_pointer(x, @$, $2); }
     | LSQUARE STAR RSQUARE type { $$ = ctu_type_pointer(x, @$, $4); /* TODO: implement indexable pointers */ }
-    | DEF LPAREN optTypeList RPAREN ARROW type { $$ = ctu_type_function(x, @$, $3, $6); }
+    | DEF LPAREN opt_type_list RPAREN ARROW type { $$ = ctu_type_function(x, @$, $3, $6); }
     | LSQUARE expr RSQUARE type { $$ = ctu_type_array(x, @$, $4, $2); }
     ;
 
-typeList: type { $$ = vector_init($1); }
-    | typeList COMMA type { vector_push(&$1, $3); $$ = $1; }
+type_list: type { $$ = vector_init($1); }
+    | type_list COMMA type { vector_push(&$1, $3); $$ = $1; }
     ;
 
-optTypeList: %empty { $$ = &kEmptyVector; }
-    | typeList { $$ = $1; }
+opt_type_list: %empty { $$ = &kEmptyVector; }
+    | type_list { $$ = $1; }
     ;
 
 /* statements */
 
-stmtList: %empty { $$ = vector_of(0); }
-    | stmtList stmt { vector_push(&$1, $2); $$ = $1; }
+stmt_list: %empty { $$ = vector_of(0); }
+    | stmt_list stmt { vector_push(&$1, $2); $$ = $1; }
     ;
 
-whileName: %empty { $$ = NULL; }
+while_name: %empty { $$ = NULL; }
     | COLON2 IDENT { $$ = $2; }
     ;
 
-whileStmt: WHILE whileName expr stmts { $$ = ctu_stmt_while(x, @$, $2, $3, $4, NULL); }
-    | WHILE whileName expr stmts ELSE stmts { $$ = ctu_stmt_while(x, @$, $2, $3, $4, $6); }
+while_stmt: WHILE while_name expr stmts { $$ = ctu_stmt_while(x, @$, $2, $3, $4, NULL); }
+    | WHILE while_name expr stmts ELSE stmts { $$ = ctu_stmt_while(x, @$, $2, $3, $4, $6); }
     ;
 
-returnStmt: RETURN expr SEMI { $$ = ctu_stmt_return(x, @$, $2); }
+return_stmt: RETURN expr SEMI { $$ = ctu_stmt_return(x, @$, $2); }
     | RETURN SEMI { $$ = ctu_stmt_return(x, @$, NULL); }
     ;
 
-stmts: LBRACE stmtList RBRACE { $$ = ctu_stmt_list(x, @$, $2); }
+stmts: LBRACE stmt_list RBRACE { $$ = ctu_stmt_list(x, @$, $2); }
     ;
 
-localDecl: mut IDENT COLON type ASSIGN maybeExpr SEMI { $$ = ctu_stmt_local(x, @$, $1, $2, $4, $6); }
+local_decl: mut IDENT COLON type ASSIGN opt_expr SEMI { $$ = ctu_stmt_local(x, @$, $1, $2, $4, $6); }
     | mut IDENT ASSIGN expr SEMI { $$ = ctu_stmt_local(x, @$, $1, $2, NULL, $4); }
     ;
 
-assignStmt: expr ASSIGN expr SEMI { $$ = ctu_stmt_assign(x, @$, $1, $3); }
+assign_stmt: expr ASSIGN expr SEMI { $$ = ctu_stmt_assign(x, @$, $1, $3); }
     ;
 
-branchStmt: IF expr stmts { $$ = ctu_stmt_branch(x, @$, $2, $3, NULL); }
+branch_stmt: IF expr stmts { $$ = ctu_stmt_branch(x, @$, $2, $3, NULL); }
     | IF expr stmts ELSE stmts { $$ = ctu_stmt_branch(x, @$, $2, $3, $5); }
     ;
 
 stmt: expr SEMI { $$ = $1; }
     | stmts { $$ = $1; }
-    | returnStmt { $$ = $1; }
-    | localDecl { $$ = $1; }
-    | whileStmt { $$ = $1; }
-    | assignStmt { $$ = $1; }
-    | branchStmt { $$ = $1; }
-    | BREAK optIdent SEMI { $$ = ctu_stmt_break(x, @$, $2); }
-    | CONTINUE optIdent SEMI { $$ = ctu_stmt_continue(x, @$, $2); }
+    | return_stmt { $$ = $1; }
+    | local_decl { $$ = $1; }
+    | while_stmt { $$ = $1; }
+    | assign_stmt { $$ = $1; }
+    | branch_stmt { $$ = $1; }
+    | BREAK opt_ident SEMI { $$ = ctu_stmt_break(x, @$, $2); }
+    | CONTINUE opt_ident SEMI { $$ = ctu_stmt_continue(x, @$, $2); }
     ;
 
 /* init */
@@ -409,102 +409,102 @@ stmt: expr SEMI { $$ = $1; }
 init: DOT LBRACE initList RBRACE { $$ = ctu_expr_init(x, @$, $3); }
     ;
 
-initList: fieldInit { $$ = vector_init($1); }
-    | initList COMMA fieldInit { vector_push(&$1, $3); $$ = $1; }
+initList: field_init { $$ = vector_init($1); }
+    | initList COMMA field_init { vector_push(&$1, $3); $$ = $1; }
     ;
 
-fieldInit: ident ASSIGN expr { $$ = ctu_field_init(x, @$, $1, $3); }
+field_init: ident ASSIGN expr { $$ = ctu_field_init(x, @$, $1, $3); }
     ;
 
 /* expressions */
 
-maybeExpr: NOINIT { $$ = NULL; }
+opt_expr: NOINIT { $$ = NULL; }
     | expr { $$ = $1; }
     ;
 
-optExprList: %empty { $$ = &kEmptyVector; }
-    | exprList { $$ = $1; }
+opt_expr_list: %empty { $$ = &kEmptyVector; }
+    | expr_list { $$ = $1; }
     ;
 
-exprList: expr { $$ = vector_init($1); }
-    | exprList COMMA expr { vector_push(&$1, $3); $$ = $1; }
+expr_list: expr { $$ = vector_init($1); }
+    | expr_list COMMA expr { vector_push(&$1, $3); $$ = $1; }
     ;
 
-primary: LPAREN expr RPAREN { $$ = $2; }
+primary_expr: LPAREN expr RPAREN { $$ = $2; }
     | INTEGER { $$ = ctu_expr_int(x, @$, $1.value); }
     | BOOLEAN { $$ = ctu_expr_bool(x, @$, $1); }
     | STRING { $$ = ctu_expr_string(x, @$, $1.text, $1.size); }
     | path { $$ = ctu_expr_name(x, @$, $1); }
-    | AS LT type GT LPAREN primary RPAREN { $$ = ctu_expr_cast(x, @$, $6, $3); }
+    | AS LT type GT LPAREN primary_expr RPAREN { $$ = ctu_expr_cast(x, @$, $6, $3); }
     | init { $$ = $1; }
     ;
 
-postExpr: primary { $$ = $1; }
-    | postExpr LPAREN optExprList RPAREN { $$ = ctu_expr_call(x, @$, $1, $3); }
-    | postExpr LSQUARE expr RSQUARE { $$ = ctu_expr_index(x, @$, $1, $3); }
-    | postExpr DOT IDENT { $$ = ctu_expr_field(x, @$, $1, $3); }
-    | postExpr ARROW IDENT { $$ = ctu_expr_field_indirect(x, @$, $1, $3); }
+postfix_expr: primary_expr { $$ = $1; }
+    | postfix_expr LPAREN opt_expr_list RPAREN { $$ = ctu_expr_call(x, @$, $1, $3); }
+    | postfix_expr LSQUARE expr RSQUARE { $$ = ctu_expr_index(x, @$, $1, $3); }
+    | postfix_expr DOT IDENT { $$ = ctu_expr_field(x, @$, $1, $3); }
+    | postfix_expr ARROW IDENT { $$ = ctu_expr_field_indirect(x, @$, $1, $3); }
     ;
 
-unaryExpr: postExpr { $$ = $1; }
-    | MINUS unaryExpr { $$ = ctu_expr_unary(x, @$, eUnaryNeg, $2); }
-    | PLUS unaryExpr { $$ = ctu_expr_unary(x, @$, eUnaryAbs, $2); }
-    | NOT unaryExpr { $$ = ctu_expr_unary(x, @$, eUnaryNot, $2); }
-    | STAR unaryExpr { $$ = ctu_expr_deref(x, @$, $2); }
-    | BITAND unaryExpr { $$ = ctu_expr_ref(x, @$, $2); }
+unary_expr: postfix_expr { $$ = $1; }
+    | MINUS unary_expr { $$ = ctu_expr_unary(x, @$, eUnaryNeg, $2); }
+    | PLUS unary_expr { $$ = ctu_expr_unary(x, @$, eUnaryAbs, $2); }
+    | NOT unary_expr { $$ = ctu_expr_unary(x, @$, eUnaryNot, $2); }
+    | STAR unary_expr { $$ = ctu_expr_deref(x, @$, $2); }
+    | BITAND unary_expr { $$ = ctu_expr_ref(x, @$, $2); }
     ;
 
-mulExpr: unaryExpr { $$ = $1; }
-    | unaryExpr STAR mulExpr { $$ = ctu_expr_binary(x, @$, eBinaryMul, $1, $3); }
-    | unaryExpr DIVIDE mulExpr { $$ = ctu_expr_binary(x, @$, eBinaryDiv, $1, $3); }
-    | unaryExpr MODULO mulExpr { $$ = ctu_expr_binary(x, @$, eBinaryRem, $1, $3); }
+mul_expr: unary_expr { $$ = $1; }
+    | unary_expr STAR mul_expr { $$ = ctu_expr_binary(x, @$, eBinaryMul, $1, $3); }
+    | unary_expr DIVIDE mul_expr { $$ = ctu_expr_binary(x, @$, eBinaryDiv, $1, $3); }
+    | unary_expr MODULO mul_expr { $$ = ctu_expr_binary(x, @$, eBinaryRem, $1, $3); }
     ;
 
-addExpr: mulExpr { $$ = $1; }
-    | mulExpr PLUS addExpr { $$ = ctu_expr_binary(x, @$, eBinaryAdd, $1, $3); }
-    | mulExpr MINUS addExpr { $$ = ctu_expr_binary(x, @$, eBinarySub, $1, $3); }
+add_expr: mul_expr { $$ = $1; }
+    | mul_expr PLUS add_expr { $$ = ctu_expr_binary(x, @$, eBinaryAdd, $1, $3); }
+    | mul_expr MINUS add_expr { $$ = ctu_expr_binary(x, @$, eBinarySub, $1, $3); }
     ;
 
-shiftExpr: addExpr { $$ = $1; }
-    | addExpr SHL shiftExpr { $$ = ctu_expr_binary(x, @$, eBinaryShl, $1, $3); }
-    | addExpr SHR shiftExpr { $$ = ctu_expr_binary(x, @$, eBinaryShr, $1, $3); }
+shift_expr: add_expr { $$ = $1; }
+    | add_expr SHL shift_expr { $$ = ctu_expr_binary(x, @$, eBinaryShl, $1, $3); }
+    | add_expr SHR shift_expr { $$ = ctu_expr_binary(x, @$, eBinaryShr, $1, $3); }
     ;
 
-bitExpr: shiftExpr { $$ = $1; }
-    | shiftExpr BITAND bitExpr { $$ = ctu_expr_binary(x, @$, eBinaryBitAnd, $1, $3); }
-    | shiftExpr BITOR bitExpr { $$ = ctu_expr_binary(x, @$, eBinaryBitOr, $1, $3); }
+bit_expr: shift_expr { $$ = $1; }
+    | shift_expr BITAND bit_expr { $$ = ctu_expr_binary(x, @$, eBinaryBitAnd, $1, $3); }
+    | shift_expr BITOR bit_expr { $$ = ctu_expr_binary(x, @$, eBinaryBitOr, $1, $3); }
     ;
 
-xorExpr: bitExpr { $$ = $1; }
-    | bitExpr BITXOR xorExpr { $$ = ctu_expr_binary(x, @$, eBinaryXor, $1, $3); }
+xor_expr: bit_expr { $$ = $1; }
+    | bit_expr BITXOR xor_expr { $$ = ctu_expr_binary(x, @$, eBinaryXor, $1, $3); }
     ;
 
-cmpExpr: xorExpr { $$ = $1; }
-    | xorExpr LT cmpExpr { $$ = ctu_expr_compare(x, @$, eCompareLt, $1, $3); }
-    | xorExpr GT cmpExpr { $$ = ctu_expr_compare(x, @$, eCompareGt, $1, $3); }
-    | xorExpr LTE cmpExpr { $$ = ctu_expr_compare(x, @$, eCompareLte, $1, $3); }
-    | xorExpr GTE cmpExpr { $$ = ctu_expr_compare(x, @$, eCompareGte, $1, $3); }
+compare_expr: xor_expr { $$ = $1; }
+    | xor_expr LT compare_expr { $$ = ctu_expr_compare(x, @$, eCompareLt, $1, $3); }
+    | xor_expr GT compare_expr { $$ = ctu_expr_compare(x, @$, eCompareGt, $1, $3); }
+    | xor_expr LTE compare_expr { $$ = ctu_expr_compare(x, @$, eCompareLte, $1, $3); }
+    | xor_expr GTE compare_expr { $$ = ctu_expr_compare(x, @$, eCompareGte, $1, $3); }
     ;
 
-eqExpr: cmpExpr { $$ = $1; }
-    | eqExpr EQ cmpExpr { $$ = ctu_expr_compare(x, @$, eCompareEq, $1, $3); }
-    | eqExpr NEQ cmpExpr { $$ = ctu_expr_compare(x, @$, eCompareNeq, $1, $3); }
+eq_expr: compare_expr { $$ = $1; }
+    | eq_expr EQ compare_expr { $$ = ctu_expr_compare(x, @$, eCompareEq, $1, $3); }
+    | eq_expr NEQ compare_expr { $$ = ctu_expr_compare(x, @$, eCompareNeq, $1, $3); }
     ;
 
-andExpr: eqExpr { $$ = $1; }
-    | eqExpr AND xorExpr { $$ = ctu_expr_compare(x, @$, eCompareAnd, $1, $3); }
+and_expr: eq_expr { $$ = $1; }
+    | eq_expr AND xor_expr { $$ = ctu_expr_compare(x, @$, eCompareAnd, $1, $3); }
     ;
 
-orExpr: andExpr { $$ = $1; }
-    | orExpr OR andExpr { $$ = ctu_expr_compare(x, @$, eCompareOr, $1, $3); }
+or_expr: and_expr { $$ = $1; }
+    | or_expr OR and_expr { $$ = ctu_expr_compare(x, @$, eCompareOr, $1, $3); }
     ;
 
-expr: orExpr { $$ = $1; }
+expr: or_expr { $$ = $1; }
     ;
 
 /* basic */
 
-optIdent: %empty { $$ = NULL; }
+opt_ident: %empty { $$ = NULL; }
     | IDENT { $$ = $1; }
     ;
 

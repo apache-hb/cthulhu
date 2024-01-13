@@ -1,7 +1,7 @@
 #include "unit/ct-test.h"
 
-#include "memory/arena.h"
 #include "defaults/memory.h"
+#include "memory/arena.h"
 
 #include "std/str.h"
 #include "std/set.h"

@@ -4,29 +4,17 @@
 
 uint16_t endian_swap16(uint16_t value)
 {
-#if CC_MSVC
-    return _byteswap_ushort(value);
-#else
-    return __builtin_bswap16(value);
-#endif
+    return BYTESWAP_U16(value);
 }
 
 uint32_t endian_swap32(uint32_t value)
 {
-#if CC_MSVC
-    return _byteswap_ulong(value);
-#else
-    return __builtin_bswap32(value);
-#endif
+    return BYTESWAP_U32(value);
 }
 
 uint64_t endian_swap64(uint64_t value)
 {
-#if CC_MSVC
-    return _byteswap_uint64(value);
-#else
-    return __builtin_bswap64(value);
-#endif
+    return BYTESWAP_U64(value);
 }
 
 uint16_t native_order16(uint16_t value, endian_t order)

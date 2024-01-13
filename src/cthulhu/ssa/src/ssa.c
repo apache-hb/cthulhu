@@ -2,6 +2,7 @@
 
 #include "cthulhu/tree/query.h"
 
+#include "memory/arena.h"
 #include "std/str.h"
 #include "std/map.h"
 #include "std/set.h"
@@ -180,7 +181,7 @@ static ssa_symbol_t *function_create(ssa_compile_t *ssa, const tree_t *tree)
     ssa_symbol_t *self = symbol_create_decl(ssa, tree, storage);
 
     size_t locals = vector_len(tree->locals);
-    self->locals = typevec_of(sizeof(ssa_local_t), locals);
+    self->locals = typevec_of(sizeof(ssa_local_t), locals, ssa->arena);
     for (size_t i = 0; i < locals; i++)
     {
         const tree_t *local = vector_get(tree->locals, i);
@@ -199,7 +200,7 @@ static ssa_symbol_t *function_create(ssa_compile_t *ssa, const tree_t *tree)
     }
 
     size_t params = vector_len(tree->params);
-    self->params = typevec_of(sizeof(ssa_param_t), params);
+    self->params = typevec_of(sizeof(ssa_param_t), params, ssa->arena);
     for (size_t i = 0; i < params; i++)
     {
         const tree_t *param = vector_get(tree->params, i);
@@ -684,7 +685,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
     case eTreeExprCall: {
         ssa_operand_t callee = compile_tree(ssa, tree->callee);
         size_t len = vector_len(tree->args);
-        typevec_t *args = typevec_of(sizeof(ssa_operand_t), len);
+        typevec_t *args = typevec_of(sizeof(ssa_operand_t), len, ssa->arena);
         for (size_t i = 0; i < len; i++)
         {
             const tree_t *arg = vector_get(tree->args, i);

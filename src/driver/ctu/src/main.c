@@ -8,7 +8,7 @@
 #include "std/vector.h"
 #include "std/str.h"
 
-#include "memory/memory.h"
+#include "memory/arena.h"
 
 #include "ctu_bison.h" // IWYU pragma: keep
 #include "ctu_flex.h" // IWYU pragma: keep
@@ -29,13 +29,14 @@ static void *ctu_preparse(driver_t *driver, scan_t *scan)
     CTU_UNUSED(scan);
 
     lifetime_t *lifetime = handle_get_lifetime(driver);
+    arena_t *arena = lifetime_get_arena(lifetime);
 
     ctu_scan_t info = {
         .reports = lifetime_get_logger(lifetime),
         .attribs = vector_new(4)
     };
 
-    return ctu_memdup(&info, sizeof(ctu_scan_t));
+    return arena_memdup(&info, sizeof(ctu_scan_t), arena);
 }
 
 static void ctu_postparse(driver_t *driver, scan_t *scan, void *tree)

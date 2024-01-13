@@ -4,9 +4,13 @@ option('languages', type : 'array',
     value : [ 'ctu', 'pl0', 'oberon', 'example' ]
 )
 
-# TODO: move away from languages to options per language
-option('lang_cc', type : 'feature',
-    description : 'build the c compiler frontend',
+option('lang_c', type : 'feature',
+    description : 'build the c language driver, implies lang_cpp',
+    value : 'auto'
+)
+
+option('lang_cpp', type : 'feature',
+    description : 'build the c preprocessor',
     value : 'auto'
 )
 

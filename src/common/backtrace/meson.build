@@ -7,13 +7,13 @@ unwind = cc.find_library('unwind', required : false)
 has_unwind = cc.check_header('<unwind.h>', dependencies : unwind)
 
 if dbghlp.found()
-    src += [ 'src/bt_dbghlp.c' ]
+    src += [ 'src/dbghelp.c' ]
     backtrace_deps = [ dbghlp ]
 elif has_unwind
-    src += [ 'src/bt_unwind.c' ]
+    src += [ 'src/unwind.c' ]
     backtrace_deps = [ unwind ]
 else
-    src += [ 'src/bt_null.c' ]
+    src += [ 'src/null.c' ]
     backtrace_deps = [ ]
 endif
 

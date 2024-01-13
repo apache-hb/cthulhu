@@ -34,7 +34,7 @@ static const decl_search_t kSearchType = {
 
 static tree_t *sema_type_name(tree_t *sema, const ctu_t *type)
 {
-    return util_search_path(sema, &kSearchType, type->node, type->typeName);
+    return util_search_path(sema, &kSearchType, type->node, type->type_name);
 }
 
 static tree_t *ctu_sema_type_pointer(ctu_sema_t *sema, const ctu_t *type)
@@ -45,7 +45,7 @@ static tree_t *ctu_sema_type_pointer(ctu_sema_t *sema, const ctu_t *type)
 
 static tree_t *sema_type_function(ctu_sema_t *sema, const ctu_t *type)
 {
-    tree_t *result = ctu_sema_type(sema, type->returnType);
+    tree_t *result = ctu_sema_type(sema, type->return_type);
 
     size_t len = vector_len(type->params);
     vector_t *params = vector_of(len);
@@ -67,8 +67,8 @@ static tree_t *sema_type_function(ctu_sema_t *sema, const ctu_t *type)
 
 static tree_t *sema_type_array(ctu_sema_t *sema, const ctu_t *type)
 {
-    tree_t *inner = ctu_sema_type(sema, type->arrayType);
-    tree_t *length = ctu_sema_rvalue(sema, type->arrayLength, ctu_get_int_type(eDigitSize, eSignUnsigned));
+    tree_t *inner = ctu_sema_type(sema, type->array_type);
+    tree_t *length = ctu_sema_rvalue(sema, type->array_length, ctu_get_int_type(eDigitSize, eSignUnsigned));
 
     mpz_t value;
     mpz_init(value);
