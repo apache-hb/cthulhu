@@ -37,8 +37,10 @@ static void set_attribs(tree_t *decl, obr_visibility_t vis, tree_link_t linkage)
         .link = linkage,
         .visibility = remap_visibility(vis)
     };
+    arena_t *arena = get_global_arena();
+    tree_attribs_t *ptr = arena_memdup(&attrib, sizeof(tree_attribs_t), arena);
 
-    tree_set_attrib(decl, ctu_memdup(&attrib, sizeof(tree_attribs_t)));
+    tree_set_attrib(decl, ptr);
 }
 
 static obr_t *begin_resolve(tree_t *sema, tree_t *self, void *user, obr_kind_t kind)

@@ -1,4 +1,5 @@
 #include "base/panic.h"
+#include "base/text.h"
 #include "common.h"
 
 #include "core/macros.h"
@@ -57,6 +58,7 @@ typedef struct entry_t
 // state for a backtrace format run
 typedef struct backtrace_t
 {
+    /// the user provided options
     print_backtrace_t options;
 
     /// format context
@@ -198,6 +200,9 @@ static typevec_t *collapse_frames(const typevec_t *frames, arena_t *arena)
 // | [2] symbol (file:line)
 // | [N] symbol (file:line)
 
+// the length of a pointer in hex, plus the 0x prefix
+#define PTR_TEXT_LEN (2 + 2 * sizeof(void*))
+
 static size_t get_largest_entry(const typevec_t *entries)
 {
     size_t len = typevec_len(entries);
@@ -215,24 +220,45 @@ static size_t get_largest_entry(const typevec_t *entries)
     return largest;
 }
 
-static size_t get_largest_collapsed_symbol(const typevec_t *entries)
+typedef struct symbol_match_info_t
 {
-    size_t len = typevec_len(entries);
+    // the largest symbol in this sequence
+    size_t largest_symbol;
+
+    // how many entries in this sequence before needing to recalculate
+    // the largest symbol
+    size_t count;
+} symbol_match_info_t;
+
+static symbol_match_info_t get_largest_collapsed_symbol(const collapsed_t *entries, size_t len)
+{
+    CTASSERT(entries != NULL);
+
     size_t largest = strlen(kUnknownSymbol);
 
     for (size_t i = 0; i < len; i++)
     {
-        const collapsed_t *entry = typevec_offset(entries, i);
+        const collapsed_t *entry = entries + i;
         CTASSERTF(entry != NULL, "entry at %zu is NULL", i);
 
         if (entry->entry == NULL)
-            continue;
+        {
+            symbol_match_info_t info = {
+                .largest_symbol = largest,
+                .count = i
+            };
+            return info;
+        }
 
         size_t width = strlen(entry->entry->symbol);
         largest = MAX(width, largest);
     }
 
-    return largest;
+    symbol_match_info_t info = {
+        .largest_symbol = largest,
+        .count = len
+    };
+    return info;
 }
 
 static char *fmt_entry_location(backtrace_t *pass, const entry_t *entry)
@@ -352,8 +378,10 @@ void print_backtrace(print_backtrace_t config, bt_report_t *report)
 
     typevec_t *frames = collapse_frames(report->entries, options.arena);
 
-    size_t symbol_align = get_largest_collapsed_symbol(frames);
+    collapsed_t *collapsed = typevec_data(frames);
     size_t frame_count = typevec_len(frames);
+
+    symbol_match_info_t symbol_align = get_largest_collapsed_symbol(collapsed, frame_count);
     size_t align = get_num_width(frame_count);
 
     backtrace_t pass = {
@@ -361,15 +389,31 @@ void print_backtrace(print_backtrace_t config, bt_report_t *report)
         .format_context = format_context_make(options),
         .frames = frames,
         .index_align = align,
-        .symbol_align = symbol_align,
+        .symbol_align = symbol_align.largest_symbol,
     };
 
     for (size_t i = 0; i < frame_count; i++)
     {
-        const collapsed_t *collapsed = typevec_offset(frames, i);
-        CTASSERTF(collapsed != NULL, "collapsed at %zu is NULL", i);
+        const collapsed_t *frame = typevec_offset(frames, i);
+        CTASSERTF(frame != NULL, "collapsed at %zu is NULL", i);
 
-        print_collapsed(&pass, i, collapsed);
+        // this logic handles aligning symbol names on a per region basis
+        // a region is defined as consecutive frames that were not recursive
+        if (symbol_align.count > 0)
+        {
+            symbol_align.count -= 1;
+        }
+        else
+        {
+            if (frame->entry != NULL)
+            {
+                size_t remaining = frame_count - i;
+                symbol_align = get_largest_collapsed_symbol(frame, remaining);
+                pass.symbol_align = symbol_align.largest_symbol;
+            }
+        }
+
+        print_collapsed(&pass, i, frame);
     }
 }
 
@@ -380,10 +424,10 @@ bt_report_t *bt_report_new(arena_t *arena)
         .entries = typevec_new(sizeof(entry_t), 4, arena),
     };
 
-    bt_report_t *report = ARENA_MALLOC(arena, sizeof(bt_report_t), "bt_report", NULL);
+    bt_report_t *report = ARENA_MALLOC(sizeof(bt_report_t), "bt_report", NULL, arena);
     *report = result;
 
-    ARENA_IDENTIFY(arena, report->entries, "entries", report);
+    ARENA_IDENTIFY(report->entries, "entries", report, arena);
 
     return report;
 }
@@ -401,9 +445,6 @@ bt_report_t *bt_report_collect(arena_t *arena)
 
     return report;
 }
-
-// the length of a pointer in hex, plus the 0x prefix
-#define PTR_TEXT_LEN (2 + 2 * sizeof(void*))
 
 USE_DECL
 void bt_report_add(bt_report_t *report, const bt_frame_t *frame)

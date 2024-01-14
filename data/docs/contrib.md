@@ -169,6 +169,20 @@ Cthulhu also aims to be easy to port to more "exotic" systems, as such avoid rel
   - This is more to aid in readability but some compilers dont support all syntax
 
 ## Styleguide
+* all macros in headers should be prefixed with `CT`
+* all macros defined in generated files should be prefixed with `CTU_`
+
+* @ref arena_t should always be the last argument to a function
+  * the exception to this rule is variadic functions
+
+```c
+// wrong
+char *action_that_allocates(arena_t *arena, const char *config);
+
+// correct
+char *action_that_allocates(const char *config, arena_t *arena);
+
+```
 Source files contents should be layed out in the following order
 
 ```c

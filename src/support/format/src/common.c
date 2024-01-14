@@ -164,7 +164,7 @@ char *fmt_left_align(arena_t *arena, size_t width, const char *fmt, ...)
     if (len >= width) return msg;
 
     size_t size = width - 1;
-    char *result = ARENA_MALLOC(arena, size, "fmt_left_align", NULL);
+    char *result = ARENA_MALLOC(size, "fmt_left_align", NULL, arena);
     memset(result, ' ', width);
     memcpy(result, msg, len);
 
@@ -188,7 +188,7 @@ char *fmt_right_align(arena_t *arena, size_t width, const char *fmt, ...)
     if (len >= width) return msg;
 
     size_t size = width - 1;
-    char *result = ARENA_MALLOC(arena, size, "fmt_right_align", NULL);
+    char *result = ARENA_MALLOC(size, "fmt_right_align", NULL, arena);
     memset(result, ' ', width);
     memcpy(result + (width - len), msg, len);
 
@@ -250,7 +250,7 @@ static void load_lineinfo(text_cache_t *text)
 
 static text_cache_t *text_cache_new(io_t *io, text_view_t source, size_t len, arena_t *arena)
 {
-    text_cache_t *cache = ARENA_MALLOC(arena, sizeof(text_cache_t), "text_cache", NULL);
+    text_cache_t *cache = ARENA_MALLOC(sizeof(text_cache_t), "text_cache", NULL, arena);
     cache->arena = arena;
     cache->io = io;
     cache->source = source;
@@ -315,11 +315,11 @@ static bool cache_is_valid(text_cache_t *cache)
     return cache->io == NULL || io_error(cache->io) == 0;
 }
 
-cache_map_t *cache_map_new(size_t size)
+cache_map_t *cache_map_new(size_t size, arena_t *arena)
 {
-    arena_t *arena = get_global_arena();
+    CTASSERT(arena != NULL);
 
-    cache_map_t *data = ARENA_MALLOC(arena, sizeof(cache_map_t), "cache_map", NULL);
+    cache_map_t *data = ARENA_MALLOC(sizeof(cache_map_t), "cache_map", NULL, arena);
     data->arena = arena;
     data->map = map_optimal(size, kTypeInfoString, arena);
 
@@ -460,7 +460,7 @@ text_t cache_escape_line(text_cache_t *cache, size_t line, const colour_pallete_
         }
     }
 
-    text_t *ptr = ARENA_MALLOC(cache->arena, sizeof(text_t), "text", NULL);
+    text_t *ptr = ARENA_MALLOC(sizeof(text_t), "text", NULL, cache->arena);
     ptr->text = typevec_data(result);
     ptr->size = typevec_len(result);
 
@@ -493,10 +493,11 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
     CTASSERT(events != NULL);
     CTASSERT(title != NULL);
 
+    arena_t *arena = get_global_arena();
     size_t error_budget = config.max_errors == 0 ? 20 : config.max_errors;
     size_t warn_budget = config.max_warnings == 0 ? 20 : config.max_warnings;
 
-    cache_map_t *cache = cache_map_new(32);
+    cache_map_t *cache = cache_map_new(32, arena);
 
     text_format_t fmt = config.report_format;
     text_config_t text = config.text_config;
@@ -530,7 +531,7 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
             // merge consecutive events with the same message
             if (repeat > 0)
             {
-                first->message = format("%s (repeated %zu times)", first->message, repeat);
+                first->message = str_format(arena, "%s (repeated %zu times)", first->message, repeat);
             }
 
             switch (diag->severity)
@@ -583,14 +584,14 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
     io_t *io = text.io;
 
     format_context_t ctx = {
-        .arena = get_global_arena(),
+        .arena = arena,
         .pallete = text.colours,
     };
 
     if (result != EXIT_OK)
     {
         io_printf(io, "compilation failed during stage: %s\n", title);
-        vector_t *parts = vector_new(3);
+        vector_t *parts = vector_new_arena(3, arena);
         if (error_count > 0)
         {
             char *colour_err = colour_format(ctx, COLOUR_FATAL, "%zu errors", error_count);
@@ -609,7 +610,7 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
             vector_push(&parts, colour_bug);
         }
 
-        char *msg = str_join(", ", parts);
+        char *msg = str_join_arena(", ", parts, arena);
         io_printf(io, "  %s\n", msg);
     }
     else if (warning_count > 0)
@@ -623,8 +624,8 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
 }
 
 static const char *const kFormatBuiltinHeading[eHeadingCount] = {
-    [eHeadingGeneric] = "<builtin>:%" PRI_LINE "",
-    [eHeadingMicrosoft] = "<builtin>(%" PRI_LINE ")",
+    [eHeadingGeneric] = SCAN_BUILTIN_NAME ":%" PRI_LINE "",
+    [eHeadingMicrosoft] = SCAN_BUILTIN_NAME "(%" PRI_LINE ")",
 };
 
 static line_t calc_line_number(bool zero_indexed_lines, line_t line)

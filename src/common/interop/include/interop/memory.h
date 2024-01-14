@@ -1,7 +1,7 @@
 #pragma once
 
 #include "memory/arena.h"
-#include "scan/scan.h"
+#include "scan/scan.h" // IWYU pragma: keep
 
 /// route memory for flex and bison though cthulhu allocators
 #define FLEX_MEMORY(prefix)                                                 \
@@ -9,7 +9,7 @@
     {                                                                       \
         scan_t *scan = yyget_extra(scanner);                                \
         arena_t *arena = scan_get_arena(scan);                              \
-        return ARENA_MALLOC(arena, size, "yyalloc", scan);                  \
+        return ARENA_MALLOC(size, "yyalloc", scan, arena);                  \
     }                                                                       \
     inline void *prefix##realloc(void *ptr, size_t bytes, yyscan_t scanner) \
     {                                                                       \

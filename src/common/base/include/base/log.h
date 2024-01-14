@@ -13,7 +13,6 @@ BEGIN_API
 /// @brief Verbose logging
 /// @{
 
-
 /// @brief a logging callback
 typedef void (*verbose_t)(const char *fmt, va_list args);
 

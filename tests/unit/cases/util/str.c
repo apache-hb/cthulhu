@@ -35,6 +35,7 @@ static const char *kStringParts[] = {"zero", "one", "two", "three", "four", "fiv
 int main(void)
 {
     test_install_panic_handler();
+    test_install_electric_fence();
 
     arena_t *arena = ctu_default_alloc();
     test_suite_t suite = test_suite_new("string", arena);
@@ -125,18 +126,18 @@ int main(void)
             map_set(entries, "!", (void *)"?");
             map_set(entries, " ", (void *)"___");
 
-            char *result = str_replace_many("hello world!", entries);
+            char *result = str_replace_many("hello world!", entries, arena);
             CTASSERT(str_equal(result, "world___hello?"));
         });
         GROUP_EXPECT_PANIC(group, "null entry", {
             map_t *entries = map_optimal(64, kTypeInfoString, arena);
             map_set(entries, "hello", NULL);
 
-            (void)str_replace_many("hello world!", entries);
+            (void)str_replace_many("hello world!", entries, arena);
         });
-        GROUP_EXPECT_PANIC(group, "null str", (void)str_replace_many(NULL, map_new(1, kTypeInfoString, arena)));
-        GROUP_EXPECT_PANIC(group, "null map", (void)str_replace_many("hello world!", NULL));
-        GROUP_EXPECT_PANIC(group, "null all", (void)str_replace_many(NULL, NULL));
+        GROUP_EXPECT_PANIC(group, "null str", (void)str_replace_many(NULL, map_new(1, kTypeInfoString, arena), arena));
+        GROUP_EXPECT_PANIC(group, "null map", (void)str_replace_many("hello world!", NULL, arena));
+        GROUP_EXPECT_PANIC(group, "null all", (void)str_replace_many(NULL, NULL, arena));
     }
 
     vector_t *parts = vector_of_arena(STRING_PARTS_LEN, arena);
@@ -146,42 +147,42 @@ int main(void)
     }
 
     {
-        test_group_t group = test_group(&suite, "str_join");
+        test_group_t group = test_group(&suite, "str_join_arena");
         GROUP_EXPECT_PASS2(group, "joined equals", {
-            char *joined = str_join(" ", parts);
+            char *joined = str_join_arena(" ", parts, arena);
             CTASSERT(str_equal(joined, "zero one two three four five six seven eight nine"));
         });
         GROUP_EXPECT_PASS2(group, "joined empty", {
             vector_t *empty = vector_of_arena(0, arena);
-            char *joined = str_join(" ", empty);
+            char *joined = str_join_arena(" ", empty, arena);
             CTASSERT(str_equal(joined, ""));
         });
         GROUP_EXPECT_PASS2(group, "joined one", {
             vector_t *one = vector_init_arena((char *)"hello", arena);
-            char *joined = str_join(" ", one);
+            char *joined = str_join_arena(" ", one, arena);
             CTASSERT(str_equal(joined, "hello"));
         });
-        GROUP_EXPECT_PANIC(group, "null sep", (void)str_join(NULL, vector_of(0)));
-        GROUP_EXPECT_PANIC(group, "null parts", (void)str_join(" ", NULL));
-        GROUP_EXPECT_PANIC(group, "null item", (void)str_join(" ", vector_init(NULL)));
-        GROUP_EXPECT_PANIC(group, "null all", (void)str_join(NULL, NULL));
+        GROUP_EXPECT_PANIC(group, "null sep", (void)str_join_arena(NULL, vector_of(0), arena));
+        GROUP_EXPECT_PANIC(group, "null parts", (void)str_join_arena(" ", NULL, arena));
+        GROUP_EXPECT_PANIC(group, "null item", (void)str_join_arena(" ", vector_init_arena(NULL, arena), arena));
+        GROUP_EXPECT_PANIC(group, "null all", (void)str_join_arena(NULL, NULL, arena));
     }
     {
         test_group_t group = test_group(&suite, "str_repeat");
         GROUP_EXPECT_PASS2(group, "repeat equals", {
-            char *repeated = str_repeat("hello", 3);
+            char *repeated = str_repeat("hello", 3, arena);
             CTASSERT(str_equal(repeated, "hellohellohello"));
         });
         GROUP_EXPECT_PASS2(group, "repeat empty", {
-            char *repeated = str_repeat("", 3);
+            char *repeated = str_repeat("", 3, arena);
             CTASSERT(str_equal(repeated, ""));
         });
         GROUP_EXPECT_PASS2(group, "repeat none", {
-            char *repeated = str_repeat("hello", 0);
+            char *repeated = str_repeat("hello", 0, arena);
             CTASSERT(str_equal(repeated, ""));
         });
         GROUP_EXPECT_PASS2(group, "repeat one", {
-            char *repeated = str_repeat("hello", 1);
+            char *repeated = str_repeat("hello", 1, arena);
             CTASSERT(str_equal(repeated, "hello"));
         });
     }
@@ -190,7 +191,7 @@ int main(void)
     ///
 
     {
-        vector_t *hello = str_split_arena("hello world!", " ", arena);
+        vector_t *hello = str_split("hello world!", " ", arena);
         test_group_t group = test_group(&suite, "str_split equals");
         GROUP_EXPECT_PASS(group, "length", vector_len(hello) == 2);
         GROUP_EXPECT_PASS(group, "first", str_equal((char *)vector_get(hello, 0), "hello"));
@@ -198,14 +199,14 @@ int main(void)
     }
 
     {
-        vector_t *nothing = str_split_arena("three different words", "something", arena);
+        vector_t *nothing = str_split("three different words", "something", arena);
         test_group_t group = test_group(&suite, "str_split nothing");
         GROUP_EXPECT_PASS(group, "length", vector_len(nothing) == 1);
         GROUP_EXPECT_PASS(group, "first", str_equal((char *)vector_get(nothing, 0), "three different words"));
     }
 
     {
-        vector_t *repeat = str_split_arena("some,,,text", ",", arena);
+        vector_t *repeat = str_split("some,,,text", ",", arena);
         test_group_t group = test_group(&suite, "str_split repeat");
         GROUP_EXPECT_PASS(group, "length", vector_len(repeat) == 4);
         GROUP_EXPECT_PASS(group, "first", str_equal((char *)vector_get(repeat, 0), "some"));
@@ -215,14 +216,14 @@ int main(void)
     }
 
     {
-        vector_t *path_parts = str_split_arena("a-path", "/", arena);
+        vector_t *path_parts = str_split("a-path", "/", arena);
         test_group_t group = test_group(&suite, "str_split parts");
         GROUP_EXPECT_PASS(group, "length", vector_len(path_parts) == 1);
         GROUP_EXPECT_PASS(group, "first", str_equal((char *)vector_get(path_parts, 0), "a-path"));
     }
 
     {
-        vector_t *empty_string = str_split_arena("", " ", arena);
+        vector_t *empty_string = str_split("", " ", arena);
         test_group_t group = test_group(&suite, "str_split empty string");
         GROUP_EXPECT_PASS(group, "length", vector_len(empty_string) == 1);
         GROUP_EXPECT_PASS(group, "first", str_equal((char *)vector_get(empty_string, 0), ""));
@@ -230,7 +231,7 @@ int main(void)
 
     {
         const char *text = "hello world!";
-        vector_t *empty_sep = str_split_arena(text, "", arena);
+        vector_t *empty_sep = str_split(text, "", arena);
         test_group_t empty_split_group = test_group(&suite, "str_split empty sep");
         GROUP_EXPECT_PASS(empty_split_group, "length", vector_len(empty_sep) == 12);
 
@@ -248,29 +249,29 @@ int main(void)
 
     test_group_t normalize_group = test_group(&suite, "str_normalize");
     GROUP_EXPECT_PASS2(normalize_group, "normalize equals", {
-        char *normalized = str_normalize("hello world!");
+        char *normalized = str_normalize("hello world!", arena);
         CTASSERT(str_equal(normalized, "hello world!"));
     });
     GROUP_EXPECT_PASS2(normalize_group, "normalize empty", {
-        char *normalized = str_normalize("");
+        char *normalized = str_normalize("", arena);
         CTASSERT(str_equal(normalized, ""));
     });
     GROUP_EXPECT_PASS2(normalize_group, "normalize newline", {
-        char *result = str_normalize("hello\n world!");
+        char *result = str_normalize("hello\n world!", arena);
         CTASSERT(str_equal(result, "hello\\n world!"));
     });
-    GROUP_EXPECT_PANIC(normalize_group, "normalize null", (void)str_normalize(NULL));
+    GROUP_EXPECT_PANIC(normalize_group, "normalize null", (void)str_normalize(NULL, arena));
 
     test_group_t normalizen_group = test_group(&suite, "str_normalizen");
     GROUP_EXPECT_PASS2(normalizen_group, "normalizen equals", {
-        char *normalized = str_normalizen("hello world!", 12);
+        char *normalized = str_normalizen("hello world!", 12, arena);
         CTASSERT(str_equal(normalized, "hello world!"));
     });
     GROUP_EXPECT_PASS2(normalizen_group, "normalizen empty", {
-        char *normalized = str_normalizen("", 0);
+        char *normalized = str_normalizen("", 0, arena);
         CTASSERT(str_equal(normalized, ""));
     });
-    GROUP_EXPECT_PANIC(normalizen_group, "normalizen null", (void)str_normalizen(NULL, 0));
+    GROUP_EXPECT_PANIC(normalizen_group, "normalizen null", (void)str_normalizen(NULL, 0, arena));
 
     for (size_t i = 0; i < ESCAPES_LEN; i++)
     {
@@ -279,8 +280,8 @@ int main(void)
         char *input = str_format(arena, "hello %s world", pair.escaped);
         char *expected = str_format(arena, "hello %s world", pair.unescaped);
 
-        char *result = str_normalize(input);
-        char *result_n = str_normalizen(input, strlen(input));
+        char *result = str_normalize(input, arena);
+        char *result_n = str_normalizen(input, strlen(input), arena);
 
         char *name = str_format(arena, "escaped %s equal (`%s` != `%s`)", pair.escaped, expected, result);
         GROUP_EXPECT_PASS(normalize_group, name, str_equal(result, expected));
@@ -303,19 +304,19 @@ int main(void)
     ///
 
     vector_t *one_arg = vector_init_arena((char *)"hello", arena);
-    const char *one_prefix = str_common_prefix(one_arg);
+    const char *one_prefix = str_common_prefix(one_arg, arena);
 
     vector_t *no_common = vector_of_arena(2, arena);
     vector_set(no_common, 0, (void *)"hello");
     vector_set(no_common, 1, (void *)"world/world2");
 
-    const char *no_common_prefix = str_common_prefix(no_common);
+    const char *no_common_prefix = str_common_prefix(no_common, arena);
 
     vector_t *common = vector_of_arena(2, arena);
     vector_set(common, 0, (void *)"hello" NATIVE_PATH_SEPARATOR "stuff");
     vector_set(common, 1, (void *)"hello" NATIVE_PATH_SEPARATOR " world");
 
-    const char *some_prefix = str_common_prefix(common);
+    const char *some_prefix = str_common_prefix(common, arena);
 
     test_group_t group = test_group(&suite, "str_common_prefix");
     GROUP_EXPECT_PASS(group, "one arg", str_equal(one_prefix, "hello"));

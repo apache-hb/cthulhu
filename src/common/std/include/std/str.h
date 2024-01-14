@@ -36,17 +36,6 @@ char *str_vformat(arena_t *arena, IN_STRING const char *fmt, va_list args);
 NODISCARD CT_PRINTF(1, 2)
 char *format(FMT_STRING const char *fmt, ...);
 
-/// @brief format a string with a @a va_list
-///
-/// format a string with printf-like syntax with a va_list
-///
-/// @param fmt the format string
-/// @param args the va_list
-///
-/// @return the formatted string
-NODISCARD
-char *vformat(IN_STRING const char *fmt, va_list args);
-
 /// @brief see if a string starts with a prefix
 ///
 /// @param str the string to search
@@ -76,26 +65,40 @@ bool str_endswith(IN_STRING const char *str, IN_STRING const char *suffix);
 NODISCARD
 char *str_join(IN_STRING const char *sep, IN_NOTNULL vector_t *parts);
 
+/// @brief join strings
+///
+/// join a vector of strings together with a separator
+///
+/// @param sep the separator to use
+/// @param parts a vector of strings to join
+/// @param arena the arena to allocate the joined string in
+///
+/// @return the joined string
+NODISCARD
+char *str_join_arena(IN_STRING const char *sep, IN_NOTNULL vector_t *parts, IN_NOTNULL arena_t *arena);
+
 /// @brief repeat a string
 ///
 /// repeat a string n times
 ///
 /// @param str the string to repeat
 /// @param times the number of times to repeat
+/// @param arena the arena to allocate the repeated string in
 ///
 /// @return the repeated string
 NODISCARD
-char *str_repeat(IN_STRING const char *str, size_t times);
+char *str_repeat(IN_STRING const char *str, size_t times, IN_NOTNULL arena_t *arena);
 
 /// @brief turn a string into a C string literal
 ///
 /// normalize a string into a valid C string literal
 ///
 /// @param str the string to normalize
+/// @param arena the arena to allocate the normalized string in
 ///
 /// @return the normalized string
 NODISCARD
-char *str_normalize(IN_STRING const char *str);
+char *str_normalize(IN_STRING const char *str, IN_NOTNULL arena_t *arena);
 
 /// @brief turn a string with length into a C string literal
 ///
@@ -103,10 +106,11 @@ char *str_normalize(IN_STRING const char *str);
 ///
 /// @param str the string to normalize
 /// @param len the length of the string
+/// @param arena the arena to allocate the normalized string in
 ///
 /// @return the normalized string
 NODISCARD
-char *str_normalizen(IN_READS(len) const char *str, size_t len);
+char *str_normalizen(IN_READS(len) const char *str, size_t len, IN_NOTNULL arena_t *arena);
 
 /// @brief split a string into a vector by a separator
 ///
@@ -116,23 +120,22 @@ char *str_normalizen(IN_READS(len) const char *str, size_t len);
 ///
 /// @param str the string to split
 /// @param sep the separator to split by
+/// @param arena the arena to allocate the substrings in
 ///
 /// @return the substrings
 NODISCARD
-vector_t *str_split(IN_STRING const char *str, IN_STRING const char *sep);
-
-NODISCARD
-vector_t *str_split_arena(IN_STRING const char *str, IN_STRING const char *sep, arena_t *arena);
+vector_t *str_split(IN_STRING const char *str, IN_STRING const char *sep, IN_NOTNULL arena_t *arena);
 
 /// @brief find the longest common prefix of a vector of paths
 ///
 /// @note if no common prefix is found, the empty string is returned.
 ///
 /// @param args the vector of paths to find the common prefix of
+/// @param arena the arena to allocate the common prefix in
 ///
 /// @return the common prefix
 NODISCARD RET_NOTNULL
-const char *str_common_prefix(IN_NOTNULL vector_t *args);
+const char *str_common_prefix(IN_NOTNULL vector_t *args, IN_NOTNULL arena_t *arena);
 
 /// @brief find the last instance of a substring in a string
 ///
@@ -179,7 +182,8 @@ size_t str_count_any(IN_STRING const char *str, IN_STRING const char *chars);
 ///
 /// @retval true @p c is any of @p chars
 /// @retval false @p c is not any of @p chars
-bool char_is_any_of(char c, const char *chars);
+NODISCARD CONSTFN
+bool char_is_any_of(char c, IN_STRING const char *chars);
 
 /// @brief check if a string contains a substring
 ///
@@ -199,25 +203,27 @@ bool str_contains(IN_STRING const char *str, IN_STRING const char *search);
 ///
 /// @return a copy of @p str with all instances of @p search replaced with @p repl
 NODISCARD
-char *str_replace(IN_STRING const char *str, IN_STRING const char *search, IN_STRING const char *repl, arena_t *arena);
+char *str_replace(IN_STRING const char *str, IN_STRING const char *search, IN_STRING const char *repl, IN_NOTNULL arena_t *arena);
 
 /// @brief replace all instances of a each substring in a string with provided replacement
 ///
 /// @param str the string to replace elements in
 /// @param repl a map of substrings to replace and their replacements
+/// @param arena the arena to allocate the new string in
 ///
 /// @return a copy of @p str with all instances of substrings in @p repl replaced
 NODISCARD
-char *str_replace_many(IN_STRING const char *str, IN_NOTNULL const map_t *repl);
+char *str_replace_many(IN_STRING const char *str, IN_NOTNULL const map_t *repl, IN_NOTNULL arena_t *arena);
 
 /// @brief trim leading and trailing characters from a string
 ///
 /// @param str the string to trim
 /// @param letters the letters to be removed
+/// @param arena the arena to allocate the trimmed string in
 ///
 /// @return the trimmed string
 NODISCARD
-char *str_trim(IN_STRING const char *str, IN_STRING const char *letters);
+char *str_trim(IN_STRING const char *str, IN_STRING const char *letters, IN_NOTNULL arena_t *arena);
 
 /// @brief remove all instances of @p letters from @p str
 ///
@@ -235,8 +241,13 @@ char *str_erase(IN_READS(len) char *str, size_t len, IN_STRING const char *lette
 ///
 /// @return the hash
 NODISCARD CONSTFN
-size_t strhash(IN_STRING const char *str);
+size_t str_hash(IN_STRING const char *str);
 
+/// @brief hash a string with a provided length
+///
+/// @param str the string to hash
+///
+/// @return the hash
 NODISCARD CONSTFN
 size_t text_hash(text_view_t text);
 
@@ -254,53 +265,65 @@ bool str_equal(IN_STRING const char *lhs, IN_STRING const char *rhs);
 /// @brief get the filename from a path
 ///
 /// @param path the path to get the filename from
+/// @param arena the arena to allocate the filename in
 ///
 /// @return the filename extracted from @p path
 NODISCARD
-char *str_basename(IN_STRING const char *path);
+char *str_basename(IN_STRING const char *path, IN_NOTNULL arena_t *arena);
 
 /// @brief get the filename from a path
 ///
 /// @param path the path to get the filename from
+/// @param arena the arena to allocate the filename in
 ///
 /// @return the filename extracted from @p path
 NODISCARD
-char *str_filename(IN_STRING const char *path);
+char *str_filename(IN_STRING const char *path, IN_NOTNULL arena_t *arena);
 
 /// @brief remove the last file extension from a path
 ///
 /// @param path the path to remove the extension from
+/// @param arena the arena to allocate the path in
 ///
 /// @return the @p path with the last extension removed
 NODISCARD
-char *str_noext(IN_STRING const char *path);
+char *str_noext(IN_STRING const char *path, IN_NOTNULL arena_t *arena);
 
 /// @brief get the last file extension from a path
 ///
 /// @param path the path to get the extension from
+/// @param arena the arena to allocate the extension in
 ///
 /// @return the last extension in @p path
 NODISCARD
-char *str_ext(IN_STRING const char *path);
+char *str_ext(IN_STRING const char *path, IN_NOTNULL arena_t *arena);
 
+/// @brief get the directory segment of a path
+///
+/// @param path the path to get the directory from
+/// @param arena the arena to allocate the directory in
+///
+/// @return the directory extracted from @p path
 NODISCARD
-char *str_directory(arena_t *arena, IN_STRING const char *path);
+char *str_directory(IN_STRING const char *path, IN_NOTNULL arena_t *arena);
 
 /// @brief uppercase an ascii string
 ///
 /// @param str the string
+/// @param arena the arena to allocate the uppercase string in
 ///
 /// @return @p str with all lowercase charaters replaced with uppercase
 NODISCARD
-char *str_upper(IN_STRING const char *str);
+char *str_upper(IN_STRING const char *str, IN_NOTNULL arena_t *arena);
 
 /// @brief lowercase an ascii string
 ///
 /// @param str the string
+/// @param arena the arena to allocate the lowercase string in
 ///
 /// @return @p str with all uppercase charaters replaced with lowercase
 NODISCARD
-char *str_lower(IN_STRING const char *str);
+char *str_lower(IN_STRING const char *str, IN_NOTNULL arena_t *arena);
 
 /// @brief get the lowercase version of a character
 ///

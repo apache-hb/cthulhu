@@ -33,7 +33,7 @@ size_t get_num_width(size_t num);
 char *fmt_left_align(arena_t *arena, size_t width, const char *fmt, ...);
 char *fmt_right_align(arena_t *arena, size_t width, const char *fmt, ...);
 
-cache_map_t *cache_map_new(size_t size);
+cache_map_t *cache_map_new(size_t size, arena_t *arena);
 void cache_map_delete(cache_map_t *map);
 
 text_cache_t *cache_emplace_file(cache_map_t *map, const char *path);

@@ -127,7 +127,7 @@ static ssa_symbol_t *symbol_new(ssa_compile_t *ssa, const char *name, const tree
 {
     const ssa_type_t *ssa_type = ssa_type_create_cached(ssa->types, type);
 
-    ssa_symbol_t *symbol = ARENA_MALLOC(ssa->arena, sizeof(ssa_symbol_t), name, ssa);
+    ssa_symbol_t *symbol = ARENA_MALLOC(sizeof(ssa_symbol_t), name, ssa, ssa->arena);
     symbol->linkage = attribs.link;
     symbol->visibility = attribs.visibility;
     symbol->link_name = attribs.mangle;
@@ -258,7 +258,7 @@ static ssa_module_t *module_create(ssa_compile_t *ssa, const char *name)
 {
     vector_t *path = vector_clone(ssa->path);
 
-    ssa_module_t *mod = ARENA_MALLOC(ssa->arena, sizeof(ssa_module_t), name, ssa);
+    ssa_module_t *mod = ARENA_MALLOC(sizeof(ssa_module_t), name, ssa, ssa->arena);
     mod->name = name;
     mod->path = path;
 
@@ -308,12 +308,12 @@ static ssa_operand_t add_step(ssa_compile_t *ssa, ssa_step_t step)
 
 static ssa_block_t *ssa_block_create(ssa_symbol_t *symbol, const char *name, size_t size, arena_t *arena)
 {
-    ssa_block_t *bb = ARENA_MALLOC(arena, sizeof(ssa_block_t), name, symbol);
+    ssa_block_t *bb = ARENA_MALLOC(sizeof(ssa_block_t), name, symbol, arena);
     bb->name = name;
     bb->steps = typevec_new(sizeof(ssa_step_t), size, arena);
     vector_push(&symbol->blocks, bb);
 
-    ARENA_IDENTIFY(arena, bb->steps, "steps", bb);
+    ARENA_IDENTIFY(bb->steps, "steps", bb, arena);
 
     return bb;
 }
@@ -386,10 +386,11 @@ static ssa_operand_t compile_loop(ssa_compile_t *ssa, const tree_t *tree)
     ssa_block_t *body_block = ssa_block_create(ssa->current_symbol, NULL, 0, ssa->arena);
     ssa_block_t *tail_block = ssa_block_create(ssa->current_symbol, NULL, 0, ssa->arena);
 
-    ssa_loop_t *save = ARENA_MALLOC(ssa->arena, sizeof(ssa_loop_t), "ssa_loop", ssa);
-    save->enter_loop = body_block;
-    save->exit_loop = tail_block;
-    map_set(ssa->symbol_loops, tree, save);
+    ssa_loop_t save = {
+        .enter_loop = body_block,
+        .exit_loop = tail_block,
+    };
+    map_set(ssa->symbol_loops, tree, &save);
 
     ssa_operand_t loop = {
         .kind = eOperandBlock,
@@ -431,6 +432,8 @@ static ssa_operand_t compile_loop(ssa_compile_t *ssa, const tree_t *tree)
         }
     };
     add_step(ssa, repeat_loop);
+
+    map_delete(ssa->symbol_loops, tree);
 
     ssa->current_block = tail_block;
     return loop;
@@ -923,7 +926,7 @@ ssa_result_t ssa_compile(map_t *mods, arena_t *arena)
     {
         map_entry_t entry = map_next(&iter);
 
-        ssa.path = str_split_arena(entry.key, ".", arena);
+        ssa.path = str_split(entry.key, ".", arena);
         forward_module(&ssa, entry.value);
     }
 

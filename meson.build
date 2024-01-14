@@ -31,7 +31,7 @@ is_release = buildtype.contains('release')
 cc = meson.get_compiler('c')
 target = target_machine.system()
 
-opt_assert = get_option('assert').disable_auto_if(is_release)
+opt_paranoid = get_option('paranoid').disable_auto_if(is_release)
 
 frontend_gui = get_option('frontend_gui')
 
@@ -87,7 +87,8 @@ config_cdata = configuration_data({
     'CTU_PATCH': parts[2].to_int()
 })
 
-config_cdata.set10('CTU_DEBUG', opt_assert.allowed())
+config_cdata.set10('CTU_DEBUG', is_debug)
+config_cdata.set10('CTU_PARANOID', opt_paranoid.allowed())
 
 # we use `__attribute__((const|pure))` heavily, but during unit tests we
 # violate function preconditions to test assertions.
@@ -265,7 +266,7 @@ summary = {
         'C preprocessor': opt_lang_cpp.allowed(),
         'Memory tracing': trace_memory.allowed(),
         'Analyze': opt_analyze.enabled(),
-        'Assertions': opt_assert.allowed()
+        'Paranoid asserts': opt_paranoid.allowed()
     },
     'Graphical Interface': {
         'Enabled': frontend_gui.allowed(),

@@ -13,7 +13,7 @@ Source::Source(const char *str, arena_t *arena)
     : path(str)
     , io(io_file(path.c_str(), kAccess, arena))
 {
-    basename = str_filename(path.c_str());
+    basename = str_filename(path.c_str(), arena);
 
     os_error_t err = io_error(io);
     if (err == 0)

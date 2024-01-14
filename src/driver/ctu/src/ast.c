@@ -6,11 +6,11 @@ static ctu_t *ctu_new(scan_t *scan, where_t where, ctu_kind_t kind)
 {
     arena_t *arena = scan_get_arena(scan);
 
-    ctu_t *self = ARENA_MALLOC(arena, sizeof(ctu_t), "ctu", scan);
+    ctu_t *self = ARENA_MALLOC(sizeof(ctu_t), "ctu", scan, arena);
     self->kind = kind;
     self->node = node_new(scan, where);
 
-    ARENA_IDENTIFY(arena, self->node, "node", self);
+    ARENA_IDENTIFY(self->node, "node", self, arena);
 
     return self;
 }

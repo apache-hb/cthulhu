@@ -17,7 +17,7 @@
 
 static c89_source_t *source_new(io_t *io, const char *path, arena_t *arena)
 {
-    c89_source_t *source = ARENA_MALLOC(arena, sizeof(c89_source_t), path, io);
+    c89_source_t *source = ARENA_MALLOC(sizeof(c89_source_t), path, io, arena);
     source->io = io;
     source->path = path;
     return source;

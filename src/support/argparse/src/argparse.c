@@ -17,7 +17,7 @@
 
 static ap_callback_t *ap_callback_new(ap_event_t event, void *data, arena_t *arena)
 {
-    ap_callback_t *self = ARENA_MALLOC(arena, sizeof(ap_callback_t), "posarg_callback", NULL);
+    ap_callback_t *self = ARENA_MALLOC(sizeof(ap_callback_t), "posarg_callback", NULL, arena);
     self->callback = event;
     self->data = data;
     return self;
@@ -101,7 +101,7 @@ ap_t *ap_new(cfg_group_t *config, arena_t *arena)
 {
     CTASSERT(config != NULL);
 
-    ap_t *self = ARENA_MALLOC(arena, sizeof(ap_t), "argparse", config);
+    ap_t *self = ARENA_MALLOC(sizeof(ap_t), "argparse", config, arena);
 
     self->arena = arena;
 
@@ -115,12 +115,12 @@ ap_t *ap_new(cfg_group_t *config, arena_t *arena)
     self->errors = vector_new_arena(16, arena);
     self->count = 0;
 
-    ARENA_IDENTIFY(arena, self->name_lookup, "name_lookup", self);
-    ARENA_IDENTIFY(arena, self->event_lookup, "event_lookup", self);
-    ARENA_IDENTIFY(arena, self->posarg_callbacks, "posarg_callbacks", self);
-    ARENA_IDENTIFY(arena, self->posargs, "posargs", self);
-    ARENA_IDENTIFY(arena, self->unknown, "unknown", self);
-    ARENA_IDENTIFY(arena, self->errors, "errors", self);
+    ARENA_IDENTIFY(self->name_lookup, "name_lookup", self, arena);
+    ARENA_IDENTIFY(self->event_lookup, "event_lookup", self, arena);
+    ARENA_IDENTIFY(self->posarg_callbacks, "posarg_callbacks", self, arena);
+    ARENA_IDENTIFY(self->posargs, "posargs", self, arena);
+    ARENA_IDENTIFY(self->unknown, "unknown", self, arena);
+    ARENA_IDENTIFY(self->errors, "errors", self, arena);
 
     add_config_fields(self, config);
 
@@ -133,7 +133,7 @@ void ap_event(ap_t *self, const cfg_field_t *param, ap_event_t callback, void *d
     CTASSERT(callback != NULL);
 
     ap_callback_t *fn = ap_callback_new(callback, data, self->arena);
-    ARENA_REPARENT(self->arena, fn, self);
+    ARENA_REPARENT(fn, self, self->arena);
 
     if (param == NULL)
     {

@@ -14,12 +14,18 @@ BEGIN_API
 
 #ifdef WITH_DOXYGEN
 #   define CTU_DEBUG 1
+#   define CTU_PARANOID 1
 #endif
 
 /// @def CTU_DEBUG
 /// @brief enable panic handling
 /// @note this is only enabled in debug builds, see [The build guide](@ref building) for more
 /// information
+
+/// @def CTU_PARANOID
+/// @brief enable paranoid assertions
+/// for expensive assertions that shouldnt be used too often
+/// use these for things that you do not want being turned into assumes due to the execution cost
 
 /// @brief panic location information
 typedef struct
@@ -115,17 +121,19 @@ NORETURN ctpanic(panic_t panic, FMT_STRING const char *msg, ...) CT_PRINTF(2, 3)
 /// @param ... the format string and optional arguments to format
 #define NEVER(...) CTU_PANIC(__VA_ARGS__)
 
-/// @def GLOBAL_INIT(ID)
-/// @brief assert that a global is only initialized once
-///
-/// @param ID the unique identifier for this global
-#define GLOBAL_INIT(ID)                              \
-    do                                               \
-    {                                                \
-        static bool init = false;                    \
-        CTASSERTM(!init, ID " already initialized"); \
-        init = true;                                 \
-    } while (0)
+#if CTU_PARANOID
+#   define CT_PARANOID(...) __VA_ARGS__
+#   define CT_PARANOID_ASSERTF(expr, ...) CTASSERTF(expr, __VA_ARGS__)
+#else
+#   define CT_PARANOID(...)
+#   define CT_PARANOID_ASSERTF(expr, ...)
+#endif
+
+/// @def CT_PARANOID(...)
+/// @brief a block of code that is only executed in paranoid builds
+
+/// @def CT_PARANOID_ASSERTF(expr, ...)
+/// @brief assert a condition with a message and optional format arguments
 
 /// @} // Panic
 

@@ -7,7 +7,6 @@
 
 #include "std/map.h"
 
-#include "io/io.h"
 #include "io/impl.h"
 
 #include <string.h>
@@ -182,7 +181,7 @@ static inode_t *vfs_create_file(fs_t *fs, inode_t *self, const char *name)
     virtual_file_t file = {
         .name = name,
 
-        .data = ARENA_MALLOC(fs->arena, 0x1000, "virtual_file", self),
+        .data = ARENA_MALLOC(0x1000, "virtual_file", self, fs->arena),
         .used = 0,
         .size = 0x1000
     };

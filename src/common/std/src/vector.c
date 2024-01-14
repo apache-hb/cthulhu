@@ -48,7 +48,7 @@ static void vector_ensure(vector_t **vector, size_t size)
 
 static vector_t *vector_init_inner(size_t size, size_t used, arena_t *arena)
 {
-    vector_t *vector = ARENA_MALLOC(arena, vector_typesize(size), "vector", NULL);
+    vector_t *vector = ARENA_MALLOC(vector_typesize(size), "vector", NULL, arena);
 
     vector->arena = arena;
     vector->size = size;

@@ -1,9 +1,10 @@
 #include "core/macros.h"
 #include "io/io.h"
-#include "memory/memory.h"
+#include "memory/arena.h"
 #include "format/notify.h"
 
 #include "base/panic.h"
+#include "memory/memory.h"
 #include "scan/node.h"
 #include "common.h"
 
@@ -95,7 +96,7 @@ static void print_scan_header(rich_t *rich, size_t largest, size_t line, const s
 
     const char *name = scan_path(scan);
     const char *lang = scan_language(scan);
-    char *padding = str_repeat(" ", get_num_width(largest));
+    char *padding = str_repeat(" ", get_num_width(largest), rich->arena);
 
     if (scan_is_builtin(scan))
     {
@@ -126,7 +127,7 @@ static void print_file_header(rich_t *rich, const node_t *node)
         const char *name = scan_path(scan);
         const char *lang = scan_language(scan);
 
-        char *padding = str_repeat(" ", width);
+        char *padding = str_repeat(" ", width, rich->arena);
 
         io_printf(config.io, " %s => %s [%s:%zu]\n", padding, lang, name, line);
     }
@@ -136,7 +137,7 @@ static void print_file_header(rich_t *rich, const node_t *node)
     }
 }
 
-static char *fmt_underline(text_cache_t *cache, const node_t *node, size_t limit)
+static char *fmt_underline(text_cache_t *cache, const node_t *node, size_t limit, arena_t *arena)
 {
     CTASSERT(cache != NULL);
 
@@ -145,7 +146,7 @@ static char *fmt_underline(text_cache_t *cache, const node_t *node, size_t limit
     text_view_t view = cache_get_line(cache, where.first_line);
     size_t width = MIN(view.size, limit);
 
-    typevec_t *padding = typevec_new(sizeof(char), width, get_global_arena());
+    typevec_t *padding = typevec_new(sizeof(char), width, arena);
     for (size_t i = 0; i < width; i++)
     {
         if (i >= where.first_column) break;
@@ -161,8 +162,8 @@ static char *fmt_underline(text_cache_t *cache, const node_t *node, size_t limit
         underline_width = MIN(where.last_column - where.first_column, 1);
     }
 
-    const char *lines = (underline_width > 1) ? str_repeat("~", underline_width - 1) : "";
-    char *underline = format("%s^%s", (char*)typevec_data(padding), lines);
+    const char *lines = (underline_width > 1) ? str_repeat("~", underline_width - 1, arena) : "";
+    char *underline = str_format(arena, "%s^%s", (char*)typevec_data(padding), lines);
 
     return underline;
 }
@@ -181,23 +182,23 @@ static void print_file_segment(rich_t *rich, const node_t *node, const char *mes
 
     size_t display_line = get_line_number(config.config, node);
     size_t width = get_num_width(MAX(display_line, rich->largest_line));
-    char *padding = str_repeat(" ", width);
+    char *padding = str_repeat(" ", width, rich->arena);
     char *line = fmt_left_align(rich->arena, width, "%zu", display_line);
 
     text_cache_t *file = cache_emplace_scan(rich->file_cache, scan);
     text_t source = cache_escape_line(file, data_line, config.colours, rich->max_columns);
 
     // get the first line of the message
-    vector_t *lines = str_split_arena(message, "\n", rich->arena);
+    vector_t *lines = str_split(message, "\n", rich->arena);
     char *first = vector_get(lines, 0);
 
     if (vector_len(lines) > 1)
     {
         char *one = colour_text(rich->fmt, COLOUR_SEGMENT, "(1)");
-        first = format("%s %s", one, first);
+        first = str_format(rich->arena, "%s %s", one, first);
     }
 
-    char *underline = fmt_underline(file, node, rich->max_columns);
+    char *underline = fmt_underline(file, node, rich->max_columns, rich->arena);
     char *coloured_underline = colour_text(rich->fmt, COLOUR_UNDERLINE, underline);
 
     const char *pretext = !isspace(source.text[0]) ? " " : "";
@@ -207,7 +208,7 @@ static void print_file_segment(rich_t *rich, const node_t *node, const char *mes
     io_printf(config.io, " %s |%s%s %s.\n", padding, pretext, coloured_underline, first);
 
     size_t extra_padding = strlen(underline);
-    char *extra = str_repeat(" ", extra_padding);
+    char *extra = str_repeat(" ", extra_padding, rich->arena);
 
     size_t len = vector_len(lines);
     size_t align = get_num_width(len);
@@ -228,7 +229,7 @@ static void print_segment_message(rich_t *rich, const char *message)
 
     text_config_t config = rich->config;
 
-    vector_t *lines = str_split_arena(message, "\n", rich->arena);
+    vector_t *lines = str_split(message, "\n", rich->arena);
     size_t len = vector_len(lines);
 
     for (size_t i = 0; i < len; i++)
@@ -292,13 +293,11 @@ static typevec_t *collect_segments(rich_t *rich, const typevec_t *all, const sca
     CTASSERT(rich != NULL);
     CTASSERT(scan != NULL);
 
-    arena_t *arena = get_global_arena();
-
     if (all == NULL)
-        return typevec_new(sizeof(segment_t), 0, arena);
+        return typevec_new(sizeof(segment_t), 0, rich->arena);
 
     size_t count = typevec_len(all);
-    typevec_t *primary = typevec_new(sizeof(segment_t), count, arena);
+    typevec_t *primary = typevec_new(sizeof(segment_t), count, rich->arena);
     for (size_t i = 0; i < count; i++)
     {
         const segment_t *segment = typevec_offset(all, i);
@@ -352,18 +351,18 @@ static join_result_t join_node_messages(rich_t *rich, const segment_t *segment, 
         result.used_primary = true;
 
         char *coloured = colour_text(rich->fmt, COLOUR_MESSAGE, segment->message);
-        other->message = format("%s\n%s", coloured, other->message);
+        other->message = str_format(rich->arena, "%s\n%s", coloured, other->message);
     }
     else if (other->message == primary)
     {
         result.used_primary = true;
 
         char *coloured = colour_text(rich->fmt, COLOUR_MESSAGE, other->message);
-        other->message = format("%s\n%s", segment->message, coloured);
+        other->message = str_format(rich->arena, "%s\n%s", segment->message, coloured);
     }
     else
     {
-        other->message = format("%s\n%s", segment->message, other->message);
+        other->message = str_format(rich->arena, "%s\n%s", segment->message, other->message);
     }
 
     return result;
@@ -376,7 +375,7 @@ static typevec_t *merge_segments(rich_t *rich, const typevec_t *segments, const 
 
     // now merge segments that share the same span
     size_t len = typevec_len(segments);
-    typevec_t *result = typevec_new(sizeof(segment_t), len, get_global_arena());
+    typevec_t *result = typevec_new(sizeof(segment_t), len, rich->arena);
     for (size_t i = 0; i < len; i++)
     {
         const segment_t *segment = typevec_offset(segments, i);
@@ -536,7 +535,7 @@ void text_report_rich(text_config_t config, const event_t *event)
         .config = config,
         .event = event,
         .severity = get_severity(event->diagnostic, info.override_fatal),
-        .file_cache = config.cache != NULL ? config.cache : cache_map_new(4),
+        .file_cache = config.cache != NULL ? config.cache : cache_map_new(4, arena),
         .max_columns = info.max_columns == 0 ? 240 : info.max_columns,
         .fmt = fmt
     };

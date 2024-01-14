@@ -33,7 +33,7 @@ static ctu_attrib_t *attrib_create(const char *name, ctu_attrib_apply_t fn_apply
     CTASSERT(name != NULL);
     CTASSERT(fn_apply != NULL);
 
-    ctu_attrib_t *it = ARENA_MALLOC(arena, sizeof(ctu_attrib_t), name, NULL);
+    ctu_attrib_t *it = ARENA_MALLOC(sizeof(ctu_attrib_t), name, NULL, arena);
     it->name = name;
     it->fn_apply = fn_apply;
     return it;
@@ -105,6 +105,12 @@ static tree_link_t get_linkage(tree_t *sema, tree_t *decl, vector_t *args)
 /// attributes
 ///
 
+static tree_attribs_t *dup_tree_attribs(const tree_attribs_t *attribs)
+{
+    arena_t *arena = get_global_arena();
+    return arena_memdup(attribs, sizeof(tree_attribs_t), arena);
+}
+
 static void apply_entry(tree_t *sema, tree_t *decl, vector_t *args)
 {
     if (!tree_is(decl, eTreeDeclFunction))
@@ -120,7 +126,7 @@ static void apply_entry(tree_t *sema, tree_t *decl, vector_t *args)
         return;
     }
 
-    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t));
+    tree_attribs_t *copy = dup_tree_attribs(old);
     copy->link = get_linkage(sema, decl, args);
     tree_set_attrib(decl, copy);
 }
@@ -143,7 +149,7 @@ static void apply_deprecated(tree_t *sema, tree_t *decl, vector_t *args)
     const char *msg = get_first_string(sema, decl, args);
     if (msg == NULL) { return; }
 
-    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t));
+    tree_attribs_t *copy = dup_tree_attribs(old);
     copy->deprecated = msg;
     tree_set_attrib(decl, copy);
 }
@@ -166,7 +172,7 @@ static void apply_section(tree_t *sema, tree_t *decl, vector_t *args)
     const char *msg = get_first_string(sema, decl, args);
     if (msg == NULL) { return; }
 
-    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t));
+    tree_attribs_t *copy = dup_tree_attribs(old);
     copy->section = msg;
     tree_set_attrib(decl, copy);
 }
@@ -186,7 +192,7 @@ static void apply_extern(tree_t *sema, tree_t *decl, vector_t *args)
         return;
     }
 
-    tree_attribs_t *copy = ctu_memdup(old, sizeof(tree_attribs_t));
+    tree_attribs_t *copy = dup_tree_attribs(old);
     if (vector_len(args) == 0)
     {
         copy->mangle = tree_get_name(decl);

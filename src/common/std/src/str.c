@@ -40,12 +40,12 @@ char *str_vformat(arena_t *arena, const char *fmt, va_list args)
     // get the number of bytes needed to format
     int len = vsnprintf(NULL, 0, fmt, args);
 
-    CTASSERTF(len > 0, "vformat failed to format string: %s", fmt);
+    CTASSERTF(len > 0, "str_vformat failed to format string: %s", fmt);
 
-    char *out = ARENA_MALLOC(arena, len + 1, "vformat", NULL);
+    char *out = ARENA_MALLOC(len + 1, "str_vformat", fmt, arena);
 
     int result = vsnprintf(out, len + 1, fmt, again);
-    CTASSERTF(result == len, "vformat failed to format string: %s expected (%d == %d)", fmt, result, len);
+    CTASSERTF(result == len, "str_vformat failed to format string: %s expected (%d == %d)", fmt, result, len);
 
     va_end(again);
 
@@ -55,19 +55,13 @@ char *str_vformat(arena_t *arena, const char *fmt, va_list args)
 USE_DECL
 char *format(const char *fmt, ...)
 {
+    arena_t *arena = get_global_arena();
     va_list args;
     va_start(args, fmt);
-    char *str = vformat(fmt, args);
+    char *str = str_vformat(arena, fmt, args);
     va_end(args);
 
     return str;
-}
-
-USE_DECL
-char *vformat(const char *fmt, va_list args)
-{
-    arena_t *arena = get_global_arena();
-    return str_vformat(arena, fmt, args);
 }
 
 bool char_is_any_of(char c, const char *chars)
@@ -104,12 +98,13 @@ static size_t str_rfind_any(const char *str, const char *letters)
 }
 
 USE_DECL
-char *str_noext(const char *path)
+char *str_noext(const char *path, arena_t *arena)
 {
     CTASSERT(path != NULL);
+    CTASSERT(arena != NULL);
 
     size_t idx = str_rfind(path, ".");
-    char *base = ctu_strdup(path);
+    char *base = arena_strdup(path, arena);
     if (idx == SIZE_MAX)
     {
         return base;
@@ -120,9 +115,10 @@ char *str_noext(const char *path)
 }
 
 USE_DECL
-char *str_ext(const char *path)
+char *str_ext(const char *path, arena_t *arena)
 {
     CTASSERT(path != NULL);
+    CTASSERT(arena != NULL);
 
     size_t idx = str_rfind(path, ".");
     if (idx == SIZE_MAX)
@@ -130,50 +126,52 @@ char *str_ext(const char *path)
         return NULL;
     }
 
-    return ctu_strdup(path + idx + 1);
+    return arena_strdup(path + idx + 1, arena);
 }
 
 USE_DECL
-char *str_directory(arena_t *arena, const char *path)
+char *str_directory(const char *path, arena_t *arena)
 {
-    CTASSERT(arena != NULL);
     CTASSERT(path != NULL);
+    CTASSERT(arena != NULL);
 
     size_t idx = str_rfind_any(path, PATH_SEPERATORS);
     if (idx == SIZE_MAX)
     {
-        return ctu_strdup(".");
+        return arena_strdup(".", arena);
     }
 
     return arena_strndup(path, idx, arena);
 }
 
 USE_DECL
-char *str_basename(const char *path)
+char *str_basename(const char *path, arena_t *arena)
 {
     CTASSERT(path != NULL);
+    CTASSERT(arena != NULL);
 
     size_t idx = str_rfind_any(path, PATH_SEPERATORS);
     if (idx == SIZE_MAX)
     {
-        return str_noext(path);
+        return str_noext(path, arena);
     }
 
-    return str_noext(path + idx + 1);
+    return str_noext(path + idx + 1, arena);
 }
 
 USE_DECL
-char *str_filename(const char *path)
+char *str_filename(const char *path, arena_t *arena)
 {
     CTASSERT(path != NULL);
+    CTASSERT(arena != NULL);
 
     size_t idx = str_rfind_any(path, PATH_SEPERATORS);
     if (idx == SIZE_MAX)
     {
-        return ctu_strdup(path);
+        return arena_strdup(path, arena);
     }
 
-    return ctu_strdup(path + idx + 1);
+    return arena_strdup(path + idx + 1, arena);
 }
 
 USE_DECL
@@ -204,11 +202,18 @@ bool str_endswith(const char *str, const char *suffix)
 USE_DECL
 char *str_join(const char *sep, vector_t *parts)
 {
+    arena_t *arena = get_global_arena();
+    return str_join_arena(sep, parts, arena);
+}
+
+USE_DECL
+char *str_join_arena(const char *sep, vector_t *parts, arena_t *arena)
+{
     CTASSERT(sep != NULL);
     CTASSERT(parts != NULL);
+    CTASSERT(arena != NULL);
 
     size_t all = vector_len(parts);
-    arena_t *arena = get_global_arena();
 
     if (all == 0)
     {
@@ -238,7 +243,7 @@ char *str_join(const char *sep, vector_t *parts)
 
     CTASSERTF(len > 0, "len = %zu", len);
 
-    char *out = ARENA_MALLOC(arena, len + 1, "str_join", NULL);
+    char *out = ARENA_MALLOC(len + 1, "str_join_arena", parts, arena);
     size_t idx = 0;
 
     size_t remaining = len;
@@ -263,10 +268,10 @@ char *str_join(const char *sep, vector_t *parts)
 }
 
 USE_DECL
-char *str_repeat(const char *str, size_t times)
+char *str_repeat(const char *str, size_t times, arena_t *arena)
 {
     CTASSERT(str != NULL);
-    arena_t *arena = get_global_arena();
+    CTASSERT(arena != NULL);
 
     if (times == 0)
     {
@@ -275,7 +280,7 @@ char *str_repeat(const char *str, size_t times)
 
     size_t len = strlen(str);
     size_t outlen = len * times;
-    char *out = ARENA_MALLOC(arena, outlen + 1, "str_repeat", NULL);
+    char *out = ARENA_MALLOC(outlen + 1, "str_repeat", str, arena);
     size_t remaining = outlen;
     for (size_t i = 0; i < times; i++)
     {
@@ -371,11 +376,10 @@ static size_t normstr(char *out, char c)
 }
 
 USE_DECL
-char *str_normalize(const char *input)
+char *str_normalize(const char *input, arena_t *arena)
 {
     CTASSERT(input != NULL);
-
-    arena_t *arena = get_global_arena();
+    CTASSERT(arena != NULL);
 
     size_t input_length = 0;
     size_t result_length = 0;
@@ -394,7 +398,7 @@ char *str_normalize(const char *input)
     }
 
     const char *repl_iter = input;
-    char *buf = ARENA_MALLOC(arena, result_length + 1, "str_normalize", NULL);
+    char *buf = ARENA_MALLOC(result_length + 1, "str_normalize", input, arena);
     char *result = buf;
     while (*repl_iter != '\0')
     {
@@ -406,10 +410,10 @@ char *str_normalize(const char *input)
 }
 
 USE_DECL
-char *str_normalizen(const char *str, size_t len)
+char *str_normalizen(const char *str, size_t len, arena_t *arena)
 {
     CTASSERT(str != NULL);
-    arena_t *arena = get_global_arena();
+    CTASSERT(arena != NULL);
 
     size_t length = 1;
     for (size_t i = 0; i < len; i++)
@@ -423,7 +427,7 @@ char *str_normalizen(const char *str, size_t len)
         return arena_strndup(str, len, arena);
     }
 
-    char *buf = ARENA_MALLOC(arena, length + 1, "str_normalizen", NULL);
+    char *buf = ARENA_MALLOC(length + 1, "str_normalizen", str, arena);
     size_t offset = 0;
     for (size_t i = 0; i < len; i++)
     {
@@ -436,7 +440,7 @@ char *str_normalizen(const char *str, size_t len)
 }
 
 USE_DECL
-vector_t *str_split_arena(IN_STRING const char *str, IN_STRING const char *sep, arena_t *arena)
+vector_t *str_split(IN_STRING const char *str, IN_STRING const char *sep, arena_t *arena)
 {
     CTASSERT(str != NULL);
     CTASSERT(sep != NULL);
@@ -448,7 +452,7 @@ vector_t *str_split_arena(IN_STRING const char *str, IN_STRING const char *sep, 
         vector_t *result = vector_new_arena(strlen(str), arena);
         for (size_t i = 0; i < strlen(str); i++)
         {
-            char *c = ARENA_MALLOC(arena, 2, "str_split", NULL);
+            char *c = ARENA_MALLOC(2, "str_split", str, arena);
             c[0] = str[i];
             c[1] = '\0';
             vector_push(&result, c);
@@ -486,14 +490,7 @@ vector_t *str_split_arena(IN_STRING const char *str, IN_STRING const char *sep, 
 }
 
 USE_DECL
-vector_t *str_split(const char *str, const char *sep)
-{
-    arena_t *arena = get_global_arena();
-    return str_split_arena(str, sep, arena);
-}
-
-USE_DECL
-size_t strhash(const char *str)
+size_t str_hash(const char *str)
 {
     CTASSERT(str != NULL);
 
@@ -542,8 +539,8 @@ char *str_replace(const char *str, const char *search, const char *repl, arena_t
         return arena_strdup(str, arena);
     }
 
-    vector_t *split = str_split_arena(str, search, arena);
-    return str_join(repl, split);
+    vector_t *split = str_split(str, search, arena);
+    return str_join_arena(repl, split, arena);
 }
 
 static const map_entry_t *find_matching_key(typevec_t *pairs, const char *str)
@@ -565,10 +562,11 @@ static const map_entry_t *find_matching_key(typevec_t *pairs, const char *str)
 }
 
 USE_DECL
-char *str_replace_many(const char *str, const map_t *repl)
+char *str_replace_many(const char *str, const map_t *repl, arena_t *arena)
 {
     CTASSERT(str != NULL);
     CTASSERT(repl != NULL);
+    CTASSERT(arena != NULL);
 
     size_t len = 0;
     typevec_t *pairs = map_entries((map_t*)repl); // TODO: map_entries should have a const version
@@ -589,8 +587,7 @@ char *str_replace_many(const char *str, const map_t *repl)
         }
     }
 
-    arena_t *arena = get_global_arena();
-    char *out = ARENA_MALLOC(arena, len + 1, "str_replace_many", NULL);
+    char *out = ARENA_MALLOC(len + 1, "str_replace_many", repl, arena);
 
     size_t offset = 0; // offset into input string
     for (size_t i = 0; i < len;)
@@ -630,9 +627,10 @@ bool str_equal(const char *lhs, const char *rhs)
  * expects a list of file paths
  */
 USE_DECL
-const char *str_common_prefix(vector_t *args)
+const char *str_common_prefix(vector_t *args, arena_t *arena)
 {
     CTASSERT(args != NULL);
+    CTASSERT(arena != NULL);
 
     size_t len = vector_len(args);
     CTASSERT(len > 0);
@@ -647,10 +645,8 @@ const char *str_common_prefix(vector_t *args)
         return it;
     }
 
-    arena_t *arena = get_global_arena();
-
     size_t size = len * sizeof(char *);
-    char **strings = ARENA_MALLOC(arena, size, "str_common_prefix", NULL);
+    char **strings = ARENA_MALLOC(size, "str_common_prefix", NULL, arena);
 
     size_t lower = SIZE_MAX;
 
@@ -664,7 +660,7 @@ const char *str_common_prefix(vector_t *args)
         // find the last path seperator
         // we find the common prefix up to the last path seperator
         size_t find = str_rfind_any(arg, PATH_SEPERATORS) + 1;
-        strings[i] = ctu_strndup(arg, find);
+        strings[i] = arena_strndup(arg, find, arena);
 
         lower = MIN(lower, find);
     }
@@ -681,14 +677,14 @@ const char *str_common_prefix(vector_t *args)
         {
             if (strings[j][i] != strings[0][i])
             {
-                result = i == 0 ? "" : ctu_strndup(strings[0], i);
+                result = i == 0 ? "" : arena_strndup(strings[0], i, arena);
                 goto finish;
             }
         }
     }
 
     // if we get here, the common prefix is the shortest string
-    result = ctu_strndup(strings[0], lower);
+    result = arena_strndup(strings[0], lower, arena);
 
 finish:
     CTASSERT(strings != NULL);
@@ -753,7 +749,7 @@ size_t str_find(const char *str, const char *sub)
     CTASSERT(str != NULL);
     CTASSERT(sub != NULL);
 
-    char *ptr = strstr(str, sub);
+    const char *ptr = strstr(str, sub);
     return ptr == NULL ? SIZE_MAX : (size_t)(ptr - str);
 }
 
@@ -778,10 +774,11 @@ size_t str_count_any(const char *str, const char *chars)
 }
 
 USE_DECL
-char *str_trim(const char *str, const char *letters)
+char *str_trim(const char *str, const char *letters, arena_t *arena)
 {
     CTASSERT(str != NULL);
     CTASSERT(letters != NULL);
+    CTASSERT(arena != NULL);
 
     const char *tmp = str;
 
@@ -799,7 +796,7 @@ char *str_trim(const char *str, const char *letters)
         remaining--;
     }
 
-    return ctu_strndup(tmp, remaining);
+    return arena_strndup(tmp, remaining, arena);
 }
 
 USE_DECL
@@ -831,11 +828,12 @@ char *str_erase(char *str, size_t len, const char *letters)
 }
 
 USE_DECL
-char *str_upper(const char *str)
+char *str_upper(const char *str, arena_t *arena)
 {
     CTASSERT(str != NULL);
+    CTASSERT(arena != NULL);
 
-    char *result = ctu_strdup(str);
+    char *result = arena_strdup(str, arena);
     char *temp = result;
 
     while (*temp)
@@ -848,11 +846,12 @@ char *str_upper(const char *str)
 }
 
 USE_DECL
-char *str_lower(const char *str)
+char *str_lower(const char *str, arena_t *arena)
 {
     CTASSERT(str != NULL);
+    CTASSERT(arena != NULL);
 
-    char *result = ctu_strdup(str);
+    char *result = arena_strdup(str, arena);
     char *temp = result;
 
     while (*temp)

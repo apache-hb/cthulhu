@@ -161,17 +161,25 @@ static user_arena_t new_user_arena(size_t size)
     return arena;
 }
 
-static arena_t new_alloc(user_arena_t *user)
+typedef struct arena_user_wrap_t
 {
-    arena_t arena = {
-        .name = "user",
-        .fn_malloc = user_malloc,
-        .fn_realloc = user_realloc,
-        .fn_free = user_free,
+    arena_t arena;
+    user_arena_t user;
+} arena_user_wrap_t;
+
+static arena_user_wrap_t new_alloc(user_arena_t user)
+{
+    arena_user_wrap_t wrap = {
+        .arena = {
+            .name = "user",
+            .fn_malloc = user_malloc,
+            .fn_realloc = user_realloc,
+            .fn_free = user_free,
+        },
         .user = user,
     };
 
-    return arena;
+    return wrap;
 }
 
 static int check_reports(logger_t *logger, report_config_t config, const char *title)
@@ -228,7 +236,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     for (int i = 2; i < argc; i++)
     {
         const char *path = argv[i];
-        const char *ext = str_ext(path);
+        const char *ext = str_ext(path, arena);
         const language_t *lang = lifetime_get_language(lifetime, ext);
 
         io_t *io = make_file(path, eAccessRead | eAccessText, arena);
@@ -242,7 +250,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     {
         lifetime_run_stage(lifetime, stage);
 
-        char *msg = format("running stage %s", stage_to_string(stage));
+        char *msg = str_format(arena, "running stage %s", stage_to_string(stage));
         CHECK_LOG(reports, msg);
     }
 
@@ -286,8 +294,8 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     os_error_t err = os_dir_current(cwd, 1024);
     CTASSERTF(err == 0, "failed to get cwd %s", os_error_string(err, arena));
 
-    const char *test_dir = format("%s" NATIVE_PATH_SEPARATOR "test-out", cwd);
-    const char *run_dir = format("%s" NATIVE_PATH_SEPARATOR "%s", test_dir, argv[1]);
+    const char *test_dir = str_format(arena, "%s" NATIVE_PATH_SEPARATOR "test-out", cwd);
+    const char *run_dir = str_format(arena, "%s" NATIVE_PATH_SEPARATOR "%s", test_dir, argv[1]);
 
     fs_t *out = fs_physical(run_dir, arena);
     if (out == NULL)
@@ -310,26 +318,26 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     for (size_t i = 0; i < len; i++)
     {
         const char *part = vector_get(c89_emit_result.sources, i);
-        char *path = format("%s" NATIVE_PATH_SEPARATOR "%s", run_dir, part);
+        char *path = str_format(arena, "%s" NATIVE_PATH_SEPARATOR "%s", run_dir, part);
         vector_set(sources, i, path);
     }
 
 #if OS_WINDOWS
-    const char *lib_dir = format("%s" NATIVE_PATH_SEPARATOR "lib", run_dir);
+    const char *lib_dir = str_format(arena, "%s" NATIVE_PATH_SEPARATOR "lib", run_dir);
 
     bool create = false;
     os_error_t cwd_err = os_dir_create(lib_dir, &create);
     CTASSERTF(cwd_err == 0, "failed to create dir `%s` %s", lib_dir, os_error_string(cwd_err, arena));
 
     int status = system(
-        format("cl /nologo /c %s /I%s\\include /Fo%s\\", str_join(" ", sources), run_dir, lib_dir));
+        str_format(arena, "cl /nologo /c %s /I%s\\include /Fo%s\\", str_join_arena(" ", sources, arena), run_dir, lib_dir));
     if (status != 0)
     {
         msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(),
                    "compilation failed `%d`", status);
     }
 #else
-    int status = system(format("cd %s && cc %s -c -Iinclude", run_dir, str_join(" ", sources)));
+    int status = system(str_format(arena, "cd %s && cc %s -c -Iinclude", run_dir, str_join_arena(" ", sources, arena)));
     if (WEXITSTATUS(status) != EXIT_OK)
     {
         msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(),
@@ -348,13 +356,13 @@ int main(int argc, const char **argv)
 
     size_t size = (size_t)(1024U * 1024U * 64U);
     user_arena_t arena = new_user_arena(size);
-    arena_t user = new_alloc(&arena);
-    init_global_arena(&user);
-    init_gmp_arena(&user);
+    arena_user_wrap_t user = new_alloc(arena);
+    init_global_arena(&user.arena);
+    init_gmp_arena(&user.arena);
 
     ctu_log_update(true);
 
-    int result = run_test_harness(argc, argv, &user);
+    int result = run_test_harness(argc, argv, &user.arena);
 
     free(arena.memory_start);
 

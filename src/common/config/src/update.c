@@ -61,6 +61,7 @@ bool cfg_set_enum(cfg_field_t *field, const char *choice)
     return false;
 }
 
+#if CTU_PARANOID
 static bool is_valid_choice(const cfg_enum_t *options, size_t value)
 {
     const cfg_choice_t *choices = options->options;
@@ -77,11 +78,12 @@ static bool is_valid_choice(const cfg_enum_t *options, size_t value)
 
     return false;
 }
+#endif
 
 void cfg_set_enum_value(cfg_field_t *field, size_t value)
 {
     ASSERT_FIELD_TYPE(field, eConfigEnum);
-    CTASSERTF(is_valid_choice(&field->enum_config, value), "invalid enum value %zu for field %s", value, field->info->name);
+    CT_PARANOID_ASSERTF(is_valid_choice(&field->enum_config, value), "invalid enum value %zu for field %s", value, field->info->name);
 
     field->enum_value = value;
 }
@@ -118,6 +120,7 @@ bool cfg_set_flag(cfg_field_t *field, const char *choice, bool set)
     return false;
 }
 
+#if CTU_PARANOID
 static bool is_valid_flag(const cfg_flags_t *options, size_t value)
 {
     if (value == 0) return true;
@@ -137,11 +140,12 @@ static bool is_valid_flag(const cfg_flags_t *options, size_t value)
 
     return remaining == 0;
 }
+#endif
 
 void cfg_set_flag_value(cfg_field_t *field, size_t value)
 {
     ASSERT_FIELD_TYPE(field, eConfigFlags);
-    CTASSERTF(is_valid_flag(&field->flags_config, value), "invalid flag value %zu for field %s", value, field->info->name);
+    CT_PARANOID_ASSERTF(is_valid_flag(&field->flags_config, value), "invalid flag value %zu for field %s", value, field->info->name);
 
     field->flags_value = value;
 }

@@ -35,7 +35,6 @@ static void wrap_reparent(const void *ptr, const void *parent, void *user)
 
 IArena::IArena(const char *alloc_name)
 {
-    user = this;
     name = alloc_name;
     fn_malloc = wrap_malloc;
     fn_realloc = wrap_realloc;

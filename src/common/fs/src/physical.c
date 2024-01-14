@@ -1,5 +1,6 @@
 #include "common.h"
 
+#include "memory/arena.h"
 #include "std/str.h"
 #include "std/map.h"
 

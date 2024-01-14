@@ -35,14 +35,15 @@ static void pl0_postparse(driver_t *handle, scan_t *scan, void *tree)
 {
     pl0_t *ast = tree;
     CTASSERT(ast->type == ePl0Module);
+    lifetime_t *lifetime = handle_get_lifetime(handle);
+    arena_t *arena = lifetime_get_arena(lifetime);
 
     // TODO: dedup this with pl0_forward_decls
     const char *fp = scan_path(scan);
     vector_t *path = vector_len(ast->mod) > 0
         ? ast->mod
-        : vector_init(str_basename(fp));
+        : vector_init_arena(str_basename(fp, arena), arena);
 
-    lifetime_t *lifetime = handle_get_lifetime(handle);
     context_t *ctx = context_new(handle, vector_tail(path), ast, NULL);
 
     add_context(lifetime, path, ctx);

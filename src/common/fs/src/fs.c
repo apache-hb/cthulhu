@@ -12,7 +12,7 @@
 
 static vector_t *path_split(const char *path, arena_t *arena)
 {
-    return str_split_arena(path, "/", arena);
+    return str_split(path, "/", arena);
 }
 
 // fs interface api
@@ -234,7 +234,7 @@ void fs_dir_create(fs_t *fs, const char *path)
 {
     CTASSERT(fs != NULL);
     CTASSERT(path != NULL);
-    CTASSERT(strlen(path) > 0);
+    CT_PARANOID_ASSERTF(strlen(path) > 0, "path cannot be empty");
 
     vector_t *parts = path_split(path, fs->arena);
     size_t len = vector_len(parts);

@@ -14,7 +14,7 @@
 ssa_type_t *ssa_type_new(ssa_kind_t kind, const char *name, quals_t quals)
 {
     arena_t *arena = get_global_arena();
-    ssa_type_t *type = ARENA_MALLOC(arena, sizeof(ssa_type_t), name, NULL);
+    ssa_type_t *type = ARENA_MALLOC(sizeof(ssa_type_t), name, NULL, arena);
     type->kind = kind;
     type->quals = quals;
     type->name = name;

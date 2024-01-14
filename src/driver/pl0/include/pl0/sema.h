@@ -16,6 +16,13 @@ typedef enum pl0_tag_t {
     ePl0TagTotal
 } pl0_tag_t;
 
+typedef struct pl0_sema_t
+{
+    tree_t *sema;
+    arena_t *arena;
+    logger_t *reports;
+} pl0_sema_t;
+
 void pl0_init(driver_t *handle);
 
 void pl0_forward_decls(context_t *context);

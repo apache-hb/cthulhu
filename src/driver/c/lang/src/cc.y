@@ -9,6 +9,8 @@
 %code top {
     // grammar is based on N3096
     #include "interop/flex.h"
+    #include "interop/bison.h"
+
     #include "cthulhu/tree/ops.h"
     #include "base/log.h"
     #include "std/vector.h"
@@ -255,7 +257,7 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
 start: translation_unit { scan_set(x, $1); }
     ;
 
-translation_unit: external_declaration { $$ = vector_init($1); }
+translation_unit: external_declaration { $$ = vector_init_arena($1, BISON_ARENA(x)); }
     | translation_unit external_declaration { vector_push(&$1, $2); $$ = $1; }
     ;
 
@@ -299,7 +301,7 @@ compound_statement: LBRACE RBRACE
     | LBRACE block_item_list RBRACE
     ;
 
-block_item_list: block_item { $$ = vector_init($1); }
+block_item_list: block_item { $$ = vector_init_arena($1, BISON_ARENA(x)); }
     | block_item_list block_item { vector_push(&$1, $2); $$ = $1; }
     ;
 
@@ -458,7 +460,7 @@ assignment_operator: ASSIGN
     | SHLEQ | SHREQ | ANDEQ | OREQ | XOREQ
     ;
 
-expression: assignment_expression { $$ = vector_init($1); }
+expression: assignment_expression { $$ = vector_init_arena($1, BISON_ARENA(x)); }
     | expression COMMA assignment_expression { vector_push(&$1, $3); $$ = $1; }
     ;
 
@@ -469,7 +471,7 @@ expression_statement: SEMICOLON { $$ = NULL; }
     | expression SEMICOLON { $$ = c_ast_expand_exprs(x, @$, $1); }
     ;
 
-module_path: IDENT { $$ = vector_init($1); }
+module_path: IDENT { $$ = vector_init_arena($1, BISON_ARENA(x)); }
     | module_path DOT IDENT { vector_push(&$1, $3); $$ = $1; }
     ;
 
@@ -489,7 +491,7 @@ declaration: declaration_specifiers init_declarator_list SEMICOLON {
     }
     ;
 
-init_declarator_list: init_declarator { $$ = vector_init($1); }
+init_declarator_list: init_declarator { $$ = vector_init_arena($1, BISON_ARENA(x)); }
     | init_declarator_list COMMA init_declarator { vector_push(&$1, $3); $$ = $1; }
     ;
 
@@ -540,7 +542,7 @@ parameter_list: parameter_declaration
 parameter_declaration: declaration_specifiers declarator
     ;
 
-declaration_specifiers: declaration_specifier { $$ = vector_init($1); }
+declaration_specifiers: declaration_specifier { $$ = vector_init_arena($1, BISON_ARENA(x)); }
     | declaration_specifiers declaration_specifier { vector_push(&$1, $2); $$ = $1; }
     ;
 
@@ -564,7 +566,7 @@ type_specifier_qualifier: type_specifier { $$ = NULL; }
     ;
 
     /* attributes */
-attribute_specifier_seq: attribute_specifier { $$ = vector_init($1); }
+attribute_specifier_seq: attribute_specifier { $$ = vector_init_arena($1, BISON_ARENA(x)); }
     | attribute_specifier_seq attribute_specifier { vector_push(&$1, $2); $$ = $1; }
     ;
 
@@ -597,7 +599,7 @@ attribute_token: IDENT
 attribute_argument_clause: LPAREN balanced_token_seq RPAREN { $$ = $2; }
     ;
 
-balanced_token_seq: balanced_token { $$ = vector_init($1); }
+balanced_token_seq: balanced_token { $$ = vector_init_arena($1, BISON_ARENA(x)); }
     | balanced_token_seq balanced_token { vector_push(&$1, $2); $$ = $1; }
     ;
 
@@ -613,7 +615,7 @@ balanced_token: LPAREN balanced_token_seq RPAREN { $$ = NULL; }
 type_name: specifier_qualifier_list { $$ = c_ast_type(x, @$, $1); }
     ;
 
-specifier_qualifier_list: type_specifier_qualifier { $$ = vector_init($1); }
+specifier_qualifier_list: type_specifier_qualifier { $$ = vector_init_arena($1, BISON_ARENA(x)); }
     | specifier_qualifier_list type_specifier_qualifier { vector_push(&$1, $2); $$ = $1; }
     ;
 

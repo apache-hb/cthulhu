@@ -1,4 +1,5 @@
 #include "cthulhu/events/events.h"
+#include "scan/node.h"
 #include "std/str.h"
 
 /// declare all the events
@@ -32,13 +33,15 @@ void evt_scan_error(logger_t *logger, const node_t *node, const char *msg)
 
 void evt_scan_unknown(logger_t *logger, const node_t *node, const char *msg)
 {
-    msg_notify(logger, &kEvent_UnknownToken, node, "unknown symbol: `%s`", str_normalize(msg));
+    const scan_t *scan = node_get_scan(node);
+    arena_t *arena = scan_get_arena(scan);
+    msg_notify(logger, &kEvent_UnknownToken, node, "unknown symbol: `%s`", str_normalize(msg, arena));
 }
 
-event_t *evt_symbol_shadowed(logger_t *logger, const char *name, const node_t *prev,
+event_builder_t evt_symbol_shadowed(logger_t *logger, const char *name, const node_t *prev,
                              const node_t *next)
 {
-    event_t *event = msg_notify(logger, &kEvent_SymbolShadowed, next, "symbol `%s` shadows previous declaration", name);
+    event_builder_t event = msg_notify(logger, &kEvent_SymbolShadowed, next, "symbol `%s` shadows previous declaration", name);
     msg_append(event, prev, "previous declaration here");
     return event;
 }

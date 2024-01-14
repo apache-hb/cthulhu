@@ -190,7 +190,8 @@ WS [ \t\r\v\n\f]
 
 \"([^"\\\n]|{ESCAPES})*\" {
     cc_scan_t *scan = cc_scan_context(yyextra);
-	yylval->text = util_text_escape(scan->reports, node_new(yyextra, *yylloc), yytext + 1, yyleng - 2);
+    arena_t *arena = scan_get_arena(yyextra);
+	yylval->text = util_text_escape(scan->reports, node_new(yyextra, *yylloc), yytext + 1, yyleng - 2, arena);
     return STRING;
 }
 

@@ -23,7 +23,7 @@ typedef struct set_t
 
 static item_t *item_new(const char *key, arena_t *arena)
 {
-    item_t *item = ARENA_MALLOC(arena, sizeof(item_t), "item", NULL);
+    item_t *item = ARENA_MALLOC(sizeof(item_t), "item", NULL, arena);
     item->key = key;
     item->next = NULL;
     return item;
@@ -50,11 +50,11 @@ set_t *set_new(size_t size, type_info_t info, arena_t *arena)
     CTASSERT(size > 0);
     CTASSERT(arena != NULL);
 
-    set_t *set = ARENA_MALLOC(arena, sizeof(set_t), "set", NULL);
+    set_t *set = ARENA_MALLOC(sizeof(set_t), "set", NULL, arena);
     set->arena = arena;
     set->info = info;
     set->size = size;
-    set->items = ARENA_MALLOC(arena, sizeof(item_t) * size, "items", set);
+    set->items = ARENA_MALLOC(sizeof(item_t) * size, "items", set, arena);
 
     clear_items(set);
 
@@ -102,7 +102,7 @@ const void *set_add(set_t *set, const void *key)
         else
         {
             item->next = item_new(key, set->arena);
-            ARENA_REPARENT(set->arena, item->next, item);
+            ARENA_REPARENT(item->next, item, set->arena);
             return key;
         }
     }

@@ -32,7 +32,7 @@ node_t *node_new(const scan_t *scan, where_t where)
     CTASSERT(scan != NULL);
 
     arena_t *arena = scan_get_arena(scan);
-    node_t *node = ARENA_MALLOC(arena, sizeof(node_t), "node", scan);
+    node_t *node = ARENA_MALLOC(sizeof(node_t), "node", scan, arena);
     node->scan = scan;
     node->where = where;
 

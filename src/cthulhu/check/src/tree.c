@@ -57,7 +57,7 @@ static void check_global_attribs(check_t *check, const tree_t *global)
     case eLinkImport:
         if (global->initial != NULL)
         {
-            event_t *id = msg_notify(check->reports, &kEvent_ImportedWithImpl, tree_get_node(global),
+            event_builder_t id = msg_notify(check->reports, &kEvent_ImportedWithImpl, tree_get_node(global),
                 "global `%s` is marked as imported but has an implementation",
                 tree_get_name(global)
             );
@@ -68,7 +68,7 @@ static void check_global_attribs(check_t *check, const tree_t *global)
     case eLinkModule:
         if (attribs->mangle != NULL)
         {
-            event_t *id = msg_notify(check->reports, &kEvent_IgnoredMangling, tree_get_node(global),
+            event_builder_t id = msg_notify(check->reports, &kEvent_IgnoredMangling, tree_get_node(global),
                 "global `%s` has internal linkage and user defined mangling",
                 tree_get_name(global)
             );
@@ -107,7 +107,7 @@ static void check_func_attribs(check_t *check, const tree_t *fn)
     case eLinkImport:
         if (fn->body != NULL)
         {
-            event_t *id = msg_notify(check->reports, &kEvent_ImportedWithImpl, tree_get_node(fn),
+            event_builder_t id = msg_notify(check->reports, &kEvent_ImportedWithImpl, tree_get_node(fn),
                 "function `%s` is marked as imported but has an implementation",
                 tree_get_name(fn)
             );
@@ -118,7 +118,7 @@ static void check_func_attribs(check_t *check, const tree_t *fn)
     case eLinkModule:
         if (attribs->mangle != NULL)
         {
-            event_t *id = msg_notify(check->reports, &kEvent_IgnoredMangling, tree_get_node(fn),
+            event_builder_t id = msg_notify(check->reports, &kEvent_IgnoredMangling, tree_get_node(fn),
                 "function `%s` has internal linkage and user defined mangling",
                 tree_get_name(fn)
             );
@@ -130,7 +130,7 @@ static void check_func_attribs(check_t *check, const tree_t *fn)
         check_func_has_body(check, fn);
         if (check->cli_entry != NULL)
         {
-            event_t *id = msg_notify(check->reports, &kEvent_MultipleEntryPoints, tree_get_node(fn),
+            event_builder_t id = msg_notify(check->reports, &kEvent_MultipleEntryPoints, tree_get_node(fn),
                 "multiple CLI entry points defined"
             );
             msg_append(id, tree_get_node(check->cli_entry), "previous entry point defined here");
@@ -144,7 +144,7 @@ static void check_func_attribs(check_t *check, const tree_t *fn)
         check_func_has_body(check, fn);
         if (check->gui_entry != NULL)
         {
-            event_t *id = msg_notify(check->reports, &kEvent_MultipleEntryPoints, tree_get_node(fn),
+            event_builder_t id = msg_notify(check->reports, &kEvent_MultipleEntryPoints, tree_get_node(fn),
                 "multiple GUI entry points defined"
             );
             msg_append(id, tree_get_node(check->gui_entry), "previous entry point defined here");
@@ -180,7 +180,7 @@ static void check_deprecated_call(check_t *check, const tree_t *expr)
 
     if (attribs->deprecated == NULL) { return; }
 
-    event_t *id = msg_notify(check->reports, &kEvent_Deprecated, tree_get_node(expr),
+    event_builder_t id = msg_notify(check->reports, &kEvent_Deprecated, tree_get_node(expr),
         "call to deprecated function `%s`",
         tree_get_name(fn)
     );
@@ -212,7 +212,7 @@ static void check_params(check_t *check, vector_t *args, vector_t *params, size_
 
         if (!util_types_equal(arg_type, param_type))
         {
-            event_t *id = msg_notify(check->reports, &kEvent_IncorrectParamType, tree_get_node(arg),
+            event_builder_t id = msg_notify(check->reports, &kEvent_IncorrectParamType, tree_get_node(arg),
                 "incorrect type for parameter %zu of function `%s`",
                 i + 1,
                 name
@@ -231,7 +231,7 @@ static void check_call_args_fixed(check_t *check, const tree_t *expr, vector_t *
 
     if (arg_count != param_count)
     {
-        event_t *id = msg_notify(check->reports, &kEvent_IncorrectParamCount, tree_get_node(expr),
+        event_builder_t id = msg_notify(check->reports, &kEvent_IncorrectParamCount, tree_get_node(expr),
             "incorrect number of parameters to function `%s`",
             name
         );
@@ -252,7 +252,7 @@ static void check_call_args_variadic(check_t *check, const tree_t *expr, vector_
 
     if (arg_count < param_count)
     {
-        event_t *id = msg_notify(check->reports, &kEvent_IncorrectParamCount, tree_get_node(expr),
+        event_builder_t id = msg_notify(check->reports, &kEvent_IncorrectParamCount, tree_get_node(expr),
             "incorrect number of parameters to variadic function `%s`",
             name
         );
@@ -446,7 +446,7 @@ static void check_global_recursion(check_t *check, const tree_t *global)
     }
     else
     {
-        event_t *id = msg_notify(check->reports, &kEvent_RecursiveEval, tree_get_node(global),
+        event_builder_t id = msg_notify(check->reports, &kEvent_RecursiveEval, tree_get_node(global),
             "evaluation of `%s` may be infinite",
             tree_get_name(global)
         );
@@ -512,7 +512,7 @@ static void check_aggregate_recursion(check_t *check, const tree_t *type)
     }
     else
     {
-        event_t *id = msg_notify(check->reports, &kEvent_InfiniteSizedType, tree_get_node(type),
+        event_builder_t id = msg_notify(check->reports, &kEvent_InfiniteSizedType, tree_get_node(type),
             "size of type `%s` may be infinite",
             tree_get_name(type)
         );
@@ -586,7 +586,7 @@ static void check_type_recursion(check_t *check, const tree_t *type)
     }
     else
     {
-        event_t *id = msg_notify(check->reports, &kEvent_InvalidType, tree_get_node(type),
+        event_builder_t id = msg_notify(check->reports, &kEvent_InvalidType, tree_get_node(type),
             "type `%s` contains an impossible type",
             tree_get_name(type)
         );
@@ -669,8 +669,8 @@ void check_tree(logger_t *reports, map_t *mods)
     check_t check = {
         .reports = reports,
 
-        .expr_stack = vector_new(64),
-        .type_stack = vector_new(64),
+        .expr_stack = vector_new_arena(64, arena),
+        .type_stack = vector_new_arena(64, arena),
 
         .checked_exprs = set_new(64, kTypeInfoPtr, arena),
         .checked_types = set_new(64, kTypeInfoPtr, arena),

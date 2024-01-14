@@ -5,7 +5,7 @@
 static size_t info_ptr_hash(const void *key) { return ptrhash(key); }
 static bool info_ptr_equal(const void *lhs, const void *rhs) { return lhs == rhs; }
 
-static size_t info_str_hash(const void *key) { return strhash(key); }
+static size_t info_str_hash(const void *key) { return str_hash(key); }
 static bool info_str_equal(const void *lhs, const void *rhs) { return str_equal(lhs, rhs); }
 
 const type_info_t kTypeInfoPtr = {

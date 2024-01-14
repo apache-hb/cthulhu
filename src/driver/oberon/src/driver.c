@@ -55,7 +55,8 @@ void obr_forward_decls(context_t *context)
 static void import_module(lifetime_t *lifetime, tree_t *sema, obr_t *include)
 {
     CTASSERT(include->kind == eObrImport);
-    context_t *ctx = get_context(lifetime, vector_init(include->symbol));
+    arena_t *arena = lifetime_get_arena(lifetime);
+    context_t *ctx = get_context(lifetime, vector_init_arena(include->symbol, arena));
 
     if (ctx == NULL)
     {
@@ -73,7 +74,7 @@ static void import_module(lifetime_t *lifetime, tree_t *sema, obr_t *include)
     tree_t *old = obr_get_namespace(sema, include->name);
     if (old != NULL)
     {
-        event_t *id = evt_symbol_shadowed(sema->reports, include->name, tree_get_node(old), tree_get_node(lib));
+        event_builder_t id = evt_symbol_shadowed(sema->reports, include->name, tree_get_node(old), tree_get_node(lib));
         msg_note(id, "consider using import aliases; eg. `IMPORT my_%s := %s;", include->name, include->symbol);
     }
     else

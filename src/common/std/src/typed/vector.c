@@ -56,13 +56,13 @@ static typevec_t *typevec_create(size_t type_size, size_t len, arena_t *arena)
 
     size_t size = MAX(len, 1);
 
-    typevec_t *vec = ARENA_MALLOC(arena, sizeof(typevec_t), "typevec", NULL);
+    typevec_t *vec = ARENA_MALLOC(sizeof(typevec_t), "typevec", NULL, arena);
     vec->arena = arena;
     vec->size = size;
     vec->used = 0;
     vec->type_size = type_size;
-    vec->data = ARENA_MALLOC(arena, type_size * (size + 1), "typevec_data", vec);
-    ARENA_IDENTIFY(arena, vec->data, "data", vec);
+    vec->data = ARENA_MALLOC(type_size * (size + 1), "typevec_data", vec, arena);
+    ARENA_IDENTIFY(vec->data, "data", vec, arena);
 
     return vec;
 }

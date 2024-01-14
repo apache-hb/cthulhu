@@ -29,7 +29,7 @@ io_t *io_new(const io_callbacks_t *cb, os_access_t flags, const char *name, cons
     if (flags & eAccessRead)
         CTASSERTF(cb->fn_read != NULL, "%s provided no `fn_read` for a readable object", name);
 
-    io_t *io = ARENA_MALLOC(arena, sizeof(io_t) + size, name, NULL);
+    io_t *io = ARENA_MALLOC(sizeof(io_t) + size, name, NULL, arena);
 
     if (size > 0)
     {

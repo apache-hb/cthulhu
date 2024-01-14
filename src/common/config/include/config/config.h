@@ -19,25 +19,10 @@ typedef struct vector_t vector_t;
 /// @brief the type of a configuration field
 typedef enum cfg_type_t
 {
-    /// an integer field
-    eConfigInt,
+#define CFG_TYPE(id, name) id,
+#include "config.inc"
 
-    /// a yes/no field
-    eConfigBool,
-
-    /// a string field
-    eConfigString,
-
-    /// a vector of strings
-    eConfigVector,
-
-    /// a choice from a set of options
-    eConfigEnum,
-
-    /// one or more choices from a set of options
-    eConfigFlags,
-
-    eConfigTotal
+    eConfigCount
 } cfg_type_t;
 
 typedef struct cfg_field_t cfg_field_t;

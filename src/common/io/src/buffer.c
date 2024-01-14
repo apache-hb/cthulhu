@@ -89,7 +89,7 @@ io_t *io_memory(const char *name, const void *data, size_t size, os_access_t fla
     CTASSERT(data != NULL);
 
     buffer_t buffer = {
-        .data = ARENA_MALLOC(arena, size, "memory", NULL),
+        .data = ARENA_MALLOC(size, "memory", NULL, arena),
         .total = size,
         .used = size,
         .offset = 0
@@ -98,7 +98,7 @@ io_t *io_memory(const char *name, const void *data, size_t size, os_access_t fla
     memcpy(buffer.data, data, size);
 
     io_t *io = io_new(&kBufferCallbacks, flags, name, &buffer, sizeof(buffer_t), arena);
-    ARENA_REPARENT(arena, buffer.data, io);
+    ARENA_REPARENT(buffer.data, io, arena);
     return io;
 }
 
@@ -106,13 +106,13 @@ USE_DECL
 io_t *io_blob(const char *name, size_t size, os_access_t flags, arena_t *arena)
 {
     buffer_t buffer = {
-        .data = ARENA_MALLOC(arena, size, "blob", NULL),
+        .data = ARENA_MALLOC(size, "blob", NULL, arena),
         .total = size,
         .used = 0,
         .offset = 0
     };
 
     io_t *io = io_new(&kBufferCallbacks, flags, name, &buffer, sizeof(buffer_t), arena);
-    ARENA_REPARENT(arena, buffer.data, io);
+    ARENA_REPARENT(buffer.data, io, arena);
     return io;
 }

@@ -6,12 +6,10 @@
 #include "std/typed/vector.h"
 #include "std/vector.h"
 
-#include <limits.h>
-
 // all this is put behind the same macro used for asserts
 // because i dont trust compilers to optimize it out
 
-#if CTU_DEBUG
+#if CTU_PARANOID
 static const cfg_field_t *config_find(const cfg_group_t *config, const char *name)
 {
     size_t field_len = vector_len(config->fields);
@@ -47,35 +45,30 @@ static void info_validate(const cfg_info_t *info)
     CTASSERT(info->name != NULL);
     CTASSERT(has_any_element(info->short_args) || has_any_element(info->long_args));
 }
+#endif
 
-#define ASSERT_OPTIONS_VALID(options, count) \
-    CTASSERT((options) != NULL); \
-    CTASSERT((count) > 0); \
-    options_validate(options, count)
+#define ASSERT_OPTIONS_VALID(options, count)                                                \
+    CTASSERT((options) != NULL);                                                            \
+    CTASSERT((count) > 0);                                                                  \
+    CT_PARANOID(options_validate(options, count));
 
 #define ASSERT_INFO_VALID_GROUP(info) \
-    CTASSERT((info) != NULL);           \
+    CTASSERT((info) != NULL);         \
     CTASSERT((info)->name != NULL);
 
 #define ASSERT_INFO_VALID(info)    \
     ASSERT_INFO_VALID_GROUP(info); \
-    info_validate(info);
+    CT_PARANOID(info_validate(info));
 
-#define ASSERT_CONFIG_VALID(config, info)                                               \
-    CTASSERT((config) != NULL);                                                         \
-    ASSERT_INFO_VALID(info);                                                            \
-    CTASSERTF(config_find(config, (info)->name) == NULL, "duplicate config field `%s`", \
-              (info)->name);
-#else
-#   define ASSERT_OPTIONS_VALID(options, count)
-#   define ASSERT_INFO_VALID_GROUP(info)
-#   define ASSERT_INFO_VALID(info)
-#   define ASSERT_CONFIG_VALID(config, info)
-#endif
+#define ASSERT_CONFIG_VALID(config, info)                                                         \
+    CTASSERT((config) != NULL);                                                                   \
+    ASSERT_INFO_VALID(info);                                                                      \
+    CT_PARANOID_ASSERTF(config_find(config, (info)->name) == NULL, "duplicate config field `%s`", \
+                        (info)->name);
 
 static cfg_field_t *add_field(cfg_group_t *config, const cfg_info_t *info, cfg_type_t type)
 {
-    cfg_field_t *field = ARENA_MALLOC(config->arena, sizeof(cfg_field_t), info->name, config);
+    cfg_field_t *field = ARENA_MALLOC(sizeof(cfg_field_t), info->name, config, config->arena);
 
     field->type = type;
     field->info = info;
@@ -96,13 +89,13 @@ static void config_init(cfg_group_t *config, arena_t *arena, const cfg_info_t *i
     config->groups = typevec_new(sizeof(cfg_group_t), 4, arena);
     config->fields = vector_new_arena(4, arena);
 
-    ARENA_IDENTIFY(arena, config->groups, "groups", config);
-    ARENA_IDENTIFY(arena, config->fields, "fields", config);
+    ARENA_IDENTIFY(config->groups, "groups", config, arena);
+    ARENA_IDENTIFY(config->fields, "fields", config, arena);
 }
 
 cfg_group_t *config_root(arena_t *arena, const cfg_info_t *info)
 {
-    cfg_group_t *config = ARENA_MALLOC(arena, sizeof(cfg_group_t), "config", NULL);
+    cfg_group_t *config = ARENA_MALLOC(sizeof(cfg_group_t), "config", NULL, arena);
     config_init(config, arena, info);
     return config;
 }
@@ -114,18 +107,9 @@ cfg_field_t *config_int(cfg_group_t *group, const cfg_info_t *info, cfg_int_t cf
     int min = cfg.min;
     int max = cfg.max;
 
-    // TODO: this is iffy, need a better way to handle this
-    if (min == 0 && max == 0)
-    {
-        cfg.min = INT_MIN;
-        cfg.max = INT_MAX;
-    }
-    else
-    {
-        CTASSERTF(min <= max, "invalid range %d-%d", min, max);
-        CTASSERTF(cfg.initial >= min && cfg.initial <= max, "initial value %d out of range %d-%d",
-                cfg.initial, min, max);
-    }
+    CTASSERTF(min <= max, "invalid range %d-%d", min, max);
+    CTASSERTF(cfg.initial >= min && cfg.initial <= max, "initial value %d out of range %d-%d",
+              cfg.initial, min, max);
 
     cfg_field_t *field = add_field(group, info, eConfigInt);
     field->int_config = cfg;
@@ -199,7 +183,7 @@ cfg_group_t *config_group(cfg_group_t *group, const cfg_info_t *info)
 
     cfg_group_t *result = typevec_push(group->groups, &config);
 
-    ARENA_REPARENT(group->arena, result, group);
+    ARENA_REPARENT(result, group, group->arena);
 
     return result;
 }

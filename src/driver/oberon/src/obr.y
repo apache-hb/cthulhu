@@ -8,6 +8,7 @@
 
 %code top {
     #include "interop/flex.h"
+    #include "interop/bison.h"
 }
 
 %code requires {
@@ -36,33 +37,33 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
 }
 
 %type<vector>
-    importList importBodyList moduleList
-    declSeq decl
-    identList
-    valueSeq valueDecl valueDeclSeq
-    constSeq constDeclSeq
-    typeSeq typeDeclSeq
-    fieldList fieldDecl
+    importList import_body_list module_seq
+    decl_seq decl
+    ident_list
+    value_seq value_decl value_decl_seq
+    const_seq const_decl_seq
+    type_seq type_decl_seq
+    field_list field_decl
 
-    optParams params
-    paramList paramDecl
-    stmtSeq optInit
-    exprList optExprList
+    opt_params params
+    param_list param_decl
+    stmt_seq opt_init
+    expr_list opt_expr_list
 
 %type<ast>
-    importBody module
+    import_body module
     type forward
 
     stmt
-    branchStmt branchTail
+    branch_stmt branch_tail
 
-    constDecl typeDecl procDecl
-    constExpr expr optExpr
-    designator factor term simpleExpr simpleExprInner qualified
+    const_decl type_decl proc_decl
+    const_expr expr opt_expr
+    designator factor term simple_expr simple_expr_inner qualified
 
     optReceiver receiver return_type
 
-%type<symbol> identDef
+%type<symbol> ident_def
 %type<ident> end
 %type<boolean> mut
 
@@ -147,56 +148,56 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %%
 
-program: moduleList { scan_set(x, $1); }
+program: module_seq { scan_set(x, $1); }
     ;
 
-moduleList: module { $$ = vector_init($1); }
-    | moduleList module { vector_push(&$1, $2); $$ = $1; }
+module_seq: module { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+    | module_seq module { vector_push(&$1, $2); $$ = $1; }
     ;
 
-module: MODULE IDENT SEMI importList declSeq optInit end DOT { $$ = obr_module(x, @$, $2, $7, $4, $5, $6); }
+module: MODULE IDENT SEMI importList decl_seq opt_init end DOT { $$ = obr_module(x, @$, $2, $7, $4, $5, $6); }
     ;
 
-optInit: %empty { $$ = NULL; }
-    | START stmtSeq { $$ = $2; }
+opt_init: %empty { $$ = NULL; }
+    | START stmt_seq { $$ = $2; }
     ;
 
 /* imports */
 
 importList: %empty { $$ = &kEmptyVector; }
-    | IMPORT importBodyList SEMI { $$ = $2; }
+    | IMPORT import_body_list SEMI { $$ = $2; }
     ;
 
-importBodyList: importBody { $$ = vector_init($1); }
-    | importBodyList COMMA importBody { vector_push(&$1, $3); $$ = $1; }
+import_body_list: import_body { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+    | import_body_list COMMA import_body { vector_push(&$1, $3); $$ = $1; }
     ;
 
-importBody: IDENT { $$ = obr_import(x, @$, $1, $1); }
+import_body: IDENT { $$ = obr_import(x, @$, $1, $1); }
     | IDENT ASSIGN IDENT { $$ = obr_import(x, @$, $1, $3); }
     ;
 
 /* values */
 
-declSeq: decl { $$ = $1; }
-    | declSeq decl { vector_append(&$1, $2); $$ = $1; }
+decl_seq: decl { $$ = $1; }
+    | decl_seq decl { vector_append(&$1, $2); $$ = $1; }
     ;
 
-decl: valueDeclSeq { $$ = $1; }
-    | constDeclSeq { $$ = $1; }
-    | typeDeclSeq { $$ = $1; }
-    | forward SEMI { $$ = vector_init($1); }
-    | procDecl SEMI { $$ = vector_init($1); }
+decl: value_decl_seq { $$ = $1; }
+    | const_decl_seq { $$ = $1; }
+    | type_decl_seq { $$ = $1; }
+    | forward SEMI { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+    | proc_decl SEMI { $$ = vector_init_arena($1, BISON_ARENA(x)); }
     ;
 
 /* procedures */
 
-procDecl: PROCEDURE optReceiver identDef optParams return_type SEMI declSeq START stmtSeq end
+proc_decl: PROCEDURE optReceiver ident_def opt_params return_type SEMI decl_seq START stmt_seq end
     {
         $$ = obr_decl_procedure(x, @$, $3, $2, $4, $5, $7, $9, $10);
     }
     ;
 
-forward: PROCEDURE CARET optReceiver identDef optParams return_type
+forward: PROCEDURE CARET optReceiver ident_def opt_params return_type
     {
         $$ = obr_decl_procedure(x, @$, $4, $3, $5, $6, NULL, NULL, NULL);
     }
@@ -213,18 +214,18 @@ optReceiver: %empty { $$ = NULL; }
 receiver: LPAREN mut IDENT COLON IDENT RPAREN { $$ = obr_receiver(x, @$, $2, $3, $5); }
     ;
 
-optParams: %empty { $$ = &kEmptyVector; }
+opt_params: %empty { $$ = &kEmptyVector; }
     | params { $$ = $1; }
     ;
 
-params: LPAREN paramList RPAREN { $$ = $2; }
+params: LPAREN param_list RPAREN { $$ = $2; }
     ;
 
-paramList: paramDecl { $$ = $1; }
-    | paramList SEMI paramDecl { vector_append(&$1, $3); $$ = $1; }
+param_list: param_decl { $$ = $1; }
+    | param_list SEMI param_decl { vector_append(&$1, $3); $$ = $1; }
     ;
 
-paramDecl: mut identList COLON type { $$ = obr_expand_params($2, $4, $1); }
+param_decl: mut ident_list COLON type { $$ = obr_expand_params($2, $4, $1); }
     ;
 
 mut: %empty { $$ = false; }
@@ -233,44 +234,44 @@ mut: %empty { $$ = false; }
 
 /* consts */
 
-constDeclSeq: CONST constSeq { $$ = $2; }
+const_decl_seq: CONST const_seq { $$ = $2; }
     ;
 
-constSeq: constDecl { $$ = vector_init($1); }
-    | constSeq constDecl { vector_push(&$1, $2); $$ = $1; }
+const_seq: const_decl { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+    | const_seq const_decl { vector_push(&$1, $2); $$ = $1; }
     ;
 
-constDecl: identDef EQUAL constExpr SEMI { $$ = obr_decl_const(x, @$, $1, $3); }
+const_decl: ident_def EQUAL const_expr SEMI { $$ = obr_decl_const(x, @$, $1, $3); }
     ;
 
 /* values */
 
-valueDeclSeq: VAR valueSeq { $$ = $2; }
+value_decl_seq: VAR value_seq { $$ = $2; }
     ;
 
-valueSeq: valueDecl { $$ = $1; }
-    | valueSeq valueDecl { vector_append(&$1, $2); $$ = $1; }
+value_seq: value_decl { $$ = $1; }
+    | value_seq value_decl { vector_append(&$1, $2); $$ = $1; }
     ;
 
-valueDecl: identList COLON type SEMI { $$ = obr_expand_vars($1, $3); }
+value_decl: ident_list COLON type SEMI { $$ = obr_expand_vars($1, $3); }
     ;
 
 /* types */
 
-typeDeclSeq: TYPE typeSeq { $$ = $2; }
+type_decl_seq: TYPE type_seq { $$ = $2; }
     ;
 
-typeSeq: typeDecl { $$ = vector_init($1); }
-    | typeSeq typeDecl { vector_push(&$1, $2); $$ = $1; }
+type_seq: type_decl { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+    | type_seq type_decl { vector_push(&$1, $2); $$ = $1; }
     ;
 
-typeDecl: identDef EQUAL type SEMI { $$ = obr_decl_type(x, @$, $1, $3); }
+type_decl: ident_def EQUAL type SEMI { $$ = obr_decl_type(x, @$, $1, $3); }
     ;
 
 type: qualified { $$ = $1; }
     | POINTER TO type { $$ = obr_type_pointer(x, @$, $3); }
-    | ARRAY optExprList OF type { $$ = obr_type_array(x, @$, $2, $4); }
-    | RECORD fieldList END { $$ = obr_type_record(x, @$, $2); }
+    | ARRAY opt_expr_list OF type { $$ = obr_type_array(x, @$, $2, $4); }
+    | RECORD field_list END { $$ = obr_type_record(x, @$, $2); }
     ;
 
 qualified: IDENT { $$ = obr_type_name(x, @$, $1); }
@@ -279,35 +280,35 @@ qualified: IDENT { $$ = obr_type_name(x, @$, $1); }
 
 /* record fields */
 
-fieldList: fieldDecl { $$ = $1; }
-    | fieldList SEMI fieldDecl { vector_append(&$1, $3); $$ = $1; }
+field_list: field_decl { $$ = $1; }
+    | field_list SEMI field_decl { vector_append(&$1, $3); $$ = $1; }
     ;
 
-fieldDecl: identList COLON type { $$ = obr_expand_fields($1, $3); }
+field_decl: ident_list COLON type { $$ = obr_expand_fields($1, $3); }
     ;
 
 /* statements */
 
-stmtSeq: stmt { $$ = vector_init($1); }
-    | stmtSeq SEMI stmt { vector_push(&$1, $3); $$ = $1; }
+stmt_seq: stmt { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+    | stmt_seq SEMI stmt { vector_push(&$1, $3); $$ = $1; }
     ;
 
-stmt: RETURN optExpr { $$ = obr_stmt_return(x, @$, $2); }
-    | WHILE expr DO stmtSeq END { $$ = obr_stmt_while(x, @$, $2, $4); }
-    | LOOP stmtSeq END { $$ = obr_stmt_loop(x, @$, $2); }
+stmt: RETURN opt_expr { $$ = obr_stmt_return(x, @$, $2); }
+    | WHILE expr DO stmt_seq END { $$ = obr_stmt_while(x, @$, $2, $4); }
+    | LOOP stmt_seq END { $$ = obr_stmt_loop(x, @$, $2); }
     | designator ASSIGN expr { $$ = obr_stmt_assign(x, @$, $1, $3); }
-    | designator LPAREN optExprList RPAREN { $$ = obr_expr_call(x, @$, $1, $3); }
-    | REPEAT stmtSeq UNTIL expr { $$ = obr_stmt_repeat(x, @$, $2, $4); }
+    | designator LPAREN opt_expr_list RPAREN { $$ = obr_expr_call(x, @$, $1, $3); }
+    | REPEAT stmt_seq UNTIL expr { $$ = obr_stmt_repeat(x, @$, $2, $4); }
     | EXIT { $$ = obr_stmt_break(x, @$); }
-    | branchStmt { $$ = $1; }
+    | branch_stmt { $$ = $1; }
     ;
 
-branchStmt: IF expr THEN stmtSeq branchTail END { $$ = obr_stmt_branch(x, @$, $2, $4, $5); }
+branch_stmt: IF expr THEN stmt_seq branch_tail END { $$ = obr_stmt_branch(x, @$, $2, $4, $5); }
     ;
 
-branchTail: %empty { $$ = NULL; }
-    | ELSIF expr THEN stmtSeq branchTail { $$ = obr_stmt_branch(x, @$, $2, $4, $5); }
-    | ELSE stmtSeq { $$ = obr_stmt_block(x, @$, $2); }
+branch_tail: %empty { $$ = NULL; }
+    | ELSIF expr THEN stmt_seq branch_tail { $$ = obr_stmt_branch(x, @$, $2, $4, $5); }
+    | ELSE stmt_seq { $$ = obr_stmt_block(x, @$, $2); }
     ;
 
 /* exprs */
@@ -317,7 +318,7 @@ designator: IDENT { $$ = obr_expr_name(x, @$, $1); } /* this deviates from the o
     ;
 
 factor: designator { $$ = $1; }
-    | designator LPAREN optExprList RPAREN { $$ = obr_expr_call(x, @$, $1, $3); }
+    | designator LPAREN opt_expr_list RPAREN { $$ = obr_expr_call(x, @$, $1, $3); }
     | NUMBER { $$ = obr_expr_digit(x, @$, $1); }
     | STRING { $$ = obr_expr_string(x, @$, $1.text, $1.size); }
     | LPAREN expr RPAREN { $$ = $2; }
@@ -331,51 +332,51 @@ term: factor { $$ = $1; }
     | term AND factor { $$ = obr_expr_binary(x, @$, eBinaryBitAnd, $1, $3); }
     ;
 
-simpleExpr: simpleExprInner { $$ = $1; }
-    | PLUS simpleExprInner { $$ = obr_expr_unary(x, @$, eUnaryAbs, $2); }
-    | MINUS simpleExprInner { $$ = obr_expr_unary(x, @$, eUnaryNeg, $2); }
+simple_expr: simple_expr_inner { $$ = $1; }
+    | PLUS simple_expr_inner { $$ = obr_expr_unary(x, @$, eUnaryAbs, $2); }
+    | MINUS simple_expr_inner { $$ = obr_expr_unary(x, @$, eUnaryNeg, $2); }
     ;
 
 /* extract the inner simple expr to simplify the grammar */
-simpleExprInner: term { $$ = $1; }
-    | simpleExprInner PLUS term { $$ = obr_expr_binary(x, @$, eBinaryAdd, $1, $3); }
-    | simpleExprInner MINUS term { $$ = obr_expr_binary(x, @$, eBinarySub, $1, $3); }
-    | simpleExprInner OR term { $$ = obr_expr_binary(x, @$, eBinaryBitOr, $1, $3); }
+simple_expr_inner: term { $$ = $1; }
+    | simple_expr_inner PLUS term { $$ = obr_expr_binary(x, @$, eBinaryAdd, $1, $3); }
+    | simple_expr_inner MINUS term { $$ = obr_expr_binary(x, @$, eBinarySub, $1, $3); }
+    | simple_expr_inner OR term { $$ = obr_expr_binary(x, @$, eBinaryBitOr, $1, $3); }
     ;
 
-expr: simpleExpr { $$ = $1; }
-    | simpleExpr EQUAL simpleExpr { $$ = obr_expr_compare(x, @$, eCompareEq, $1, $3); }
-    | simpleExpr NEQUAL simpleExpr { $$ = obr_expr_compare(x, @$, eCompareNeq, $1, $3); }
-    | simpleExpr LT simpleExpr { $$ = obr_expr_compare(x, @$, eCompareLt, $1, $3); }
-    | simpleExpr GT simpleExpr { $$ = obr_expr_compare(x, @$, eCompareGt, $1, $3); }
-    | simpleExpr LTE simpleExpr { $$ = obr_expr_compare(x, @$, eCompareLte, $1, $3); }
-    | simpleExpr GTE simpleExpr { $$ = obr_expr_compare(x, @$, eCompareGte, $1, $3); }
-    | simpleExpr IN simpleExpr { $$ = obr_expr_in(x, @$, $1, $3); }
-    | simpleExpr IS simpleExpr { $$ = obr_expr_is(x, @$, $1, $3); }
+expr: simple_expr { $$ = $1; }
+    | simple_expr EQUAL simple_expr { $$ = obr_expr_compare(x, @$, eCompareEq, $1, $3); }
+    | simple_expr NEQUAL simple_expr { $$ = obr_expr_compare(x, @$, eCompareNeq, $1, $3); }
+    | simple_expr LT simple_expr { $$ = obr_expr_compare(x, @$, eCompareLt, $1, $3); }
+    | simple_expr GT simple_expr { $$ = obr_expr_compare(x, @$, eCompareGt, $1, $3); }
+    | simple_expr LTE simple_expr { $$ = obr_expr_compare(x, @$, eCompareLte, $1, $3); }
+    | simple_expr GTE simple_expr { $$ = obr_expr_compare(x, @$, eCompareGte, $1, $3); }
+    | simple_expr IN simple_expr { $$ = obr_expr_in(x, @$, $1, $3); }
+    | simple_expr IS simple_expr { $$ = obr_expr_is(x, @$, $1, $3); }
     ;
 
-constExpr: expr { $$ = $1; }
+const_expr: expr { $$ = $1; }
     ;
 
-optExpr: %empty { $$ = NULL; }
+opt_expr: %empty { $$ = NULL; }
     | expr { $$ = $1; }
     ;
 
 /* extra */
 
-optExprList: %empty { $$ = &kEmptyVector; }
-    | exprList { $$ = $1; }
+opt_expr_list: %empty { $$ = &kEmptyVector; }
+    | expr_list { $$ = $1; }
     ;
 
-exprList: expr { $$ = vector_init($1); }
-    | exprList COMMA expr { vector_push(&$1, $3); $$ = $1; }
+expr_list: expr { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+    | expr_list COMMA expr { vector_push(&$1, $3); $$ = $1; }
     ;
 
-identList: identDef { $$ = vector_init($1); }
-    | identList COMMA identDef { vector_push(&$1, $3); $$ = $1; }
+ident_list: ident_def { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+    | ident_list COMMA ident_def { vector_push(&$1, $3); $$ = $1; }
     ;
 
-identDef: IDENT { $$ = obr_symbol(x, @$, $1, eObrVisPrivate); }
+ident_def: IDENT { $$ = obr_symbol(x, @$, $1, eObrVisPrivate); }
     | IDENT STAR { $$ = obr_symbol(x, @$, $1, eObrVisPublic); }
     | IDENT MINUS { $$ = obr_symbol(x, @$, $1, eObrVisPublicReadOnly); }
     ;

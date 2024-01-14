@@ -38,7 +38,7 @@ static void parse_source(lifetime_t *lifetime, const char *path)
 {
     logger_t *reports = lifetime_get_logger(lifetime);
     arena_t *arena = lifetime_get_arena(lifetime);
-    const char *ext = str_ext(path);
+    const char *ext = str_ext(path, arena);
     if (ext == NULL)
     {
         msg_notify(reports, &kEvent_NoFileExtension, node_builtin(),
@@ -49,8 +49,8 @@ static void parse_source(lifetime_t *lifetime, const char *path)
     const language_t *lang = lifetime_get_language(lifetime, ext);
     if (lang == NULL)
     {
-        const char *basepath = str_filename(path);
-        event_t *id = msg_notify(reports, &kEvent_FailedToIdentifyLanguage, node_builtin(),
+        const char *basepath = str_filename(path, arena);
+        event_builder_t id = msg_notify(reports, &kEvent_FailedToIdentifyLanguage, node_builtin(),
                                  "could not identify compiler for `%s` by extension `%s`", basepath,
                                  ext);
         msg_note(id, "extra extensions can be provided with -ext=id:ext");
@@ -61,7 +61,7 @@ static void parse_source(lifetime_t *lifetime, const char *path)
     os_error_t err = io_error(io);
     if (err != 0)
     {
-        event_t *id = msg_notify(reports, &kEvent_FailedToOpenSourceFile, node_builtin(),
+        event_builder_t id = msg_notify(reports, &kEvent_FailedToOpenSourceFile, node_builtin(),
                                  "failed to open source `%s`", path);
         msg_note(id, "error: %s", os_error_string(err, arena));
         return;
@@ -169,7 +169,7 @@ int main(int argc, const char **argv)
     {
         lifetime_run_stage(lifetime, stage);
 
-        char *msg = format("running stage %s", stage_to_string(stage));
+        char *msg = str_format(arena, "running stage %s", stage_to_string(stage));
         CHECK_LOG(reports, msg);
     }
 

@@ -17,7 +17,7 @@ static inode_t *inode_new(inode_type_t type, const void *data, size_t size, aren
 {
     CTASSERT(type < eNodeTotal);
 
-    inode_t *inode = ARENA_MALLOC(arena, sizeof(inode_t) + size, "inode", NULL);
+    inode_t *inode = ARENA_MALLOC(sizeof(inode_t) + size, "inode", NULL, arena);
     inode->type = type;
     memcpy(inode->data, data, size);
     return inode;
@@ -74,7 +74,7 @@ fs_t *fs_new(inode_t *root, const fs_callbacks_t *cb, const void *data, size_t s
 {
     CTASSERT(cb != NULL);
 
-    fs_t *fs = ARENA_MALLOC(arena, sizeof(fs_t) + size, "fs", cb);
+    fs_t *fs = ARENA_MALLOC(sizeof(fs_t) + size, "fs", cb, arena);
     fs->arena = arena;
     fs->cb = cb;
     fs->root = root;

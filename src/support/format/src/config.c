@@ -22,6 +22,7 @@
 
 typedef struct format_config_t
 {
+    arena_t *arena;
     io_t *io;
     format_context_t context;
 } format_config_t;
@@ -185,7 +186,7 @@ static void print_enum(format_config_t options, alignment_info_t alignment, cons
 {
     const cfg_enum_t *info = cfg_enum_info(field);
 
-    char *padding = str_repeat(" ", alignment.arg_alignment);
+    char *padding = str_repeat(" ", alignment.arg_alignment, options.arena);
     io_printf(options.io, "%soptions: ", padding);
 
     for (size_t i = 0; i < info->count; i++)
@@ -230,7 +231,7 @@ static void print_flags(format_config_t options, alignment_info_t alignment, con
 {
     const cfg_flags_t *info = cfg_flags_info(field);
 
-    char *padding = str_repeat(" ", alignment.arg_alignment);
+    char *padding = str_repeat(" ", alignment.arg_alignment, options.arena);
     io_printf(options.io, "%soptions: ", padding);
 
     for (size_t i = 0; i < info->count; i++)
@@ -317,7 +318,7 @@ static bool print_field_info(format_config_t options, alignment_info_t alignment
     size_t offset = print_field_args(options, info, win_style);
     size_t padding = alignment.arg_alignment - offset;
 
-    char *pad = str_repeat(" ", padding);
+    char *pad = str_repeat(" ", padding, options.arena);
 
     bool needs_second_line = false;
 
@@ -327,7 +328,7 @@ static bool print_field_info(format_config_t options, alignment_info_t alignment
     {
         io_printf(options.io, "%s%s", pad, info->brief);
         size_t after_brief = alignment.brief_alignment - strlen(info->brief);
-        char *pad2 = str_repeat(" ", after_brief);
+        char *pad2 = str_repeat(" ", after_brief, options.arena);
 
         io_printf(options.io, "%s", pad2);
 
@@ -339,14 +340,14 @@ static bool print_field_info(format_config_t options, alignment_info_t alignment
         io_printf(options.io, "%s%.*s", pad, (int)first_newline, info->brief);
 
         size_t after_brief = alignment.brief_alignment - first_newline;
-        char *pad2 = str_repeat(" ", after_brief);
+        char *pad2 = str_repeat(" ", after_brief, options.arena);
 
         io_printf(options.io, "%s", pad2);
 
         print_field_default(options, field);
 
         // print remaining lines, putting padding in front of each
-        char *pad_remaining = str_repeat(" ", alignment.arg_alignment);
+        char *pad_remaining = str_repeat(" ", alignment.arg_alignment, options.arena);
         size_t start = first_newline + 1;
         size_t len = 0;
         for (size_t i = start; info->brief[i]; i++)
@@ -428,6 +429,7 @@ void print_config(print_config_t config)
 {
     print_options_t options = config.options;
     format_config_t format_config = {
+        .arena = options.arena,
         .io = options.io,
         .context = format_context_make(options)
     };

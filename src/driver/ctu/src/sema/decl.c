@@ -171,7 +171,7 @@ static void ctu_resolve_variant(tree_t *sema, tree_t *self, void *user)
         {
             if (default_case != NULL)
             {
-                event_t *id = msg_notify(sema->reports, &kEvent_DuplicateDefaultCases, it->node, "decl `%s` has multiple default cases", decl->name);
+                event_builder_t id = msg_notify(sema->reports, &kEvent_DuplicateDefaultCases, it->node, "decl `%s` has multiple default cases", decl->name);
                 msg_append(id, default_case->node, "previous default case");
             }
             else

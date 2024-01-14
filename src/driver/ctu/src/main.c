@@ -15,13 +15,18 @@
 
 CTU_CALLBACKS(kCallbacks, ctu);
 
-static vector_t *find_mod_path(ctu_t *ast, const char *fp)
+static vector_t *mod_basename(const char *fp, arena_t *arena)
 {
-    if (ast == NULL) { return vector_init(str_basename(fp)); }
+    return vector_init_arena(str_basename(fp, arena), arena);
+}
+
+static vector_t *find_mod_path(ctu_t *ast, const char *fp, arena_t *arena)
+{
+    if (ast == NULL) { return mod_basename(fp, arena); }
 
     return vector_len(ast->modspec) > 0
         ? ast->modspec
-        : vector_init(str_basename(fp));
+        : mod_basename(fp, arena);
 }
 
 static void *ctu_preparse(driver_t *driver, scan_t *scan)
@@ -33,7 +38,7 @@ static void *ctu_preparse(driver_t *driver, scan_t *scan)
 
     ctu_scan_t info = {
         .reports = lifetime_get_logger(lifetime),
-        .attribs = vector_new(4)
+        .attribs = vector_new_arena(4, arena)
     };
 
     return arena_memdup(&info, sizeof(ctu_scan_t), arena);
@@ -43,8 +48,9 @@ static void ctu_postparse(driver_t *driver, scan_t *scan, void *tree)
 {
     ctu_t *ast = tree;
     CTASSERT(ast->kind == eCtuModule);
+    arena_t *arena = scan_get_arena(scan);
 
-    vector_t *path = find_mod_path(ast, scan_path(scan));
+    vector_t *path = find_mod_path(ast, scan_path(scan), arena);
 
     lifetime_t *lifetime = handle_get_lifetime(driver);
     context_t *ctx = context_new(driver, vector_tail(path), ast, NULL);

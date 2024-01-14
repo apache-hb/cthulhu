@@ -213,8 +213,6 @@ vector_t *ctu_rt_path(void)
 
 tree_t *ctu_rt_mod(lifetime_t *lifetime)
 {
-    GLOBAL_INIT("cthulhu runtime module");
-
     arena_t *arena = lifetime_get_arena(lifetime);
 
     size_t sizes[eCtuTagTotal] = {

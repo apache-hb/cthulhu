@@ -1,6 +1,6 @@
 #include "cthulhu/runtime/driver.h"
 
-#include "memory/memory.h"
+#include "memory/arena.h"
 #include "oberon/driver.h"
 
 #include "interop/compile.h"
@@ -17,13 +17,14 @@ static void *obr_preparse(driver_t *handle, scan_t *scan)
     CTU_UNUSED(scan);
 
     lifetime_t *lifetime = handle_get_lifetime(handle);
+    arena_t *arena = lifetime_get_arena(lifetime);
     logger_t *reports = lifetime_get_logger(lifetime);
 
     obr_scan_t info = {
         .reports = reports,
     };
 
-    return ctu_memdup(&info, sizeof(obr_scan_t));
+    return arena_memdup(&info, sizeof(obr_scan_t), arena);
 }
 
 static void obr_postparse(driver_t *handle, scan_t *scan, void *tree)
@@ -33,13 +34,14 @@ static void obr_postparse(driver_t *handle, scan_t *scan, void *tree)
     vector_t *modules = tree;
 
     lifetime_t *lifetime = handle_get_lifetime(handle);
+    arena_t *arena = lifetime_get_arena(lifetime);
 
     size_t len = vector_len(modules);
     for (size_t i = 0; i < len; i++)
     {
         obr_t *mod = vector_get(modules, i);
         context_t *ctx = context_new(handle, mod->name, mod, NULL);
-        add_context(lifetime, vector_init(mod->name), ctx);
+        add_context(lifetime, vector_init_arena(mod->name, arena), ctx);
     }
 }
 

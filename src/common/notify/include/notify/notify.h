@@ -74,6 +74,12 @@ logger_t *logger_new(IN_NOTNULL arena_t *arena);
 NODISCARD
 typevec_t *logger_get_events(IN_NOTNULL const logger_t *logs);
 
+/// @brief check if the logger has any fatal errors
+///
+/// @param[in] logs the logger
+/// @param[in] rules the rules to use
+///
+/// @return true if the logger has fatal errors
 NODISCARD
 bool logger_has_errors(IN_NOTNULL const logger_t *logs, notify_rules_t rules);
 
@@ -92,9 +98,9 @@ void logger_reset(IN_NOTNULL logger_t *logs);
 /// @param fmt the format string
 /// @param ... the format arguments
 ///
-/// @return the new event
+/// @return the new event builder
 RET_NOTNULL
-event_t *msg_notify(
+event_builder_t msg_notify(
     IN_NOTNULL logger_t *logs,
     const diagnostic_t *diagnostic,
     const node_t *node,
@@ -110,7 +116,7 @@ event_t *msg_notify(
 ///
 /// @return the new event
 RET_NOTNULL
-event_t *msg_vnotify(
+event_builder_t msg_vnotify(
     IN_NOTNULL logger_t *logs,
     IN_NOTNULL const diagnostic_t *diagnostic,
     const node_t *node,
@@ -118,31 +124,42 @@ event_t *msg_vnotify(
 
 /// @brief append additional information to a message
 ///
-/// @param[in, out] event the event to append to
+/// @param[in, out] builder the event builder to append to
 /// @param node the node to attach to the message
 /// @param fmt the format string
 /// @param ... the format arguments
 void msg_append(
-    IN_NOTNULL event_t *event,
+    event_builder_t builder,
     const node_t *node,
     FMT_STRING const char *fmt, ...) CT_PRINTF(3, 4);
 
+/// @brief append additional information to a message
+///
+/// @param[in, out] builder the event builder to append to
+/// @param node the node to attach to the message
+/// @param fmt the format string
+/// @param args the format arguments
 void msg_vappend(
-    IN_NOTNULL event_t *event,
+    event_builder_t builder,
     const node_t *node,
     const char *fmt, va_list args);
 
 /// @brief add a note to an existing message
 ///
-/// @param[in, out] event the event to append to
+/// @param[in, out] builder the event builder to append to
 /// @param fmt the format string
 /// @param ... the format arguments
 void msg_note(
-    IN_NOTNULL event_t *event,
+    event_builder_t builder,
     FMT_STRING const char *fmt, ...) CT_PRINTF(2, 3);
 
+/// @brief add a note to an existing message
+///
+/// @param[in, out] builder the event builder to append to
+/// @param fmt the format string
+/// @param args the format arguments
 void msg_vnote(
-    IN_NOTNULL event_t *event,
+    event_builder_t builder,
     const char *fmt, va_list args);
 
 /// @}

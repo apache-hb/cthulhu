@@ -13,12 +13,12 @@
 #include "std/str.h"
 #include "std/vector.h"
 
-static char *path_to_string(vector_t *path)
+static char *path_to_string(vector_t *path, arena_t *arena)
 {
     CTASSERT(path != NULL);
     CTASSERT(vector_len(path) > 0);
 
-    return str_join(".", path);
+    return str_join_arena(".", path, arena);
 }
 
 static context_t *context_inner_new(driver_t *handle, const char *name, void *ast, tree_t *root)
@@ -27,7 +27,7 @@ static context_t *context_inner_new(driver_t *handle, const char *name, void *as
     CTASSERT(name != NULL);
 
     lifetime_t *lifetime = handle->parent;
-    context_t *self = ARENA_MALLOC(lifetime->arena, sizeof(context_t), name, lifetime);
+    context_t *self = ARENA_MALLOC(sizeof(context_t), name, lifetime, lifetime->arena);
 
     self->parent = lifetime;
     self->lang = handle->lang;
@@ -53,7 +53,7 @@ context_t *add_context(lifetime_t *lifetime, vector_t *path, context_t *mod)
     CTASSERT(lifetime != NULL);
     CTASSERT(mod != NULL);
 
-    char *name = path_to_string(path);
+    char *name = path_to_string(path, lifetime->arena);
 
     context_t *old = map_get(lifetime->modules, name);
     if (old != NULL)
@@ -69,7 +69,7 @@ context_t *get_context(lifetime_t *lifetime, vector_t *path)
 {
     CTASSERT(lifetime != NULL);
 
-    char *name = path_to_string(path);
+    char *name = path_to_string(path, lifetime->arena);
 
     return map_get(lifetime->modules, name);
 }

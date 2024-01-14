@@ -3,8 +3,6 @@
 #include "base/panic.h"
 #include "memory/arena.h"
 
-#include "memory/memory.h"
-#include "std/map.h"
 #include "std/set.h"
 #include "std/str.h"
 #include "std/typed/vector.h"
@@ -22,12 +20,12 @@ logger_t *logger_new(arena_t *arena)
 {
     CTASSERT(arena != NULL);
 
-    logger_t *logs = ARENA_MALLOC(arena, sizeof(logger_t), "logger", NULL);
+    logger_t *logs = ARENA_MALLOC(sizeof(logger_t), "logger", NULL, arena);
 
     logs->arena = arena;
     logs->messages = typevec_new(sizeof(event_t), 8, arena);
 
-    ARENA_IDENTIFY(arena, logs->messages, "messages", logs);
+    ARENA_IDENTIFY(logs->messages, "messages", logs, arena);
 
     return logs;
 }
@@ -94,12 +92,12 @@ void logger_reset(logger_t *logs)
 }
 
 USE_DECL
-event_t *msg_notify(logger_t *reports, const diagnostic_t *diagnostic, const node_t *node, const char *fmt, ...)
+event_builder_t msg_notify(logger_t *reports, const diagnostic_t *diagnostic, const node_t *node, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
 
-    event_t *event = msg_vnotify(reports, diagnostic, node, fmt, args);
+    event_builder_t event = msg_vnotify(reports, diagnostic, node, fmt, args);
 
     va_end(args);
 
@@ -107,7 +105,7 @@ event_t *msg_notify(logger_t *reports, const diagnostic_t *diagnostic, const nod
 }
 
 USE_DECL
-event_t *msg_vnotify(logger_t *logs, const diagnostic_t *diagnostic, const node_t *node, const char *fmt, va_list args)
+event_builder_t msg_vnotify(logger_t *logs, const diagnostic_t *diagnostic, const node_t *node, const char *fmt, va_list args)
 {
     CTASSERT(logs != NULL);
     CTASSERT(diagnostic != NULL);
@@ -122,34 +120,44 @@ event_t *msg_vnotify(logger_t *logs, const diagnostic_t *diagnostic, const node_
         .notes = NULL,
     };
 
-    return typevec_push(logs->messages, &event);
+    event_t *result = typevec_push(logs->messages, &event);
+    event_builder_t builder = {
+        .event = result,
+        .arena = logs->arena
+    };
+    return builder;
 }
 
 USE_DECL
-void msg_append(event_t *event, const node_t *node, const char *fmt, ...)
+void msg_append(event_builder_t builder, const node_t *node, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
 
-    msg_vappend(event, node, fmt, args);
+    msg_vappend(builder, node, fmt, args);
 
     va_end(args);
 }
 
+#define CHECK_BUILDER(bld) \
+    CTASSERT((bld).event != NULL); \
+    CTASSERT((bld).arena != NULL);
+
 USE_DECL
-void msg_vappend(event_t *event, const node_t *node, const char *fmt, va_list args)
+void msg_vappend(event_builder_t builder, const node_t *node, const char *fmt, va_list args)
 {
-    CTASSERT(event != NULL);
+    CHECK_BUILDER(builder);
     CTASSERT(fmt != NULL);
+
+    event_t *event = builder.event;
 
     if (event->segments == NULL)
     {
-        arena_t *arena = get_global_arena();
-        event->segments = typevec_new(sizeof(segment_t), 2, arena);
-        ARENA_IDENTIFY(arena, event->segments, "segments", event);
+        event->segments = typevec_new(sizeof(segment_t), 2, builder.arena);
+        ARENA_IDENTIFY(event->segments, "segments", event, builder.arena);
     }
 
-    char *msg = vformat(fmt, args);
+    char *msg = str_vformat(builder.arena, fmt, args);
 
     segment_t segment = {
         .node = node,
@@ -160,23 +168,25 @@ void msg_vappend(event_t *event, const node_t *node, const char *fmt, va_list ar
 }
 
 USE_DECL
-void msg_note(event_t *event, const char *fmt, ...)
+void msg_note(event_builder_t builder, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
 
-    msg_vnote(event, fmt, args);
+    msg_vnote(builder, fmt, args);
 
     va_end(args);
 }
 
 USE_DECL
-void msg_vnote(event_t *event, const char *fmt, va_list args)
+void msg_vnote(event_builder_t builder, const char *fmt, va_list args)
 {
-    CTASSERT(event != NULL);
+    CHECK_BUILDER(builder);
     CTASSERT(fmt != NULL);
 
-    char *msg = vformat(fmt, args);
+    char *msg = str_vformat(builder.arena, fmt, args);
+
+    event_t *event = builder.event;
 
     if (event->notes == NULL)
     {

@@ -64,7 +64,7 @@ static io_t *make_file(logger_t *reports, const char *path, os_access_t flags, a
     os_error_t err = io_error(io);
     if (err != 0)
     {
-        event_t *id = msg_notify(reports, &kEvent_FailedToOpenSourceFile, NULL, "failed to open `%s`", path);
+        event_builder_t id = msg_notify(reports, &kEvent_FailedToOpenSourceFile, NULL, "failed to open `%s`", path);
         msg_note(id, "%s", os_error_string(err, arena));
         return NULL;
     }
@@ -108,7 +108,7 @@ int main(int argc, const char **argv)
     for (int i = 1; i < argc; i++)
     {
         const char *path = argv[i];
-        const char *ext = str_ext(path);
+        const char *ext = str_ext(path, arena);
         const language_t *lang = lifetime_get_language(lifetime, ext);
 
         if (lang == NULL)
@@ -129,7 +129,7 @@ int main(int argc, const char **argv)
     {
         lifetime_run_stage(lifetime, stage);
 
-        char *msg = format("running stage %s", stage_to_string(stage));
+        char *msg = str_format(arena, "running stage %s", stage_to_string(stage));
         CHECK_LOG(logger, msg);
     }
 

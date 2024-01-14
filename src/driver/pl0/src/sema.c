@@ -1,5 +1,6 @@
 #include "pl0/sema.h"
 #include "cthulhu/events/events.h"
+#include "memory/memory.h"
 #include "pl0/ast.h"
 
 #include "cthulhu/util/util.h"
@@ -42,12 +43,13 @@ static const tree_attribs_t kEntryAttrib = {
 
 static char *pl0_normalize(const char *name)
 {
-    return str_lower(name);
+    arena_t *arena = get_global_arena();
+    return str_lower(name, arena);
 }
 
 static void report_pl0_shadowing(logger_t *reports, const char *name, const node_t *prev, const node_t *next)
 {
-    event_t *id = evt_symbol_shadowed(reports, name, prev, next);
+    event_builder_t id = evt_symbol_shadowed(reports, name, prev, next);
     msg_note(id, "PL/0 is case insensitive");
 }
 
@@ -169,6 +171,7 @@ void pl0_init(driver_t *handle)
 {
     const node_t *node = node_builtin();
     lifetime_t *lifetime = handle_get_lifetime(handle);
+    arena_t *arena = lifetime_get_arena(lifetime);
 
     gIntType = tree_type_digit(node, "integer", eDigitInt, eSignSigned, eQualUnknown);
     gCharType = tree_type_digit(node, "char", eDigitChar, eSignSigned, eQualUnknown);
@@ -187,9 +190,9 @@ void pl0_init(driver_t *handle)
     tree_set_attrib(gRuntimePrint, &kPrintAttrib);
 
     tree_t *param = tree_decl_param(node, "number", gIntType);
-    vector_t *rt_print_params = vector_init(param);
+    vector_t *rt_print_params = vector_init_arena(param, arena);
 
-    vector_t *args = vector_of(2);
+    vector_t *args = vector_of_arena(2, arena);
     vector_set(args, 0, tree_expr_string(node, string_type, "%d\n", 4));
     vector_set(args, 1, param);
     tree_t *call = tree_expr_call(node, gRuntimePrint, args);
@@ -207,7 +210,7 @@ void pl0_init(driver_t *handle)
 
 static void report_pl0_unresolved(logger_t *reports, const node_t *node, const char *name)
 {
-    event_t *id = msg_notify(reports, &kEvent_SymbolNotFound, node, "unresolved reference to `%s`", name);
+    event_builder_t id = msg_notify(reports, &kEvent_SymbolNotFound, node, "unresolved reference to `%s`", name);
     msg_note(id, "symbol resolution is case sensitive");
 }
 
@@ -342,7 +345,8 @@ static tree_t *sema_print(tree_t *sema, pl0_t *node)
 {
     tree_t *expr = sema_expr(sema, node->print);
 
-    vector_t *args = vector_init(expr);
+    arena_t *arena = get_global_arena();
+    vector_t *args = vector_init_arena(expr, arena);
 
     return tree_expr_call(node->node, gPrint, args);
 }
@@ -567,6 +571,7 @@ void pl0_forward_decls(context_t *context)
 void pl0_process_imports(context_t *context)
 {
     lifetime_t *lifetime = context_get_lifetime(context);
+    arena_t *arena = lifetime_get_arena(lifetime);
     pl0_t *root = context_get_ast(context);
     tree_t *sema = context_get_module(context);
 
@@ -580,7 +585,7 @@ void pl0_process_imports(context_t *context)
 
         if (ctx == NULL)
         {
-            msg_notify(sema->reports, &kEvent_ImportNotFound, import_decl->node, "cannot import `%s`, failed to find module", str_join(".", import_decl->path));
+            msg_notify(sema->reports, &kEvent_ImportNotFound, import_decl->node, "cannot import `%s`, failed to find module", str_join_arena(".", import_decl->path, arena));
             continue;
         }
 

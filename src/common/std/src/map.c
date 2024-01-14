@@ -43,7 +43,7 @@ typedef struct map_t
 
 static bucket_t *impl_bucket_new(const void *key, void *value, arena_t *arena)
 {
-    bucket_t *entry = ARENA_MALLOC(arena, sizeof(bucket_t), "bucket", NULL);
+    bucket_t *entry = ARENA_MALLOC(sizeof(bucket_t), "bucket", NULL, arena);
     entry->key = key;
     entry->value = value;
     entry->next = NULL;
@@ -90,13 +90,13 @@ map_t *map_new(size_t size, type_info_t info, arena_t *arena)
     CTASSERT(info.equals != NULL);
     CTASSERT(info.hash != NULL);
 
-    map_t *map = ARENA_MALLOC(arena, sizeof(map_t), "map", NULL);
+    map_t *map = ARENA_MALLOC(sizeof(map_t), "map", NULL, arena);
 
     map->arena = arena;
     map->info = info;
     map->size = size;
     map->used = 0;
-    map->data = ARENA_MALLOC(arena, sizeof(bucket_t) * size, "buckets", map);
+    map->data = ARENA_MALLOC(sizeof(bucket_t) * size, "buckets", map, arena);
 
     clear_keys(map->data, size);
 
@@ -248,7 +248,7 @@ static void impl_resize(map_t *map, size_t new_size)
     // TODO: maybe resize the old data instead of allocating new data
     map->size = new_size;
     map->used = 0;
-    map->data = ARENA_MALLOC(map->arena, sizeof(bucket_t) * new_size, "buckets", map);
+    map->data = ARENA_MALLOC(sizeof(bucket_t) * new_size, "buckets", map, map->arena);
     clear_keys(map->data, new_size);
 
     for (size_t i = 0; i < old_size; i++)
@@ -290,7 +290,7 @@ void map_set(map_t *map, const void *key, void *value)
             map->used += 1;
 
             bucket->next = impl_bucket_new(key, value, map->arena);
-            ARENA_REPARENT(map->arena, bucket->next, bucket);
+            ARENA_REPARENT(bucket->next, bucket, map->arena);
             return;
         }
 

@@ -34,8 +34,8 @@ option('trace_memory', type : 'feature',
     value : 'auto'
 )
 
-option('assert', type : 'feature',
-    description : 'enable basic assertions, disabled in release by default',
+option('paranoid', type : 'feature',
+    description : 'enable paranoid assertions, disabled in release by default',
     value : 'auto'
 )
 

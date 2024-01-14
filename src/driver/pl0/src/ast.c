@@ -1,17 +1,20 @@
 #include "pl0/ast.h"
 
+#include "base/panic.h"
 #include "memory/arena.h"
 #include "pl0/scan.h"
 
 pl0_t *pl0_new(scan_t *scan, where_t where, pl0_type_t type)
 {
+    CTASSERT(scan != NULL);
+
     arena_t *arena = scan_get_arena(scan);
 
-    pl0_t *node = ARENA_MALLOC(arena, sizeof(pl0_t), "pl0", scan);
+    pl0_t *node = ARENA_MALLOC(sizeof(pl0_t), "pl0", scan, arena);
     node->node = node_new(scan, where);
     node->type = type;
 
-    ARENA_IDENTIFY(arena, node->node, "node", node);
+    ARENA_IDENTIFY(node->node, "node", node, arena);
 
     return node;
 }

@@ -2,7 +2,7 @@
 
 #include "core/analyze.h"
 #include "core/compiler.h"
-#include "base/text.h"
+#include "core/text.h"
 
 #include <stddef.h>
 #include <stdbool.h>
@@ -15,6 +15,14 @@ BEGIN_API
 
 /// @ingroup Location
 /// @{
+
+#define SCAN_BUILTIN_LANG "builtin"
+/// @def SCAN_BUILTIN_LANG
+/// @brief the language of the builtin scanner
+
+#define SCAN_BUILTIN_NAME "<builtin>"
+/// @def SCAN_BUILTIN_NAME
+/// @brief the name of the builtin scanner
 
 /// @brief get the source language of a scanner
 ///

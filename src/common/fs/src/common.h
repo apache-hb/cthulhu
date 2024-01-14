@@ -3,7 +3,7 @@
 #include "fs/fs.h"
 
 #include <stddef.h>
-#include <stdint.h>
+#include <stdalign.h>
 
 typedef struct map_t map_t;
 typedef struct arena_t arena_t;
@@ -20,9 +20,9 @@ typedef enum inode_type_t
 typedef struct inode_t
 {
     inode_type_t type;
-    uint32_t shutup; // ubsan moment
 
-    char data[];
+    // use size_t as msvc doesnt have max_align_t
+    alignas(size_t) char data[];
 } inode_t;
 
 typedef inode_t *(*fs_query_node_t)(fs_t *fs, inode_t *node, const char *name);
@@ -43,6 +43,8 @@ typedef void (*fs_delete_t)(fs_t *fs);
 typedef struct fs_callbacks_t
 {
     fs_query_node_t pfn_query_node;
+
+    // TODO: return an iterator instead of doing it in serial
     fs_query_dirents_t pfn_query_dirents;
     fs_query_file_t pfn_query_file;
 

@@ -1,8 +1,8 @@
 #include "cthulhu/util/text.h"
 
+#include "base/panic.h"
 #include "cthulhu/events/events.h"
 #include "memory/arena.h"
-#include "memory/memory.h"
 #include "std/typed/vector.h"
 
 #include "notify/notify.h"
@@ -48,12 +48,15 @@ static escape_t consume_text(logger_t *reports, const node_t *node, const char *
     }
 }
 
-text_t util_text_escape(logger_t *reports, const node_t *node, const char *text, size_t length)
+text_t util_text_escape(logger_t *reports, const node_t *node, const char *text, size_t length, arena_t *arena)
 {
-    arena_t *arena = get_global_arena();
+    CTASSERT(reports != NULL);
+    CTASSERT(node != NULL);
+    CTASSERT(text != NULL);
+    CTASSERT(arena != NULL);
 
     typevec_t *vec = typevec_new(sizeof(char), length, arena);
-    ARENA_IDENTIFY(arena, vec, "text", reports);
+    ARENA_IDENTIFY(vec, "text", reports, arena);
 
     for (size_t i = 0; i < length;)
     {

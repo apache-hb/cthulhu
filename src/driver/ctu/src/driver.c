@@ -72,10 +72,11 @@ static void import_module(lifetime_t *lifetime, tree_t *sema, ctu_t *include)
 {
     CTASSERT(include->kind == eCtuImport);
     context_t *ctx = get_context(lifetime, include->import_path);
+    arena_t *arena = lifetime_get_arena(lifetime);
 
     if (ctx == NULL)
     {
-        msg_notify(sema->reports, &kEvent_ImportNotFound, include->node, "import `%s` not found", str_join("::", include->import_path));
+        msg_notify(sema->reports, &kEvent_ImportNotFound, include->node, "import `%s` not found", str_join_arena("::", include->import_path, arena));
         return;
     }
 
@@ -89,9 +90,9 @@ static void import_module(lifetime_t *lifetime, tree_t *sema, ctu_t *include)
     tree_t *old = ctu_get_namespace(sema, include->name, NULL);
     if (old != NULL)
     {
-        event_t *id = evt_symbol_shadowed(sema->reports, include->name, tree_get_node(old), tree_get_node(lib));
+        event_builder_t id = evt_symbol_shadowed(sema->reports, include->name, tree_get_node(old), tree_get_node(lib));
         msg_note(id, "consider using import aliases; eg. `import %s as my_%s`",
-            str_join("::", include->import_path),
+            str_join_arena("::", include->import_path, arena),
             include->name
         );
     }

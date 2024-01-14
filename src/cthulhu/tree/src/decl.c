@@ -97,9 +97,16 @@ tree_t *tree_decl_global(
     return self;
 }
 
+static tree_resolve_info_t *dup_resolve_info(tree_resolve_info_t *info)
+{
+    arena_t *arena = get_global_arena();
+    tree_resolve_info_t *copy = arena_memdup(info, sizeof(tree_resolve_info_t), arena);
+    return copy;
+}
+
 tree_t *tree_open_global(const node_t *node, const char *name, const tree_t *type, tree_resolve_info_t resolve)
 {
-    tree_t *self = decl_open(node, name, type, eTreeDeclGlobal, ctu_memdup(&resolve, sizeof(tree_resolve_info_t)));
+    tree_t *self = decl_open(node, name, type, eTreeDeclGlobal, dup_resolve_info(&resolve));
     tree_set_storage(self, kEmptyStorage);
     return self;
 }
@@ -111,7 +118,7 @@ tree_t *tree_open_function(const node_t *node, const char *name, const tree_t *s
         CTASSERTF(tree_is(signature, eTreeTypeClosure), "signature %s is not a closure", tree_to_string(signature));
     }
 
-    tree_t *self = decl_open(node, name, signature, eTreeDeclFunction, ctu_memdup(&resolve, sizeof(tree_resolve_info_t)));
+    tree_t *self = decl_open(node, name, signature, eTreeDeclFunction, dup_resolve_info(&resolve));
     self->params = signature == NULL ? NULL : signature->params;
     self->locals = vector_new(4);
     return self;
@@ -164,7 +171,7 @@ tree_t *tree_decl_case(const node_t *node, const char *name, tree_t *expr)
 
 tree_t *tree_open_decl(const node_t *node, const char *name, tree_resolve_info_t resolve)
 {
-    return decl_open(node, name, NULL, eTreeType, ctu_memdup(&resolve, sizeof(tree_resolve_info_t)));
+    return decl_open(node, name, NULL, eTreeType, dup_resolve_info(&resolve));
 }
 
 void tree_close_decl(tree_t *self, const tree_t *other)
@@ -220,7 +227,8 @@ tree_t *tree_alias(const tree_t *tree, const char *name)
 {
     CTASSERTF(tree != NULL && name != NULL, "(tree=%p, name=%p)", (void*)tree, (void*)name);
 
-    tree_t *copy = ctu_memdup(tree, sizeof(tree_t));
+    arena_t *arena = get_global_arena();
+    tree_t *copy = arena_memdup(tree, sizeof(tree_t), arena);
     copy->name = name;
     return copy;
 }
@@ -250,7 +258,7 @@ tree_t *tree_decl_struct(const node_t *node, const char *name, vector_t *fields)
 
 tree_t *tree_open_struct(const node_t *node, const char *name, tree_resolve_info_t resolve)
 {
-    tree_t *self = decl_open(node, name, NULL, eTreeTypeStruct, ctu_memdup(&resolve, sizeof(tree_resolve_info_t)));
+    tree_t *self = decl_open(node, name, NULL, eTreeTypeStruct, dup_resolve_info(&resolve));
     self->fields = vector_new(4);
     return self;
 }
@@ -277,7 +285,7 @@ tree_t *tree_decl_union(const node_t *node, const char *name, vector_t *fields)
 
 tree_t *tree_open_union(const node_t *node, const char *name, tree_resolve_info_t resolve)
 {
-    tree_t *self = decl_open(node, name, NULL, eTreeTypeUnion, ctu_memdup(&resolve, sizeof(tree_resolve_info_t)));
+    tree_t *self = decl_open(node, name, NULL, eTreeTypeUnion, dup_resolve_info(&resolve));
     self->fields = vector_new(4);
     return self;
 }
@@ -314,7 +322,7 @@ tree_t *tree_decl_enum(const node_t *node, const char *name, const tree_t *under
 
 tree_t *tree_open_enum(const node_t *node, const char *name, tree_resolve_info_t resolve)
 {
-    tree_t *self = decl_open(node, name, NULL, eTreeTypeEnum, ctu_memdup(&resolve, sizeof(tree_resolve_info_t)));
+    tree_t *self = decl_open(node, name, NULL, eTreeTypeEnum, dup_resolve_info(&resolve));
     self->underlying = NULL;
     self->cases = vector_new(4);
     self->default_case = NULL;

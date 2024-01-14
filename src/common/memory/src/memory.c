@@ -25,24 +25,6 @@ void init_global_arena(arena_t *arena)
     gGlobalArena = arena;
 }
 
-USE_DECL
-void *ctu_memdup(const void *ptr, size_t size)
-{
-    return arena_memdup(ptr, size, get_global_arena());
-}
-
-USE_DECL
-char *ctu_strdup(const char *str)
-{
-    return arena_strdup(str, get_global_arena());
-}
-
-USE_DECL
-char *ctu_strndup(const char *str, size_t len)
-{
-    return arena_strndup(str, len, get_global_arena());
-}
-
 /// gmp arena managment
 
 static arena_t *gGmpArena = NULL;

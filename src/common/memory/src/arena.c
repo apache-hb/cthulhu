@@ -45,7 +45,7 @@ void *arena_malloc(size_t size, const char *name, const void *parent, arena_t *a
     CTASSERT(arena != NULL);
     CTASSERT(size > 0);
 
-    void *ptr = arena->fn_malloc(size, arena->user);
+    void *ptr = arena->fn_malloc(size, arena_data(arena));
     CTASSERTF(ptr != NULL, "arena `%s` of %zu bytes failed", name, size);
 
     if (name != NULL)
@@ -69,7 +69,7 @@ void *arena_realloc(void *ptr, size_t new_size, size_t old_size, arena_t *arena)
     CTASSERT(new_size > 0);
     CTASSERT(old_size > 0);
 
-    void *outptr = arena->fn_realloc(ptr, new_size, old_size, arena->user);
+    void *outptr = arena->fn_realloc(ptr, new_size, old_size, arena_data(arena));
     CTASSERTF(outptr != NULL, "realloc(%zu) failed", new_size);
 
     return outptr;
@@ -82,7 +82,7 @@ void arena_free(void *ptr, size_t size, arena_t *arena)
     CTASSERT(ptr != NULL);
     CTASSERT(size > 0);
 
-    arena->fn_free(ptr, size, arena->user);
+    arena->fn_free(ptr, size, arena_data(arena));
 }
 
 USE_DECL
@@ -94,7 +94,7 @@ void arena_rename(const void *ptr, const char *name, arena_t *arena)
 
     if (arena->fn_rename == NULL) return;
 
-    arena->fn_rename(ptr, name, arena->user);
+    arena->fn_rename(ptr, name, arena_data(arena));
 }
 
 USE_DECL
@@ -106,5 +106,13 @@ void arena_reparent(const void *ptr, const void *parent, arena_t *arena)
 
     if (arena->fn_reparent == NULL) return;
 
-    arena->fn_reparent(ptr, parent, arena->user);
+    arena->fn_reparent(ptr, parent, arena_data(arena));
+}
+
+USE_DECL
+void *arena_data(arena_t *arena)
+{
+    CTASSERT(arena != NULL);
+
+    return arena + 1;
 }

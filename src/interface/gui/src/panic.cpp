@@ -3,6 +3,7 @@
 #include "backtrace/backtrace.h"
 
 #include "cthulhu/runtime/interface.h"
+#include "memory/memory.h"
 #include "std/str.h"
 
 #include "imgui/imgui.h"
@@ -120,6 +121,7 @@ static void trace_callback(void *user, const bt_frame_t *frame)
 
 void PanicInfo::capture_trace(panic_t panic, const char *fmt, va_list args)
 {
+    arena_t *arena = get_global_arena();
     trace_capture_t capture = {
         .info = this,
     };
@@ -130,7 +132,7 @@ void PanicInfo::capture_trace(panic_t panic, const char *fmt, va_list args)
     bt_read(trace_callback, &capture);
 
     info = panic;
-    message = vformat(fmt, args);
+    message = str_vformat(arena, fmt, args);
     has_error = true;
 }
 

@@ -7,6 +7,7 @@
 
 typedef struct logger_t logger_t;
 typedef struct node_t node_t;
+typedef struct arena_t arena_t;
 
 BEGIN_API
 
@@ -19,9 +20,10 @@ BEGIN_API
 /// @param node the node to report errors on
 /// @param text the text to escape
 /// @param length the length of the text
+/// @param arena the arena to allocate the escaped text in
 ///
 /// @return the escaped text
-text_t util_text_escape(logger_t *reports, const node_t *node, const char *text, size_t length);
+text_t util_text_escape(logger_t *reports, const node_t *node, const char *text, size_t length, arena_t *arena);
 
 /// @}
 

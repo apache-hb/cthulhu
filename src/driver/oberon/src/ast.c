@@ -22,7 +22,7 @@ static void ensure_block_names_match(scan_t *scan, const node_t *node, const cha
 
     if (!str_equal(name, end))
     {
-        event_t *id = msg_notify(ctx->reports, &kEvent_BlockMismatchEnds, node,
+        event_builder_t id = msg_notify(ctx->reports, &kEvent_BlockMismatchEnds, node,
                                  "mismatching %s block BEGIN and END names", type);
         msg_note(id, "BEGIN name `%s` does not match END name `%s`", name, end);
     }
@@ -32,11 +32,11 @@ static obr_t *obr_new(scan_t *scan, where_t where, obr_kind_t kind)
 {
     arena_t *arena = scan_get_arena(scan);
 
-    obr_t *self = ARENA_MALLOC(arena, sizeof(obr_t), "obr", scan);
+    obr_t *self = ARENA_MALLOC(sizeof(obr_t), "obr", scan, arena);
     self->kind = kind;
     self->node = node_new(scan, where);
 
-    ARENA_IDENTIFY(arena, self->node, "node", self);
+    ARENA_IDENTIFY(self->node, "node", self, arena);
 
     return self;
 }
@@ -344,7 +344,7 @@ obr_t *obr_receiver(scan_t *scan, where_t where, bool mut, char *name, char *typ
 obr_symbol_t *obr_symbol(scan_t *scan, where_t where, char *name, obr_visibility_t visibility)
 {
     arena_t *arena = scan_get_arena(scan);
-    obr_symbol_t *self = ARENA_MALLOC(arena, sizeof(obr_symbol_t), "obr_symbol", scan);
+    obr_symbol_t *self = ARENA_MALLOC(sizeof(obr_symbol_t), "obr_symbol", scan, arena);
     self->scan = scan;
     self->where = where;
     self->name = name;

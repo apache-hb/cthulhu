@@ -9,6 +9,8 @@
 #include "std/vector.h"
 #include "std/str.h"
 
+#include <limits.h>
+
 typedef struct test_config_t
 {
     cfg_group_t *root;
@@ -122,7 +124,7 @@ static test_config_t make_config(arena_t *arena)
 
     config.bool_field2 = config_bool(config.root, &kBoolInfo2, false);
 
-    cfg_int_t int_initial = {.initial = 0};
+    cfg_int_t int_initial = {.initial = 0, .min = INT_MIN, .max = INT_MAX };
     config.int_field = config_int(config.root, &kIntInfo, int_initial);
 
     config.string_field = config_string(config.root, &kStringInfo, NULL);

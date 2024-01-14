@@ -12,7 +12,7 @@
 ssa_value_t *ssa_value_new(const ssa_type_t *type, bool init)
 {
     arena_t *arena = get_global_arena();
-    ssa_value_t *self = ARENA_MALLOC(arena, sizeof(ssa_value_t), "ssa_value", NULL);
+    ssa_value_t *self = ARENA_MALLOC(sizeof(ssa_value_t), "ssa_value", NULL, arena);
     self->type = type;
     self->init = init;
     return self;

@@ -21,17 +21,17 @@ char *CompileInfo::parse_source(size_t index)
 {
     const char *path = sources.get_path(index);
 
-    char *ext = str_ext(path);
+    char *ext = str_ext(path, &global);
     if (ext == nullptr)
     {
-        return format("could not determine file extension for '%s'", path);
+        return str_format(&global, "could not determine file extension for '%s'", path);
     }
 
     const language_t *lang = lifetime_get_language(lifetime, ext);
     if (lang == nullptr)
     {
-        const char *basepath = str_filename(path);
-        return format("could not find language for `%s` by extension `%s`", basepath, ext);
+        const char *basepath = str_filename(path, &global);
+        return str_format(&global, "could not find language for `%s` by extension `%s`", basepath, ext);
     }
 
     io_t *io = sources.get_io(index);

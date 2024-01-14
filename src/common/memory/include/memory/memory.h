@@ -9,41 +9,16 @@ BEGIN_API
 /// @brief Default global memory allocator
 /// @{
 
+/// @brief get the global memory arena
+///
+/// @return the global memory arena
 arena_t *get_global_arena(void);
+
+/// @brief initialize the global memory arena
+/// @warning this should be called with care, as it will overwrite the current arena
+///
+/// @param arena the arena to initialize
 void init_global_arena(arena_t *arena);
-
-///
-/// @brief allocate a copy of a string
-///
-/// will abort if memory cannot be allocated.
-///
-/// @param str the string to copy
-///
-/// @return the allocated copy of the string
-NODISCARD
-char *ctu_strdup(IN_STRING const char *str);
-
-/// @brief allocate a copy of a string with a maximum length
-///
-/// will abort if memory cannot be allocated.
-///
-/// @param str the string to copy
-/// @param len the maximum length of the string to copy
-///
-/// @return the allocated copy of the string
-NODISCARD
-char *ctu_strndup(IN_READS(len) const char *str, size_t len);
-
-/// @brief duplicate a memory region
-/// duplicate a region of memory and return a pointer to the new memory.
-/// will abort if memory cannot be allocated.
-///
-/// @param ptr the pointer to duplicate
-/// @param size the size of the memory to duplicate
-///
-/// @return the duplicated memory
-NODISCARD
-void *ctu_memdup(IN_READS(size) const void *ptr, IN_RANGE(>, 0) size_t size);
 
 /// @brief initialize gmp with a custom allocator
 ///

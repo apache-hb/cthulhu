@@ -18,7 +18,7 @@ static const tree_attribs_t kDefaultAttrib = {
 tree_t *tree_new(tree_kind_t kind, const node_t *node, const tree_t *type)
 {
     arena_t *arena = get_global_arena();
-    tree_t *self = ARENA_MALLOC(arena, sizeof(tree_t), tree_kind_to_string(kind), NULL);
+    tree_t *self = ARENA_MALLOC(sizeof(tree_t), tree_kind_to_string(kind), NULL, arena);
 
     self->kind = kind;
     self->node = node;
@@ -50,10 +50,12 @@ static tree_t *error_vformat(const node_t *node, const diagnostic_t *diagnostic,
 {
     CTASSERT(diagnostic != NULL);
 
+    arena_t *arena = get_global_arena();
+
     tree_t *self = tree_new(eTreeError, node, NULL);
     self->type = self;
     self->diagnostic = diagnostic;
-    self->message = vformat(message, args);
+    self->message = str_vformat(arena, message, args);
     return self;
 }
 

@@ -10,6 +10,7 @@ BEGIN_API
 /// @ingroup Notify
 /// @{
 
+/// @brief the default severity of a diagnostic
 typedef enum severity_t
 {
 #define SEVERITY(ID, NAME) ID,

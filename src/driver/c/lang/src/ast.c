@@ -11,7 +11,7 @@ static c_ast_t *c_ast_new(scan_t *scan, where_t where, c_kind_t kind)
     arena_t *arena = scan_get_arena(scan);
     node_t *node = node_new(scan, where);
 
-    c_ast_t *ast = ARENA_MALLOC(arena, sizeof(c_ast_t), "c_ast_t", scan);
+    c_ast_t *ast = ARENA_MALLOC(sizeof(c_ast_t), "c_ast_t", scan, arena);
     ast->node = node;
     ast->kind = kind;
     return ast;

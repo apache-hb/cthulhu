@@ -221,7 +221,7 @@ static const diagnostic_t kReservedName = {
 
 void event_simple(logger_t *logs)
 {
-    event_t *event = msg_notify(logs, &kInfoDiagnostic, node_builtin(), "test");
+    event_builder_t event = msg_notify(logs, &kInfoDiagnostic, node_builtin(), "test");
     msg_append(event, node_builtin(), "hello %s", "world");
 }
 
@@ -254,7 +254,7 @@ void event_missing_call(logger_t *logs, scan_t *scan_main, scan_t *scan_lhs)
 
     node_t *node3 = node_new(scan_lhs, where3);
 
-    event_t *event = msg_notify(logs, &kUndefinedFunctionName, node, "function `%s` is undefined in the current context", "lhs");
+    event_builder_t event = msg_notify(logs, &kUndefinedFunctionName, node, "function `%s` is undefined in the current context", "lhs");
     msg_note(event, "did you mean `%s`?", "rhs");
     msg_append(event, node, "function called here");
     msg_append(event, node, "function called here but with a different message");
@@ -284,7 +284,7 @@ void event_invalid_import(logger_t *logs, scan_t *scan, scan_t *scan_rhs)
 
     node_t *node2 = node_new(scan_rhs, where2);
 
-    event_t *event = msg_notify(logs, &kUnresolvedImport, node, "unresolved import `%s`", "multi.lhs");
+    event_builder_t event = msg_notify(logs, &kUnresolvedImport, node, "unresolved import `%s`", "multi.lhs");
     msg_note(event, "did you mean `%s`?", "multi.rhs");
     msg_note(event, "did you mean `%s`?", "multi.rhx");
     msg_append(event, node, "import statement here");
@@ -302,7 +302,7 @@ void event_invalid_function(logger_t *logs, scan_t *scan)
 
     node_t *node = node_new(scan, where);
 
-    event_t *event = msg_notify(logs, &kReservedName, node, "reserved name `%s`", "entry");
+    event_builder_t event = msg_notify(logs, &kReservedName, node, "reserved name `%s`", "entry");
     msg_append(event, node, "procedure declaration here");
     msg_note(event, "did you mean `%s`?", "main");
 }

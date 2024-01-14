@@ -24,12 +24,12 @@ static tree_t *tree_module_new(const node_t *node, const char *name,
     self->reports = reports;
 
     self->tags = vector_of(decls);
-    ARENA_IDENTIFY(arena, self->tags, "module_tags", self);
+    ARENA_IDENTIFY(self->tags, "module_tags", self, arena);
 
     for (size_t i = 0; i < decls; i++)
     {
         map_t *map = map_optimal(sizes[i], kTypeInfoString, arena);
-        ARENA_IDENTIFY(arena, map, "module_tag", self);
+        ARENA_IDENTIFY(map, "module_tag", self, arena);
         vector_set(self->tags, i, map);
     }
 

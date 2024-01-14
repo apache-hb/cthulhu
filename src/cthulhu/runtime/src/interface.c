@@ -44,7 +44,7 @@ static driver_t *handle_new(lifetime_t *lifetime, const language_t *lang)
     CTASSERT(lifetime != NULL);
     CTASSERT(lang != NULL);
 
-    driver_t *self = ARENA_MALLOC(lifetime->arena, sizeof(driver_t), lang->id, lifetime);
+    driver_t *self = ARENA_MALLOC(sizeof(driver_t), lang->id, lifetime, lifetime->arena);
 
     self->parent = lifetime;
     self->lang = lang;
@@ -66,7 +66,7 @@ lifetime_t *handle_get_lifetime(driver_t *handle)
 
 mediator_t *mediator_new(arena_t *arena)
 {
-    mediator_t *self = ARENA_MALLOC(arena, sizeof(mediator_t), "mediator", NULL);
+    mediator_t *self = ARENA_MALLOC(sizeof(mediator_t), "mediator", NULL, arena);
 
     self->arena = arena;
 
@@ -78,7 +78,7 @@ lifetime_t *lifetime_new(mediator_t *mediator, arena_t *arena)
     CTASSERT(mediator != NULL);
     CTASSERT(arena != NULL);
 
-    lifetime_t *self = ARENA_MALLOC(arena, sizeof(lifetime_t), "lifetime", mediator);
+    lifetime_t *self = ARENA_MALLOC(sizeof(lifetime_t), "lifetime", mediator, arena);
 
     logger_t *logger = logger_new(arena);
 
@@ -291,15 +291,13 @@ map_t *lifetime_get_modules(lifetime_t *lifetime)
     arena_t *arena = lifetime->arena;
 
     map_t *mods = map_optimal(64, kTypeInfoString, arena);
-    ARENA_IDENTIFY(arena, mods, "modules", lifetime);
+    ARENA_IDENTIFY(mods, "modules", lifetime, arena);
 
     map_iter_t iter = map_iter(lifetime->modules);
-    while (map_has_next(&iter))
+    const char *name = NULL;
+    context_t *ctx = NULL;
+    while (CTU_MAP_NEXT(&iter, &name, &ctx))
     {
-        map_entry_t entry = map_next(&iter);
-        context_t *ctx = entry.value;
-        const char *name = entry.key;
-
         CTASSERTF(ctx != NULL, "module `%s` is NULL", name);
         CTASSERTF(ctx->root != NULL, "module `%s` has NULL root", name);
 

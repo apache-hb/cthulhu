@@ -70,17 +70,14 @@ const cfg_flags_t *cfg_flags_info(const cfg_field_t *field)
     return &field->flags_config;
 }
 
-static const char *const kConfigTypeNames[eConfigTotal] = {
-    [eConfigInt] = "int",
-    [eConfigBool] = "bool",
-    [eConfigString] = "string",
-    [eConfigEnum] = "enum",
-    [eConfigFlags] = "flags",
+static const char *const kConfigTypeNames[eConfigCount] = {
+#define CFG_TYPE(id, name) [id] = (name),
+#include "config/config.inc"
 };
 
 const char *cfg_type_name(cfg_type_t type)
 {
-    CTASSERTF(type < eConfigTotal, "invalid type %d", type);
+    CTASSERTF(type < eConfigCount, "invalid type %d", type);
 
     return kConfigTypeNames[type];
 }

@@ -98,9 +98,6 @@ typedef struct arena_t
     /// @brief the reparent function
     /// @note this feature is optional
     mem_reparent_t fn_reparent;
-
-    /// @brief the user data
-    void *user;
 } arena_t;
 
 /// @brief release memory from a custom allocator
@@ -147,22 +144,51 @@ void *arena_realloc(
     IN_RANGE(!=, 0) size_t old_size,
     IN_NOTNULL arena_t *arena);
 
+/// @brief allocate a copy of a string from a custom allocator
+///
+/// @param str the string to copy
+/// @param arena the allocator to use
+///
+/// @return the allocated copy of the string
 NODISCARD CT_ALLOC(arena_free)
 char *arena_strdup(
     IN_STRING const char *str,
     IN_NOTNULL arena_t *arena);
 
+/// @brief allocate a copy of a string with a maximum length from a custom allocator
+///
+/// @param str the string to copy
+/// @param len the maximum length of the string to copy
+/// @param arena the allocator to use
+///
+/// @return the allocated copy of the string
 NODISCARD CT_ALLOC(arena_free)
 char *arena_strndup(
     IN_READS(len) const char *str,
     IN_RANGE(>, 0) size_t len,
     IN_NOTNULL arena_t *arena);
 
+/// @brief duplicate a memory region from a custom allocator
+/// duplicate a region of memory and return a pointer to the new memory.
+///
+/// @param ptr the pointer to duplicate
+/// @param size the size of the memory to duplicate
+/// @param arena the allocator to use
+///
+/// @return the duplicated memory
 NODISCARD CT_ALLOC(arena_free) CT_ALLOC_SIZE(2)
 void *arena_memdup(
     IN_READS(size) const void *ptr,
     IN_RANGE(>, 0) size_t size,
     IN_NOTNULL arena_t *arena);
+
+/// @brief get the user data pointer from an arena
+///
+/// @param arena the allocator to use
+///
+/// @return the user data pointer
+NODISCARD
+void *arena_data(IN_NOTNULL arena_t *arena);
 
 /// @brief rename a pointer in a custom allocator
 ///
@@ -182,37 +208,37 @@ void arena_reparent(IN_NOTNULL const void *ptr, const void *parent, IN_NOTNULL a
 /// @brief rename a pointer in a custom allocator
 /// @note this is a no-op if @a CTU_TRACE_MEMORY is not defined
 ///
-/// @param arena the allocator to use
 /// @param ptr the pointer to rename
 /// @param name the new name of the pointer
+/// @param arena the allocator to use
 
 /// @def ARENA_REPARENT(arena, ptr, parent)
 /// @brief reparent a pointer in a custom allocator
 /// @note this is a no-op if @a CTU_TRACE_MEMORY is not defined
 ///
-/// @param arena the allocator to use
 /// @param ptr the pointer to reparent
 /// @param parent the new parent of the pointer
+/// @param arena the allocator to use
 
 /// @def ARENA_MALLOC(arena, size, name, parent)
 /// @brief allocate memory from a custom allocator
 /// @note this is converted to @a arena_malloc if @a CTU_TRACE_MEMORY is not defined
 ///
-/// @param arena the allocator to use
 /// @param size the size of the allocation, must be greater than 0
 /// @param name the name of the allocation
 /// @param parent the parent of the allocation
+/// @param arena the allocator to use
 ///
 /// @return the allocated pointer
 
 #if CTU_TRACE_MEMORY
-#   define ARENA_RENAME(arena, ptr, name) arena_rename(ptr, name, arena)
-#   define ARENA_REPARENT(arena, ptr, parent) arena_reparent(ptr, parent, arena)
-#   define ARENA_MALLOC(arena, size, name, parent) arena_malloc(size, name, parent, arena)
+#   define ARENA_RENAME(ptr, name, arena) arena_rename(ptr, name, arena)
+#   define ARENA_REPARENT(ptr, parent, arena) arena_reparent(ptr, parent, arena)
+#   define ARENA_MALLOC(size, name, parent, arena) arena_malloc(size, name, parent, arena)
 #else
 #   define ARENA_RENAME(arena, ptr, name)
 #   define ARENA_REPARENT(arena, ptr, parent)
-#   define ARENA_MALLOC(arena, size, name, parent) arena_malloc(size, NULL, NULL, arena)
+#   define ARENA_MALLOC(size, name, parent, arena) arena_malloc(size, NULL, NULL, arena)
 #endif
 
 /// @def ARENA_IDENTIFY(arena, ptr, name, parent)
@@ -223,16 +249,16 @@ void arena_reparent(IN_NOTNULL const void *ptr, const void *parent, IN_NOTNULL a
 /// @warning @p name must be an expression that is evaluated in the argument list
 /// @warning @p parent must be an address on the heap
 ///
-/// @param arena the allocator to use
 /// @param ptr the pointer to rename
 /// @param name the new name of the pointer
 /// @param parent the new parent of the pointer
+/// @param arena the allocator to use
 
-#define ARENA_IDENTIFY(arena, ptr, name, parent)                                                                       \
+#define ARENA_IDENTIFY(ptr, name, parent, arena)                                                                       \
     do                                                                                                                 \
     {                                                                                                                  \
-        ARENA_RENAME(arena, ptr, name);                                                                                \
-        ARENA_REPARENT(arena, ptr, parent);                                                                            \
+        ARENA_RENAME(ptr, name, arena);                                                                                \
+        ARENA_REPARENT(ptr, parent, arena);                                                                            \
     } while (0)
 
 /// @} // Memory Management
