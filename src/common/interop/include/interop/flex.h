@@ -6,8 +6,8 @@
 
 BEGIN_API
 
-/// @defgroup FlexBisonMacros Helpers for flex and bison driver frontends
-/// @ingroup Interop
+/// @defgroup flex_bison_macros Helpers for flex and bison driver frontends
+/// @ingroup interop
 /// @{
 
 /// @brief tracks the current source position

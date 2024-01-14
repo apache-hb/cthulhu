@@ -11,7 +11,7 @@ typedef struct arena_t arena_t;
 
 BEGIN_API
 
-/// @ingroup RuntimeUtil
+/// @ingroup runtime_util
 /// @{
 
 /// @brief escape a string literal into a string

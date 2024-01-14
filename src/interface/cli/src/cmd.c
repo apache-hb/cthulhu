@@ -74,7 +74,7 @@ static const cfg_choice_t kReportStyleChoices[] = {
 
 tool_t make_tool(arena_t *arena)
 {
-    cfg_group_t *config = config_root(arena, &kConfigInfo);
+    cfg_group_t *config = config_root(&kConfigInfo, arena);
 
     default_options_t options = get_default_options(config);
 

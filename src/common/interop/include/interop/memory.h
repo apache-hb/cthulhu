@@ -3,6 +3,9 @@
 #include "memory/arena.h"
 #include "scan/scan.h" // IWYU pragma: keep
 
+/// @ingroup flex_bison_macros
+/// @{
+
 /// route memory for flex and bison though cthulhu allocators
 #define FLEX_MEMORY(prefix)                                                 \
     inline void *prefix##alloc(size_t size, yyscan_t scanner)               \
@@ -25,3 +28,9 @@
         }                                                                   \
         arena_free(ptr, ALLOC_SIZE_UNKNOWN, arena);                         \
     }
+
+/// @def FLEX_MEMORY(prefix)
+/// @brief route memory for flex and bison though cthulhu allocators
+/// @param prefix the prefix assigned to flex and bison functions
+
+/// @}

@@ -1,18 +1,21 @@
 #pragma once
 
 #include "core/compiler.h"
+#include "core/analyze.h"
 
 BEGIN_API
 
+/// @ingroup tree
+/// @{
+
+/// @brief all type qualifiers
 typedef enum quals_t
 {
 #define TYPE_QUALIFIER(ID, NAME, FLAG) ID = (FLAG),
 #include "tree.inc"
 } quals_t;
 
-/**
- * @brief all binary operators
- */
+/// @brief all binary operators
 typedef enum binary_t
 {
 #define BINARY_OP(ID, NAME, SYMBOL) ID,
@@ -20,9 +23,7 @@ typedef enum binary_t
     eBinaryTotal
 } binary_t;
 
-/**
- * @brief all comparison operators
- */
+/// @brief all comparison operators
 typedef enum compare_t
 {
 #define COMPARE_OP(ID, NAME, SYMBOL) ID,
@@ -30,9 +31,7 @@ typedef enum compare_t
     eCompareTotal
 } compare_t;
 
-/**
- * @brief all unary operators
- */
+/// @brief all unary operators
 typedef enum unary_t
 {
 #define UNARY_OP(ID, NAME, SYMBOL) ID,
@@ -40,6 +39,7 @@ typedef enum unary_t
     eUnaryTotal
 } unary_t;
 
+/// @brief all casts
 typedef enum cast_t
 {
 #define CAST_OP(ID, NAME) ID,
@@ -47,6 +47,7 @@ typedef enum cast_t
     eCastTotal
 } cast_t;
 
+/// @brief all builtins
 typedef enum builtin_t
 {
 #define TREE_BUILTIN(ID, NAME) ID,
@@ -54,6 +55,7 @@ typedef enum builtin_t
     eBuiltinTotal
 } builtin_t;
 
+/// @brief all arities
 typedef enum arity_t
 {
 #define TREE_ARITY(ID, STR) ID,
@@ -61,9 +63,7 @@ typedef enum arity_t
     eArityTotal
 } arity_t;
 
-/**
- * @brief the visibility of a declaration
- */
+/// @brief the linkage of a declaration
 typedef enum tree_link_t
 {
 #define TREE_LINKAGE(ID, STR) ID,
@@ -71,6 +71,7 @@ typedef enum tree_link_t
     eLinkTotal
 } tree_link_t;
 
+/// @brief the type of jump
 typedef enum tree_jump_t
 {
 #define TREE_JUMP(ID, STR) ID,
@@ -78,6 +79,7 @@ typedef enum tree_jump_t
     eJumpTotal
 } tree_jump_t;
 
+/// @brief symbol visibility
 typedef enum visibility_t
 {
 #define TREE_VISIBILITY(ID, STR) ID,
@@ -85,6 +87,7 @@ typedef enum visibility_t
     eVisibileTotal
 } visibility_t;
 
+/// @brief digit width
 typedef enum digit_t
 {
 #define DIGIT_KIND(ID, STR) ID,
@@ -92,6 +95,7 @@ typedef enum digit_t
     eDigitTotal
 } digit_t;
 
+/// @brief integer sign
 typedef enum sign_t
 {
 #define SIGN_KIND(ID, STR) ID,
@@ -99,19 +103,94 @@ typedef enum sign_t
     eSignTotal
 } sign_t;
 
-const char *unary_name(unary_t op);
-const char *binary_name(binary_t op);
-const char *compare_name(compare_t op);
+/// @brief get the pretty name of a unary operator
+///
+/// @param op the operator to get the name of
+///
+/// @return the name of @p op
+RET_NOTNULL
+const char *unary_name(IN_RANGE(<, eUnaryTotal) unary_t op);
 
-const char *unary_symbol(unary_t op);
-const char *binary_symbol(binary_t op);
-const char *compare_symbol(compare_t op);
+/// @brief get the pretty name of a binary operator
+///
+/// @param op the operator to get the name of
+///
+/// @return the name of @p op
+RET_NOTNULL
+const char *binary_name(IN_RANGE(<, eBinaryTotal) binary_t op);
 
-const char *sign_name(sign_t sign);
-const char *digit_name(digit_t digit);
+/// @brief get the pretty name of a comparison operator
+///
+/// @param op the operator to get the name of
+///
+/// @return the name of @p op
+RET_NOTNULL
+const char *compare_name(IN_RANGE(<, eCompareTotal)compare_t op);
 
+/// @brief get the C symbol of a unary operator
+///
+/// @param op the operator to get the symbol of
+///
+/// @return the symbol of @p op
+RET_NOTNULL
+const char *unary_symbol(IN_RANGE(<, eUnaryTotal) unary_t op);
+
+/// @brief get the C symbol of a binary operator
+///
+/// @param op the operator to get the symbol of
+///
+/// @return the symbol of @p op
+RET_NOTNULL
+const char *binary_symbol(IN_RANGE(<, eBinaryTotal)binary_t op);
+
+/// @brief get the C symbol of a comparison operator
+///
+/// @param op the operator to get the symbol of
+///
+/// @return the symbol of @p op
+RET_NOTNULL
+const char *compare_symbol(IN_RANGE(<, eCompareTotal) compare_t op);
+
+/// @brief get the pretty name of a integer sign
+///
+/// @param sign the sign to get the name of
+///
+/// @return the name of @p op
+RET_NOTNULL
+const char *sign_name(IN_RANGE(<, eSignTotal) sign_t sign);
+
+/// @brief get the pretty name of a digit
+///
+/// @param digit the digit to get the name of
+///
+/// @return the name of @p op
+RET_NOTNULL
+const char *digit_name(IN_RANGE(<, eDigitTotal) digit_t digit);
+
+/// @brief get the name of a set of qualifiers
+///
+/// @param quals the qualifiers to get the name of
+///
+/// @return the name of @p quals
+RET_NOTNULL
 const char *quals_name(quals_t quals);
-const char *link_name(tree_link_t link);
-const char *vis_name(visibility_t vis);
+
+/// @brief get the name of a linkage
+///
+/// @param link the linkage to get the name of
+///
+/// @return the name of @p link
+RET_NOTNULL
+const char *link_name(IN_RANGE(<, eLinkTotal) tree_link_t link);
+
+/// @brief get the name of visibility
+///
+/// @param vis the visibility to get the name of
+///
+/// @return the name of @p vis
+RET_NOTNULL
+const char *vis_name(IN_RANGE(<, eVisibileTotal) visibility_t vis);
+
+/// @}
 
 END_API

@@ -8,6 +8,9 @@ typedef struct arena_t arena_t;
 typedef struct io_t io_t;
 typedef struct colour_pallete_t colour_pallete_t;
 
+/// @ingroup format
+/// @{
+
 /// @brief line heading style
 typedef enum heading_style_t
 {
@@ -34,5 +37,7 @@ typedef struct print_options_t
     /// @brief colour pallete to use
     const colour_pallete_t *pallete;
 } print_options_t;
+
+/// @}
 
 END_API

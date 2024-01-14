@@ -7,9 +7,9 @@
 
 BEGIN_API
 
-/// @defgroup Defaults Default options
+/// @defgroup defaults Default options
 /// @brief Default command line options and behaviour
-/// @ingroup Support
+/// @ingroup support
 /// @{
 
 typedef struct cfg_group_t cfg_group_t;

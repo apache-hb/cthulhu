@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-/// @ingroup IO
+/// @ingroup io
 /// @{
 
 typedef struct io_t io_t;

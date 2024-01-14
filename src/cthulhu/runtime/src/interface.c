@@ -64,6 +64,7 @@ lifetime_t *handle_get_lifetime(driver_t *handle)
     return handle->parent;
 }
 
+USE_DECL
 mediator_t *mediator_new(arena_t *arena)
 {
     mediator_t *self = ARENA_MALLOC(sizeof(mediator_t), "mediator", NULL, arena);
@@ -73,6 +74,7 @@ mediator_t *mediator_new(arena_t *arena)
     return self;
 }
 
+USE_DECL
 lifetime_t *lifetime_new(mediator_t *mediator, arena_t *arena)
 {
     CTASSERT(mediator != NULL);
@@ -100,17 +102,19 @@ lifetime_t *lifetime_new(mediator_t *mediator, arena_t *arena)
     return self;
 }
 
+static const char *const kStageNames[eStageTotal] = {
+#define STAGE(ID, STR) [ID] = (STR),
+#include "cthulhu/runtime/mediator.inc"
+};
+
 USE_DECL
 const char *stage_to_string(compile_stage_t stage)
 {
-#define STAGE(ID, STR) case ID: return STR;
-    switch (stage)
-    {
-#include "cthulhu/runtime/mediator.inc"
-    default: return "unknown";
-    }
+    CTASSERTF(stage < eStageTotal, "invalid stage %d", stage);
+    return kStageNames[stage];
 }
 
+USE_DECL
 void lifetime_add_language(lifetime_t *lifetime, const language_t *lang)
 {
     CTASSERT(lifetime != NULL);
@@ -135,11 +139,13 @@ void lifetime_add_language(lifetime_t *lifetime, const language_t *lang)
     EXEC(lang, fn_create, handle);
 }
 
+USE_DECL
 const language_t *lifetime_add_extension(lifetime_t *lifetime, const char *ext, const language_t *lang)
 {
     return add_language_extension(lifetime, ext, lang);
 }
 
+USE_DECL
 const language_t *lifetime_get_language(lifetime_t *lifetime, const char *ext)
 {
     CTASSERT(lifetime != NULL);
@@ -176,6 +182,7 @@ static bool parse_failed(logger_t *reports, const char *path, parse_result_t res
     }
 }
 
+USE_DECL
 void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io)
 {
     CTASSERT(lifetime != NULL);
@@ -219,10 +226,10 @@ void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io)
 static void resolve_tag(tree_t *mod, size_t tag)
 {
     map_iter_t iter = map_iter(tree_module_tag(mod, tag));
-    while (map_has_next(&iter))
+    const char *key = NULL;
+    tree_t *decl = NULL;
+    while (CTU_MAP_NEXT(&iter, &key, &decl))
     {
-        map_entry_t entry = map_next(&iter);
-        tree_t *decl = entry.value;
         tree_resolve(tree_get_cookie(mod), decl);
     }
 }
@@ -244,6 +251,7 @@ static void resolve_decls(tree_t *mod)
     }
 }
 
+USE_DECL
 void lifetime_resolve(lifetime_t *lifetime)
 {
     CTASSERT(lifetime != NULL);
@@ -260,6 +268,7 @@ void lifetime_resolve(lifetime_t *lifetime)
     }
 }
 
+USE_DECL
 void lifetime_run_stage(lifetime_t *lifetime, compile_stage_t stage)
 {
     CTASSERT(lifetime != NULL);
@@ -284,6 +293,7 @@ void lifetime_run_stage(lifetime_t *lifetime, compile_stage_t stage)
     }
 }
 
+USE_DECL
 map_t *lifetime_get_modules(lifetime_t *lifetime)
 {
     CTASSERT(lifetime != NULL);

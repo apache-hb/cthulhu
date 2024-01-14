@@ -1,6 +1,6 @@
 /**
 
-@defgroup Common Common library
+@defgroup common Common library
 @brief Collection of common types and functions shared by all other components
 
 This contains helpers that arent reliant on the compiler library.

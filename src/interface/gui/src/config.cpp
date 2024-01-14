@@ -130,7 +130,8 @@ void draw_int(cfg_field_t *field)
     int value = cfg_int_value(field);
     if (ImGui::DragInt(label, &value, 1.f, cfg->min, cfg->max))
     {
-        cfg_set_int(field, value);
+        // we know that the value is in range because of the drag constraints
+        (void)cfg_set_int(field, value);
     }
 }
 
@@ -175,7 +176,8 @@ void draw_enum(cfg_field_t *field)
             bool is_selected = (current == i);
             if (ImGui::Selectable(cfg->options[i].text, is_selected))
             {
-                cfg_set_enum(field, cfg->options[i].text);
+                // we know that the value is in range because of the selectable constraints
+                (void)cfg_set_enum(field, cfg->options[i].text);
             }
 
             if (is_selected)

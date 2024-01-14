@@ -95,7 +95,7 @@ static const cfg_info_t kZeroIndexedInfo = {
 
 static tool_t make_config(arena_t *arena)
 {
-    cfg_group_t *config = config_root(arena, &kToolInfo);
+    cfg_group_t *config = config_root(&kToolInfo, arena);
 
     cfg_field_t *test_backtrace = config_bool(config, &kBacktraceInfo, false);
     cfg_enum_t notify_info = {

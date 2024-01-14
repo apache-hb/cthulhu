@@ -38,16 +38,19 @@ static context_t *context_inner_new(driver_t *handle, const char *name, void *as
     return self;
 }
 
+USE_DECL
 context_t *compiled_new(driver_t *handle, tree_t *root)
 {
     return context_inner_new(handle, tree_get_name(root), NULL, root);
 }
 
+USE_DECL
 context_t *context_new(driver_t *handle, const char *name, void *ast, tree_t *root)
 {
     return context_inner_new(handle, name, ast, root);
 }
 
+USE_DECL
 context_t *add_context(lifetime_t *lifetime, vector_t *path, context_t *mod)
 {
     CTASSERT(lifetime != NULL);
@@ -65,6 +68,7 @@ context_t *add_context(lifetime_t *lifetime, vector_t *path, context_t *mod)
     return NULL;
 }
 
+USE_DECL
 context_t *get_context(lifetime_t *lifetime, vector_t *path)
 {
     CTASSERT(lifetime != NULL);
@@ -98,34 +102,39 @@ cookie_t *lifetime_get_cookie(lifetime_t *lifetime)
     return &lifetime->cookie;
 }
 
-void *context_get_ast(context_t *context)
+USE_DECL
+void *context_get_ast(const context_t *context)
 {
     CTASSERT(context != NULL);
 
     return context->ast;
 }
 
-tree_t *context_get_module(context_t *context)
+USE_DECL
+tree_t *context_get_module(const context_t *context)
 {
     CTASSERT(context != NULL);
 
     return context->root;
 }
 
-lifetime_t *context_get_lifetime(context_t *context)
+USE_DECL
+lifetime_t *context_get_lifetime(const context_t *context)
 {
     CTASSERT(context != NULL);
 
     return context->parent;
 }
 
-const char *context_get_name(context_t *context)
+USE_DECL
+const char *context_get_name(const context_t *context)
 {
     CTASSERT(context != NULL);
 
     return context->name;
 }
 
+USE_DECL
 void context_update(context_t *ctx, void *ast, tree_t *root)
 {
     CTASSERT(ctx != NULL);
@@ -138,6 +147,7 @@ void context_update(context_t *ctx, void *ast, tree_t *root)
 /// helpers
 ///
 
+USE_DECL
 tree_t *lifetime_sema_new(lifetime_t *lifetime, const char *name, size_t len, const size_t *sizes)
 {
     CTASSERT(lifetime != NULL);

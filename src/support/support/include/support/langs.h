@@ -7,7 +7,7 @@
 BEGIN_API
 
 /// @defgroup langs Language driver enumeration
-/// @ingroup Support
+/// @ingroup support
 /// @brief Language driver enumeration for staticly linked languages
 /// @{
 

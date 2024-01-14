@@ -28,6 +28,7 @@ bt_error_t gErrorReport = {
     .frame = bt_error_frame,
 };
 
+USE_DECL
 frame_resolve_t bt_resolve_symbol(const bt_frame_t *frame, bt_symbol_t *symbol)
 {
     if (frame == NULL) return eResolveNothing;
@@ -42,7 +43,10 @@ frame_resolve_t bt_resolve_symbol(const bt_frame_t *frame, bt_symbol_t *symbol)
     return bt_resolve_inner(frame, symbol);
 }
 
+USE_DECL
 void bt_read(bt_trace_t callback, void *user)
 {
+    if (callback == NULL) return;
+
     bt_read_inner(callback, user);
 }

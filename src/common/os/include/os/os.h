@@ -9,11 +9,11 @@
 
 BEGIN_API
 
-/// @defgroup OS Platform independent OS api
-/// @ingroup Common
-/// @{
-
 typedef struct arena_t arena_t;
+
+/// @defgroup os Platform OS api wrapper
+/// @ingroup common
+/// @{
 
 /// @brief file handle
 typedef struct os_file_t os_file_t;
@@ -47,6 +47,10 @@ typedef enum os_dirent_t
 /// @brief error code
 typedef size_t os_error_t;
 
+/// @brief initialize the os api
+/// @note this must be called before using any other os api
+void os_init(void);
+
 /// @brief convert an os error code to a string
 ///
 /// @param error the error code to convert
@@ -54,11 +58,7 @@ typedef size_t os_error_t;
 ///
 /// @return the string representation of the error code
 NODISCARD RET_STRING
-char *os_error_string(os_error_t error, arena_t *arena);
-
-/// @brief initialize the os api
-/// @note this must be called before using any other os api
-void os_init(void);
+char *os_error_string(os_error_t error, IN_NOTNULL arena_t *arena);
 
 /// filesytem api
 
@@ -83,7 +83,7 @@ os_error_t os_file_delete(IN_STRING const char *path);
 /// @brief check if a directory exists
 ///
 /// @param path the path to the directory to check
-/// @param[out] create true if the directory was created, false if it already existed
+/// @param create true if the directory was created, false if it already existed
 ///
 /// @return true if the directory exists, false otherwise
 /// @return an error if the directory could not be checked
@@ -130,12 +130,12 @@ os_error_t os_dir_current(OUT_WRITES(size) char *cwd, size_t size);
 /// @note the iterator must be closed with @a os_iter_end
 ///
 /// @param path path to directory
-/// @param[out] iter iterator to fill
+/// @param iter iterator to fill
 /// @param arena the arena to allocate from
 ///
 /// @return result containing either a valid iterator or an error, NULL if dir does not exist
 NODISCARD
-os_error_t os_iter_begin(IN_STRING const char *path, os_iter_t *iter, arena_t *arena);
+os_error_t os_iter_begin(IN_STRING const char *path, os_iter_t *iter, IN_NOTNULL arena_t *arena);
 
 /// @brief close a directory iterator
 ///
@@ -145,7 +145,7 @@ void os_iter_end(IN_NOTNULL os_iter_t *iter);
 /// @brief get the next directory entry
 ///
 /// @param iter iterator to use
-/// @param[out] dir directory entry to fill
+/// @param dir directory entry to fill
 ///
 /// @return true if a directory entry was found
 NODISCARD
@@ -165,7 +165,7 @@ os_error_t os_iter_error(IN_NOTNULL os_iter_t *iter);
 ///
 /// @return the name of the directory entry
 NODISCARD
-char *os_dir_name(IN_NOTNULL os_dir_t *dir, arena_t *arena);
+char *os_dir_name(IN_NOTNULL os_dir_t *dir, IN_NOTNULL arena_t *arena);
 
 /// file api
 
@@ -173,7 +173,7 @@ char *os_dir_name(IN_NOTNULL os_dir_t *dir, arena_t *arena);
 ///
 /// @param path the path to the file to open
 /// @param access the access mode to open the file with
-/// @param[out] file the file handle to fill
+/// @param file the file handle to fill
 ///
 /// @return a file handle on success
 /// @return an error if the file could not be opened
@@ -190,7 +190,7 @@ void os_file_close(OUT_PTR_INVALID os_file_t *file);
 /// @param file the file to read from
 /// @param buffer the buffer to read into
 /// @param size the number of bytes to read
-/// @param[out] actual the number of bytes actually read
+/// @param actual the number of bytes actually read
 ///
 /// @return the number of bytes read
 /// @return an error if the file could not be read from
@@ -206,7 +206,7 @@ os_error_t os_file_read(
 /// @param file the file to write to
 /// @param buffer the buffer to write from
 /// @param size the number of bytes to write
-/// @param[out] actual the number of bytes actually written
+/// @param actual the number of bytes actually written
 ///
 /// @return the number of bytes written
 /// @return an error if the file could not be written to
@@ -220,17 +220,17 @@ os_error_t os_file_write(
 /// @brief get the size of a file
 ///
 /// @param file the file to get the size of
-/// @param[out] actual the size of the file
+/// @param actual the size of the file
 ///
 /// @return an error if the file size could not be retrieved
 NODISCARD
-os_error_t os_file_size(IN_NOTNULL os_file_t *file, size_t *actual);
+os_error_t os_file_size(IN_NOTNULL os_file_t *file, IN_NOTNULL size_t *actual);
 
 /// @brief seek to a position in a file
 ///
 /// @param file the file to seek in
 /// @param offset the offset to seek to
-/// @param[out] actual the actual offset after seeking
+/// @param actual the actual offset after seeking
 ///
 /// @return an error if the file could not be seeked
 NODISCARD
@@ -239,20 +239,20 @@ os_error_t os_file_seek(IN_NOTNULL os_file_t *file, size_t offset, size_t *actua
 /// @brief get the current position in a file
 ///
 /// @param file the file to get the position of
-/// @param[out] actual the current position in the file
+/// @param actual the current position in the file
 ///
 /// @return an error if the file position could not be retrieved
 NODISCARD
-os_error_t os_file_tell(IN_NOTNULL os_file_t *file, size_t *actual);
+os_error_t os_file_tell(IN_NOTNULL os_file_t *file, IN_NOTNULL size_t *actual);
 
 /// @brief map a file into memory
 ///
 /// @param file the file to map
-/// @param[out] mapped the mapped memory
+/// @param mapped the mapped memory
 ///
 /// @return an error if the file could not be mapped
 NODISCARD
-os_error_t os_file_map(IN_NOTNULL os_file_t *file, const void **mapped);
+os_error_t os_file_map(IN_NOTNULL os_file_t *file, IN_NOTNULL const void **mapped);
 
 /// @brief get the name of a file
 ///

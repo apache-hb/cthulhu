@@ -125,8 +125,8 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %type<vector>
     path modspec
-    imports importList
-    decls declList
+    imports import_seq
+    decls decl_seq
     record_fields
     stmt_list
     fn_param_list
@@ -135,7 +135,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     type_list opt_type_list
     variant_field_list opt_variant_field_list
     initList
-    attribs attrib attribBody attribList
+    attribs attrib attrib_body attrib_list
 
 /**
  * order of operations, tightest first
@@ -157,7 +157,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %type<ast>
     import
-    decl innerDecl global_decl fn_decl struct_decl union_decl record_field type_alias_decl
+    decl inner_decl global_decl fn_decl struct_decl union_decl record_field type_alias_decl
     fn_body
     type
     primary_expr expr
@@ -165,9 +165,9 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     opt_expr
     stmt stmts local_decl return_stmt while_stmt assign_stmt branch_stmt
     fn_param fn_result
-    variantDecl variant_field underlying
+    variant_decl variant_field underlying
     field_init init
-    singleAttrib
+    single_attrib
 
 %type<ident>
     importAlias ident opt_ident while_name variadic
@@ -192,11 +192,11 @@ modspec: %empty { $$ = &kEmptyVector; }
 /* imports */
 
 imports: %empty { $$ = &kEmptyVector; }
-    | importList { $$ = $1; }
+    | import_seq { $$ = $1; }
     ;
 
-importList: import { $$ = vector_init_arena($1, BISON_ARENA(x)); }
-    | importList import { vector_push(&$1, $2); $$ = $1; }
+import_seq: import { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+    | import_seq import { vector_push(&$1, $2); $$ = $1; }
     ;
 
 import: IMPORT path importAlias SEMI { $$ = ctu_import(x, @$, $2, ($3 != NULL) ? $3 : vector_tail($2)); }
@@ -208,22 +208,22 @@ importAlias: %empty { $$ = NULL; }
 
 /* decorators */
 
-attribs: %empty { $$ = vector_of(0); }
+attribs: %empty { $$ = vector_of_arena(0, BISON_ARENA(x)); }
     | attribs attrib { vector_append(&$1, $2); $$ = $1; }
     ;
 
-attrib: AT attribBody { $$ = $2; }
+attrib: AT attrib_body { $$ = $2; }
     ;
 
-attribBody: singleAttrib { $$ = vector_init_arena($1, BISON_ARENA(x)); }
-    | LSQUARE attribList RSQUARE { $$ = $2; }
+attrib_body: single_attrib { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+    | LSQUARE attrib_list RSQUARE { $$ = $2; }
     ;
 
-attribList: singleAttrib { $$ = vector_init_arena($1, BISON_ARENA(x)); }
-    | attribList COMMA singleAttrib { vector_push(&$1, $3); $$ = $1; }
+attrib_list: single_attrib { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+    | attrib_list COMMA single_attrib { vector_push(&$1, $3); $$ = $1; }
     ;
 
-singleAttrib: path { $$ = ctu_attrib(x, @$, $1, &kEmptyVector); }
+single_attrib: path { $$ = ctu_attrib(x, @$, $1, &kEmptyVector); }
     | path LPAREN RPAREN { $$ = ctu_attrib(x, @$, $1, &kEmptyVector); }
     | path LPAREN attrib_args RPAREN { $$ = ctu_attrib(x, @$, $1, $3); }
     ;
@@ -235,27 +235,27 @@ attrib_args: expr { $$ = vector_init_arena($1, BISON_ARENA(x)); }
 /* toplevel decls */
 
 decls: %empty { $$ = &kEmptyVector; }
-    | declList { $$ = $1; }
+    | decl_seq { $$ = $1; }
     ;
 
-declList: decl { $$ = vector_init_arena($1, BISON_ARENA(x)); }
-    | declList decl { vector_push(&$1, $2); $$ = $1; }
+decl_seq: decl { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+    | decl_seq decl { vector_push(&$1, $2); $$ = $1; }
     ;
 
-decl: attribs innerDecl { $$ = ctu_apply($2, $1); }
+decl: attribs inner_decl { $$ = ctu_apply($2, $1); }
     ;
 
-innerDecl: global_decl { $$ = $1; }
+inner_decl: global_decl { $$ = $1; }
     | fn_decl { $$ = $1; }
     | struct_decl { $$ = $1; }
     | type_alias_decl { $$ = $1; }
-    | variantDecl { $$ = $1; }
+    | variant_decl { $$ = $1; }
     | union_decl { $$ = $1; }
     ;
 
 /* variants/enums */
 
-variantDecl: exported VARIANT IDENT underlying LBRACE opt_variant_field_list RBRACE { $$ = ctu_decl_variant(x, @$, $1, $3, $4, $6); }
+variant_decl: exported VARIANT IDENT underlying LBRACE opt_variant_field_list RBRACE { $$ = ctu_decl_variant(x, @$, $1, $3, $4, $6); }
     ;
 
 underlying: %empty { $$ = NULL; }
@@ -364,7 +364,7 @@ opt_type_list: %empty { $$ = &kEmptyVector; }
 
 /* statements */
 
-stmt_list: %empty { $$ = vector_of(0); }
+stmt_list: %empty { $$ = vector_of_arena(0, BISON_ARENA(x)); }
     | stmt_list stmt { vector_push(&$1, $2); $$ = $1; }
     ;
 

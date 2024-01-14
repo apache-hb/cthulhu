@@ -7,51 +7,58 @@
   - `scripts` - automation for arduous setup tasks
   - `docs` - documentation
 
-- `driver` - language frontends
-  - `pl0` - pl0 frontend, good for referencing how to use the common framework
-  - `oberon` - oberon-2 frontend (WIP)
-  - `ctu` - cthulhu language frontend (WIP)
-  - `jvm` - jvm classfile consumer (TODO)
-  - `cc` - C11 frontend (TODO)
-  - `example` - example frontend
+- `src` - all source code
+  - `common` - common code. @ref common
+    - `stacktrace` - backtrace retrieval. @ref backtrace
+    - `base` - base utils. @ref base
+    - `config` - configuration schema. @ref config
+    - `core` - header only compiler specific code. @ref core
+    - `fs` - filesystem abstraction. @ref filesystem
+    - `interop` - flex & bison helper functions. @ref interop
+    - `io` - file io abstraction. @ref io
+    - `memory` - memory allocation and arenas. @ref memory
+    - `notify` - error reporting tools. @ref notify
+    - `os` - platform detail wrappers. @ref os
+    - `scan` - flex & bison scanning tools. @ref location
+    - `std` - collections and data structures. @ref standard
 
-- `interface` - user facing components used to interact with drivers and the collection
-  - `cli` - command line user interface
-  - `gui` - graphical user interface (TODO)
+  - `cthulhu` - compiler framework library. @ref runtime
+    - `check` - validates state for various structures. @ref check
+    - `emit` - ssa emitter. @ref emit
+    - `events` - shared events between languages. @ref events
+    - `runtime` - code required to orchestrate communication between languages, the framework, and frontends. @ref mediator
+    - `ssa` - tree to ssa transforms, as well as optimizations. @ref ssa
+    - `tree` - common typed ast. @ref tree
+    - `util` - common utilities. @ref runtime_util
 
-- `common` - common code
-  - `core` - header only compiler specific code
-  - `stacktrace` - backtrace retrieval
-  - `base` - base utils
-  - `memory` - memory allocation and arenas
-  - `interop` - flex & bison helper functions
-  - `platform` - platform detail wrappers
-  - `io` - file io abstraction
-  - `notify` - error reporting tools
-  - `scan` - flex & bison scanning tools
-  - `std` - collections and data structures
-  - `config` - configuration schema
+  - `driver` - language frontends
+    - `c` - C11 frontend (WIP)
+      - `pre` - C preprocessor (WIP)
+      - `lang` - C language driver (WIP)
+    - `ctu` - cthulhu language frontend (WIP)
+    - `example` - example frontend
+    - `jvm` - jvm classfile consumer (TODO)
+    - `oberon` - oberon-2 frontend (WIP)
+    - `pl0` - pl0 frontend, good for referencing how to use the common framework
 
-- `cthulhu` - compiler framework library
-  - `emit` - ssa emitter
-  - `tree` - common typed ast
-  - `util` - common utilities
-  - `mediator` - code required to orchestrate communication between languages, the framework, and frontends
-  - `check` - validates state for various structures
-  - `ssa` - tree to ssa transforms, as well as optimizations
+  - `interface` - user facing components used to interact with drivers and the collection
+    - `cli` - command line user interface
+    - `example` - example usage of the runtime
+    - `gui` - graphical user interface built with imgui (WIP)
 
-- `support` - libraries shared between tools and frontends
-  - `format` - text formatting for displaying to a user
-  - `support` - lists enabled language drivers
-  - `argparse` - command line argument parsing
-  - `defaults` - default options for command line tools
+  - `support` - libraries shared between tools and frontends. @ref support
+    - `argparse` - command line argument parsing. @ref argparse
+    - `defaults` - default options for command line tools. @ref defaults
+    - `format` - text formatting for displaying to a user. @ref format
+    - `support` - lists enabled language drivers when built statically. @ref langs
 
-- `tools` - supporting tools and test utilities
-  - `harness` - test harness for end to end language tests
-  - `notify` - testing notification formatting
-  - `diagnostic` - diagnostic listing and querying tool
-  - `display` - example config display
-  - `stacktrace` - stacktrace testing
+  - `tools` - supporting tools and test utilities
+    - `diagnostic` - diagnostic listing and querying tool
+    - `display` - example config display
+    - `error` - test tool for examining stacktraces
+    - `harness` - test harness for end to end language tests
+    - `meson_ctu` - an implementation of meson that is aware of cthulhu
+    - `notify` - testing notification formatting
 
 - `subprojects` - dependencies
   - `mini-gmp` - fallback gmp library if system gmp isnt installed
@@ -62,7 +69,7 @@
 
 ### Where to put new code
 
-When adding a new module consider how much of the compiler needs access to it. Treat levels of access as if they were permission levels, with @ref Common being the highest level. If a library will only ever be used by a user facing tool, it should be part of the @ref Support set of modules. When a module needs to be available to drivers it should be in @ref Runtime, the core compiler set. And if a module is going to be used extensively, and perhaps outside of the cthulhu project it should be placed in @ref Common.
+When adding a new module consider how much of the compiler needs access to it. Treat levels of access as if they were permission levels, with @ref common being the highest level. If a library will only ever be used by a user facing tool, it should be part of the @ref support set of modules. When a module needs to be available to drivers it should be in @ref runtime, the core compiler set. And if a module is going to be used extensively, and perhaps outside of the cthulhu project it should be placed in @ref common.
 
 ## Coding rules
 
@@ -73,10 +80,10 @@ When adding a new module consider how much of the compiler needs access to it. T
   - It is acceptable to make massive changes to move common functionality into libraries
   - I cannot stress how important this rule is
 
-- Be very generous with usage of @ref Panic
+- Be very generous with usage of @ref panic
   - Any function boundary or usage point should be littered with these
   - Do not use asserts to handle user input, asserts should be used for internal invariants
-  - For user facing error reporting look at @ref Notify
+  - For user facing error reporting look at @ref notify
 
 - All features that require platform specific code must have a reasonable fallback implementation.
   - See @ref backtrace for an example of this, doing nothing can be a reasonable fallback.
@@ -84,7 +91,7 @@ When adding a new module consider how much of the compiler needs access to it. T
 - Everything must be implemented in standard C11
   - No compiler extensions in common code.
 
-- No io or filesystem access that isnt marhshalled by @ref io_t or @ref fs_t
+- No io or filesystem access that isnt marhshalled by @ref io or @ref filesystem
   - Makes porting to systems with non tradition IO easier.
 
 - The build process must only rely on C and meson
@@ -92,7 +99,7 @@ When adding a new module consider how much of the compiler needs access to it. T
   - To aid porting to systems that may not have a big ecosystem
   - We should never rely on an older version of cthulhu, the version - 1 problem is not a fun one.
 
-- All platform specific code must go in the @ref OS module
+- All platform specific code must go in the @ref os module
 
 - Forward declare all types where possible rather than including headers
   - This makes renaming types harder but reduces build times significantly
@@ -211,3 +218,18 @@ Source files contents should be layed out in the following order
   - no inline asm
   - no thread local values
   - no non-const static locals
+
+### Flex/Bison styleguide
+* `snake_case` for rules
+* rules that match 1 or more of a rule should be named `<rule>_seq`
+* rules that match a rule with a seperator should be named `<rule>_list`
+```c
+// for example
+expr_list: expr
+  | expr_list COMMA expr
+  ;
+
+stmt_seq: stmt
+  | stmt_seq stmt
+  ;
+```

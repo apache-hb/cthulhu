@@ -2,9 +2,9 @@
 
 #include <ctu_config.h>
 
-/// @defgroup Compiler Compiler specific macros
+/// @defgroup compiler Compiler specific macros
 /// @brief Compiler detection macros and compiler specific functionality
-/// @ingroup Core
+/// @ingroup core
 /// @{
 
 #if defined(__clang__)

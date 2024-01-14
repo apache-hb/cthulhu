@@ -7,7 +7,7 @@
 
 BEGIN_API
 
-/// @ingroup Notify
+/// @ingroup notify
 /// @{
 
 /// @brief the default severity of a diagnostic

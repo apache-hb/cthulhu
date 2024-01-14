@@ -9,9 +9,9 @@
 
 BEGIN_API
 
-/// @defgroup Memory Arena memory allocation
+/// @defgroup memory Arena memory allocation
 /// @brief Global and arena memory management
-/// @ingroup Common
+/// @ingroup common
 /// @{
 
 #ifdef WITH_DOXYGEN

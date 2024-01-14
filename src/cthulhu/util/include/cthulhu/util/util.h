@@ -12,9 +12,9 @@ typedef struct node_t node_t;
 
 BEGIN_API
 
-/// @defgroup RuntimeUtil Driver utility functions
+/// @defgroup runtime_util Driver utility functions
 /// @brief Utility functions for the runtime
-/// @ingroup Runtime
+/// @ingroup runtime
 /// @{
 
 ///
@@ -48,7 +48,7 @@ typedef struct decl_search_t {
 /// @param search the search options
 /// @param node the node to report errors on
 /// @param path the path to search
-/// @param[out] is_imported whether the namespace was imported
+/// @param is_imported whether the namespace was imported
 ///
 /// @return the namespace if found, an error otherwise
 tree_t *util_search_namespace(tree_t *sema, const decl_search_t *search, const node_t *node, vector_t *path, bool *is_imported);
@@ -76,7 +76,7 @@ tree_t *util_search_qualified(tree_t *sema, const decl_search_t *search, const n
 
 /// @brief evaluate a digit expression
 ///
-/// @param[out] value the value to set
+/// @param value the value to set
 /// @param expr the expression to evaluate
 ///
 /// @return true if the expression was evaluated, false otherwise

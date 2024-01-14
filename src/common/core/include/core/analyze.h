@@ -2,9 +2,9 @@
 
 #include <ctu_config.h>
 
-/// @defgroup Analyze Static analysis decorators
+/// @defgroup analyze Static analysis decorators
 /// @brief Decorators for static analysis tools
-/// @ingroup Core
+/// @ingroup core
 /// @{
 
 #if __cplusplus >= 201703L
@@ -35,7 +35,6 @@
 #   define IN_STRING _In_z_
 #   define IN_RANGE(cmp, it) _In_range_(cmp, it)
 #else
-#   define FMT_STRING
 #   define USE_DECL
 #   define IN_READS(expr)
 #   define OUT_WRITES(expr)
@@ -52,19 +51,25 @@
 #   define IN_RANGE(cmp, it)
 #endif
 
+#ifndef FMT_STRING
+#   define FMT_STRING
+#endif
+
 /// @def CT_PRINTF(a, b)
 /// @brief mark a function as a printf style function
 ///
 /// @param a the index of the format string parameter
 /// @param b the index of the first variadic parameter
 
+
 #if __clang_major__ >= 3
 #   define CT_PRINTF(a, b) __attribute__((__format__(__printf__, a, b)))
 #elif __GNUC__ >= 4
 #   define CT_PRINTF(a, b) __attribute__((format(printf, a, b)))
 #else
-#   define CT_PRINTF(a, b)
+#  define CT_PRINTF(a, b)
 #endif
+
 
 #if __GNUC__ >= 11
 #   define GNU_ATTRIB(...) __attribute__((__VA_ARGS__))
@@ -76,6 +81,8 @@
 #   define CTU_ATTRIB(...) __attribute__((__VA_ARGS__))
 #else
 #   define CTU_ATTRIB(...)
+#   define GNU_ATTRIB(...)
+#   define CLANG_ATTRIB(...)
 #endif
 
 #ifndef IN_NOTNULL
@@ -89,22 +96,14 @@
 /// @def CTU_ATTRIB(...)
 /// @brief any attribute that both gcc and clang support
 
-#ifndef CLANG_ATTRIB
-#   define CLANG_ATTRIB(...)
-#endif
-
-#ifndef GNU_ATTRIB
-#   define GNU_ATTRIB(...)
-#endif
-
 #ifndef NODISCARD
 #   define NODISCARD CTU_ATTRIB(warn_unused_result)
 #endif
 
 /// @def CONSTFN
-/// @brief mark a function as const, always returns the same value for the same arguments
+/// @brief mark a function as const, has no side effects and always returns the same value for the same arguments
 /// @def PUREFN
-/// @brief mark a function as pure, has no side effects and always returns the same value for the same arguments
+/// @brief mark a function as pure, always returns the same value for the same arguments
 
 #if CTU_DISABLE_FN_PURITY
 #   define CONSTFN

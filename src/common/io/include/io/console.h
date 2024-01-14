@@ -6,7 +6,7 @@ BEGIN_API
 
 typedef struct io_t io_t;
 
-/// @ingroup IO
+/// @ingroup io
 /// @{
 
 /// @brief get the global stdout IO object

@@ -9,7 +9,7 @@ typedef struct tree_t tree_t;
 
 BEGIN_API
 
-/// @ingroup RuntimeUtil
+/// @ingroup runtime_util
 /// @{
 
 /// @brief compare two types for strict equality

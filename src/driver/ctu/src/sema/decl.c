@@ -103,7 +103,7 @@ static vector_t *ctu_collect_fields(tree_t *sema, tree_t *self, ctu_t *decl)
     arena_t *arena = get_global_arena();
     map_t *fields = map_optimal(len, kTypeInfoString, arena);
 
-    vector_t *items = vector_of(len);
+    vector_t *items = vector_of_arena(len, arena);
     for (size_t i = 0; i < len; i++)
     {
         ctu_t *field = vector_get(decl->fields, i);

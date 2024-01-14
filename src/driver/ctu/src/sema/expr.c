@@ -1,5 +1,4 @@
 #include "ctu/sema/expr.h"
-#include "base/log.h"
 #include "cthulhu/events/events.h"
 #include "ctu/sema/decl/resolve.h"
 #include "ctu/sema/type.h"
@@ -683,7 +682,6 @@ static tree_t *sema_return(ctu_sema_t *sema, const ctu_t *stmt)
 static tree_t *sema_while(ctu_sema_t *sema, const ctu_t *stmt)
 {
     tree_t *save = ctu_current_loop(sema);
-    ctu_log("save loop %p on %p", save, sema);
 
     tree_t *cond = ctu_sema_rvalue(sema, stmt->cond, ctu_get_bool_type());
     tree_t *loop = tree_stmt_loop(stmt->node, cond, tree_stmt_block(stmt->node, &kEmptyVector),
@@ -695,7 +693,6 @@ static tree_t *sema_while(ctu_sema_t *sema, const ctu_t *stmt)
     }
 
     ctu_set_current_loop(sema, loop);
-    ctu_log("set loop %p on %p", loop, sema);
 
     loop->then = ctu_sema_stmt(sema, stmt->then);
     ctu_set_current_loop(sema, save);
@@ -735,7 +732,6 @@ static tree_t *get_label_loop(ctu_sema_t *sema, const ctu_t *stmt)
             return loop;
         }
 
-        ctu_log("no loop found for %p", sema);
         return tree_raise(stmt->node, ctx->reports, &kEvent_InvalidControlFlow, "loop control statement not within a loop");
     }
 

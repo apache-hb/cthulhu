@@ -2,9 +2,9 @@
 
 #include "core/compiler.h"
 
-/// @defgroup Macros Common macros
+/// @defgroup macros Common macros
 /// @brief Common macros used throughout the project
-/// @ingroup Core
+/// @ingroup core
 /// @{
 
 #ifdef __cplusplus
@@ -44,9 +44,9 @@
 #define INNER_STR(x) #x
 #define STR(x) INNER_STR(x)
 
-/// @defgroup Colour ANSI Colour macros
+/// @defgroup ansi_colour ANSI Colour macros
 /// @brief ANSI escape string colour macros
-/// @ingroup Core
+/// @ingroup core
 ///
 /// Useful for formatting messages to the console.
 /// @{

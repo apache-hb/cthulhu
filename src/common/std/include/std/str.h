@@ -14,18 +14,63 @@ typedef struct arena_t arena_t;
 typedef struct vector_t vector_t;
 typedef struct map_t map_t;
 
-/// @defgroup StringUtils String manipulation and processing
-/// @ingroup Standard
+/// @defgroup string_utils String manipulation and processing
+/// @ingroup standard
 /// @brief String manipulation and processing
 /// @{
 
+/// @brief format a string
+///
+/// format a string with printf-like syntax into a text buffer.
+/// useful when you need the length of the formatted string.
+///
+/// @param arena the arena to allocate the formatted string in
+/// @param fmt the format string
+/// @param ... the arguments to format
+///
+/// @return the formatted string
 NODISCARD CT_PRINTF(2, 3)
-char *str_format(arena_t *arena, FMT_STRING const char *fmt, ...);
-
-NODISCARD
-char *str_vformat(arena_t *arena, IN_STRING const char *fmt, va_list args);
+text_t text_format(IN_NOTNULL arena_t *arena, FMT_STRING const char *fmt, ...);
 
 /// @brief format a string
+///
+/// format a string with a va_list and printf-like syntax into a text buffer.
+/// useful when you need the length of the formatted string.
+///
+/// @param arena the arena to allocate the formatted string in
+/// @param fmt the format string
+/// @param args the arguments to format
+///
+/// @return the formatted string
+NODISCARD
+text_t text_vformat(IN_NOTNULL arena_t *arena, IN_STRING const char *fmt, va_list args);
+
+/// @brief format a string
+///
+/// format a string with printf-like syntax
+///
+/// @param arena the arena to allocate the formatted string in
+/// @param fmt the format string
+/// @param ... the arguments to format
+///
+/// @return the formatted string
+NODISCARD CT_PRINTF(2, 3)
+char *str_format(IN_NOTNULL arena_t *arena, FMT_STRING const char *fmt, ...);
+
+/// @brief format a string
+///
+/// format a string with a va_list and printf-like syntax
+///
+/// @param arena the arena to allocate the formatted string in
+/// @param fmt the format string
+/// @param args the arguments to format
+///
+/// @return the formatted string
+NODISCARD
+char *str_vformat(IN_NOTNULL arena_t *arena, IN_STRING const char *fmt, va_list args);
+
+/// @brief format a string
+/// @warning prefer @ref str_format or @ref text_format
 ///
 /// format a string with printf-like syntax
 ///
@@ -147,16 +192,6 @@ const char *str_common_prefix(IN_NOTNULL vector_t *args, IN_NOTNULL arena_t *are
 RET_INSPECT CONSTFN
 size_t str_rfind(IN_STRING const char *str, IN_STRING const char *sub);
 
-/// @brief find the last instance of a substring in a string with provided length
-///
-/// @param str the string to search
-/// @param len the length of @p str
-/// @param sub the substring to search for
-///
-/// @return the index of the last instance of @p sub in @p str, or @a SIZE_MAX
-RET_INSPECT CONSTFN
-size_t str_rfindn(IN_READS(len) const char *str, size_t len, IN_STRING const char *sub);
-
 /// @brief find the first instance of a substring in a string
 ///
 /// @param str the string to search
@@ -165,15 +200,6 @@ size_t str_rfindn(IN_READS(len) const char *str, size_t len, IN_STRING const cha
 /// @return the index of the first instance of @p sub in @p str, or @a SIZE_MAX if @p sub is not found
 RET_INSPECT CONSTFN
 size_t str_find(IN_STRING const char *str, IN_STRING const char *sub);
-
-/// @brief count the number of times any of a set of characters in @p chars appears in @p str
-///
-/// @param str the string to search
-/// @param chars the characters to search for
-///
-/// @return the number of times any of @p chars appears in @p str
-RET_INSPECT CONSTFN
-size_t str_count_any(IN_STRING const char *str, IN_STRING const char *chars);
 
 /// @brief check if a character is any of a set of characters
 ///
@@ -215,16 +241,6 @@ char *str_replace(IN_STRING const char *str, IN_STRING const char *search, IN_ST
 NODISCARD
 char *str_replace_many(IN_STRING const char *str, IN_NOTNULL const map_t *repl, IN_NOTNULL arena_t *arena);
 
-/// @brief trim leading and trailing characters from a string
-///
-/// @param str the string to trim
-/// @param letters the letters to be removed
-/// @param arena the arena to allocate the trimmed string in
-///
-/// @return the trimmed string
-NODISCARD
-char *str_trim(IN_STRING const char *str, IN_STRING const char *letters, IN_NOTNULL arena_t *arena);
-
 /// @brief remove all instances of @p letters from @p str
 ///
 /// @param str the string to erase letters from
@@ -245,7 +261,7 @@ size_t str_hash(IN_STRING const char *str);
 
 /// @brief hash a string with a provided length
 ///
-/// @param str the string to hash
+/// @param text the string to hash
 ///
 /// @return the hash
 NODISCARD CONSTFN
@@ -329,9 +345,17 @@ char *str_lower(IN_STRING const char *str, IN_NOTNULL arena_t *arena);
 ///
 /// @param c the character
 ///
-/// @return the lowercase version of @p c, or '\0' if @p c is not an ascii
+/// @return the lowercase version of @p c, or the character itself
 NODISCARD CONSTFN
-char str_tolower(int c);
+char str_tolower(char c);
+
+/// @brief get the uppercase version of a character
+///
+/// @param c the character
+///
+/// @return the uppercase version of @p c or the character itself
+NODISCARD CONSTFN
+char str_toupper(char c);
 
 #define STR_WHITESPACE " \t\r\v\n\f" ///< all whitespace charaters
 

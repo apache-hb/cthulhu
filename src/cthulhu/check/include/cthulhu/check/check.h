@@ -4,9 +4,9 @@
 
 typedef struct logger_t logger_t;
 
-/// @defgroup Check Tree form validation
+/// @defgroup check Tree form validation
 /// @brief Validation for tree form IR
-/// @ingroup Runtime
+/// @ingroup runtime
 /// @{
 
 /// @brief check the tree form IR

@@ -1,3 +1,4 @@
+#include "base/panic.h"
 #include "io/impl.h"
 #include "io/io.h"
 #include "memory/arena.h"
@@ -88,6 +89,9 @@ static const io_callbacks_t kFileCallbacks = {
 USE_DECL
 io_t *io_file(const char *path, os_access_t mode, arena_t *arena)
 {
+    CTASSERT(path != NULL);
+    CTASSERT(arena != NULL);
+
     os_file_t fd = { 0 };
     os_error_t err = os_file_open(path, mode, &fd);
 

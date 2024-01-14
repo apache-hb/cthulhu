@@ -75,7 +75,7 @@ static const cfg_info_t kFlagInfo = {
 
 static tool_t make_config(arena_t *arena)
 {
-    cfg_group_t *config = config_root(arena, &kToolInfo);
+    cfg_group_t *config = config_root(&kToolInfo, arena);
 
     default_options_t options = get_default_options(config);
 

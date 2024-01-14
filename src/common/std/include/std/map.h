@@ -6,24 +6,30 @@
 
 BEGIN_API
 
-/// @defgroup Map Unordered map
-/// @ingroup Standard
-/// @brief Hash map
-/// @{
-
-typedef struct vector_t vector_t;
-typedef struct typevec_t typevec_t;
-typedef struct bucket_t bucket_t;
-typedef struct map_t map_t;
 typedef struct arena_t arena_t;
+typedef struct typevec_t typevec_t;
+typedef struct vector_t vector_t;
 
+/// @defgroup hash_map Unordered map
+/// @ingroup standard
+/// @brief Hash map
 ///
-/// the map makes some assumptions about keys
+/// the map makes some assumptions about keys and values
 /// - identical pointers are equal
-/// - copying the pointer is allowed
+/// - copying only the pointer is sufficient for copying the value
 /// - NULL is the empty value
 /// - key lifetimes are externally managed and valid for the lifetime of the map
 ///
+/// the map interface provides a @a map_new and a @a map_optimal function for performance reasons.
+/// its recommended to use @a map_optimal if you have an estimate of the number of elements in the map.
+///
+/// @{
+
+/// @brief an unordered hash map
+typedef struct map_t map_t;
+
+/// @brief a single node in a map
+typedef struct bucket_t bucket_t;
 
 /// @brief create a new map
 ///
@@ -33,7 +39,7 @@ typedef struct arena_t arena_t;
 ///
 /// @return the new map
 NODISCARD
-map_t *map_new(IN_RANGE(>, 0) size_t size, type_info_t info, IN_NOTNULL arena_t *arena);
+map_t *map_new(IN_RANGE(>, 0) size_t size, typeinfo_t info, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new map with an optimal size
 ///
@@ -43,7 +49,7 @@ map_t *map_new(IN_RANGE(>, 0) size_t size, type_info_t info, IN_NOTNULL arena_t 
 ///
 /// @return the new map
 NODISCARD
-map_t *map_optimal(IN_RANGE(>, 0) size_t size, type_info_t info, IN_NOTNULL arena_t *arena);
+map_t *map_optimal(IN_RANGE(>, 0) size_t size, typeinfo_t info, IN_NOTNULL arena_t *arena);
 
 /// @brief set a key-value pair in a map
 /// @pre @p key is not NULL
@@ -59,6 +65,7 @@ void map_set(IN_NOTNULL map_t *map, IN_NOTNULL const void *key, void *value);
 /// @param key the key to get the value for
 ///
 /// @return the value for @p key or NULL if the key is not found
+NODISCARD CONSTFN
 void *map_get(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key);
 
 /// @brief get a value from a map or a default value
@@ -68,6 +75,7 @@ void *map_get(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key);
 /// @param other the default value to return if the key is not found
 ///
 /// @return the value named by @p key or @p other if the key is not found
+NODISCARD CONSTFN
 void *map_get_default(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key, void *other);
 
 /// @brief check if a map contains a key
@@ -76,6 +84,7 @@ void *map_get_default(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key, v
 /// @param key the key to check for
 ///
 /// @retval true the map contains @p key
+NODISCARD CONSTFN
 bool map_contains(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key);
 
 /// @brief delete a key-value pair from a map
@@ -85,16 +94,20 @@ bool map_contains(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key);
 /// @param key the key to delete
 void map_delete(IN_NOTNULL map_t *map, IN_NOTNULL const void *key);
 
-/**
- * @brief collect all the values in a map into a vector
- *
- * @param map the map to collect the values from
- *
- * @return a vector containing all the values
- */
+/// @brief collect all the values from a map into a vector
+///
+/// @param map the map to collect the values from
+///
+/// @return a vector containing all the values
 NODISCARD
 vector_t *map_values(IN_NOTNULL map_t *map);
 
+/// @brief collect all key-value pairs in a map into a vector
+/// returns a typevec_t<map_entry_t>
+///
+/// @param map the map to collect the key-value pairs from
+///
+/// @return a vector containing all the key-value pairs
 NODISCARD
 typevec_t *map_entries(IN_NOTNULL map_t *map);
 
@@ -104,14 +117,24 @@ typevec_t *map_entries(IN_NOTNULL map_t *map);
 ///
 /// @return the number of key-value pairs in the map
 NODISCARD
-size_t map_count(IN_NOTNULL map_t *map);
+size_t map_count(IN_NOTNULL const map_t *map);
 
+/// @brief clear all key-value pairs from a map
+/// @note this does no memory management, it only removes all key-value pairs from the map
+/// does not free the map itself or shrink its internal storage
+///
+/// @param map the map to clear
+void map_reset(IN_NOTNULL map_t *map);
+
+/// @brief a key-value pair in a map
 typedef struct map_entry_t
 {
     const void *key; ///< the key of this entry
     void *value;     ///< the value of this entry
 } map_entry_t;
 
+/// @brief a map iterator handle
+/// @warning these are internal to the iterator and should not be used directly
 typedef struct map_iter_t
 {
     map_t *map;   ///< the map being iterated over
@@ -121,21 +144,66 @@ typedef struct map_iter_t
     bucket_t *next;   ///< the next bucket in the chain
 } map_iter_t;
 
+/// @brief create a new map iterator
+/// @warning iterators are invalidated by any operation that modifies the map.
+/// @note iteration order is unspecified.
+///
+/// @param map the map to iterate over
+///
+/// @return the new iterator
 NODISCARD CONSTFN
 map_iter_t map_iter(IN_NOTNULL map_t *map);
 
+/// @brief get the next key-value pair from a map iterator
+/// @warning this functions behaviour is undefined if called on an iterator that has no more elements
+///
+/// @param iter the iterator to get the next key-value pair from
+///
+/// @return the next key-value pair
 NODISCARD
 map_entry_t map_next(IN_NOTNULL map_iter_t *iter);
 
-NODISCARD
-bool map_next_ex(IN_NOTNULL map_iter_t *iter, const void **key, void **value);
-
-#define CTU_MAP_NEXT(iter, key, value) map_next_ex(iter, (const void **)(key), (void **)(value))
-
+/// @brief check if a map iterator has more elements
+///
+/// @param iter the iterator to check
+///
+/// @retval true the iterator has more elements
 NODISCARD CONSTFN
-bool map_has_next(IN_NOTNULL map_iter_t *iter);
+bool map_has_next(IN_NOTNULL const map_iter_t *iter);
 
-void map_reset(IN_NOTNULL map_t *map);
+/// @brief get the next key-value pair from a map iterator
+/// returns the values via out parameters for ease of use
+/// this also returns false if the iterator has no more elements
+/// this is intended to be used via @a CTU_MAP_NEXT for more idiomatic usage
+///
+/// @param iter the iterator to get the next key-value pair from
+/// @param key the key of the next key-value pair
+/// @param value the value of the next key-value pair
+///
+/// @retval true the iterator has more elements
+NODISCARD
+bool map_next_ex(IN_NOTNULL map_iter_t *iter, IN_NOTNULL const void **key, IN_NOTNULL void **value);
+
+/// @def CTU_MAP_NEXT(iter, key, value)
+/// @brief get the next key-value pair from a map iterator
+///
+/// intended to be used as such:
+/// @code{.c}
+/// map_iter_t iter = map_iter(map);
+/// const char *key = NULL;
+/// void *value = NULL;
+/// while (CTU_MAP_NEXT(&iter, &key, &value))
+/// {
+///     // do something with key and value
+/// }
+/// @endcode
+///
+/// @param iter the iterator to get the next key-value pair from
+/// @param key the key of the next key-value pair
+/// @param value the value of the next key-value pair
+///
+/// @retval true the iterator has more elements
+#define CTU_MAP_NEXT(iter, key, value) map_next_ex(iter, (const void **)(key), (void **)(value))
 
 /// @}
 

@@ -98,18 +98,12 @@ vector_t *vector_of(size_t len)
 }
 
 USE_DECL
-vector_t *vector_init(void *value)
-{
-    return vector_init_arena(value, get_global_arena());
-}
-
-USE_DECL
 vector_t *vector_clone(vector_t *vector)
 {
     CTASSERT(vector != NULL);
 
     size_t len = vector_len(vector);
-    vector_t *clone = vector_of(len);
+    vector_t *clone = vector_of_arena(len, vector->arena);
     memcpy(clone->data, vector->data, len * sizeof(void *));
     return clone;
 }

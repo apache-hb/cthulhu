@@ -1,3 +1,4 @@
+#include "base/panic.h"
 #include "io/impl.h"
 
 #include "core/macros.h"
@@ -59,6 +60,10 @@ static const io_callbacks_t kViewCallbacks = {
 USE_DECL
 io_t *io_view(const char *name, const void *data, size_t size, arena_t *arena)
 {
+    CTASSERT(name != NULL);
+    CTASSERT(data != NULL);
+    CTASSERT(arena != NULL);
+
     os_access_t flags = eAccessRead;
 
     view_t view = {
@@ -73,5 +78,9 @@ io_t *io_view(const char *name, const void *data, size_t size, arena_t *arena)
 USE_DECL
 io_t *io_string(const char *name, const char *string, arena_t *arena)
 {
+    CTASSERT(name != NULL);
+    CTASSERT(string != NULL);
+    CTASSERT(arena != NULL);
+
     return io_view(name, string, strlen(string), arena);
 }

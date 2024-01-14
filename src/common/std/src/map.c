@@ -32,7 +32,7 @@ typedef struct bucket_t
 typedef struct map_t
 {
     arena_t *arena;                   ///< the arena this map is allocated in
-    type_info_t info;                  ///< the key info for this map
+    typeinfo_t info;                  ///< the key info for this map
 
     size_t size;                      ///< the number of buckets in the toplevel
     size_t used;                      ///< the number of buckets in use
@@ -50,23 +50,14 @@ static bucket_t *impl_bucket_new(const void *key, void *value, arena_t *arena)
     return entry;
 }
 
-static size_t wrap_bucket_index(map_t *map, size_t hash)
-{
-    return hash % map->size;
-}
-
-static bucket_t *map_bucket_at(map_t *map, size_t index)
-{
-    bucket_t *entry = &map->data[index];
-    return entry;
-}
-
+HOTFN
 static bucket_t *map_get_bucket(map_t *map, size_t hash)
 {
-    size_t index = wrap_bucket_index(map, hash);
-    return map_bucket_at(map, index);
+    size_t index = hash % map->size;
+    return &map->data[index];
 }
 
+HOTFN
 static const bucket_t *map_get_bucket_const(const map_t *map, size_t hash)
 {
     size_t index = hash % map->size;
@@ -83,7 +74,7 @@ static void clear_keys(bucket_t *buckets, size_t size)
 }
 
 USE_DECL
-map_t *map_new(size_t size, type_info_t info, arena_t *arena)
+map_t *map_new(size_t size, typeinfo_t info, arena_t *arena)
 {
     CTASSERT(size > 0);
 
@@ -155,7 +146,7 @@ typevec_t *map_entries(map_t *map)
 }
 
 USE_DECL
-size_t map_count(map_t *map)
+size_t map_count(const map_t *map)
 {
     CTASSERT(map != NULL);
 
@@ -165,27 +156,30 @@ size_t map_count(map_t *map)
     return count;
 }
 
-
 // info functions
 
+HOTFN
 static size_t impl_key_hash(const map_t *map, const void *key)
 {
-    const type_info_t *info = &map->info;
+    const typeinfo_t *info = &map->info;
     return info->hash(key);
 }
 
+HOTFN
 static bool impl_key_equal(const map_t *map, const void *lhs, const void *rhs)
 {
-    const type_info_t *info = &map->info;
+    const typeinfo_t *info = &map->info;
     return info->equals(lhs, rhs);
 }
 
+HOTFN
 static const bucket_t *impl_bucket_get_const(const map_t *map, const void *key)
 {
     size_t hash = impl_key_hash(map, key);
     return map_get_bucket_const(map, hash);
 }
 
+HOTFN
 static bucket_t *impl_bucket_get(map_t *map, const void *key)
 {
     size_t hash = impl_key_hash(map, key);
@@ -240,6 +234,7 @@ static bool impl_insert_into_bucket(map_t *map, bucket_t *bucket, const void *ke
     return false;
 }
 
+HOTFN
 static void impl_resize(map_t *map, size_t new_size)
 {
     bucket_t *old_data = map->data;
@@ -268,7 +263,7 @@ static void impl_resize(map_t *map, size_t new_size)
     arena_free(old_data, sizeof(bucket_t) * old_size, map->arena);
 }
 
-USE_DECL
+USE_DECL HOTFN
 void map_set(map_t *map, const void *key, void *value)
 {
     CTASSERT(map != NULL);
@@ -298,7 +293,7 @@ void map_set(map_t *map, const void *key, void *value)
     }
 }
 
-USE_DECL
+USE_DECL HOTFN
 void *map_get(const map_t *map, const void *key)
 {
     CTASSERT(map != NULL);
@@ -307,7 +302,7 @@ void *map_get(const map_t *map, const void *key)
     return map_get_default(map, key, NULL);
 }
 
-USE_DECL
+USE_DECL HOTFN
 void *map_get_default(const map_t *map, const void *key, void *other)
 {
     CTASSERT(map != NULL);
@@ -355,6 +350,15 @@ void map_delete(map_t *map, const void *key)
         previous = entry;
         entry = entry->next;
     }
+}
+
+USE_DECL
+void map_reset(map_t *map)
+{
+    CTASSERT(map != NULL);
+
+    map->used = 0;
+    clear_keys(map->data, map->size);
 }
 
 // iteration
@@ -453,9 +457,13 @@ map_entry_t map_next(map_iter_t *iter)
     return entry;
 }
 
-NODISCARD
-bool map_next_ex(IN_NOTNULL map_iter_t *iter, const void **key, void **value)
+USE_DECL
+bool map_next_ex(map_iter_t *iter, const void **key, void **value)
 {
+    CTASSERT(iter != NULL);
+    CTASSERT(key != NULL);
+    CTASSERT(value != NULL);
+
     bool has_next = map_has_next(iter);
     if (!has_next)
         return false;
@@ -467,18 +475,9 @@ bool map_next_ex(IN_NOTNULL map_iter_t *iter, const void **key, void **value)
 }
 
 USE_DECL
-bool map_has_next(map_iter_t *iter)
+bool map_has_next(const map_iter_t *iter)
 {
     CTASSERT(iter != NULL);
 
     return iter->bucket != NULL;
-}
-
-USE_DECL
-void map_reset(map_t *map)
-{
-    CTASSERT(map != NULL);
-
-    map->used = 0;
-    clear_keys(map->data, map->size);
 }

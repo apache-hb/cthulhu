@@ -33,7 +33,7 @@ static bool info_text_equals(const void *lhs, const void *rhs)
     return strncmp(lhs_view->text, rhs_view->text, lhs_view->size) == 0;
 }
 
-static const type_info_t kTypeInfoText = {
+static const typeinfo_t kTypeInfoText = {
     .hash = info_text_hash,
     .equals = info_text_equals,
 };

@@ -28,20 +28,50 @@ typedef struct callbacks_t callbacks_t;
 /// drivers
 ///
 
-typedef void (*driver_create_t)(driver_t *);
-typedef void (*driver_destroy_t)(driver_t *);
+/// @ingroup mediator
+/// @{
 
-typedef void (*driver_parse_t)(driver_t *, scan_t *);
+/// @brief initialize a language driver
+///
+/// @param driver the driver to initialize
+typedef void (*driver_create_t)(driver_t *driver);
+
+/// @brief destroy a language driver
+///
+/// @param driver the driver to destroy
+typedef void (*driver_destroy_t)(driver_t *driver);
+
+/// @brief parse a file into an AST
+/// the ast should be exported via @a scan_set
+///
+/// @param driver the driver to use
+/// @param scan the scanner to use
+typedef void (*driver_parse_t)(driver_t *driver, scan_t *scan);
 
 /// @brief return the context data needed for a scanner
-typedef void *(*driver_prepass_t)(driver_t *, scan_t *);
+///
+/// @param driver the driver to use
+/// @param scan the scanner to use
+///
+/// @return the context data
+typedef void *(*driver_prepass_t)(driver_t *driver, scan_t *scan);
 
-/// @brief get the context data from a scanner
-typedef void (*driver_postpass_t)(driver_t *, scan_t *, void *);
+/// @brief run after a successful parse
+///
+/// @param driver the driver to use
+/// @param scan the scanner to use
+/// @param ast the language ast produced by the parser
+typedef void (*driver_postpass_t)(driver_t *driver, scan_t *scan, void *ast);
 
 /// @brief get the schema for the driver
-typedef cfg_group_t *(*driver_config_t)(driver_t *, cfg_group_t *);
+///
+/// @param driver the driver to get the schema of
+/// @param root the group to add the schema to
+///
+/// @return the group for this driver
+typedef cfg_group_t *(*driver_config_t)(driver_t *driver, cfg_group_t *root);
 
+/// @brief a compile state
 typedef enum compile_stage_t
 {
 #define STAGE(ID, STR) ID,
@@ -50,7 +80,10 @@ typedef enum compile_stage_t
     eStageTotal
 } compile_stage_t;
 
-typedef void (*driver_pass_t)(context_t *);
+/// @brief a driver pass to be run on each translation unit
+///
+/// @param context the context to run the pass on
+typedef void (*driver_pass_t)(context_t *context);
 
 /// @brief a language drivers provided configuration
 typedef struct language_t
@@ -97,20 +130,38 @@ typedef struct language_t
     driver_pass_t fn_compile_passes[eStageTotal];
 } language_t;
 
+/// @brief get the logger for a lifetime
 ///
-/// helpers
+/// @param lifetime the lifetime to get the logger of
 ///
-
+/// @return the logger
 NODISCARD
-logger_t *lifetime_get_logger(lifetime_t *lifetime);
+logger_t *lifetime_get_logger(IN_NOTNULL lifetime_t *lifetime);
 
+/// @brief get the arena for a lifetime
+///
+/// @param lifetime the lifetime to get the arena of
+///
+/// @return the arena
 NODISCARD
-arena_t *lifetime_get_arena(lifetime_t *lifetime);
+arena_t *lifetime_get_arena(IN_NOTNULL lifetime_t *lifetime);
 
+/// @brief get the recursive resolution cookie for a lifetime
+///
+/// @param lifetime the lifetime to get the cookie of
+///
+/// @return the cookie
 NODISCARD
-cookie_t *lifetime_get_cookie(lifetime_t *lifetime);
+cookie_t *lifetime_get_cookie(IN_NOTNULL lifetime_t *lifetime);
 
+/// @brief get the name of a compile stage
+///
+/// @param stage the stage to get the name of
+///
+/// @return the name of @p stage
 NODISCARD
 const char *stage_to_string(compile_stage_t stage);
+
+/// @}
 
 END_API

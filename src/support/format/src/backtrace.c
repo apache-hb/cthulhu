@@ -417,8 +417,11 @@ void print_backtrace(print_backtrace_t config, bt_report_t *report)
     }
 }
 
+USE_DECL
 bt_report_t *bt_report_new(arena_t *arena)
 {
+    CTASSERT(arena != NULL);
+
     bt_report_t result = {
         .arena = arena,
         .entries = typevec_new(sizeof(entry_t), 4, arena),
@@ -437,6 +440,7 @@ static void read_stacktrace_frame(void *user, const bt_frame_t *frame)
     bt_report_add(user, frame);
 }
 
+USE_DECL
 bt_report_t *bt_report_collect(arena_t *arena)
 {
     bt_report_t *report = bt_report_new(arena);

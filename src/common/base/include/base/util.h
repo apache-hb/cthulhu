@@ -7,11 +7,7 @@
 
 BEGIN_API
 
-/// @defgroup Util Utility functions
-/// @brief Utility functions
-/// @ingroup Base
-/// @{
-
+/// @ingroup base
 /// @brief hash a pointer value
 ///
 /// @param ptr the pointer to hash
@@ -19,7 +15,5 @@ BEGIN_API
 /// @return the hash of the pointer
 NODISCARD CONSTFN
 size_t ptrhash(const void *ptr);
-
-/// @}
 
 END_API

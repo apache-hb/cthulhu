@@ -2,7 +2,7 @@
 
 #include <stddef.h>
 
-/// @ingroup Core
+/// @ingroup core
 /// @brief a range of text
 typedef struct text_t
 {
@@ -10,7 +10,7 @@ typedef struct text_t
     size_t size; ///< the number of bytes in the text
 } text_t;
 
-/// @ingroup Core
+/// @ingroup core
 /// @brief a non-owning view of text
 typedef struct text_view_t
 {

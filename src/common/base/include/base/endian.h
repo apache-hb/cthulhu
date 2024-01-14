@@ -5,8 +5,8 @@
 
 #include <stdint.h>
 
-/// @defgroup Endian Endianess and byte swapping
-/// @ingroup Base
+/// @defgroup endian Endianess and byte swapping
+/// @ingroup base
 /// @{
 
 /// @def CTU_BIG_ENDIAN
@@ -48,7 +48,7 @@ typedef enum endian_t
 /// @param value the value to swap
 ///
 /// @return the swapped value
-CONSTFN
+NODISCARD CONSTFN
 uint16_t endian_swap16(uint16_t value);
 
 /// @brief swap the endianess of a 32-bit value
@@ -56,7 +56,7 @@ uint16_t endian_swap16(uint16_t value);
 /// @param value the value to swap
 ///
 /// @return the swapped value
-CONSTFN
+NODISCARD CONSTFN
 uint32_t endian_swap32(uint32_t value);
 
 /// @brief swap the endianess of a 64-bit value
@@ -64,7 +64,7 @@ uint32_t endian_swap32(uint32_t value);
 /// @param value the value to swap
 ///
 /// @return the swapped value
-CONSTFN
+NODISCARD CONSTFN
 uint64_t endian_swap64(uint64_t value);
 
 /// @brief convert a 16-bit value of a given endianess to the native endianess
@@ -73,8 +73,8 @@ uint64_t endian_swap64(uint64_t value);
 /// @param order the endianess of @a value
 ///
 /// @return the converted value
-CONSTFN
-uint16_t native_order16(uint16_t value, endian_t order);
+NODISCARD CONSTFN
+uint16_t native_order16(uint16_t value, IN_RANGE(<, eEndianTotal) endian_t order);
 
 /// @brief convert a 32-bit value of a given endianess to the native endianess
 ///
@@ -82,8 +82,8 @@ uint16_t native_order16(uint16_t value, endian_t order);
 /// @param order the endianess of @a value
 ///
 /// @return the converted value
-CONSTFN
-uint32_t native_order32(uint32_t value, endian_t order);
+NODISCARD CONSTFN
+uint32_t native_order32(uint32_t value, IN_RANGE(<, eEndianTotal) endian_t order);
 
 /// @brief convert a 64-bit value of a given endianess to the native endianess
 ///
@@ -91,8 +91,8 @@ uint32_t native_order32(uint32_t value, endian_t order);
 /// @param order the endianess of @a value
 ///
 /// @return the converted value
-CONSTFN
-uint64_t native_order64(uint64_t value, endian_t order);
+NODISCARD CONSTFN
+uint64_t native_order64(uint64_t value, IN_RANGE(<, eEndianTotal) endian_t order);
 
 /// @}
 

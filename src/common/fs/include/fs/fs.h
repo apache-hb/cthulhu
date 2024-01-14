@@ -4,9 +4,9 @@
 
 BEGIN_API
 
-/// @defgroup FS Filesystem abstraction
+/// @defgroup filesystem Filesystem abstraction
 /// @brief virtual and physical filesystem interface
-/// @ingroup Common
+/// @ingroup common
 /// @{
 
 typedef struct arena_t arena_t;
@@ -103,6 +103,6 @@ typedef struct sync_result_t
 /// @param src the source filesystem
 sync_result_t fs_sync(fs_t *dst, fs_t *src);
 
-/// @} // FS
+/// @}
 
 END_API

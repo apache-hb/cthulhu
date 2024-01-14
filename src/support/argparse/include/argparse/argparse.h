@@ -7,11 +7,11 @@
 
 BEGIN_API
 
-/// @defgroup ArgParse Command line argument parsing
+/// @defgroup argparse Command line argument parsing
 /// @brief Command line argument parsing
 /// TODO: reduce the amount of allocations by allowing config to accept string views
 /// TODO: nicely support error propagation out of the parser
-/// @ingroup Support
+/// @ingroup support
 /// @{
 
 typedef struct node_t node_t;

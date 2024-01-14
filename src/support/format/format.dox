@@ -1,0 +1,7 @@
+/**
+
+@defgroup format User facing text formatting library
+@ingroup support
+@brief Format common types into a human readable text format
+
+*/

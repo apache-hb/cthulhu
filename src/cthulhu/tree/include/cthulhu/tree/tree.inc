@@ -7,70 +7,70 @@
 /// types
 ///
 
-TREE_KIND(eTreeTypeEmpty, "type-empty") ///< a type that can never be created
-TREE_KIND(eTreeTypeUnit, "type-unit") ///< a type with a single value
-TREE_KIND(eTreeTypeBool, "type-bool") ///< a type with two values
-TREE_KIND(eTreeTypeOpaque, "type-opaque")
-TREE_KIND(eTreeTypeDigit, "type-digit")
-TREE_KIND(eTreeTypeClosure, "type-closure") ///< a function pointer type (no captures)
+TREE_KIND(eTreeTypeEmpty, "type_empty") ///< a type that can never be created
+TREE_KIND(eTreeTypeUnit, "type_unit") ///< a type with a single value
+TREE_KIND(eTreeTypeBool, "type_bool") ///< a type with two values
+TREE_KIND(eTreeTypeOpaque, "type_opaque")
+TREE_KIND(eTreeTypeDigit, "type_digit")
+TREE_KIND(eTreeTypeClosure, "type_closure") ///< a function pointer type (no captures)
 
-TREE_KIND(eTreeTypeReference, "type-reference") ///< a reference to an object
-TREE_KIND(eTreeTypePointer, "type-pointer") ///< a pointer to an object
-TREE_KIND(eTreeTypeArray, "type-array") ///< an array of objects
+TREE_KIND(eTreeTypeReference, "type_reference") ///< a reference to an object
+TREE_KIND(eTreeTypePointer, "type_pointer") ///< a pointer to an object
+TREE_KIND(eTreeTypeArray, "type_array") ///< an array of objects
 
-TREE_KIND(eTreeTypeStruct, "type-struct")
-TREE_KIND(eTreeTypeUnion, "type-union")
-TREE_KIND(eTreeTypeEnum, "type-enum")
+TREE_KIND(eTreeTypeStruct, "type_struct")
+TREE_KIND(eTreeTypeUnion, "type_union")
+TREE_KIND(eTreeTypeEnum, "type_enum")
 
 ///
 /// expressions
 /// these yield a value
 ///
 
-TREE_KIND(eTreeExprEmpty, "expr-empty") ///< an uninitialized value of a type
-TREE_KIND(eTreeExprUnit, "expr-unit")
-TREE_KIND(eTreeExprBool, "expr-bool")
-TREE_KIND(eTreeExprDigit, "expr-digit")
-TREE_KIND(eTreeExprString, "expr-string")
+TREE_KIND(eTreeExprEmpty, "expr_empty") ///< an uninitialized value of a type
+TREE_KIND(eTreeExprUnit, "expr_unit")
+TREE_KIND(eTreeExprBool, "expr_bool")
+TREE_KIND(eTreeExprDigit, "expr_digit")
+TREE_KIND(eTreeExprString, "expr_string")
 
-TREE_KIND(eTreeExprCast, "expr-cast")
-TREE_KIND(eTreeExprLoad, "expr-load")
-TREE_KIND(eTreeExprReference, "expr-reference")
-TREE_KIND(eTreeExprAddress, "expr-address")
-TREE_KIND(eTreeExprUnary, "expr-unary")
-TREE_KIND(eTreeExprBinary, "expr-binary")
-TREE_KIND(eTreeExprCompare, "expr-compare")
+TREE_KIND(eTreeExprCast, "expr_cast")
+TREE_KIND(eTreeExprLoad, "expr_load")
+TREE_KIND(eTreeExprReference, "expr_reference")
+TREE_KIND(eTreeExprAddress, "expr_address")
+TREE_KIND(eTreeExprUnary, "expr_unary")
+TREE_KIND(eTreeExprBinary, "expr_binary")
+TREE_KIND(eTreeExprCompare, "expr_compare")
 
-TREE_KIND(eTreeExprField, "expr-field") ///< get a reference to a field
-TREE_KIND(eTreeExprOffset, "expr-offset")
+TREE_KIND(eTreeExprField, "expr_field") ///< get a reference to a field
+TREE_KIND(eTreeExprOffset, "expr_offset")
 
-TREE_KIND(eTreeExprCall, "expr-call")
+TREE_KIND(eTreeExprCall, "expr_call")
 
 ///
 /// statements
 /// these cannot yield a value
 ///
 
-TREE_KIND(eTreeStmtBlock, "stmt-block")
-TREE_KIND(eTreeStmtReturn, "stmt-return")
-TREE_KIND(eTreeStmtAssign, "stmt-assign")
-TREE_KIND(eTreeStmtLoop, "stmt-loop")
-TREE_KIND(eTreeStmtBranch, "stmt-branch")
-TREE_KIND(eTreeStmtJump, "stmt-jump") ///< loop related jumps
+TREE_KIND(eTreeStmtBlock, "stmt_block")
+TREE_KIND(eTreeStmtReturn, "stmt_return")
+TREE_KIND(eTreeStmtAssign, "stmt_assign")
+TREE_KIND(eTreeStmtLoop, "stmt_loop")
+TREE_KIND(eTreeStmtBranch, "stmt_branch")
+TREE_KIND(eTreeStmtJump, "stmt_jump") ///< loop related jumps
 
 ///
 /// declarations
 ///
 
-TREE_KIND(eTreeDeclGlobal, "decl-global")
-TREE_KIND(eTreeDeclLocal, "decl-local")
-TREE_KIND(eTreeDeclParam, "decl-param")
-TREE_KIND(eTreeDeclCase, "decl-case")
-TREE_KIND(eTreeDeclField, "decl-field")
-TREE_KIND(eTreeDeclFunction, "decl-function")
-TREE_KIND(eTreeDeclModule, "decl-module")
+TREE_KIND(eTreeDeclGlobal, "decl_global")
+TREE_KIND(eTreeDeclLocal, "decl_local")
+TREE_KIND(eTreeDeclParam, "decl_param")
+TREE_KIND(eTreeDeclCase, "decl_case")
+TREE_KIND(eTreeDeclField, "decl_field")
+TREE_KIND(eTreeDeclFunction, "decl_function")
+TREE_KIND(eTreeDeclModule, "decl_module")
 
-TREE_KIND(eTreeType, "unresolved-type") ///< unresolved type
+TREE_KIND(eTreeType, "unresolved_type") ///< unresolved type
 TREE_KIND(eTreeError, "error") ///< an error of some sort
 
 #undef TREE_KIND
@@ -147,8 +147,8 @@ TYPE_QUALIFIER(eQualRestrict, "restrict", (1 << 4))
 TREE_LINKAGE(eLinkExport, "exported")
 TREE_LINKAGE(eLinkImport, "imported")
 TREE_LINKAGE(eLinkModule, "internal")
-TREE_LINKAGE(eLinkEntryCli, "entry-cli")
-TREE_LINKAGE(eLinkEntryGui, "entry-gui")
+TREE_LINKAGE(eLinkEntryCli, "entry_cli")
+TREE_LINKAGE(eLinkEntryGui, "entry_gui")
 
 #undef TREE_LINKAGE
 
@@ -211,9 +211,9 @@ COMPARE_OP(eCompareGte, "gte", ">=")
 #   define CAST_OP(ID, NAME)
 #endif
 
-CAST_OP(eCastZeroExtend, "zero-extend")
-CAST_OP(eCastSignExtend, "sign-extend")
-CAST_OP(eCastBit, "bitcast")
+CAST_OP(eCastZeroExtend, "zero_extend")
+CAST_OP(eCastSignExtend, "sign_extend")
+CAST_OP(eCastBit, "bit_cast")
 
 #undef CAST_OP
 

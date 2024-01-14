@@ -6,14 +6,18 @@
 
 BEGIN_API
 
-/// @defgroup Set Unordered set
-/// @ingroup Standard
+typedef struct arena_t arena_t;
+
+/// @defgroup hash_set Unordered set
+/// @ingroup standard
 /// @brief Hash set
 /// @{
 
+/// @brief an unordered hash set
 typedef struct set_t set_t;
+
+/// @brief a single node in a set
 typedef struct item_t item_t;
-typedef struct arena_t arena_t;
 
 /// @brief create a new set
 ///
@@ -23,7 +27,7 @@ typedef struct arena_t arena_t;
 ///
 /// @return the new set
 NODISCARD
-set_t *set_new(IN_RANGE(>, 0) size_t size, type_info_t info, IN_NOTNULL arena_t *arena);
+set_t *set_new(IN_RANGE(>, 0) size_t size, typeinfo_t info, IN_NOTNULL arena_t *arena);
 
 /// @brief add a key to a set
 /// @pre @p key is not NULL
@@ -64,6 +68,8 @@ bool set_empty(IN_NOTNULL set_t *set);
 /// @param set the set to clear
 void set_reset(IN_NOTNULL set_t *set);
 
+/// @brief a set iterator handle
+/// @warning these are internal fields and should not be used directly
 typedef struct set_iter_t
 {
     set_t *set; ///< the set to iterate over
@@ -73,32 +79,31 @@ typedef struct set_iter_t
     item_t *next; ///< the next item
 } set_iter_t;
 
-/**
- * @brief begin iterating over a set
- *
- * @param set the set to iterate over
- * @return a set iterator
- */
+/// @brief acquire a set iterator for a set
+/// @warning modifying the set invalidates all iterators
+/// @note the iteration order is unspecified.
+///
+/// @param set the set to iterate over
+///
+/// @return the new iterator
 NODISCARD CONSTFN
 set_iter_t set_iter(IN_NOTNULL set_t *set);
 
-/**
- * @brief get the next item in a set iterator
- *
- * @note always call @ref set_has_next before calling this function
- * @param iter the iterator to get the next item from
- * @return the next item
- */
+/// @brief get the next item from a set iterator
+/// @warning this functions behaviour is undefined if called on an iterator that has no more items
+///
+/// @param iter the iterator to get the next item from
+///
+/// @return the next item
 NODISCARD
 const void *set_next(IN_NOTNULL set_iter_t *iter);
 
-/**
- * @brief check if a set iterator has a next item
- *
- * @param iter the iterator to check
- * @return true if the iterator has a next item
- * @return false if the iterator does not have a next item
- */
+/// @brief check if a set iterator has more items
+///
+/// @param iter the iterator to check
+///
+/// @retval true the iterator has more items
+/// @retval false the iterator has no more items
 NODISCARD CONSTFN
 bool set_has_next(IN_NOTNULL set_iter_t *iter);
 

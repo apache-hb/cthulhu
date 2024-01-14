@@ -8,8 +8,8 @@
 
 BEGIN_API
 
-/// @defgroup Panic Assertions and panic handling
-/// @ingroup Base
+/// @defgroup panic Assertions and panic handling
+/// @ingroup base
 /// @{
 
 #ifdef WITH_DOXYGEN

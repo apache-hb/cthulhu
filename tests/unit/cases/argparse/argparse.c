@@ -118,7 +118,7 @@ static test_config_t make_config(arena_t *arena)
 {
     test_config_t config = {0};
 
-    config.root = config_root(arena, &kRootInfo);
+    config.root = config_root(&kRootInfo, arena);
 
     config.bool_field = config_bool(config.root, &kBoolInfo, false);
 

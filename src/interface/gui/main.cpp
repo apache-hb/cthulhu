@@ -166,7 +166,7 @@ public:
 
     void init_config()
     {
-        config = config_root(&global, &root_info);
+        config = config_root(&root_info, &global);
 
         cfg_group_t *test_group = config_group(config, &test_group_info);
 

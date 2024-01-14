@@ -1,7 +1,7 @@
 /**
 
-@defgroup Base Base features
+@defgroup base Base library
 @brief Basic features required by all other modules
-@ingroup Common
+@ingroup common
 
 */

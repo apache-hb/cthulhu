@@ -1,4 +1,5 @@
 #include "base/util.h"
+#include "base/panic.h"
 #include "base/text.h"
 
 #include <stdint.h>
@@ -16,15 +17,21 @@ size_t ptrhash(const void *ptr)
     return key & SIZE_MAX;
 }
 
+USE_DECL
 text_t text_make(char *text, size_t size)
 {
+    CTASSERT(text != NULL);
+
     text_t result = { text, size };
 
     return result;
 }
 
+USE_DECL
 text_view_t text_view_make(const char *text, size_t size)
 {
+    CTASSERT(text != NULL);
+
     text_view_t result = { text, size };
 
     return result;

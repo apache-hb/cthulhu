@@ -21,6 +21,7 @@ io_t *io_new(const io_callbacks_t *cb, os_access_t flags, const char *name, cons
 {
     CTASSERT(cb != NULL);
     CTASSERT(name != NULL);
+    CTASSERT(arena != NULL);
 
     if (flags & eAccessWrite)
         CTASSERTF(cb->fn_write != NULL, "%s provided no `fn_write` function for a writable object",

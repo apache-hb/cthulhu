@@ -3,9 +3,9 @@
 #include <inttypes.h>
 #include <stdint.h>
 
-/// @defgroup Version Version macros
+/// @defgroup core_version Version macros
 /// @brief Version macros and types
-/// @ingroup Core
+/// @ingroup core
 /// @{
 
 /// @def NEW_VERSION(major, minor, patch)

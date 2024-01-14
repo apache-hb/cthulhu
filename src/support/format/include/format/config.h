@@ -11,6 +11,7 @@ typedef struct cfg_group_t cfg_group_t;
 /// @brief config format options
 typedef struct print_config_t
 {
+    /// @brief generic print options
     print_options_t options;
 
     /// @brief the config object to format
@@ -29,6 +30,9 @@ typedef struct print_config_t
     const char *name;
 } print_config_t;
 
+/// @brief print a configuration object
+///
+/// @param config the printing options and config object to print
 void print_config(print_config_t config);
 
 END_API

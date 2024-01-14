@@ -16,7 +16,7 @@ typedef struct item_t
 typedef struct set_t
 {
     arena_t *arena; ///< the arena this set is allocated in
-    type_info_t info;
+    typeinfo_t info;
     FIELD_RANGE(>, 0) size_t size;   ///< the number of buckets
     FIELD_SIZE(size) item_t *items; ///< the buckets
 } set_t;
@@ -45,7 +45,7 @@ static void clear_items(set_t *set)
     }
 }
 
-set_t *set_new(size_t size, type_info_t info, arena_t *arena)
+set_t *set_new(size_t size, typeinfo_t info, arena_t *arena)
 {
     CTASSERT(size > 0);
     CTASSERT(arena != NULL);
@@ -63,7 +63,7 @@ set_t *set_new(size_t size, type_info_t info, arena_t *arena)
 
 static item_t *impl_get_bucket(set_t *set, const void *key)
 {
-    type_info_t info = set->info;
+    typeinfo_t info = set->info;
     CTASSERT(info.hash != NULL);
 
     size_t hash = info.hash(key);
@@ -72,7 +72,7 @@ static item_t *impl_get_bucket(set_t *set, const void *key)
 
 static bool impl_keys_equal(const set_t *set, const void *lhs, const void *rhs)
 {
-    type_info_t info = set->info;
+    typeinfo_t info = set->info;
     CTASSERT(info.equals != NULL);
 
     return info.equals(lhs, rhs);

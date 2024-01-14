@@ -108,6 +108,7 @@ void ap_on_string(scan_t *scan, cfg_field_t *param, char *value)
         break;
 
     case eConfigEnum:
+        // TODO: handle failure
         cfg_set_enum(param, value);
         break;
 

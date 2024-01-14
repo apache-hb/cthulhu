@@ -107,7 +107,7 @@ program: block DOT { scan_set(x, $1); }
 block: module imports consts vars procedures toplevel { $$ = pl0_module(x, @$, $1, $2, $3, $4, $5, $6); }
     ;
 
-imports: %empty { $$ = vector_new(0); }
+imports: %empty { $$ = vector_new_arena(0, BISON_ARENA(x)); }
     | IMPORT paths SEMICOLON { $$ = $2; }
     ;
 
@@ -130,7 +130,7 @@ toplevel: %empty { $$ = NULL; }
     | stmtlist { $$ = pl0_stmts(x, @$, $1); }
     ;
 
-consts: %empty { $$ = vector_new(0); }
+consts: %empty { $$ = vector_new_arena(0, BISON_ARENA(x)); }
     | CONST inits SEMICOLON { $$ = $2; }
     ;
 
@@ -141,7 +141,7 @@ inits: init { $$ = vector_init_arena($1, BISON_ARENA(x)); }
 init: IDENT EQUALS expr { $$ = pl0_value(x, @$, $1, $3); }
     ;
 
-vars: %empty { $$ = vector_new(0); }
+vars: %empty { $$ = vector_new_arena(0, BISON_ARENA(x)); }
     | VAR names SEMICOLON { $$ = $2; }
     ;
 
@@ -152,7 +152,7 @@ names: name { $$ = vector_init_arena($1, BISON_ARENA(x)); }
 name: IDENT { $$ = pl0_value(x, @$, $1, NULL); }
     ;
 
-procedures: %empty { $$ = vector_new(0); }
+procedures: %empty { $$ = vector_new_arena(0, BISON_ARENA(x)); }
     | proclist { $$ = $1; }
     ;
 

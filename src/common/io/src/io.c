@@ -11,9 +11,7 @@ void io_close(io_t *io)
     CTASSERT(io != NULL);
 
     if (io->cb->fn_close != NULL)
-    {
         io->cb->fn_close(io);
-    }
 }
 
 USE_DECL
@@ -62,11 +60,8 @@ size_t io_vprintf(io_t *io, const char *fmt, va_list args)
         return cb->fn_write_format(io, fmt, args);
     }
 
-    char *buffer = str_vformat(io->arena, fmt, args);
-
-    size_t size = io_write(io, buffer, strlen(buffer));
-
-    return size;
+    text_t text = text_vformat(io->arena, fmt, args);
+    return io_write(io, text.text, text.size);
 }
 
 USE_DECL

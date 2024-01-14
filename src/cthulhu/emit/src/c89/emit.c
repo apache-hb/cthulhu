@@ -565,7 +565,7 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
             ssa_type_closure_t closure = ty->closure;
             const ssa_type_t *result = closure.result;
 
-            vector_t *args = vector_of(args_len);
+            vector_t *args = vector_of_arena(args_len, emit->arena);
             for (size_t arg_idx = 0; arg_idx < args_len; arg_idx++)
             {
                 const ssa_operand_t *operand = typevec_offset(call.args, arg_idx);

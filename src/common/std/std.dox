@@ -1,7 +1,15 @@
 /**
 
-@defgroup Standard Standard library
+@defgroup standard Standard library
 @brief Commonly used collections and functions
-@ingroup Common
+@ingroup common
+
+Why do we have both @ref vector_t and @ref typevec_t?
+These types are partially an artifact of history, but they also serve different purposes.
+@ref vector_t garuntees pointer stability of inserted elements as it only takes heap allocated objects.
+This is useful when dealing with ast nodes, or for certain graph algorithms where pointer equality is ok.
+
+@ref typevec_t is more useful for general purpose code that does not require pointer stability and may benefit
+from the reduced memory usage and reduced indirection.
 
 */

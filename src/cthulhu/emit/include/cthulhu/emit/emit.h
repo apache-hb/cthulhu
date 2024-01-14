@@ -4,9 +4,9 @@
 
 BEGIN_API
 
-/// @defgroup Emit SSA emitter
+/// @defgroup emit SSA emitter
 /// @brief Emitter for SSA form
-/// @ingroup Runtime
+/// @ingroup runtime
 /// @{
 
 typedef struct ssa_module_t ssa_module_t;

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "core/compiler.h"
 #include "core/analyze.h"
+#include "core/compiler.h"
+
 
 #include "core/text.h"
 
@@ -14,7 +15,7 @@ BEGIN_API
 
 /// @defgroup backtrace Stacktrace library
 /// @brief Backtrace library
-/// @ingroup Common
+/// @ingroup common
 /// @{
 
 /// @brief an address of a symbol
@@ -48,21 +49,21 @@ typedef struct bt_frame_t
 typedef enum frame_resolve_t
 {
     /// @brief nothing was resolved
-    eResolveNothing         = (0),
+    eResolveNothing = (0),
 
     /// @brief the line number was found
     /// @note this does not imply @a eResolveFile
-    eResolveLine            = (1 << 0),
+    eResolveLine = (1 << 0),
 
     /// @brief the symbol name was found
     /// @note this does not imply @a eResolveDemangledName
-    eResolveName            = (1 << 1),
+    eResolveName = (1 << 1),
 
     /// @brief the symbol name was demangled
-    eResolveDemangledName   = (1 << 2) | eResolveName,
+    eResolveDemangledName = (1 << 2) | eResolveName,
 
     /// @brief the file path was found
-    eResolveFile            = (1 << 3),
+    eResolveFile = (1 << 3),
 
     eResolveCount
 } frame_resolve_t;
@@ -74,16 +75,32 @@ typedef void (*bt_trace_t)(void *user, const bt_frame_t *frame);
 /// called on events such as segfaults
 typedef void (*bt_fatal_callback_t)(void);
 
+/// @brief called once when a system error occurs
+///
+/// @param error the error to report
+///
+/// @return the user data to pass to @a bt_error_end
 typedef void *(*bt_error_begin_t)(size_t error);
+
+/// @brief called once when a system error occurs
+///
+/// @param error the error to report
 typedef void (*bt_error_end_t)(void *error);
 
+/// @brief system error handling callbacks
 typedef struct bt_error_t
 {
+    /// @brief called once when a system error occurs
     bt_error_begin_t begin;
+
+    /// @brief called after all frames have been collected
     bt_error_end_t end;
+
+    /// @brief called once for each frame
     bt_trace_t frame;
 } bt_error_t;
 
+/// @brief the global system error handler
 extern bt_error_t gErrorReport;
 
 /// @brief initialize the backtrace backend
@@ -91,8 +108,9 @@ extern bt_error_t gErrorReport;
 void bt_init(void);
 
 /// @brief get the backtrace backend name
+///
 /// @return the backtrace backend name
-RET_STRING
+RET_STRING CONSTFN
 const char *bt_backend(void);
 
 /// @brief get a backtrace from the current location using a callback
@@ -101,7 +119,7 @@ const char *bt_backend(void);
 ///
 /// @param callback the callback to call for each frame
 /// @param user the user data to pass to the callback
-void bt_read(bt_trace_t callback, void *user);
+void bt_read(IN_NOTNULL bt_trace_t callback, void *user);
 
 /// @brief resolve a frame to a symbol
 ///
@@ -109,7 +127,7 @@ void bt_read(bt_trace_t callback, void *user);
 ///
 /// @param frame the frame to resolve
 /// @param symbol the symbol to fill
-frame_resolve_t bt_resolve_symbol(IN_NOTNULL const bt_frame_t *frame, bt_symbol_t *symbol);
+frame_resolve_t bt_resolve_symbol(IN_NOTNULL const bt_frame_t *frame, IN_NOTNULL bt_symbol_t *symbol);
 
 /// @}
 

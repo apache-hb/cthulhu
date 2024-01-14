@@ -13,7 +13,7 @@ typedef struct arena_t arena_t;
 
 BEGIN_API
 
-/// @ingroup Location
+/// @ingroup location
 /// @{
 
 #define SCAN_BUILTIN_LANG "builtin"

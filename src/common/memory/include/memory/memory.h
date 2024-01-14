@@ -4,8 +4,8 @@
 
 BEGIN_API
 
-/// @defgroup GlobalMemory Global memory allocation
-/// @ingroup Memory
+/// @defgroup global_memory Global memory allocation
+/// @ingroup memory
 /// @brief Default global memory allocator
 /// @{
 
@@ -25,6 +25,6 @@ void init_global_arena(arena_t *arena);
 /// @param arena the allocator to use
 void init_gmp_arena(IN_NOTNULL arena_t *arena);
 
-/// @} // GlobalMemory
+/// @} // global_memory
 
 END_API

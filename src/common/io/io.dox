@@ -1,8 +1,8 @@
 /**
 
-@defgroup IO Generic IO objects
-@brief Unified interface over stream io
-@ingroup Common
+@defgroup io IO stream interface
+@brief Unified interface over streaming io
+@ingroup common
 
 These are currently all heap allocated but are moving over to a stack allocated approach.
 New apis should be designed as such.

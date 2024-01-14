@@ -74,7 +74,7 @@ typedef struct tool_t
 
 static tool_t make_config(arena_t *arena, langs_t langs)
 {
-    cfg_group_t *root = config_root(arena, &kGroupInfo);
+    cfg_group_t *root = config_root(&kGroupInfo, arena);
 
     cfg_choice_t *lang_choices = ARENA_MALLOC(sizeof(cfg_choice_t) * (langs.size + 1), "lang_choices", root, arena);
     cfg_choice_t none_choice = {

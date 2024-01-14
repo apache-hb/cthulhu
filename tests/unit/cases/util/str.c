@@ -162,7 +162,7 @@ int main(void)
             char *joined = str_join_arena(" ", one, arena);
             CTASSERT(str_equal(joined, "hello"));
         });
-        GROUP_EXPECT_PANIC(group, "null sep", (void)str_join_arena(NULL, vector_of(0), arena));
+        GROUP_EXPECT_PANIC(group, "null sep", (void)str_join_arena(NULL, vector_of_arena(0, arena), arena));
         GROUP_EXPECT_PANIC(group, "null parts", (void)str_join_arena(" ", NULL, arena));
         GROUP_EXPECT_PANIC(group, "null item", (void)str_join_arena(" ", vector_init_arena(NULL, arena), arena));
         GROUP_EXPECT_PANIC(group, "null all", (void)str_join_arena(NULL, NULL, arena));

@@ -37,7 +37,7 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
 }
 
 %type<vector>
-    importList import_body_list module_seq
+    import_list import_body_list module_seq
     decl_seq decl
     ident_list
     value_seq value_decl value_decl_seq
@@ -155,7 +155,7 @@ module_seq: module { $$ = vector_init_arena($1, BISON_ARENA(x)); }
     | module_seq module { vector_push(&$1, $2); $$ = $1; }
     ;
 
-module: MODULE IDENT SEMI importList decl_seq opt_init end DOT { $$ = obr_module(x, @$, $2, $7, $4, $5, $6); }
+module: MODULE IDENT SEMI import_list decl_seq opt_init end DOT { $$ = obr_module(x, @$, $2, $7, $4, $5, $6); }
     ;
 
 opt_init: %empty { $$ = NULL; }
@@ -164,7 +164,7 @@ opt_init: %empty { $$ = NULL; }
 
 /* imports */
 
-importList: %empty { $$ = &kEmptyVector; }
+import_list: %empty { $$ = &kEmptyVector; }
     | IMPORT import_body_list SEMI { $$ = $2; }
     ;
 

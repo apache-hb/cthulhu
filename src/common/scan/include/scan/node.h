@@ -10,9 +10,9 @@
 
 BEGIN_API
 
-/// @defgroup Location Source location tracking
+/// @defgroup location Source location tracking
 /// @brief AST source position tracking
-/// @ingroup Common
+/// @ingroup common
 /// @{
 
 typedef uint_fast64_t line_t;   ///< line number

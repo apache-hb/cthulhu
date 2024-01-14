@@ -1,7 +1,7 @@
 /**
 
-@defgroup Core Header only core
+@defgroup core Header only core
 @brief Abstractions over compiler specific features and build configuration
-@ingroup Common
+@ingroup common
 
 */

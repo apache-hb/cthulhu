@@ -9,9 +9,9 @@
 
 BEGIN_API
 
-/// @defgroup SSA SSA form IR
+/// @defgroup ssa SSA form IR
 /// @brief SSA form IR
-/// @ingroup Runtime
+/// @ingroup runtime
 /// @{
 
 typedef struct logger_t logger_t;

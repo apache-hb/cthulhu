@@ -1,6 +1,6 @@
 /**
 
-@defgroup Runtime Compiler runtime
+@defgroup runtime Compiler runtime
 @brief Runtime functions for drivers, interfaces, and plugins.
 
 */

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/analyze.h"
 #include "core/compiler.h"
 
 #include <stdbool.h>
@@ -7,9 +8,9 @@
 
 BEGIN_API
 
-/// @defgroup Config Configuration
+/// @defgroup config Configuration
 /// @brief Configuration system
-/// @ingroup Common
+/// @ingroup common
 /// @{
 
 typedef struct arena_t arena_t;
@@ -34,10 +35,10 @@ typedef struct cfg_group_t cfg_group_t;
 typedef struct cfg_info_t
 {
     /// @brief the name of this field
-    const char *name;
+    FIELD_STRING const char *name;
 
     /// @brief a brief description of this field
-    const char *brief;
+    FIELD_STRING const char *brief;
 
     /// @brief a null terminated list of short argument names
     const char *const *short_args;
@@ -50,22 +51,24 @@ typedef struct cfg_info_t
 typedef struct cfg_int_t
 {
     /// @brief default value
+    FIELD_RANGE(>, min)
+    FIELD_RANGE(<, max)
     int initial;
 
     /// @brief minimum value
     /// @note if min == INT_MIN, there is no minimum
-    int min;
+    FIELD_RANGE(<, max) int min;
 
     /// @brief maximum value
     /// @note if max == INT_MAX, there is no maximum
-    int max;
+    FIELD_RANGE(>, min) int max;
 } cfg_int_t;
 
 /// @brief a choice in a set of options
 typedef struct cfg_choice_t
 {
     /// @brief the name of this choice
-    const char *text;
+    FIELD_STRING const char *text;
 
     /// @brief the value of this choice
     size_t value;
@@ -75,7 +78,7 @@ typedef struct cfg_choice_t
 typedef struct cfg_enum_t
 {
     /// @brief the choices in this set
-    const cfg_choice_t *options;
+    FIELD_SIZE(count) const cfg_choice_t *options;
 
     /// @brief the number of choices in this set
     size_t count;
@@ -89,7 +92,7 @@ typedef struct cfg_enum_t
 typedef struct cfg_flags_t
 {
     /// @brief the choices in this set
-    const cfg_choice_t *options;
+    FIELD_SIZE(count) const cfg_choice_t *options;
 
     /// @brief the number of choices in this set
     size_t count;
@@ -101,11 +104,11 @@ typedef struct cfg_flags_t
 
 /// @brief create a new configuration group
 ///
-/// @param arena the allocator to use
 /// @param info the information about this group
+/// @param arena the allocator to use
 ///
 /// @return the new configuration group
-cfg_group_t *config_root(arena_t *arena, const cfg_info_t *info);
+cfg_group_t *config_root(IN_NOTNULL const cfg_info_t *info, IN_NOTNULL arena_t *arena);
 
 /// @defgroup ConfigAdd Construction
 /// @brief Configuration construction API
@@ -118,7 +121,7 @@ cfg_group_t *config_root(arena_t *arena, const cfg_info_t *info);
 /// @param info the information about this group
 ///
 /// @return the new subgroup
-cfg_group_t *config_group(cfg_group_t *group, const cfg_info_t *info);
+cfg_group_t *config_group(IN_NOTNULL cfg_group_t *group, IN_NOTNULL const cfg_info_t *info);
 
 /// @brief add a new integer field to a configuration group
 ///
@@ -127,7 +130,7 @@ cfg_group_t *config_group(cfg_group_t *group, const cfg_info_t *info);
 /// @param cfg the configuration information for this field
 ///
 /// @return the new configuration field
-cfg_field_t *config_int(cfg_group_t *group, const cfg_info_t *info, cfg_int_t cfg);
+cfg_field_t *config_int(IN_NOTNULL cfg_group_t *group, IN_NOTNULL const cfg_info_t *info, cfg_int_t cfg);
 
 /// @brief add a new yes/no field to a configuration group
 ///
@@ -136,7 +139,7 @@ cfg_field_t *config_int(cfg_group_t *group, const cfg_info_t *info, cfg_int_t cf
 /// @param initial the initial value for this field
 ///
 /// @return the new configuration field
-cfg_field_t *config_bool(cfg_group_t *group, const cfg_info_t *info, bool initial);
+cfg_field_t *config_bool(IN_NOTNULL cfg_group_t *group, IN_NOTNULL const cfg_info_t *info, bool initial);
 
 /// @brief add a new string field to a configuration group
 ///
@@ -145,7 +148,7 @@ cfg_field_t *config_bool(cfg_group_t *group, const cfg_info_t *info, bool initia
 /// @param initial the initial value for this field
 ///
 /// @return the new configuration field
-cfg_field_t *config_string(cfg_group_t *group, const cfg_info_t *info, const char *initial);
+cfg_field_t *config_string(IN_NOTNULL cfg_group_t *group, IN_NOTNULL const cfg_info_t *info, const char *initial);
 
 /// @brief add a new vector field to a configuration group
 ///
@@ -154,7 +157,7 @@ cfg_field_t *config_string(cfg_group_t *group, const cfg_info_t *info, const cha
 /// @param initial the initial values for this field
 ///
 /// @return the new configuration field
-cfg_field_t *config_vector(cfg_group_t *group, const cfg_info_t *info, vector_t *initial);
+cfg_field_t *config_vector(IN_NOTNULL cfg_group_t *group, IN_NOTNULL const cfg_info_t *info, vector_t *initial);
 
 /// @brief add a new choice field to a configuration group
 ///
@@ -163,7 +166,7 @@ cfg_field_t *config_vector(cfg_group_t *group, const cfg_info_t *info, vector_t 
 /// @param cfg the configuration information for this field
 ///
 /// @return the new configuration field
-cfg_field_t *config_enum(cfg_group_t *group, const cfg_info_t *info, cfg_enum_t cfg);
+cfg_field_t *config_enum(IN_NOTNULL cfg_group_t *group, IN_NOTNULL const cfg_info_t *info, cfg_enum_t cfg);
 
 /// @brief add a new flags field to a configuration group
 ///
@@ -172,7 +175,7 @@ cfg_field_t *config_enum(cfg_group_t *group, const cfg_info_t *info, cfg_enum_t 
 /// @param cfg the configuration information for this field
 ///
 /// @return the new configuration field
-cfg_field_t *config_flags(cfg_group_t *group, const cfg_info_t *info, cfg_flags_t cfg);
+cfg_field_t *config_flags(IN_NOTNULL cfg_group_t *group, IN_NOTNULL const cfg_info_t *info, cfg_flags_t cfg);
 
 /// @} // ConfigAdd
 
@@ -186,77 +189,88 @@ cfg_field_t *config_flags(cfg_group_t *group, const cfg_info_t *info, cfg_flags_
 /// @param field the field to get the type of
 ///
 /// @return the type of @p field
-cfg_type_t cfg_get_type(const cfg_field_t *field);
+CONSTFN
+cfg_type_t cfg_get_type(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the information about a configuration field
 ///
 /// @param field the field to get the information about
 ///
 /// @return the information about @p field
-const cfg_info_t *cfg_get_info(const cfg_field_t *field);
+CONSTFN RET_NOTNULL
+const cfg_info_t *cfg_get_info(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the information about a configuration group
 ///
 /// @param config the configuration group to get the information about
 ///
 /// @return the information about @p config
-const cfg_info_t *cfg_group_info(const cfg_group_t *config);
+CONSTFN RET_NOTNULL
+const cfg_info_t *cfg_group_info(IN_NOTNULL const cfg_group_t *config);
 
 /// @brief get the information about an integer field
 ///
 /// @param field the field to get the information about
 ///
 /// @return the information about @p field
-const cfg_int_t *cfg_int_info(const cfg_field_t *field);
+CONSTFN RET_NOTNULL
+const cfg_int_t *cfg_int_info(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the information about a yes/no field
 ///
 /// @param field the field to get the information about
 ///
 /// @return the information about @p field
-bool cfg_bool_info(const cfg_field_t *field);
+CONSTFN
+bool cfg_bool_info(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the information about a string field
 ///
 /// @param field the field to get the information about
 ///
 /// @return the information about @p field
-const char *cfg_string_info(const cfg_field_t *field);
+CONSTFN
+const char *cfg_string_info(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the information about a choice field
 ///
 /// @param field the field to get the information about
 ///
 /// @return the information about @p field
-const cfg_enum_t *cfg_enum_info(const cfg_field_t *field);
+CONSTFN RET_NOTNULL
+const cfg_enum_t *cfg_enum_info(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the information about a flags field
 ///
 /// @param field the field to get the information about
 ///
 /// @return the information about @p field
-const cfg_flags_t *cfg_flags_info(const cfg_field_t *field);
+CONSTFN RET_NOTNULL
+const cfg_flags_t *cfg_flags_info(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the name of a configuration type
 ///
 /// @param type the type to get the name of
 ///
 /// @return the name of @p type
-const char *cfg_type_name(cfg_type_t type);
+CONSTFN RET_NOTNULL
+const char *cfg_type_name(IN_RANGE(<, eConfigCount) cfg_type_t type);
 
 /// @brief get all subgroups in a configuration group
 ///
 /// @param config the configuration group to get the subgroups from
 ///
 /// @return the subgroups in @p config
-typevec_t *cfg_get_groups(const cfg_group_t *config);
+CONSTFN RET_NOTNULL
+typevec_t *cfg_get_groups(IN_NOTNULL const cfg_group_t *config);
 
 /// @brief get all fields in a configuration group
 ///
 /// @param config the configuration group to get the fields from
 ///
 /// @return the fields in @p config
-vector_t *cfg_get_fields(const cfg_group_t *config);
+CONSTFN RET_NOTNULL
+vector_t *cfg_get_fields(IN_NOTNULL const cfg_group_t *config);
 
 /// @} // ConfigReflect
 
@@ -270,42 +284,48 @@ vector_t *cfg_get_fields(const cfg_group_t *config);
 /// @param field the field to get the value of
 ///
 /// @return the current value of @p field
-int cfg_int_value(const cfg_field_t *field);
+CONSTFN
+int cfg_int_value(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the current boolean value of a configuration field
 ///
 /// @param field the field to get the value of
 ///
 /// @return the current value of @p field
-bool cfg_bool_value(const cfg_field_t *field);
+CONSTFN
+bool cfg_bool_value(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the current string value of a configuration field
 ///
 /// @param field the field to get the value of
 ///
 /// @return the current value of @p field
-const char *cfg_string_value(const cfg_field_t *field);
+CONSTFN
+const char *cfg_string_value(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the current vector value of a configuration field
 ///
 /// @param field the field to get the value of
 ///
 /// @return the current value of @p field
-vector_t *cfg_vector_value(const cfg_field_t *field);
+CONSTFN
+vector_t *cfg_vector_value(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the current enum value of a configuration field
 ///
 /// @param field the field to get the value of
 ///
 /// @return the current value of @p field
-size_t cfg_enum_value(const cfg_field_t *field);
+CONSTFN
+size_t cfg_enum_value(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the current flags value of a configuration field
 ///
 /// @param field the field to get the value of
 ///
 /// @return the current value of @p field
-size_t cfg_flags_value(const cfg_field_t *field);
+CONSTFN
+size_t cfg_flags_value(IN_NOTNULL const cfg_field_t *field);
 
 /// @} // ConfigRead
 
@@ -320,25 +340,26 @@ size_t cfg_flags_value(const cfg_field_t *field);
 /// @param value the new value
 ///
 /// @return true if the value was valid, false otherwise
-bool cfg_set_int(cfg_field_t *field, int value);
+NODISCARD
+bool cfg_set_int(IN_NOTNULL cfg_field_t *field, int value);
 
 /// @brief set the current value of a bool field
 ///
 /// @param field the field to set the value of
 /// @param value the new value
-void cfg_set_bool(cfg_field_t *field, bool value);
+void cfg_set_bool(IN_NOTNULL cfg_field_t *field, bool value);
 
 /// @brief set the current value of a string field
 ///
 /// @param field the field to set the value of
 /// @param value the new value
-void cfg_set_string(cfg_field_t *field, char *value);
+void cfg_set_string(IN_NOTNULL cfg_field_t *field, char *value);
 
 /// @brief push a new value onto an array field
 ///
 /// @param field the field to push the value onto
 /// @param value the new value
-void cfg_vector_push(cfg_field_t *field, char *value);
+void cfg_vector_push(IN_NOTNULL cfg_field_t *field, char *value);
 
 /// @brief set the current value of an enum field
 /// set the value via a string name
@@ -346,8 +367,9 @@ void cfg_vector_push(cfg_field_t *field, char *value);
 /// @param field the field to set the value of
 /// @param choice the name of the choice to set
 ///
-/// @return true if the choice was valid and the field was updated, false otherwise
-bool cfg_set_enum(cfg_field_t *field, const char *choice);
+/// @retval true if the choice was valid and the field was updated,
+/// @retval false otherwise
+bool cfg_set_enum(IN_NOTNULL cfg_field_t *field, const char *choice);
 
 /// @brief set the current value of an enum field
 /// set the value via an integer value
@@ -356,7 +378,7 @@ bool cfg_set_enum(cfg_field_t *field, const char *choice);
 ///
 /// @param field the field to set the value of
 /// @param value the value to set
-void cfg_set_enum_value(cfg_field_t *field, size_t value);
+void cfg_set_enum_value(IN_NOTNULL cfg_field_t *field, size_t value);
 
 /// @brief set the current value of a flags field
 /// set the value via a string name
@@ -365,8 +387,10 @@ void cfg_set_enum_value(cfg_field_t *field, size_t value);
 /// @param choice the name of the choice to set
 /// @param set true to set the flag, false to clear it
 ///
-/// @return true if the choice was valid and the field was updated, false otherwise
-bool cfg_set_flag(cfg_field_t *field, const char *choice, bool set);
+/// @retval true if the choice was valid and the field was updated
+/// @retval false otherwise
+NODISCARD
+bool cfg_set_flag(IN_NOTNULL cfg_field_t *field, const char *choice, bool set);
 
 /// @brief set the current value of a flags field
 /// set the value via an integer value
@@ -375,7 +399,7 @@ bool cfg_set_flag(cfg_field_t *field, const char *choice, bool set);
 ///
 /// @param field the field to set the value of
 /// @param value the value to set
-void cfg_set_flag_value(cfg_field_t *field, size_t value);
+void cfg_set_flag_value(IN_NOTNULL cfg_field_t *field, size_t value);
 
 /// @} // ConfigWrite
 

@@ -8,8 +8,8 @@
 
 BEGIN_API
 
-/// @defgroup Log Verbose logging
-/// @ingroup Common
+/// @defgroup log Verbose logging
+/// @ingroup base
 /// @brief Verbose logging
 /// @{
 

@@ -1,4 +1,5 @@
 #include "std/str.h"
+#include "base/text.h"
 #include "std/map.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
@@ -7,12 +8,52 @@
 #include "memory/memory.h"
 #include "base/panic.h"
 
-#include <ctype.h>
 #include <limits.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+
+USE_DECL
+text_t text_format(arena_t *arena, const char *fmt, ...)
+{
+    CTASSERT(arena != NULL);
+    CTASSERT(fmt != NULL);
+
+    va_list args;
+    va_start(args, fmt);
+
+    text_t text = text_vformat(arena, fmt, args);
+
+    va_end(args);
+
+    return text;
+}
+
+USE_DECL
+text_t text_vformat(arena_t *arena, const char *fmt, va_list args)
+{
+    CTASSERT(arena != NULL);
+    CTASSERT(fmt != NULL);
+
+    // make a copy of the args for the second format
+    va_list again;
+    va_copy(again, args);
+
+    // get the number of bytes needed to format
+    int len = vsnprintf(NULL, 0, fmt, args);
+
+    CTASSERTF(len > 0, "text_vformat failed to format string: %s", fmt);
+
+    char *out = ARENA_MALLOC(len + 1, "text_vformat", fmt, arena);
+
+    int result = vsnprintf(out, len + 1, fmt, again);
+    CTASSERTF(result == len, "text_vformat failed to format string: %s expected (%d == %d)", fmt, result, len);
+
+    va_end(again);
+
+    return text_make(out, len);
+}
 
 USE_DECL
 char *str_format(arena_t *arena, const char *fmt, ...)
@@ -33,23 +74,9 @@ char *str_vformat(arena_t *arena, const char *fmt, va_list args)
     CTASSERT(arena != NULL);
     CTASSERT(fmt != NULL);
 
-    // make a copy of the args for the second format
-    va_list again;
-    va_copy(again, args);
+    text_t text = text_vformat(arena, fmt, args);
 
-    // get the number of bytes needed to format
-    int len = vsnprintf(NULL, 0, fmt, args);
-
-    CTASSERTF(len > 0, "str_vformat failed to format string: %s", fmt);
-
-    char *out = ARENA_MALLOC(len + 1, "str_vformat", fmt, arena);
-
-    int result = vsnprintf(out, len + 1, fmt, again);
-    CTASSERTF(result == len, "str_vformat failed to format string: %s expected (%d == %d)", fmt, result, len);
-
-    va_end(again);
-
-    return out;
+    return text.text;
 }
 
 USE_DECL
@@ -733,17 +760,6 @@ size_t str_rfind(const char *str, const char *sub)
 }
 
 USE_DECL
-size_t str_rfindn(const char *str, size_t len, const char *sub)
-{
-    CTASSERT(str != NULL);
-    CTASSERT(sub != NULL);
-
-    size_t sublen = strlen(sub);
-
-    return str_rfind_inner(str, len, sub, sublen);
-}
-
-USE_DECL
 size_t str_find(const char *str, const char *sub)
 {
     CTASSERT(str != NULL);
@@ -751,52 +767,6 @@ size_t str_find(const char *str, const char *sub)
 
     const char *ptr = strstr(str, sub);
     return ptr == NULL ? SIZE_MAX : (size_t)(ptr - str);
-}
-
-USE_DECL
-size_t str_count_any(const char *str, const char *chars)
-{
-    CTASSERT(str != NULL);
-    CTASSERT(chars != NULL);
-    CTASSERT(strlen(chars) > 0);
-
-    size_t count = 0;
-
-    for (size_t i = 0; str[i] != '\0'; i++)
-    {
-        if (char_is_any_of(str[i], chars))
-        {
-            count++;
-        }
-    }
-
-    return count;
-}
-
-USE_DECL
-char *str_trim(const char *str, const char *letters, arena_t *arena)
-{
-    CTASSERT(str != NULL);
-    CTASSERT(letters != NULL);
-    CTASSERT(arena != NULL);
-
-    const char *tmp = str;
-
-    // strip from front
-    while (*tmp && char_is_any_of(*tmp, letters))
-    {
-        tmp++;
-    }
-
-    size_t remaining = strlen(tmp);
-
-    // strip from back
-    while (remaining > 0 && char_is_any_of(tmp[remaining - 1], letters))
-    {
-        remaining--;
-    }
-
-    return arena_strndup(tmp, remaining, arena);
 }
 
 USE_DECL
@@ -838,7 +808,7 @@ char *str_upper(const char *str, arena_t *arena)
 
     while (*temp)
     {
-        *temp = (char)toupper(*temp);
+        *temp = str_toupper(*temp);
         temp += 1;
     }
 
@@ -864,17 +834,23 @@ char *str_lower(const char *str, arena_t *arena)
 }
 
 USE_DECL
-char str_tolower(int c)
+char str_tolower(char c)
 {
     if (c >= 'A' && c <= 'Z')
     {
         return (char)((c + 'a' - 'A') & CHAR_MAX);
     }
 
-    if (CHAR_MIN <= c && c <= CHAR_MAX)
+    return c;
+}
+
+USE_DECL
+char str_toupper(char c)
+{
+    if (c >= 'a' && c <= 'z')
     {
-        return (char)c;
+        return (char)((c + 'A' - 'a') & CHAR_MAX);
     }
 
-    return '\0';
+    return c;
 }

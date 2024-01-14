@@ -9,11 +9,12 @@ typedef struct arena_t arena_t;
 
 BEGIN_API
 
-/// @defgroup TypedVector Typed vector
-/// @ingroup Standard
+/// @defgroup typed_vector Typed vector
+/// @ingroup standard
 /// @brief Generic vector of typed values
 /// @{
 
+/// @brief a vector of typed values
 typedef struct typevec_t typevec_t;
 
 /// @brief create a new typed vector
@@ -27,7 +28,7 @@ NODISCARD
 typevec_t *typevec_new(IN_RANGE(>, 0) size_t type_size, size_t len, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new typed vector with an initial size and length
-/// @note it is expected that the user will fill the vector up to @a len using @a typevec_set
+/// @note it is expected that the user will fill the vector up to @p len using @a typevec_set
 ///       with valid values rather than using @a typevec_push
 ///
 /// @param type_size the size of the type
@@ -55,7 +56,7 @@ typevec_t *typevec_of_array(
     IN_NOTNULL arena_t *arena);
 
 /// @brief create a new typevec from an existing typevec
-/// @pre @p start < @p end and @p end <= @a typevec_len(@p vec)
+/// @pre @p start < @p end and @p end <= @a typevec_len(vec)
 ///
 /// @param vec the vector to copy
 /// @param start the start index
@@ -77,12 +78,18 @@ size_t typevec_len(IN_NOTNULL const typevec_t *vec);
 
 /// @brief set an element in the vector
 ///
+/// @pre @p index < @a typevec_len(vec)
+/// this reads @a type_size bytes from @p src and copies them to the vector
+///
 /// @param vec the vector to set the value in
 /// @param index the index to set the value at
 /// @param src the value to set
 void typevec_set(IN_NOTNULL typevec_t *vec, size_t index, IN_NOTNULL const void *src);
 
 /// @brief get an element from the vector
+///
+/// @pre @p index < @a typevec_len(vec)
+/// this copies @a type_size bytes from the vector to @p dst
 ///
 /// @param vec the vector to get the value from
 /// @param index the index to get the value from
@@ -116,7 +123,7 @@ void typevec_append(IN_NOTNULL typevec_t *vec, IN_NOTNULL const void *src, size_
 void typevec_pop(IN_NOTNULL typevec_t *vec, IN_NOTNULL void *dst);
 
 /// @brief get a pointer to the value at the given index
-///
+/// @pre @p index < @a typevec_len(vec)
 /// @note the pointer is only valid until the next call to @a typevec_push or @a typevec_pop
 ///
 /// @param vec the vector to get the value from
@@ -140,6 +147,11 @@ void *typevec_data(IN_NOTNULL const typevec_t *vec);
 /// @param cmp the comparison function
 void typevec_sort(IN_NOTNULL typevec_t *vec, int (*cmp)(const void *, const void *));
 
+/// @brief reset a vector
+/// @warning this does not perform cleanup on the data in the vector
+///          if the data requires cleanup, it must be done manually.
+///
+/// @param vec the vector to reset
 void typevec_reset(IN_NOTNULL typevec_t *vec);
 
 /// @}

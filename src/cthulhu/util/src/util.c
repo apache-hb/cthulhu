@@ -9,6 +9,7 @@
 #include "base/panic.h"
 
 #include <stdlib.h>
+#include <stdint.h>
 
 void *util_select_decl(tree_t *sema, const size_t *tags, size_t len, const char *name)
 {
@@ -123,8 +124,8 @@ static tree_t *cast_to_opaque(const tree_t *dst, tree_t *expr)
         return tree_expr_cast(tree_get_node(expr), dst, expr); // TODO: a little iffy
 
     default:
-        return tree_error(tree_get_node(expr), &kEvent_InvalidCast, "cannot cast `%s` to `%s`", tree_to_string(src),
-                          tree_to_string(dst));
+        return tree_error(tree_get_node(expr), &kEvent_InvalidCast, "cannot cast `%s` to `%s`",
+                          tree_to_string(src), tree_to_string(dst));
     }
 }
 
@@ -147,8 +148,8 @@ static tree_t *cast_to_pointer(const tree_t *dst, tree_t *expr)
         return cast_check_length(dst, expr, dst->length, src->length);
 
     default:
-        return tree_error(tree_get_node(expr), &kEvent_InvalidCast, "cannot cast `%s` to `%s`", tree_to_string(src),
-                          tree_to_string(dst));
+        return tree_error(tree_get_node(expr), &kEvent_InvalidCast, "cannot cast `%s` to `%s`",
+                          tree_to_string(src), tree_to_string(dst));
     }
 }
 
@@ -163,15 +164,16 @@ static tree_t *cast_to_digit(const tree_t *dst, tree_t *expr)
     case eTreeTypeDigit:
         if (dst->digit < src->digit)
         {
-            return tree_error(tree_get_node(expr), &kEvent_InvalidCast, "cannot cast `%s` to `%s`, may truncate",
-                              tree_to_string(src), tree_to_string(dst));
+            return tree_error(tree_get_node(expr), &kEvent_InvalidCast,
+                              "cannot cast `%s` to `%s`, may truncate", tree_to_string(src),
+                              tree_to_string(dst));
         }
 
         return expr;
 
     default:
-        return tree_error(tree_get_node(expr), &kEvent_InvalidCast, "cannot cast `%s` to `%s`", tree_to_string(src),
-                          tree_to_string(dst));
+        return tree_error(tree_get_node(expr), &kEvent_InvalidCast, "cannot cast `%s` to `%s`",
+                          tree_to_string(src), tree_to_string(dst));
     }
 }
 
@@ -186,8 +188,8 @@ static tree_t *cast_to_bool(const tree_t *dst, tree_t *expr)
     case eTreeTypeBool: return expr;
 
     default:
-        return tree_error(tree_get_node(expr), &kEvent_InvalidCast, "cannot cast `%s` to `%s`", tree_to_string(src),
-                          tree_to_string(dst));
+        return tree_error(tree_get_node(expr), &kEvent_InvalidCast, "cannot cast `%s` to `%s`",
+                          tree_to_string(src), tree_to_string(dst));
     }
 }
 
@@ -215,8 +217,8 @@ tree_t *util_type_cast(const tree_t *dst, tree_t *expr)
     case eTreeTypeBool: return cast_to_bool(dst, expr);
 
     default:
-        return tree_error(tree_get_node(expr), &kEvent_InvalidCast, "cannot cast `%s` to `%s`", tree_to_string(src),
-                          tree_to_string(dst));
+        return tree_error(tree_get_node(expr), &kEvent_InvalidCast, "cannot cast `%s` to `%s`",
+                          tree_to_string(src), tree_to_string(dst));
     }
 }
 

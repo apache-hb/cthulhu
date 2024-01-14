@@ -182,7 +182,7 @@ void pl0_init(driver_t *handle)
 
     tree_t *string_type = get_string_type(4);
 
-    vector_t *params = vector_of(1);
+    vector_t *params = vector_of_arena(1, arena);
     vector_set(params, 0, tree_decl_param(node, "fmt", string_type));
 
     tree_t *signature = tree_type_closure(node, "printf", gIntType, params, eArityVariable);

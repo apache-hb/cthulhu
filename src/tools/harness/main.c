@@ -314,7 +314,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     CHECK_LOG(reports, "syncing output directory");
 
     size_t len = vector_len(c89_emit_result.sources);
-    vector_t *sources = vector_of(len);
+    vector_t *sources = vector_of_arena(len, arena);
     for (size_t i = 0; i < len; i++)
     {
         const char *part = vector_get(c89_emit_result.sources, i);

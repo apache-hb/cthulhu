@@ -84,12 +84,12 @@ int main(void)
 
         map_iter_t iter = map_iter(map);
 
-        while (map_has_next(&iter))
+        const void *key = NULL;
+        void *value = NULL;
+        while (CTU_MAP_NEXT(&iter, &key, &value))
         {
-            map_entry_t entry = map_next(&iter);
-
-            GROUP_EXPECT_PASS(group, "map has item", entry.key != NULL);
-            GROUP_EXPECT_PASS(group, "map has item", entry.value != NULL);
+            GROUP_EXPECT_PASS(group, "map has item", key != NULL);
+            GROUP_EXPECT_PASS(group, "map has item", value != NULL);
             items++;
         }
 

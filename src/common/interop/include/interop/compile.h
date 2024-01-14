@@ -11,9 +11,9 @@ typedef struct scan_t scan_t;
 
 BEGIN_API
 
-/// @defgroup Interop flex/bison interop utils
-/// @brief flex/bison interop utils
-/// @ingroup Common
+/// @defgroup interop Flex/Bison interop utils
+/// @brief Flex/Bison interop utils for easier integration
+/// @ingroup common
 /// @{
 
 /// @brief scanner function callbacks for flex and bison

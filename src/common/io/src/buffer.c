@@ -86,7 +86,9 @@ static const io_callbacks_t kBufferCallbacks = {
 USE_DECL
 io_t *io_memory(const char *name, const void *data, size_t size, os_access_t flags, arena_t *arena)
 {
+    CTASSERT(name != NULL);
     CTASSERT(data != NULL);
+    CTASSERT(arena != NULL);
 
     buffer_t buffer = {
         .data = ARENA_MALLOC(size, "memory", NULL, arena),
@@ -105,6 +107,9 @@ io_t *io_memory(const char *name, const void *data, size_t size, os_access_t fla
 USE_DECL
 io_t *io_blob(const char *name, size_t size, os_access_t flags, arena_t *arena)
 {
+    CTASSERT(name != NULL);
+    CTASSERT(arena != NULL);
+
     buffer_t buffer = {
         .data = ARENA_MALLOC(size, "blob", NULL, arena),
         .total = size,

@@ -10,30 +10,94 @@ BEGIN_API
 
 typedef struct vector_t vector_t;
 
-// make a precompiled context
-context_t *compiled_new(driver_t *handle, tree_t *root);
+/// @ingroup mediator
+/// @{
 
-// make a context from an ast
-context_t *context_new(driver_t *handle, const char *name, void *ast, tree_t *root);
-
-context_t *add_context(lifetime_t *lifetime, vector_t *path, context_t *mod);
-context_t *get_context(lifetime_t *lifetime, vector_t *path);
-
-lifetime_t *handle_get_lifetime(driver_t *handle);
-
-// context api
-
-void *context_get_ast(context_t *context);
-tree_t *context_get_module(context_t *context);
-lifetime_t *context_get_lifetime(context_t *context);
-const char *context_get_name(context_t *context);
-
-void context_update(context_t *ctx, void *ast, tree_t *root);
-
+/// @brief make a new precompiled context
 ///
-/// helper apis
+/// @param handle the driver to use
+/// @param root the tree of the context
 ///
+/// @return the new context
+context_t *compiled_new(IN_NOTNULL driver_t *handle, IN_NOTNULL tree_t *root);
 
-tree_t *lifetime_sema_new(lifetime_t *lifetime, const char *name, size_t len, const size_t *sizes);
+/// @brief make a new context
+///
+/// @param handle the driver to use
+/// @param name the name of the context
+/// @param ast the ast of the context
+/// @param root the tree of the context
+///
+/// @return the new context
+context_t *context_new(IN_NOTNULL driver_t *handle, const char *name, void *ast, tree_t *root);
+
+/// @brief add a new context to the lifetime
+///
+/// @param lifetime the lifetime object
+/// @param path the path to the context
+/// @param mod the context to add
+///
+/// @return the new context
+context_t *add_context(IN_NOTNULL lifetime_t *lifetime, IN_NOTNULL vector_t *path, IN_NOTNULL context_t *mod);
+
+/// @brief get a context from the lifetime
+///
+/// @param lifetime the lifetime object
+/// @param path the path to the context
+///
+/// @return the new context
+context_t *get_context(IN_NOTNULL lifetime_t *lifetime, IN_NOTNULL vector_t *path);
+
+/// @brief get the lifetime of a driver
+///
+/// @param handle the driver to get the lifetime of
+///
+/// @return the lifetime of @p handle
+lifetime_t *handle_get_lifetime(IN_NOTNULL driver_t *handle);
+
+/// @brief get the ast of a context
+///
+/// @param context the context to get the ast of
+///
+/// @return the ast of @p context
+void *context_get_ast(IN_NOTNULL const context_t *context);
+
+/// @brief get the tree of a context
+///
+/// @param context the context to get the tree of
+///
+/// @return the tree of @p context
+tree_t *context_get_module(IN_NOTNULL const context_t *context);
+
+/// @brief get the lifetime of a context
+///
+/// @param context the context to get the lifetime of
+///
+/// @return the lifetime of @p context
+lifetime_t *context_get_lifetime(IN_NOTNULL const context_t *context);
+
+/// @brief get the name of a context
+///
+/// @param context the context to get the name of
+const char *context_get_name(IN_NOTNULL const context_t *context);
+
+/// @brief update a context with a new ast and tree
+///
+/// @param ctx the context to update
+/// @param ast the new ast
+/// @param root the new tree
+void context_update(IN_NOTNULL context_t *ctx, void *ast, tree_t *root);
+
+/// @brief create a new sema context from a lifetime
+///
+/// @param lifetime the lifetime object
+/// @param name the name of the context
+/// @param len the length of the name
+/// @param sizes the sizes of the sema objects
+///
+/// @return the new sema context
+tree_t *lifetime_sema_new(IN_NOTNULL lifetime_t *lifetime, IN_STRING const char *name, IN_RANGE(>, 0) size_t len, IN_READS(len) const size_t *sizes);
+
+/// @}
 
 END_API

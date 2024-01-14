@@ -157,20 +157,19 @@ char *fmt_left_align(arena_t *arena, size_t width, const char *fmt, ...)
 
     va_list args;
     va_start(args, fmt);
-    char *msg = str_vformat(arena, fmt, args);
+    text_t msg = text_vformat(arena, fmt, args);
     va_end(args);
 
-    size_t len = strlen(msg);
-    if (len >= width) return msg;
+    if (msg.size >= width) return msg.text;
 
     size_t size = width - 1;
     char *result = ARENA_MALLOC(size, "fmt_left_align", NULL, arena);
     memset(result, ' ', width);
-    memcpy(result, msg, len);
+    memcpy(result, msg.text, msg.size);
 
     result[width] = '\0';
 
-    arena_free(msg, size, arena);
+    arena_free(msg.text, msg.size, arena);
 
     return result;
 }
@@ -181,20 +180,19 @@ char *fmt_right_align(arena_t *arena, size_t width, const char *fmt, ...)
 
     va_list args;
     va_start(args, fmt);
-    char *msg = str_vformat(arena, fmt, args);
+    text_t msg = text_vformat(arena, fmt, args);
     va_end(args);
 
-    size_t len = strlen(msg);
-    if (len >= width) return msg;
+    if (msg.size >= width) return msg.text;
 
     size_t size = width - 1;
     char *result = ARENA_MALLOC(size, "fmt_right_align", NULL, arena);
     memset(result, ' ', width);
-    memcpy(result + (width - len), msg, len);
+    memcpy(result + (width - msg.size), msg.text, msg.size);
 
     result[width] = '\0';
 
-    arena_free(msg, size, arena);
+    arena_free(msg.text, msg.size, arena);
 
     return result;
 }
@@ -331,10 +329,10 @@ void cache_map_delete(cache_map_t *map)
     CTASSERT(map != NULL);
 
     map_iter_t iter = map_iter(map->map);
-    while (map_has_next(&iter))
+    const char *key = NULL;
+    text_cache_t *cache = NULL;
+    while (CTU_MAP_NEXT(&iter, &key, &cache))
     {
-        map_entry_t entry = map_next(&iter);
-        text_cache_t *cache = entry.value;
         text_cache_delete(cache);
     }
 }
