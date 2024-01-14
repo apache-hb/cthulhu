@@ -4,7 +4,7 @@
 #include "base/text.h"
 #include "core/text.h"
 #include "io/io.h"
-#include "memory/arena.h"
+#include "arena/arena.h"
 
 #include <string.h>
 

@@ -1,7 +1,7 @@
 #include "std/map.h"
 #include "base/panic.h"
 
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "std/str.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
@@ -113,7 +113,7 @@ vector_t *map_values(map_t *map)
 {
     CTASSERT(map != NULL);
 
-    vector_t *result = vector_new_arena(map->size, map->arena);
+    vector_t *result = vector_new(map->size, map->arena);
 
     MAP_FOREACH_APPLY(map, entry, { vector_push(&result, entry->value); });
 

@@ -1,6 +1,6 @@
 #include "std/map.h"
 
-#include "memory/arena.h"
+#include "arena/arena.h"
 
 #include <stdint.h>
 

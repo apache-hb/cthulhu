@@ -11,6 +11,7 @@
 
 #include "ctu/ast.h"
 
+#include "memory/memory.h"
 #include "std/str.h"
 #include "std/vector.h"
 
@@ -296,8 +297,9 @@ static tree_t *sema_call(ctu_sema_t *sema, const ctu_t *expr)
 
     vector_t *params = tree_fn_get_params(type);
 
+    arena_t *arena = get_global_arena();
     size_t len = vector_len(expr->args);
-    vector_t *result = vector_of(len);
+    vector_t *result = vector_of(len, arena);
     for (size_t i = 0; i < len; i++)
     {
         const tree_t *ty = get_param_checked(params, i);
@@ -654,7 +656,8 @@ static tree_t *sema_stmts(ctu_sema_t *sema, const ctu_t *stmt)
     size_t sizes[eCtuTagTotal] = {[eCtuTagTypes] = 4, [eCtuTagValues] = 4, [eCtuTagFunctions] = 4,};
 
     tree_t *ctx = tree_module(sema->sema, stmt->node, decl->name, eCtuTagTotal, sizes);
-    ctu_sema_t inner = ctu_sema_nested(sema, ctx, sema->decl, vector_new(len));
+    arena_t *arena = get_global_arena();
+    ctu_sema_t inner = ctu_sema_nested(sema, ctx, sema->decl, vector_new(len, arena));
     for (size_t i = 0; i < len; i++)
     {
         ctu_t *it = vector_get(stmt->stmts, i);

@@ -39,17 +39,18 @@ const char *jvm_attrib_tag_string(jvm_attrib_tag_t tag)
 
 const char *jvm_access_string(jvm_access_t access)
 {
-    vector_t *parts = vector_new(8);
+    arena_t *arena = get_global_arena();
+    vector_t *parts = vector_new(8, arena);
 #define JVM_ACCESS(id, str, bits) if (access & (bits)) { vector_push(&parts, str); }
 
 #include "jvm/jvm.inc"
 
     if (vector_len(parts) > 0)
     {
-        return str_join("|", parts);
+        return str_join("|", parts, arena);
     }
 
-    return format("none (0x%x)", access);
+    return str_format(arena, "none (0x%x)", access);
 }
 
 #define FN_READ_IO(name, type, err) \

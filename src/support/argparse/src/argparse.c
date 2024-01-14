@@ -1,7 +1,7 @@
 #include "common.h"
 
 #include "base/panic.h"
-#include "memory/arena.h"
+#include "arena/arena.h"
 
 #include "std/map.h"
 #include "std/str.h"
@@ -108,11 +108,11 @@ ap_t *ap_new(cfg_group_t *config, arena_t *arena)
     self->name_lookup = map_optimal(256, kTypeInfoString, arena);
     self->event_lookup = map_optimal(256, kTypeInfoPtr, arena);
 
-    self->posarg_callbacks = vector_new_arena(16, arena);
+    self->posarg_callbacks = vector_new(16, arena);
 
-    self->posargs = vector_new_arena(16, arena);
-    self->unknown = vector_new_arena(16, arena);
-    self->errors = vector_new_arena(16, arena);
+    self->posargs = vector_new(16, arena);
+    self->unknown = vector_new(16, arena);
+    self->errors = vector_new(16, arena);
     self->count = 0;
 
     ARENA_IDENTIFY(self->name_lookup, "name_lookup", self, arena);

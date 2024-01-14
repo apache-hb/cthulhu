@@ -2,6 +2,7 @@
 
 #include "cthulhu/tree/tree.h"
 
+#include "memory/memory.h"
 #include "std/vector.h"
 
 #include "scan/node.h"
@@ -10,7 +11,8 @@
 
 static vector_t *example_lang_path(void)
 {
-    vector_t *path = vector_new(2);
+    arena_t *arena = get_global_arena();
+    vector_t *path = vector_new(2, arena);
     vector_push(&path, "example");
     vector_push(&path, "lang");
     return path;

@@ -313,95 +313,93 @@ static scan_t *scan_string(const char *name, const char *lang, const char *sourc
     return scan_io(lang, io, arena);
 }
 
-static void do_print_backtrace(print_backtrace_t config)
+static void do_print_backtrace(print_backtrace_t config, arena_t *arena)
 {
-    arena_t *arena = get_global_arena();
-
     bt_report_t *report = bt_report_collect(arena);
 
     print_backtrace(config, report);
 }
 
-int recurse(int x, print_backtrace_t config)
+int recurse(int x, print_backtrace_t config, arena_t *arena)
 {
     if (x == 0)
     {
-        do_print_backtrace(config);
+        do_print_backtrace(config, arena);
         return 0;
     }
 
-    return recurse(x - 1, config);
+    return recurse(x - 1, config, arena);
 }
 
-static int rec3(int x, print_backtrace_t config)
+static int rec3(int x, print_backtrace_t config, arena_t *arena)
 {
     if (x == 0)
     {
-        do_print_backtrace(config);
+        do_print_backtrace(config, arena);
         return 0;
     }
 
-    return recurse(x - 1, config);
+    return recurse(x - 1, config, arena);
 }
 
-static int inner(int x, print_backtrace_t config)
+static int inner(int x, print_backtrace_t config, arena_t *arena)
 {
-    return rec3(x, config);
+    return rec3(x, config, arena);
 }
 
-static int rec2(int x, int y, print_backtrace_t config)
+static int rec2(int x, int y, print_backtrace_t config, arena_t *arena)
 {
     if (x == 0)
     {
-        return inner(y, config);
+        return inner(y, config, arena);
     }
 
-    return rec2(x - 1, y, config);
+    return rec2(x - 1, y, config, arena);
 }
 
-static int recurse_head(int x, print_backtrace_t config);
-static int recurse_middle(int x, print_backtrace_t config);
-static int recurse_tail(int x, print_backtrace_t config);
+static int recurse_head(int x, print_backtrace_t config, arena_t *arena);
+static int recurse_middle(int x, print_backtrace_t config, arena_t *arena);
+static int recurse_tail(int x, print_backtrace_t config, arena_t *arena);
 
-static int recurse_head(int x, print_backtrace_t config)
+static int recurse_head(int x, print_backtrace_t config, arena_t *arena)
 {
     if (x == 0)
     {
-        do_print_backtrace(config);
+        do_print_backtrace(config, arena);
         return 0;
     }
 
-    return recurse_middle(x - 1, config);
+    return recurse_middle(x - 1, config, arena);
 }
 
-static int recurse_middle(int x, print_backtrace_t config)
+static int recurse_middle(int x, print_backtrace_t config, arena_t *arena)
 {
     if (x == 0)
     {
-        do_print_backtrace(config);
+        do_print_backtrace(config, arena);
         return 0;
     }
 
-    return recurse_tail(x - 1, config);
+    return recurse_tail(x - 1, config, arena);
 }
 
-static int recurse_tail(int x, print_backtrace_t config)
+static int recurse_tail(int x, print_backtrace_t config, arena_t *arena)
 {
     if (x == 0)
     {
-        do_print_backtrace(config);
+        do_print_backtrace(config, arena);
         return 0;
     }
 
-    return recurse_head(x - 1, config);
+    return recurse_head(x - 1, config, arena);
 }
 
-static void do_backtrace(io_t *io)
+static void do_backtrace(io_t *io, arena_t *arena)
 {
     io_printf(io, "\n=== backtrace ===\n\n");
 
     print_options_t options = {
-        .arena = get_global_arena(),
+        .arena = arena,
         .io = io,
         .pallete = &kColourDefault,
     };
@@ -418,13 +416,13 @@ static void do_backtrace(io_t *io)
         .zero_indexed_lines = true,
     };
 
-    recurse(15, config1);
-    recurse(1000, config2);
+    recurse(15, config1, arena);
+    recurse(1000, config2, arena);
 
-    rec2(200, 100, config1);
-    rec2(5, 100, config2);
+    rec2(200, 100, config1, arena);
+    rec2(5, 100, config2, arena);
 
-    recurse_head(25, config1);
+    recurse_head(25, config1, arena);
 }
 
 int main(int argc, const char **argv)
@@ -491,7 +489,7 @@ int main(int argc, const char **argv)
 
     if (backtraces)
     {
-        do_backtrace(con);
+        do_backtrace(con, arena);
     }
 
     io_close(con);

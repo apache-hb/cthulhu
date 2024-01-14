@@ -12,7 +12,7 @@ src = [
 
 libformat = library('format', src,
     c_args : user_args,
-    dependencies : [ std, core, io, scan, notify, config, backtrace ],
+    dependencies : [ std, core, io, scan, notify, config, backtrace, memory ],
     include_directories : [ 'include' ]
 )
 

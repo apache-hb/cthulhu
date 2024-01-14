@@ -1,6 +1,6 @@
 #include "c/ast.h"
 #include "base/panic.h"
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
 #include <string.h>

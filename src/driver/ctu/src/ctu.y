@@ -195,7 +195,7 @@ imports: %empty { $$ = &kEmptyVector; }
     | import_seq { $$ = $1; }
     ;
 
-import_seq: import { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+import_seq: import { $$ = vector_init($1, BISON_ARENA(x)); }
     | import_seq import { vector_push(&$1, $2); $$ = $1; }
     ;
 
@@ -208,18 +208,18 @@ importAlias: %empty { $$ = NULL; }
 
 /* decorators */
 
-attribs: %empty { $$ = vector_of_arena(0, BISON_ARENA(x)); }
+attribs: %empty { $$ = vector_of(0, BISON_ARENA(x)); }
     | attribs attrib { vector_append(&$1, $2); $$ = $1; }
     ;
 
 attrib: AT attrib_body { $$ = $2; }
     ;
 
-attrib_body: single_attrib { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+attrib_body: single_attrib { $$ = vector_init($1, BISON_ARENA(x)); }
     | LSQUARE attrib_list RSQUARE { $$ = $2; }
     ;
 
-attrib_list: single_attrib { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+attrib_list: single_attrib { $$ = vector_init($1, BISON_ARENA(x)); }
     | attrib_list COMMA single_attrib { vector_push(&$1, $3); $$ = $1; }
     ;
 
@@ -228,7 +228,7 @@ single_attrib: path { $$ = ctu_attrib(x, @$, $1, &kEmptyVector); }
     | path LPAREN attrib_args RPAREN { $$ = ctu_attrib(x, @$, $1, $3); }
     ;
 
-attrib_args: expr { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+attrib_args: expr { $$ = vector_init($1, BISON_ARENA(x)); }
     | attrib_args COMMA expr { vector_push(&$1, $3); $$ = $1; }
     ;
 
@@ -238,7 +238,7 @@ decls: %empty { $$ = &kEmptyVector; }
     | decl_seq { $$ = $1; }
     ;
 
-decl_seq: decl { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+decl_seq: decl { $$ = vector_init($1, BISON_ARENA(x)); }
     | decl_seq decl { vector_push(&$1, $2); $$ = $1; }
     ;
 
@@ -266,7 +266,7 @@ opt_variant_field_list: %empty { $$ = &kEmptyVector; }
     | variant_field_list { $$ = $1; }
     ;
 
-variant_field_list: variant_field { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+variant_field_list: variant_field { $$ = vector_init($1, BISON_ARENA(x)); }
     | variant_field_list variant_field { vector_push(&$1, $2); $$ = $1; }
     ;
 
@@ -294,7 +294,7 @@ variadic: %empty { $$ = NULL; }
     | COMMA IDENT COLON DOT3 { $$ = $2; }
     ;
 
-fn_param_list: fn_param { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+fn_param_list: fn_param { $$ = vector_init($1, BISON_ARENA(x)); }
     | fn_param_list COMMA fn_param { vector_push(&$1, $3); $$ = $1; }
     ;
 
@@ -338,7 +338,7 @@ union_decl: exported UNION IDENT LBRACE record_fields RBRACE { $$ = ctu_decl_uni
 
 /* fields */
 
-record_fields: record_field { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+record_fields: record_field { $$ = vector_init($1, BISON_ARENA(x)); }
     | record_fields record_field { vector_push(&$1, $2); $$ = $1; }
     ;
 
@@ -354,7 +354,7 @@ type: path { $$ = ctu_type_name(x, @$, $1); }
     | LSQUARE expr RSQUARE type { $$ = ctu_type_array(x, @$, $4, $2); }
     ;
 
-type_list: type { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+type_list: type { $$ = vector_init($1, BISON_ARENA(x)); }
     | type_list COMMA type { vector_push(&$1, $3); $$ = $1; }
     ;
 
@@ -364,7 +364,7 @@ opt_type_list: %empty { $$ = &kEmptyVector; }
 
 /* statements */
 
-stmt_list: %empty { $$ = vector_of_arena(0, BISON_ARENA(x)); }
+stmt_list: %empty { $$ = vector_of(0, BISON_ARENA(x)); }
     | stmt_list stmt { vector_push(&$1, $2); $$ = $1; }
     ;
 
@@ -410,7 +410,7 @@ stmt: expr SEMI { $$ = $1; }
 init: DOT LBRACE initList RBRACE { $$ = ctu_expr_init(x, @$, $3); }
     ;
 
-initList: field_init { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+initList: field_init { $$ = vector_init($1, BISON_ARENA(x)); }
     | initList COMMA field_init { vector_push(&$1, $3); $$ = $1; }
     ;
 
@@ -427,7 +427,7 @@ opt_expr_list: %empty { $$ = &kEmptyVector; }
     | expr_list { $$ = $1; }
     ;
 
-expr_list: expr { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+expr_list: expr { $$ = vector_init($1, BISON_ARENA(x)); }
     | expr_list COMMA expr { vector_push(&$1, $3); $$ = $1; }
     ;
 
@@ -513,7 +513,7 @@ ident: IDENT { $$ = $1; }
     | DISCARD { $$ = NULL; }
     ;
 
-path: IDENT { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+path: IDENT { $$ = vector_init($1, BISON_ARENA(x)); }
     | path COLON2 IDENT { vector_push(&$1, $3); $$ = $1; }
     ;
 

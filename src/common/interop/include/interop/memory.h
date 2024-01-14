@@ -1,6 +1,6 @@
 #pragma once
 
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "scan/scan.h" // IWYU pragma: keep
 
 /// @ingroup flex_bison_macros

@@ -289,7 +289,6 @@ typedef struct ssa_symbol_t
 
     typevec_t *locals; ///< typevec_t<ssa_type_t>
     typevec_t *params; ///< typevec_t<ssa_type_t>
-    vector_t *consts; ///< set_t<ssa_value_t> all constants used by this symbol
 
     ssa_block_t *entry; ///< entry block
 

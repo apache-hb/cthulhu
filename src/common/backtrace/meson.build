@@ -18,6 +18,7 @@ else
 endif
 
 libbacktrace = library('backtrace', src,
+    build_by_default : false,
     c_args : user_args,
     include_directories : 'include',
     dependencies : [ backtrace_deps, core ]

@@ -5,7 +5,7 @@
 #include "c/driver.h"
 
 #include "core/macros.h"
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "notify/notify.h"
 
 #include "cc_bison.h" // IWYU pragma: keep

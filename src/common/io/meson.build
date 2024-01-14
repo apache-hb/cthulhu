@@ -11,8 +11,9 @@ src = [
 # TODO: make src/console.c optional for platforms without stdio.h
 
 libio = library('io', src,
+    build_by_default : false,
     c_args : user_args,
-    dependencies : [ std, os, memory ],
+    dependencies : [ std, os, arena ],
     include_directories : [ 'include' ]
 )
 

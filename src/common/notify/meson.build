@@ -3,8 +3,9 @@ src = [
 ]
 
 libnotify = library('notify', src,
+    build_by_default : false,
     c_args : user_args,
-    dependencies : [ std, memory ],
+    dependencies : [ std, arena ],
     include_directories : 'include'
 )
 

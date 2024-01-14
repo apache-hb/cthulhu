@@ -5,12 +5,13 @@ src = [
 ]
 
 libconfig = library('config', src,
+    build_by_default : false,
     include_directories : [ 'include' ],
-    dependencies : [ base, std, memory, io ]
+    dependencies : [ base, std, arena, io ]
 )
 
 config = declare_dependency(
     link_with : libconfig,
     include_directories : [ 'include' ],
-    dependencies : [ base, std, memory ]
+    dependencies : [ base, std ]
 )

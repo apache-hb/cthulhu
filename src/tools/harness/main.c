@@ -314,7 +314,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     CHECK_LOG(reports, "syncing output directory");
 
     size_t len = vector_len(c89_emit_result.sources);
-    vector_t *sources = vector_of_arena(len, arena);
+    vector_t *sources = vector_of(len, arena);
     for (size_t i = 0; i < len; i++)
     {
         const char *part = vector_get(c89_emit_result.sources, i);
@@ -330,14 +330,14 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     CTASSERTF(cwd_err == 0, "failed to create dir `%s` %s", lib_dir, os_error_string(cwd_err, arena));
 
     int status = system(
-        str_format(arena, "cl /nologo /c %s /I%s\\include /Fo%s\\", str_join_arena(" ", sources, arena), run_dir, lib_dir));
+        str_format(arena, "cl /nologo /c %s /I%s\\include /Fo%s\\", str_join(" ", sources, arena), run_dir, lib_dir));
     if (status != 0)
     {
         msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(),
                    "compilation failed `%d`", status);
     }
 #else
-    int status = system(str_format(arena, "cd %s && cc %s -c -Iinclude", run_dir, str_join_arena(" ", sources, arena)));
+    int status = system(str_format(arena, "cd %s && cc %s -c -Iinclude", run_dir, str_join(" ", sources, arena)));
     if (WEXITSTATUS(status) != EXIT_OK)
     {
         msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(),

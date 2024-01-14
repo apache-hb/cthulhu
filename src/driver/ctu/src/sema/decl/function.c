@@ -9,6 +9,7 @@
 
 #include "cthulhu/tree/query.h"
 
+#include "memory/memory.h"
 #include "std/vector.h"
 
 static void add_param(ctu_sema_t *sema, tree_t *param)
@@ -53,8 +54,9 @@ void ctu_resolve_function(tree_t *sema, tree_t *self, void *user)
         [eCtuTagValues] = len
     };
 
+    arena_t *arena = get_global_arena();
     tree_t *ctx = tree_module(sema, decl->node, decl->name, eCtuTagTotal, sizes);
-    ctu_sema_t inner = ctu_sema_init(ctx, fn, vector_new(0));
+    ctu_sema_t inner = ctu_sema_init(ctx, fn, vector_new(0, arena));
 
     for (size_t i = 0; i < len; i++)
     {
@@ -89,10 +91,11 @@ void ctu_resolve_function(tree_t *sema, tree_t *self, void *user)
 void ctu_resolve_function_type(tree_t *sema, tree_t *self, void *user)
 {
     ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclFunction);
-    ctu_sema_t inner = ctu_sema_init(sema, NULL, vector_new(0));
+    arena_t *arena = get_global_arena();
+    ctu_sema_t inner = ctu_sema_init(sema, NULL, vector_new(0, arena));
 
     size_t len = vector_len(decl->params);
-    vector_t *params = vector_of(len);
+    vector_t *params = vector_of(len, arena);
     for (size_t i = 0; i < len; i++)
     {
         ctu_t *param = vector_get(decl->params, i);

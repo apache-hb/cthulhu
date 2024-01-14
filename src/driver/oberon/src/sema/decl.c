@@ -197,8 +197,9 @@ static tree_t *forward_type(tree_t *sema, obr_t *decl)
 static tree_t *forward_proc(tree_t *sema, obr_t *decl)
 {
     tree_t *result = decl->result == NULL ? obr_get_void_type() : obr_sema_type(sema, decl->result, decl->name);
+    arena_t *arena = get_global_arena();
     size_t len = vector_len(decl->params);
-    vector_t *params = vector_of(len);
+    vector_t *params = vector_of(len, arena);
     for (size_t i = 0; i < len; i++)
     {
         obr_t *param = vector_get(decl->params, i);

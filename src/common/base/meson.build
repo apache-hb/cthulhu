@@ -6,6 +6,7 @@ src = [
 ]
 
 libbase = library('base', src,
+    build_by_default : false,
     c_args : user_args,
     dependencies : [ core ],
     include_directories : [ 'include' ]

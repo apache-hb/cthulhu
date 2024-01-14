@@ -1,7 +1,7 @@
 subdir('core')
 subdir('backtrace')
 subdir('base')
-subdir('memory')
+subdir('arena')
 subdir('std')
 subdir('os')
 subdir('io')

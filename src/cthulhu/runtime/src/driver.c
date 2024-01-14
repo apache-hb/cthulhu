@@ -4,7 +4,7 @@
 
 #include "cthulhu/tree/query.h"
 
-#include "memory/arena.h"
+#include "arena/arena.h"
 
 #include "base/panic.h"
 
@@ -18,7 +18,7 @@ static char *path_to_string(vector_t *path, arena_t *arena)
     CTASSERT(path != NULL);
     CTASSERT(vector_len(path) > 0);
 
-    return str_join_arena(".", path, arena);
+    return str_join(".", path, arena);
 }
 
 static context_t *context_inner_new(driver_t *handle, const char *name, void *ast, tree_t *root)

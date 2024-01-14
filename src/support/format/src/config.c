@@ -425,19 +425,19 @@ static void print_usage(format_config_t options, const char *name)
     );
 }
 
-void print_config(print_config_t config)
+void print_config(print_config_t print, const cfg_group_t *config)
 {
-    print_options_t options = config.options;
+    print_options_t options = print.options;
     format_config_t format_config = {
         .arena = options.arena,
         .io = options.io,
         .context = format_context_make(options)
     };
 
-    if (config.print_usage)
+    if (print.print_usage)
     {
-        print_usage(format_config, config.name);
+        print_usage(format_config, print.name);
     }
 
-    print_config_group(format_config, config.win_style, config.config);
+    print_config_group(format_config, print.win_style, config);
 }

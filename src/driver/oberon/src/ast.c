@@ -7,7 +7,7 @@
 #include "std/str.h"
 
 #include "base/panic.h"
-#include "memory/arena.h"
+#include "memory/memory.h"
 
 static void ensure_block_names_match(scan_t *scan, const node_t *node, const char *type,
                                      const char *name, const char *end)
@@ -23,7 +23,7 @@ static void ensure_block_names_match(scan_t *scan, const node_t *node, const cha
     if (!str_equal(name, end))
     {
         event_builder_t id = msg_notify(ctx->reports, &kEvent_BlockMismatchEnds, node,
-                                 "mismatching %s block BEGIN and END names", type);
+                                        "mismatching %s block BEGIN and END names", type);
         msg_note(id, "BEGIN name `%s` does not match END name `%s`", name, end);
     }
 }
@@ -355,8 +355,9 @@ obr_symbol_t *obr_symbol(scan_t *scan, where_t where, char *name, obr_visibility
 #define EXPAND_INNER(fn, ...)                              \
     do                                                     \
     {                                                      \
+        arena_t *arena = get_global_arena();               \
         size_t len = vector_len(symbols);                  \
-        vector_t *result = vector_of(len);                 \
+        vector_t *result = vector_of(len, arena);    \
         for (size_t i = 0; i < len; i++)                   \
         {                                                  \
             obr_symbol_t *symbol = vector_get(symbols, i); \

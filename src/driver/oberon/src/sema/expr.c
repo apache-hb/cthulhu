@@ -1,5 +1,6 @@
 #include "oberon/sema/expr.h"
 #include "cthulhu/events/events.h"
+#include "memory/memory.h"
 #include "oberon/sema/sema.h"
 
 #include "cthulhu/util/util.h"
@@ -111,8 +112,9 @@ static tree_t *sema_call(tree_t *sema, obr_t *expr)
 
     vector_t *params = tree_fn_get_params(callee);
 
+    arena_t *arena = get_global_arena();
     size_t len = vector_len(expr->args);
-    vector_t *args = vector_of(len);
+    vector_t *args = vector_of(len, arena);
     for (size_t i = 0; i < len; i++)
     {
         obr_t *it = vector_get(expr->args, i);
@@ -277,7 +279,8 @@ static tree_t *sema_repeat(tree_t *sema, obr_t *stmt)
 
     // we lower a repeat until loop into a while loop and an initial body
 
-    vector_t *stmts = vector_of(2);
+    arena_t *arena = get_global_arena();
+    vector_t *stmts = vector_of(2, arena);
     vector_push(&stmts, body);
 
     tree_t *loop = tree_stmt_loop(stmt->node, cond, body, NULL);
@@ -304,8 +307,9 @@ static tree_t *sema_stmt(tree_t *sema, obr_t *stmt)
 
 tree_t *obr_sema_stmts(tree_t *sema, const node_t *node, vector_t *stmts)
 {
+    arena_t *arena = get_global_arena();
     size_t len = vector_len(stmts);
-    vector_t *result = vector_of(len);
+    vector_t *result = vector_of(len, arena);
     for (size_t i = 0; i < len; i++)
     {
         obr_t *stmt = vector_get(stmts, i);

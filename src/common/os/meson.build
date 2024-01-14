@@ -13,8 +13,9 @@ api_header = 'impl' / os_platform + '.h'
 os_header = '-DOS_API_HEADER="' + api_header + '"'
 
 lib_oscommon = library('os_common', src,
+    build_by_default : false,
     c_args : user_args + [ os_header ],
-    dependencies : [ core, base, memory, std ],
+    dependencies : [ core, base, arena, std ],
     include_directories : [ 'include', 'src' ]
 )
 

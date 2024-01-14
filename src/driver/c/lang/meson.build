@@ -10,7 +10,7 @@ src = [
 ]
 
 libcc = library('cc', src,
-    dependencies : [ runtime, interop, scan, notify, tree, util, events ],
+    dependencies : [ runtime, interop, scan, notify, tree, util, events, memory ],
     c_args : generated_args,
     include_directories : [ 'src', 'include' ]
 )

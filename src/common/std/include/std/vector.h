@@ -37,7 +37,7 @@ void vector_delete(OUT_PTR_INVALID vector_t *vector);
 ///
 /// @return a new vector
 NODISCARD
-vector_t *vector_new_arena(size_t size, IN_NOTNULL arena_t *arena);
+vector_t *vector_new(size_t size, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new vector with a specified length
 /// @note these elements should be filled in manually by the caller using @a vector_set
@@ -48,13 +48,13 @@ vector_t *vector_new_arena(size_t size, IN_NOTNULL arena_t *arena);
 ///
 /// @return a new vector
 NODISCARD
-vector_t *vector_of_arena(size_t len, IN_NOTNULL arena_t *arena);
+vector_t *vector_of(size_t len, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new vector with a single initial value
 ///
 /// this is equivalent to
 /// @code{.c}
-/// vector_t *vec = vector_of_arena(1, arena);
+/// vector_t *vec = vector_of(1, arena);
 /// vector_set(vec, 0, value);
 /// @endcode
 ///
@@ -63,25 +63,7 @@ vector_t *vector_of_arena(size_t len, IN_NOTNULL arena_t *arena);
 ///
 /// @return a new vector
 NODISCARD
-vector_t *vector_init_arena(void *value, IN_NOTNULL arena_t *arena);
-
-/// @brief create a new vector
-/// @warning use @a vector_new_arena instead
-///
-/// @param size the initial size of the vector
-///
-/// @return a new vector
-NODISCARD
-vector_t *vector_new(size_t size);
-
-/// @brief create a new vector with a specified length
-/// @warning use @a vector_of_arena instead
-///
-/// @param len the initial size of the vector
-///
-/// @return a new vector
-NODISCARD
-vector_t *vector_of(size_t len);
+vector_t *vector_init(void *value, IN_NOTNULL arena_t *arena);
 
 /// @brief clone a vector
 ///

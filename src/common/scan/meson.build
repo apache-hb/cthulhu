@@ -4,8 +4,9 @@ src = [
 ]
 
 libscan = library('scan', src,
+    build_by_default : false,
     c_args : user_args,
-    dependencies : [ memory, std, io, os ],
+    dependencies : [ arena, std, io, os ],
     include_directories : 'include'
 )
 

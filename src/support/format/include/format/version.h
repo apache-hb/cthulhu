@@ -17,18 +17,14 @@ typedef struct print_version_t
 {
     /// @brief the options to use when printing
     print_options_t options;
-
-    /// @brief the version to print
-    version_info_t version;
-
-    /// @brief the name of the program
-    FIELD_STRING const char *name;
 } print_version_t;
 
 /// @brief print the version of the program
 ///
 /// @param config the config to use when printing
-void print_version(print_version_t config);
+/// @param version the version to print
+/// @param name the name of the program
+void print_version(print_version_t config, version_info_t version, IN_STRING const char *name);
 
 /// @}
 

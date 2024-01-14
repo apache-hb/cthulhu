@@ -9,7 +9,7 @@ src = [
 libemit = library('emit', src,
     include_directories : [ 'include', 'src' ],
     c_args : user_args,
-    dependencies : [ memory, base, ssa, std, io, fs, scan, events, interop ]
+    dependencies : [ arena, base, ssa, std, io, fs, scan, events, interop ]
 )
 
 emit = declare_dependency(

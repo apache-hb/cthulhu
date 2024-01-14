@@ -1,6 +1,7 @@
 #include "oberon/sema/type.h"
 #include "cthulhu/events/events.h"
 #include "cthulhu/util/type.h"
+#include "memory/memory.h"
 #include "oberon/driver.h"
 #include "oberon/sema/expr.h"
 #include "oberon/sema/sema.h"
@@ -110,7 +111,8 @@ static tree_t *sema_type_array(tree_t *sema, obr_t *type, const char *name)
 static tree_t *sema_type_record(tree_t *sema, obr_t *type, const char *name)
 {
     size_t len = vector_len(type->fields);
-    vector_t *result = vector_of(len);
+    arena_t *arena = get_global_arena();
+    vector_t *result = vector_of(len, arena);
     for (size_t i = 0; i < len; i++)
     {
         obr_t *field = vector_get(type->fields, i);

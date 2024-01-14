@@ -34,7 +34,7 @@ char *begin_module(emit_t *emit, fs_t *fs, const ssa_module_t *mod)
 
     if (is_root) { vector_drop(vec); }
 
-    char *path = str_join("/", vec);
+    char *path = str_join("/", vec, emit->arena);
     if (vector_len(vec) > 0)
     {
         fs_dir_create(fs, path);
@@ -65,7 +65,7 @@ void counter_reset(emit_t *emit)
     names_reset(&emit->block_names);
 }
 
-static char *name_increment(names_t *names, const void *obj, char *existing)
+static char *name_increment(names_t *names, const void *obj, char *existing, arena_t *arena)
 {
     char *name = map_get(names->names, obj);
     if (name != NULL) { return name; }
@@ -76,19 +76,19 @@ static char *name_increment(names_t *names, const void *obj, char *existing)
         return existing;
     }
 
-    char *id = format("%zu", names->counter++);
+    char *id = str_format(arena, "%zu", names->counter++);
     map_set(names->names, obj, id);
     return id;
 }
 
 char *get_step_name(emit_t *emit, const ssa_step_t *step)
 {
-    return name_increment(&emit->vreg_names, step, NULL);
+    return name_increment(&emit->vreg_names, step, NULL, emit->arena);
 }
 
 char *get_block_name(emit_t *emit, const ssa_block_t *block)
 {
-    return name_increment(&emit->block_names, block, (char*)block->name);
+    return name_increment(&emit->block_names, block, (char*)block->name, emit->arena);
 }
 
 char *get_step_from_block(emit_t *emit, const ssa_block_t *block, size_t index)
@@ -105,58 +105,59 @@ void write_string(io_t *io, const char *fmt, ...)
     va_end(args);
 }
 
-static char *digit_to_string(ssa_type_digit_t digit)
+static char *digit_to_string(ssa_type_digit_t digit, arena_t *arena)
 {
-    return format("digit(%s.%s)", sign_name(digit.sign), digit_name(digit.digit));
+    return str_format(arena, "digit(%s.%s)", sign_name(digit.sign), digit_name(digit.digit));
 }
 
-static char *params_to_string(typevec_t *params)
+static char *params_to_string(typevec_t *params, arena_t *arena)
 {
     size_t len = typevec_len(params);
-    vector_t *vec = vector_of(len);
+    vector_t *vec = vector_of(len, arena);
     for (size_t i = 0; i < len; i++)
     {
         const ssa_param_t *param = typevec_offset(params, i);
-        const char *ty = type_to_string(param->type);
-        vector_set(vec, i, format("%s: %s", param->name, ty));
+        const char *ty = type_to_string(param->type, arena);
+        vector_set(vec, i, str_format(arena, "%s: %s", param->name, ty));
     }
 
-    return str_join(", ", vec);
+    return str_join(", ", vec, arena);
 }
 
-static char *closure_to_string(ssa_type_closure_t closure)
+static char *closure_to_string(ssa_type_closure_t closure, arena_t *arena)
 {
-    const char *result = type_to_string(closure.result);
-    char *params = params_to_string(closure.params);
+    const char *result = type_to_string(closure.result, arena);
+    char *params = params_to_string(closure.params, arena);
 
-    return format("closure(result: %s, params: [%s], variadic: %s)", result, params, closure.variadic ? "true" : "false");
+    return str_format(arena, "closure(result: %s, params: [%s], variadic: %s)", result, params, closure.variadic ? "true" : "false");
 }
 
-static char *pointer_to_string(ssa_type_pointer_t pointer)
+static char *pointer_to_string(ssa_type_pointer_t pointer, arena_t *arena)
 {
-    const char *pointee = type_to_string(pointer.pointer);
+    const char *pointee = type_to_string(pointer.pointer, arena);
     switch (pointer.length)
     {
-    case 0: return format("ptr(%s)", pointee);
-    case SIZE_MAX: return format("unbounded-ptr(%s)", pointee);
-    default: return format("ptr(%s of %zu)", pointee, pointer.length);
+    case 0: return str_format(arena, "ptr(%s)", pointee);
+    case SIZE_MAX: return str_format(arena, "unbounded-ptr(%s)", pointee);
+    default: return str_format(arena, "ptr(%s of %zu)", pointee, pointer.length);
     }
 }
 
-static char *record_to_string(ssa_type_record_t record)
+static char *record_to_string(ssa_type_record_t record, arena_t *arena)
 {
     size_t len = typevec_len(record.fields);
-    vector_t *fields = vector_of(len);
+    vector_t *fields = vector_of(len, arena);
     for (size_t i = 0; i < len; i++)
     {
         const ssa_field_t *field = typevec_offset(record.fields, i);
         vector_set(fields, i, (char*)field->name);
     }
 
-    return format("record(fields: [%s])", str_join(", ", fields));
+    char *joined = str_join(", ", fields, arena);
+    return str_format(arena, "record(fields: [%s])", joined);
 }
 
-const char *type_to_string(const ssa_type_t *type)
+const char *type_to_string(const ssa_type_t *type, arena_t *arena)
 {
     switch (type->kind)
     {
@@ -164,10 +165,10 @@ const char *type_to_string(const ssa_type_t *type)
     case eTypeUnit: return "unit";
     case eTypeBool: return "bool";
     case eTypeOpaque: return "opaque";
-    case eTypeDigit: return digit_to_string(type->digit);
-    case eTypeClosure: return closure_to_string(type->closure);
-    case eTypePointer: return pointer_to_string(type->pointer);
-    case eTypeStruct: return record_to_string(type->record);
+    case eTypeDigit: return digit_to_string(type->digit, arena);
+    case eTypeClosure: return closure_to_string(type->closure, arena);
+    case eTypePointer: return pointer_to_string(type->pointer, arena);
+    case eTypeStruct: return record_to_string(type->record, arena);
     default: NEVER("unknown type kind %d", type->kind);
     }
 }

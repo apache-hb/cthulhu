@@ -1,7 +1,7 @@
 #include "std/set.h"
 #include "std/str.h"
 
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "base/panic.h"
 
 /**

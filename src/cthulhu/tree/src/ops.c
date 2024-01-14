@@ -1,6 +1,7 @@
 #include "cthulhu/tree/ops.h"
 
 #include "base/panic.h"
+#include "memory/memory.h"
 #include "std/vector.h"
 #include "std/str.h"
 
@@ -116,10 +117,11 @@ const char *digit_name(digit_t digit)
 USE_DECL
 const char *quals_name(quals_t quals)
 {
+    arena_t *arena = get_global_arena();
 #define TYPE_QUALIFIER(ID, STR, BIT) if (quals & (BIT)) { vector_push(&names, (char*)(STR)); }
-    vector_t *names = vector_new(4);
+    vector_t *names = vector_new(4, arena);
 #include "cthulhu/tree/tree.inc"
-    return str_join(" | ", names);
+    return str_join(" | ", names, arena);
 }
 
 static const char *const kLinkNames[eLinkTotal] = {

@@ -1,5 +1,5 @@
 #include "std/vector.h"
-#include "memory/memory.h"
+#include "arena/arena.h"
 #include "base/panic.h"
 
 #include <stdint.h>
@@ -60,7 +60,7 @@ static vector_t *vector_init_inner(size_t size, size_t used, arena_t *arena)
 // vector public api
 
 USE_DECL
-vector_t *vector_new_arena(size_t size, arena_t *arena)
+vector_t *vector_new(size_t size, arena_t *arena)
 {
     CTASSERT(arena != NULL);
 
@@ -68,7 +68,7 @@ vector_t *vector_new_arena(size_t size, arena_t *arena)
 }
 
 USE_DECL
-vector_t *vector_of_arena(size_t len, arena_t *arena)
+vector_t *vector_of(size_t len, arena_t *arena)
 {
     CTASSERT(arena != NULL);
 
@@ -76,25 +76,13 @@ vector_t *vector_of_arena(size_t len, arena_t *arena)
 }
 
 USE_DECL
-vector_t *vector_init_arena(void *value, arena_t *arena)
+vector_t *vector_init(void *value, arena_t *arena)
 {
     CTASSERT(arena != NULL);
 
-    vector_t *vector = vector_of_arena(1, arena);
+    vector_t *vector = vector_of(1, arena);
     vector_set(vector, 0, value);
     return vector;
-}
-
-USE_DECL
-vector_t *vector_new(size_t size)
-{
-    return vector_new_arena(size, get_global_arena());
-}
-
-USE_DECL
-vector_t *vector_of(size_t len)
-{
-    return vector_of_arena(len, get_global_arena());
 }
 
 USE_DECL
@@ -103,7 +91,7 @@ vector_t *vector_clone(vector_t *vector)
     CTASSERT(vector != NULL);
 
     size_t len = vector_len(vector);
-    vector_t *clone = vector_of_arena(len, vector->arena);
+    vector_t *clone = vector_of(len, vector->arena);
     memcpy(clone->data, vector->data, len * sizeof(void *));
     return clone;
 }

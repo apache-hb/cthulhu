@@ -1,6 +1,6 @@
 #include "core/macros.h"
 #include "io/io.h"
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "format/notify.h"
 
 #include "base/panic.h"

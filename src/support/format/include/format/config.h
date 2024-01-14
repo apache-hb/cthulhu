@@ -14,9 +14,6 @@ typedef struct print_config_t
     /// @brief generic print options
     print_options_t options;
 
-    /// @brief the config object to format
-    const cfg_group_t *config;
-
     /// @brief should the command line usage header be printed
     bool print_usage;
 
@@ -32,7 +29,8 @@ typedef struct print_config_t
 
 /// @brief print a configuration object
 ///
-/// @param config the printing options and config object to print
-void print_config(print_config_t config);
+/// @param print the printing options
+/// @param config the config object to print
+void print_config(print_config_t print, const cfg_group_t *config);
 
 END_API

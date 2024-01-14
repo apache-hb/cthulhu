@@ -8,7 +8,7 @@
 
 #include "fs/fs.h"
 
-#include "memory/arena.h"
+#include "arena/arena.h"
 
 #include "base/panic.h"
 #include "core/macros.h"
@@ -25,18 +25,18 @@ static c89_source_t *source_new(io_t *io, const char *path, arena_t *arena)
 
 static c89_source_t *header_for(c89_emit_t *emit, const ssa_module_t *mod, const char *path)
 {
-    char *it = format("include/%s.h", path);
+    char *it = str_format(emit->arena, "include/%s.h", path);
     fs_file_create(emit->fs, it);
 
     io_t *io = fs_open(emit->fs, it, eAccessWrite | eAccessText);
-    c89_source_t *source = source_new(io, format("%s.h", path), emit->arena);
+    c89_source_t *source = source_new(io, str_format(emit->arena, "%s.h", path), emit->arena);
     map_set(emit->hdrmap, mod, source);
     return source;
 }
 
 static c89_source_t *source_for(c89_emit_t *emit, const ssa_module_t *mod, const char *path)
 {
-    char *it = format("src/%s.c", path);
+    char *it = str_format(emit->arena, "src/%s.c", path);
     fs_file_create(emit->fs, it);
 
     io_t *io = fs_open(emit->fs, it, eAccessWrite | eAccessText);
@@ -47,10 +47,10 @@ static c89_source_t *source_for(c89_emit_t *emit, const ssa_module_t *mod, const
 
 // begin api
 
-static const char *format_path(const char *base, const char *name)
+static const char *format_path(const char *base, const char *name, arena_t *arena)
 {
     if (strlen(base) == 0) { return name; }
-    return format("%s/%s", base, name);
+    return str_format(arena, "%s/%s", base, name);
 }
 
 static void collect_deps(c89_emit_t *emit, const ssa_module_t *mod, vector_t *symbols)
@@ -72,10 +72,10 @@ static void c89_begin_module(c89_emit_t *emit, const ssa_module_t *mod)
     // create source and header files
     char *path = begin_module(&emit->emit, emit->fs, mod); // lets not scuff the original path
 
-    const char *src_file = format_path(path, mod->name);
-    const char *hdr_file = format_path(path, mod->name);
+    const char *src_file = format_path(path, mod->name, emit->arena);
+    const char *hdr_file = format_path(path, mod->name, emit->arena);
 
-    vector_push(&emit->sources, format("src/%s.c", src_file));
+    vector_push(&emit->sources, str_format(emit->arena, "src/%s.c", src_file));
 
     c89_source_t *src = source_for(emit, mod, src_file);
     c89_source_t *hdr = header_for(emit, mod, hdr_file);
@@ -303,7 +303,7 @@ static const char *c89_name_vreg(c89_emit_t *emit, const ssa_step_t *step, const
 {
     set_step_type(emit, step, (ssa_type_t*)type);
 
-    const char *id = format("vreg%s", get_step_name(&emit->emit, step));
+    const char *id = str_format(emit->arena, "vreg%s", get_step_name(&emit->emit, step));
     return format_symbol(emit, type, id);
 }
 
@@ -335,15 +335,16 @@ static const char *c89_name_load_vreg_by_operand(c89_emit_t *emit, const ssa_ste
 static const char *operand_type_string(c89_emit_t *emit, ssa_operand_t operand)
 {
     const ssa_type_t *type = get_operand_type(emit, operand);
-    return type_to_string(type);
+    return type_to_string(type, emit->arena);
 }
 
 static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value);
 
 static const char *c89_format_pointer(c89_emit_t *emit, vector_t *data)
 {
+    arena_t *arena = emit->arena;
     size_t len = vector_len(data);
-    vector_t *result = vector_of(len);
+    vector_t *result = vector_of(len, arena);
     for (size_t i = 0; i < len; i++)
     {
         const ssa_value_t *value = vector_get(data, i);
@@ -351,8 +352,8 @@ static const char *c89_format_pointer(c89_emit_t *emit, vector_t *data)
         vector_set(result, i, (char*)it);
     }
 
-    char *joined = str_join(", ", result);
-    return format("{ %s }", joined);
+    char *joined = str_join(", ", result, arena);
+    return str_format(arena, "{ %s }", joined);
 }
 
 static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value)
@@ -373,7 +374,7 @@ static const char *c89_format_local(c89_emit_t *emit, size_t local)
     CTASSERTF(local < typevec_len(locals), "local(%zu) > locals(%zu)", local, typevec_len(locals));
 
     const ssa_local_t *it = typevec_offset(locals, local);
-    return format("l_%s", it->name);
+    return str_format(emit->arena, "l_%s", it->name);
 }
 
 static const char *c89_format_param(c89_emit_t *emit, size_t param)
@@ -394,10 +395,10 @@ static const char *c89_format_operand(c89_emit_t *emit, ssa_operand_t operand)
         return c89_format_value(emit, operand.value);
 
     case eOperandBlock:
-        return format("bb%s", get_block_name(&emit->emit, operand.bb));
+        return str_format(emit->arena, "bb%s", get_block_name(&emit->emit, operand.bb));
 
     case eOperandReg:
-        return format("vreg%s", get_step_from_block(&emit->emit, operand.vreg_context, operand.vreg_index));
+        return str_format(emit->arena, "vreg%s", get_step_from_block(&emit->emit, operand.vreg_context, operand.vreg_index));
 
     case eOperandGlobal:
         return mangle_symbol_name(operand.global);
@@ -444,7 +445,7 @@ static void c89_write_address(c89_emit_t *emit, io_t *io, const ssa_step_t *step
     write_string(io, "\t%s = &(%s); // %s\n",
         step_name,
         c89_format_operand(emit, addr.symbol),
-        type_to_string(ptr)
+        type_to_string(ptr, emit->arena)
     );
 }
 
@@ -466,11 +467,11 @@ static void c89_write_member(c89_emit_t *emit, io_t *io, const ssa_step_t *step)
 
     ssa_member_t member = step->member;
     const ssa_type_t *record_ptr = get_operand_type(emit, member.object);
-    CTASSERTF(record_ptr->kind == eTypePointer, "expected record type, got %s", type_to_string(record_ptr));
+    CTASSERTF(record_ptr->kind == eTypePointer, "expected record type, got %s", type_to_string(record_ptr, emit->arena));
 
     ssa_type_pointer_t ptr = record_ptr->pointer;
     const ssa_type_t *record = ptr.pointer;
-    CTASSERTF(record->kind == eTypeStruct, "expected record type, got %s", type_to_string(record));
+    CTASSERTF(record->kind == eTypeStruct, "expected record type, got %s", type_to_string(record, emit->arena));
 
     ssa_type_record_t record_type = record->record;
     const ssa_field_t *field = typevec_offset(record_type.fields, member.index);
@@ -565,7 +566,7 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
             ssa_type_closure_t closure = ty->closure;
             const ssa_type_t *result = closure.result;
 
-            vector_t *args = vector_of_arena(args_len, emit->arena);
+            vector_t *args = vector_of(args_len, emit->arena);
             for (size_t arg_idx = 0; arg_idx < args_len; arg_idx++)
             {
                 const ssa_operand_t *operand = typevec_offset(call.args, arg_idx);
@@ -581,7 +582,7 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
 
             write_string(io, "%s(%s);\n",
                 c89_format_operand(emit, call.function),
-                str_join(", ", args)
+                str_join(", ", args, emit->arena)
             );
             break;
         }
@@ -688,20 +689,8 @@ static void write_locals(c89_emit_t *emit, io_t *io, typevec_t *locals)
     {
         const ssa_local_t *local = typevec_offset(locals, i);
         write_string(io, "\t%s;\n",
-            c89_format_storage(emit, local->storage, format("l_%s", local->name))
+            c89_format_storage(emit, local->storage, str_format(emit->arena, "l_%s", local->name))
         );
-    }
-}
-
-static void write_consts(c89_emit_t *emit, io_t *io, vector_t *consts)
-{
-    size_t len = vector_len(consts);
-    for (size_t i = 0; i < len; i++)
-    {
-        const ssa_value_t *value = vector_get(consts, i);
-        const char *ty = format_symbol(emit, value->type, format("const%zu", i));
-        const char *it = c89_format_value(emit, value);
-        write_string(io, "\tstatic %s = %s;\n", ty, it);
     }
 }
 
@@ -721,7 +710,6 @@ void c89_define_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_sy
     if (func->linkage != eLinkImport)
     {
         write_string(src->io, "%s%s(%s) {\n", link, result, params);
-        write_consts(emit, src->io, func->consts);
         write_locals(emit, src->io, func->locals);
         write_string(src->io, "\tgoto bb%s;\n", get_block_name(&emit->emit, func->entry));
         size_t len = vector_len(func->blocks);
@@ -791,6 +779,7 @@ c89_emit_result_t emit_c89(const c89_emit_options_t *options)
     c89_emit_t emit = {
         .arena = arena,
         .emit = {
+            .arena = arena,
             .reports = opts.reports,
             .block_names = names_new(64, arena),
             .vreg_names = names_new(64, arena),
@@ -804,7 +793,7 @@ c89_emit_result_t emit_c89(const c89_emit_options_t *options)
 
         .fs = opts.fs,
         .deps = opts.deps,
-        .sources = vector_new_arena(32, opts.arena)
+        .sources = vector_new(32, opts.arena)
     };
 
     for (size_t i = 0; i < len; i++)

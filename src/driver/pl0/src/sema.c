@@ -132,7 +132,8 @@ static tree_t *make_runtime_mod(lifetime_t *lifetime)
 
 static vector_t *make_runtime_path(void)
 {
-    vector_t *path = vector_new(2);
+    arena_t *arena = get_global_arena();
+    vector_t *path = vector_new(2, arena);
     vector_push(&path, "pl0");
     vector_push(&path, "lang");
     return path;
@@ -182,7 +183,7 @@ void pl0_init(driver_t *handle)
 
     tree_t *string_type = get_string_type(4);
 
-    vector_t *params = vector_of_arena(1, arena);
+    vector_t *params = vector_of(1, arena);
     vector_set(params, 0, tree_decl_param(node, "fmt", string_type));
 
     tree_t *signature = tree_type_closure(node, "printf", gIntType, params, eArityVariable);
@@ -190,9 +191,9 @@ void pl0_init(driver_t *handle)
     tree_set_attrib(gRuntimePrint, &kPrintAttrib);
 
     tree_t *param = tree_decl_param(node, "number", gIntType);
-    vector_t *rt_print_params = vector_init_arena(param, arena);
+    vector_t *rt_print_params = vector_init(param, arena);
 
-    vector_t *args = vector_of_arena(2, arena);
+    vector_t *args = vector_of(2, arena);
     vector_set(args, 0, tree_expr_string(node, string_type, "%d\n", 4));
     vector_set(args, 1, param);
     tree_t *call = tree_expr_call(node, gRuntimePrint, args);
@@ -272,7 +273,8 @@ static tree_t *sema_expr(tree_t *sema, pl0_t *node)
 static tree_t *sema_vector(tree_t *sema, node_t *node, vector_t *body)
 {
     size_t len = vector_len(body);
-    vector_t *result = vector_of(len);
+    arena_t *arena = get_global_arena();
+    vector_t *result = vector_of(len, arena);
 
     for (size_t i = 0; i < len; i++)
     {
@@ -298,9 +300,7 @@ static tree_t *sema_call(tree_t *sema, pl0_t *node)
         return tree_error(node->node, &kEvent_FunctionNotFound, "unresolved procedure `%s`", node->procedure);
     }
 
-    vector_t *args = vector_new(0);
-
-    return tree_expr_call(node->node, proc, args);
+    return tree_expr_call(node->node, proc, &kEmptyVector);
 }
 
 static tree_t *sema_branch(tree_t *sema, pl0_t *node)
@@ -346,7 +346,7 @@ static tree_t *sema_print(tree_t *sema, pl0_t *node)
     tree_t *expr = sema_expr(sema, node->print);
 
     arena_t *arena = get_global_arena();
-    vector_t *args = vector_init_arena(expr, arena);
+    vector_t *args = vector_init(expr, arena);
 
     return tree_expr_call(node->node, gPrint, args);
 }
@@ -437,7 +437,8 @@ static void sema_proc(tree_t *sema, tree_t *tree, pl0_t *node)
 
     tree_t *inner = sema_vector(nest, node->node, node->body);
 
-    vector_t *body = vector_new(2);
+    arena_t *arena = get_global_arena();
+    vector_t *body = vector_new(2, arena);
     vector_push(&body, inner);
     vector_push(&body, ret);
 
@@ -585,7 +586,7 @@ void pl0_process_imports(context_t *context)
 
         if (ctx == NULL)
         {
-            msg_notify(sema->reports, &kEvent_ImportNotFound, import_decl->node, "cannot import `%s`, failed to find module", str_join_arena(".", import_decl->path, arena));
+            msg_notify(sema->reports, &kEvent_ImportNotFound, import_decl->node, "cannot import `%s`, failed to find module", str_join(".", import_decl->path, arena));
             continue;
         }
 

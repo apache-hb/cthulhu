@@ -1,4 +1,4 @@
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "unit/ct-test.h"
 
 #include "defaults/memory.h"

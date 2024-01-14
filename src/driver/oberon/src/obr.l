@@ -11,7 +11,7 @@
 #include "oberon/scan.h"
 #include "interop/flex.h"
 #include "interop/memory.h"
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "cthulhu/util/text.h"
 #include "cthulhu/events/events.h"
 %}

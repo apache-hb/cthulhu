@@ -94,7 +94,7 @@ lifetime_t *lifetime_new(mediator_t *mediator, arena_t *arena)
 
     cookie_t cookie = {
         .reports = logger,
-        .stack = vector_new_arena(16, arena),
+        .stack = vector_new(16, arena),
     };
 
     self->cookie = cookie;

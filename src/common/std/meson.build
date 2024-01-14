@@ -11,8 +11,9 @@ src = [
 ]
 
 libstd = library('std', src,
+    build_by_default : false,
     c_args : user_args,
-    dependencies : [ memory, base ],
+    dependencies : [ arena, base ],
     include_directories : 'include'
 )
 

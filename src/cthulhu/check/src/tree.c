@@ -669,8 +669,8 @@ void check_tree(logger_t *reports, map_t *mods)
     check_t check = {
         .reports = reports,
 
-        .expr_stack = vector_new_arena(64, arena),
-        .type_stack = vector_new_arena(64, arena),
+        .expr_stack = vector_new(64, arena),
+        .type_stack = vector_new(64, arena),
 
         .checked_exprs = set_new(64, kTypeInfoPtr, arena),
         .checked_types = set_new(64, kTypeInfoPtr, arena),

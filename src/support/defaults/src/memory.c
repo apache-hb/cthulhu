@@ -1,7 +1,7 @@
 #include "defaults/memory.h"
 
 #include "core/macros.h"
-#include "memory/arena.h"
+#include "arena/arena.h"
 
 #include <stdlib.h>
 

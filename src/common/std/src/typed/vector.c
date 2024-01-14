@@ -2,7 +2,7 @@
 
 #include "core/macros.h"
 
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "base/panic.h"
 
 #include <stdlib.h>

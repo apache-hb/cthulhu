@@ -7,6 +7,7 @@
 
 #include "base/panic.h"
 
+#include "memory/memory.h"
 #include "std/vector.h"
 
 #include "scan/node.h"
@@ -144,7 +145,8 @@ tree_t *obr_rt_mod(lifetime_t *lifetime)
 
 vector_t *obr_rt_path(void)
 {
-    vector_t *path = vector_new(2);
+    arena_t *arena = get_global_arena();
+    vector_t *path = vector_new(2, arena);
     vector_push(&path, "oberon");
     vector_push(&path, "lang");
     return path;

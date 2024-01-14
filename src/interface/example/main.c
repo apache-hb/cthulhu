@@ -13,7 +13,7 @@
 #include "scan/node.h"
 #include "support/langs.h"
 
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "defaults/memory.h"
 
 #include "std/map.h"

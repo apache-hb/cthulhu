@@ -4,8 +4,9 @@
 #include "std/typed/vector.h"
 #include "std/vector.h"
 
+#include "arena/arena.h"
+
 #include "core/macros.h"
-#include "memory/memory.h"
 #include "base/panic.h"
 
 #include <limits.h>
@@ -77,18 +78,6 @@ char *str_vformat(arena_t *arena, const char *fmt, va_list args)
     text_t text = text_vformat(arena, fmt, args);
 
     return text.text;
-}
-
-USE_DECL
-char *format(const char *fmt, ...)
-{
-    arena_t *arena = get_global_arena();
-    va_list args;
-    va_start(args, fmt);
-    char *str = str_vformat(arena, fmt, args);
-    va_end(args);
-
-    return str;
 }
 
 bool char_is_any_of(char c, const char *chars)
@@ -227,14 +216,7 @@ bool str_endswith(const char *str, const char *suffix)
 }
 
 USE_DECL
-char *str_join(const char *sep, vector_t *parts)
-{
-    arena_t *arena = get_global_arena();
-    return str_join_arena(sep, parts, arena);
-}
-
-USE_DECL
-char *str_join_arena(const char *sep, vector_t *parts, arena_t *arena)
+char *str_join(const char *sep, vector_t *parts, arena_t *arena)
 {
     CTASSERT(sep != NULL);
     CTASSERT(parts != NULL);
@@ -270,7 +252,7 @@ char *str_join_arena(const char *sep, vector_t *parts, arena_t *arena)
 
     CTASSERTF(len > 0, "len = %zu", len);
 
-    char *out = ARENA_MALLOC(len + 1, "str_join_arena", parts, arena);
+    char *out = ARENA_MALLOC(len + 1, "str_join", parts, arena);
     size_t idx = 0;
 
     size_t remaining = len;
@@ -476,7 +458,7 @@ vector_t *str_split(IN_STRING const char *str, IN_STRING const char *sep, arena_
     if (strlen(sep) == 0)
     {
         // split into individual characters
-        vector_t *result = vector_new_arena(strlen(str), arena);
+        vector_t *result = vector_new(strlen(str), arena);
         for (size_t i = 0; i < strlen(str); i++)
         {
             char *c = ARENA_MALLOC(2, "str_split", str, arena);
@@ -488,7 +470,7 @@ vector_t *str_split(IN_STRING const char *str, IN_STRING const char *sep, arena_
     }
 
     size_t seplen = strlen(sep);
-    vector_t *result = vector_new_arena(4, arena);
+    vector_t *result = vector_new(4, arena);
 
     // store the start of the current token
     // continue until a seperator is found
@@ -567,7 +549,7 @@ char *str_replace(const char *str, const char *search, const char *repl, arena_t
     }
 
     vector_t *split = str_split(str, search, arena);
-    return str_join_arena(repl, split, arena);
+    return str_join(repl, split, arena);
 }
 
 static const map_entry_t *find_matching_key(typevec_t *pairs, const char *str)

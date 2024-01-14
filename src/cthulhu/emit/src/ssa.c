@@ -1,5 +1,6 @@
 #include "common.h"
 
+#include "arena/arena.h"
 #include "std/map.h"
 #include "std/str.h"
 #include "std/vector.h"
@@ -23,59 +24,60 @@ typedef struct ssa_emit_t
     map_t *deps;
 } ssa_emit_t;
 
-static char *params_to_string(typevec_t *params)
+static char *params_to_string(typevec_t *params, arena_t *arena)
 {
     size_t len = typevec_len(params);
-    vector_t *vec = vector_of(len);
+    vector_t *vec = vector_of(len, arena);
     for (size_t i = 0; i < len; i++)
     {
         const ssa_param_t *param = typevec_offset(params, i);
-        const char *ty = type_to_string(param->type);
-        vector_set(vec, i, format("%s: %s", param->name, ty));
+        const char *ty = type_to_string(param->type, arena);
+        vector_set(vec, i, str_format(arena, "%s: %s", param->name, ty));
     }
 
-    return str_join(", ", vec);
+    return str_join(", ", vec, arena);
 }
 
-static vector_t *join_attribs(const ssa_symbol_t *symbol)
+static vector_t *join_attribs(const ssa_symbol_t *symbol, arena_t *arena)
 {
-    vector_t *attribs = vector_new(2);
+    vector_t *attribs = vector_new(2, arena);
 
     if (symbol->link_name != NULL)
     {
-        vector_push(&attribs, format("extern = `%s`", symbol->link_name));
+        vector_push(&attribs, str_format(arena, "extern = `%s`", symbol->link_name));
     }
 
-    vector_push(&attribs, format("linkage = %s", link_name(symbol->linkage)));
-    vector_push(&attribs, format("visibility = %s", vis_name(symbol->visibility)));
+    vector_push(&attribs, str_format(arena, "linkage = %s", link_name(symbol->linkage)));
+    vector_push(&attribs, str_format(arena, "visibility = %s", vis_name(symbol->visibility)));
 
     return attribs;
 }
 
-static void emit_ssa_attribs(io_t *io, const ssa_symbol_t *symbol)
+static void emit_ssa_attribs(io_t *io, const ssa_symbol_t *symbol, arena_t *arena)
 {
-    write_string(io, "\t[%s]\n", str_join(", ", join_attribs(symbol)));
+    write_string(io, "\t[%s]\n", str_join(", ", join_attribs(symbol, arena), arena));
 }
 
-static const char *value_to_string(const ssa_value_t *value);
+static const char *value_to_string(const ssa_value_t *value, arena_t *arena);
 
-static const char *pointer_value_to_string(const ssa_value_t *value)
+static const char *pointer_value_to_string(const ssa_value_t *value, arena_t *arena)
 {
     size_t len = vector_len(value->data);
-    vector_t *parts = vector_new(16);
+    vector_t *parts = vector_new(16, arena);
     for (size_t i = 0; i < MIN(len, 16); i++)
     {
         const ssa_value_t *elem = vector_get(value->data, i);
-        const char *it = value_to_string(elem);
+        const char *it = value_to_string(elem, arena);
         vector_push(&parts, (char*)it);
     }
 
     if (len > 16) { vector_push(&parts, "..."); }
 
-    return format("[%s]", str_join(", ", parts));
+    char *joined = str_join(", ", parts, arena);
+    return str_format(arena, "[%s]", joined);
 }
 
-static const char *value_to_string(const ssa_value_t *value)
+static const char *value_to_string(const ssa_value_t *value, arena_t *arena)
 {
     if (!value->init) { return "noinit"; }
 
@@ -86,7 +88,7 @@ static const char *value_to_string(const ssa_value_t *value)
     case eTypeBool: return value->bool_value ? "true" : "false";
     case eTypeUnit: return "unit";
     case eTypeEmpty: return "empty";
-    case eTypePointer: return pointer_value_to_string(value);
+    case eTypePointer: return pointer_value_to_string(value, arena);
 
     default: NEVER("unknown type kind %d", type->kind);
     }
@@ -94,30 +96,32 @@ static const char *value_to_string(const ssa_value_t *value)
 
 static const char *operand_to_string(ssa_emit_t *emit, ssa_operand_t operand)
 {
+    emit_t *base = &emit->emit;
+    arena_t *arena = base->arena;
     switch (operand.kind)
     {
     case eOperandEmpty: return "empty";
     case eOperandBlock:
-        return format(".%s", get_block_name(&emit->emit, operand.bb));
+        return str_format(arena, ".%s", get_block_name(&emit->emit, operand.bb));
     case eOperandImm:
-        return format("$%s", value_to_string(operand.value));
+        return str_format(arena, "$%s", value_to_string(operand.value, arena));
     case eOperandReg:
-        return format("%%%s", get_step_from_block(&emit->emit, operand.vreg_context, operand.vreg_index));
+        return str_format(arena, "%%%s", get_step_from_block(&emit->emit, operand.vreg_context, operand.vreg_index));
     case eOperandGlobal: {
         const ssa_symbol_t *symbol = operand.global;
-        return format("@%s", symbol->name);
+        return str_format(arena, "@%s", symbol->name);
     }
     case eOperandFunction: {
         const ssa_symbol_t *symbol = operand.function;
-        return format("::%s", symbol->name);
+        return str_format(arena, "::%s", symbol->name);
     }
     case eOperandLocal: {
         size_t index = operand.local;
-        return format("local(%zu)", index);
+        return str_format(arena, "local(%zu)", index);
     }
     case eOperandParam: {
         size_t index = operand.param;
-        return format("param(%zu)", index);
+        return str_format(arena, "param(%zu)", index);
     }
     default: NEVER("unknown operand kind %d", operand.kind);
     }
@@ -125,6 +129,7 @@ static const char *operand_to_string(ssa_emit_t *emit, ssa_operand_t operand)
 
 static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
 {
+    emit_t *base = &emit->emit;
     size_t len = typevec_len(bb->steps);
     write_string(io, ".%s: [len=%zu]\n", get_block_name(&emit->emit, bb), len);
     for (size_t i = 0; i < len; i++)
@@ -155,7 +160,7 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
             ssa_cast_t cast = step->cast;
             write_string(io, "\t%%%s = cast %s %s\n",
                 get_step_name(&emit->emit, step),
-                type_to_string(cast.type),
+                type_to_string(cast.type, base->arena),
                 operand_to_string(emit, cast.operand)
             );
             break;
@@ -215,7 +220,7 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
         case eOpCall: {
             ssa_call_t call = step->call;
             size_t args_len = typevec_len(call.args);
-            vector_t *args = vector_of(args_len);
+            vector_t *args = vector_of(args_len, base->arena);
             for (size_t arg_idx = 0; arg_idx < args_len; arg_idx++)
             {
                 const ssa_operand_t *arg = typevec_offset(call.args, arg_idx);
@@ -224,7 +229,7 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
             write_string(io, "\t%%%s = call %s (%s)\n",
                 get_step_name(&emit->emit, step),
                 operand_to_string(emit, call.function),
-                str_join(", ", args)
+                str_join(", ", args, base->arena)
             );
             break;
         }
@@ -262,33 +267,22 @@ static void emit_ssa_blocks(ssa_emit_t *emit, io_t *io, vector_t *bbs)
     }
 }
 
-static void emit_ssa_consts(ssa_emit_t *emit, io_t *io, vector_t *consts)
+static const char *storage_to_string(ssa_storage_t storage, arena_t *arena)
 {
-    CTU_UNUSED(emit);
-    size_t len = vector_len(consts);
-    for (size_t i = 0; i < len; i++)
-    {
-        const ssa_value_t *value = vector_get(consts, i);
-        write_string(io, "\tconst[%zu] %s = %s\n", i, type_to_string(value->type), value_to_string(value));
-    }
-}
-
-static const char *storage_to_string(ssa_storage_t storage)
-{
-    const char *ty = type_to_string(storage.type);
+    const char *ty = type_to_string(storage.type, arena);
     const char *quals = quals_name(storage.quals);
 
-    return format("{type = %s, quals = %s, size = %zu}", ty, quals, storage.size);
+    return str_format(arena, "{type = %s, quals = %s, size = %zu}", ty, quals, storage.size);
 }
 
 static void emit_ssa_locals(ssa_emit_t *emit, io_t *io, typevec_t *locals)
 {
-    CTU_UNUSED(emit);
+    emit_t *base = &emit->emit;
     size_t len = typevec_len(locals);
     for (size_t i = 0; i < len; i++)
     {
         const ssa_local_t *local = typevec_offset(locals, i);
-        write_string(io, "\tlocal[%zu] %s %s\n", i, type_to_string(local->type), storage_to_string(local->storage));
+        write_string(io, "\tlocal[%zu] %s %s\n", i, type_to_string(local->type, base->arena), storage_to_string(local->storage, base->arena));
     }
 }
 
@@ -313,9 +307,10 @@ static void emit_symbol_deps(io_t *io, const ssa_symbol_t *symbol, map_t *deps)
 static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
 {
     fs_t *fs = emit->fs;
+    emit_t *base = &emit->emit;
     char *path = begin_module(&emit->emit, fs, mod);
 
-    char *file = format("%s/%s.ssa", path, mod->name);
+    char *file = str_format(base->arena, "%s/%s.ssa", path, mod->name);
     fs_file_create(fs, file);
 
     io_t *io = fs_open(fs, file, eAccessWrite | eAccessText);
@@ -331,10 +326,9 @@ static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
         const ssa_symbol_t *global = vector_get(mod->globals, i);
         emit_symbol_deps(io, global, emit->deps);
 
-        write_string(io, "global %s: %s\n", global->name, type_to_string(global->type));
-        emit_ssa_attribs(io, global);
+        write_string(io, "global %s: %s\n", global->name, type_to_string(global->type, base->arena));
+        emit_ssa_attribs(io, global, base->arena);
 
-        emit_ssa_consts(emit, io, global->consts);
         emit_ssa_blocks(emit, io, global->blocks);
 
         if (len >= i) { write_string(io, "\n"); }
@@ -352,14 +346,13 @@ static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
 
         write_string(io, "fn %s(%s) -> %s [variadic: %s]\n",
             fn->name,
-            params_to_string(closure.params), type_to_string(closure.result),
+            params_to_string(closure.params, base->arena), type_to_string(closure.result, base->arena),
             closure.variadic ? "true" : "false"
         );
-        emit_ssa_attribs(io, fn);
+        emit_ssa_attribs(io, fn, base->arena);
 
         if (fn->linkage != eLinkImport)
         {
-            emit_ssa_consts(emit, io, fn->consts);
             emit_ssa_locals(emit, io, fn->locals);
             emit_ssa_blocks(emit, io, fn->blocks);
         }
@@ -374,6 +367,7 @@ ssa_emit_result_t emit_ssa(const ssa_emit_options_t *options)
     arena_t *arena = opts.arena;
     ssa_emit_t emit = {
         .emit = {
+            .arena = arena,
             .reports = opts.reports,
             .block_names = names_new(64, arena),
             .vreg_names = names_new(64, arena),

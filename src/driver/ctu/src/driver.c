@@ -76,7 +76,7 @@ static void import_module(lifetime_t *lifetime, tree_t *sema, ctu_t *include)
 
     if (ctx == NULL)
     {
-        msg_notify(sema->reports, &kEvent_ImportNotFound, include->node, "import `%s` not found", str_join_arena("::", include->import_path, arena));
+        msg_notify(sema->reports, &kEvent_ImportNotFound, include->node, "import `%s` not found", str_join("::", include->import_path, arena));
         return;
     }
 
@@ -92,7 +92,7 @@ static void import_module(lifetime_t *lifetime, tree_t *sema, ctu_t *include)
     {
         event_builder_t id = evt_symbol_shadowed(sema->reports, include->name, tree_get_node(old), tree_get_node(lib));
         msg_note(id, "consider using import aliases; eg. `import %s as my_%s`",
-            str_join_arena("::", include->import_path, arena),
+            str_join("::", include->import_path, arena),
             include->name
         );
     }

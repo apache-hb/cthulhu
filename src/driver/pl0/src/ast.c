@@ -1,7 +1,7 @@
 #include "pl0/ast.h"
 
 #include "base/panic.h"
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "pl0/scan.h"
 
 pl0_t *pl0_new(scan_t *scan, where_t where, pl0_type_t type)

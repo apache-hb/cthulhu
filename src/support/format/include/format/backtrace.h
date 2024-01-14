@@ -54,9 +54,9 @@ void bt_report_add(IN_NOTNULL bt_report_t *report, IN_NOTNULL const bt_frame_t *
 
 /// @brief print a backtrace report
 ///
-/// @param config the configuration to use
+/// @param print the configuration to use
 /// @param report the report to print
-void print_backtrace(print_backtrace_t config, IN_NOTNULL bt_report_t *report);
+void print_backtrace(print_backtrace_t print, IN_NOTNULL bt_report_t *report);
 
 /// @}
 

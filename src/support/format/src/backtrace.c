@@ -4,7 +4,7 @@
 
 #include "core/macros.h"
 #include "io/io.h"
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "format/notify.h"
 
 #include "backtrace/backtrace.h"
@@ -370,11 +370,11 @@ static void print_collapsed(backtrace_t *pass, size_t index, const collapsed_t *
 }
 
 USE_DECL
-void print_backtrace(print_backtrace_t config, bt_report_t *report)
+void print_backtrace(print_backtrace_t print, bt_report_t *report)
 {
     CTASSERT(report != NULL);
 
-    print_options_t options = config.options;
+    print_options_t options = print.options;
 
     typevec_t *frames = collapse_frames(report->entries, options.arena);
 
@@ -385,7 +385,7 @@ void print_backtrace(print_backtrace_t config, bt_report_t *report)
     size_t align = get_num_width(frame_count);
 
     backtrace_t pass = {
-        .options = config,
+        .options = print,
         .format_context = format_context_make(options),
         .frames = frames,
         .index_align = align,

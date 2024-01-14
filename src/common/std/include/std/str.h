@@ -69,18 +69,6 @@ char *str_format(IN_NOTNULL arena_t *arena, FMT_STRING const char *fmt, ...);
 NODISCARD
 char *str_vformat(IN_NOTNULL arena_t *arena, IN_STRING const char *fmt, va_list args);
 
-/// @brief format a string
-/// @warning prefer @ref str_format or @ref text_format
-///
-/// format a string with printf-like syntax
-///
-/// @param fmt the format string
-/// @param ... the arguments to format
-///
-/// @return the formatted string
-NODISCARD CT_PRINTF(1, 2)
-char *format(FMT_STRING const char *fmt, ...);
-
 /// @brief see if a string starts with a prefix
 ///
 /// @param str the string to search
@@ -105,22 +93,11 @@ bool str_endswith(IN_STRING const char *str, IN_STRING const char *suffix);
 ///
 /// @param sep the separator to use
 /// @param parts a vector of strings to join
-///
-/// @return the joined string
-NODISCARD
-char *str_join(IN_STRING const char *sep, IN_NOTNULL vector_t *parts);
-
-/// @brief join strings
-///
-/// join a vector of strings together with a separator
-///
-/// @param sep the separator to use
-/// @param parts a vector of strings to join
 /// @param arena the arena to allocate the joined string in
 ///
 /// @return the joined string
 NODISCARD
-char *str_join_arena(IN_STRING const char *sep, IN_NOTNULL vector_t *parts, IN_NOTNULL arena_t *arena);
+char *str_join(IN_STRING const char *sep, IN_NOTNULL vector_t *parts, IN_NOTNULL arena_t *arena);
 
 /// @brief repeat a string
 ///

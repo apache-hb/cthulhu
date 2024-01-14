@@ -2,6 +2,7 @@
 
 #include "cthulhu/tree/query.h"
 
+#include "memory/memory.h"
 #include "std/vector.h"
 #include "std/str.h"
 
@@ -54,27 +55,28 @@ const char *tree_kind_to_string(tree_kind_t kind)
     }
 }
 
-static const char *length_name(size_t length)
+static const char *length_name(size_t length, arena_t *arena)
 {
     if (length == SIZE_MAX) return "unbounded";
-    return format("%zu", length);
+    return str_format(arena, "%zu", length);
 }
 
 const char *tree_to_string(const tree_t *self)
 {
     if (self == NULL) { return "nil"; }
 
+    arena_t *arena = get_global_arena();
     tree_kind_t kind = tree_get_kind(self);
     switch (kind)
     {
     case eTreeError:
-        return format("{ error: %s }", self->message);
+        return str_format(arena, "{ error: %s }", self->message);
 
     case eTreeTypeArray:
-        return format("array %s { element: %s, length: %zu }", tree_get_name(self), tree_to_string(self->ptr), self->length);
+        return str_format(arena, "array %s { element: %s, length: %zu }", tree_get_name(self), tree_to_string(self->ptr), self->length);
 
     case eTreeTypePointer:
-        return format("pointer %s { pointer: %s, length: %s }", tree_get_name(self), tree_to_string(self->ptr), length_name(self->length));
+        return str_format(arena, "pointer %s { pointer: %s, length: %s }", tree_get_name(self), tree_to_string(self->ptr), length_name(self->length, arena));
 
     default:
         break;
@@ -82,7 +84,7 @@ const char *tree_to_string(const tree_t *self)
 
     if (has_name(self->kind))
     {
-        return format("{ %s: %s }", tree_kind_to_string(self->kind), tree_get_name(self));
+        return str_format(arena, "{ %s: %s }", tree_kind_to_string(self->kind), tree_get_name(self));
     }
 
     return tree_kind_to_string(self->kind);

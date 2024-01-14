@@ -154,13 +154,12 @@ int process_default_options(default_options_t options, tool_config_t config)
     {
         print_config_t config_display = {
             .options = base,
-            .config = config.group,
             .print_usage = cfg_bool_value(options.enable_usage),
             .win_style = cfg_bool_value(options.enable_windows_style),
             .name = name
         };
 
-        print_config(config_display);
+        print_config(config_display, config.group);
         return EXIT_SHOULD_EXIT;
     }
 
@@ -169,11 +168,9 @@ int process_default_options(default_options_t options, tool_config_t config)
     {
         print_version_t version_display = {
             .options = base,
-            .version = config.version,
-            .name = name
         };
 
-        print_version(version_display);
+        print_version(version_display, config.version, name);
         return EXIT_SHOULD_EXIT;
     }
 
@@ -252,13 +249,12 @@ static int process_argparse_result(default_options_t options, tool_config_t conf
 
     print_config_t display = {
         .options = base,
-        .config = config.group,
         .print_usage = cfg_bool_value(options.enable_usage),
         .win_style = cfg_bool_value(options.enable_windows_style),
         .name = config.argv[0]
     };
 
-    print_config(display);
+    print_config(display, config.group);
     return EXIT_SHOULD_EXIT;
 }
 

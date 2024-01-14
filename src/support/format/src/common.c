@@ -589,7 +589,7 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
     if (result != EXIT_OK)
     {
         io_printf(io, "compilation failed during stage: %s\n", title);
-        vector_t *parts = vector_new_arena(3, arena);
+        vector_t *parts = vector_new(3, arena);
         if (error_count > 0)
         {
             char *colour_err = colour_format(ctx, COLOUR_FATAL, "%zu errors", error_count);
@@ -608,7 +608,7 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
             vector_push(&parts, colour_bug);
         }
 
-        char *msg = str_join_arena(", ", parts, arena);
+        char *msg = str_join(", ", parts, arena);
         io_printf(io, "  %s\n", msg);
     }
     else if (warning_count > 0)

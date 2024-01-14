@@ -8,7 +8,7 @@
 #include "std/vector.h"
 #include "std/str.h"
 
-#include "memory/arena.h"
+#include "arena/arena.h"
 
 #include "ctu_bison.h" // IWYU pragma: keep
 #include "ctu_flex.h" // IWYU pragma: keep
@@ -17,7 +17,7 @@ CTU_CALLBACKS(kCallbacks, ctu);
 
 static vector_t *mod_basename(const char *fp, arena_t *arena)
 {
-    return vector_init_arena(str_basename(fp, arena), arena);
+    return vector_init(str_basename(fp, arena), arena);
 }
 
 static vector_t *find_mod_path(ctu_t *ast, const char *fp, arena_t *arena)
@@ -38,7 +38,7 @@ static void *ctu_preparse(driver_t *driver, scan_t *scan)
 
     ctu_scan_t info = {
         .reports = lifetime_get_logger(lifetime),
-        .attribs = vector_new_arena(4, arena)
+        .attribs = vector_new(4, arena)
     };
 
     return arena_memdup(&info, sizeof(ctu_scan_t), arena);

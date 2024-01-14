@@ -1,7 +1,7 @@
 #include "notify/notify.h"
 
 #include "base/panic.h"
-#include "memory/arena.h"
+#include "arena/arena.h"
 
 #include "std/set.h"
 #include "std/str.h"
@@ -190,7 +190,7 @@ void msg_vnote(event_builder_t builder, const char *fmt, va_list args)
 
     if (event->notes == NULL)
     {
-        event->notes = vector_new(4);
+        event->notes = vector_new(4, builder.arena);
     }
 
     vector_push(&event->notes, msg);

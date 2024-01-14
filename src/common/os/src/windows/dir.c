@@ -1,5 +1,5 @@
 #include "core/win32.h" // IWYU pragma: keep
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "os/os.h"
 #include "os_common.h"
 

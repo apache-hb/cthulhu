@@ -107,18 +107,18 @@ program: block DOT { scan_set(x, $1); }
 block: module imports consts vars procedures toplevel { $$ = pl0_module(x, @$, $1, $2, $3, $4, $5, $6); }
     ;
 
-imports: %empty { $$ = vector_new_arena(0, BISON_ARENA(x)); }
+imports: %empty { $$ = vector_new(0, BISON_ARENA(x)); }
     | IMPORT paths SEMICOLON { $$ = $2; }
     ;
 
-paths: import { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+paths: import { $$ = vector_init($1, BISON_ARENA(x)); }
     | paths COMMA import { vector_push(&$1, $3); $$ = $1; }
     ;
 
 import: path { $$ = pl0_import(x, @$, $1); }
     ;
 
-path: IDENT { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+path: IDENT { $$ = vector_init($1, BISON_ARENA(x)); }
     | path DOT IDENT { vector_push(&$1, $3); $$ = $1; }
     ;
 
@@ -130,33 +130,33 @@ toplevel: %empty { $$ = NULL; }
     | stmtlist { $$ = pl0_stmts(x, @$, $1); }
     ;
 
-consts: %empty { $$ = vector_new_arena(0, BISON_ARENA(x)); }
+consts: %empty { $$ = vector_new(0, BISON_ARENA(x)); }
     | CONST inits SEMICOLON { $$ = $2; }
     ;
 
-inits: init { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+inits: init { $$ = vector_init($1, BISON_ARENA(x)); }
     | inits COMMA init { vector_push(&$1, $3); $$ = $1; }
     ;
 
 init: IDENT EQUALS expr { $$ = pl0_value(x, @$, $1, $3); }
     ;
 
-vars: %empty { $$ = vector_new_arena(0, BISON_ARENA(x)); }
+vars: %empty { $$ = vector_new(0, BISON_ARENA(x)); }
     | VAR names SEMICOLON { $$ = $2; }
     ;
 
-names: name { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+names: name { $$ = vector_init($1, BISON_ARENA(x)); }
     | names COMMA name { vector_push(&$1, $3); $$ = $1; }
     ;
 
 name: IDENT { $$ = pl0_value(x, @$, $1, NULL); }
     ;
 
-procedures: %empty { $$ = vector_new_arena(0, BISON_ARENA(x)); }
+procedures: %empty { $$ = vector_new(0, BISON_ARENA(x)); }
     | proclist { $$ = $1; }
     ;
 
-proclist: procedure { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+proclist: procedure { $$ = vector_init($1, BISON_ARENA(x)); }
     | proclist procedure { vector_push(&$1, $2); $$ = $1; }
     ;
 
@@ -174,7 +174,7 @@ statement: statements { $$ = $1; }
 statements: START stmtlist END { $$ = pl0_stmts(x, @$, $2); }
     ;
 
-stmtlist: statement { $$ = vector_init_arena($1, BISON_ARENA(x)); }
+stmtlist: statement { $$ = vector_init($1, BISON_ARENA(x)); }
     | stmtlist SEMICOLON statement { vector_push(&$1, $3); $$ = $1; }
     ;
 

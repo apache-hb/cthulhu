@@ -23,7 +23,7 @@ static tree_t *tree_module_new(const node_t *node, const char *name,
     self->cookie = cookie;
     self->reports = reports;
 
-    self->tags = vector_of_arena(decls, arena);
+    self->tags = vector_of(decls, arena);
     ARENA_IDENTIFY(self->tags, "module_tags", self, arena);
 
     for (size_t i = 0; i < decls; i++)

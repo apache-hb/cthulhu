@@ -8,6 +8,7 @@
 
 #include "cthulhu/util/util.h"
 
+#include "memory/memory.h"
 #include "std/vector.h"
 
 #include "base/panic.h"
@@ -205,7 +206,8 @@ tree_t *ctu_get_void_type(void) { return gVoidType; }
 
 vector_t *ctu_rt_path(void)
 {
-    vector_t *path = vector_new(2);
+    arena_t *arena = get_global_arena();
+    vector_t *path = vector_new(2, arena);
     vector_push(&path, "cthulhu");
     vector_push(&path, "lang");
     return path;

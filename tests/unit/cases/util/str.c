@@ -1,4 +1,4 @@
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "unit/ct-test.h"
 
 #include "defaults/memory.h"
@@ -140,32 +140,32 @@ int main(void)
         GROUP_EXPECT_PANIC(group, "null all", (void)str_replace_many(NULL, NULL, arena));
     }
 
-    vector_t *parts = vector_of_arena(STRING_PARTS_LEN, arena);
+    vector_t *parts = vector_of(STRING_PARTS_LEN, arena);
     for (size_t i = 0; i < STRING_PARTS_LEN; i++)
     {
         vector_set(parts, i, (char *)kStringParts[i]);
     }
 
     {
-        test_group_t group = test_group(&suite, "str_join_arena");
+        test_group_t group = test_group(&suite, "str_join");
         GROUP_EXPECT_PASS2(group, "joined equals", {
-            char *joined = str_join_arena(" ", parts, arena);
+            char *joined = str_join(" ", parts, arena);
             CTASSERT(str_equal(joined, "zero one two three four five six seven eight nine"));
         });
         GROUP_EXPECT_PASS2(group, "joined empty", {
-            vector_t *empty = vector_of_arena(0, arena);
-            char *joined = str_join_arena(" ", empty, arena);
+            vector_t *empty = vector_of(0, arena);
+            char *joined = str_join(" ", empty, arena);
             CTASSERT(str_equal(joined, ""));
         });
         GROUP_EXPECT_PASS2(group, "joined one", {
-            vector_t *one = vector_init_arena((char *)"hello", arena);
-            char *joined = str_join_arena(" ", one, arena);
+            vector_t *one = vector_init((char *)"hello", arena);
+            char *joined = str_join(" ", one, arena);
             CTASSERT(str_equal(joined, "hello"));
         });
-        GROUP_EXPECT_PANIC(group, "null sep", (void)str_join_arena(NULL, vector_of_arena(0, arena), arena));
-        GROUP_EXPECT_PANIC(group, "null parts", (void)str_join_arena(" ", NULL, arena));
-        GROUP_EXPECT_PANIC(group, "null item", (void)str_join_arena(" ", vector_init_arena(NULL, arena), arena));
-        GROUP_EXPECT_PANIC(group, "null all", (void)str_join_arena(NULL, NULL, arena));
+        GROUP_EXPECT_PANIC(group, "null sep", (void)str_join(NULL, vector_of(0, arena), arena));
+        GROUP_EXPECT_PANIC(group, "null parts", (void)str_join(" ", NULL, arena));
+        GROUP_EXPECT_PANIC(group, "null item", (void)str_join(" ", vector_init(NULL, arena), arena));
+        GROUP_EXPECT_PANIC(group, "null all", (void)str_join(NULL, NULL, arena));
     }
     {
         test_group_t group = test_group(&suite, "str_repeat");
@@ -303,16 +303,16 @@ int main(void)
     /// common prefix
     ///
 
-    vector_t *one_arg = vector_init_arena((char *)"hello", arena);
+    vector_t *one_arg = vector_init((char *)"hello", arena);
     const char *one_prefix = str_common_prefix(one_arg, arena);
 
-    vector_t *no_common = vector_of_arena(2, arena);
+    vector_t *no_common = vector_of(2, arena);
     vector_set(no_common, 0, (void *)"hello");
     vector_set(no_common, 1, (void *)"world/world2");
 
     const char *no_common_prefix = str_common_prefix(no_common, arena);
 
-    vector_t *common = vector_of_arena(2, arena);
+    vector_t *common = vector_of(2, arena);
     vector_set(common, 0, (void *)"hello" NATIVE_PATH_SEPARATOR "stuff");
     vector_set(common, 1, (void *)"hello" NATIVE_PATH_SEPARATOR " world");
 

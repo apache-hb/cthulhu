@@ -5,7 +5,7 @@ src = [
 
 libdefaults = library('defaults', src,
     include_directories : 'include',
-    dependencies : [ config, format, argparse, os, io, notify, backtrace ]
+    dependencies : [ config, format, argparse, os, io, notify, backtrace, memory ]
 )
 
 defaults = declare_dependency(

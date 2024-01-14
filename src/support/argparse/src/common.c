@@ -4,7 +4,7 @@
 #include "config/config.h"
 #include "core/macros.h"
 
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "scan/node.h"
 
 #include "std/map.h"

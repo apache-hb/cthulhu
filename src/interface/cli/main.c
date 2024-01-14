@@ -5,7 +5,7 @@
 
 #include "cthulhu/events/events.h"
 #include "io/console.h"
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "format/notify.h"
 #include "scan/node.h"
 #include "std/map.h"

@@ -8,6 +8,7 @@
 
 #include "cthulhu/tree/query.h"
 
+#include "memory/memory.h"
 #include "std/vector.h"
 #include "std/str.h"
 
@@ -40,15 +41,17 @@ static tree_t *sema_type_name(tree_t *sema, const ctu_t *type)
 static tree_t *ctu_sema_type_pointer(ctu_sema_t *sema, const ctu_t *type)
 {
     tree_t *pointee = ctu_sema_type(sema, type->pointer);
-    return tree_type_pointer(type->node, format("*%s", tree_get_name(pointee)), pointee, 1);
+    arena_t *arena = get_global_arena();
+    return tree_type_pointer(type->node, str_format(arena, "*%s", tree_get_name(pointee)), pointee, 1);
 }
 
 static tree_t *sema_type_function(ctu_sema_t *sema, const ctu_t *type)
 {
     tree_t *result = ctu_sema_type(sema, type->return_type);
 
+    arena_t *arena = get_global_arena();
     size_t len = vector_len(type->params);
-    vector_t *params = vector_of(len);
+    vector_t *params = vector_of(len, arena);
     for (size_t i = 0; i < len; i++)
     {
         const ctu_t *param = vector_get(type->params, i);

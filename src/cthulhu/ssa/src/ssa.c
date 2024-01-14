@@ -2,7 +2,7 @@
 
 #include "cthulhu/tree/query.h"
 
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "std/str.h"
 #include "std/map.h"
 #include "std/set.h"
@@ -10,7 +10,7 @@
 
 #include "std/typed/vector.h"
 
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "base/panic.h"
 
 #include <string.h>
@@ -135,14 +135,13 @@ static ssa_symbol_t *symbol_new(ssa_compile_t *ssa, const char *name, const tree
 
     symbol->locals = NULL;
     symbol->params = NULL;
-    symbol->consts = vector_new_arena(4, ssa->arena);
 
     symbol->name = name;
     symbol->type = ssa_type;
     symbol->value = NULL;
     symbol->entry = NULL;
 
-    symbol->blocks = vector_new_arena(4, ssa->arena);
+    symbol->blocks = vector_new(4, ssa->arena);
 
     return symbol;
 }
@@ -262,9 +261,9 @@ static ssa_module_t *module_create(ssa_compile_t *ssa, const char *name)
     mod->name = name;
     mod->path = path;
 
-    mod->globals    = vector_new_arena(32, ssa->arena);
-    mod->functions  = vector_new_arena(32, ssa->arena);
-    mod->types      = vector_new_arena(32, ssa->arena);
+    mod->globals    = vector_new(32, ssa->arena);
+    mod->functions  = vector_new(32, ssa->arena);
+    mod->types      = vector_new(32, ssa->arena);
 
     return mod;
 }
@@ -905,7 +904,7 @@ ssa_result_t ssa_compile(map_t *mods, arena_t *arena)
     ssa_compile_t ssa = {
         .arena = arena,
 
-        .modules = vector_new_arena(sizes.modules, arena),
+        .modules = vector_new(sizes.modules, arena),
         .symbol_deps = map_optimal(sizes.deps, kTypeInfoPtr, arena),
 
         .strings = map_optimal(sizes.globals + sizes.functions, kTypeInfoText, arena),

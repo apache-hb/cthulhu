@@ -62,7 +62,8 @@ static void ctu_resolve_global(tree_t *sema, tree_t *self, void *user)
 {
     ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclGlobal);
 
-    ctu_sema_t ctx = ctu_sema_init(sema, self, vector_new(0));
+    arena_t *arena = get_global_arena();
+    ctu_sema_t ctx = ctu_sema_init(sema, self, vector_new(0, arena));
 
     tree_t *type = decl->type == NULL ? NULL : ctu_sema_type(&ctx, decl->type);
     tree_t *expr = decl->value == NULL ? NULL : ctu_sema_rvalue(&ctx, decl->value, type);
@@ -89,7 +90,8 @@ static void ctu_resolve_type(tree_t *sema, tree_t *self, void *user)
     ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclTypeAlias);
     CTASSERTF(decl->type_alias != NULL, "decl %s has no type", decl->name);
 
-    ctu_sema_t inner = ctu_sema_init(sema, self, vector_new(0));
+    arena_t *arena = get_global_arena();
+    ctu_sema_t inner = ctu_sema_init(sema, self, vector_new(0, arena));
 
     const tree_t *temp = tree_resolve(tree_get_cookie(sema), ctu_sema_type(&inner, decl->type_alias)); // TODO: doesnt support newtypes, also feels icky
     tree_close_decl(self, temp);
@@ -98,12 +100,12 @@ static void ctu_resolve_type(tree_t *sema, tree_t *self, void *user)
 static vector_t *ctu_collect_fields(tree_t *sema, tree_t *self, ctu_t *decl)
 {
     arena_t *arena = get_global_arena();
-    ctu_sema_t inner = ctu_sema_init(sema, self, vector_new_arena(0, arena));
+    ctu_sema_t inner = ctu_sema_init(sema, self, vector_new(0, arena));
     size_t len = vector_len(decl->fields);
 
     map_t *fields = map_optimal(len, kTypeInfoString, arena);
 
-    vector_t *items = vector_of_arena(len, arena);
+    vector_t *items = vector_of(len, arena);
     for (size_t i = 0; i < len; i++)
     {
         ctu_t *field = vector_get(decl->fields, i);
@@ -141,7 +143,8 @@ static void ctu_resolve_union(tree_t *sema, tree_t *self, void *user)
 static void ctu_resolve_variant(tree_t *sema, tree_t *self, void *user)
 {
     ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclVariant);
-    ctu_sema_t inner = ctu_sema_init(sema, self, vector_new(0));
+    arena_t *arena = get_global_arena();
+    ctu_sema_t inner = ctu_sema_init(sema, self, vector_new(0, arena));
 
     const tree_t *underlying = decl->underlying != NULL
         ? ctu_sema_type(&inner, decl->underlying)
@@ -156,7 +159,7 @@ static void ctu_resolve_variant(tree_t *sema, tree_t *self, void *user)
     size_t len = vector_len(decl->cases);
 
     tree_t *default_case = NULL;
-    vector_t *result = vector_of(len);
+    vector_t *result = vector_of(len, arena);
 
     for (size_t i = 0; i < len; i++)
     {
@@ -193,7 +196,8 @@ static tree_t *ctu_forward_global(tree_t *sema, ctu_t *decl)
     CTASSERTF(decl->kind == eCtuDeclGlobal, "decl %s is not a global", decl->name);
     CTASSERTF(decl->type != NULL || decl->value != NULL, "decl %s has no type and no init expr", decl->name);
 
-    ctu_sema_t inner = ctu_sema_init(sema, NULL, vector_new(0));
+    arena_t *arena = get_global_arena();
+    ctu_sema_t inner = ctu_sema_init(sema, NULL, vector_new(0, arena));
     tree_t *type = decl->type == NULL ? NULL : ctu_sema_type(&inner, decl->type);
 
     tree_resolve_info_t resolve = {

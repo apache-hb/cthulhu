@@ -2,7 +2,7 @@
 
 #include "config/config.h"
 #include "core/macros.h"
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
 #include "std/str.h"

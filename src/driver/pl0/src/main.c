@@ -1,7 +1,7 @@
 #include "config/config.h"
 #include "core/macros.h"
 
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "pl0/sema.h"
 #include "pl0/ast.h"
 
@@ -42,7 +42,7 @@ static void pl0_postparse(driver_t *handle, scan_t *scan, void *tree)
     const char *fp = scan_path(scan);
     vector_t *path = vector_len(ast->mod) > 0
         ? ast->mod
-        : vector_init_arena(str_basename(fp, arena), arena);
+        : vector_init(str_basename(fp, arena), arena);
 
     context_t *ctx = context_new(handle, vector_tail(path), ast, NULL);
 

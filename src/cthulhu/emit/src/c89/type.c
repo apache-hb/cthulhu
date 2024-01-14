@@ -1,5 +1,6 @@
 #include "c89.h"
 
+#include "arena/arena.h"
 #include "std/vector.h"
 #include "std/str.h"
 
@@ -27,15 +28,15 @@ static const char *get_c89_digit(ssa_type_digit_t ty)
     }
 }
 
-static const char *get_quals(quals_t quals, bool emit_const)
+static const char *get_quals(quals_t quals, bool emit_const, arena_t *arena)
 {
     if (quals & eQualConst) { return emit_const ? "const " : ""; }
 
-    vector_t *vec = vector_new(3);
+    vector_t *vec = vector_new(3, arena);
     if (quals & eQualAtomic) { vector_push(&vec, "_Atomic"); }
     if (quals & eQualVolatile) { vector_push(&vec, "volatile"); }
 
-    return str_join(" ", vec);
+    return str_join(" ", vec, arena);
 }
 
 static const char *format_c89_closure(c89_emit_t *emit, const char *quals, ssa_type_closure_t type, const char *name)
@@ -44,13 +45,13 @@ static const char *format_c89_closure(c89_emit_t *emit, const char *quals, ssa_t
     const char *params = c89_format_params(emit, type.params, type.variadic);
 
     return (name == NULL)
-        ? format("%s (*%s)(%s)", result, quals, params)
-        : format("%s (*%s%s)(%s)", result, quals, name, params);
+        ? str_format(emit->arena, "%s (*%s)(%s)", result, quals, params)
+        : str_format(emit->arena, "%s (*%s%s)(%s)", result, quals, name, params);
 }
 
 static const char *format_c89_pointer(c89_emit_t *emit, ssa_type_pointer_t pointer, const char *name)
 {
-    const char *tmp = (name == NULL) ? "*" : format("*%s", name);
+    const char *tmp = (name == NULL) ? "*" : str_format(emit->arena, "*%s", name);
 
     return c89_format_type(emit, pointer.pointer, tmp, true);
 }
@@ -59,56 +60,59 @@ const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char
 {
     CTASSERT(type != NULL);
 
-    const char *quals = get_quals(type->quals, emit_const);
+    const char *quals = get_quals(type->quals, emit_const, emit->arena);
 
     switch (type->kind)
     {
     case eTypeUnit: return (name != NULL)
-        ? format("void %s", name)
+        ? str_format(emit->arena, "void %s", name)
         : "void";
 
     case eTypeBool: return (name != NULL)
-        ? format("%sbool %s", quals, name)
-        : format("%sbool", quals);
+        ? str_format(emit->arena, "%sbool %s", quals, name)
+        : str_format(emit->arena, "%sbool", quals);
 
     case eTypeDigit: {
         const char *digit_name = get_c89_digit(type->digit);
         return (name != NULL)
-            ? format("%s%s %s", quals, digit_name, name)
-            : format("%s%s", quals, digit_name);
+            ? str_format(emit->arena, "%s%s %s", quals, digit_name, name)
+            : str_format(emit->arena, "%s%s", quals, digit_name);
     }
 
     case eTypeOpaque: return (name != NULL)
-        ? format("%svoid *%s", quals, name)
-        : format("%svoid *", quals);
+        ? str_format(emit->arena, "%svoid *%s", quals, name)
+        : str_format(emit->arena, "%svoid *", quals);
 
     case eTypeClosure: return format_c89_closure(emit, quals, type->closure, name);
     case eTypePointer: return format_c89_pointer(emit, type->pointer, name);
 
     case eTypeStruct: return (name != NULL)
-        ? format("%sstruct %s %s", quals, type->name, name)
-        : format("%sstruct %s", quals, type->name);
+        ? str_format(emit->arena, "%sstruct %s %s", quals, type->name, name)
+        : str_format(emit->arena, "%sstruct %s", quals, type->name);
 
     case eTypeEmpty: NEVER("cannot emit empty type `%s`", type->name);
-    default: NEVER("unknown type %s", type_to_string(type));
+    default: NEVER("unknown type %s", type_to_string(type, emit->arena));
     }
 }
 
 const char *c89_format_storage(c89_emit_t *emit, ssa_storage_t storage, const char *name)
 {
-    char *it = format("%s[%zu]", name, storage.size);
+    char *it = str_format(emit->arena, "%s[%zu]", name, storage.size);
     return c89_format_type(emit, storage.type, it, true);
 }
 
 const char *c89_format_params(c89_emit_t *emit, typevec_t *params, bool variadic)
 {
+    CTASSERT(emit != NULL);
+    CTASSERT(params != NULL);
+
     size_t len = typevec_len(params);
     if (len == 0)
     {
         return variadic ? "" : "void";
     }
 
-    vector_t *args = vector_of(len);
+    vector_t *args = vector_of(len, emit->arena);
     for (size_t i = 0; i < len; i++)
     {
         const ssa_param_t *param = typevec_offset(params, i);
@@ -116,6 +120,6 @@ const char *c89_format_params(c89_emit_t *emit, typevec_t *params, bool variadic
         vector_set(args, i, (char*)it);
     }
 
-    char *all = str_join(", ", args);
-    return variadic ? format("%s, ...", all) : all;
+    char *all = str_join(", ", args, emit->arena);
+    return variadic ? str_format(emit->arena, "%s, ...", all) : all;
 }

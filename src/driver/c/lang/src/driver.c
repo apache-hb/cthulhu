@@ -1,6 +1,7 @@
 #include "c/driver.h"
 #include "c/sema/sema.h"
 
+#include "memory/memory.h"
 #include "std/vector.h"
 
 #include "scan/node.h"
@@ -15,7 +16,8 @@ static const tree_attribs_t kExportAttribs = {
 
 static vector_t *cc_lang_path(void)
 {
-    vector_t *path = vector_new(2);
+    arena_t *arena = get_global_arena();
+    vector_t *path = vector_new(2, arena);
     vector_push(&path, "cc");
     vector_push(&path, "lang");
     return path;

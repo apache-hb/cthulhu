@@ -8,8 +8,9 @@ src = [
 fs_args = cc.get_supported_arguments('/wd4324')
 
 libfs = library('fs', src,
+    build_by_default : false,
     c_args : user_args + fs_args,
-    dependencies : [ memory, std, os, io ],
+    dependencies : [ arena, std, os, io ],
     include_directories : [ 'include', 'src' ]
 )
 

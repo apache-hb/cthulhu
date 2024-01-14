@@ -1,7 +1,7 @@
 #include "io/impl.h"
 
 #include "base/panic.h"
-#include "memory/arena.h"
+#include "arena/arena.h"
 
 #include <string.h>
 

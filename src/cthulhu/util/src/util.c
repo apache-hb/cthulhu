@@ -4,6 +4,7 @@
 
 #include "cthulhu/tree/query.h"
 
+#include "memory/memory.h"
 #include "std/str.h"
 
 #include "base/panic.h"
@@ -271,5 +272,6 @@ bool util_length_bounded(size_t length)
 
 const char *util_length_name(size_t length)
 {
-    return util_length_bounded(length) ? format("%zu", length) : "unbounded";
+    arena_t *arena = get_global_arena();
+    return util_length_bounded(length) ? str_format(arena, "%zu", length) : "unbounded";
 }

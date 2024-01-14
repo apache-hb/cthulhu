@@ -11,6 +11,7 @@ typedef struct names_t
 
 typedef struct emit_t
 {
+    arena_t *arena;
     logger_t *reports;
 
     names_t block_names;
@@ -29,4 +30,4 @@ char *get_step_from_block(emit_t *emit, const ssa_block_t *block, size_t index);
 
 void write_string(io_t *io, const char *fmt, ...);
 
-const char *type_to_string(const ssa_type_t *type);
+const char *type_to_string(const ssa_type_t *type, arena_t *arena);

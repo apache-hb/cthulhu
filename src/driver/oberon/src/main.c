@@ -1,6 +1,6 @@
 #include "cthulhu/runtime/driver.h"
 
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "oberon/driver.h"
 
 #include "interop/compile.h"
@@ -41,7 +41,7 @@ static void obr_postparse(driver_t *handle, scan_t *scan, void *tree)
     {
         obr_t *mod = vector_get(modules, i);
         context_t *ctx = context_new(handle, mod->name, mod, NULL);
-        add_context(lifetime, vector_init_arena(mod->name, arena), ctx);
+        add_context(lifetime, vector_init(mod->name, arena), ctx);
     }
 }
 

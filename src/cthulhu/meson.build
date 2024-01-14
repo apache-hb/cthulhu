@@ -1,3 +1,4 @@
+subdir('memory')
 subdir('events')
 subdir('tree')
 subdir('ssa')

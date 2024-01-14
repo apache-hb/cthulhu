@@ -2,7 +2,7 @@
 
 #include "base/panic.h"
 #include "cthulhu/events/events.h"
-#include "memory/arena.h"
+#include "arena/arena.h"
 #include "std/typed/vector.h"
 
 #include "notify/notify.h"

@@ -56,7 +56,7 @@ static void import_module(lifetime_t *lifetime, tree_t *sema, obr_t *include)
 {
     CTASSERT(include->kind == eObrImport);
     arena_t *arena = lifetime_get_arena(lifetime);
-    context_t *ctx = get_context(lifetime, vector_init_arena(include->symbol, arena));
+    context_t *ctx = get_context(lifetime, vector_init(include->symbol, arena));
 
     if (ctx == NULL)
     {

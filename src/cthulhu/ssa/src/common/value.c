@@ -65,8 +65,9 @@ ssa_value_t *ssa_value_string(const ssa_type_t *type, text_view_t view)
     EXPECT_TYPE(ptr.pointer, eTypeDigit);
     CTASSERTF(ptr.length != 0 && ptr.length != SIZE_MAX, "invalid string length: %zu", ptr.length);
 
+    arena_t *arena = get_global_arena();
     ssa_value_t *self = ssa_value_new(type, true);
-    self->data = vector_of(length);
+    self->data = vector_of(length, arena);
     for (size_t i = 0; i < length; i++)
     {
         ssa_value_t *value = ssa_value_char(ptr.pointer, text[i]);

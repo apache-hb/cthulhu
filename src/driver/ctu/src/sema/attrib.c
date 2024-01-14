@@ -17,7 +17,8 @@
 
 static const char *attrib_name(vector_t *path)
 {
-    return str_join("::", path);
+    arena_t *arena = get_global_arena();
+    return str_join("::", path, arena);
 }
 
 static ctu_attrib_t *get_attrib(tree_t *sema, vector_t *path)

@@ -1,6 +1,6 @@
 #include "common.h"
 
-#include "memory/arena.h"
+#include "arena/arena.h"
 
 #include "std/str.h"
 #include "std/typed/vector.h"
@@ -87,7 +87,7 @@ static void config_init(cfg_group_t *config, arena_t *arena, const cfg_info_t *i
     config->info = info;
 
     config->groups = typevec_new(sizeof(cfg_group_t), 4, arena);
-    config->fields = vector_new_arena(4, arena);
+    config->fields = vector_new(4, arena);
 
     ARENA_IDENTIFY(config->groups, "groups", config, arena);
     ARENA_IDENTIFY(config->fields, "fields", config, arena);
@@ -153,7 +153,7 @@ cfg_field_t *config_vector(cfg_group_t *group, const cfg_info_t *info, vector_t 
     ASSERT_CONFIG_VALID(group, info);
 
     cfg_field_t *field = add_field(group, info, eConfigVector);
-    field->vec_value = initial != NULL ? initial : vector_new_arena(4, group->arena);
+    field->vec_value = initial != NULL ? initial : vector_new(4, group->arena);
 
     return field;
 }

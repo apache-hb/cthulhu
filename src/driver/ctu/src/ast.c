@@ -1,6 +1,6 @@
 #include "ctu/ast.h"
 
-#include "memory/arena.h"
+#include "arena/arena.h"
 
 static ctu_t *ctu_new(scan_t *scan, where_t where, ctu_kind_t kind)
 {
