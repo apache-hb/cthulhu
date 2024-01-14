@@ -97,10 +97,10 @@ static void ctu_resolve_type(tree_t *sema, tree_t *self, void *user)
 
 static vector_t *ctu_collect_fields(tree_t *sema, tree_t *self, ctu_t *decl)
 {
-    ctu_sema_t inner = ctu_sema_init(sema, self, vector_new(0));
+    arena_t *arena = get_global_arena();
+    ctu_sema_t inner = ctu_sema_init(sema, self, vector_new_arena(0, arena));
     size_t len = vector_len(decl->fields);
 
-    arena_t *arena = get_global_arena();
     map_t *fields = map_optimal(len, kTypeInfoString, arena);
 
     vector_t *items = vector_of_arena(len, arena);
@@ -108,7 +108,7 @@ static vector_t *ctu_collect_fields(tree_t *sema, tree_t *self, ctu_t *decl)
     {
         ctu_t *field = vector_get(decl->fields, i);
         tree_t *type = ctu_sema_type(&inner, field->field_type);
-        char *name = field->name == NULL ? format("field%zu", i) : field->name;
+        char *name = field->name == NULL ? str_format(arena, "field%zu", i) : field->name;
         tree_t *item = tree_decl_field(field->node, name, type);
 
         tree_t *prev = map_get(fields, name);
