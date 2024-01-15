@@ -442,7 +442,7 @@ bt_report_t *bt_report_new(arena_t *arena)
     return report;
 }
 
-static void read_stacktrace_frame(void *user, const bt_frame_t *frame)
+static void read_stacktrace_frame(const bt_frame_t *frame, void *user)
 {
     bt_report_add(user, frame);
 }

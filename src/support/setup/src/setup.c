@@ -301,14 +301,13 @@ static void pretty_panic_handler(panic_t panic, const char *fmt, va_list args)
     exit(CT_EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
 }
 
-static void *default_error_begin(size_t error)
+static void default_error_begin(size_t error, void *user)
 {
-    io_t *io = io_stdout();
+    io_t *io = user;
     io_printf(io, "a fatal error has occured 0x%zX\n", error);
-    return io;
 }
 
-static void default_error_frame(void *user, const bt_frame_t *frame)
+static void default_error_frame(const bt_frame_t *frame, void *user)
 {
     io_t *io = user;
 
@@ -362,6 +361,7 @@ void setup_global(void)
         .begin = default_error_begin,
         .end = default_error_end,
         .frame = default_error_frame,
+        .user = io_stderr()
     };
 
     gErrorReport = error;

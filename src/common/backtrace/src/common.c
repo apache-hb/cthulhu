@@ -4,13 +4,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void *bt_error_begin(size_t error)
+static void bt_error_begin(size_t error, void *user)
 {
     CTU_UNUSED(error);
-    return NULL;
+    CTU_UNUSED(user);
 }
 
-static void bt_error_frame(void *user, const bt_frame_t *frame)
+static void bt_error_frame(const bt_frame_t *frame, void *user)
 {
     CTU_UNUSED(user);
     CTU_UNUSED(frame);
@@ -26,6 +26,7 @@ bt_error_t gErrorReport = {
     .begin = bt_error_begin,
     .end = bt_error_end,
     .frame = bt_error_frame,
+    .user = NULL
 };
 
 USE_DECL

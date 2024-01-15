@@ -71,23 +71,20 @@ typedef enum frame_resolve_t
 } frame_resolve_t;
 
 /// @brief user callback for @a bt_read
-typedef void (*bt_trace_t)(void *user, const bt_frame_t *frame);
-
-/// @brief system level fatal error callback
-/// called on events such as segfaults
-typedef void (*bt_fatal_callback_t)(void);
-
-/// @brief called once when a system error occurs
 ///
-/// @param error the error to report
-///
-/// @return the user data to pass to @a bt_error_end
-typedef void *(*bt_error_begin_t)(size_t error);
+/// @param frame the frame to resolve
+/// @param user user data
+typedef void (*bt_trace_t)(const bt_frame_t *frame, void *user);
 
 /// @brief called once when a system error occurs
 ///
 /// @param error the error to report
-typedef void (*bt_error_end_t)(void *error);
+typedef void (*bt_error_begin_t)(size_t error, void *user);
+
+/// @brief called once when a system error occurs
+///
+/// @param user the user data from @a bt_error_begin
+typedef void (*bt_error_end_t)(void *user);
 
 /// @brief system error handling callbacks
 typedef struct bt_error_t
@@ -100,6 +97,9 @@ typedef struct bt_error_t
 
     /// @brief called once for each frame
     bt_trace_t frame;
+
+    /// @brief user data to pass to the callbacks
+    void *user;
 } bt_error_t;
 
 /// @brief the global system error handler

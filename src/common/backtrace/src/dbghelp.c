@@ -62,7 +62,7 @@ static void read_context_stack(CONTEXT *ctx, bt_trace_t callback, void *user)
             .address = stackframe.AddrPC.Offset,
         };
 
-        callback(user, &frame);
+        callback(&frame, user);
     }
 }
 
@@ -128,11 +128,11 @@ frame_resolve_t bt_resolve_inner(const bt_frame_t *frame, bt_symbol_t *symbol)
 
 static LONG WINAPI bt_exception_handler(EXCEPTION_POINTERS *exception)
 {
-    void *ctx = gErrorReport.begin(exception->ExceptionRecord->ExceptionCode);
+    gErrorReport.begin(exception->ExceptionRecord->ExceptionCode, gErrorReport.user);
 
-    read_context_stack(exception->ContextRecord, gErrorReport.frame, ctx);
+    read_context_stack(exception->ContextRecord, gErrorReport.frame, gErrorReport.user);
 
-    gErrorReport.end(ctx);
+    gErrorReport.end(gErrorReport.user);
 
     return EXCEPTION_EXECUTE_HANDLER;
 }

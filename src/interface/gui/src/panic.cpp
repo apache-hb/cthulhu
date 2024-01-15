@@ -100,7 +100,7 @@ struct trace_capture_t
     PanicInfo *info = nullptr;
 };
 
-static void trace_callback(void *user, const bt_frame_t *frame)
+static void trace_callback(const bt_frame_t *frame, void *user)
 {
     auto& [symbol, info] = *reinterpret_cast<trace_capture_t*>(user);
 
