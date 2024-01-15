@@ -5,13 +5,7 @@ subdir('driver')
 
 subdir('support')
 
-foreach interface : get_option('interfaces')
-    subdir('interface' / interface)
-endforeach
-
-if frontend_gui.allowed()
-    subdir('interface/gui')
-endif
+subdir('interface')
 
 if driver_tests.allowed()
     subdir('tools/harness')

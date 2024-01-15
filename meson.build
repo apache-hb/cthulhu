@@ -1,6 +1,6 @@
 project('cthulhu', 'c',
     license : 'LGPLv3',
-    version : '0.2.7',
+    version : '0.2.8',
     meson_version : '>=1.3.0',
     default_options : [
         # gcc is picky about POSIX stdlib extensions
@@ -18,9 +18,8 @@ project('cthulhu', 'c',
         'warning_level=3',
         'werror=true',
 
-        # currently meson doesnt forward `declare_dependency:sources` between dependencies
-        # which means we cant pass the ctu_xxx_api.h headers between dependencies
-        # so we have to use static linking until thats fixed
+        # do static linking by default
+        # shared linking is supported but slows down the test suite
         'default_library=static'
     ]
 )
@@ -34,10 +33,12 @@ target = target_machine.system()
 
 opt_paranoid = get_option('paranoid').disable_auto_if(is_release)
 
-frontend_gui = get_option('frontend_gui')
+frontend_gui = get_option('frontend_gui').disable_auto_if(meson.is_subproject())
+frontend_cli = get_option('frontend_cli')
+frontend_example = get_option('frontend_example').disable_auto_if(meson.is_subproject())
 
 # disable unit tests if we are a subproject or release build
-# this is because they require some different compiler flags that slow down the compiler
+# this is because they require some different flags that slow down the compiler.
 # but only on gcc
 unit_tests = get_option('unit_tests').disable_auto_if(is_release or meson.is_subproject())
 driver_tests = get_option('driver_tests').disable_auto_if(meson.is_subproject())
@@ -53,18 +54,19 @@ tool_notify = get_option('tool_notify').disable_auto_if(is_release or meson.is_s
 tool_display = get_option('tool_display').disable_auto_if(is_release or meson.is_subproject())
 tool_error = get_option('tool_error').disable_auto_if(is_release or meson.is_subproject())
 
-opt_lang_c = get_option('lang_c')
-opt_lang_cpp = get_option('lang_cpp').require(opt_lang_c.allowed())
+lang_ctu = get_option('lang_ctu')
+lang_pl0 = get_option('lang_pl0')
+lang_oberon = get_option('lang_oberon')
+lang_jvm = get_option('lang_jvm')
+lang_example = get_option('lang_example').disable_auto_if(meson.is_subproject())
+lang_c = get_option('lang_c')
+lang_cpp = get_option('lang_cpp')
 
 # tools like this are user facing, so dont disable them in release mode
 tool_diagnostic = get_option('tool_diagnostic').disable_auto_if(meson.is_subproject())
-# tool_cpreproc = get_option('tool_cpreproc').disable_auto_if(meson.is_subproject() or not opt_lang_cpp.allowed())
 
-wants_cpp = frontend_gui.allowed()
-needs_cpp = frontend_gui.enabled()
-
-if wants_cpp
-    has_cpp = add_languages('cpp', native : false, required : needs_cpp)
+if frontend_gui.allowed()
+    has_cpp = add_languages('cpp', native : false, required : frontend_gui.enabled())
 
     frontend_gui = frontend_gui.require(has_cpp)
 endif
@@ -82,11 +84,11 @@ parts = version.split('.')
 source_dir = meson.project_source_root() / 'src'
 data_dir = meson.project_source_root() / 'data'
 
-config_cdata = configuration_data({
-    'CTU_MAJOR': parts[0].to_int(),
-    'CTU_MINOR': parts[1].to_int(),
-    'CTU_PATCH': parts[2].to_int()
-})
+config_cdata = configuration_data()
+
+config_cdata.set('CTU_MAJOR', parts[0].to_int())
+config_cdata.set('CTU_MINOR', parts[1].to_int())
+config_cdata.set('CTU_PATCH', parts[2].to_int())
 
 config_cdata.set10('CTU_DEBUG', is_debug)
 config_cdata.set10('CTU_PARANOID', opt_paranoid.allowed())
@@ -110,10 +112,12 @@ args = cc.get_supported_arguments(
     # we use flexible array members
     '/wd4200',
 
-    # extraneous features that we dont use
-    '-fstrict-aliasing',
+    # we dont need these parts of C, might as well get some small perf gains
     '-fno-threadsafe-statics',
     '-fno-keep-static-consts',
+
+    # more free perf
+    '-fstrict-aliasing',
     '-fmerge-all-constants'
 )
 
@@ -262,15 +266,25 @@ endif
 summary = {
     'Build': {
         'Debug': is_debug,
-        'Interfaces': ', '.join(get_option('interfaces')),
-        'Languages': ', '.join(get_option('languages')),
-        'C language driver': opt_lang_c.allowed(),
-        'C preprocessor': opt_lang_cpp.allowed(),
         'Memory tracing': trace_memory.allowed(),
         'Analyze': opt_analyze.enabled(),
         'Paranoid asserts': opt_paranoid.allowed()
     },
-    'Graphical Interface': {
+    'Frontends': {
+        'GUI': frontend_gui.allowed(),
+        'CLI': frontend_cli.allowed(),
+        'Example': frontend_example.allowed()
+    },
+    'Languages': {
+        'C': lang_c.allowed(),
+        'C preprocessor': lang_cpp.allowed(),
+        'Cthulhu': lang_ctu.allowed(),
+        'PL/0': lang_pl0.allowed(),
+        'Oberon-2': lang_oberon.allowed(),
+        'JVM bytecode': lang_jvm.allowed(),
+        'Example': lang_example.allowed()
+    },
+    'GUI Frontend': {
         'Enabled': frontend_gui.allowed(),
         'Backend': 'd3d12+win32'
     },

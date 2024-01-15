@@ -313,9 +313,12 @@ static void ssa_opt_global(ssa_vm_t *vm, ssa_symbol_t *global)
     global->value = scope.return_value;
 }
 
-void ssa_opt(logger_t *reports, ssa_result_t result)
+USE_DECL
+void ssa_opt(logger_t *reports, ssa_result_t result, arena_t *arena)
 {
-    arena_t *arena = get_global_arena();
+    CTASSERT(reports != NULL);
+    CTASSERT(arena != NULL);
+
     ssa_vm_t vm = {
         .reports = reports,
         .arena = arena,

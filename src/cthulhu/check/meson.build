@@ -13,7 +13,7 @@ src = [
 libcheck = library('check', src,
     c_args : user_args + [ '-DCT_CHECK_BUILD=1' ],
     include_directories : check_include,
-    dependencies : [ memory, std, tree, ssa, scan, events, util ]
+    dependencies : [ arena, std, tree, ssa, scan, events, util ]
 )
 
 check = declare_dependency(

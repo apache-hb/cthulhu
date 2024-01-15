@@ -18,7 +18,8 @@ BEGIN_API
 ///
 /// @param reports the reports object
 /// @param mods the modules to check
-CT_CHECK_API void check_tree(IN_NOTNULL logger_t *reports, IN_NOTNULL map_t *mods);
+/// @param arena the arena to allocate in
+CT_CHECK_API void check_tree(IN_NOTNULL logger_t *reports, IN_NOTNULL map_t *mods, IN_NOTNULL arena_t *arena);
 
 END_API
 

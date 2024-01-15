@@ -8,6 +8,7 @@
 
 #include "cthulhu/emit/emit.h"
 #include "cthulhu/ssa/ssa.h"
+#include "cthulhu/check/check.h"
 
 #include "io/console.h"
 #include "notify/notify.h"
@@ -139,10 +140,13 @@ int main(int argc, const char **argv)
 
     map_t *modmap = lifetime_get_modules(lifetime);
 
+    check_tree(logger, modmap, arena);
+    CHECK_LOG(logger, "checking tree");
+
     ssa_result_t ssa = ssa_compile(modmap, arena);
     CHECK_LOG(logger, "generating ssa");
 
-    ssa_opt(logger, ssa);
+    ssa_opt(logger, ssa, arena);
     CHECK_LOG(logger, "optimizing ssa");
 
     fs_t *fs = fs_virtual("out", arena);

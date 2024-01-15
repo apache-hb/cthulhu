@@ -8,7 +8,7 @@
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"
 
-#include "memory/memory.h"
+#include "arena/arena.h"
 #include "std/vector.h"
 #include "std/set.h"
 #include "std/map.h"
@@ -664,12 +664,12 @@ static void check_module_valid(check_t *check, const tree_t *mod)
 }
 
 USE_DECL
-void check_tree(logger_t *reports, map_t *mods)
+void check_tree(logger_t *reports, map_t *mods, arena_t *arena)
 {
+    CTASSERT(arena != NULL);
     CTASSERT(reports != NULL);
     CTASSERT(mods != NULL);
 
-    arena_t *arena = get_global_arena();
     check_t check = {
         .reports = reports,
 

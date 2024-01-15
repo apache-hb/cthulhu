@@ -311,19 +311,24 @@ typedef struct ssa_result_t {
     map_t *deps; // map<ssa_symbol, set<ssa_symbol>>
 } ssa_result_t;
 
+/// @brief compile a set of trees into their ssa form
+///
+/// @param mods the modules to compile
+/// @param arena the arena to allocate in
+///
+/// @return the compiled modules
 CT_SSA_API ssa_result_t ssa_compile(map_t *mods, arena_t *arena);
 
 ///
 /// optimization api
 ///
 
-/**
- * @brief Optimize a given module.
- *
- * @param reports report sink
- * @param mod module to optimize
- */
-CT_SSA_API void ssa_opt(logger_t *reports, ssa_result_t mod);
+/// @brief Optimize a given module.
+///
+/// @param reports report sink
+/// @param mod module to optimize
+/// @param arena arena to allocate in
+CT_SSA_API void ssa_opt(logger_t *reports, ssa_result_t mod, arena_t *arena);
 
 ///
 /// rewriting

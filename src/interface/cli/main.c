@@ -4,6 +4,7 @@
 #include "cmd.h"
 
 #include "cthulhu/events/events.h"
+#include "cthulhu/check/check.h"
 #include "io/console.h"
 #include "arena/arena.h"
 #include "format/notify.h"
@@ -178,10 +179,13 @@ int main(int argc, const char **argv)
     CHECK_LOG(reports, "compiling sources");
 
     map_t *modmap = lifetime_get_modules(lifetime);
+    check_tree(reports, modmap, arena);
+    CHECK_LOG(reports, "checking tree");
+
     ssa_result_t ssa = ssa_compile(modmap, arena);
     CHECK_LOG(reports, "compiling ssa");
 
-    ssa_opt(reports, ssa);
+    ssa_opt(reports, ssa, arena);
     CHECK_LOG(reports, "optimizing ssa");
 
     fs_t *fs = fs_virtual("out", arena);

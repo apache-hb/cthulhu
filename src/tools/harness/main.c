@@ -261,13 +261,13 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
 
     map_t *modmap = lifetime_get_modules(lifetime);
 
-    check_tree(reports, modmap);
+    check_tree(reports, modmap, arena);
     CHECK_LOG(reports, "validations failed");
 
     ssa_result_t ssa = ssa_compile(modmap, arena);
     CHECK_LOG(reports, "generating ssa");
 
-    ssa_opt(reports, ssa);
+    ssa_opt(reports, ssa, arena);
     CHECK_LOG(reports, "optimizing ssa");
 
     fs_t *fs = fs_virtual("out", arena);

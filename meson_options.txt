@@ -1,7 +1,28 @@
-option('languages', type : 'array',
-    description : 'select which languages to compile',
-    choices : [ 'ctu', 'pl0', 'oberon', 'jvm', 'example' ],
-    value : [ 'ctu', 'pl0', 'oberon', 'example' ]
+# languages
+
+option('lang_ctu', type : 'feature',
+    description : 'build the ctu language driver',
+    value : 'auto'
+)
+
+option('lang_pl0', type : 'feature',
+    description : 'build the pl0 language driver',
+    value : 'auto'
+)
+
+option('lang_oberon', type : 'feature',
+    description : 'build the oberon-2 language driver',
+    value : 'auto'
+)
+
+option('lang_jvm', type : 'feature',
+    description : 'build the jvm language driver',
+    value : 'disabled'
+)
+
+option('lang_example', type : 'feature',
+    description : 'build the example language driver',
+    value : 'auto'
 )
 
 option('lang_c', type : 'feature',
@@ -14,13 +35,17 @@ option('lang_cpp', type : 'feature',
     value : 'auto'
 )
 
-option('interfaces', type : 'array',
-    description : 'select which compiler frontends to enable',
-    choices : [ 'cli', 'example' ],
-    value : [ 'cli', 'example' ]
+# interfaces
+
+option('frontend_cli', type : 'feature',
+    description : 'build the cli frontend',
+    value : 'auto'
 )
 
-# gui interface
+option('frontend_example', type : 'feature',
+    description : 'build the example frontend',
+    value : 'auto'
+)
 
 option('frontend_gui', type : 'feature',
     description : 'build gui frontend (requires c++ compiler)',
@@ -35,7 +60,7 @@ option('trace_memory', type : 'feature',
 )
 
 option('paranoid', type : 'feature',
-    description : 'enable paranoid assertions, disabled in release by default',
+    description : 'enable paranoid assertions',
     value : 'auto'
 )
 

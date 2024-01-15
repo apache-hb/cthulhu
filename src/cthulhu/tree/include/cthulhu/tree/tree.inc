@@ -149,6 +149,9 @@ TREE_LINKAGE(eLinkImport, "imported")
 TREE_LINKAGE(eLinkModule, "internal")
 TREE_LINKAGE(eLinkEntryCli, "entry_cli")
 TREE_LINKAGE(eLinkEntryGui, "entry_gui")
+TREE_LINKAGE(eLinkPixelShader, "pixel_shader")
+TREE_LINKAGE(eLinkVertexShader, "vertex_shader")
+TREE_LINKAGE(eLinkComputeShader, "compute_shader")
 
 #undef TREE_LINKAGE
 
@@ -234,11 +237,3 @@ TREE_JUMP(eJumpBreak, "break")
 TREE_JUMP(eJumpContinue, "continue")
 
 #undef TREE_JUMP
-
-#ifndef ATTRIB_KIND
-#   define ATTRIB_KIND(ID, NAME)
-#endif
-
-ATTRIB_KIND(eAttribEmitName, "emit_name")
-
-#undef ATTRIB_KIND

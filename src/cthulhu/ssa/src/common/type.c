@@ -91,10 +91,9 @@ ssa_type_t *ssa_type_union(const char *name, quals_t quals, typevec_t *fields)
     return type;
 }
 
-static typevec_t *collect_params(map_t *cache, const tree_t *type)
+static typevec_t *collect_params(map_t *cache, const tree_t *type, arena_t *arena)
 {
     vector_t *vec = tree_fn_get_params(type);
-    arena_t *arena = get_global_arena();
 
     size_t len = vector_len(vec);
     typevec_t *result = typevec_of(sizeof(ssa_param_t), len, arena);
@@ -118,9 +117,8 @@ static typevec_t *collect_params(map_t *cache, const tree_t *type)
     return result;
 }
 
-static typevec_t *collect_fields(map_t *cache, const tree_t *type)
+static typevec_t *collect_fields(map_t *cache, const tree_t *type, arena_t *arena)
 {
-    arena_t *arena = get_global_arena();
     size_t len = vector_len(type->fields);
     typevec_t *result = typevec_of(sizeof(ssa_field_t), len, arena);
     for (size_t i = 0; i < len; i++)
@@ -142,7 +140,7 @@ static typevec_t *collect_fields(map_t *cache, const tree_t *type)
     return result;
 }
 
-static ssa_type_t *ssa_type_create(map_t *cache, const tree_t *type)
+static ssa_type_t *ssa_type_create(map_t *cache, const tree_t *type, arena_t *arena)
 {
     tree_kind_t kind = tree_get_kind(type);
     const char *name = tree_get_name(type);
@@ -159,7 +157,7 @@ static ssa_type_t *ssa_type_create(map_t *cache, const tree_t *type)
             /* name = */ name,
             /* quals = */ quals,
             /* result = */ ssa_type_create_cached(cache, tree_fn_get_return(type)),
-            /* params = */ collect_params(cache, type),
+            /* params = */ collect_params(cache, type, arena),
             /* variadic = */ tree_fn_get_arity(type) == eArityVariable
         );
 
@@ -173,9 +171,9 @@ static ssa_type_t *ssa_type_create(map_t *cache, const tree_t *type)
     case eTreeTypeOpaque:
         return ssa_type_opaque_pointer(name, quals);
 
-    case eTreeTypeEnum: return ssa_type_create(cache, type->underlying);
-    case eTreeTypeStruct: return ssa_type_struct(name, quals, collect_fields(cache, type));
-    case eTreeTypeUnion: return ssa_type_union(name, quals, collect_fields(cache, type));
+    case eTreeTypeEnum: return ssa_type_create(cache, type->underlying, arena);
+    case eTreeTypeStruct: return ssa_type_struct(name, quals, collect_fields(cache, type, arena));
+    case eTreeTypeUnion: return ssa_type_union(name, quals, collect_fields(cache, type, arena));
 
     default: NEVER("unexpected type kind: %s", tree_to_string(type));
     }
@@ -189,7 +187,9 @@ ssa_type_t *ssa_type_create_cached(map_t *cache, const tree_t *type)
     ssa_type_t *temp = ssa_type_empty(tree_get_name(type), eQualUnknown);
     map_set(cache, type, temp);
 
-    ssa_type_t *result = ssa_type_create(cache, type);
+    arena_t *arena = get_global_arena();
+
+    ssa_type_t *result = ssa_type_create(cache, type, arena);
     memcpy(temp, result, sizeof(ssa_type_t));
     return temp;
 }
