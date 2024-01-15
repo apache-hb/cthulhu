@@ -246,9 +246,9 @@ int main(int argc, const char **argv)
     ap_t *ap = ap_new(config.group, config.arena);
 
     int err = parse_argparse(ap, tool.options, config);
-    if (err == EXIT_SHOULD_EXIT)
+    if (err == CT_EXIT_SHOULD_EXIT)
     {
-        return EXIT_OK;
+        return CT_EXIT_OK;
     }
 
     ///
@@ -258,7 +258,7 @@ int main(int argc, const char **argv)
     if (cfg_bool_value(tool.print_all_langs))
     {
         print_all_langs(io, langs);
-        return EXIT_OK;
+        return CT_EXIT_OK;
     }
 
     ///
@@ -270,7 +270,7 @@ int main(int argc, const char **argv)
     {
         const language_t *lang = langs.langs[lang_index - 1];
         print_lang_info(io, lang);
-        return EXIT_OK;
+        return CT_EXIT_OK;
     }
 
     ///
@@ -313,7 +313,7 @@ int main(int argc, const char **argv)
             }
         }
 
-        return EXIT_OK;
+        return CT_EXIT_OK;
     }
 
     ///

@@ -35,14 +35,16 @@
 /// returns the minimum of @a lhs and @a rhs
 #define MIN(L, R) ((L) < (R) ? (L) : (R))
 
-/// @def ALIGN_POW2(x, align)
+/// @def CT_ALIGN_POW2(X, ALIGN)
 /// aligns @p X to the next power of 2 of @p ALIGN
-#define ALIGN_POW2(X, ALIGN) (((X) + (ALIGN)-1) & ~((ALIGN)-1))
+#define CT_ALIGN_POW2(X, ALIGN) (((X) + (ALIGN)-1) & ~((ALIGN)-1))
 
+/// @def CTU_UNUSED(x)
+/// @brief mark a variable as unused
 #define CTU_UNUSED(x) ((void)(x))
 
-#define INNER_STR(x) #x
-#define STR(x) INNER_STR(x)
+#define CT_INNER_STR(x) #x
+#define CT_STR(x) CT_INNER_STR(x)
 
 /// @defgroup ansi_colour ANSI Colour macros
 /// @brief ANSI escape string colour macros
@@ -51,15 +53,15 @@
 /// Useful for formatting messages to the console.
 /// @{
 
-#define ANSI_RED "\x1B[1;31m"    ///< ANSI red
-#define ANSI_GREEN "\x1B[1;32m"  ///< ANSI green
-#define ANSI_YELLOW "\x1B[1;33m" ///< ANSI yellow
-#define ANSI_BLUE "\x1B[1;34m"   ///< ANSI blue
-#define ANSI_MAGENTA "\x1B[1;35m" ///< ANSI magenta
-#define ANSI_CYAN "\x1B[1;36m"   ///< ANSI cyan
-#define ANSI_WHITE "\x1B[1;37m"  ///< ANSI white
+#define CT_ANSI_RED "\x1B[1;31m"    ///< ANSI red
+#define CT_ANSI_GREEN "\x1B[1;32m"  ///< ANSI green
+#define CT_ANSI_YELLOW "\x1B[1;33m" ///< ANSI yellow
+#define CT_ANSI_BLUE "\x1B[1;34m"   ///< ANSI blue
+#define CT_ANSI_MAGENTA "\x1B[1;35m" ///< ANSI magenta
+#define CT_ANSI_CYAN "\x1B[1;36m"   ///< ANSI cyan
+#define CT_ANSI_WHITE "\x1B[1;37m"  ///< ANSI white
 
-#define ANSI_RESET "\x1B[0m"     ///< ANSI reset
+#define CT_ANSI_RESET "\x1B[0m"     ///< ANSI reset
 
 /// @}
 
@@ -70,10 +72,10 @@
 /// Used in tests and the cli.
 /// @{
 
-#define EXIT_SHOULD_EXIT 2 ///< the user has requested to exit the program
-#define EXIT_OK 0        ///< no user errors or internal errors
-#define EXIT_ERROR 1     ///< the user has made an error
-#define EXIT_INTERNAL 99 ///< internal compiler errors have occurred
+#define CT_EXIT_OK 0        ///< no user errors or internal errors
+#define CT_EXIT_ERROR 1     ///< the user has made an error
+#define CT_EXIT_SHOULD_EXIT 2 ///< the user has requested to exit the program
+#define CT_EXIT_INTERNAL 99 ///< internal compiler errors have occurred
 
 /// @}
 

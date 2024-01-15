@@ -160,7 +160,7 @@ int process_default_options(default_options_t options, tool_config_t config)
         };
 
         print_config(config_display, config.group);
-        return EXIT_SHOULD_EXIT;
+        return CT_EXIT_SHOULD_EXIT;
     }
 
     bool show_version = cfg_bool_value(options.print_version);
@@ -171,10 +171,10 @@ int process_default_options(default_options_t options, tool_config_t config)
         };
 
         print_version(version_display, config.version, name);
-        return EXIT_SHOULD_EXIT;
+        return CT_EXIT_SHOULD_EXIT;
     }
 
-    return EXIT_OK;
+    return CT_EXIT_OK;
 }
 
 static void report_argparse_errors(io_t *io, format_context_t ctx, vector_t *args)
@@ -231,9 +231,9 @@ static int process_argparse_result(default_options_t options, tool_config_t conf
 
     bool has_no_args = count == 0 && posarg_count == 0;
 
-    if (!has_no_args && err == EXIT_OK)
+    if (!has_no_args && err == CT_EXIT_OK)
     {
-        return EXIT_OK;
+        return CT_EXIT_OK;
     }
 
     if (has_no_args && unknown_count == 0)
@@ -255,7 +255,7 @@ static int process_argparse_result(default_options_t options, tool_config_t conf
     };
 
     print_config(display, config.group);
-    return EXIT_SHOULD_EXIT;
+    return CT_EXIT_SHOULD_EXIT;
 }
 
 int parse_commands(default_options_t options, tool_config_t config)
@@ -267,7 +267,7 @@ int parse_commands(default_options_t options, tool_config_t config)
 int parse_argparse(ap_t *ap, default_options_t options, tool_config_t config)
 {
     int err = process_argparse_result(options, config, ap);
-    if (err != EXIT_OK)
+    if (err != CT_EXIT_OK)
     {
         return err;
     }
@@ -298,7 +298,7 @@ static void pretty_panic_handler(panic_t panic, const char *fmt, va_list args)
     io_printf(io, "[panic][%s:%zu] => %s: %s\n", panic.file, panic.line, panic.function, msg);
 
     print_backtrace(backtrace_config, report);
-    exit(EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
+    exit(CT_EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
 }
 
 static void *default_error_begin(size_t error)
@@ -339,7 +339,7 @@ static void default_error_end(void *user)
 {
     io_t *io = user;
     io_printf(io, "exiting\n");
-    exit(EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
+    exit(CT_EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
 }
 
 static void default_verbose(const char *fmt, va_list args)

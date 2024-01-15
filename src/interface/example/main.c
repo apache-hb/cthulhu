@@ -42,7 +42,7 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
     int err = text_report(logger_get_events(logger), config, title);
     logger_reset(logger);
 
-    if (err != EXIT_OK)
+    if (err != CT_EXIT_OK)
     {
         return err;
     }
@@ -54,7 +54,7 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
     do                                                       \
     {                                                        \
         int err = check_reports(logger, report_config, fmt); \
-        if (err != EXIT_OK)                                  \
+        if (err != CT_EXIT_OK)                                  \
         {                                                    \
             return err;                                      \
         }                                                    \

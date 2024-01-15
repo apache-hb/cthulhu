@@ -19,7 +19,7 @@ static void bt_error_frame(void *user, const bt_frame_t *frame)
 static void bt_error_end(void *user)
 {
     CTU_UNUSED(user);
-    exit(EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
+    exit(CT_EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
 }
 
 bt_error_t gErrorReport = {

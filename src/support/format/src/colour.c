@@ -21,16 +21,16 @@ const colour_pallete_t kColourNone = {
 
 const colour_pallete_t kColourDefault = {
     .colours = {
-        [eColourRed] = ANSI_RED,
-        [eColourGreen] = ANSI_GREEN,
-        [eColourYellow] = ANSI_YELLOW,
-        [eColourBlue] = ANSI_BLUE,
-        [eColourMagenta] = ANSI_MAGENTA,
-        [eColourCyan] = ANSI_CYAN,
-        [eColourWhite] = ANSI_WHITE,
+        [eColourRed] = CT_ANSI_RED,
+        [eColourGreen] = CT_ANSI_GREEN,
+        [eColourYellow] = CT_ANSI_YELLOW,
+        [eColourBlue] = CT_ANSI_BLUE,
+        [eColourMagenta] = CT_ANSI_MAGENTA,
+        [eColourCyan] = CT_ANSI_CYAN,
+        [eColourWhite] = CT_ANSI_WHITE,
         [eColourDefault] = "",
     },
-    .reset = ANSI_RESET
+    .reset = CT_ANSI_RESET
 };
 
 const char *colour_get(const colour_pallete_t *colours, colour_t idx)

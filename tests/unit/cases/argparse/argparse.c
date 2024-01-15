@@ -162,7 +162,7 @@ int main(void)
         test_config_t cfg = make_config(arena);
         ap_t *ap = ap_new(cfg.root, arena);
         int result = ap_parse(ap, "-b -i 42 -s hello -e b -f a -f c");
-        GROUP_EXPECT_PASS(group, "smoke test parses", result == EXIT_OK);
+        GROUP_EXPECT_PASS(group, "smoke test parses", result == CT_EXIT_OK);
         GROUP_EXPECT_PASS(group, "no unknown args", vector_len(ap_get_unknown(ap)) == 0);
         GROUP_EXPECT_PASS(group, "has no errors", vector_len(ap_get_errors(ap)) == 0);
 
@@ -186,7 +186,7 @@ int main(void)
         ap_t *ap = ap_new(cfg.root, arena);
         int result = ap_parse(ap, "-f a,c");
 
-        GROUP_EXPECT_PASS(group, "test parses", result == EXIT_OK);
+        GROUP_EXPECT_PASS(group, "test parses", result == CT_EXIT_OK);
         GROUP_EXPECT_PASS(group, "no unknown args", vector_len(ap_get_unknown(ap)) == 0);
         GROUP_EXPECT_PASS(group, "has no errors", vector_len(ap_get_errors(ap)) == 0);
 
@@ -201,7 +201,7 @@ int main(void)
         ap_t *ap = ap_new(cfg.root, arena);
         int result = ap_parse(ap, "-f \"-a,c\"");
 
-        GROUP_EXPECT_PASS(group, "test parses", result == EXIT_OK);
+        GROUP_EXPECT_PASS(group, "test parses", result == CT_EXIT_OK);
         GROUP_EXPECT_PASS(group, "no unknown args", vector_len(ap_get_unknown(ap)) == 0);
         GROUP_EXPECT_PASS(group, "has no errors", vector_len(ap_get_errors(ap)) == 0);
 
@@ -216,7 +216,7 @@ int main(void)
         ap_t *ap = ap_new(cfg.root, arena);
         int result = ap_parse(ap, "/b-");
 
-        GROUP_EXPECT_PASS(group, "test parses", result == EXIT_OK);
+        GROUP_EXPECT_PASS(group, "test parses", result == CT_EXIT_OK);
         GROUP_EXPECT_PASS(group, "no unknown args", vector_len(ap_get_unknown(ap)) == 0);
 
         vector_t *errors = ap_get_errors(ap);
@@ -234,7 +234,7 @@ int main(void)
         ap_t *ap = ap_new(cfg.root, arena);
         int result = ap_parse(ap, "-b -b2");
 
-        GROUP_EXPECT_PASS(group, "test parses", result == EXIT_OK);
+        GROUP_EXPECT_PASS(group, "test parses", result == CT_EXIT_OK);
         GROUP_EXPECT_PASS(group, "no unknown args", vector_len(ap_get_unknown(ap)) == 0);
 
         vector_t *errors = ap_get_errors(ap);

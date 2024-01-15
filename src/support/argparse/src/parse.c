@@ -90,7 +90,7 @@ int ap_parse_common(ap_t *self, const char *text)
     scan_set_context(scan, self);
     parse_result_t result = scan_buffer(scan, &kCallbacks);
 
-    return result.result == eParseOk ? EXIT_OK : EXIT_ERROR;
+    return result.result == eParseOk ? CT_EXIT_OK : CT_EXIT_ERROR;
 }
 
 int ap_parse_args(ap_t *self, int argc, const char **argv)

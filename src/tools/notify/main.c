@@ -445,9 +445,9 @@ int main(int argc, const char **argv)
     };
 
     int err = parse_commands(tool.options, config);
-    if (err == EXIT_SHOULD_EXIT)
+    if (err == CT_EXIT_SHOULD_EXIT)
     {
-        return EXIT_OK;
+        return CT_EXIT_OK;
     }
 
     bool backtraces = cfg_bool_value(tool.test_backtrace);

@@ -78,23 +78,23 @@ typedef struct default_options_t
 CT_SETUP_API default_options_t get_default_options(cfg_group_t *group);
 
 /// @brief process the default options
-/// @note if this function does not return @a EXIT_OK, the program should exit
+/// @note if this function does not return @a CT_EXIT_OK, the program should exit
 ///       with the returned error code
 ///
 /// @param options the default options
 /// @param config the tool config
 ///
-/// @return @a EXIT_OK on success or an error code
+/// @return @a CT_EXIT_OK on success or an error code
 CT_SETUP_API int process_default_options(default_options_t options, tool_config_t config);
 
 /// @brief parse the default commands
-/// @note if this function does not return @a EXIT_OK, the program should exit
+/// @note if this function does not return @a CT_EXIT_OK, the program should exit
 ///       with the returned error code
 ///
 /// @param options the default options
 /// @param config the tool config
 ///
-/// @return @a EXIT_OK on success or an error code
+/// @return @a CT_EXIT_OK on success or an error code
 CT_SETUP_API int parse_commands(default_options_t options, tool_config_t config);
 
 /// @brief parse the default arguments
@@ -105,7 +105,7 @@ CT_SETUP_API int parse_commands(default_options_t options, tool_config_t config)
 /// @param options the default options
 /// @param config the tool config
 ///
-/// @return @a EXIT_OK on success or an error code
+/// @return @a CT_EXIT_OK on success or an error code
 CT_SETUP_API int parse_argparse(ap_t *ap, default_options_t options, tool_config_t config);
 
 /// @brief initialise the runtime with default options

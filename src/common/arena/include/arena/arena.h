@@ -24,11 +24,11 @@ BEGIN_API
 /// @brief a compile time flag to enable memory tracing
 /// @note this is enabled by default in debug builds, see [The build guide](@ref building) for more information
 
-/// @def ALLOC_SIZE_UNKNOWN
+/// @def CT_ALLOC_SIZE_UNKNOWN
 /// @brief unknown allocation size constant
 /// when freeing or reallocating memory, this can be used as the size
 /// to indicate that the size is unknown. requires allocator support
-#define ALLOC_SIZE_UNKNOWN SIZE_MAX
+#define CT_ALLOC_SIZE_UNKNOWN SIZE_MAX
 
 /// @brief a memory allocator
 typedef struct arena_t arena_t;
@@ -44,7 +44,7 @@ typedef struct arena_t arena_t;
 typedef void *(*mem_alloc_t)(size_t size, void *user);
 
 /// @brief arena realloc callback
-/// @pre @p old_size must be either @ref ALLOC_SIZE_UNKNOWN or the size of the allocation.
+/// @pre @p old_size must be either @ref CT_ALLOC_SIZE_UNKNOWN or the size of the allocation.
 /// @pre @p new_size must be greater than 0.
 /// @pre @p ptr must not be NULL.
 ///
@@ -58,7 +58,7 @@ typedef void *(*mem_alloc_t)(size_t size, void *user);
 typedef void *(*mem_resize_t)(void *ptr, size_t new_size, size_t old_size, void *user);
 
 /// @brief arena free callback
-/// @pre @p size must be either @ref ALLOC_SIZE_UNKNOWN or the size of the allocation.
+/// @pre @p size must be either @ref CT_ALLOC_SIZE_UNKNOWN or the size of the allocation.
 ///
 /// @param ptr the pointer to free
 /// @param size the size of the allocation.

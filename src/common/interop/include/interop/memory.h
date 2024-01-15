@@ -17,7 +17,7 @@
     inline void *prefix##realloc(void *ptr, size_t bytes, yyscan_t scanner) \
     {                                                                       \
         arena_t *arena = scan_get_arena(yyget_extra(scanner));              \
-        return arena_realloc(ptr, bytes, ALLOC_SIZE_UNKNOWN, arena);        \
+        return arena_realloc(ptr, bytes, CT_ALLOC_SIZE_UNKNOWN, arena);        \
     }                                                                       \
     inline void prefix##free(void *ptr, yyscan_t scanner)                   \
     {                                                                       \
@@ -26,7 +26,7 @@
         {                                                                   \
             return;                                                         \
         }                                                                   \
-        arena_free(ptr, ALLOC_SIZE_UNKNOWN, arena);                         \
+        arena_free(ptr, CT_ALLOC_SIZE_UNKNOWN, arena);                         \
     }
 
 /// @def FLEX_MEMORY(prefix)

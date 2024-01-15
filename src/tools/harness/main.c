@@ -84,7 +84,7 @@ typedef struct user_arena_t
 
 static user_ptr_t *get_memory(user_arena_t *arena, size_t size)
 {
-    size_t aligned = ALIGN_POW2(size, 16);
+    size_t aligned = CT_ALIGN_POW2(size, 16);
     size_t space = aligned + sizeof(user_ptr_t); // required space
 
     CTASSERTF(arena->memory_cursor + space < arena->memory_end,
@@ -93,7 +93,7 @@ static user_ptr_t *get_memory(user_arena_t *arena, size_t size)
     user_ptr_t *ptr = (user_ptr_t *)arena->memory_cursor;
 
     // align the pointer itself
-    ptr = (user_ptr_t *)ALIGN_POW2((uintptr_t)ptr, 16);
+    ptr = (user_ptr_t *)CT_ALIGN_POW2((uintptr_t)ptr, 16);
     ptr->size = (uint32_t)size;
     arena->memory_cursor = (char *)ptr + aligned + sizeof(user_ptr_t);
 
@@ -194,7 +194,7 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
     do                                                          \
     {                                                           \
         int log_ok = check_reports(logger, report_config, fmt); \
-        if (log_ok != EXIT_OK)                                  \
+        if (log_ok != CT_EXIT_OK)                                  \
         {                                                       \
             return log_ok;                                      \
         }                                                       \
@@ -340,7 +340,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     }
 #else
     int status = system(str_format(arena, "cd %s && cc %s -c -Iinclude", run_dir, str_join(" ", sources, arena)));
-    if (WEXITSTATUS(status) != EXIT_OK)
+    if (WEXITSTATUS(status) != CT_EXIT_OK)
     {
         msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(),
                    "compilation failed %d", WEXITSTATUS(status));

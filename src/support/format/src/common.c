@@ -507,7 +507,7 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
     void (*fn)(text_config_t, const event_t *) = fmt == eTextComplex ? text_report_rich
                                                                      : text_report_simple;
 
-    int result = EXIT_OK;
+    int result = CT_EXIT_OK;
     size_t warning_count = 0;
     size_t error_count = 0;
     size_t bug_count = 0;
@@ -565,12 +565,12 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
         switch (diag->severity)
         {
         case eSeverityFatal:
-            result = MAX(result, EXIT_ERROR);
+            result = MAX(result, CT_EXIT_ERROR);
             error_count += 1;
             break;
         case eSeverityInternal:
         case eSeveritySorry:
-            result = MAX(result, EXIT_INTERNAL);
+            result = MAX(result, CT_EXIT_INTERNAL);
             bug_count += 1;
             break;
         case eSeverityWarn:
@@ -587,7 +587,7 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
         .pallete = text.colours,
     };
 
-    if (result != EXIT_OK)
+    if (result != CT_EXIT_OK)
     {
         io_printf(io, "compilation failed during stage: %s\n", title);
         vector_t *parts = vector_new(3, arena);

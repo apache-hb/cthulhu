@@ -700,7 +700,7 @@ finish:
     for (size_t i = 0; i < len; i++)
     {
         CTASSERTF(strings[i] != NULL, "strings[%zu] = NULL", i);
-        arena_free(strings[i], ALLOC_SIZE_UNKNOWN, arena);
+        arena_free(strings[i], CT_ALLOC_SIZE_UNKNOWN, arena);
     }
 
     arena_free(strings, size, arena);

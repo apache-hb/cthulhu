@@ -10,7 +10,7 @@ static void default_panic_handler(panic_t panic, const char *fmt, va_list args)
     CTU_UNUSED(fmt);
     CTU_UNUSED(args);
 
-    exit(EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
+    exit(CT_EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
 }
 
 panic_handler_t gPanicHandler = default_panic_handler;
