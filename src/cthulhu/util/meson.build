@@ -13,6 +13,7 @@ src = [
 ]
 
 libutil = library('util', src,
+    build_by_default : false,
     c_args : user_args + [ '-DCT_UTIL_BUILD=1' ],
     include_directories : util_include,
     dependencies : [ memory, base, std, scan, events, tree, arena ]

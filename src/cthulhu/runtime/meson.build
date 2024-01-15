@@ -12,6 +12,7 @@ src = [
 ]
 
 libruntime = library('runtime', src,
+    build_by_default : false,
     c_args : user_args + [ '-DCT_RUNTIME_BUILD=1' ],
     include_directories : runtime_include,
     dependencies : [

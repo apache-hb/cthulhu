@@ -31,6 +31,7 @@ support_api = configure_file(
 support_include = include_directories('.', 'include')
 
 libsupport = library('support', impl,
+    build_by_default : false,
     c_args : user_args + [ '-DCT_SUPPORT_BUILD=1' ],
     include_directories : [ support_include, driver_include ],
     dependencies : deps + [ runtime, memory ]

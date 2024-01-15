@@ -16,6 +16,7 @@ src = [
 ]
 
 libemit = library('emit', src,
+    build_by_default : false,
     c_args : user_args + [ '-DCT_EMIT_BUILD=1' ],
     include_directories : [ emit_impl_include, emit_include ],
     dependencies : [ arena, base, ssa, std, io, fs, scan, events, interop ]

@@ -15,6 +15,7 @@ src = [
 ]
 
 libtree = library('tree', src,
+    build_by_default : false,
     c_args : user_args + [ '-DCT_TREE_BUILD=1' ],
     include_directories : tree_include,
     dependencies : [ memory, std, gmp, scan, events, arena ]

@@ -11,6 +11,7 @@ src = [
 ]
 
 libevents = library('events', src,
+    build_by_default : false,
     c_args : user_args + [ '-DCT_EVENTS_BUILD=1' ],
     dependencies : [ memory, std, scan, notify ],
     include_directories : events_include

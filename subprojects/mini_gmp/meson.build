@@ -18,13 +18,14 @@ if is_shared
 endif
 
 libgmp = library('gmp', [ 'mini_gmp.c', 'mini_mpq.c' ],
+    build_by_default : false,
     include_directories : '.',
     c_args : c_args,
-    c_shared_args : export_args + [ '-DMINI_GMP_EXPORTS=1' ],
+    c_shared_args : export_args + [ '-DMINI_GMP_EXPORTS=1' ]
 )
 
 gmp = declare_dependency(
     link_with : libgmp,
     include_directories : '.',
-    compile_args : export_args,
+    compile_args : export_args
 )

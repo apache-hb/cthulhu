@@ -268,7 +268,9 @@ summary = {
         'Debug': is_debug,
         'Memory tracing': trace_memory.allowed(),
         'Analyze': opt_analyze.enabled(),
-        'Paranoid asserts': opt_paranoid.allowed()
+        'Paranoid asserts': opt_paranoid.allowed(),
+        'Flex': flex,
+        'Bison': bison,
     },
     'Frontends': {
         'GUI': frontend_gui.allowed(),
