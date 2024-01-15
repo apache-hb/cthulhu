@@ -6,23 +6,23 @@ typedef struct io_t io_t;
 
 typedef enum jvm_version_t {
 #define JVM_VERSION(id, name, v) id = (v),
-#include "jvm.inc"
+#include "jvm.def"
 } jvm_version_t;
 
 typedef enum jvm_const_tag_t {
 #define JVM_CONST(id, name, v) id = (v),
-#include "jvm.inc"
+#include "jvm.def"
 } jvm_const_tag_t;
 
 typedef enum jvm_attrib_tag_t {
 #define JVM_ATTRIB(id, name) id,
-#include "jvm.inc"
+#include "jvm.def"
     eAttribTotal
 } jvm_attrib_tag_t;
 
 typedef enum jvm_access_t {
 #define JVM_ACCESS(id, name, v) id = (v),
-#include "jvm.inc"
+#include "jvm.def"
 } jvm_access_t;
 
 const char *jvm_version_string(jvm_version_t version);

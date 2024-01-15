@@ -130,7 +130,7 @@ static LONG WINAPI bt_exception_handler(EXCEPTION_POINTERS *exception)
 {
     gErrorReport.begin(exception->ExceptionRecord->ExceptionCode, gErrorReport.user);
 
-    read_context_stack(exception->ContextRecord, gErrorReport.frame, gErrorReport.user);
+    read_context_stack(exception->ContextRecord, gErrorReport.next, gErrorReport.user);
 
     gErrorReport.end(gErrorReport.user);
 

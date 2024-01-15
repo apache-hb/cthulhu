@@ -2,7 +2,7 @@
 
 #include "core/macros.h"
 #include "cthulhu/tree/query.h"
-#include "cthulhu/util/type.h"
+#include "cthulhu/util/types.h"
 #include "cthulhu/util/util.h"
 
 #include "base/panic.h"

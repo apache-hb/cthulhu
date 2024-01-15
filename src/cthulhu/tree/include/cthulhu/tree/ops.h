@@ -14,14 +14,14 @@ BEGIN_API
 typedef enum quals_t
 {
 #define TYPE_QUALIFIER(ID, NAME, FLAG) ID = (FLAG),
-#include "tree.inc"
+#include "tree.def"
 } quals_t;
 
 /// @brief all binary operators
 typedef enum binary_t
 {
 #define BINARY_OP(ID, NAME, SYMBOL) ID,
-#include "tree.inc"
+#include "tree.def"
     eBinaryTotal
 } binary_t;
 
@@ -29,7 +29,7 @@ typedef enum binary_t
 typedef enum compare_t
 {
 #define COMPARE_OP(ID, NAME, SYMBOL) ID,
-#include "tree.inc"
+#include "tree.def"
     eCompareTotal
 } compare_t;
 
@@ -37,7 +37,7 @@ typedef enum compare_t
 typedef enum unary_t
 {
 #define UNARY_OP(ID, NAME, SYMBOL) ID,
-#include "tree.inc"
+#include "tree.def"
     eUnaryTotal
 } unary_t;
 
@@ -45,7 +45,7 @@ typedef enum unary_t
 typedef enum cast_t
 {
 #define CAST_OP(ID, NAME) ID,
-#include "tree.inc"
+#include "tree.def"
     eCastTotal
 } cast_t;
 
@@ -53,7 +53,7 @@ typedef enum cast_t
 typedef enum builtin_t
 {
 #define TREE_BUILTIN(ID, NAME) ID,
-#include "tree.inc"
+#include "tree.def"
     eBuiltinTotal
 } builtin_t;
 
@@ -61,7 +61,7 @@ typedef enum builtin_t
 typedef enum arity_t
 {
 #define TREE_ARITY(ID, STR) ID,
-#include "tree.inc"
+#include "tree.def"
     eArityTotal
 } arity_t;
 
@@ -69,7 +69,7 @@ typedef enum arity_t
 typedef enum tree_link_t
 {
 #define TREE_LINKAGE(ID, STR) ID,
-#include "tree.inc"
+#include "tree.def"
     eLinkTotal
 } tree_link_t;
 
@@ -77,7 +77,7 @@ typedef enum tree_link_t
 typedef enum tree_jump_t
 {
 #define TREE_JUMP(ID, STR) ID,
-#include "tree.inc"
+#include "tree.def"
     eJumpTotal
 } tree_jump_t;
 
@@ -85,7 +85,7 @@ typedef enum tree_jump_t
 typedef enum visibility_t
 {
 #define TREE_VISIBILITY(ID, STR) ID,
-#include "tree.inc"
+#include "tree.def"
     eVisibileTotal
 } visibility_t;
 
@@ -93,7 +93,7 @@ typedef enum visibility_t
 typedef enum digit_t
 {
 #define DIGIT_KIND(ID, STR) ID,
-#include "tree.inc"
+#include "tree.def"
     eDigitTotal
 } digit_t;
 
@@ -101,7 +101,7 @@ typedef enum digit_t
 typedef enum sign_t
 {
 #define SIGN_KIND(ID, STR) ID,
-#include "tree.inc"
+#include "tree.def"
     eSignTotal
 } sign_t;
 

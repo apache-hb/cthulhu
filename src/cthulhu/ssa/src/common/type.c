@@ -91,6 +91,47 @@ ssa_type_t *ssa_type_union(const char *name, quals_t quals, typevec_t *fields)
     return type;
 }
 
+ssa_type_t *ssa_type_enum(const char *name, quals_t quals, ssa_type_t *underlying, typevec_t *cases)
+{
+    CTASSERTF(underlying->kind == eTypeDigit, "expected digit, got %d", underlying->kind);
+
+    ssa_type_enum_t it = { .underlying = underlying, .cases = cases };
+    ssa_type_t *type = ssa_type_new(eTypeEnum, name, quals);
+    type->sum = it;
+    return type;
+}
+
+static typevec_t *collect_cases(const tree_t *type, arena_t *arena)
+{
+    CTASSERTF(tree_is(type, eTreeTypeEnum), "expected enum, got %s", tree_to_string(type));
+
+    vector_t *vec = tree_enum_get_cases(type);
+    size_t len = vector_len(vec);
+
+    typevec_t *result = typevec_of(sizeof(ssa_case_t), len, arena);
+
+    for (size_t i = 0; i < len; i++)
+    {
+        const tree_t *it = vector_get(vec, i);
+        CTASSERTF(tree_is(it, eTreeDeclCase), "expected case, got %s", tree_to_string(it));
+
+        const char *name = tree_get_name(it);
+        const tree_t *expr = it->case_value;
+
+        // TODO: eval case_value
+        CTASSERTF(tree_is(expr, eTreeExprDigit), "only digit literal case values are supported, got %s", tree_to_string(expr));
+
+        ssa_case_t entry = {
+            .name = name,
+        };
+        mpz_init_set(entry.value, expr->digit_value);
+
+        typevec_set(result, i, &entry);
+    }
+
+    return result;
+}
+
 static typevec_t *collect_params(map_t *cache, const tree_t *type, arena_t *arena)
 {
     vector_t *vec = tree_fn_get_params(type);
@@ -171,7 +212,7 @@ static ssa_type_t *ssa_type_create(map_t *cache, const tree_t *type, arena_t *ar
     case eTreeTypeOpaque:
         return ssa_type_opaque_pointer(name, quals);
 
-    case eTreeTypeEnum: return ssa_type_create(cache, type->underlying, arena);
+    case eTreeTypeEnum: return ssa_type_enum(name, quals, ssa_type_create_cached(cache, type->underlying), collect_cases(type, arena));
     case eTreeTypeStruct: return ssa_type_struct(name, quals, collect_fields(cache, type, arena));
     case eTreeTypeUnion: return ssa_type_union(name, quals, collect_fields(cache, type, arena));
 

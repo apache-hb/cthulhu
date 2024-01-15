@@ -11,7 +11,7 @@ typedef struct typevec_t typevec_t;
 typedef enum c_kind_t
 {
 #define C_AST_KIND(id, name) id,
-#include "c/ast.inc"
+#include "c/ast.def"
 
     eAstCount
 } c_kind_t;
@@ -19,26 +19,26 @@ typedef enum c_kind_t
 typedef enum c_storage_class_t
 {
 #define C_STORAGE_CLASS(id, name, v) id = (v),
-#include "c/ast.inc"
+#include "c/ast.def"
 } c_storage_class_t;
 
 typedef enum c_type_qualifier_t
 {
 #define C_TYPE_QUALIFIER(id, name, v) id = (v),
-#include "c/ast.inc"
+#include "c/ast.def"
 } c_type_qualifier_t;
 
 typedef enum c_type_specifier_t
 {
 #define C_TYPE_SPECIFIER(id, name) id,
-#include "c/ast.inc"
+#include "c/ast.def"
     eTypeSpecifierCount
 } c_type_specifier_t;
 
 typedef enum c_callconv_t
 {
 #define C_CALLCONV(id, name) id,
-#include "c/ast.inc"
+#include "c/ast.def"
 } c_callconv_t;
 
 typedef struct c_ast_t

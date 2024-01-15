@@ -30,6 +30,12 @@ CT_TREE_API const tree_t *tree_get_storage_type(const tree_t *self);
 CT_TREE_API size_t tree_get_storage_size(const tree_t *self);
 
 ///
+/// enum queries
+///
+
+CT_TREE_API vector_t *tree_enum_get_cases(const tree_t *self);
+
+///
 /// closure + function queries
 ///
 

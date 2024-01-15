@@ -4,7 +4,7 @@
 #include "oberon/sema/sema.h"
 
 #include "cthulhu/util/util.h"
-#include "cthulhu/util/type.h"
+#include "cthulhu/util/types.h"
 
 #include "oberon/sema/type.h"
 #include "std/str.h"

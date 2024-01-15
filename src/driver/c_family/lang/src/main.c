@@ -42,7 +42,7 @@ static void cc_postparse(driver_t *handle, scan_t *scan, void *tree)
 
 static const diagnostic_t * const kDiagnosticTable[] = {
 #define NEW_EVENT(name, ...) &kEvent_##name,
-#include "c/events.inc"
+#include "c/events.def"
 };
 
 static const char *const kLangNames[] = { "c", "h", NULL };

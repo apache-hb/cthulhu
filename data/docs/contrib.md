@@ -33,6 +33,7 @@
     - `util` - common utilities. @ref runtime_util
 
   - `driver` - language frontends
+    - `driver` - language helper library. @ref driver
     - `c` - C11 frontend (WIP)
       - `pre` - C preprocessor (WIP)
       - `lang` - C language driver (WIP)

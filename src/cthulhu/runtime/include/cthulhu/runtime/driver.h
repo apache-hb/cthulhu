@@ -1,8 +1,6 @@
 #pragma once
 
-#include "core/compiler.h"
-
-#include "cthulhu/runtime/common.h"
+#include "cthulhu/runtime/runtime.h"
 
 #include <stddef.h>
 

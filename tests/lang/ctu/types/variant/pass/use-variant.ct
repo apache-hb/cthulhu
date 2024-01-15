@@ -1,9 +1,9 @@
 variant Meme {
-    case based = 1
-    case cringe = 2
+    case first = 1
+    case second = 2
 }
 
-export def getMeme(b: bool): Meme {
-    if b { return Meme::based; }
-    else { return Meme::cringe; }
+export def getType(b: bool): Meme {
+    if b { return Meme::first; }
+    else { return Meme::second; }
 }

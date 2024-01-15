@@ -62,7 +62,7 @@ static void ctu_postparse(driver_t *driver, scan_t *scan, void *tree)
 
 static const diagnostic_t * const kDiagnosticTable[] = {
 #define NEW_EVENT(name, ...) &kEvent_##name,
-#include "ctu/events.inc"
+#include "ctu/events.def"
 };
 
 static const char *const kLangNames[] = { "ct", "ctu", "cthulhu", NULL };

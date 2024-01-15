@@ -40,7 +40,7 @@ BEGIN_API
 typedef enum endian_t
 {
 #define ENDIAN(id, name, v) id = (v),
-#include "endian.inc"
+#include "endian.def"
 
     eEndianTotal
 } endian_t;

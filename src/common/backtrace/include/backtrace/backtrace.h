@@ -96,7 +96,7 @@ typedef struct bt_error_t
     bt_error_end_t end;
 
     /// @brief called once for each frame
-    bt_trace_t frame;
+    bt_trace_t next;
 
     /// @brief user data to pass to the callbacks
     void *user;

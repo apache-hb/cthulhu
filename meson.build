@@ -59,8 +59,12 @@ lang_pl0 = get_option('lang_pl0')
 lang_oberon = get_option('lang_oberon')
 lang_jvm = get_option('lang_jvm')
 lang_example = get_option('lang_example').disable_auto_if(meson.is_subproject())
-lang_c = get_option('lang_c')
-lang_cpp = get_option('lang_cpp')
+lang_c = get_option('lang_c').disable_auto_if(meson.is_subproject())
+lang_cpp = get_option('lang_cpp').disable_auto_if(meson.is_subproject())
+
+target_c_family = get_option('target_c_family')
+target_debug = get_option('target_debug').disable_auto_if(meson.is_subproject())
+default_target = get_option('default_target')
 
 # tools like this are user facing, so dont disable them in release mode
 tool_diagnostic = get_option('tool_diagnostic').disable_auto_if(meson.is_subproject())
@@ -271,6 +275,11 @@ summary = {
         'Paranoid asserts': opt_paranoid.allowed(),
         'Flex': flex,
         'Bison': bison,
+    },
+    'Targets': {
+        'C Family': target_c_family.allowed(),
+        'Debug': target_debug.allowed(),
+        'Default': default_target
     },
     'Frontends': {
         'GUI': frontend_gui.allowed(),

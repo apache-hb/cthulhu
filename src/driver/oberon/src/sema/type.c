@@ -1,6 +1,6 @@
 #include "oberon/sema/type.h"
 #include "cthulhu/events/events.h"
-#include "cthulhu/util/type.h"
+#include "cthulhu/util/types.h"
 #include "memory/memory.h"
 #include "oberon/driver.h"
 #include "oberon/sema/expr.h"

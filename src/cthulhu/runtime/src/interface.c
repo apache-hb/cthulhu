@@ -104,7 +104,7 @@ lifetime_t *lifetime_new(mediator_t *mediator, arena_t *arena)
 
 static const char *const kStageNames[eStageTotal] = {
 #define STAGE(ID, STR) [ID] = (STR),
-#include "cthulhu/runtime/mediator.inc"
+#include "cthulhu/runtime/mediator.def"
 };
 
 USE_DECL

@@ -7,7 +7,7 @@
 
 static const char *const kUnaryNames[eUnaryTotal] = {
 #define UNARY_OP(ID, STR, SYM) [ID] = (STR),
-#include "cthulhu/tree/tree.inc"
+#include "cthulhu/tree/tree.def"
 };
 
 USE_DECL
@@ -19,7 +19,7 @@ const char *unary_name(unary_t op)
 
 static const char *const kUnarySymbols[eUnaryTotal] = {
 #define UNARY_OP(ID, STR, SYM) [ID] = (SYM),
-#include "cthulhu/tree/tree.inc"
+#include "cthulhu/tree/tree.def"
 };
 
 USE_DECL
@@ -31,7 +31,7 @@ const char *unary_symbol(unary_t op)
 
 static const char *const kBinaryNames[eBinaryTotal] = {
 #define BINARY_OP(ID, STR, SYM) [ID] = (STR),
-#include "cthulhu/tree/tree.inc"
+#include "cthulhu/tree/tree.def"
 };
 
 USE_DECL
@@ -43,7 +43,7 @@ const char *binary_name(binary_t op)
 
 static const char *const kBinarySymbols[eBinaryTotal] = {
 #define BINARY_OP(ID, STR, SYM) [ID] = (SYM),
-#include "cthulhu/tree/tree.inc"
+#include "cthulhu/tree/tree.def"
 };
 
 USE_DECL
@@ -55,7 +55,7 @@ const char *binary_symbol(binary_t op)
 
 static const char *const kCompareNames[eCompareTotal] = {
 #define COMPARE_OP(ID, STR, SYM) [ID] = (STR),
-#include "cthulhu/tree/tree.inc"
+#include "cthulhu/tree/tree.def"
 };
 
 USE_DECL
@@ -67,7 +67,7 @@ const char *compare_name(compare_t op)
 
 static const char *const kCompareSymbols[eCompareTotal] = {
 #define COMPARE_OP(ID, STR, SYM) [ID] = (SYM),
-#include "cthulhu/tree/tree.inc"
+#include "cthulhu/tree/tree.def"
 };
 
 USE_DECL
@@ -79,7 +79,7 @@ const char *compare_symbol(compare_t op)
 
 static const char *const kSignNames[eSignTotal] = {
 #define SIGN_KIND(ID, STR) [ID] = (STR),
-#include "cthulhu/tree/tree.inc"
+#include "cthulhu/tree/tree.def"
 };
 
 USE_DECL
@@ -91,7 +91,7 @@ const char *sign_name(sign_t sign)
 
 static const char *const kDigitNames[eDigitTotal] = {
 #define DIGIT_KIND(ID, STR) [ID] = (STR),
-#include "cthulhu/tree/tree.inc"
+#include "cthulhu/tree/tree.def"
 };
 
 USE_DECL
@@ -106,12 +106,12 @@ const char *digit_name(digit_t digit)
 
 // static const size_t kQualFlagsCount = 1
 // #define TYPE_QUALIFIER(ID, STR, BIT) + 1
-// #include "cthulhu/tree/tree.inc"
+// #include "cthulhu/tree/tree.def"
 // ;
 
 // static const size_t kQualStringLen = sizeof(
 // #define TYPE_QUALIFIER(ID, STR, BIT) STR
-// #include "cthulhu/tree/tree.inc"
+// #include "cthulhu/tree/tree.def"
 // );
 
 USE_DECL
@@ -120,13 +120,13 @@ const char *quals_name(quals_t quals)
     arena_t *arena = get_global_arena();
 #define TYPE_QUALIFIER(ID, STR, BIT) if (quals & (BIT)) { vector_push(&names, (char*)(STR)); }
     vector_t *names = vector_new(4, arena);
-#include "cthulhu/tree/tree.inc"
+#include "cthulhu/tree/tree.def"
     return str_join(" | ", names, arena);
 }
 
 static const char *const kLinkNames[eLinkTotal] = {
 #define TREE_LINKAGE(ID, STR) [ID] = (STR),
-#include "cthulhu/tree/tree.inc"
+#include "cthulhu/tree/tree.def"
 };
 
 USE_DECL
@@ -138,7 +138,7 @@ const char *link_name(tree_link_t link)
 
 static const char *const kVisibilityNames[eVisibileTotal] = {
 #define TREE_VISIBILITY(ID, STR) [ID] = (STR),
-#include "cthulhu/tree/tree.inc"
+#include "cthulhu/tree/tree.def"
 };
 
 USE_DECL

@@ -329,15 +329,16 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     os_error_t cwd_err = os_dir_create(lib_dir, &create);
     CTASSERTF(cwd_err == 0, "failed to create dir `%s` %s", lib_dir, os_error_string(cwd_err, arena));
 
-    int status = system(
-        str_format(arena, "cl /nologo /c %s /I%s\\include /Fo%s\\", str_join(" ", sources, arena), run_dir, lib_dir));
+    char *cmd = str_format(arena, "cl /nologo /c %s /I%s\\include /Fo%s\\", str_join(" ", sources, arena), run_dir, lib_dir);
+    int status = system(cmd); // NOLINT
     if (status != 0)
     {
         msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(),
                    "compilation failed `%d`", status);
     }
 #else
-    int status = system(str_format(arena, "cd %s && cc %s -c -Iinclude", run_dir, str_join(" ", sources, arena)));
+    char *cmd = str_format(arena, "cd %s && cc %s -c -Iinclude", run_dir, str_join(" ", sources, arena));
+    int status = system(cmd); // NOLINT
     if (WEXITSTATUS(status) != CT_EXIT_OK)
     {
         msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(),

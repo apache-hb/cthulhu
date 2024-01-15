@@ -23,7 +23,7 @@ typedef struct vector_t vector_t;
 typedef enum cfg_type_t
 {
 #define CFG_TYPE(id, name) id,
-#include "config.inc"
+#include "config.def"
 
     eConfigCount
 } cfg_type_t;

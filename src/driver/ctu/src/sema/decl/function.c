@@ -5,7 +5,7 @@
 #include "ctu/sema/type.h"
 #include "ctu/sema/expr.h"
 
-#include "cthulhu/util/type.h"
+#include "cthulhu/util/types.h"
 
 #include "cthulhu/tree/query.h"
 

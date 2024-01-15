@@ -7,7 +7,7 @@
 !*.hpp
 !*.c
 !*.h
-!*.inc
+!*.def
 !*.[ch].in
 !data/**/*
 !*.mm

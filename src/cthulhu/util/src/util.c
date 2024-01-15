@@ -1,6 +1,6 @@
 #include "cthulhu/util/util.h"
 #include "cthulhu/events/events.h"
-#include "cthulhu/util/type.h"
+#include "cthulhu/util/types.h"
 
 #include "cthulhu/tree/query.h"
 

@@ -37,21 +37,21 @@ typedef struct ssa_value_t ssa_value_t;
 
 typedef enum ssa_kind_t {
 #define SSA_KIND(ID, NAME) ID,
-#include "ssa.inc"
+#include "ssa.def"
 
     eTypeTotal
 } ssa_kind_t;
 
 typedef enum ssa_opkind_t {
 #define SSA_OPKIND(ID, NAME) ID,
-#include "ssa.inc"
+#include "ssa.def"
 
     eOperandTotal
 } ssa_opkind_t;
 
 typedef enum ssa_opcode_t {
 #define SSA_OPCODE(ID, NAME) ID,
-#include "ssa.inc"
+#include "ssa.def"
 
     eOpTotal
 } ssa_opcode_t;
@@ -103,7 +103,7 @@ typedef struct ssa_case_t {
 } ssa_case_t;
 
 typedef struct ssa_type_enum_t {
-    ssa_type_digit_t underlying;
+    ssa_type_t *underlying;
     typevec_t *cases; // typevec_t<ssa_case_t>
 } ssa_type_enum_t;
 

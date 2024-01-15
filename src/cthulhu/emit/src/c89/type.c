@@ -86,6 +86,10 @@ const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char
     case eTypeClosure: return format_c89_closure(emit, quals, type->closure, name);
     case eTypePointer: return format_c89_pointer(emit, type->pointer, name);
 
+    case eTypeEnum: return (name != NULL)
+        ? str_format(emit->arena, "%senum %s %s", quals, type->name, name)
+        : str_format(emit->arena, "%senum %s", quals, type->name);
+
     case eTypeStruct: return (name != NULL)
         ? str_format(emit->arena, "%sstruct %s %s", quals, type->name, name)
         : str_format(emit->arena, "%sstruct %s", quals, type->name);

@@ -14,7 +14,7 @@ const char *jvm_version_string(jvm_version_t version)
 {
 #define JVM_VERSION(id, str, it) case id: return str " (" #it ")";
     switch (version) {
-#include "jvm/jvm.inc"
+#include "jvm/jvm.def"
     default: return format("unknown (0x%x)", version);
     }
 }
@@ -23,7 +23,7 @@ const char *jvm_const_tag_string(jvm_const_tag_t tag)
 {
 #define JVM_CONST(id, str, items) case id: return str " (" #items ")";
     switch (tag) {
-#include "jvm/jvm.inc"
+#include "jvm/jvm.def"
     default: return format("unknown (0x%x)", tag);
     }
 }
@@ -32,7 +32,7 @@ const char *jvm_attrib_tag_string(jvm_attrib_tag_t tag)
 {
 #define JVM_ATTRIB(id, str) case id: return str;
     switch (tag) {
-#include "jvm/jvm.inc"
+#include "jvm/jvm.def"
     default: return format("unknown (0x%x)", tag);
     }
 }
@@ -43,7 +43,7 @@ const char *jvm_access_string(jvm_access_t access)
     vector_t *parts = vector_new(8, arena);
 #define JVM_ACCESS(id, str, bits) if (access & (bits)) { vector_push(&parts, str); }
 
-#include "jvm/jvm.inc"
+#include "jvm/jvm.def"
 
     if (vector_len(parts) > 0)
     {

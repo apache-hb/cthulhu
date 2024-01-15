@@ -307,7 +307,7 @@ static void default_error_begin(size_t error, void *user)
     io_printf(io, "a fatal error has occured 0x%zX\n", error);
 }
 
-static void default_error_frame(const bt_frame_t *frame, void *user)
+static void default_error_next(const bt_frame_t *frame, void *user)
 {
     io_t *io = user;
 
@@ -360,7 +360,7 @@ void setup_global(void)
     bt_error_t error = {
         .begin = default_error_begin,
         .end = default_error_end,
-        .frame = default_error_frame,
+        .next = default_error_next,
         .user = io_stderr()
     };
 

@@ -49,7 +49,7 @@ const char *tree_kind_to_string(tree_kind_t kind)
     switch (kind)
     {
 #define TREE_KIND(ID, NAME) case ID: return NAME;
-#include "cthulhu/tree/tree.inc"
+#include "cthulhu/tree/tree.def"
 
     default: NEVER("invalid tree kind %d", kind);
     }
@@ -180,6 +180,17 @@ size_t tree_get_storage_size(const tree_t *self)
 
     CTASSERTF(storage.size != SIZE_MAX, "global %s has no storage length", tree_to_string(self));
     return storage.size;
+}
+
+///
+/// enums
+///
+
+vector_t *tree_enum_get_cases(const tree_t *self)
+{
+    TREE_EXPECT(self, eTreeTypeEnum);
+
+    return self->cases;
 }
 
 ///

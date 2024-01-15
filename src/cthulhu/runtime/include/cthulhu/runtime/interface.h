@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cthulhu/runtime/common.h"
+#include "cthulhu/runtime/runtime.h"
 
 BEGIN_API
 

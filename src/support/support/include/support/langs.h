@@ -4,7 +4,7 @@
 
 #include <ctu_support_api.h>
 
-#include "cthulhu/runtime/common.h"
+#include "cthulhu/runtime/runtime.h"
 
 BEGIN_API
 

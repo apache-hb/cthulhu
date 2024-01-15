@@ -342,6 +342,8 @@ void tree_close_enum(tree_t *self, const tree_t *underlying, vector_t *cases, tr
 
     self->underlying = underlying;
     self->cases = cases;
+
+    // TODO: should this be a responsibility of tree?
     self->default_case = default_case;
 
     CTASSERTF(tree_is(underlying, eTreeTypeDigit), "enums must have an underlying digit type, got %s", tree_to_string(underlying));

@@ -171,6 +171,21 @@ static const char *format_symbol(c89_emit_t *emit, const ssa_type_t *type, const
     return c89_format_type(emit, type, name, true);
 }
 
+static void define_enum(io_t *io, const ssa_type_t *type)
+{
+    const ssa_type_enum_t it = type->sum;
+    size_t len = typevec_len(it.cases);
+    write_string(io, "enum %s { /* %zu cases */\n", type->name, len);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_case_t *field = typevec_offset(it.cases, i);
+
+        // TODO: formalize the name mangling for enum fields
+        write_string(io, "\t%s_%s = %s,\n", type->name, field->name, mpz_get_str(NULL, 10, field->value));
+    }
+    write_string(io, "};\n");
+}
+
 void c89_proto_type(c89_emit_t *emit, const ssa_module_t *mod, const ssa_type_t *type)
 {
     c89_source_t *hdr = map_get(emit->hdrmap, mod);
@@ -178,6 +193,13 @@ void c89_proto_type(c89_emit_t *emit, const ssa_module_t *mod, const ssa_type_t 
     {
     case eTypeStruct:
         write_string(hdr->io, "struct %s;\n", type->name);
+        break;
+    case eTypeUnion:
+        write_string(hdr->io, "union %s;\n", type->name);
+        break;
+
+    case eTypeEnum:
+        define_enum(hdr->io, type);
         break;
 
     default:
@@ -623,10 +645,10 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
 
 /// defines
 
-static void define_record(c89_emit_t *emit, io_t *io, const ssa_type_t *type)
+static void define_record(c89_emit_t *emit, const char *aggregate, io_t *io, const ssa_type_t *type)
 {
     const ssa_type_record_t record = type->record;
-    write_string(io, "struct %s {\n", type->name);
+    write_string(io, "%s %s {\n", aggregate, type->name);
     size_t len = typevec_len(record.fields);
     for (size_t i = 0; i < len; i++)
     {
@@ -642,7 +664,10 @@ void c89_define_type(c89_emit_t *emit, const ssa_module_t *mod, const ssa_type_t
     switch (type->kind)
     {
     case eTypeStruct:
-        define_record(emit, hdr->io, type);
+        define_record(emit, "struct", hdr->io, type);
+        break;
+    case eTypeUnion:
+        define_record(emit, "union", hdr->io, type);
         break;
 
     default:
@@ -742,7 +767,7 @@ static void define_type_ordererd(c89_emit_t *emit, const ssa_module_t *mod, cons
     set_add(emit->defined, type);
 
     // TODO: this is probably a touch broken, types may be put into the wrong translation
-    if (type->kind == eTypeStruct)
+    if (type->kind == eTypeStruct || type->kind == eTypeUnion)
     {
         ssa_type_record_t record = type->record;
         size_t len = typevec_len(record.fields);

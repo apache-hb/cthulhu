@@ -46,7 +46,7 @@ typedef struct tree_attribs_t {
 
 typedef enum tree_kind_t {
 #define TREE_KIND(ID, NAME) ID,
-#include "cthulhu/tree/tree.inc"
+#include "cthulhu/tree/tree.def"
 
     eTreeTotal
 } tree_kind_t;

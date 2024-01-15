@@ -10,7 +10,7 @@ static void bt_error_begin(size_t error, void *user)
     CTU_UNUSED(user);
 }
 
-static void bt_error_frame(const bt_frame_t *frame, void *user)
+static void bt_error_next(const bt_frame_t *frame, void *user)
 {
     CTU_UNUSED(user);
     CTU_UNUSED(frame);
@@ -25,7 +25,7 @@ static void bt_error_end(void *user)
 bt_error_t gErrorReport = {
     .begin = bt_error_begin,
     .end = bt_error_end,
-    .frame = bt_error_frame,
+    .next = bt_error_next,
     .user = NULL
 };
 

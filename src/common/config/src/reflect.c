@@ -82,7 +82,7 @@ const cfg_flags_t *cfg_flags_info(const cfg_field_t *field)
 
 static const char *const kConfigTypeNames[eConfigCount] = {
 #define CFG_TYPE(id, name) [id] = (name),
-#include "config/config.inc"
+#include "config/config.def"
 };
 
 USE_DECL

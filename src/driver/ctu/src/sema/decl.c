@@ -10,7 +10,7 @@
 #include "cthulhu/tree/query.h"
 
 #include "cthulhu/util/util.h"
-#include "cthulhu/util/type.h"
+#include "cthulhu/util/types.h"
 
 #include "memory/memory.h"
 #include "std/map.h"

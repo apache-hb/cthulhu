@@ -1,5 +1,5 @@
 #ifndef STAGE
-#   define STAGE(ID, STR) 
+#   define STAGE(ID, STR)
 #endif
 
 STAGE(eStageForwardSymbols, "forward-symbols")

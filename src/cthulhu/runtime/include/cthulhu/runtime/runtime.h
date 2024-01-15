@@ -3,7 +3,6 @@
 #include <ctu_runtime_api.h>
 
 #include "core/analyze.h"
-#include "core/compiler.h"
 #include "core/version_def.h"
 #include "notify/diagnostic.h"
 
@@ -77,7 +76,7 @@ typedef cfg_group_t *(*driver_config_t)(driver_t *driver, cfg_group_t *root);
 typedef enum compile_stage_t
 {
 #define STAGE(ID, STR) ID,
-#include "mediator.inc"
+#include "mediator.def"
 
     eStageTotal
 } compile_stage_t;

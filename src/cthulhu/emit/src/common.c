@@ -157,6 +157,21 @@ static char *record_to_string(ssa_type_record_t record, arena_t *arena)
     return str_format(arena, "record(fields: [%s])", joined);
 }
 
+static char *enum_to_string(ssa_type_enum_t sum, arena_t *arena)
+{
+    size_t len = typevec_len(sum.cases);
+    vector_t *variants = vector_of(len, arena);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_case_t *field = typevec_offset(sum.cases, i);
+        char *segment = str_format(arena, "%s: %s", field->name, mpz_get_str(NULL, 10, field->value));
+        vector_set(variants, i, segment);
+    }
+
+    char *joined = str_join(", ", variants, arena);
+    return str_format(arena, "enum(variants: [%s])", joined);
+}
+
 const char *type_to_string(const ssa_type_t *type, arena_t *arena)
 {
     switch (type->kind)
@@ -165,6 +180,7 @@ const char *type_to_string(const ssa_type_t *type, arena_t *arena)
     case eTypeUnit: return "unit";
     case eTypeBool: return "bool";
     case eTypeOpaque: return "opaque";
+    case eTypeEnum: return enum_to_string(type->sum, arena);
     case eTypeDigit: return digit_to_string(type->digit, arena);
     case eTypeClosure: return closure_to_string(type->closure, arena);
     case eTypePointer: return pointer_to_string(type->pointer, arena);

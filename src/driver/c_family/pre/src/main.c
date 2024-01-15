@@ -1,4 +1,4 @@
-#include "cthulhu/runtime/common.h"
+#include "cthulhu/runtime/runtime.h"
 
 #include "driver/driver.h"
 
