@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_tree_api.h>
+
 #include "core/compiler.h"
 #include "core/analyze.h"
 
@@ -109,7 +111,7 @@ typedef enum sign_t
 ///
 /// @return the name of @p op
 RET_NOTNULL
-const char *unary_name(IN_RANGE(<, eUnaryTotal) unary_t op);
+CT_TREE_API const char *unary_name(IN_RANGE(<, eUnaryTotal) unary_t op);
 
 /// @brief get the pretty name of a binary operator
 ///
@@ -117,7 +119,7 @@ const char *unary_name(IN_RANGE(<, eUnaryTotal) unary_t op);
 ///
 /// @return the name of @p op
 RET_NOTNULL
-const char *binary_name(IN_RANGE(<, eBinaryTotal) binary_t op);
+CT_TREE_API const char *binary_name(IN_RANGE(<, eBinaryTotal) binary_t op);
 
 /// @brief get the pretty name of a comparison operator
 ///
@@ -125,7 +127,7 @@ const char *binary_name(IN_RANGE(<, eBinaryTotal) binary_t op);
 ///
 /// @return the name of @p op
 RET_NOTNULL
-const char *compare_name(IN_RANGE(<, eCompareTotal)compare_t op);
+CT_TREE_API const char *compare_name(IN_RANGE(<, eCompareTotal)compare_t op);
 
 /// @brief get the C symbol of a unary operator
 ///
@@ -133,7 +135,7 @@ const char *compare_name(IN_RANGE(<, eCompareTotal)compare_t op);
 ///
 /// @return the symbol of @p op
 RET_NOTNULL
-const char *unary_symbol(IN_RANGE(<, eUnaryTotal) unary_t op);
+CT_TREE_API const char *unary_symbol(IN_RANGE(<, eUnaryTotal) unary_t op);
 
 /// @brief get the C symbol of a binary operator
 ///
@@ -141,7 +143,7 @@ const char *unary_symbol(IN_RANGE(<, eUnaryTotal) unary_t op);
 ///
 /// @return the symbol of @p op
 RET_NOTNULL
-const char *binary_symbol(IN_RANGE(<, eBinaryTotal)binary_t op);
+CT_TREE_API const char *binary_symbol(IN_RANGE(<, eBinaryTotal)binary_t op);
 
 /// @brief get the C symbol of a comparison operator
 ///
@@ -149,7 +151,7 @@ const char *binary_symbol(IN_RANGE(<, eBinaryTotal)binary_t op);
 ///
 /// @return the symbol of @p op
 RET_NOTNULL
-const char *compare_symbol(IN_RANGE(<, eCompareTotal) compare_t op);
+CT_TREE_API const char *compare_symbol(IN_RANGE(<, eCompareTotal) compare_t op);
 
 /// @brief get the pretty name of a integer sign
 ///
@@ -157,7 +159,7 @@ const char *compare_symbol(IN_RANGE(<, eCompareTotal) compare_t op);
 ///
 /// @return the name of @p op
 RET_NOTNULL
-const char *sign_name(IN_RANGE(<, eSignTotal) sign_t sign);
+CT_TREE_API const char *sign_name(IN_RANGE(<, eSignTotal) sign_t sign);
 
 /// @brief get the pretty name of a digit
 ///
@@ -165,7 +167,7 @@ const char *sign_name(IN_RANGE(<, eSignTotal) sign_t sign);
 ///
 /// @return the name of @p op
 RET_NOTNULL
-const char *digit_name(IN_RANGE(<, eDigitTotal) digit_t digit);
+CT_TREE_API const char *digit_name(IN_RANGE(<, eDigitTotal) digit_t digit);
 
 /// @brief get the name of a set of qualifiers
 ///
@@ -173,7 +175,7 @@ const char *digit_name(IN_RANGE(<, eDigitTotal) digit_t digit);
 ///
 /// @return the name of @p quals
 RET_NOTNULL
-const char *quals_name(quals_t quals);
+CT_TREE_API const char *quals_name(quals_t quals);
 
 /// @brief get the name of a linkage
 ///
@@ -181,7 +183,7 @@ const char *quals_name(quals_t quals);
 ///
 /// @return the name of @p link
 RET_NOTNULL
-const char *link_name(IN_RANGE(<, eLinkTotal) tree_link_t link);
+CT_TREE_API const char *link_name(IN_RANGE(<, eLinkTotal) tree_link_t link);
 
 /// @brief get the name of visibility
 ///
@@ -189,7 +191,7 @@ const char *link_name(IN_RANGE(<, eLinkTotal) tree_link_t link);
 ///
 /// @return the name of @p vis
 RET_NOTNULL
-const char *vis_name(IN_RANGE(<, eVisibileTotal) visibility_t vis);
+CT_TREE_API const char *vis_name(IN_RANGE(<, eVisibileTotal) visibility_t vis);
 
 /// @}
 

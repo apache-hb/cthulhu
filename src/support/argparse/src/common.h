@@ -60,15 +60,17 @@ typedef struct ap_field_t
     bool negate;
 } ap_field_t;
 
-void ap_on_string(scan_t *scan, cfg_field_t *param, char *value);
-void ap_on_bool(scan_t *scan, cfg_field_t *param, bool value);
-void ap_on_int(scan_t *scan, cfg_field_t *param, mpz_t value);
+CT_ARGPARSE_API int ap_parse_common(ap_t *self, const char *text);
 
-void ap_on_posarg(scan_t *scan, char *value);
+CT_ARGPARSE_API void ap_on_string(scan_t *scan, cfg_field_t *param, char *value);
+CT_ARGPARSE_API void ap_on_bool(scan_t *scan, cfg_field_t *param, bool value);
+CT_ARGPARSE_API void ap_on_int(scan_t *scan, cfg_field_t *param, mpz_t value);
+
+CT_ARGPARSE_API void ap_on_posarg(scan_t *scan, char *value);
 
 CT_PRINTF(2, 3)
-void ap_add_error(ap_t *self, const char *fmt, ...);
+CT_ARGPARSE_API void ap_add_error(ap_t *self, const char *fmt, ...);
 
-void ap_on_invalid(scan_t *scan, char *value);
+CT_ARGPARSE_API void ap_on_invalid(scan_t *scan, char *value);
 
-int ap_get_opt(scan_t *scan, const char *name, ap_field_t *param, char **value);
+CT_ARGPARSE_API int ap_get_opt(scan_t *scan, const char *name, ap_field_t *param, char **value);

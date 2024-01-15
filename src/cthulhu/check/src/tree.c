@@ -663,8 +663,12 @@ static void check_module_valid(check_t *check, const tree_t *mod)
     }
 }
 
+USE_DECL
 void check_tree(logger_t *reports, map_t *mods)
 {
+    CTASSERT(reports != NULL);
+    CTASSERT(mods != NULL);
+
     arena_t *arena = get_global_arena();
     check_t check = {
         .reports = reports,

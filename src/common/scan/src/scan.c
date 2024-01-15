@@ -1,7 +1,7 @@
 #include "scan/scan.h"
 #include "base/panic.h"
 
-#include "base/text.h"
+#include "base/util.h"
 #include "core/text.h"
 #include "io/io.h"
 #include "arena/arena.h"

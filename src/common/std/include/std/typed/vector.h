@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_std_api.h>
+
 #include "core/analyze.h"
 #include "core/compiler.h"
 
@@ -25,7 +27,7 @@ typedef struct typevec_t typevec_t;
 ///
 /// @return the new vector
 NODISCARD
-typevec_t *typevec_new(IN_RANGE(>, 0) size_t type_size, size_t len, IN_NOTNULL arena_t *arena);
+CT_STD_API typevec_t *typevec_new(IN_RANGE(>, 0) size_t type_size, size_t len, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new typed vector with an initial size and length
 /// @note it is expected that the user will fill the vector up to @p len using @a typevec_set
@@ -37,7 +39,7 @@ typevec_t *typevec_new(IN_RANGE(>, 0) size_t type_size, size_t len, IN_NOTNULL a
 ///
 /// @return the new vector
 NODISCARD
-typevec_t *typevec_of(IN_RANGE(>, 0) size_t type_size, size_t len, IN_NOTNULL arena_t *arena);
+CT_STD_API typevec_t *typevec_of(IN_RANGE(>, 0) size_t type_size, size_t len, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new typed vector from an array
 /// this copies @p count * @a type_size bytes from @p src to the vector
@@ -49,7 +51,7 @@ typevec_t *typevec_of(IN_RANGE(>, 0) size_t type_size, size_t len, IN_NOTNULL ar
 ///
 /// @return the new vector
 NODISCARD
-typevec_t *typevec_of_array(
+CT_STD_API typevec_t *typevec_of_array(
     IN_RANGE(>, 0) size_t type_size,
     IN_READS(count * type_size) const void *src,
     size_t count,
@@ -64,7 +66,7 @@ typevec_t *typevec_of_array(
 ///
 /// @return the new vector
 NODISCARD
-typevec_t *typevec_slice(
+CT_STD_API typevec_t *typevec_slice(
     IN_NOTNULL const typevec_t *vec,
     IN_RANGE(<, end) size_t start,
     IN_RANGE(>, start) size_t end);
@@ -74,7 +76,7 @@ typevec_t *typevec_slice(
 /// @param vec the vector to get the length of
 /// @return the length of the vector
 NODISCARD
-size_t typevec_len(IN_NOTNULL const typevec_t *vec);
+CT_STD_API size_t typevec_len(IN_NOTNULL const typevec_t *vec);
 
 /// @brief set an element in the vector
 ///
@@ -84,7 +86,7 @@ size_t typevec_len(IN_NOTNULL const typevec_t *vec);
 /// @param vec the vector to set the value in
 /// @param index the index to set the value at
 /// @param src the value to set
-void typevec_set(IN_NOTNULL typevec_t *vec, size_t index, IN_NOTNULL const void *src);
+CT_STD_API void typevec_set(IN_NOTNULL typevec_t *vec, size_t index, IN_NOTNULL const void *src);
 
 /// @brief get an element from the vector
 ///
@@ -94,19 +96,19 @@ void typevec_set(IN_NOTNULL typevec_t *vec, size_t index, IN_NOTNULL const void 
 /// @param vec the vector to get the value from
 /// @param index the index to get the value from
 /// @param dst the destination to copy the value to
-void typevec_get(IN_NOTNULL const typevec_t *vec, size_t index, IN_NOTNULL void *dst);
+CT_STD_API void typevec_get(IN_NOTNULL const typevec_t *vec, size_t index, IN_NOTNULL void *dst);
 
 /// @brief get the last element from the vector
 ///
 /// @param vec the vector to get the value from
 /// @param dst the destination to copy the value to
-void typevec_tail(IN_NOTNULL const typevec_t *vec, IN_NOTNULL void *dst);
+CT_STD_API void typevec_tail(IN_NOTNULL const typevec_t *vec, IN_NOTNULL void *dst);
 
 /// @brief push a value onto the vector
 ///
 /// @param vec the vector to push the value onto
 /// @param src the value to push
-void *typevec_push(IN_NOTNULL typevec_t *vec, IN_NOTNULL const void *src);
+CT_STD_API void *typevec_push(IN_NOTNULL typevec_t *vec, IN_NOTNULL const void *src);
 
 /// @brief append multiple values onto the vector
 /// @note this copies @p len * @a type_size bytes from @p src to the vector
@@ -114,13 +116,13 @@ void *typevec_push(IN_NOTNULL typevec_t *vec, IN_NOTNULL const void *src);
 /// @param vec the vector to append the values onto
 /// @param src the values to append
 /// @param len the number of values to append
-void typevec_append(IN_NOTNULL typevec_t *vec, IN_NOTNULL const void *src, size_t len);
+CT_STD_API void typevec_append(IN_NOTNULL typevec_t *vec, IN_NOTNULL const void *src, size_t len);
 
 /// @brief pop a value from the vector
 ///
 /// @param vec the vector to pop the value from
 /// @param dst the destination to copy the value to
-void typevec_pop(IN_NOTNULL typevec_t *vec, IN_NOTNULL void *dst);
+CT_STD_API void typevec_pop(IN_NOTNULL typevec_t *vec, IN_NOTNULL void *dst);
 
 /// @brief get a pointer to the value at the given index
 /// @pre @p index < @a typevec_len(vec)
@@ -130,7 +132,7 @@ void typevec_pop(IN_NOTNULL typevec_t *vec, IN_NOTNULL void *dst);
 /// @param index the index to get the value from
 /// @return void* a pointer to the value
 NODISCARD
-void *typevec_offset(IN_NOTNULL const typevec_t *vec, size_t index);
+CT_STD_API void *typevec_offset(IN_NOTNULL const typevec_t *vec, size_t index);
 
 /// @brief get a pointer to the underlying data
 ///
@@ -139,20 +141,20 @@ void *typevec_offset(IN_NOTNULL const typevec_t *vec, size_t index);
 /// @param vec the vector to get the data from
 /// @return void* a pointer to the data
 NODISCARD
-void *typevec_data(IN_NOTNULL const typevec_t *vec);
+CT_STD_API void *typevec_data(IN_NOTNULL const typevec_t *vec);
 
 /// @brief sort a vector
 ///
 /// @param vec the vector to sort
 /// @param cmp the comparison function
-void typevec_sort(IN_NOTNULL typevec_t *vec, int (*cmp)(const void *, const void *));
+CT_STD_API void typevec_sort(IN_NOTNULL typevec_t *vec, int (*cmp)(const void *, const void *));
 
 /// @brief reset a vector
 /// @warning this does not perform cleanup on the data in the vector
 ///          if the data requires cleanup, it must be done manually.
 ///
 /// @param vec the vector to reset
-void typevec_reset(IN_NOTNULL typevec_t *vec);
+CT_STD_API void typevec_reset(IN_NOTNULL typevec_t *vec);
 
 /// @}
 

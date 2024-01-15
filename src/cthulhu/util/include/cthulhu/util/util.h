@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_util_api.h>
+
 #include "core/compiler.h"
 
 #include <stdbool.h>
@@ -29,7 +31,7 @@ BEGIN_API
 /// @param name the name of the decl
 ///
 /// @return the decl if found, an error otherwise
-void *util_select_decl(tree_t *sema, const size_t *tags, size_t len, const char *name);
+CT_UTIL_API void *util_select_decl(tree_t *sema, const size_t *tags, size_t len, const char *name);
 
 typedef struct decl_search_t {
     const size_t *local_tags;
@@ -51,7 +53,7 @@ typedef struct decl_search_t {
 /// @param is_imported whether the namespace was imported
 ///
 /// @return the namespace if found, an error otherwise
-tree_t *util_search_namespace(tree_t *sema, const decl_search_t *search, const node_t *node, vector_t *path, bool *is_imported);
+CT_UTIL_API tree_t *util_search_namespace(tree_t *sema, const decl_search_t *search, const node_t *node, vector_t *path, bool *is_imported);
 
 /// @brief search for a decl given a path
 ///
@@ -61,7 +63,7 @@ tree_t *util_search_namespace(tree_t *sema, const decl_search_t *search, const n
 /// @param path the path to search
 ///
 /// @return tree_t* the decl if found, an error otherwise
-tree_t *util_search_path(tree_t *sema, const decl_search_t *search, const node_t *node, vector_t *path);
+CT_UTIL_API tree_t *util_search_path(tree_t *sema, const decl_search_t *search, const node_t *node, vector_t *path);
 
 /// @brief search for a decl inside a module
 ///
@@ -72,7 +74,7 @@ tree_t *util_search_path(tree_t *sema, const decl_search_t *search, const node_t
 /// @param name the name of the decl
 ///
 /// @return tree_t*
-tree_t *util_search_qualified(tree_t *sema, const decl_search_t *search, const node_t *node, const char *mod, const char *name);
+CT_UTIL_API tree_t *util_search_qualified(tree_t *sema, const decl_search_t *search, const node_t *node, const char *mod, const char *name);
 
 /// @brief evaluate a digit expression
 ///
@@ -80,7 +82,7 @@ tree_t *util_search_qualified(tree_t *sema, const decl_search_t *search, const n
 /// @param expr the expression to evaluate
 ///
 /// @return true if the expression was evaluated, false otherwise
-bool util_eval_digit(mpz_t value, const tree_t *expr);
+CT_UTIL_API bool util_eval_digit(mpz_t value, const tree_t *expr);
 
 /// @}
 

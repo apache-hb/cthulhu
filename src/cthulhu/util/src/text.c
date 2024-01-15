@@ -48,6 +48,7 @@ static escape_t consume_text(logger_t *reports, const node_t *node, const char *
     }
 }
 
+USE_DECL
 text_t util_text_escape(logger_t *reports, const node_t *node, const char *text, size_t length, arena_t *arena)
 {
     CTASSERT(reports != NULL);

@@ -1,18 +1,13 @@
 #pragma once
 
+#include <ctu_argparse_api.h>
+
 #include "core/compiler.h"
 
-#include <gmp.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 BEGIN_API
-
-/// @defgroup argparse Command line argument parsing
-/// @brief Command line argument parsing
-/// TODO: reduce the amount of allocations by allowing config to accept string views
-/// TODO: nicely support error propagation out of the parser
-/// @ingroup support
-/// @{
 
 typedef struct node_t node_t;
 typedef struct vector_t vector_t;
@@ -22,6 +17,14 @@ typedef struct arena_t arena_t;
 typedef struct cfg_group_t cfg_group_t;
 typedef struct cfg_field_t cfg_field_t;
 
+/// @defgroup argparse Command line argument parsing
+/// @brief Command line argument parsing
+/// TODO: reduce the amount of allocations by allowing config to accept string views
+/// TODO: nicely support error propagation out of the parser
+/// @ingroup support
+/// @{
+
+/// @brief argument parser
 typedef struct ap_t ap_t;
 
 /// @brief the continuation code of a user event
@@ -55,7 +58,7 @@ typedef ap_event_result_t (*ap_event_t)(ap_t *ap, const cfg_field_t *param, cons
 /// @param arena the arena to allocate from
 ///
 /// @return the created parser instance
-ap_t *ap_new(cfg_group_t *config, arena_t *arena);
+CT_ARGPARSE_API ap_t *ap_new(cfg_group_t *config, arena_t *arena);
 
 /// @brief add a callback event to a parameter
 ///
@@ -63,7 +66,7 @@ ap_t *ap_new(cfg_group_t *config, arena_t *arena);
 /// @param param the parameter to add the event to
 /// @param callback the callback to add
 /// @param data the data to pass to the callback
-void ap_event(ap_t *self, const cfg_field_t *param, ap_event_t callback, void *data);
+CT_ARGPARSE_API void ap_event(ap_t *self, const cfg_field_t *param, ap_event_t callback, void *data);
 
 /// @brief parse a command line
 ///
@@ -72,7 +75,7 @@ void ap_event(ap_t *self, const cfg_field_t *param, ap_event_t callback, void *d
 /// @param argv from main
 ///
 /// @return int exit code
-int ap_parse_args(ap_t *self, int argc, const char **argv);
+CT_ARGPARSE_API int ap_parse_args(ap_t *self, int argc, const char **argv);
 
 /// @brief parse a string
 ///
@@ -80,21 +83,21 @@ int ap_parse_args(ap_t *self, int argc, const char **argv);
 /// @param str the string to parse
 ///
 /// @return int exit code
-int ap_parse(ap_t *self, const char *str);
+CT_ARGPARSE_API int ap_parse(ap_t *self, const char *str);
 
 /// @brief get all positional arguments
 ///
 /// @param self the parser instance
 ///
 /// @return all positional arguments
-vector_t *ap_get_posargs(ap_t *self);
+CT_ARGPARSE_API vector_t *ap_get_posargs(ap_t *self);
 
 /// @brief get all unknown arguments
 ///
 /// @param self the parser instance
 ///
 /// @return all unknown arguments
-vector_t *ap_get_unknown(ap_t *self);
+CT_ARGPARSE_API vector_t *ap_get_unknown(ap_t *self);
 
 /// @brief get all errors
 /// @note does not include unknown arguments
@@ -102,14 +105,14 @@ vector_t *ap_get_unknown(ap_t *self);
 /// @param self the parser instance
 ///
 /// @return all errors
-vector_t *ap_get_errors(ap_t *self);
+CT_ARGPARSE_API vector_t *ap_get_errors(ap_t *self);
 
 /// @brief get the number of processed arguments
 ///
 /// @param self the parser instance
 ///
 /// @return the number of processed arguments
-size_t ap_count_params(ap_t *self);
+CT_ARGPARSE_API size_t ap_count_params(ap_t *self);
 
 /// @} // ArgParse
 

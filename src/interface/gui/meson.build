@@ -19,7 +19,7 @@ src = [
 
 deps = [ cpp.find_library('d3d12'), cpp.find_library('dxgi') ]
 
-libimgui = library('imgui', src,
+libimgui = static_library('imgui', src,
     cpp_args : gui_args,
     include_directories : [ 'imgui', 'imgui/backends' ],
     dependencies : [ deps, base ]
@@ -52,7 +52,8 @@ executable('gui', src,
     include_directories : 'include',
     dependencies : [
         imgui, core, os, scan,
-        memory, notify, config, defaults,
-        io, runtime, support, ssa, tree, backtrace
+        memory, notify, config, setup,
+        io, runtime, support, ssa, tree, backtrace,
+        arena
     ]
 )

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_scan_api.h>
+
 #include "core/analyze.h"
 #include "core/compiler.h"
 #include "core/text.h"
@@ -30,7 +32,7 @@ BEGIN_API
 ///
 /// @return the language of @p scan
 NODISCARD CONSTFN
-const char *scan_language(IN_NOTNULL const scan_t *scan);
+CT_SCAN_API const char *scan_language(IN_NOTNULL const scan_t *scan);
 
 /// @brief get the path of a scanner
 ///
@@ -38,7 +40,7 @@ const char *scan_language(IN_NOTNULL const scan_t *scan);
 ///
 /// @return the path of @p scan
 NODISCARD CONSTFN
-const char *scan_path(IN_NOTNULL const scan_t *scan);
+CT_SCAN_API const char *scan_path(IN_NOTNULL const scan_t *scan);
 
 /// @brief get the compiled object from a scanner
 ///
@@ -46,26 +48,26 @@ const char *scan_path(IN_NOTNULL const scan_t *scan);
 ///
 /// @return the user data of @p scan
 NODISCARD CONSTFN
-void *scan_get(IN_NOTNULL scan_t *scan);
+CT_SCAN_API void *scan_get(IN_NOTNULL scan_t *scan);
 
 /// @brief set the compiled object of a scanner
 ///
 /// @param scan the scanner to set the user data of
 /// @param value the new user data
-void scan_set(IN_NOTNULL scan_t *scan, void *value);
+CT_SCAN_API void scan_set(IN_NOTNULL scan_t *scan, void *value);
 
 /// @brief get the context of a scanner
 ///
 /// @param scan the scanner to get the context of
 /// @param value the new context
-void scan_set_context(IN_NOTNULL scan_t *scan, void *value);
+CT_SCAN_API void scan_set_context(IN_NOTNULL scan_t *scan, void *value);
 
 /// @brief get the context of a scanner
 ///
 /// @param scan the scanner to get the context of
 ///
 /// @return the context of @p scan
-void *scan_get_context(IN_NOTNULL const scan_t *scan);
+CT_SCAN_API void *scan_get_context(IN_NOTNULL const scan_t *scan);
 
 /// @brief get a text span of the scanners contents
 ///
@@ -73,7 +75,7 @@ void *scan_get_context(IN_NOTNULL const scan_t *scan);
 ///
 /// @return the text of @p scan
 NODISCARD CONSTFN
-text_view_t scan_source(IN_NOTNULL const scan_t *scan);
+CT_SCAN_API text_view_t scan_source(IN_NOTNULL const scan_t *scan);
 
 /// @brief get the arena of a scanner
 ///
@@ -81,7 +83,7 @@ text_view_t scan_source(IN_NOTNULL const scan_t *scan);
 ///
 /// @return the arena of @p scan
 NODISCARD CONSTFN
-arena_t *scan_get_arena(IN_NOTNULL const scan_t *scan);
+CT_SCAN_API arena_t *scan_get_arena(IN_NOTNULL const scan_t *scan);
 
 /// @brief read data from a scanner
 ///
@@ -91,7 +93,7 @@ arena_t *scan_get_arena(IN_NOTNULL const scan_t *scan);
 ///
 /// @return the number of bytes read
 NODISCARD RET_RANGE(0, size)
-size_t scan_read(IN_NOTNULL scan_t *scan, OUT_WRITES(size) void *dst, size_t size);
+CT_SCAN_API size_t scan_read(IN_NOTNULL scan_t *scan, OUT_WRITES(size) void *dst, size_t size);
 
 /// @brief create a scanner from an io source
 ///
@@ -101,12 +103,12 @@ size_t scan_read(IN_NOTNULL scan_t *scan, OUT_WRITES(size) void *dst, size_t siz
 ///
 /// @return the created scanner
 NODISCARD
-scan_t *scan_io(IN_STRING const char *language,
+CT_SCAN_API scan_t *scan_io(IN_STRING const char *language,
                 IN_NOTNULL io_t *io,
                 IN_NOTNULL arena_t *arena);
 
 /// @brief the builtin scanner
-extern const scan_t kScanBuiltin;
+CT_SCAN_API extern const scan_t kScanBuiltin;
 
 /// @brief check if a scanner is the builtin scanner
 ///
@@ -114,7 +116,7 @@ extern const scan_t kScanBuiltin;
 ///
 /// @return true if @p scan is the builtin scanner
 NODISCARD CONSTFN
-bool scan_is_builtin(const scan_t *scan);
+CT_SCAN_API bool scan_is_builtin(const scan_t *scan);
 
 /// @}
 

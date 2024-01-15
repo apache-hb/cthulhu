@@ -1,3 +1,11 @@
+base_api = configure_file(
+    input : api_header,
+    output : 'ctu_base_api.h',
+    configuration : { 'MOD': 'BASE' }
+)
+
+base_include = include_directories('.', 'include')
+
 src = [
     'src/util.c',
     'src/panic.c',
@@ -7,13 +15,13 @@ src = [
 
 libbase = library('base', src,
     build_by_default : false,
-    c_args : user_args,
+    c_args : user_args + [ '-DCT_BASE_BUILD=1' ],
     dependencies : [ core ],
-    include_directories : [ 'include' ]
+    include_directories : base_include
 )
 
 base = declare_dependency(
     link_with : libbase,
     dependencies : [ core ],
-    include_directories : [ 'include' ]
+    include_directories : base_include
 )

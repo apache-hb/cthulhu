@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_ssa_api.h>
+
 #include "core/compiler.h"
 
 #include "cthulhu/tree/ops.h"
@@ -309,7 +311,7 @@ typedef struct ssa_result_t {
     map_t *deps; // map<ssa_symbol, set<ssa_symbol>>
 } ssa_result_t;
 
-ssa_result_t ssa_compile(map_t *mods, arena_t *arena);
+CT_SSA_API ssa_result_t ssa_compile(map_t *mods, arena_t *arena);
 
 ///
 /// optimization api
@@ -321,23 +323,23 @@ ssa_result_t ssa_compile(map_t *mods, arena_t *arena);
  * @param reports report sink
  * @param mod module to optimize
  */
-void ssa_opt(logger_t *reports, ssa_result_t mod);
+CT_SSA_API void ssa_opt(logger_t *reports, ssa_result_t mod);
 
 ///
 /// rewriting
 ///
 
-ssa_type_t *ssa_type_bool(const char *name, quals_t quals);
-ssa_type_t *ssa_type_digit(const char *name, quals_t quals, sign_t sign, digit_t digit);
-ssa_type_t *ssa_type_pointer(const char *name, quals_t quals, ssa_type_t *pointer, size_t length);
+CT_SSA_API ssa_type_t *ssa_type_bool(const char *name, quals_t quals);
+CT_SSA_API ssa_type_t *ssa_type_digit(const char *name, quals_t quals, sign_t sign, digit_t digit);
+CT_SSA_API ssa_type_t *ssa_type_pointer(const char *name, quals_t quals, ssa_type_t *pointer, size_t length);
 
 ///
 /// names
 ///
 
-const char *ssa_type_name(ssa_kind_t kind);
-const char *ssa_opkind_name(ssa_opkind_t kind);
-const char *ssa_opcode_name(ssa_opcode_t opcode);
+CT_SSA_API const char *ssa_type_name(ssa_kind_t kind);
+CT_SSA_API const char *ssa_opkind_name(ssa_opkind_t kind);
+CT_SSA_API const char *ssa_opcode_name(ssa_opcode_t opcode);
 
 /// @}
 

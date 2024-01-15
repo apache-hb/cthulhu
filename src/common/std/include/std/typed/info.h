@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_std_api.h>
+
 #include "core/compiler.h"
 #include "core/analyze.h"
 
@@ -43,11 +45,11 @@ typedef struct typeinfo_t
 } typeinfo_t;
 
 /// @brief type information for a c style string
-extern const typeinfo_t kTypeInfoString;
+CT_STD_API extern const typeinfo_t kTypeInfoString;
 
 /// @brief type information for a generic pointer
 /// this operates on the pointer itself and not the data it points to
-extern const typeinfo_t kTypeInfoPtr;
+CT_STD_API extern const typeinfo_t kTypeInfoPtr;
 
 /// @}
 

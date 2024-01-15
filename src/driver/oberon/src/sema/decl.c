@@ -1,4 +1,5 @@
 #include "oberon/sema/decl.h"
+#include "arena/arena.h"
 #include "core/macros.h"
 #include "notify/notify.h"
 #include "oberon/sema/type.h"

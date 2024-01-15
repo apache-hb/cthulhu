@@ -35,6 +35,7 @@
 #   define IN_STRING _In_z_
 #   define IN_RANGE(cmp, it) _In_range_(cmp, it)
 #else
+#   define FMT_STRING
 #   define USE_DECL
 #   define IN_READS(expr)
 #   define OUT_WRITES(expr)
@@ -49,10 +50,6 @@
 
 #   define IN_STRING
 #   define IN_RANGE(cmp, it)
-#endif
-
-#ifndef FMT_STRING
-#   define FMT_STRING
 #endif
 
 /// @def CT_PRINTF(a, b)

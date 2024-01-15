@@ -1,3 +1,10 @@
+std_api = configure_file(
+    input : api_header,
+    output : 'ctu_std_api.h',
+    configuration : { 'MOD': 'STD' }
+)
+
+std_include = include_directories('.', 'include')
 
 src = [
     'src/map.c',
@@ -12,13 +19,13 @@ src = [
 
 libstd = library('std', src,
     build_by_default : false,
-    c_args : user_args,
+    c_args : user_args + [ '-DCT_STD_BUILD=1' ],
     dependencies : [ arena, base ],
-    include_directories : 'include'
+    include_directories : std_include
 )
 
 std = declare_dependency(
     link_with : libstd,
     dependencies : base,
-    include_directories : 'include'
+    include_directories : std_include
 )

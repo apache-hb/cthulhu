@@ -1,6 +1,9 @@
 #pragma once
 
+#include <ctu_util_api.h>
+
 #include "core/compiler.h"
+#include "core/analyze.h"
 #include "core/text.h"
 
 #include <stddef.h>
@@ -23,7 +26,7 @@ BEGIN_API
 /// @param arena the arena to allocate the escaped text in
 ///
 /// @return the escaped text
-text_t util_text_escape(logger_t *reports, const node_t *node, const char *text, size_t length, arena_t *arena);
+CT_UTIL_API text_t util_text_escape(IN_NOTNULL logger_t *reports, IN_NOTNULL const node_t *node, IN_READS(length) const char *text, size_t length, IN_NOTNULL arena_t *arena);
 
 /// @}
 

@@ -31,6 +31,7 @@ bt_error_t gErrorReport = {
 USE_DECL
 frame_resolve_t bt_resolve_symbol(const bt_frame_t *frame, bt_symbol_t *symbol)
 {
+    // we return nothing rather than asserting because we might be called from inside an assert
     if (frame == NULL) return eResolveNothing;
     if (symbol == NULL) return eResolveNothing;
 

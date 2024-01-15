@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_interop_api.h>
+
 #include "scan/node.h"
 
 #include "base/panic.h"
@@ -15,7 +17,7 @@ BEGIN_API
 ///
 /// @param where a pointer to the current location
 /// @param text current source text
-void flex_action(where_t *where, const char *text);
+CT_INTEROP_API void flex_action(IN_NOTNULL where_t *where, IN_STRING const char *text);
 
 /// @brief retrevies more input for flex
 ///
@@ -24,19 +26,19 @@ void flex_action(where_t *where, const char *text);
 /// @param size total number of characters to write
 ///
 /// @return number of characters written
-int flex_input(scan_t *scan, char *out, int size);
+CT_INTEROP_API int flex_input(IN_NOTNULL scan_t *scan, OUT_WRITES(size) char *out, int size);
 
 /// @brief initialize source location tracking
 ///
 /// @param where the source location to initialize
-void flex_init(where_t *where);
+CT_INTEROP_API void flex_init(IN_NOTNULL where_t *where);
 
 /// @brief update the source location
 ///
 /// @param where the source location to update
 /// @param offsets the source location offsets
 /// @param steps the number of steps to update by
-void flex_update(where_t *where, where_t *offsets, int steps);
+CT_INTEROP_API void flex_update(IN_NOTNULL where_t *where, IN_READS(steps) const where_t *offsets, int steps);
 
 /// track source locations inside flex and bison
 #ifndef YY_USER_ACTION

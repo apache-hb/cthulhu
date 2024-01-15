@@ -6,6 +6,13 @@
 #include <dbghelp.h>
 #include <stdlib.h>
 
+#define MAX_NAME_SIZE 512
+
+union disp_t {
+    DWORD disp;
+    DWORD64 disp64;
+};
+
 USE_DECL
 const char *bt_backend(void)
 {
@@ -27,12 +34,9 @@ static BOOL walk_stack(STACKFRAME *frame, CONTEXT *ctx, HANDLE process, HANDLE t
     );
 }
 
-union disp_t {
-    DWORD disp;
-    DWORD64 disp64;
-};
-
-void read_context_stack(CONTEXT *ctx, bt_trace_t callback, void *user)
+// split this out as a function so we can use it in the exception handler
+// exception handlers provide a CONTEXT we can use to walk the stack
+static void read_context_stack(CONTEXT *ctx, bt_trace_t callback, void *user)
 {
     HANDLE thread = GetCurrentThread();
     HANDLE process = GetCurrentProcess();
@@ -70,8 +74,6 @@ void bt_read_inner(bt_trace_t callback, void *user)
     read_context_stack(&ctx, callback, user);
 }
 
-#define MAX_NAME_SIZE 512
-
 frame_resolve_t bt_resolve_inner(const bt_frame_t *frame, bt_symbol_t *symbol)
 {
     union disp_t disp = { 0 };
@@ -108,6 +110,8 @@ frame_resolve_t bt_resolve_inner(const bt_frame_t *frame, bt_symbol_t *symbol)
             resolve |= eResolveLine | eResolveFile;
         }
 
+        // even though we're a C codebase still run the demangler to catch C++ code
+        // that end users may have written
         if (UnDecorateSymbolName(info->Name, name.text, name_size, UNDNAME_COMPLETE))
         {
             resolve |= eResolveDemangledName;

@@ -234,10 +234,10 @@ typedef struct tree_t {
 /// tree error handling
 ///
 
-tree_t *tree_error(const node_t *node, const diagnostic_t *diagnostic, const char *message, ...);
-tree_t *tree_pick_error(const node_t *node, const tree_t *lhs, const tree_t *rhs);
-tree_t *tree_raise(const node_t *node, logger_t *reports, const diagnostic_t *diagnostic, const char *message, ...);
-void tree_report(logger_t *reports, const tree_t *error);
+CT_TREE_API tree_t *tree_error(const node_t *node, const diagnostic_t *diagnostic, const char *message, ...);
+CT_TREE_API tree_t *tree_pick_error(const node_t *node, const tree_t *lhs, const tree_t *rhs);
+CT_TREE_API tree_t *tree_raise(const node_t *node, logger_t *reports, const diagnostic_t *diagnostic, const char *message, ...);
+CT_TREE_API void tree_report(logger_t *reports, const tree_t *error);
 
 ///
 /// tree type interface
@@ -250,7 +250,7 @@ void tree_report(logger_t *reports, const tree_t *error);
  * @param name the name of the type
  * @return an empty type
  */
-tree_t *tree_type_empty(const node_t *node, const char *name);
+CT_TREE_API tree_t *tree_type_empty(const node_t *node, const char *name);
 
 /**
  * @brief create a unit type, this is a type that has only one value. equivilent to void
@@ -259,7 +259,7 @@ tree_t *tree_type_empty(const node_t *node, const char *name);
  * @param name the name of the type
  * @return a unit type
  */
-tree_t *tree_type_unit(const node_t *node, const char *name);
+CT_TREE_API tree_t *tree_type_unit(const node_t *node, const char *name);
 
 /**
  * @brief create a bool type, this is a type that has only two values, true and false
@@ -269,7 +269,7 @@ tree_t *tree_type_unit(const node_t *node, const char *name);
  * @param quals the qualifiers of the type
  * @return a bool type
  */
-tree_t *tree_type_bool(const node_t *node, const char *name, quals_t quals);
+CT_TREE_API tree_t *tree_type_bool(const node_t *node, const char *name, quals_t quals);
 
 /**
  * @brief create an opaque pointer type
@@ -278,7 +278,7 @@ tree_t *tree_type_bool(const node_t *node, const char *name, quals_t quals);
  * @param name the name of the type
  * @return tree_t*
  */
-tree_t *tree_type_opaque(const node_t *node, const char *name);
+CT_TREE_API tree_t *tree_type_opaque(const node_t *node, const char *name);
 
 /**
  * @brief create a digit type
@@ -290,7 +290,7 @@ tree_t *tree_type_opaque(const node_t *node, const char *name);
  * @param quals the qualifiers of the type
  * @return a digit type
  */
-tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sign_t sign, quals_t quals);
+CT_TREE_API tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sign_t sign, quals_t quals);
 
 /**
  * @brief create a function pointer type
@@ -302,7 +302,7 @@ tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sig
  * @param arity does this function have variadic arguments
  * @return tree_t* the function pointer type
  */
-tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *result, vector_t *params, arity_t arity);
+CT_TREE_API tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *result, vector_t *params, arity_t arity);
 
 /**
  * @brief create a pointer type
@@ -313,7 +313,7 @@ tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *re
  * @param length the optional length of the pointer
  * @return tree_t* the pointer type
  */
-tree_t *tree_type_pointer(const node_t *node, const char *name, const tree_t *pointer, size_t length);
+CT_TREE_API tree_t *tree_type_pointer(const node_t *node, const char *name, const tree_t *pointer, size_t length);
 
 /**
  * @brief create a reference type
@@ -323,7 +323,7 @@ tree_t *tree_type_pointer(const node_t *node, const char *name, const tree_t *po
  * @param reference the type that this reference references
  * @return tree_t* the reference type
  */
-tree_t *tree_type_reference(const node_t *node, const char *name, const tree_t *reference);
+CT_TREE_API tree_t *tree_type_reference(const node_t *node, const char *name, const tree_t *reference);
 
 /// @brief create a new array type
 ///
@@ -333,16 +333,16 @@ tree_t *tree_type_reference(const node_t *node, const char *name, const tree_t *
 /// @param length the length of the array
 ///
 /// @return the array type
-tree_t *tree_type_array(const node_t *node, const char *name, const tree_t *array, size_t length);
+CT_TREE_API tree_t *tree_type_array(const node_t *node, const char *name, const tree_t *array, size_t length);
 
 ///
 /// tree expr interface
 ///
 
-tree_t *tree_expr_empty(const node_t *node, const tree_t *type);
-tree_t *tree_expr_unit(const node_t *node, const tree_t *type);
-tree_t *tree_expr_bool(const node_t *node, const tree_t *type, bool value);
-tree_t *tree_expr_digit(const node_t *node, const tree_t *type, const mpz_t value);
+CT_TREE_API tree_t *tree_expr_empty(const node_t *node, const tree_t *type);
+CT_TREE_API tree_t *tree_expr_unit(const node_t *node, const tree_t *type);
+CT_TREE_API tree_t *tree_expr_bool(const node_t *node, const tree_t *type, bool value);
+CT_TREE_API tree_t *tree_expr_digit(const node_t *node, const tree_t *type, const mpz_t value);
 
 /**
  * @brief create a string expression
@@ -353,9 +353,9 @@ tree_t *tree_expr_digit(const node_t *node, const tree_t *type, const mpz_t valu
  * @param length the length of the string not including the null terminator
  * @return tree_t*
  */
-tree_t *tree_expr_string(const node_t *node, const tree_t *type, const char *value, size_t length);
+CT_TREE_API tree_t *tree_expr_string(const node_t *node, const tree_t *type, const char *value, size_t length);
 
-tree_t *tree_expr_cast(const node_t *node, const tree_t *type, tree_t *expr);
+CT_TREE_API tree_t *tree_expr_cast(const node_t *node, const tree_t *type, tree_t *expr);
 
 /**
  * @brief load a value from a pointer or storage
@@ -364,7 +364,7 @@ tree_t *tree_expr_cast(const node_t *node, const tree_t *type, tree_t *expr);
  * @param expr the pointer or storage to load from
  * @return tree_t* the loaded value
  */
-tree_t *tree_expr_load(const node_t *node, tree_t *expr);
+CT_TREE_API tree_t *tree_expr_load(const node_t *node, tree_t *expr);
 
 /**
  * @brief create a reference to an object
@@ -373,7 +373,7 @@ tree_t *tree_expr_load(const node_t *node, tree_t *expr);
  * @param expr the object to reference
  * @return tree_t*
  */
-tree_t *tree_expr_ref(const node_t *node, tree_t *expr);
+CT_TREE_API tree_t *tree_expr_ref(const node_t *node, tree_t *expr);
 
 /**
  * @brief create a reference to an object
@@ -382,17 +382,17 @@ tree_t *tree_expr_ref(const node_t *node, tree_t *expr);
  * @param expr the object to reference
  * @return tree_t* the reference
  */
-tree_t *tree_expr_address(const node_t *node, tree_t *expr);
+CT_TREE_API tree_t *tree_expr_address(const node_t *node, tree_t *expr);
 
-tree_t *tree_expr_unary(const node_t *node, unary_t unary, tree_t *expr);
-tree_t *tree_expr_binary(const node_t *node, const tree_t *type, binary_t binary, tree_t *lhs, tree_t *rhs);
-tree_t *tree_expr_compare(const node_t *node, const tree_t *type, compare_t compare, tree_t *lhs, tree_t *rhs);
+CT_TREE_API tree_t *tree_expr_unary(const node_t *node, unary_t unary, tree_t *expr);
+CT_TREE_API tree_t *tree_expr_binary(const node_t *node, const tree_t *type, binary_t binary, tree_t *lhs, tree_t *rhs);
+CT_TREE_API tree_t *tree_expr_compare(const node_t *node, const tree_t *type, compare_t compare, tree_t *lhs, tree_t *rhs);
 
-tree_t *tree_expr_field(const node_t *node, const tree_t *type, tree_t *object, tree_t *field);
+CT_TREE_API tree_t *tree_expr_field(const node_t *node, const tree_t *type, tree_t *object, tree_t *field);
 
-tree_t *tree_expr_offset(const node_t *node, const tree_t *type, tree_t *object, tree_t *offset);
+CT_TREE_API tree_t *tree_expr_offset(const node_t *node, const tree_t *type, tree_t *object, tree_t *offset);
 
-tree_t *tree_expr_call(const node_t *node, const tree_t *callee, vector_t *args);
+CT_TREE_API tree_t *tree_expr_call(const node_t *node, const tree_t *callee, vector_t *args);
 
 ///
 /// tree statement interface
@@ -405,7 +405,7 @@ tree_t *tree_expr_call(const node_t *node, const tree_t *callee, vector_t *args)
  * @param stmts the statements in the block
  * @return the block statement
  */
-tree_t *tree_stmt_block(const node_t *node, vector_t *stmts);
+CT_TREE_API tree_t *tree_stmt_block(const node_t *node, vector_t *stmts);
 
 /**
  * @brief create a return statement
@@ -416,102 +416,102 @@ tree_t *tree_stmt_block(const node_t *node, vector_t *stmts);
  * @param value the value to return
  * @return the return statement
  */
-tree_t *tree_stmt_return(const node_t *node, const tree_t *value);
+CT_TREE_API tree_t *tree_stmt_return(const node_t *node, const tree_t *value);
 
-tree_t *tree_stmt_assign(const node_t *node, tree_t *dst, tree_t *src);
-tree_t *tree_stmt_loop(const node_t *node, tree_t *cond, tree_t *body, tree_t *other);
-tree_t *tree_stmt_branch(const node_t *node, tree_t *cond, tree_t *then, tree_t *other);
-tree_t *tree_stmt_jump(const node_t *node, tree_t *label, tree_jump_t jump);
+CT_TREE_API tree_t *tree_stmt_assign(const node_t *node, tree_t *dst, tree_t *src);
+CT_TREE_API tree_t *tree_stmt_loop(const node_t *node, tree_t *cond, tree_t *body, tree_t *other);
+CT_TREE_API tree_t *tree_stmt_branch(const node_t *node, tree_t *cond, tree_t *then, tree_t *other);
+CT_TREE_API tree_t *tree_stmt_jump(const node_t *node, tree_t *label, tree_jump_t jump);
 
 ///
 /// tree decl interface
 ///
 
 // delay the resolve of a declaration
-tree_t *tree_resolve(cookie_t *cookie, const tree_t *decl);
-tree_t *tree_resolve_type(const tree_t *decl);
+CT_TREE_API tree_t *tree_resolve(cookie_t *cookie, const tree_t *decl);
+CT_TREE_API tree_t *tree_resolve_type(const tree_t *decl);
 
-tree_t *tree_open_decl(const node_t *node, const char *name, tree_resolve_info_t resolve);
-void tree_close_decl(tree_t *self, const tree_t *other);
+CT_TREE_API tree_t *tree_open_decl(const node_t *node, const char *name, tree_resolve_info_t resolve);
+CT_TREE_API void tree_close_decl(tree_t *self, const tree_t *other);
 
 ///
 /// global decls
 ///
 
-tree_t *tree_decl_global(
+CT_TREE_API tree_t *tree_decl_global(
     const node_t *node, const char *name,
     tree_storage_t storage, const tree_t *type, tree_t *initial
 );
 
-tree_t *tree_open_global(
+CT_TREE_API tree_t *tree_open_global(
     const node_t *node, const char *name,
     const tree_t *type, tree_resolve_info_t resolve
 );
 
-void tree_close_global(tree_t *self, tree_t *value);
+CT_TREE_API void tree_close_global(tree_t *self, tree_t *value);
 
 ///
 /// function decls
 ///
 
-tree_t *tree_decl_function(
+CT_TREE_API tree_t *tree_decl_function(
     const node_t *node, const char *name, const tree_t *signature,
     vector_t *params, vector_t *locals, tree_t *body
 );
 
-tree_t *tree_open_function(
+CT_TREE_API tree_t *tree_open_function(
     const node_t *node, const char *name,
     const tree_t *signature, tree_resolve_info_t resolve
 );
 
-void tree_close_function(tree_t *self, tree_t *body);
+CT_TREE_API void tree_close_function(tree_t *self, tree_t *body);
 
 ///
 /// struct decls
 ///
 
-tree_t *tree_decl_struct(const node_t *node, const char *name, vector_t *fields);
-tree_t *tree_open_struct(const node_t *node, const char *name, tree_resolve_info_t resolve);
-void tree_close_struct(tree_t *self, vector_t *fields);
+CT_TREE_API tree_t *tree_decl_struct(const node_t *node, const char *name, vector_t *fields);
+CT_TREE_API tree_t *tree_open_struct(const node_t *node, const char *name, tree_resolve_info_t resolve);
+CT_TREE_API void tree_close_struct(tree_t *self, vector_t *fields);
 
 ///
 /// union decls
 ///
 
-tree_t *tree_decl_union(const node_t *node, const char *name, vector_t *fields);
-tree_t *tree_open_union(const node_t *node, const char *name, tree_resolve_info_t resolve);
-void tree_close_union(tree_t *self, vector_t *fields);
+CT_TREE_API tree_t *tree_decl_union(const node_t *node, const char *name, vector_t *fields);
+CT_TREE_API tree_t *tree_open_union(const node_t *node, const char *name, tree_resolve_info_t resolve);
+CT_TREE_API void tree_close_union(tree_t *self, vector_t *fields);
 
 ///
 /// enum decls
 ///
 
-tree_t *tree_decl_enum(const node_t *node, const char *name, const tree_t *underlying, vector_t *fields, tree_t *default_case);
-tree_t *tree_open_enum(const node_t *node, const char *name, tree_resolve_info_t resolve);
-void tree_close_enum(tree_t *self, const tree_t *underlying, vector_t *fields, tree_t *default_case);
+CT_TREE_API tree_t *tree_decl_enum(const node_t *node, const char *name, const tree_t *underlying, vector_t *fields, tree_t *default_case);
+CT_TREE_API tree_t *tree_open_enum(const node_t *node, const char *name, tree_resolve_info_t resolve);
+CT_TREE_API void tree_close_enum(tree_t *self, const tree_t *underlying, vector_t *fields, tree_t *default_case);
 
 ///
 /// other decls
 ///
 
-tree_t *tree_decl_param(const node_t *node, const char *name, const tree_t *type);
-tree_t *tree_decl_field(const node_t *node, const char *name, const tree_t *type);
-tree_t *tree_decl_local(const node_t *node, const char *name, tree_storage_t storage, const tree_t *type);
-tree_t *tree_decl_case(const node_t *node, const char *name, tree_t *expr);
+CT_TREE_API tree_t *tree_decl_param(const node_t *node, const char *name, const tree_t *type);
+CT_TREE_API tree_t *tree_decl_field(const node_t *node, const char *name, const tree_t *type);
+CT_TREE_API tree_t *tree_decl_local(const node_t *node, const char *name, tree_storage_t storage, const tree_t *type);
+CT_TREE_API tree_t *tree_decl_case(const node_t *node, const char *name, tree_t *expr);
 
 ///
 /// various helpers
 ///
 
-void tree_add_local(tree_t *self, tree_t *decl);
-void tree_add_param(tree_t *self, tree_t *decl);
-void tree_add_enum(tree_t *self, tree_t *decl);
-void tree_set_attrib(tree_t *self, const tree_attribs_t *attrib);
-void tree_set_type(tree_t *self, const tree_t *type);
+CT_TREE_API void tree_add_local(tree_t *self, tree_t *decl);
+CT_TREE_API void tree_add_param(tree_t *self, tree_t *decl);
+CT_TREE_API void tree_add_enum(tree_t *self, tree_t *decl);
+CT_TREE_API void tree_set_attrib(tree_t *self, const tree_attribs_t *attrib);
+CT_TREE_API void tree_set_type(tree_t *self, const tree_t *type);
 
-tree_t *tree_alias(const tree_t *tree, const char *name);
+CT_TREE_API tree_t *tree_alias(const tree_t *tree, const char *name);
 
-void tree_set_storage(tree_t *self, tree_storage_t storage);
+CT_TREE_API void tree_set_storage(tree_t *self, tree_storage_t storage);
 
 ///
 /// tree sema interface
@@ -521,7 +521,7 @@ void tree_set_storage(tree_t *self, tree_storage_t storage);
 // will be emitted, they are also required to be valid tree_t objects
 // any custom slots can contain any data, but they will not be emitted
 
-tree_t *tree_module_root(logger_t *reports, cookie_t *cookie, const node_t *node, const char *name, size_t decls, const size_t *sizes);
+CT_TREE_API tree_t *tree_module_root(logger_t *reports, cookie_t *cookie, const node_t *node, const char *name, size_t decls, const size_t *sizes);
 
 /**
  * @brief create a new module
@@ -533,7 +533,7 @@ tree_t *tree_module_root(logger_t *reports, cookie_t *cookie, const node_t *node
  * @param sizes the size of each declaration category
  * @return the module
  */
-tree_t *tree_module(tree_t *parent, const node_t *node, const char *name, size_t decls, const size_t *sizes);
+CT_TREE_API tree_t *tree_module(tree_t *parent, const node_t *node, const char *name, size_t decls, const size_t *sizes);
 
 /**
  * @brief recursively search for a declaration in a module
@@ -543,7 +543,7 @@ tree_t *tree_module(tree_t *parent, const node_t *node, const char *name, size_t
  * @param name the name of the declaration
  * @return the declaration or NULL if it does not exist
  */
-void *tree_module_get(tree_t *self, size_t tag, const char *name);
+CT_TREE_API void *tree_module_get(tree_t *self, size_t tag, const char *name);
 
 /**
  * @brief set a declaration in the current module
@@ -556,9 +556,9 @@ void *tree_module_get(tree_t *self, size_t tag, const char *name);
  * @param value the value of the declaration
  * @return a previous declaration or NULL if it did not exist
  */
-void *tree_module_set(tree_t *self, size_t tag, const char *name, void *value);
+CT_TREE_API void *tree_module_set(tree_t *self, size_t tag, const char *name, void *value);
 
-map_t *tree_module_tag(const tree_t *self, size_t tag);
+CT_TREE_API map_t *tree_module_tag(const tree_t *self, size_t tag);
 
 /**
  * @brief return a resolution cookie
@@ -566,7 +566,7 @@ map_t *tree_module_tag(const tree_t *self, size_t tag);
  * @param sema the module
  * @return the cookie
  */
-cookie_t *tree_get_cookie(tree_t *sema);
+CT_TREE_API cookie_t *tree_get_cookie(tree_t *sema);
 
 /// @}
 

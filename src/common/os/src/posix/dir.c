@@ -4,7 +4,7 @@
 
 #include "base/panic.h"
 
-#include "memory/memory.h"
+#include "arena/arena.h"
 
 #include <errno.h>
 

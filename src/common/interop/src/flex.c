@@ -4,8 +4,12 @@
 
 #include <limits.h>
 
+USE_DECL
 void flex_action(where_t *where, const char *text)
 {
+    CTASSERT(where != NULL);
+    CTASSERT(text != NULL);
+
     where->first_line = where->last_line;
     where->first_column = where->last_column;
 
@@ -23,22 +27,33 @@ void flex_action(where_t *where, const char *text)
     }
 }
 
+USE_DECL
 int flex_input(scan_t *scan, char *out, int size)
 {
+    CTASSERT(scan != NULL);
+    CTASSERT(out != NULL);
+
     CTASSERTF(size <= INT_MAX, "flex_input() size is too large (scan=%s, size=%d)", scan_path(scan), size);
     return (int)scan_read(scan, out, size);
 }
 
+USE_DECL
 void flex_init(where_t *where)
 {
+    CTASSERT(where != NULL);
+
     where->first_line = 0;
     where->first_column = 0;
     where->last_line = 0;
     where->last_column = 0;
 }
 
-void flex_update(where_t *where, where_t *offsets, int steps)
+USE_DECL
+void flex_update(where_t *where, const where_t *offsets, int steps)
 {
+    CTASSERT(where != NULL);
+    CTASSERT(offsets != NULL);
+
     if (steps)
     {
         where_t rhs1 = offsets[1];

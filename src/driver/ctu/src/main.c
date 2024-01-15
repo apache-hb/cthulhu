@@ -10,6 +10,8 @@
 
 #include "arena/arena.h"
 
+#include "driver/driver.h"
+
 #include "ctu_bison.h" // IWYU pragma: keep
 #include "ctu_flex.h" // IWYU pragma: keep
 
@@ -65,7 +67,7 @@ static const diagnostic_t * const kDiagnosticTable[] = {
 
 static const char *const kLangNames[] = { "ct", "ctu", "cthulhu", NULL };
 
-const language_t kCtuModule = {
+CT_DRIVER_API const language_t kCtuModule = {
     .id = "ctu",
     .name = "Cthulhu",
     .version = {
@@ -94,3 +96,5 @@ const language_t kCtuModule = {
         [eStageCompileSymbols] = ctu_compile_module
     }
 };
+
+CTU_DRIVER_ENTRY(kCtuModule)

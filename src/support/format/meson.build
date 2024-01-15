@@ -1,3 +1,11 @@
+format_api = configure_file(
+    input : api_header,
+    output : 'ctu_format_api.h',
+    configuration : { 'MOD': 'FORMAT' }
+)
+
+format_include = include_directories('.', 'include')
+
 src = [
     'src/colour.c',
     'src/config.c',
@@ -11,13 +19,13 @@ src = [
 ]
 
 libformat = library('format', src,
-    c_args : user_args,
-    dependencies : [ std, core, io, scan, notify, config, backtrace, memory ],
-    include_directories : [ 'include' ]
+    c_args : user_args + [ '-DCT_FORMAT_BUILD=1' ],
+    dependencies : [ std, core, io, scan, notify, config, backtrace, memory, arena ],
+    include_directories : format_include
 )
 
 format = declare_dependency(
     link_with : libformat,
     dependencies : [ std, core, notify ],
-    include_directories : [ 'include' ]
+    include_directories : format_include
 )

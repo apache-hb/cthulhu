@@ -3,7 +3,7 @@
 #include "format/colour.h"
 #include "config/config.h"
 #include "core/macros.h"
-#include "defaults/defaults.h"
+#include "setup/setup.h"
 #include "format/config.h"
 #include "format/notify2.h"
 #include "io/console.h"
@@ -427,7 +427,7 @@ static void do_backtrace(io_t *io, arena_t *arena)
 
 int main(int argc, const char **argv)
 {
-    default_init();
+    setup_global();
 
     arena_t *arena = get_global_arena();
     io_t *con = io_stdout();

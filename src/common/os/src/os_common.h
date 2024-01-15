@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/compiler.h"
+
 #include <stdbool.h>
 
-bool is_special(const char *path);
+CT_LOCAL bool is_special(const char *path);

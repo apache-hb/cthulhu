@@ -39,7 +39,7 @@ typedef struct bucket_t bucket_t;
 ///
 /// @return the new map
 NODISCARD
-map_t *map_new(IN_RANGE(>, 0) size_t size, typeinfo_t info, IN_NOTNULL arena_t *arena);
+CT_STD_API map_t *map_new(IN_RANGE(>, 0) size_t size, typeinfo_t info, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new map with an optimal size
 ///
@@ -49,7 +49,7 @@ map_t *map_new(IN_RANGE(>, 0) size_t size, typeinfo_t info, IN_NOTNULL arena_t *
 ///
 /// @return the new map
 NODISCARD
-map_t *map_optimal(IN_RANGE(>, 0) size_t size, typeinfo_t info, IN_NOTNULL arena_t *arena);
+CT_STD_API map_t *map_optimal(IN_RANGE(>, 0) size_t size, typeinfo_t info, IN_NOTNULL arena_t *arena);
 
 /// @brief set a key-value pair in a map
 /// @pre @p key is not NULL
@@ -57,7 +57,7 @@ map_t *map_optimal(IN_RANGE(>, 0) size_t size, typeinfo_t info, IN_NOTNULL arena
 /// @param map the map to set the key-value pair in
 /// @param key the key to set
 /// @param value the value to set
-void map_set(IN_NOTNULL map_t *map, IN_NOTNULL const void *key, void *value);
+CT_STD_API void map_set(IN_NOTNULL map_t *map, IN_NOTNULL const void *key, void *value);
 
 /// @brief get a value from a map
 ///
@@ -66,7 +66,7 @@ void map_set(IN_NOTNULL map_t *map, IN_NOTNULL const void *key, void *value);
 ///
 /// @return the value for @p key or NULL if the key is not found
 NODISCARD CONSTFN
-void *map_get(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key);
+CT_STD_API void *map_get(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key);
 
 /// @brief get a value from a map or a default value
 ///
@@ -76,7 +76,7 @@ void *map_get(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key);
 ///
 /// @return the value named by @p key or @p other if the key is not found
 NODISCARD CONSTFN
-void *map_get_default(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key, void *other);
+CT_STD_API void *map_get_default(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key, void *other);
 
 /// @brief check if a map contains a key
 ///
@@ -85,14 +85,14 @@ void *map_get_default(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key, v
 ///
 /// @retval true the map contains @p key
 NODISCARD CONSTFN
-bool map_contains(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key);
+CT_STD_API bool map_contains(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key);
 
 /// @brief delete a key-value pair from a map
 /// @note this does no memory management, it only removes the key-value pair from the map
 ///
 /// @param map the map to delete the key-value pair from
 /// @param key the key to delete
-void map_delete(IN_NOTNULL map_t *map, IN_NOTNULL const void *key);
+CT_STD_API void map_delete(IN_NOTNULL map_t *map, IN_NOTNULL const void *key);
 
 /// @brief collect all the values from a map into a vector
 ///
@@ -100,7 +100,7 @@ void map_delete(IN_NOTNULL map_t *map, IN_NOTNULL const void *key);
 ///
 /// @return a vector containing all the values
 NODISCARD
-vector_t *map_values(IN_NOTNULL map_t *map);
+CT_STD_API vector_t *map_values(IN_NOTNULL map_t *map);
 
 /// @brief collect all key-value pairs in a map into a vector
 /// returns a typevec_t<map_entry_t>
@@ -109,7 +109,7 @@ vector_t *map_values(IN_NOTNULL map_t *map);
 ///
 /// @return a vector containing all the key-value pairs
 NODISCARD
-typevec_t *map_entries(IN_NOTNULL map_t *map);
+CT_STD_API typevec_t *map_entries(IN_NOTNULL map_t *map);
 
 /// @brief get the number of key-value pairs in a map
 ///
@@ -117,14 +117,14 @@ typevec_t *map_entries(IN_NOTNULL map_t *map);
 ///
 /// @return the number of key-value pairs in the map
 NODISCARD
-size_t map_count(IN_NOTNULL const map_t *map);
+CT_STD_API size_t map_count(IN_NOTNULL const map_t *map);
 
 /// @brief clear all key-value pairs from a map
 /// @note this does no memory management, it only removes all key-value pairs from the map
 /// does not free the map itself or shrink its internal storage
 ///
 /// @param map the map to clear
-void map_reset(IN_NOTNULL map_t *map);
+CT_STD_API void map_reset(IN_NOTNULL map_t *map);
 
 /// @brief a key-value pair in a map
 typedef struct map_entry_t
@@ -152,7 +152,7 @@ typedef struct map_iter_t
 ///
 /// @return the new iterator
 NODISCARD CONSTFN
-map_iter_t map_iter(IN_NOTNULL map_t *map);
+CT_STD_API map_iter_t map_iter(IN_NOTNULL map_t *map);
 
 /// @brief get the next key-value pair from a map iterator
 /// @warning this functions behaviour is undefined if called on an iterator that has no more elements
@@ -161,7 +161,7 @@ map_iter_t map_iter(IN_NOTNULL map_t *map);
 ///
 /// @return the next key-value pair
 NODISCARD
-map_entry_t map_next(IN_NOTNULL map_iter_t *iter);
+CT_STD_API map_entry_t map_next(IN_NOTNULL map_iter_t *iter);
 
 /// @brief check if a map iterator has more elements
 ///
@@ -169,7 +169,7 @@ map_entry_t map_next(IN_NOTNULL map_iter_t *iter);
 ///
 /// @retval true the iterator has more elements
 NODISCARD CONSTFN
-bool map_has_next(IN_NOTNULL const map_iter_t *iter);
+CT_STD_API bool map_has_next(IN_NOTNULL const map_iter_t *iter);
 
 /// @brief get the next key-value pair from a map iterator
 /// returns the values via out parameters for ease of use
@@ -182,7 +182,7 @@ bool map_has_next(IN_NOTNULL const map_iter_t *iter);
 ///
 /// @retval true the iterator has more elements
 NODISCARD
-bool map_next_ex(IN_NOTNULL map_iter_t *iter, IN_NOTNULL const void **key, IN_NOTNULL void **value);
+CT_STD_API bool map_next_ex(IN_NOTNULL map_iter_t *iter, IN_NOTNULL const void **key, IN_NOTNULL void **value);
 
 /// @def CTU_MAP_NEXT(iter, key, value)
 /// @brief get the next key-value pair from a map iterator

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_interop_api.h>
+
 #include "scan/scan.h"
 
 #include "base/panic.h"
@@ -93,7 +95,7 @@ typedef struct parse_result_t
 /// @param callbacks the flex/bison callbacks
 ///
 /// @return the parse result
-parse_result_t scan_buffer(scan_t *extra, const callbacks_t *callbacks);
+CT_INTEROP_API parse_result_t scan_buffer(IN_NOTNULL scan_t *extra, IN_NOTNULL const callbacks_t *callbacks);
 
 /// @}
 

@@ -11,7 +11,7 @@ pl0 = library('pl0', src,
     dependencies : [
         runtime, interop, scan,
         notify, tree, util, events,
-        config, memory
+        config, memory, driver
     ],
     c_args : generated_args,
     include_directories : [ 'src', 'include' ]

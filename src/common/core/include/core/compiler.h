@@ -7,6 +7,8 @@
 /// @ingroup core
 /// @{
 
+// always detect clang first because it pretends to be gcc and msvc
+// note: i hate that clang does this
 #if defined(__clang__)
 #   define CC_CLANG 1
 #elif defined(__GNUC__)
@@ -59,7 +61,7 @@
 
 #ifdef CC_MSVC
 #   define CTU_ASSUME(expr) __assume(expr)
-#else
+#elif CC_GNU || CC_CLANG
 #   define CTU_ASSUME(expr)                                                                                            \
         do                                                                                                              \
         {                                                                                                               \
@@ -68,6 +70,8 @@
                 __builtin_unreachable();                                                                                \
             }                                                                                                           \
         } while (0)
+#else
+#   define CTU_ASSUME(expr) ((void)0)
 #endif
 
 // clang-format off
@@ -92,6 +96,7 @@
 #   define FUNCNAME __func__
 #endif
 
+// byteswapping
 #if CC_MSVC
 #   define BYTESWAP_U16(x) _byteswap_ushort(x)
 #   define BYTESWAP_U32(x) _byteswap_ulong(x)
@@ -100,6 +105,21 @@
 #   define BYTESWAP_U16(x) __builtin_bswap16(x)
 #   define BYTESWAP_U32(x) __builtin_bswap32(x)
 #   define BYTESWAP_U64(x) __builtin_bswap64(x)
+#endif
+
+// dll visibility macros
+#if CC_MSVC
+#   define CT_EXPORT __declspec(dllexport)
+#   define CT_IMPORT __declspec(dllimport)
+#   define CT_LOCAL
+#elif __GNUC__ >= 4 || __clang__ >= 3
+#   define CT_EXPORT __attribute__((visibility("default")))
+#   define CT_IMPORT
+#   define CT_LOCAL __attribute__((visibility("hidden")))
+#else
+#   define CT_EXPORT
+#   define CT_IMPORT
+#   define CT_LOCAL
 #endif
 
 /// @}

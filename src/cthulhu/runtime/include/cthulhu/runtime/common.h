@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_runtime_api.h>
+
 #include "core/analyze.h"
 #include "core/compiler.h"
 #include "core/version_def.h"
@@ -136,7 +138,7 @@ typedef struct language_t
 ///
 /// @return the logger
 NODISCARD
-logger_t *lifetime_get_logger(IN_NOTNULL lifetime_t *lifetime);
+CT_RUNTIME_API logger_t *lifetime_get_logger(IN_NOTNULL lifetime_t *lifetime);
 
 /// @brief get the arena for a lifetime
 ///
@@ -144,7 +146,7 @@ logger_t *lifetime_get_logger(IN_NOTNULL lifetime_t *lifetime);
 ///
 /// @return the arena
 NODISCARD
-arena_t *lifetime_get_arena(IN_NOTNULL lifetime_t *lifetime);
+CT_RUNTIME_API arena_t *lifetime_get_arena(IN_NOTNULL lifetime_t *lifetime);
 
 /// @brief get the recursive resolution cookie for a lifetime
 ///
@@ -152,7 +154,7 @@ arena_t *lifetime_get_arena(IN_NOTNULL lifetime_t *lifetime);
 ///
 /// @return the cookie
 NODISCARD
-cookie_t *lifetime_get_cookie(IN_NOTNULL lifetime_t *lifetime);
+CT_RUNTIME_API cookie_t *lifetime_get_cookie(IN_NOTNULL lifetime_t *lifetime);
 
 /// @brief get the name of a compile stage
 ///
@@ -160,7 +162,7 @@ cookie_t *lifetime_get_cookie(IN_NOTNULL lifetime_t *lifetime);
 ///
 /// @return the name of @p stage
 NODISCARD
-const char *stage_to_string(compile_stage_t stage);
+CT_RUNTIME_API const char *stage_to_string(compile_stage_t stage);
 
 /// @}
 

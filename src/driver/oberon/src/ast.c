@@ -1,5 +1,6 @@
 #include "oberon/ast.h"
 
+#include "arena/arena.h"
 #include "notify/notify.h"
 #include "oberon/driver.h"
 #include "oberon/scan.h"

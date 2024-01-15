@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_format_api.h>
+
 #include "core/analyze.h"
 
 #include "format/format.h"
@@ -38,25 +40,25 @@ typedef struct print_backtrace_t
 /// @brief create a new backtrace report
 ///
 /// @return the new backtrace report
-bt_report_t *bt_report_new(IN_NOTNULL arena_t *arena);
+CT_FORMAT_API bt_report_t *bt_report_new(IN_NOTNULL arena_t *arena);
 
 /// @brief collect a backtrace into a report
 /// this is equivalent to calling bt_report_new() and then bt_report_add()
 ///
 /// @return the new backtrace report
-bt_report_t *bt_report_collect(IN_NOTNULL arena_t *arena);
+CT_FORMAT_API bt_report_t *bt_report_collect(IN_NOTNULL arena_t *arena);
 
 /// @brief add a frame to a backtrace report
 ///
 /// @param report the report to add the frame to
 /// @param frame the frame to add to the report
-void bt_report_add(IN_NOTNULL bt_report_t *report, IN_NOTNULL const bt_frame_t *frame);
+CT_FORMAT_API void bt_report_add(IN_NOTNULL bt_report_t *report, IN_NOTNULL const bt_frame_t *frame);
 
 /// @brief print a backtrace report
 ///
 /// @param print the configuration to use
 /// @param report the report to print
-void print_backtrace(print_backtrace_t print, IN_NOTNULL bt_report_t *report);
+CT_FORMAT_API void print_backtrace(print_backtrace_t print, IN_NOTNULL bt_report_t *report);
 
 /// @}
 

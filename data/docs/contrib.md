@@ -9,6 +9,7 @@
 
 - `src` - all source code
   - `common` - common code. @ref common
+    - `arena` - memory allocation arenas. @ref memory
     - `stacktrace` - backtrace retrieval. @ref backtrace
     - `base` - base utils. @ref base
     - `config` - configuration schema. @ref config
@@ -16,7 +17,6 @@
     - `fs` - filesystem abstraction. @ref filesystem
     - `interop` - flex & bison helper functions. @ref interop
     - `io` - file io abstraction. @ref io
-    - `memory` - memory allocation and arenas. @ref memory
     - `notify` - error reporting tools. @ref notify
     - `os` - platform detail wrappers. @ref os
     - `scan` - flex & bison scanning tools. @ref location
@@ -26,6 +26,7 @@
     - `check` - validates state for various structures. @ref check
     - `emit` - ssa emitter. @ref emit
     - `events` - shared events between languages. @ref events
+    - `memory` - global arena allocator. @ref global_memory
     - `runtime` - code required to orchestrate communication between languages, the framework, and frontends. @ref mediator
     - `ssa` - tree to ssa transforms, as well as optimizations. @ref ssa
     - `tree` - common typed ast. @ref tree
@@ -48,8 +49,8 @@
 
   - `support` - libraries shared between tools and frontends. @ref support
     - `argparse` - command line argument parsing. @ref argparse
-    - `defaults` - default options for command line tools. @ref defaults
     - `format` - text formatting for displaying to a user. @ref format
+    - `setup` - default options for command line tools. @ref setup
     - `support` - lists enabled language drivers when built statically. @ref langs
 
   - `tools` - supporting tools and test utilities

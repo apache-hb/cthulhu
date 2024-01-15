@@ -2,6 +2,8 @@
 
 #include <stddef.h>
 
+#include <ctu_support_api.h>
+
 #include "cthulhu/runtime/common.h"
 
 BEGIN_API
@@ -15,7 +17,7 @@ BEGIN_API
 typedef struct langs_t
 {
     /// @brief the language drivers
-    const language_t *const *langs;
+    FIELD_SIZE(size) const language_t *const *langs;
 
     /// @brief the number of language drivers
     size_t size;
@@ -24,7 +26,7 @@ typedef struct langs_t
 /// @brief get the language drivers
 ///
 /// @return the language drivers
-langs_t get_langs(void);
+CT_SUPPORT_API langs_t get_langs(void);
 
 /// @}
 

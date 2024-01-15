@@ -4,7 +4,7 @@
 
 #include "cthulhu/runtime/interface.h"
 
-#include "defaults/defaults.h"
+#include "setup/setup.h"
 
 typedef struct logger_t logger_t;
 typedef struct map_t map_t;

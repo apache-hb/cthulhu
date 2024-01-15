@@ -17,7 +17,7 @@ BEGIN_API
 /// @brief destroy an IO object
 ///
 /// @param io the io object
-void io_close(OUT_PTR_INVALID io_t *io);
+CT_IO_API void io_close(OUT_PTR_INVALID io_t *io);
 
 /// @brief create an IO object from a file
 ///
@@ -27,7 +27,7 @@ void io_close(OUT_PTR_INVALID io_t *io);
 ///
 /// @return the io object, or NULL on error
 NODISCARD CT_ALLOC(io_close)
-io_t *io_file(IN_STRING const char *path, os_access_t mode, IN_NOTNULL arena_t *arena);
+CT_IO_API io_t *io_file(IN_STRING const char *path, os_access_t mode, IN_NOTNULL arena_t *arena);
 
 /// @brief create an IO object from an initial view of memory
 /// @note this copies @p size bytes from @p data into a new buffer
@@ -40,7 +40,7 @@ io_t *io_file(IN_STRING const char *path, os_access_t mode, IN_NOTNULL arena_t *
 ///
 /// @return the io object
 NODISCARD CT_ALLOC(io_close)
-io_t *io_memory(IN_STRING const char *name, const void *data, size_t size, os_access_t flags, IN_NOTNULL arena_t *arena);
+CT_IO_API io_t *io_memory(IN_STRING const char *name, const void *data, size_t size, os_access_t flags, IN_NOTNULL arena_t *arena);
 
 /// @brief create an IO object in memory of a given size
 /// @p size specifies the initial internal buffer size, the file seek position starts at 0
@@ -52,7 +52,7 @@ io_t *io_memory(IN_STRING const char *name, const void *data, size_t size, os_ac
 ///
 /// @return the io object
 NODISCARD CT_ALLOC(io_close)
-io_t *io_blob(IN_STRING const char *name, size_t size, os_access_t flags, IN_NOTNULL arena_t *arena);
+CT_IO_API io_t *io_blob(IN_STRING const char *name, size_t size, os_access_t flags, IN_NOTNULL arena_t *arena);
 
 /// @brief create a readonly IO object for a given view of memory
 /// @pre @p data must point to a valid memory region of @p size bytes
@@ -64,7 +64,7 @@ io_t *io_blob(IN_STRING const char *name, size_t size, os_access_t flags, IN_NOT
 ///
 /// @return the IO view
 NODISCARD CT_ALLOC(io_close)
-io_t *io_view(IN_STRING const char *name, IN_NOTNULL const void *data, size_t size, IN_NOTNULL arena_t *arena);
+CT_IO_API io_t *io_view(IN_STRING const char *name, IN_NOTNULL const void *data, size_t size, IN_NOTNULL arena_t *arena);
 
 /// @brief create an IO view of a string
 /// create a readonly IO view of a string
@@ -75,7 +75,7 @@ io_t *io_view(IN_STRING const char *name, IN_NOTNULL const void *data, size_t si
 ///
 /// @return the io object
 NODISCARD CT_ALLOC(io_close)
-io_t *io_string(IN_STRING const char *name, IN_STRING const char *string, IN_NOTNULL arena_t *arena);
+CT_IO_API io_t *io_string(IN_STRING const char *name, IN_STRING const char *string, IN_NOTNULL arena_t *arena);
 
 /// @brief read from an io object
 /// @pre the io object must have been created with the @a eAccessRead flag
@@ -85,7 +85,7 @@ io_t *io_string(IN_STRING const char *name, IN_STRING const char *string, IN_NOT
 /// @param size the number of bytes to read
 ///
 /// @return the number of bytes actually read
-size_t io_read(io_t *io, OUT_WRITES(size) void *dst, size_t size);
+CT_IO_API size_t io_read(IN_NOTNULL io_t *io, OUT_WRITES(size) void *dst, size_t size);
 
 /// @brief write to an io object
 /// @pre the io object must have been created with the @a eAccessWrite flag
@@ -95,7 +95,7 @@ size_t io_read(io_t *io, OUT_WRITES(size) void *dst, size_t size);
 /// @param size the number of bytes to copy into the file
 ///
 /// @return the number of bytes actually written
-size_t io_write(io_t *io, IN_READS(size) const void *src, size_t size);
+CT_IO_API size_t io_write(IN_NOTNULL io_t *io, IN_READS(size) const void *src, size_t size);
 
 /// @brief printf to an io object
 /// @pre the io object must have been created with the @a eAccessWrite flag
@@ -105,7 +105,7 @@ size_t io_write(io_t *io, IN_READS(size) const void *src, size_t size);
 /// @param ... the format arguments
 ///
 /// @return the number of bytes actually written
-size_t io_printf(io_t *io, FMT_STRING const char *fmt, ...) CT_PRINTF(2, 3);
+CT_IO_API size_t io_printf(IN_NOTNULL io_t *io, FMT_STRING const char *fmt, ...) CT_PRINTF(2, 3);
 
 /// @brief vprintf to an io object
 /// @pre the io object must have been created with the @a eAccessWrite flag
@@ -115,7 +115,7 @@ size_t io_printf(io_t *io, FMT_STRING const char *fmt, ...) CT_PRINTF(2, 3);
 /// @param args the format arguments
 ///
 /// @return the number of bytes actually written
-size_t io_vprintf(io_t *io, const char *fmt, va_list args);
+CT_IO_API size_t io_vprintf(IN_NOTNULL io_t *io, IN_STRING const char *fmt, va_list args);
 
 /// @brief get the name of an io object
 ///
@@ -123,7 +123,7 @@ size_t io_vprintf(io_t *io, const char *fmt, va_list args);
 ///
 /// @return the name of the object
 NODISCARD
-const char *io_name(IN_NOTNULL const io_t *io);
+CT_IO_API const char *io_name(IN_NOTNULL const io_t *io);
 
 /// @brief get the total size of an io objects contents
 ///
@@ -131,7 +131,7 @@ const char *io_name(IN_NOTNULL const io_t *io);
 ///
 /// @return the total size in bytes of its contents
 NODISCARD
-size_t io_size(IN_NOTNULL io_t *io);
+CT_IO_API size_t io_size(IN_NOTNULL io_t *io);
 
 /// @brief seek to an absolute offset in a file
 ///
@@ -140,7 +140,7 @@ size_t io_size(IN_NOTNULL io_t *io);
 ///
 /// @return the offset after seeking
 NODISCARD
-size_t io_seek(IN_NOTNULL io_t *io, size_t offset);
+CT_IO_API size_t io_seek(IN_NOTNULL io_t *io, size_t offset);
 
 /// @brief map an io objects backing into memory
 ///
@@ -148,7 +148,7 @@ size_t io_seek(IN_NOTNULL io_t *io, size_t offset);
 ///
 /// @return memory mapping to the contents
 NODISCARD
-const void *io_map(IN_NOTNULL io_t *io);
+CT_IO_API const void *io_map(IN_NOTNULL io_t *io);
 
 /// @brief get the last error from the io object
 ///
@@ -156,7 +156,7 @@ const void *io_map(IN_NOTNULL io_t *io);
 ///
 /// @return the last set error
 NODISCARD RET_INSPECT
-io_error_t io_error(IN_NOTNULL const io_t *io);
+CT_IO_API io_error_t io_error(IN_NOTNULL const io_t *io);
 
 /// @} // IO
 

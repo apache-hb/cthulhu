@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_emit_api.h>
+
 #include "core/compiler.h"
 
 BEGIN_API
@@ -62,7 +64,7 @@ typedef struct ssa_emit_result_t
 /// @param options the options to use
 ///
 /// @return the result of the emit
-ssa_emit_result_t emit_ssa(const ssa_emit_options_t *options);
+CT_EMIT_API ssa_emit_result_t emit_ssa(const ssa_emit_options_t *options);
 
 ///
 /// c89 api
@@ -83,7 +85,7 @@ typedef struct c89_emit_result_t
 /// @param options the options to use
 ///
 /// @return the result of the emit
-c89_emit_result_t emit_c89(const c89_emit_options_t *options);
+CT_EMIT_API c89_emit_result_t emit_c89(const c89_emit_options_t *options);
 
 /// @}
 

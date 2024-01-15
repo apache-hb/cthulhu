@@ -1,11 +1,7 @@
 subdir('common')
 subdir('cthulhu')
 
-foreach lang : get_option('languages')
-    subdir('driver' / lang)
-endforeach
-
-subdir('driver/c')
+subdir('driver')
 
 subdir('support')
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_format_api.h>
+
 #include "core/analyze.h"
 #include "core/compiler.h"
 
@@ -90,20 +92,20 @@ typedef struct report_config_t
     text_config_t text_config;
 } report_config_t;
 
-int text_report(
+CT_FORMAT_API int text_report(
     IN_NOTNULL typevec_t *events,
     report_config_t config,
     IN_STRING const char *title);
 
 // complex reporting
-void text_report_rich(
+CT_FORMAT_API void text_report_rich(
     text_config_t config,
     IN_NOTNULL const event_t *event);
 
 // simple reporting like msvc
 // path(line): severity id: main message
 
-void text_report_simple(
+CT_FORMAT_API void text_report_simple(
     text_config_t config,
     IN_NOTNULL const event_t *event);
 

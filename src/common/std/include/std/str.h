@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_std_api.h>
+
 #include "core/analyze.h"
 #include "core/compiler.h"
 #include "core/text.h"
@@ -30,7 +32,7 @@ typedef struct map_t map_t;
 ///
 /// @return the formatted string
 NODISCARD CT_PRINTF(2, 3)
-text_t text_format(IN_NOTNULL arena_t *arena, FMT_STRING const char *fmt, ...);
+CT_STD_API text_t text_format(IN_NOTNULL arena_t *arena, FMT_STRING const char *fmt, ...);
 
 /// @brief format a string
 ///
@@ -43,7 +45,7 @@ text_t text_format(IN_NOTNULL arena_t *arena, FMT_STRING const char *fmt, ...);
 ///
 /// @return the formatted string
 NODISCARD
-text_t text_vformat(IN_NOTNULL arena_t *arena, IN_STRING const char *fmt, va_list args);
+CT_STD_API text_t text_vformat(IN_NOTNULL arena_t *arena, IN_STRING const char *fmt, va_list args);
 
 /// @brief format a string
 ///
@@ -55,7 +57,7 @@ text_t text_vformat(IN_NOTNULL arena_t *arena, IN_STRING const char *fmt, va_lis
 ///
 /// @return the formatted string
 NODISCARD CT_PRINTF(2, 3)
-char *str_format(IN_NOTNULL arena_t *arena, FMT_STRING const char *fmt, ...);
+CT_STD_API char *str_format(IN_NOTNULL arena_t *arena, FMT_STRING const char *fmt, ...);
 
 /// @brief format a string
 ///
@@ -67,7 +69,7 @@ char *str_format(IN_NOTNULL arena_t *arena, FMT_STRING const char *fmt, ...);
 ///
 /// @return the formatted string
 NODISCARD
-char *str_vformat(IN_NOTNULL arena_t *arena, IN_STRING const char *fmt, va_list args);
+CT_STD_API char *str_vformat(IN_NOTNULL arena_t *arena, IN_STRING const char *fmt, va_list args);
 
 /// @brief see if a string starts with a prefix
 ///
@@ -76,7 +78,7 @@ char *str_vformat(IN_NOTNULL arena_t *arena, IN_STRING const char *fmt, va_list 
 ///
 /// @return if str starts with prefix
 NODISCARD CONSTFN
-bool str_startswith(IN_STRING const char *str, IN_STRING const char *prefix);
+CT_STD_API bool str_startswith(IN_STRING const char *str, IN_STRING const char *prefix);
 
 /// @brief check if a string ends with a substring
 ///
@@ -85,7 +87,7 @@ bool str_startswith(IN_STRING const char *str, IN_STRING const char *prefix);
 ///
 /// @return if str ends with suffix
 NODISCARD CONSTFN
-bool str_endswith(IN_STRING const char *str, IN_STRING const char *suffix);
+CT_STD_API bool str_endswith(IN_STRING const char *str, IN_STRING const char *suffix);
 
 /// @brief join strings
 ///
@@ -97,7 +99,7 @@ bool str_endswith(IN_STRING const char *str, IN_STRING const char *suffix);
 ///
 /// @return the joined string
 NODISCARD
-char *str_join(IN_STRING const char *sep, IN_NOTNULL vector_t *parts, IN_NOTNULL arena_t *arena);
+CT_STD_API char *str_join(IN_STRING const char *sep, IN_NOTNULL vector_t *parts, IN_NOTNULL arena_t *arena);
 
 /// @brief repeat a string
 ///
@@ -109,7 +111,7 @@ char *str_join(IN_STRING const char *sep, IN_NOTNULL vector_t *parts, IN_NOTNULL
 ///
 /// @return the repeated string
 NODISCARD
-char *str_repeat(IN_STRING const char *str, size_t times, IN_NOTNULL arena_t *arena);
+CT_STD_API char *str_repeat(IN_STRING const char *str, size_t times, IN_NOTNULL arena_t *arena);
 
 /// @brief turn a string into a C string literal
 ///
@@ -120,7 +122,7 @@ char *str_repeat(IN_STRING const char *str, size_t times, IN_NOTNULL arena_t *ar
 ///
 /// @return the normalized string
 NODISCARD
-char *str_normalize(IN_STRING const char *str, IN_NOTNULL arena_t *arena);
+CT_STD_API char *str_normalize(IN_STRING const char *str, IN_NOTNULL arena_t *arena);
 
 /// @brief turn a string with length into a C string literal
 ///
@@ -132,7 +134,7 @@ char *str_normalize(IN_STRING const char *str, IN_NOTNULL arena_t *arena);
 ///
 /// @return the normalized string
 NODISCARD
-char *str_normalizen(IN_READS(len) const char *str, size_t len, IN_NOTNULL arena_t *arena);
+CT_STD_API char *str_normalizen(IN_READS(len) const char *str, size_t len, IN_NOTNULL arena_t *arena);
 
 /// @brief split a string into a vector by a separator
 ///
@@ -146,7 +148,7 @@ char *str_normalizen(IN_READS(len) const char *str, size_t len, IN_NOTNULL arena
 ///
 /// @return the substrings
 NODISCARD
-vector_t *str_split(IN_STRING const char *str, IN_STRING const char *sep, IN_NOTNULL arena_t *arena);
+CT_STD_API vector_t *str_split(IN_STRING const char *str, IN_STRING const char *sep, IN_NOTNULL arena_t *arena);
 
 /// @brief find the longest common prefix of a vector of paths
 ///
@@ -157,7 +159,7 @@ vector_t *str_split(IN_STRING const char *str, IN_STRING const char *sep, IN_NOT
 ///
 /// @return the common prefix
 NODISCARD RET_NOTNULL
-const char *str_common_prefix(IN_NOTNULL vector_t *args, IN_NOTNULL arena_t *arena);
+CT_STD_API const char *str_common_prefix(IN_NOTNULL vector_t *args, IN_NOTNULL arena_t *arena);
 
 /// @brief find the last instance of a substring in a string
 ///
@@ -167,7 +169,7 @@ const char *str_common_prefix(IN_NOTNULL vector_t *args, IN_NOTNULL arena_t *are
 /// @return the index of the last instance of @p sub in @p str, or @a SIZE_MAX if
 /// sub is not found
 RET_INSPECT CONSTFN
-size_t str_rfind(IN_STRING const char *str, IN_STRING const char *sub);
+CT_STD_API size_t str_rfind(IN_STRING const char *str, IN_STRING const char *sub);
 
 /// @brief find the first instance of a substring in a string
 ///
@@ -176,7 +178,7 @@ size_t str_rfind(IN_STRING const char *str, IN_STRING const char *sub);
 ///
 /// @return the index of the first instance of @p sub in @p str, or @a SIZE_MAX if @p sub is not found
 RET_INSPECT CONSTFN
-size_t str_find(IN_STRING const char *str, IN_STRING const char *sub);
+CT_STD_API size_t str_find(IN_STRING const char *str, IN_STRING const char *sub);
 
 /// @brief check if a character is any of a set of characters
 ///
@@ -186,7 +188,7 @@ size_t str_find(IN_STRING const char *str, IN_STRING const char *sub);
 /// @retval true @p c is any of @p chars
 /// @retval false @p c is not any of @p chars
 NODISCARD CONSTFN
-bool char_is_any_of(char c, IN_STRING const char *chars);
+CT_STD_API bool char_is_any_of(char c, IN_STRING const char *chars);
 
 /// @brief check if a string contains a substring
 ///
@@ -195,7 +197,7 @@ bool char_is_any_of(char c, IN_STRING const char *chars);
 ///
 /// @return if @p sub is found in @p str
 NODISCARD CONSTFN
-bool str_contains(IN_STRING const char *str, IN_STRING const char *search);
+CT_STD_API bool str_contains(IN_STRING const char *str, IN_STRING const char *search);
 
 /// @brief replace all instances of a substring in a string
 ///
@@ -206,7 +208,7 @@ bool str_contains(IN_STRING const char *str, IN_STRING const char *search);
 ///
 /// @return a copy of @p str with all instances of @p search replaced with @p repl
 NODISCARD
-char *str_replace(IN_STRING const char *str, IN_STRING const char *search, IN_STRING const char *repl, IN_NOTNULL arena_t *arena);
+CT_STD_API char *str_replace(IN_STRING const char *str, IN_STRING const char *search, IN_STRING const char *repl, IN_NOTNULL arena_t *arena);
 
 /// @brief replace all instances of a each substring in a string with provided replacement
 ///
@@ -216,7 +218,7 @@ char *str_replace(IN_STRING const char *str, IN_STRING const char *search, IN_ST
 ///
 /// @return a copy of @p str with all instances of substrings in @p repl replaced
 NODISCARD
-char *str_replace_many(IN_STRING const char *str, IN_NOTNULL const map_t *repl, IN_NOTNULL arena_t *arena);
+CT_STD_API char *str_replace_many(IN_STRING const char *str, IN_NOTNULL const map_t *repl, IN_NOTNULL arena_t *arena);
 
 /// @brief remove all instances of @p letters from @p str
 ///
@@ -226,7 +228,7 @@ char *str_replace_many(IN_STRING const char *str, IN_NOTNULL const map_t *repl, 
 ///
 /// @return @p str with all instances of @p letters removed
 NODISCARD
-char *str_erase(IN_READS(len) char *str, size_t len, IN_STRING const char *letters);
+CT_STD_API char *str_erase(IN_READS(len) char *str, size_t len, IN_STRING const char *letters);
 
 /// @brief hash a string
 ///
@@ -234,7 +236,7 @@ char *str_erase(IN_READS(len) char *str, size_t len, IN_STRING const char *lette
 ///
 /// @return the hash
 NODISCARD CONSTFN
-size_t str_hash(IN_STRING const char *str);
+CT_STD_API size_t str_hash(IN_STRING const char *str);
 
 /// @brief hash a string with a provided length
 ///
@@ -242,7 +244,7 @@ size_t str_hash(IN_STRING const char *str);
 ///
 /// @return the hash
 NODISCARD CONSTFN
-size_t text_hash(text_view_t text);
+CT_STD_API size_t text_hash(text_view_t text);
 
 /// @brief compare strings equality
 ///
@@ -253,7 +255,7 @@ size_t text_hash(text_view_t text);
 ///
 /// @return if the strings are equal
 NODISCARD CONSTFN
-bool str_equal(IN_STRING const char *lhs, IN_STRING const char *rhs);
+CT_STD_API bool str_equal(IN_STRING const char *lhs, IN_STRING const char *rhs);
 
 /// @brief get the filename from a path
 ///
@@ -262,7 +264,7 @@ bool str_equal(IN_STRING const char *lhs, IN_STRING const char *rhs);
 ///
 /// @return the filename extracted from @p path
 NODISCARD
-char *str_basename(IN_STRING const char *path, IN_NOTNULL arena_t *arena);
+CT_STD_API char *str_basename(IN_STRING const char *path, IN_NOTNULL arena_t *arena);
 
 /// @brief get the filename from a path
 ///
@@ -271,7 +273,7 @@ char *str_basename(IN_STRING const char *path, IN_NOTNULL arena_t *arena);
 ///
 /// @return the filename extracted from @p path
 NODISCARD
-char *str_filename(IN_STRING const char *path, IN_NOTNULL arena_t *arena);
+CT_STD_API char *str_filename(IN_STRING const char *path, IN_NOTNULL arena_t *arena);
 
 /// @brief remove the last file extension from a path
 ///
@@ -280,7 +282,7 @@ char *str_filename(IN_STRING const char *path, IN_NOTNULL arena_t *arena);
 ///
 /// @return the @p path with the last extension removed
 NODISCARD
-char *str_noext(IN_STRING const char *path, IN_NOTNULL arena_t *arena);
+CT_STD_API char *str_noext(IN_STRING const char *path, IN_NOTNULL arena_t *arena);
 
 /// @brief get the last file extension from a path
 ///
@@ -289,7 +291,7 @@ char *str_noext(IN_STRING const char *path, IN_NOTNULL arena_t *arena);
 ///
 /// @return the last extension in @p path
 NODISCARD
-char *str_ext(IN_STRING const char *path, IN_NOTNULL arena_t *arena);
+CT_STD_API char *str_ext(IN_STRING const char *path, IN_NOTNULL arena_t *arena);
 
 /// @brief get the directory segment of a path
 ///
@@ -298,7 +300,7 @@ char *str_ext(IN_STRING const char *path, IN_NOTNULL arena_t *arena);
 ///
 /// @return the directory extracted from @p path
 NODISCARD
-char *str_directory(IN_STRING const char *path, IN_NOTNULL arena_t *arena);
+CT_STD_API char *str_directory(IN_STRING const char *path, IN_NOTNULL arena_t *arena);
 
 /// @brief uppercase an ascii string
 ///
@@ -307,7 +309,7 @@ char *str_directory(IN_STRING const char *path, IN_NOTNULL arena_t *arena);
 ///
 /// @return @p str with all lowercase charaters replaced with uppercase
 NODISCARD
-char *str_upper(IN_STRING const char *str, IN_NOTNULL arena_t *arena);
+CT_STD_API char *str_upper(IN_STRING const char *str, IN_NOTNULL arena_t *arena);
 
 /// @brief lowercase an ascii string
 ///
@@ -316,7 +318,7 @@ char *str_upper(IN_STRING const char *str, IN_NOTNULL arena_t *arena);
 ///
 /// @return @p str with all uppercase charaters replaced with lowercase
 NODISCARD
-char *str_lower(IN_STRING const char *str, IN_NOTNULL arena_t *arena);
+CT_STD_API char *str_lower(IN_STRING const char *str, IN_NOTNULL arena_t *arena);
 
 /// @brief get the lowercase version of a character
 ///
@@ -324,7 +326,7 @@ char *str_lower(IN_STRING const char *str, IN_NOTNULL arena_t *arena);
 ///
 /// @return the lowercase version of @p c, or the character itself
 NODISCARD CONSTFN
-char str_tolower(char c);
+CT_STD_API char str_tolower(char c);
 
 /// @brief get the uppercase version of a character
 ///
@@ -332,7 +334,7 @@ char str_tolower(char c);
 ///
 /// @return the uppercase version of @p c or the character itself
 NODISCARD CONSTFN
-char str_toupper(char c);
+CT_STD_API char str_toupper(char c);
 
 #define STR_WHITESPACE " \t\r\v\n\f" ///< all whitespace charaters
 

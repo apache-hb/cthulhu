@@ -1,12 +1,17 @@
 #pragma once
 
+#include <ctu_io_api.h>
+
 #include "os/os.h"
 #include <stddef.h>
 #include <stdarg.h>
 
+BEGIN_API
+
 /// @ingroup io
 /// @{
 
+/// @brief an io object
 typedef struct io_t io_t;
 
 /// @brief an io error code
@@ -124,6 +129,9 @@ typedef struct io_t
     const char *name;
 } io_t;
 
+// TODO: io_data and io_new should be private to the io module
+// currently not due to the fs module
+
 /// @brief get the user data from an io object
 /// @warning does not perform any validation on the type of the user data
 ///
@@ -131,7 +139,7 @@ typedef struct io_t
 ///
 /// @return the user data
 PUREFN
-void *io_data(IN_NOTNULL io_t *io);
+CT_IO_API void *io_data(IN_NOTNULL io_t *io);
 
 /// @brief create a new IO object for a given interface
 /// @pre @p data must point to a valid memory region of @p size bytes
@@ -145,7 +153,7 @@ void *io_data(IN_NOTNULL io_t *io);
 /// @param arena the arena to allocate the io object from
 ///
 /// @return a new IO interface
-io_t *io_new(
+CT_IO_API io_t *io_new(
     IN_NOTNULL const io_callbacks_t *cb,
     os_access_t flags,
     IN_STRING const char *name,
@@ -154,3 +162,5 @@ io_t *io_new(
     IN_NOTNULL arena_t *arena);
 
 /// @}
+
+END_API

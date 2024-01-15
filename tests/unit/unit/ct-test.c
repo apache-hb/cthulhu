@@ -7,8 +7,9 @@
 #include "format/colour.h"
 #include "io/io.h"
 #include "memory/memory.h"
-#include "defaults/memory.h"
+#include "setup/memory.h"
 #include "backtrace/backtrace.h"
+#include "arena/arena.h"
 
 #include "std/str.h"
 #include "os/os.h"

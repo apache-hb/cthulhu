@@ -18,7 +18,7 @@ obr = library('obr', src,
     dependencies : [
         base, runtime, interop,
         scan, tree, util, notify,
-        events, memory
+        events, memory, driver
     ],
     c_args : generated_args,
     include_directories : [ 'src', 'include' ]

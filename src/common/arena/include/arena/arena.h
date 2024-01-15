@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_arena_api.h>
+
 #include "core/analyze.h"
 #include "core/compiler.h"
 
@@ -28,6 +30,7 @@ BEGIN_API
 /// to indicate that the size is unknown. requires allocator support
 #define ALLOC_SIZE_UNKNOWN SIZE_MAX
 
+/// @brief a memory allocator
 typedef struct arena_t arena_t;
 
 /// @brief arena malloc callback
@@ -106,7 +109,7 @@ typedef struct arena_t
 /// @param arena the allocator to use
 /// @param ptr the pointer to free
 /// @param size the size of the allocation
-void arena_free(
+CT_ARENA_API void arena_free(
     OUT_PTR_INVALID void *ptr,
     IN_RANGE(!=, 0) size_t size,
     IN_NOTNULL arena_t *arena);
@@ -121,7 +124,7 @@ void arena_free(
 /// @return the allocated pointer
 NODISCARD CT_ALLOC(arena_free) CT_ALLOC_SIZE(1)
 RET_NOTNULL
-void *arena_malloc(
+CT_ARENA_API void *arena_malloc(
     IN_RANGE(!=, 0) size_t size,
     const char *name,
     const void *parent,
@@ -138,7 +141,7 @@ void *arena_malloc(
 /// @return the reallocated pointer
 NODISCARD
 RET_NOTNULL
-void *arena_realloc(
+CT_ARENA_API void *arena_realloc(
     OUT_PTR_INVALID void *ptr,
     IN_RANGE(!=, 0) size_t new_size,
     IN_RANGE(!=, 0) size_t old_size,
@@ -151,7 +154,7 @@ void *arena_realloc(
 ///
 /// @return the allocated copy of the string
 NODISCARD CT_ALLOC(arena_free)
-char *arena_strdup(
+CT_ARENA_API char *arena_strdup(
     IN_STRING const char *str,
     IN_NOTNULL arena_t *arena);
 
@@ -163,7 +166,7 @@ char *arena_strdup(
 ///
 /// @return the allocated copy of the string
 NODISCARD CT_ALLOC(arena_free)
-char *arena_strndup(
+CT_ARENA_API char *arena_strndup(
     IN_READS(len) const char *str,
     IN_RANGE(>, 0) size_t len,
     IN_NOTNULL arena_t *arena);
@@ -177,7 +180,7 @@ char *arena_strndup(
 ///
 /// @return the duplicated memory
 NODISCARD CT_ALLOC(arena_free) CT_ALLOC_SIZE(2)
-void *arena_memdup(
+CT_ARENA_API void *arena_memdup(
     IN_READS(size) const void *ptr,
     IN_RANGE(>, 0) size_t size,
     IN_NOTNULL arena_t *arena);
@@ -188,21 +191,21 @@ void *arena_memdup(
 ///
 /// @return the user data pointer
 NODISCARD
-void *arena_data(IN_NOTNULL arena_t *arena);
+CT_ARENA_API void *arena_data(IN_NOTNULL arena_t *arena);
 
 /// @brief rename a pointer in a custom allocator
 ///
 /// @param arena the allocator to use
 /// @param ptr the pointer to rename
 /// @param name the new name of the pointer
-void arena_rename(IN_NOTNULL const void *ptr, IN_STRING const char *name, IN_NOTNULL arena_t *arena);
+CT_ARENA_API void arena_rename(IN_NOTNULL const void *ptr, IN_STRING const char *name, IN_NOTNULL arena_t *arena);
 
 /// @brief reparent a pointer in a custom allocator
 ///
 /// @param arena the allocator to use
 /// @param ptr the pointer to reparent
 /// @param parent the new parent of the pointer
-void arena_reparent(IN_NOTNULL const void *ptr, const void *parent, IN_NOTNULL arena_t *arena);
+CT_ARENA_API void arena_reparent(IN_NOTNULL const void *ptr, const void *parent, IN_NOTNULL arena_t *arena);
 
 /// @def ARENA_RENAME(arena, ptr, name)
 /// @brief rename a pointer in a custom allocator

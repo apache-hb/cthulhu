@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_format_api.h>
+
 #include "core/version_def.h"
 
 #include "core/analyze.h"
@@ -24,7 +26,7 @@ typedef struct print_version_t
 /// @param config the config to use when printing
 /// @param version the version to print
 /// @param name the name of the program
-void print_version(print_version_t config, version_info_t version, IN_STRING const char *name);
+CT_FORMAT_API void print_version(print_version_t config, version_info_t version, IN_STRING const char *name);
 
 /// @}
 

@@ -1,3 +1,11 @@
+os_api = configure_file(
+    input : api_header,
+    output : 'ctu_os_api.h',
+    configuration : { 'MOD': 'OS' }
+)
+
+os_include = include_directories('.', 'include')
+os_impl_include = include_directories('src')
 
 src = [ 'src/os_common.c' ]
 
@@ -9,21 +17,25 @@ else
     error('unknown os api')
 endif
 
-api_header = 'impl' / os_platform + '.h'
-os_header = '-DOS_API_HEADER="' + api_header + '"'
+os_api_impl_header = 'impl' / os_platform + '.h'
+os_header = '-DOS_API_HEADER="' + os_api_impl_header + '"'
+os_api_build = '-DCT_OS_BUILD=1'
 
-lib_oscommon = library('os_common', src,
+# TODO: the impl libraries should be static, and os_common should route
+# to the native impl, allowing common checks to be done in common
+# would do now but time crunch
+lib_oscommon = static_library('os_common', src,
     build_by_default : false,
-    c_args : user_args + [ os_header ],
+    c_args : user_args + [ os_header, os_api_build ],
     dependencies : [ core, base, arena, std ],
-    include_directories : [ 'include', 'src' ]
+    include_directories : [ os_include, os_impl_include ]
 )
 
 os_common = declare_dependency(
     link_with : lib_oscommon,
-    compile_args : [ os_header ],
+    compile_args : [ os_header, os_api_build ],
     dependencies : [ core ],
-    include_directories : [ 'include', 'src' ]
+    include_directories : [ os_include, os_impl_include ]
 )
 
 # get the backend
@@ -34,7 +46,7 @@ subdir('src' / os_platform)
 
 os = declare_dependency(
     compile_args : [ os_header ],
-    link_with : [ lib_osnative, lib_oscommon ],
-    include_directories : 'include',
-    dependencies : [ core ]
+    link_with : [ lib_osnative ],
+    dependencies : [ core ],
+    include_directories : os_include
 )

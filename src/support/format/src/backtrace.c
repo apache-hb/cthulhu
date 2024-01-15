@@ -1,5 +1,5 @@
 #include "base/panic.h"
-#include "base/text.h"
+#include "base/util.h"
 #include "common.h"
 
 #include "core/macros.h"
@@ -67,19 +67,25 @@ typedef struct backtrace_t
     /// the collapsed frames
     typevec_t *frames;
 
+    /// the alignment of the frame index numbers
     size_t index_align;
+
+    /// the current alignment of the symbol names
     size_t symbol_align;
 } backtrace_t;
 
+/// @brief a single possibly collapsed frame
 typedef struct collapsed_t
 {
-    // the sequence of frames
+    /// @brief the sequence of frames
+    /// @note this is NULL if @a entry is not NULL
     typevec_t *sequence;
 
-    // how many times the sequence repeats
+    /// @brief how many times @a sequence repeats
+    /// @note this is 0 if @a entry is not NULL
     size_t repeat;
 
-    // a single entry if collapsed is empty
+    /// @brief a single entry if @a collapsed is NULL
     entry_t *entry;
 } collapsed_t;
 
@@ -299,6 +305,7 @@ static char *fmt_entry(backtrace_t *pass, size_t symbol_align, const entry_t *en
 
     frame_resolve_t resolved = entry->info;
 
+    // we only need the @ seperator if we only have the address
     bool needs_seperator = !((resolved & eResolveFile) && (resolved & eResolveLine));
     char *where = fmt_entry_location(pass, entry);
     const char *name = (resolved & eResolveName) ? entry->symbol : kUnknownSymbol;

@@ -2,7 +2,7 @@
 #include "core/macros.h"
 #include "arena/arena.h"
 #include "unit/ct-test.h"
-#include "defaults/memory.h"
+#include "setup/memory.h"
 
 #include "argparse/argparse.h"
 

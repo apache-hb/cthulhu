@@ -6,6 +6,7 @@
 #include "std/vector.h"
 #include "std/typed/vector.h"
 
+#include "arena/arena.h"
 #include "memory/memory.h"
 #include "base/panic.h"
 

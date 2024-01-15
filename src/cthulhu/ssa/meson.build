@@ -1,3 +1,10 @@
+ssa_api = configure_file(
+    input : api_header,
+    output : 'ctu_ssa_api.h',
+    configuration : { 'MOD': 'SSA' }
+)
+
+ssa_include = include_directories('.', 'include')
 
 src = [
     'src/ssa.c',
@@ -9,13 +16,13 @@ src = [
 ]
 
 libssa = library('ssa', src,
-    include_directories : 'include',
-    c_args : user_args,
-    dependencies : [ memory, std, tree, scan, events ]
+    c_args : user_args + [ '-DCT_SSA_BUILD=1' ],
+    dependencies : [ memory, std, tree, scan, events, arena ],
+    include_directories : ssa_include
 )
 
 ssa = declare_dependency(
     link_with : libssa,
-    include_directories : 'include',
+    include_directories : ssa_include,
     dependencies : [ tree ]
 )

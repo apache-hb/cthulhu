@@ -1,3 +1,3 @@
 executable('tool_error', 'main.c',
-    dependencies : [ backtrace, defaults ]
+    dependencies : [ backtrace, setup, base ]
 )

@@ -9,6 +9,8 @@
 
 #include "base/log.h"
 
+#include "driver/driver.h"
+
 static vector_t *example_lang_path(void)
 {
     arena_t *arena = get_global_arena();
@@ -79,7 +81,7 @@ static void ex_compile_symbols(context_t *context)
 
 static const char * const kLangNames[] = { "e", "example", NULL };
 
-const language_t kExampleModule = {
+CT_DRIVER_API const language_t kExampleModule = {
     .id = "example",
     .name = "Example",
     .version = {
@@ -102,3 +104,5 @@ const language_t kExampleModule = {
         [eStageCompileSymbols] = ex_compile_symbols
     }
 };
+
+CTU_DRIVER_ENTRY(kExampleModule)

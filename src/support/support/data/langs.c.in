@@ -1,16 +1,21 @@
 #include "support/langs.h"
 
-#include "memory/memory.h"
+#include <string.h>
+#include <ctu_driver_api.h>
 
 @EXTERNS@
 
-static const language_t *const kLangArray[] = { @MODS@ };
+static language_t *gLangArray[@LEN@] = { 0 };
 
 langs_t get_langs(void)
 {
+    const language_t *const local_lang_array[] = { @MODS@ };
+    // msvc cant work out that kLangArray is const initialized
+    memcpy(gLangArray, local_lang_array, sizeof(local_lang_array));
+
     langs_t ret = {
-        .langs = kLangArray,
-        .size = (sizeof(kLangArray) / sizeof(language_t*))
+        .langs = (const language_t* const*)gLangArray,
+        .size = @LEN@
     };
     return ret;
 }

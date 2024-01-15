@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_base_api.h>
+
 #include "core/analyze.h"
 #include "core/compiler.h"
 
@@ -30,13 +32,13 @@ BEGIN_API
 /// @brief panic location information
 typedef struct
 {
-    /// the file the panic occurred in
+    /// @brief the file the panic occurred in
     FIELD_STRING const char *file;
 
-    /// the line the panic occurred on
+    /// @brief the line the panic occurred on
     size_t line;
 
-    /// the function the panic occurred in
+    /// @brief the function the panic occurred in
     FIELD_STRING const char *function;
 } panic_t;
 
@@ -53,14 +55,14 @@ typedef void (*panic_handler_t)(panic_t panic, const char *fmt, va_list args);
 ///
 /// by default this prints a stacktrace and aborts
 /// it can be overridden for testing purposes or to add more functionality
-extern panic_handler_t gPanicHandler;
+CT_BASE_API extern panic_handler_t gPanicHandler;
 
 /// @brief panic with a message, file, and line
 ///
 /// @param panic the panic information
 /// @param msg the message to panic with
 /// @param ... the arguments to format
-NORETURN ctpanic(panic_t panic, FMT_STRING const char *msg, ...) CT_PRINTF(2, 3);
+NORETURN CT_BASE_API ctpanic(panic_t panic, FMT_STRING const char *msg, ...) CT_PRINTF(2, 3);
 
 /// @def CTU_PANIC(...)
 /// @brief panic with a message and optional format arguments

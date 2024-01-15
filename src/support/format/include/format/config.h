@@ -1,5 +1,9 @@
 #pragma once
 
+#include <ctu_format_api.h>
+
+#include "core/analyze.h"
+
 #include "format/format.h"
 
 #include <stdbool.h>
@@ -31,6 +35,6 @@ typedef struct print_config_t
 ///
 /// @param print the printing options
 /// @param config the config object to print
-void print_config(print_config_t print, const cfg_group_t *config);
+CT_FORMAT_API void print_config(print_config_t print, IN_NOTNULL const cfg_group_t *config);
 
 END_API

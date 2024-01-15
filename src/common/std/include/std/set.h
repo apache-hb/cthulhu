@@ -27,7 +27,7 @@ typedef struct item_t item_t;
 ///
 /// @return the new set
 NODISCARD
-set_t *set_new(IN_RANGE(>, 0) size_t size, typeinfo_t info, IN_NOTNULL arena_t *arena);
+CT_STD_API set_t *set_new(IN_RANGE(>, 0) size_t size, typeinfo_t info, IN_NOTNULL arena_t *arena);
 
 /// @brief add a key to a set
 /// @pre @p key is not NULL
@@ -36,7 +36,7 @@ set_t *set_new(IN_RANGE(>, 0) size_t size, typeinfo_t info, IN_NOTNULL arena_t *
 /// @param key the key to add
 ///
 /// @return the key that was added, or the existing key if it already exists
-const void *set_add(IN_NOTNULL set_t *set, IN_NOTNULL const void *key);
+CT_STD_API const void *set_add(IN_NOTNULL set_t *set, IN_NOTNULL const void *key);
 
 /// @brief check if a set contains a key
 /// @pre @p key is not NULL
@@ -46,14 +46,14 @@ const void *set_add(IN_NOTNULL set_t *set, IN_NOTNULL const void *key);
 ///
 /// @return true if the set contains the key
 NODISCARD CONSTFN
-bool set_contains(IN_NOTNULL const set_t *set, IN_NOTNULL const void *key);
+CT_STD_API bool set_contains(IN_NOTNULL const set_t *set, IN_NOTNULL const void *key);
 
 /// @brief remove a key from a set
 /// @pre @p key is not NULL
 ///
 /// @param set the set to remove the key from
 /// @param key the key to remove
-void set_delete(IN_NOTNULL set_t *set, IN_NOTNULL const void *key);
+CT_STD_API void set_delete(IN_NOTNULL set_t *set, IN_NOTNULL const void *key);
 
 /// @brief check if a set is empty
 ///
@@ -61,12 +61,12 @@ void set_delete(IN_NOTNULL set_t *set, IN_NOTNULL const void *key);
 ///
 /// @return true if the set is empty
 NODISCARD CONSTFN
-bool set_empty(IN_NOTNULL set_t *set);
+CT_STD_API bool set_empty(IN_NOTNULL set_t *set);
 
 /// @brief clear all keys from a set
 ///
 /// @param set the set to clear
-void set_reset(IN_NOTNULL set_t *set);
+CT_STD_API void set_reset(IN_NOTNULL set_t *set);
 
 /// @brief a set iterator handle
 /// @warning these are internal fields and should not be used directly
@@ -87,7 +87,7 @@ typedef struct set_iter_t
 ///
 /// @return the new iterator
 NODISCARD CONSTFN
-set_iter_t set_iter(IN_NOTNULL set_t *set);
+CT_STD_API set_iter_t set_iter(IN_NOTNULL set_t *set);
 
 /// @brief get the next item from a set iterator
 /// @warning this functions behaviour is undefined if called on an iterator that has no more items
@@ -96,7 +96,7 @@ set_iter_t set_iter(IN_NOTNULL set_t *set);
 ///
 /// @return the next item
 NODISCARD
-const void *set_next(IN_NOTNULL set_iter_t *iter);
+CT_STD_API const void *set_next(IN_NOTNULL set_iter_t *iter);
 
 /// @brief check if a set iterator has more items
 ///
@@ -105,7 +105,7 @@ const void *set_next(IN_NOTNULL set_iter_t *iter);
 /// @retval true the iterator has more items
 /// @retval false the iterator has no more items
 NODISCARD CONSTFN
-bool set_has_next(IN_NOTNULL set_iter_t *iter);
+CT_STD_API bool set_has_next(IN_NOTNULL set_iter_t *iter);
 
 /// @}
 

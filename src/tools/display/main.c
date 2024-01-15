@@ -1,7 +1,7 @@
 #include "config/config.h"
 
 #include "core/macros.h"
-#include "defaults/defaults.h"
+#include "setup/setup.h"
 #include "io/console.h"
 #include "memory/memory.h"
 
@@ -106,7 +106,7 @@ static tool_t make_config(arena_t *arena)
 
 int main(int argc, const char **argv)
 {
-    default_init();
+    setup_global();
     arena_t *arena = get_global_arena();
 
     io_t *io = io_stdout();

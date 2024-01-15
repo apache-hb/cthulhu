@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_format_api.h>
+
 #include "core/compiler.h"
 #include "core/analyze.h"
 
@@ -45,10 +47,10 @@ typedef struct format_context_t
 } format_context_t;
 
 /// @brief a colour pallete that applies no colours
-extern const colour_pallete_t kColourNone;
+CT_FORMAT_API extern const colour_pallete_t kColourNone;
 
 /// @brief a colour pallete that applies ANSI VT100 colours
-extern const colour_pallete_t kColourDefault;
+CT_FORMAT_API extern const colour_pallete_t kColourDefault;
 
 /// @brief get a colours string form from a pallete
 ///
@@ -56,14 +58,14 @@ extern const colour_pallete_t kColourDefault;
 /// @param idx the colour to get
 ///
 /// @return the colour string
-const char *colour_get(IN_NOTNULL const colour_pallete_t *colours, IN_RANGE(<, eColourCount) colour_t idx);
+CT_FORMAT_API const char *colour_get(IN_NOTNULL const colour_pallete_t *colours, IN_RANGE(<, eColourCount) colour_t idx);
 
 /// @brief get a reset string from a pallete
 ///
 /// @param colours the pallete to get the reset from
 ///
 /// @return the reset string
-const char *colour_reset(IN_NOTNULL const colour_pallete_t *colours);
+CT_FORMAT_API const char *colour_reset(IN_NOTNULL const colour_pallete_t *colours);
 
 /// @brief add colour to a string
 ///
@@ -72,7 +74,7 @@ const char *colour_reset(IN_NOTNULL const colour_pallete_t *colours);
 /// @param text the text to colour
 ///
 /// @return the coloured string
-char *colour_text(format_context_t context, IN_RANGE(<, eColourCount) colour_t idx, IN_STRING const char *text);
+CT_FORMAT_API char *colour_text(format_context_t context, IN_RANGE(<, eColourCount) colour_t idx, IN_STRING const char *text);
 
 /// @brief format a string and add colour to it
 ///
@@ -83,7 +85,7 @@ char *colour_text(format_context_t context, IN_RANGE(<, eColourCount) colour_t i
 ///
 /// @return the coloured string
 CT_PRINTF(3, 4)
-char *colour_format(format_context_t context, IN_RANGE(<, eColourCount) colour_t idx, FMT_STRING const char *fmt, ...);
+CT_FORMAT_API char *colour_format(format_context_t context, IN_RANGE(<, eColourCount) colour_t idx, FMT_STRING const char *fmt, ...);
 
 /// @brief format a string and add colour to it
 ///
@@ -93,7 +95,7 @@ char *colour_format(format_context_t context, IN_RANGE(<, eColourCount) colour_t
 /// @param args the format arguments
 ///
 /// @return the coloured string
-char *colour_vformat(format_context_t context, IN_RANGE(<, eColourCount) colour_t idx, IN_STRING const char *fmt, va_list args);
+CT_FORMAT_API char *colour_vformat(format_context_t context, IN_RANGE(<, eColourCount) colour_t idx, IN_STRING const char *fmt, va_list args);
 
 /// @}
 

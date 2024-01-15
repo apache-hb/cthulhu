@@ -1,12 +1,12 @@
 #include "argparse/argparse.h"
-#include "base/text.h"
-#include "defaults/memory.h"
+#include "base/util.h"
+#include "setup/memory.h"
+#include "setup/setup.h"
 #include "format/backtrace.h"
 #include "format/colour.h"
 #include "base/log.h"
 #include "base/panic.h"
 #include "core/macros.h"
-#include "defaults/defaults.h"
 #include "format/config.h"
 #include "format/version.h"
 #include "io/console.h"
@@ -349,7 +349,7 @@ static void default_verbose(const char *fmt, va_list args)
     io_printf(io, "\n");
 }
 
-void default_init(void)
+void setup_global(void)
 {
     bt_init();
     os_init();

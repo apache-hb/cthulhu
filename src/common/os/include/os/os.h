@@ -2,6 +2,8 @@
 
 #include OS_API_HEADER
 
+#include <ctu_os_api.h>
+
 #include "core/analyze.h"
 #include "core/compiler.h"
 
@@ -49,7 +51,7 @@ typedef size_t os_error_t;
 
 /// @brief initialize the os api
 /// @note this must be called before using any other os api
-void os_init(void);
+CT_OS_API void os_init(void);
 
 /// @brief convert an os error code to a string
 ///
@@ -58,7 +60,7 @@ void os_init(void);
 ///
 /// @return the string representation of the error code
 NODISCARD RET_STRING
-char *os_error_string(os_error_t error, IN_NOTNULL arena_t *arena);
+CT_OS_API char *os_error_string(os_error_t error, IN_NOTNULL arena_t *arena);
 
 /// filesytem api
 
@@ -69,7 +71,7 @@ char *os_error_string(os_error_t error, IN_NOTNULL arena_t *arena);
 /// @return true if the file was created, false if it already exists
 /// @return an error if the file could not be created
 RET_INSPECT
-os_error_t os_file_create(IN_STRING const char *path);
+CT_OS_API os_error_t os_file_create(IN_STRING const char *path);
 
 /// @brief delete a file
 ///
@@ -78,7 +80,7 @@ os_error_t os_file_create(IN_STRING const char *path);
 /// @return true if the file was deleted, false if it did not exist
 /// @return an error if the file could not be deleted
 RET_INSPECT
-os_error_t os_file_delete(IN_STRING const char *path);
+CT_OS_API os_error_t os_file_delete(IN_STRING const char *path);
 
 /// @brief check if a directory exists
 ///
@@ -88,7 +90,7 @@ os_error_t os_file_delete(IN_STRING const char *path);
 /// @return true if the directory exists, false otherwise
 /// @return an error if the directory could not be checked
 RET_INSPECT
-os_error_t os_dir_create(IN_STRING const char *path, IN_NOTNULL bool *create);
+CT_OS_API os_error_t os_dir_create(IN_STRING const char *path, IN_NOTNULL bool *create);
 
 /// @brief delete a directory
 ///
@@ -97,7 +99,7 @@ os_error_t os_dir_create(IN_STRING const char *path, IN_NOTNULL bool *create);
 /// @return true if the directory was deleted, false if it did not exist
 /// @return an error if the directory could not be deleted
 RET_INSPECT
-os_error_t os_dir_delete(IN_STRING const char *path);
+CT_OS_API os_error_t os_dir_delete(IN_STRING const char *path);
 
 /// @brief check if a directory exists
 ///
@@ -106,7 +108,7 @@ os_error_t os_dir_delete(IN_STRING const char *path);
 /// @return true if the directory exists, false otherwise
 /// @return an error if the directory could not be checked
 RET_INSPECT
-bool os_dir_exists(IN_STRING const char *path);
+CT_OS_API bool os_dir_exists(IN_STRING const char *path);
 
 /// @brief get the type of a paths inode entry
 ///
@@ -115,14 +117,14 @@ bool os_dir_exists(IN_STRING const char *path);
 /// @return the type of the inode entry
 /// @return an error if the inode entry could not be checked
 NODISCARD
-os_dirent_t os_dirent_type(IN_STRING const char *path);
+CT_OS_API os_dirent_t os_dirent_type(IN_STRING const char *path);
 
 /// @brief get the current working directory
 ///
 /// @return the current working directory
 /// @return an error if the current working directory could not be retrieved
 NODISCARD
-os_error_t os_dir_current(OUT_WRITES(size) char *cwd, size_t size);
+CT_OS_API os_error_t os_dir_current(OUT_WRITES(size) char *cwd, size_t size);
 
 /// directory iteration
 
@@ -135,12 +137,12 @@ os_error_t os_dir_current(OUT_WRITES(size) char *cwd, size_t size);
 ///
 /// @return result containing either a valid iterator or an error, NULL if dir does not exist
 NODISCARD
-os_error_t os_iter_begin(IN_STRING const char *path, os_iter_t *iter, IN_NOTNULL arena_t *arena);
+CT_OS_API os_error_t os_iter_begin(IN_STRING const char *path, os_iter_t *iter, IN_NOTNULL arena_t *arena);
 
 /// @brief close a directory iterator
 ///
 /// @param iter iterator to close
-void os_iter_end(IN_NOTNULL os_iter_t *iter);
+CT_OS_API void os_iter_end(IN_NOTNULL os_iter_t *iter);
 
 /// @brief get the next directory entry
 ///
@@ -149,14 +151,14 @@ void os_iter_end(IN_NOTNULL os_iter_t *iter);
 ///
 /// @return true if a directory entry was found
 NODISCARD
-bool os_iter_next(IN_NOTNULL os_iter_t *iter, os_dir_t *dir);
+CT_OS_API bool os_iter_next(IN_NOTNULL os_iter_t *iter, os_dir_t *dir);
 
 /// @brief get the error state of a directory iterator
 ///
 /// @param iter iterator to check
 ///
 /// @return the error state of the iterator
-os_error_t os_iter_error(IN_NOTNULL os_iter_t *iter);
+CT_OS_API os_error_t os_iter_error(IN_NOTNULL os_iter_t *iter);
 
 /// @brief get the name of a directory entry
 ///
@@ -165,7 +167,7 @@ os_error_t os_iter_error(IN_NOTNULL os_iter_t *iter);
 ///
 /// @return the name of the directory entry
 NODISCARD
-char *os_dir_name(IN_NOTNULL os_dir_t *dir, IN_NOTNULL arena_t *arena);
+CT_OS_API char *os_dir_name(IN_NOTNULL os_dir_t *dir, IN_NOTNULL arena_t *arena);
 
 /// file api
 
@@ -178,12 +180,12 @@ char *os_dir_name(IN_NOTNULL os_dir_t *dir, IN_NOTNULL arena_t *arena);
 /// @return a file handle on success
 /// @return an error if the file could not be opened
 NODISCARD
-os_error_t os_file_open(IN_STRING const char *path, os_access_t access, os_file_t *file);
+CT_OS_API os_error_t os_file_open(IN_STRING const char *path, os_access_t access, os_file_t *file);
 
 /// @brief close a file
 ///
 /// @param file the file to close
-void os_file_close(OUT_PTR_INVALID os_file_t *file);
+CT_OS_API void os_file_close(OUT_PTR_INVALID os_file_t *file);
 
 /// @brief read from a file
 ///
@@ -195,7 +197,7 @@ void os_file_close(OUT_PTR_INVALID os_file_t *file);
 /// @return the number of bytes read
 /// @return an error if the file could not be read from
 NODISCARD
-os_error_t os_file_read(
+CT_OS_API os_error_t os_file_read(
         IN_NOTNULL os_file_t *file,
         void *buffer,
         IN_RANGE(>, 0) size_t size,
@@ -211,7 +213,7 @@ os_error_t os_file_read(
 /// @return the number of bytes written
 /// @return an error if the file could not be written to
 NODISCARD
-os_error_t os_file_write(
+CT_OS_API os_error_t os_file_write(
         IN_NOTNULL os_file_t *file,
         IN_READS(size) const void *buffer,
         IN_RANGE(>, 0) size_t size,
@@ -224,7 +226,7 @@ os_error_t os_file_write(
 ///
 /// @return an error if the file size could not be retrieved
 NODISCARD
-os_error_t os_file_size(IN_NOTNULL os_file_t *file, IN_NOTNULL size_t *actual);
+CT_OS_API os_error_t os_file_size(IN_NOTNULL os_file_t *file, IN_NOTNULL size_t *actual);
 
 /// @brief seek to a position in a file
 ///
@@ -234,7 +236,7 @@ os_error_t os_file_size(IN_NOTNULL os_file_t *file, IN_NOTNULL size_t *actual);
 ///
 /// @return an error if the file could not be seeked
 NODISCARD
-os_error_t os_file_seek(IN_NOTNULL os_file_t *file, size_t offset, size_t *actual);
+CT_OS_API os_error_t os_file_seek(IN_NOTNULL os_file_t *file, size_t offset, size_t *actual);
 
 /// @brief get the current position in a file
 ///
@@ -243,7 +245,7 @@ os_error_t os_file_seek(IN_NOTNULL os_file_t *file, size_t offset, size_t *actua
 ///
 /// @return an error if the file position could not be retrieved
 NODISCARD
-os_error_t os_file_tell(IN_NOTNULL os_file_t *file, IN_NOTNULL size_t *actual);
+CT_OS_API os_error_t os_file_tell(IN_NOTNULL os_file_t *file, IN_NOTNULL size_t *actual);
 
 /// @brief map a file into memory
 ///
@@ -252,7 +254,7 @@ os_error_t os_file_tell(IN_NOTNULL os_file_t *file, IN_NOTNULL size_t *actual);
 ///
 /// @return an error if the file could not be mapped
 NODISCARD
-os_error_t os_file_map(IN_NOTNULL os_file_t *file, IN_NOTNULL const void **mapped);
+CT_OS_API os_error_t os_file_map(IN_NOTNULL os_file_t *file, IN_NOTNULL const void **mapped);
 
 /// @brief get the name of a file
 ///
@@ -260,7 +262,7 @@ os_error_t os_file_map(IN_NOTNULL os_file_t *file, IN_NOTNULL const void **mappe
 ///
 /// @return the name of the file
 NODISCARD
-const char *os_file_name(IN_NOTNULL os_file_t *file);
+CT_OS_API const char *os_file_name(IN_NOTNULL os_file_t *file);
 
 /// @}
 

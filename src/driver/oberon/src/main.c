@@ -7,6 +7,8 @@
 
 #include "core/macros.h"
 
+#include "driver/driver.h"
+
 #include "obr_bison.h" // IWYU pragma: keep
 #include "obr_flex.h" // IWYU pragma: keep
 
@@ -57,7 +59,7 @@ static const diagnostic_t *const kDiagnosticTable[] = {
 
 static const char *const kLangNames[] = { "m", "mod", "obr", "oberon", NULL };
 
-const language_t kOberonModule = {
+CT_DRIVER_API const language_t kOberonModule = {
     .id = "obr",
     .name = "Oberon-2",
     .version = {
@@ -87,3 +89,5 @@ const language_t kOberonModule = {
         [eStageCompileSymbols] = obr_compile_module
     }
 };
+
+CTU_DRIVER_ENTRY(kOberonModule)

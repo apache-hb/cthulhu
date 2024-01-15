@@ -1,11 +1,21 @@
+unit_api = configure_file(
+    input : api_header,
+    output : 'ctu_unit_api.h',
+    configuration : { 'MOD': 'UNIT' }
+)
+
+unit_include = include_directories('.', 'unit')
+
 libunit = library('unit', 'unit/ct-test.c',
-    include_directories : 'unit',
-    dependencies : [ base, std, memory, os, io, defaults, format, backtrace ]
+    c_args : user_args + [ '-DCT_UNIT_BUILD=1' ],
+    include_directories : unit_include,
+    dependencies : [ base, std, memory, os, io, setup, format, backtrace, arena ]
 )
 
 unit = declare_dependency(
     compile_args : cc.get_supported_arguments('-Wno-unused-result', '-Wno-unused-value'),
     link_with : libunit,
+    include_directories : unit_include,
     dependencies : [ base, std ]
 )
 
@@ -21,7 +31,7 @@ foreach case : cases
 
     exe = executable(case, path,
         include_directories : '.',
-        dependencies : [ unit, memory, std, defaults ]
+        dependencies : [ unit, memory, std, setup, arena ]
     )
 
     test(case, exe, suite : 'unit')
@@ -31,7 +41,7 @@ endforeach
 
 vfs_exe = executable('vfs', 'cases/io/vfs.c',
     include_directories : '.',
-    dependencies : [ unit, base, scan, memory, fs, defaults ]
+    dependencies : [ unit, base, scan, memory, fs, setup, arena ]
 )
 
 test('vfs', vfs_exe, suite : 'unit')
@@ -40,7 +50,7 @@ test('vfs', vfs_exe, suite : 'unit')
 
 fs_exe = executable('fs', 'cases/io/fs.c',
     include_directories : '.',
-    dependencies : [ unit, base, std, scan, memory, fs, defaults ]
+    dependencies : [ unit, base, std, scan, memory, fs, setup, arena ]
 )
 
 test('fs', fs_exe,
@@ -52,7 +62,7 @@ test('fs', fs_exe,
 
 argparse_exe = executable('argparse.argparse', 'cases/argparse/argparse.c',
     include_directories : '.',
-    dependencies : [ unit, memory, base, std, memory, config, argparse, defaults ]
+    dependencies : [ unit, memory, base, std, memory, config, argparse, setup, arena ]
 )
 
 test('argparse', argparse_exe, suite : 'unit')

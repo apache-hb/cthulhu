@@ -1,3 +1,10 @@
+tree_api = configure_file(
+    input : api_header,
+    output : 'ctu_tree_api.h',
+    configuration : { 'MOD': 'TREE' }
+)
+
+tree_include = include_directories('.', 'include')
 
 src = [
     'src/tree.c',
@@ -8,13 +15,13 @@ src = [
 ]
 
 libtree = library('tree', src,
-    include_directories : 'include',
-    c_args : user_args,
-    dependencies : [ memory, std, gmp, scan, events ]
+    c_args : user_args + [ '-DCT_TREE_BUILD=1' ],
+    include_directories : tree_include,
+    dependencies : [ memory, std, gmp, scan, events, arena ]
 )
 
 tree = declare_dependency(
     link_with : libtree,
-    include_directories : 'include',
+    include_directories : tree_include,
     dependencies : [ gmp ]
 )

@@ -28,6 +28,7 @@ project('cthulhu', 'c',
 buildtype = get_option('buildtype')
 is_debug = buildtype.contains('debug')
 is_release = buildtype.contains('release')
+default_library = get_option('default_library')
 cc = meson.get_compiler('c')
 target = target_machine.system()
 
@@ -89,6 +90,7 @@ config_cdata = configuration_data({
 
 config_cdata.set10('CTU_DEBUG', is_debug)
 config_cdata.set10('CTU_PARANOID', opt_paranoid.allowed())
+config_cdata.set10('CTU_BUILD_SHARED', default_library == 'shared')
 
 # we use `__attribute__((const|pure))` heavily, but during unit tests we
 # violate function preconditions to test assertions.

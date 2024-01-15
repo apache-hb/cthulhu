@@ -1,3 +1,4 @@
+#include "arena/arena.h"
 #include "common.h"
 
 #include "cthulhu/tree/tree.h"

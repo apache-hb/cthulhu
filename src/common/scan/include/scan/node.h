@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_scan_api.h>
+
 #include "core/analyze.h"
 
 #include "scan/scan.h"
@@ -15,24 +17,37 @@ BEGIN_API
 /// @ingroup common
 /// @{
 
-typedef uint_fast64_t line_t;   ///< line number
-typedef uint_fast64_t column_t; ///< column number
+/// @brief a line number
+typedef uint_fast64_t line_t;
 
-#define PRI_LINE PRIuFAST64
-#define PRI_COLUMN PRIuFAST64
-
-/// @brief a location inside a scanner
-typedef struct
-{
-    line_t first_line; ///< the first line of the location
-    line_t last_line;  ///< the last line of the location
-
-    column_t first_column; ///< the first column of the location
-    column_t last_column;  ///< the last column of the location
-} where_t;
+/// @brief a column number
+typedef uint_fast64_t column_t;
 
 /// @brief a position in a source file
 typedef struct node_t node_t;
+
+/// @brief format specifier for @a line_t
+#define PRI_LINE PRIuFAST64
+
+/// @brief format specifier for @a column_t
+#define PRI_COLUMN PRIuFAST64
+
+/// @brief a location inside a scanner
+/// locations are inclusive and 0-based
+typedef struct
+{
+    /// @brief the first line of the location
+    line_t first_line;
+
+    /// @brief the last line of the location
+    line_t last_line;
+
+    /// @brief the first column of the location
+    column_t first_column;
+
+    /// @brief the last column of the location
+    column_t last_column;
+} where_t;
 
 /// @brief get the associated source file of a node
 ///
@@ -40,7 +55,7 @@ typedef struct node_t node_t;
 ///
 /// @return the source file of @p node
 NODISCARD CONSTFN
-const scan_t *node_get_scan(const node_t *node);
+CT_SCAN_API const scan_t *node_get_scan(const node_t *node);
 
 /// @brief get the location of a node inside its source file
 ///
@@ -48,7 +63,7 @@ const scan_t *node_get_scan(const node_t *node);
 ///
 /// @return the location of @p node
 NODISCARD CONSTFN
-where_t node_get_location(const node_t *node);
+CT_SCAN_API where_t node_get_location(const node_t *node);
 
 /// @brief create a new node in a given file at a given location
 ///
@@ -57,14 +72,14 @@ where_t node_get_location(const node_t *node);
 ///
 /// @return the created node
 NODISCARD CONSTFN
-node_t *node_new(const scan_t *scan, where_t where);
+CT_SCAN_API node_t *node_new(const scan_t *scan, where_t where);
 
 /// @brief get the builtin node
 /// node used for drivers that declare builtin symbols
 ///
 /// @return the builtin node
 NODISCARD CONSTFN
-const node_t *node_builtin(void);
+CT_SCAN_API const node_t *node_builtin(void);
 
 /// @brief check if a node is the builtin node
 ///
@@ -72,7 +87,7 @@ const node_t *node_builtin(void);
 ///
 /// @return whether or not @p node is the builtin node
 NODISCARD CONSTFN
-bool node_is_builtin(const node_t *node);
+CT_SCAN_API bool node_is_builtin(const node_t *node);
 
 /// @}
 

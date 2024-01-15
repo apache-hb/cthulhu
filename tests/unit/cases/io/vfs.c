@@ -1,6 +1,6 @@
 #include "arena/arena.h"
 #include "unit/ct-test.h"
-#include "defaults/memory.h"
+#include "setup/memory.h"
 
 #include "fs/fs.h"
 

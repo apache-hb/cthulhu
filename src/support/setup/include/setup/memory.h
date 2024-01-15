@@ -1,15 +1,17 @@
 #pragma once
 
+#include <ctu_setup_api.h>
+
 #include "core/compiler.h"
 
 typedef struct arena_t arena_t;
 
 BEGIN_API
 
-/// @ingroup defaults
+/// @ingroup setup
 /// @brief get the default allocator
 ///
 /// @return the default allocator
-arena_t *ctu_default_alloc(void);
+CT_SETUP_API arena_t *ctu_default_alloc(void);
 
 END_API

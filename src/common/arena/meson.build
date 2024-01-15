@@ -1,14 +1,22 @@
+arena_api = configure_file(
+    input : api_header,
+    output : 'ctu_arena_api.h',
+    configuration : { 'MOD': 'ARENA' }
+)
+
+arena_include = include_directories('.', 'include')
+
 src = [ 'src/arena.c' ]
 
 libarena = library('arena', src,
     build_by_default : false,
-    c_args : user_args,
-    dependencies : [ gmp, base ],
-    include_directories : [ 'include' ]
+    c_args : user_args + [ '-DCT_ARENA_BUILD=1' ],
+    dependencies : [ base ],
+    include_directories : arena_include
 )
 
 arena = declare_dependency(
     link_with : libarena,
-    dependencies : [ gmp, core ],
-    include_directories : [ 'include' ]
+    dependencies : [ core ],
+    include_directories : arena_include
 )

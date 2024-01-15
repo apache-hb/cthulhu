@@ -1,9 +1,7 @@
 src = [ 'init.c', 'file.c', 'dir.c', 'fs.c', 'error.c' ]
 
-platform = [ ]
-
 lib_osnative = library('os_posix', src,
     build_by_default : false,
     c_args : user_args,
-    dependencies : [ os_common, platform, base, std, arena ]
+    dependencies : [ arena, std, os_common ]
 )

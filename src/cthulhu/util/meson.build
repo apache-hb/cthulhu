@@ -1,3 +1,11 @@
+util_api = configure_file(
+    input : api_header,
+    output : 'ctu_util_api.h',
+    configuration : { 'MOD': 'UTIL' }
+)
+
+util_include = include_directories('.', 'include')
+
 src = [
     'src/util.c',
     'src/text.c',
@@ -5,13 +13,13 @@ src = [
 ]
 
 libutil = library('util', src,
-    include_directories : 'include',
-    c_args : user_args,
-    dependencies : [ memory, base, std, scan, events, tree ]
+    c_args : user_args + [ '-DCT_UTIL_BUILD=1' ],
+    include_directories : util_include,
+    dependencies : [ memory, base, std, scan, events, tree, arena ]
 )
 
 util = declare_dependency(
     link_with : libutil,
-    include_directories : 'include',
+    include_directories : util_include,
     dependencies : [ base ]
 )

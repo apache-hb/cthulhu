@@ -1,9 +1,10 @@
-#include "defaults/defaults.h"
+#include "setup/setup.h"
 #include "format/colour.h"
 #include "base/log.h"
 #include "cthulhu/events/events.h"
 #include "cthulhu/runtime/interface.h"
 
+#include "arena/arena.h"
 #include "io/console.h"
 #include "memory/memory.h"
 #include "notify/notify.h"
@@ -185,6 +186,7 @@ static arena_user_wrap_t new_alloc(user_arena_t user)
 static int check_reports(logger_t *logger, report_config_t config, const char *title)
 {
     int err = text_report(logger_get_events(logger), config, title);
+    logger_reset(logger);
     return err;
 }
 
@@ -352,7 +354,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
 
 int main(int argc, const char **argv)
 {
-    default_init();
+    setup_global();
 
     size_t size = (size_t)(1024U * 1024U * 64U);
     user_arena_t arena = new_user_arena(size);

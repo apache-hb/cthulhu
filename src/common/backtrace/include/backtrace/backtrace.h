@@ -1,8 +1,9 @@
 #pragma once
 
+#include <ctu_backtrace_api.h>
+
 #include "core/analyze.h"
 #include "core/compiler.h"
-
 
 #include "core/text.h"
 
@@ -21,6 +22,7 @@ BEGIN_API
 /// @brief an address of a symbol
 typedef uint_least64_t bt_address_t;
 
+/// @brief format specifier for @a bt_address_t
 #define PRI_ADDRESS PRIuLEAST64
 
 /// @brief a symbol
@@ -101,17 +103,17 @@ typedef struct bt_error_t
 } bt_error_t;
 
 /// @brief the global system error handler
-extern bt_error_t gErrorReport;
+CT_BACKTRACE_API extern bt_error_t gErrorReport;
 
 /// @brief initialize the backtrace backend
 /// @note this function must be called before any other backtrace function
-void bt_init(void);
+CT_BACKTRACE_API void bt_init(void);
 
 /// @brief get the backtrace backend name
 ///
 /// @return the backtrace backend name
 RET_STRING CONSTFN
-const char *bt_backend(void);
+CT_BACKTRACE_API const char *bt_backend(void);
 
 /// @brief get a backtrace from the current location using a callback
 /// @note this function is not thread safe
@@ -119,7 +121,7 @@ const char *bt_backend(void);
 ///
 /// @param callback the callback to call for each frame
 /// @param user the user data to pass to the callback
-void bt_read(IN_NOTNULL bt_trace_t callback, void *user);
+CT_BACKTRACE_API void bt_read(IN_NOTNULL bt_trace_t callback, void *user);
 
 /// @brief resolve a frame to a symbol
 ///
@@ -127,7 +129,7 @@ void bt_read(IN_NOTNULL bt_trace_t callback, void *user);
 ///
 /// @param frame the frame to resolve
 /// @param symbol the symbol to fill
-frame_resolve_t bt_resolve_symbol(IN_NOTNULL const bt_frame_t *frame, IN_NOTNULL bt_symbol_t *symbol);
+CT_BACKTRACE_API frame_resolve_t bt_resolve_symbol(IN_NOTNULL const bt_frame_t *frame, IN_NOTNULL bt_symbol_t *symbol);
 
 /// @}
 

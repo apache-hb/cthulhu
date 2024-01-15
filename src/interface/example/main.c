@@ -1,4 +1,5 @@
-#include "defaults/defaults.h"
+#include "setup/setup.h"
+#include "setup/memory.h"
 #include "format/colour.h"
 #include "format/notify.h"
 #include "base/log.h"
@@ -14,7 +15,6 @@
 #include "support/langs.h"
 
 #include "arena/arena.h"
-#include "defaults/memory.h"
 
 #include "std/map.h"
 #include "std/str.h"
@@ -39,6 +39,7 @@
 static int check_reports(logger_t *logger, report_config_t config, const char *title)
 {
     int err = text_report(logger_get_events(logger), config, title);
+    logger_reset(logger);
 
     if (err != EXIT_OK)
     {
@@ -74,7 +75,7 @@ static io_t *make_file(logger_t *reports, const char *path, os_access_t flags, a
 
 int main(int argc, const char **argv)
 {
-    default_init();
+    setup_global();
 
     ctu_log_update(true);
     arena_t *arena = ctu_default_alloc();

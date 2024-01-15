@@ -1,6 +1,6 @@
 #include "unit/ct-test.h"
 
-#include "defaults/memory.h"
+#include "setup/memory.h"
 #include "arena/arena.h"
 
 #include "std/str.h"

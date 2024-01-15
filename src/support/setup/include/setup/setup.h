@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_setup_api.h>
+
 #include "core/compiler.h"
 #include "core/version_def.h"
 
@@ -7,16 +9,16 @@
 
 BEGIN_API
 
-/// @defgroup defaults Default options
-/// @brief Default command line options and behaviour
-/// @ingroup support
-/// @{
-
 typedef struct cfg_group_t cfg_group_t;
 typedef struct cfg_field_t cfg_field_t;
 typedef struct io_t io_t;
 typedef struct arena_t arena_t;
 typedef struct ap_t ap_t;
+
+/// @defgroup setup Default options
+/// @brief Default command line options and behaviour
+/// @ingroup support
+/// @{
 
 /// @brief tool config
 typedef struct tool_config_t
@@ -73,7 +75,7 @@ typedef struct default_options_t
 /// @param group the config group to use
 ///
 /// @return the default options
-default_options_t get_default_options(cfg_group_t *group);
+CT_SETUP_API default_options_t get_default_options(cfg_group_t *group);
 
 /// @brief process the default options
 /// @note if this function does not return @a EXIT_OK, the program should exit
@@ -83,7 +85,7 @@ default_options_t get_default_options(cfg_group_t *group);
 /// @param config the tool config
 ///
 /// @return @a EXIT_OK on success or an error code
-int process_default_options(default_options_t options, tool_config_t config);
+CT_SETUP_API int process_default_options(default_options_t options, tool_config_t config);
 
 /// @brief parse the default commands
 /// @note if this function does not return @a EXIT_OK, the program should exit
@@ -93,7 +95,7 @@ int process_default_options(default_options_t options, tool_config_t config);
 /// @param config the tool config
 ///
 /// @return @a EXIT_OK on success or an error code
-int parse_commands(default_options_t options, tool_config_t config);
+CT_SETUP_API int parse_commands(default_options_t options, tool_config_t config);
 
 /// @brief parse the default arguments
 /// @note this function is the same as @see parse_commands but allows
@@ -104,10 +106,10 @@ int parse_commands(default_options_t options, tool_config_t config);
 /// @param config the tool config
 ///
 /// @return @a EXIT_OK on success or an error code
-int parse_argparse(ap_t *ap, default_options_t options, tool_config_t config);
+CT_SETUP_API int parse_argparse(ap_t *ap, default_options_t options, tool_config_t config);
 
 /// @brief initialise the runtime with default options
-void default_init(void);
+CT_SETUP_API void setup_global(void);
 
 /// @}
 

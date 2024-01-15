@@ -1,30 +1,41 @@
+argparse_api = configure_file(
+    input : api_header,
+    output : 'ctu_argparse_api.h',
+    configuration : { 'MOD': 'ARGPARSE' }
+)
+
+argparse_include = include_directories('.', 'include')
+argparse_impl_include = include_directories('src')
+
+# TODO: restructure this to expose less implementation details
+
+# src = [
+#     'src/argparse.c',
+#     'src/common.c'
+# ]
+
+# libargparse_base = library('argparse_base', src,
+#     c_args : user_args + [ '-DCT_ARGPARSE_BUILD=1' ],
+#     dependencies : [ gmp, std, scan, io, interop, config ],
+#     include_directories : [ argparse_impl_include, argparse_include ]
+# )
 
 src = [
     'src/argparse.c',
-    'src/common.c'
-]
-
-libargparse_base = library('argparse_base', src,
-    c_args : user_args,
-    dependencies : [ gmp, std, scan, interop, config ],
-    include_directories : [ 'src', 'include' ]
-)
-
-src = [
+    'src/common.c',
     'src/parse.c',
     lex.process('src/ap.l'),
     parse.process('src/ap.y')
 ]
 
 libargparse = library('argparse', src,
-    c_args : generated_args,
-    link_with : libargparse_base,
+    c_args : generated_args + [ '-DCT_ARGPARSE_BUILD=1' ],
     dependencies : [ gmp, memory, std, scan, interop, io, config ],
-    include_directories : [ 'src', 'include' ]
+    include_directories : [ argparse_impl_include, argparse_include ]
 )
 
 argparse = declare_dependency(
-    link_with : [ libargparse_base, libargparse ],
-    include_directories : 'include',
-    dependencies : [ gmp, core ]
+    link_with : [ libargparse ],
+    include_directories : argparse_include,
+    dependencies : [ core ]
 )

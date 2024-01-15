@@ -97,6 +97,8 @@ static void add_config_fields(ap_t *ap, const cfg_group_t *config)
     }
 }
 
+// construction
+
 ap_t *ap_new(cfg_group_t *config, arena_t *arena)
 {
     CTASSERT(config != NULL);

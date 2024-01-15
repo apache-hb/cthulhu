@@ -79,7 +79,7 @@ static char *join_args(int argc, const char **argv, arena_t *arena)
     return typevec_data(vec);
 }
 
-static int ap_parse_common(ap_t *self, const char *text)
+int ap_parse_common(ap_t *self, const char *text)
 {
     CTASSERT(self != NULL);
     CTASSERT(text != NULL);

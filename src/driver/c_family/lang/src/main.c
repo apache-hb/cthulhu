@@ -8,6 +8,8 @@
 #include "arena/arena.h"
 #include "notify/notify.h"
 
+#include "driver/driver.h"
+
 #include "cc_bison.h" // IWYU pragma: keep
 #include "cc_flex.h" // IWYU pragma: keep
 
@@ -45,7 +47,7 @@ static const diagnostic_t * const kDiagnosticTable[] = {
 
 static const char *const kLangNames[] = { "c", "h", NULL };
 
-const language_t kCModule = {
+CT_DRIVER_API const language_t kCModule = {
     .id = "c",
     .name = "C",
     .version = {
@@ -69,3 +71,5 @@ const language_t kCModule = {
     .fn_postparse = cc_postparse,
     .parse_callbacks = &kCallbacks,
 };
+
+CTU_DRIVER_ENTRY(kCModule)

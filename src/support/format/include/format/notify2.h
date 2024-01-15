@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_format_api.h>
+
 #include "format/format.h"
 #include "core/analyze.h"
 
@@ -49,13 +51,13 @@ typedef struct print_notify_t
 ///
 /// @param config the config to use when printing
 /// @param event the event to print
-void print_notify(print_notify_t config, IN_NOTNULL const event_t *event);
+CT_FORMAT_API void print_notify(print_notify_t config, IN_NOTNULL const event_t *event);
 
 /// @brief format many events for printing
 ///
 /// @param config the config to use when printing
 /// @param events the events to print
-void print_notify_many(print_notify_t config, IN_NOTNULL const typevec_t *events);
+CT_FORMAT_API void print_notify_many(print_notify_t config, IN_NOTNULL const typevec_t *events);
 
 /// @}
 

@@ -9,6 +9,7 @@
 #include "std/map.h"
 #include "std/set.h"
 #include "std/str.h"
+#include "arena/arena.h"
 
 #include "std/typed/vector.h"
 #include "std/vector.h"

@@ -1,5 +1,7 @@
 #include "cthulhu/runtime/driver.h"
 
+#include "driver/driver.h"
+
 #include "core/macros.h"
 
 static void jvm_create(driver_t *handle)
@@ -12,7 +14,7 @@ static void jvm_destroy(driver_t *handle)
     CTU_UNUSED(handle);
 }
 
-static const char *kLangNames[] = { "class", "jar", NULL };
+static const char *const kLangNames[] = { "class", "jar", NULL };
 
 const language_t kJvmModule = {
     .id = "jvm",
@@ -29,3 +31,5 @@ const language_t kJvmModule = {
     .fn_create = jvm_create,
     .fn_destroy = jvm_destroy
 };
+
+CTU_DRIVER_ENTRY(kJvmModule)

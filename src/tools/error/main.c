@@ -1,10 +1,10 @@
 #include "backtrace/backtrace.h"
 #include "base/panic.h"
-#include "defaults/defaults.h"
+#include "setup/setup.h"
 
 int main(void)
 {
-    default_init();
+    setup_global();
 
     //CTASSERT(false);
 

@@ -11,6 +11,8 @@
 
 #include "std/str.h"
 
+#include "driver/driver.h"
+
 #include "pl0_bison.h" // IWYU pragma: keep
 #include "pl0_flex.h" // IWYU pragma: keep
 
@@ -51,7 +53,7 @@ static void pl0_postparse(driver_t *handle, scan_t *scan, void *tree)
 
 static const char *const kLangNames[] = { "pl", "pl0", NULL };
 
-const language_t kPl0Module = {
+CT_DRIVER_API const language_t kPl0Module = {
     .id = "pl0",
     .name = "PL/0",
     .version = {
@@ -75,3 +77,5 @@ const language_t kPl0Module = {
         [eStageCompileSymbols] = pl0_compile_module
     }
 };
+
+CTU_DRIVER_ENTRY(kPl0Module)

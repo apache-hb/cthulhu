@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_unit_api.h>
+
 #include "base/panic.h"
 
 #include "std/typed/vector.h"
@@ -12,13 +14,14 @@ BEGIN_API
 typedef struct test_suite_t test_suite_t;
 typedef struct test_group_t test_group_t;
 
-extern jmp_buf gPanicJump;
+CT_UNIT_API extern jmp_buf gPanicJump;
 
 typedef struct test_suite_t
 {
     /// the name of the test suite
     const char *suite_name;
 
+    /// all the test results
     typevec_t *results;
 } test_suite_t;
 
@@ -27,41 +30,41 @@ typedef struct test_suite_t
 /// @param suite the name of the test suite
 ///
 /// @return the test suite
-test_suite_t test_suite_new(const char *suite, arena_t *arena);
+CT_UNIT_API test_suite_t test_suite_new(const char *suite, arena_t *arena);
 
 /// @brief notify the suite that a test result has been received
 ///
 /// @param group the test group
 /// @param result the result of the test
 /// @param msg the message to display
-void group_notify_result(test_group_t *group, bool result, const char *msg);
+CT_UNIT_API void group_notify_result(test_group_t *group, bool result, const char *msg);
 
 /// @brief notify that a test failed
 ///
 /// @param group the test group
 /// @param msg the message to display
-void group_notify_success(test_group_t *group, const char *msg);
+CT_UNIT_API void group_notify_success(test_group_t *group, const char *msg);
 
 /// @brief notify that a test failed
 ///
 /// @param group the test group
 /// @param msg the message to display
-void group_notify_failure(test_group_t *group, const char *msg);
+CT_UNIT_API void group_notify_failure(test_group_t *group, const char *msg);
 
 /// @brief notify that an exception occurred
 ///
 /// @param group the test group
 /// @param msg the message to display
-void group_notify_exception(test_group_t *group, const char *msg);
+CT_UNIT_API void group_notify_exception(test_group_t *group, const char *msg);
 
 /// @brief install the global panic handler
-void test_install_panic_handler(void);
+CT_UNIT_API void test_install_panic_handler(void);
 
 /// @brief install the electric fence allocator
-void test_install_electric_fence(void);
+CT_UNIT_API void test_install_electric_fence(void);
 
 /// @brief begin expecting a panic
-void test_begin_expect_panic(void);
+CT_UNIT_API void test_begin_expect_panic(void);
 
 /// @brief create a new test group
 ///
@@ -69,14 +72,14 @@ void test_begin_expect_panic(void);
 /// @param name the name of the test group
 ///
 /// @return the test case builder
-test_group_t test_group(test_suite_t *suite, const char *name);
+CT_UNIT_API test_group_t test_group(test_suite_t *suite, const char *name);
 
 /// @brief finish a test suite and print the results
 ///
 /// @param suite the test suite
 ///
 /// @return the exit code of the test suite
-int test_suite_finish(test_suite_t *suite);
+CT_UNIT_API int test_suite_finish(test_suite_t *suite);
 
 typedef struct test_group_t
 {

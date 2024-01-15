@@ -1,0 +1,16 @@
+#include "cthulhu/runtime/common.h"
+
+#include "driver/driver.h"
+
+const language_t kCppModule = {
+    .id = "cpp",
+    .name = "C Preprocessor",
+    .version = {
+        .license = "LGPLv3",
+        .desc = "C Preprocessor language driver",
+        .author = "Elliot Haisley",
+        .version = NEW_VERSION(0, 0, 1)
+    },
+};
+
+CTU_DRIVER_ENTRY(kCppModule)

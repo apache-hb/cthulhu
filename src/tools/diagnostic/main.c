@@ -3,7 +3,7 @@
 #include "core/macros.h"
 #include "cthulhu/runtime/interface.h"
 #include "cthulhu/events/events.h"
-#include "defaults/defaults.h"
+#include "setup/setup.h"
 #include "io/console.h"
 #include "io/io.h"
 #include "std/map.h"
@@ -12,6 +12,7 @@
 #include "std/vector.h"
 #include "support/langs.h"
 #include "argparse/argparse.h"
+#include "arena/arena.h"
 
 #include "memory/memory.h"
 
@@ -224,7 +225,7 @@ static void print_diagnostic(io_t *io, const diagnostic_t *diag)
 
 int main(int argc, const char **argv)
 {
-    default_init();
+    setup_global();
     arena_t *arena = get_global_arena();
     io_t *io = io_stdout();
 

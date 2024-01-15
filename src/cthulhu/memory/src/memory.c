@@ -1,5 +1,6 @@
 #include "memory/memory.h"
 
+#include "arena/arena.h"
 #include "base/panic.h"
 
 #include <gmp.h>

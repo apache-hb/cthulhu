@@ -1,5 +1,5 @@
 #include "config/config.h"
-#include "defaults/memory.h"
+#include "setup/memory.h"
 #include "format/colour.h"
 #include "cmd.h"
 
@@ -73,6 +73,7 @@ static void parse_source(lifetime_t *lifetime, const char *path)
 static int check_reports(logger_t *logger, report_config_t config, const char *title)
 {
     int err = text_report(logger_get_events(logger), config, title);
+    logger_reset(logger);
 
     if (err != EXIT_OK)
     {
@@ -94,7 +95,7 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
 
 int main(int argc, const char **argv)
 {
-    default_init();
+    setup_global();
 
     arena_t *arena = ctu_default_alloc();
     mediator_t *mediator = mediator_new(arena);
