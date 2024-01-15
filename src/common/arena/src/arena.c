@@ -114,5 +114,5 @@ void *arena_data(arena_t *arena)
 {
     CTASSERT(arena != NULL);
 
-    return arena + 1;
+    return arena->user;
 }

@@ -101,6 +101,9 @@ typedef struct arena_t
     /// @brief the reparent function
     /// @note this feature is optional
     mem_reparent_t fn_reparent;
+
+    /// @brief user data pointer
+    void *user;
 } arena_t;
 
 /// @brief release memory from a custom allocator

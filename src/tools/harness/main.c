@@ -168,19 +168,17 @@ typedef struct arena_user_wrap_t
     user_arena_t user;
 } arena_user_wrap_t;
 
-static arena_user_wrap_t new_alloc(user_arena_t user)
+static arena_t new_alloc(user_arena_t *user)
 {
-    arena_user_wrap_t wrap = {
-        .arena = {
-            .name = "user",
-            .fn_malloc = user_malloc,
-            .fn_realloc = user_realloc,
-            .fn_free = user_free,
-        },
+    arena_t arena = {
+        .name = "user",
+        .fn_malloc = user_malloc,
+        .fn_realloc = user_realloc,
+        .fn_free = user_free,
         .user = user,
     };
 
-    return wrap;
+    return arena;
 }
 
 static int check_reports(logger_t *logger, report_config_t config, const char *title)
@@ -358,13 +356,13 @@ int main(int argc, const char **argv)
 
     size_t size = (size_t)(1024U * 1024U * 64U);
     user_arena_t arena = new_user_arena(size);
-    arena_user_wrap_t user = new_alloc(arena);
-    init_global_arena(&user.arena);
-    init_gmp_arena(&user.arena);
+    arena_t user = new_alloc(&arena);
+    init_global_arena(&user);
+    init_gmp_arena(&user);
 
     ctu_log_update(true);
 
-    int result = run_test_harness(argc, argv, &user.arena);
+    int result = run_test_harness(argc, argv, &user);
 
     free(arena.memory_start);
 

@@ -41,6 +41,7 @@ IArena::IArena(const char *alloc_name)
     fn_free = wrap_free;
     fn_rename = wrap_rename;
     fn_reparent = wrap_reparent;
+    user = this;
 }
 
 void IArena::install_global()
