@@ -1,8 +1,8 @@
 fs = import('fs')
 
-foreach lang : get_option('languages')
-    if fs.is_file(lang / 'meson.build')
-        subdir(lang)
-        driver_summary += { lang + ' tests': true }
+foreach name, info : langs
+    if fs.is_file(name / 'meson.build')
+        subdir(name)
+        driver_summary += { name + ' tests': true }
     endif
 endforeach
