@@ -17,12 +17,13 @@ libruntime = library('runtime', src,
     include_directories : runtime_include,
     dependencies : [
         memory, base, std,
-        scan, events, tree, interop, notify
+        scan, events, tree, interop, notify,
+        tree
     ]
 )
 
 runtime = declare_dependency(
     link_with : libruntime,
     include_directories : runtime_include,
-    dependencies : [ base, std, notify ]
+    dependencies : [ base, std, notify, tree ]
 )

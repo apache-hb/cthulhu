@@ -26,8 +26,10 @@
 
 static tree_t *gRootModule = NULL;
 
-void ctu_init(driver_t *handle)
+void ctu_init(driver_t *handle, tree_context_t *tree_context)
 {
+    CTU_UNUSED(tree_context);
+
     lifetime_t *lifetime = handle_get_lifetime(handle);
 
     gRootModule = ctu_rt_mod(lifetime);
@@ -37,8 +39,10 @@ void ctu_init(driver_t *handle)
     add_context(lifetime, path, ctx);
 }
 
-void ctu_forward_decls(context_t *context)
+void ctu_forward_decls(context_t *context, tree_context_t *tree_context)
 {
+    CTU_UNUSED(tree_context);
+
     ctu_t *ast = context_get_ast(context);
     const char *name = context_get_name(context);
 
@@ -102,8 +106,10 @@ static void import_module(lifetime_t *lifetime, tree_t *sema, ctu_t *include)
     }
 }
 
-void ctu_process_imports(context_t *context)
+void ctu_process_imports(context_t *context, tree_context_t *tree_context)
 {
+    CTU_UNUSED(tree_context);
+
     lifetime_t *lifetime = context_get_lifetime(context);
 
     ctu_t *ast = context_get_ast(context);
@@ -117,7 +123,8 @@ void ctu_process_imports(context_t *context)
     }
 }
 
-void ctu_compile_module(context_t *context)
+void ctu_compile_module(context_t *context, tree_context_t *tree_context)
 {
     CTU_UNUSED(context);
+    CTU_UNUSED(tree_context);
 }

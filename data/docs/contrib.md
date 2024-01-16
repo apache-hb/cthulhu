@@ -32,7 +32,12 @@
     - `tree` - common typed ast. @ref tree
     - `util` - common utilities. @ref runtime_util
 
-  - `driver` - language frontends
+  - `frontend` - user facing components used to interact with drivers and the collection
+    - `cli` - command line user interface
+    - `example` - example usage of the runtime
+    - `gui` - graphical user interface built with imgui (WIP)
+
+  - `language` - language frontends
     - `driver` - language helper library. @ref driver
     - `c` - C11 frontend (WIP)
       - `pre` - C preprocessor (WIP)
@@ -43,16 +48,15 @@
     - `oberon` - oberon-2 frontend (WIP)
     - `pl0` - pl0 frontend, good for referencing how to use the common framework
 
-  - `interface` - user facing components used to interact with drivers and the collection
-    - `cli` - command line user interface
-    - `example` - example usage of the runtime
-    - `gui` - graphical user interface built with imgui (WIP)
-
   - `support` - libraries shared between tools and frontends. @ref support
     - `argparse` - command line argument parsing. @ref argparse
     - `format` - text formatting for displaying to a user. @ref format
     - `setup` - default options for command line tools. @ref setup
     - `support` - lists enabled language drivers when built statically. @ref langs
+
+  - `target` - codegen target libraries
+    - `cfamily` - C and C++ codegen
+    - `debug` - debug output
 
   - `tools` - supporting tools and test utilities
     - `diagnostic` - diagnostic listing and querying tool

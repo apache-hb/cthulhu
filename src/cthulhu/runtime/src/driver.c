@@ -1,4 +1,4 @@
-#include "common.h"
+#include "mediator.h"
 
 #include "cthulhu/runtime/driver.h"
 
@@ -33,7 +33,8 @@ static context_t *context_inner_new(driver_t *handle, const char *name, void *as
     self->lang = handle->lang;
     self->name = name;
     self->ast = ast;
-    self->root = root;
+    self->tree = root;
+    self->tree_context = handle->tree_context;
 
     return self;
 }
@@ -115,7 +116,7 @@ tree_t *context_get_module(const context_t *context)
 {
     CTASSERT(context != NULL);
 
-    return context->root;
+    return context->tree;
 }
 
 USE_DECL
@@ -140,7 +141,7 @@ void context_update(context_t *ctx, void *ast, tree_t *root)
     CTASSERT(ctx != NULL);
 
     ctx->ast = ast;
-    ctx->root = root;
+    ctx->tree = root;
 }
 
 ///

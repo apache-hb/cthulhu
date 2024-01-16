@@ -36,7 +36,7 @@ static tree_t *example_lang_module(lifetime_t *lifetime)
     return tree_module_root(reports, cookie, node, "runtime", eSemaTotal, sizes);
 }
 
-static void ex_create(driver_t *handle)
+static void ex_create(driver_t *handle, tree_context_t *tree_context)
 {
     lifetime_t *lifetime = handle_get_lifetime(handle);
 
@@ -46,37 +46,37 @@ static void ex_create(driver_t *handle)
 
     add_context(lifetime, path, ctx);
 
-    ctu_log("ex-create(0x%p)", (void*)handle);
+    ctu_log("ex_create(handle = 0x%p, tree_context = 0x%p)", (void*)handle, (void*)tree_context);
 }
 
 static void ex_destroy(driver_t *handle)
 {
-    ctu_log("ex-destroy(0x%p)", (void*)handle);
+    ctu_log("ex_destroy(handle = 0x%p)", (void*)handle);
 }
 
 static void ex_parse(driver_t *handle, scan_t *scan)
 {
-    ctu_log("ex-parse(0x%p, %s)", (void*)handle, scan_path(scan));
+    ctu_log("ex_parse(handle = 0x%p, scan = %s)", (void*)handle, scan_path(scan));
 }
 
-static void ex_forward_symbols(context_t *context)
+static void ex_forward_symbols(context_t *context, tree_context_t *tree_context)
 {
-    ctu_log("ex-forward(0x%p)", (void*)context);
+    ctu_log("ex_forward(context = 0x%p, tree_context = 0x%p)", (void*)context, (void*)tree_context);
 }
 
-static void ex_compile_imports(context_t *context)
+static void ex_compile_imports(context_t *context, tree_context_t *tree_context)
 {
-    ctu_log("ex-compile-imports(0x%p)", (void*)context);
+    ctu_log("ex_compile_imports(context = 0x%p, tree_context = 0x%p)", (void*)context, (void*)tree_context);
 }
 
-static void ex_compile_types(context_t *context)
+static void ex_compile_types(context_t *context, tree_context_t *tree_context)
 {
-    ctu_log("ex-compile-types(0x%p)", (void*)context);
+    ctu_log("ex_compile_types(context = 0x%p, tree_context = 0x%p)", (void*)context, (void*)tree_context);
 }
 
-static void ex_compile_symbols(context_t *context)
+static void ex_compile_symbols(context_t *context, tree_context_t *tree_context)
 {
-    ctu_log("ex-compile-symbols(0x%p)", (void*)context);
+    ctu_log("ex_compile_symbols(context = 0x%p, tree_context = 0x%p)", (void*)context, (void*)tree_context);
 }
 
 static const char * const kLangNames[] = { "e", "example", NULL };

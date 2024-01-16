@@ -532,7 +532,7 @@ static tree_t *sema_init(ctu_sema_t *sema, const ctu_t *expr, const tree_t *impl
 
     const tree_t *ref = ctu_resolve_decl_type(implicit_type);
 
-    tree_storage_t storage = {.storage = implicit_type, .size = 1, .quals = eQualMutable};
+    tree_storage_t storage = {.storage = implicit_type, .length = 1, .quals = eQualMutable};
     tree_t *local = tree_decl_local(expr->node, "$tmp", storage, ref);
     tree_add_local(sema->decl, local);
 
@@ -633,7 +633,7 @@ static tree_t *sema_local(ctu_sema_t *sema, const ctu_t *stmt)
     const tree_t *ref = tree_type_reference(stmt->node, stmt->name, actual_type);
     tree_storage_t storage = {
         .storage = actual_type,
-        .size = 1,
+        .length = 1,
         .quals = stmt->mut ? eQualMutable : eQualConst,
     };
     tree_t *self = tree_decl_local(stmt->node, stmt->name, storage, ref);

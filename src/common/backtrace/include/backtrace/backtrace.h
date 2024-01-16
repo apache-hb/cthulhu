@@ -79,11 +79,12 @@ typedef void (*bt_trace_t)(const bt_frame_t *frame, void *user);
 /// @brief called once when a system error occurs
 ///
 /// @param error the error to report
+/// @param user the user data
 typedef void (*bt_error_begin_t)(size_t error, void *user);
 
 /// @brief called once when a system error occurs
 ///
-/// @param user the user data from @a bt_error_begin
+/// @param user the user data
 typedef void (*bt_error_end_t)(void *user);
 
 /// @brief system error handling callbacks
@@ -103,7 +104,7 @@ typedef struct bt_error_t
 } bt_error_t;
 
 /// @brief the global system error handler
-CT_BACKTRACE_API extern bt_error_t gErrorReport;
+CT_BACKTRACE_API extern bt_error_t gSystemError;
 
 /// @brief initialize the backtrace backend
 /// @note this function must be called before any other backtrace function
@@ -117,7 +118,7 @@ CT_BACKTRACE_API const char *bt_backend(void);
 
 /// @brief get a backtrace from the current location using a callback
 /// @note this function is not thread safe
-/// @note @a bt_init must be called before calling this function
+/// @pre @a bt_init must be called before calling this function
 ///
 /// @param callback the callback to call for each frame
 /// @param user the user data to pass to the callback
@@ -125,7 +126,7 @@ CT_BACKTRACE_API void bt_read(IN_NOTNULL bt_trace_t callback, void *user);
 
 /// @brief resolve a frame to a symbol
 ///
-/// @note @a bt_init must be called before calling this function
+/// @pre @a bt_init must be called before calling this function
 ///
 /// @param frame the frame to resolve
 /// @param symbol the symbol to fill

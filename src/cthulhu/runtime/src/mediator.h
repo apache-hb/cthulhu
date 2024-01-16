@@ -35,6 +35,7 @@ typedef struct driver_t
 {
     lifetime_t *parent;
     const language_t *lang;
+    tree_context_t *tree_context;
 } driver_t;
 
 // per module in a compiler run
@@ -43,10 +44,11 @@ typedef struct context_t
 {
     lifetime_t *parent;
     const language_t *lang;
+    tree_context_t *tree_context;
 
     const char *name;
     void *ast;
-    tree_t *root;
+    tree_t *tree;
 } context_t;
 
 #define EXEC(mod, fn, ...) do { if (mod->fn != NULL) { mod->fn(__VA_ARGS__); } } while (0)

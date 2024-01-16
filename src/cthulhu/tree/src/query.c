@@ -1,3 +1,4 @@
+#include "arena/arena.h"
 #include "common.h"
 
 #include "cthulhu/tree/query.h"
@@ -14,7 +15,7 @@ static bool has_name(tree_kind_t kind)
 {
     switch (kind)
     {
-    case eTreeType:
+    case eTreePartial:
 
     case eTreeTypeEmpty:
     case eTreeTypeUnit:
@@ -48,7 +49,7 @@ const char *tree_kind_to_string(tree_kind_t kind)
 {
     switch (kind)
     {
-#define TREE_KIND(ID, NAME) case ID: return NAME;
+#define TREE_KIND(ID, NAME, TAGS) case ID: return NAME;
 #include "cthulhu/tree/tree.def"
 
     default: NEVER("invalid tree kind %d", kind);
@@ -63,9 +64,16 @@ static const char *length_name(size_t length, arena_t *arena)
 
 const char *tree_to_string(const tree_t *self)
 {
-    if (self == NULL) { return "nil"; }
-
     arena_t *arena = get_global_arena();
+    return tree_to_string_arena(self, arena);
+}
+
+char *tree_to_string_arena(const tree_t *self, arena_t *arena)
+{
+    CTASSERT(arena != NULL);
+
+    if (self == NULL) { return arena_strdup("nil", arena); }
+
     tree_kind_t kind = tree_get_kind(self);
     switch (kind)
     {
@@ -87,24 +95,8 @@ const char *tree_to_string(const tree_t *self)
         return str_format(arena, "{ %s: %s }", tree_kind_to_string(self->kind), tree_get_name(self));
     }
 
-    return tree_kind_to_string(self->kind);
-}
-
-const node_t *tree_get_node(const tree_t *self)
-{
-    CTASSERT(self != NULL);
-
-    return self->node;
-}
-
-const char *tree_get_name(const tree_t *self)
-{
-    CTASSERT(self != NULL);
-    if (tree_is(self, eTreeError)) { return self->message; }
-
-    CTASSERTF(has_name(self->kind), "kind %s has no name", tree_kind_to_string(self->kind));
-
-    return self->name;
+    const char *it = tree_kind_to_string(self->kind);
+    return arena_strdup(it, arena);
 }
 
 tree_kind_t tree_get_kind(const tree_t *self)
@@ -112,14 +104,6 @@ tree_kind_t tree_get_kind(const tree_t *self)
     CTASSERT(self != NULL);
 
     return self->kind;
-}
-
-const tree_t *tree_get_type(const tree_t *self)
-{
-    if (tree_is(self, eTreeError)) { return self; }
-
-    CTASSERTF(self->type != NULL, "missing type on %s", tree_to_string(self)); // type hasnt been set yet
-    return self->type;
 }
 
 const tree_attribs_t *tree_get_attrib(const tree_t *self)
@@ -162,7 +146,7 @@ quals_t tree_get_storage_quals(const tree_t *self)
 
     quals_t quals = storage.quals;
     CTASSERTF((quals & (eQualConst | eQualMutable)) != (eQualConst | eQualMutable), "global %s has both const and mutable quals", tree_to_string(self));
-    CTASSERTF(quals != eQualUnknown, "global %s has unknown quals", tree_to_string(self));
+    CTASSERTF(quals != eQualNone, "global %s has no quals", tree_to_string(self));
     return quals;
 }
 
@@ -178,8 +162,8 @@ size_t tree_get_storage_size(const tree_t *self)
 {
     tree_storage_t storage = get_storage(self);
 
-    CTASSERTF(storage.size != SIZE_MAX, "global %s has no storage length", tree_to_string(self));
-    return storage.size;
+    CTASSERTF(storage.length != SIZE_MAX, "global %s has no storage length", tree_to_string(self));
+    return storage.length;
 }
 
 ///

@@ -90,7 +90,7 @@ static bool is_type(tree_kind_t kind)
 {
     switch (kind)
     {
-    case eTreeType:
+    case eTreePartial:
     case eTreeTypeEmpty:
     case eTreeTypeUnit:
     case eTreeTypeBool:
@@ -131,12 +131,12 @@ static bool is_load_type(tree_kind_t kind)
 
 tree_t *tree_type_empty(const node_t *node, const char *name)
 {
-    return tree_decl(eTreeTypeUnit, node, NULL, name, eQualUnknown);
+    return tree_decl(eTreeTypeUnit, node, NULL, name, eQualNone);
 }
 
 tree_t *tree_type_unit(const node_t *node, const char *name)
 {
-    return tree_decl(eTreeTypeUnit, node, NULL, name, eQualUnknown);
+    return tree_decl(eTreeTypeUnit, node, NULL, name, eQualNone);
 }
 
 tree_t *tree_type_bool(const node_t *node, const char *name, quals_t quals)
@@ -146,7 +146,7 @@ tree_t *tree_type_bool(const node_t *node, const char *name, quals_t quals)
 
 tree_t *tree_type_opaque(const node_t *node, const char *name)
 {
-    return tree_decl(eTreeTypeOpaque, node, NULL, name, eQualUnknown);
+    return tree_decl(eTreeTypeOpaque, node, NULL, name, eQualNone);
 }
 
 tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sign_t sign, quals_t quals)
@@ -169,7 +169,7 @@ tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *re
         TREE_EXPECT(param, eTreeDeclParam);
     }
 
-    tree_t *self = tree_decl(eTreeTypeClosure, node, NULL, name, eQualUnknown);
+    tree_t *self = tree_decl(eTreeTypeClosure, node, NULL, name, eQualNone);
     self->result = result;
     self->params = params;
     self->arity = arity;
@@ -180,7 +180,7 @@ tree_t *tree_type_pointer(const node_t *node, const char *name, const tree_t *po
 {
     EXPECT_TYPE(pointer);
 
-    tree_t *self = tree_decl(eTreeTypePointer, node, NULL, name, eQualUnknown);
+    tree_t *self = tree_decl(eTreeTypePointer, node, NULL, name, eQualNone);
     self->ptr = pointer;
     self->length = length;
     return self;
@@ -190,7 +190,7 @@ tree_t *tree_type_array(const node_t *node, const char *name, const tree_t *arra
 {
     EXPECT_TYPE(array);
 
-    tree_t *self = tree_decl(eTreeTypeArray, node, NULL, name, eQualUnknown);
+    tree_t *self = tree_decl(eTreeTypeArray, node, NULL, name, eQualNone);
     self->ptr = array;
     self->length = length;
     return self;
@@ -200,7 +200,7 @@ tree_t *tree_type_reference(const node_t *node, const char *name, const tree_t *
 {
     EXPECT_TYPE(reference);
 
-    tree_t *self = tree_decl(eTreeTypeReference, node, NULL, name, eQualUnknown);
+    tree_t *self = tree_decl(eTreeTypeReference, node, NULL, name, eQualNone);
     self->ptr = reference;
     return self;
 }

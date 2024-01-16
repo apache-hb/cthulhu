@@ -462,7 +462,7 @@ static void c89_write_address(c89_emit_t *emit, io_t *io, const ssa_step_t *step
     ssa_operand_t symbol = addr.symbol;
     const ssa_type_t *type = get_operand_type(emit, symbol);
 
-    const ssa_type_t *ptr = ssa_type_pointer(type->name, eQualUnknown, (ssa_type_t*)type, 0);
+    const ssa_type_t *ptr = ssa_type_pointer(type->name, eQualNone, (ssa_type_t*)type, 0);
     const char *step_name = c89_name_vreg(emit, step, ptr);
 
     write_string(io, "\t%s = &(%s); // %s\n",
@@ -500,7 +500,7 @@ static void c89_write_member(c89_emit_t *emit, io_t *io, const ssa_step_t *step)
     const ssa_field_t *field = typevec_offset(record_type.fields, member.index);
 
     write_string(io, "\t%s = &%s->%s;\n",
-        c89_name_vreg(emit, step, ssa_type_pointer(field->name, eQualUnknown, (ssa_type_t*)field->type, 1)),
+        c89_name_vreg(emit, step, ssa_type_pointer(field->name, eQualNone, (ssa_type_t*)field->type, 1)),
         c89_format_operand(emit, member.object),
         field->name
     );

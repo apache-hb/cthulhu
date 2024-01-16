@@ -13,13 +13,13 @@
 
 static const tree_storage_t kEmptyStorage = {
     .storage = NULL,
-    .size = SIZE_MAX,
-    .quals = eQualUnknown
+    .length = SIZE_MAX,
+    .quals = eQualNone
 };
 
 static tree_t *decl_open(const node_t *node, const char *name, const tree_t *type, tree_kind_t expected, const tree_resolve_info_t *resolve)
 {
-    tree_t *self = tree_decl(expected, node, type, name, eQualUnknown);
+    tree_t *self = tree_decl(expected, node, type, name, eQualNone);
 
     if (resolve != NULL)
     {
@@ -58,6 +58,7 @@ tree_t *tree_resolve(cookie_t *cookie, const tree_t *decl)
 
     vector_push(&cookie->stack, inner);
 
+    CTASSERTF(res->fn_resolve != NULL, "resolve function for %s is NULL", tree_to_string(inner));
     res->fn_resolve(res->sema, inner, res->user);
 
     vector_drop(cookie->stack);
@@ -80,13 +81,6 @@ tree_t *tree_resolve_type(const tree_t *decl)
     res->fn_resolve_type(res->sema, inner, res->user);
 
     return inner;
-}
-
-void tree_set_storage(tree_t *self, tree_storage_t storage)
-{
-    CTASSERT(self != NULL);
-
-    self->storage = storage;
 }
 
 tree_t *tree_decl_global(
@@ -151,31 +145,31 @@ void tree_close_function(tree_t *self, tree_t *body)
 
 tree_t *tree_decl_param(const node_t *node, const char *name, const tree_t *type)
 {
-    return tree_decl(eTreeDeclParam, node, type, name, eQualUnknown);
+    return tree_decl(eTreeDeclParam, node, type, name, eQualNone);
 }
 
 tree_t *tree_decl_field(const node_t *node, const char *name, const tree_t *type)
 {
-    return tree_decl(eTreeDeclField, node, type, name, eQualUnknown);
+    return tree_decl(eTreeDeclField, node, type, name, eQualNone);
 }
 
 tree_t *tree_decl_local(const node_t *node, const char *name, tree_storage_t storage, const tree_t *type)
 {
-    tree_t *self = tree_decl(eTreeDeclLocal, node, type, name, eQualUnknown);
+    tree_t *self = tree_decl(eTreeDeclLocal, node, type, name, eQualNone);
     tree_set_storage(self, storage);
     return self;
 }
 
 tree_t *tree_decl_case(const node_t *node, const char *name, tree_t *expr)
 {
-    tree_t *self = tree_decl(eTreeDeclCase, node, tree_get_type(expr), name, eQualUnknown);
+    tree_t *self = tree_decl(eTreeDeclCase, node, tree_get_type(expr), name, eQualNone);
     self->case_value = expr;
     return self;
 }
 
 tree_t *tree_open_decl(const node_t *node, const char *name, tree_resolve_info_t resolve)
 {
-    return decl_open(node, name, NULL, eTreeType, dup_resolve_info(&resolve));
+    return decl_open(node, name, NULL, eTreePartial, dup_resolve_info(&resolve));
 }
 
 void tree_close_decl(tree_t *self, const tree_t *other)

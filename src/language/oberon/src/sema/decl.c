@@ -60,7 +60,7 @@ static void set_const_type(tree_t *self, obr_t *decl, const tree_t *type)
     tree_t *ref = tree_type_reference(decl->node, decl->name, type);
     tree_storage_t storage = {
         .storage = type,
-        .size = 1,
+        .length = 1,
         .quals = eQualConst
     };
 
@@ -129,7 +129,7 @@ static void resolve_proc(tree_t *sema, tree_t *self, void *user)
         tree_t *ref = tree_type_reference(local->node, local->name, type);
         tree_storage_t storage = {
             .storage = type,
-            .size = 1,
+            .length = 1,
             .quals = eQualConst
         };
 
@@ -175,7 +175,7 @@ static tree_t *forward_var(tree_t *sema, obr_t *decl)
     tree_t *ref = tree_type_reference(decl->node, decl->name, type);
     tree_storage_t storage = {
         .storage = type,
-        .size = 1,
+        .length = 1,
         .quals = eQualMutable
     };
 

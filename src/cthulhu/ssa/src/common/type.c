@@ -226,7 +226,7 @@ ssa_type_t *ssa_type_create_cached(map_t *cache, const tree_t *type)
     ssa_type_t *old = map_get(cache, type);
     if (old != NULL) { return old; }
 
-    ssa_type_t *temp = ssa_type_empty(tree_get_name(type), eQualUnknown);
+    ssa_type_t *temp = ssa_type_empty(tree_get_name(type), eQualNone);
     map_set(cache, type, temp);
 
     arena_t *arena = get_global_arena();

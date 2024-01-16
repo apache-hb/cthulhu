@@ -172,7 +172,7 @@ static ssa_storage_t create_storage_for_decl(map_t *types, const tree_t *decl)
 static ssa_symbol_t *function_create(ssa_compile_t *ssa, const tree_t *tree)
 {
     CTASSERTF(tree_is(tree, eTreeDeclFunction), "expected function, got %s", tree_to_string(tree));
-    ssa_storage_t storage = { .type = NULL, .size = 0, .quals = eQualUnknown };
+    ssa_storage_t storage = { .type = NULL, .size = 0, .quals = eQualNone };
     ssa_symbol_t *self = symbol_create_decl(ssa, tree, storage);
 
     size_t locals = vector_len(tree->locals);

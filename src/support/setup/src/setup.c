@@ -364,7 +364,7 @@ void setup_global(void)
         .user = io_stderr()
     };
 
-    gErrorReport = error;
+    gSystemError = error;
     gPanicHandler = pretty_panic_handler;
     gVerboseCallback = default_verbose;
 }

@@ -2,6 +2,7 @@
 
 #include "core/text.h"
 #include "cthulhu/tree/ops.h"
+#include "cthulhu/tree/context.h"
 
 #include <stdbool.h>
 #include <gmp.h>
@@ -44,13 +45,6 @@ typedef struct tree_attribs_t {
     const char *deprecated; ///< the reason for deprecation, or NULL if not deprecated
 } tree_attribs_t;
 
-typedef enum tree_kind_t {
-#define TREE_KIND(ID, NAME) ID,
-#include "cthulhu/tree/tree.def"
-
-    eTreeTotal
-} tree_kind_t;
-
 typedef struct cookie_t {
     logger_t *reports;
     vector_t *stack;
@@ -64,16 +58,18 @@ typedef struct tree_resolve_info_t {
     resolve_type_t fn_resolve_type;
 } tree_resolve_info_t;
 
-typedef struct tree_storage_t {
-    const tree_t *storage;
-    size_t size;
-    quals_t quals;
-} tree_storage_t;
+typedef enum tree_kind_t {
+#define TREE_KIND(ID, NAME, TAGS) ID,
+#include "cthulhu/tree/tree.def"
+
+    eTreeTotal
+} tree_kind_t;
 
 typedef struct tree_t {
     tree_kind_t kind;
     const node_t *node;
     const tree_t *type;
+    void *extra;
 
     union {
         /* eTreeDigit */
@@ -170,6 +166,7 @@ typedef struct tree_t {
                 /* eTreeTypePointer|eTreeTypeReference|eTreeTypeArray */
                 struct {
                     const tree_t *ptr;
+                    const tree_t *len;
                     size_t length;
                 };
 
@@ -205,6 +202,7 @@ typedef struct tree_t {
                         /* eTreeTypeClosure */
                         struct {
                             const tree_t *result;
+                            const tree_t *return_type;
                             arity_t arity;
                         };
                     };

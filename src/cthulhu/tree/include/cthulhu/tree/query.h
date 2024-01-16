@@ -10,6 +10,7 @@ BEGIN_API
 
 CT_TREE_API const char *tree_kind_to_string(tree_kind_t kind);
 CT_TREE_API const char *tree_to_string(const tree_t *self);
+CT_TREE_API char *tree_to_string_arena(const tree_t *self, arena_t *arena);
 
 CT_TREE_API const node_t *tree_get_node(const tree_t *self);
 CT_TREE_API const char *tree_get_name(const tree_t *self);

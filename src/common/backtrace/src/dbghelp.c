@@ -128,11 +128,11 @@ frame_resolve_t bt_resolve_inner(const bt_frame_t *frame, bt_symbol_t *symbol)
 
 static LONG WINAPI bt_exception_handler(EXCEPTION_POINTERS *exception)
 {
-    gErrorReport.begin(exception->ExceptionRecord->ExceptionCode, gErrorReport.user);
+    gSystemError.begin(exception->ExceptionRecord->ExceptionCode, gSystemError.user);
 
-    read_context_stack(exception->ContextRecord, gErrorReport.next, gErrorReport.user);
+    read_context_stack(exception->ContextRecord, gSystemError.next, gSystemError.user);
 
-    gErrorReport.end(gErrorReport.user);
+    gSystemError.end(gSystemError.user);
 
     return EXCEPTION_EXECUTE_HANDLER;
 }

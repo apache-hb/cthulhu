@@ -1,5 +1,5 @@
 #include "base/log.h"
-#include "common.h"
+#include "mediator.h"
 
 #include "cthulhu/events/events.h"
 
@@ -48,6 +48,7 @@ static driver_t *handle_new(lifetime_t *lifetime, const language_t *lang)
 
     self->parent = lifetime;
     self->lang = lang;
+    self->tree_context = tree_context_new(lang->tree_info, lang->name, lifetime->arena);
 
     return self;
 }
@@ -136,7 +137,7 @@ void lifetime_add_language(lifetime_t *lifetime, const language_t *lang)
     }
 
     driver_t *handle = handle_new(lifetime, lang);
-    EXEC(lang, fn_create, handle);
+    EXEC(lang, fn_create, handle, handle->tree_context);
 }
 
 USE_DECL
@@ -289,7 +290,7 @@ void lifetime_run_stage(lifetime_t *lifetime, compile_stage_t stage)
             continue;
         }
 
-        fn_pass(ctx);
+        fn_pass(ctx, ctx->tree_context);
     }
 }
 
@@ -309,9 +310,9 @@ map_t *lifetime_get_modules(lifetime_t *lifetime)
     while (CTU_MAP_NEXT(&iter, &name, &ctx))
     {
         CTASSERTF(ctx != NULL, "module `%s` is NULL", name);
-        CTASSERTF(ctx->root != NULL, "module `%s` has NULL root", name);
+        CTASSERTF(ctx->tree != NULL, "module `%s` has NULL tree", name);
 
-        map_set(mods, name, ctx->root);
+        map_set(mods, name, ctx->tree);
     }
 
     return mods;

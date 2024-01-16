@@ -23,8 +23,8 @@ typedef struct pl0_sema_t
     logger_t *reports;
 } pl0_sema_t;
 
-void pl0_init(driver_t *handle);
+void pl0_init(driver_t *handle, tree_context_t *tree_context);
 
-void pl0_forward_decls(context_t *context);
-void pl0_process_imports(context_t *context);
-void pl0_compile_module(context_t *context);
+void pl0_forward_decls(context_t *context, tree_context_t *tree_context);
+void pl0_process_imports(context_t *context, tree_context_t *tree_context);
+void pl0_compile_module(context_t *context, tree_context_t *tree_context);

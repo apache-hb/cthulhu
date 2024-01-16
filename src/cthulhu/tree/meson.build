@@ -7,6 +7,7 @@ tree_api = configure_file(
 tree_include = include_directories('.', 'include')
 
 src = [
+    'src/context.c',
     'src/tree.c',
     'src/ops.c',
     'src/sema.c',

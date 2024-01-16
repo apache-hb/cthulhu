@@ -77,7 +77,7 @@ static void ctu_resolve_global(tree_t *sema, tree_t *self, void *user)
 
     tree_storage_t storage = {
         .storage = ty,
-        .size = size,
+        .length = size,
         .quals = decl->mut ? eQualMutable : eQualConst
     };
     self->type = tree_type_reference(self->node, self->name, real_type);
@@ -208,7 +208,7 @@ static tree_t *ctu_forward_global(tree_t *sema, ctu_t *decl)
 
     tree_storage_t storage = {
         .storage = type,
-        .size = 1,
+        .length = 1,
         .quals = decl->mut ? eQualMutable : eQualConst
     };
 

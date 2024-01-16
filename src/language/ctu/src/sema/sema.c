@@ -168,12 +168,12 @@ static tree_t *gStringChar = NULL;
 
 static tree_t *make_int_type(const char *name, digit_t digit, sign_t sign)
 {
-    return (DIGIT_TYPE(digit, sign) = tree_type_digit(node_builtin(), name, digit, sign, eQualUnknown));
+    return (DIGIT_TYPE(digit, sign) = tree_type_digit(node_builtin(), name, digit, sign, eQualNone));
 }
 
 static tree_t *make_bool_type(const char *name)
 {
-    return (gBoolType = tree_type_bool(node_builtin(), name, eQualUnknown));
+    return (gBoolType = tree_type_bool(node_builtin(), name, eQualNone));
 }
 
 static tree_t *make_str_type(const char *name)

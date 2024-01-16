@@ -14,14 +14,18 @@
 
 static tree_t *gRuntime = NULL;
 
-void obr_create(driver_t *handle)
+void obr_create(driver_t *handle, tree_context_t *tree_context)
 {
+    CTU_UNUSED(tree_context);
+
     lifetime_t *lifetime = handle_get_lifetime(handle);
     gRuntime = obr_rt_mod(lifetime);
 }
 
-void obr_forward_decls(context_t *context)
+void obr_forward_decls(context_t *context, tree_context_t *tree_context)
 {
+    CTU_UNUSED(tree_context);
+
     obr_t *root = context_get_ast(context);
     size_t decl_count = vector_len(root->decls);
 
@@ -83,8 +87,10 @@ static void import_module(lifetime_t *lifetime, tree_t *sema, obr_t *include)
     }
 }
 
-void obr_process_imports(context_t *context)
+void obr_process_imports(context_t *context, tree_context_t *tree_context)
 {
+    CTU_UNUSED(tree_context);
+
     lifetime_t *lifetime = context_get_lifetime(context);
     obr_t *root = context_get_ast(context);
     tree_t *sema = context_get_module(context);
@@ -97,7 +103,8 @@ void obr_process_imports(context_t *context)
     }
 }
 
-void obr_compile_module(context_t *context)
+void obr_compile_module(context_t *context, tree_context_t *tree_context)
 {
     CTU_UNUSED(context);
+    CTU_UNUSED(tree_context);
 }

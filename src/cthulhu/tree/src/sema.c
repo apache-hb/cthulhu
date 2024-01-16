@@ -19,7 +19,7 @@ static tree_t *tree_module_new(const node_t *node, const char *name,
 
     arena_t *arena = get_global_arena();
 
-    tree_t *self = tree_decl(eTreeDeclModule, node, NULL, name, eQualUnknown);
+    tree_t *self = tree_decl(eTreeDeclModule, node, NULL, name, eQualNone);
     self->parent = parent;
     self->cookie = cookie;
     self->reports = reports;

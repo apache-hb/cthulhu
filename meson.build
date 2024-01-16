@@ -231,11 +231,12 @@ doxygen = find_program('doxygen', required : get_option('doxygen'))
 
 if doxygen.found()
     doxy_sources = [
-        source_dir / 'interface',
+        source_dir / 'frontend',
         source_dir / 'common',
         source_dir / 'support',
         source_dir / 'cthulhu',
-        source_dir / 'driver',
+        source_dir / 'language',
+        source_dir / 'target',
 
         data_dir / 'docs'
     ]

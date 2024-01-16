@@ -14,24 +14,23 @@ static const tree_attribs_t kExportAttribs = {
     .visibility = eVisiblePublic
 };
 
-static vector_t *cc_lang_path(void)
+static vector_t *cc_lang_path(arena_t *arena)
 {
-    arena_t *arena = get_global_arena();
-    vector_t *path = vector_new(2, arena);
-    vector_push(&path, "cc");
-    vector_push(&path, "lang");
+    vector_t *path = vector_of(2, arena);
+    vector_set(path, 0, "cc");
+    vector_set(path, 1, "lang");
     return path;
 }
 
-static void add_digit(tree_t *mod, const char *name, digit_t digit, sign_t sign)
+static void add_digit(tree_t *mod, const char *name, digit_t digit, sign_t sign, tree_context_t *tree_context)
 {
     const node_t *node = node_builtin();
-    tree_t *it = tree_type_digit(node, name, digit, sign, eQualUnknown);
+    tree_t *it = tree_type_digit_new(tree_context, node, name, digit, sign);
     tree_set_attrib(it, &kExportAttribs);
     tree_module_set(mod, eCTagTypes, name, it);
 }
 
-static tree_t *cc_lang_module(lifetime_t *lifetime)
+static tree_t *cc_lang_module(lifetime_t *lifetime, tree_context_t *tree_context)
 {
     logger_t *reports = lifetime_get_logger(lifetime);
     cookie_t *cookie = lifetime_get_cookie(lifetime);
@@ -48,43 +47,46 @@ static tree_t *cc_lang_module(lifetime_t *lifetime)
 
     // TODO: this is a stopgap until C is properly implemented
 
-    add_digit(root, "char", eDigitChar, eSignDefault);
-    add_digit(root, "charSigned", eDigitChar, eSignSigned);
-    add_digit(root, "charUnsigned", eDigitChar, eSignUnsigned);
+    add_digit(root, "char", eDigitChar, eSignDefault, tree_context);
+    add_digit(root, "charSigned", eDigitChar, eSignSigned, tree_context);
+    add_digit(root, "charUnsigned", eDigitChar, eSignUnsigned, tree_context);
 
-    add_digit(root, "short", eDigitShort, eSignDefault);
-    add_digit(root, "shortSigned", eDigitShort, eSignSigned);
-    add_digit(root, "shortUnsigned", eDigitShort, eSignUnsigned);
+    add_digit(root, "short", eDigitShort, eSignDefault, tree_context);
+    add_digit(root, "shortSigned", eDigitShort, eSignSigned, tree_context);
+    add_digit(root, "shortUnsigned", eDigitShort, eSignUnsigned, tree_context);
 
-    add_digit(root, "int", eDigitInt, eSignDefault);
-    add_digit(root, "intSigned", eDigitInt, eSignSigned);
-    add_digit(root, "intUnsigned", eDigitInt, eSignUnsigned);
+    add_digit(root, "int", eDigitInt, eSignDefault, tree_context);
+    add_digit(root, "intSigned", eDigitInt, eSignSigned, tree_context);
+    add_digit(root, "intUnsigned", eDigitInt, eSignUnsigned, tree_context);
 
-    add_digit(root, "long", eDigitLong, eSignDefault);
-    add_digit(root, "longSigned", eDigitLong, eSignSigned);
-    add_digit(root, "longUnsigned", eDigitLong, eSignUnsigned);
+    add_digit(root, "long", eDigitLong, eSignDefault, tree_context);
+    add_digit(root, "longSigned", eDigitLong, eSignSigned, tree_context);
+    add_digit(root, "longUnsigned", eDigitLong, eSignUnsigned, tree_context);
 
-    add_digit(root, "int8", eDigit8, eSignSigned);
-    add_digit(root, "uint8", eDigit8, eSignUnsigned);
+    add_digit(root, "int8", eDigit8, eSignSigned, tree_context);
+    add_digit(root, "uint8", eDigit8, eSignUnsigned, tree_context);
 
-    add_digit(root, "int16", eDigit16, eSignSigned);
-    add_digit(root, "uint16", eDigit16, eSignUnsigned);
+    add_digit(root, "int16", eDigit16, eSignSigned, tree_context);
+    add_digit(root, "uint16", eDigit16, eSignUnsigned, tree_context);
 
-    add_digit(root, "int32", eDigit32, eSignSigned);
-    add_digit(root, "uint32", eDigit32, eSignUnsigned);
+    add_digit(root, "int32", eDigit32, eSignSigned, tree_context);
+    add_digit(root, "uint32", eDigit32, eSignUnsigned, tree_context);
 
-    add_digit(root, "int64", eDigit64, eSignSigned);
-    add_digit(root, "uint64", eDigit64, eSignUnsigned);
+    add_digit(root, "int64", eDigit64, eSignSigned, tree_context);
+    add_digit(root, "uint64", eDigit64, eSignUnsigned, tree_context);
 
     return root;
 }
 
-void cc_create(driver_t *handle)
+void cc_create(driver_t *handle, tree_context_t *tree_context)
 {
-    lifetime_t *lifetime = handle_get_lifetime(handle);
+    CTU_UNUSED(tree_context);
 
-    vector_t *path = cc_lang_path();
-    tree_t *root = cc_lang_module(lifetime);
+    lifetime_t *lifetime = handle_get_lifetime(handle);
+    arena_t *arena = lifetime_get_arena(lifetime);
+
+    vector_t *path = cc_lang_path(arena);
+    tree_t *root = cc_lang_module(lifetime, tree_context);
 
     context_t *ctx = compiled_new(handle, root);
     add_context(lifetime, path, ctx);

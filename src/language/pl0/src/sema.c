@@ -1,4 +1,5 @@
 #include "pl0/sema.h"
+#include "core/macros.h"
 #include "cthulhu/events/events.h"
 #include "memory/memory.h"
 #include "pl0/ast.h"
@@ -130,27 +131,34 @@ static tree_t *make_runtime_mod(lifetime_t *lifetime)
     return mod;
 }
 
-static vector_t *make_runtime_path(void)
+static vector_t *make_runtime_path(arena_t *arena)
 {
-    arena_t *arena = get_global_arena();
-    vector_t *path = vector_new(2, arena);
-    vector_push(&path, "pl0");
-    vector_push(&path, "lang");
+    vector_t *path = vector_of(2, arena);
+    vector_set(path, 0, "pl0");
+    vector_set(path, 1, "lang");
     return path;
 }
 
-static tree_t *get_string_type(size_t size)
+static tree_t *get_string_type(tree_context_t *context, const node_t *node, size_t size)
 {
-    const node_t *node = node_builtin();
-    tree_t *char_type = tree_type_digit(node, "PL0_CHAR", eDigitChar, eSignSigned, eQualConst);
-    return tree_type_pointer(node, "PL0_STRING", char_type, size);
+    mpz_t value;
+    mpz_init_set_ui(value, size);
+    tree_t *length = tree_expr_digit(node, gIntType, value);
+    return tree_type_pointer_new(context, node, "string", gCharType, length);
+}
+
+static tree_t *get_bool_type(tree_context_t *tree_context, const node_t *node)
+{
+    tree_t *type = tree_type_bool_new(tree_context, node, "boolean");
+    tree_set_qualifiers(type, eQualConst);
+    return type;
 }
 
 static tree_storage_t get_const_storage(const tree_t *type)
 {
     tree_storage_t storage = {
         .storage = type,
-        .size = 1,
+        .length = 1,
         .quals = eQualConst
     };
 
@@ -161,32 +169,33 @@ static tree_storage_t get_mutable_storage(const tree_t *type)
 {
     tree_storage_t storage = {
         .storage = type,
-        .size = 1,
+        .length = 1,
         .quals = eQualMutable
     };
 
     return storage;
 }
 
-void pl0_init(driver_t *handle)
+void pl0_init(driver_t *handle, tree_context_t *tree_context)
 {
     const node_t *node = node_builtin();
     lifetime_t *lifetime = handle_get_lifetime(handle);
     arena_t *arena = lifetime_get_arena(lifetime);
 
-    gIntType = tree_type_digit(node, "integer", eDigitInt, eSignSigned, eQualUnknown);
-    gCharType = tree_type_digit(node, "char", eDigitChar, eSignSigned, eQualUnknown);
-    gBoolType = tree_type_bool(node, "boolean", eQualConst);
-    gVoidType = tree_type_unit(node, "void");
+    gIntType = tree_type_digit_new(tree_context, node, "integer", eDigitInt, eSignSigned);
+    gCharType = tree_type_digit_new(tree_context, node, "char", eDigitChar, eSignSigned);
+    gBoolType = get_bool_type(tree_context, node);
 
-    gIntRef = tree_type_reference(node, "ref", gIntType);
+    gVoidType = tree_type_unit_new(tree_context, node, "void");
 
-    tree_t *string_type = get_string_type(4);
+    gIntRef = tree_type_reference_new(tree_context, node, "ref", gIntType);
+
+    tree_t *string_type = get_string_type(tree_context, node, 4);
 
     vector_t *params = vector_of(1, arena);
     vector_set(params, 0, tree_decl_param(node, "fmt", string_type));
 
-    tree_t *signature = tree_type_closure(node, "printf", gIntType, params, eArityVariable);
+    tree_t *signature = tree_type_closure_new(tree_context, node, "printf", gIntType, params, eArityVariable);
     gRuntimePrint = tree_decl_function(node, "printf", signature, params, &kEmptyVector, NULL);
     tree_set_attrib(gRuntimePrint, &kPrintAttrib);
 
@@ -198,12 +207,12 @@ void pl0_init(driver_t *handle)
     vector_set(args, 1, param);
     tree_t *call = tree_expr_call(node, gRuntimePrint, args);
 
-    tree_t *putd_signature = tree_type_closure(node, "pl0_print", gVoidType, rt_print_params, eArityFixed);
+    tree_t *putd_signature = tree_type_closure_new(tree_context, node, "pl0_print", gVoidType, rt_print_params, eArityFixed);
     gPrint = tree_decl_function(node, "pl0_print", putd_signature, rt_print_params, &kEmptyVector, call);
     tree_set_attrib(gPrint, &kExportAttrib);
 
     tree_t *runtime = make_runtime_mod(lifetime);
-    vector_t *path = make_runtime_path();
+    vector_t *path = make_runtime_path(arena);
 
     context_t *ctx = compiled_new(handle, runtime);
     add_context(handle_get_lifetime(handle), path, ctx);
@@ -487,8 +496,10 @@ typedef struct {
     vector_t *procs;
 } sema_data_t;
 
-void pl0_forward_decls(context_t *context)
+void pl0_forward_decls(context_t *context, tree_context_t *tree_context)
 {
+    CTU_UNUSED(tree_context);
+
     lifetime_t *lifetime = context_get_lifetime(context);
 
     pl0_t *root = context_get_ast(context);
@@ -569,8 +580,10 @@ void pl0_forward_decls(context_t *context)
     context_update(context, root, sema);
 }
 
-void pl0_process_imports(context_t *context)
+void pl0_process_imports(context_t *context, tree_context_t *tree_context)
 {
+    CTU_UNUSED(tree_context);
+
     lifetime_t *lifetime = context_get_lifetime(context);
     arena_t *arena = lifetime_get_arena(lifetime);
     pl0_t *root = context_get_ast(context);
@@ -602,8 +615,10 @@ void pl0_process_imports(context_t *context)
     }
 }
 
-void pl0_compile_module(context_t *context)
+void pl0_compile_module(context_t *context, tree_context_t *tree_context)
 {
+    CTU_UNUSED(tree_context);
+
     pl0_t *root = context_get_ast(context);
     tree_t *mod = context_get_module(context);
 

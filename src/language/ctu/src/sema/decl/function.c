@@ -28,7 +28,7 @@ static void add_param(ctu_sema_t *sema, tree_t *param)
 
     tree_storage_t storage = {
         .storage = ty,
-        .size = 1,
+        .length = 1,
         .quals = eQualMutable
     };
     tree_t *local = tree_decl_local(node, id, storage, ref);

@@ -22,7 +22,7 @@ static void bt_error_end(void *user)
     exit(CT_EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
 }
 
-bt_error_t gErrorReport = {
+bt_error_t gSystemError = {
     .begin = bt_error_begin,
     .end = bt_error_end,
     .next = bt_error_next,

@@ -125,11 +125,11 @@ tree_t *obr_rt_mod(lifetime_t *lifetime)
         [eObrTagModules] = 32,
     };
 
-    gTypeBoolean = tree_type_bool(node_builtin(), "BOOLEAN", eQualUnknown);
-    gTypeChar = tree_type_digit(node_builtin(), "CHAR", eDigitChar, eSignSigned, eQualUnknown);
-    gTypeShort = tree_type_digit(node_builtin(), "SHORTINT", eDigitShort, eSignSigned, eQualUnknown);
-    gTypeInteger = tree_type_digit(node_builtin(), "INTEGER", eDigitInt, eSignSigned, eQualUnknown);
-    gTypeLong = tree_type_digit(node_builtin(), "LONGINT", eDigitLong, eSignSigned, eQualUnknown);
+    gTypeBoolean = tree_type_bool(node_builtin(), "BOOLEAN", eQualNone);
+    gTypeChar = tree_type_digit(node_builtin(), "CHAR", eDigitChar, eSignSigned, eQualNone);
+    gTypeShort = tree_type_digit(node_builtin(), "SHORTINT", eDigitShort, eSignSigned, eQualNone);
+    gTypeInteger = tree_type_digit(node_builtin(), "INTEGER", eDigitInt, eSignSigned, eQualNone);
+    gTypeLong = tree_type_digit(node_builtin(), "LONGINT", eDigitLong, eSignSigned, eQualNone);
     gTypeVoid = tree_type_unit(node_builtin(), "VOID");
 
     tree_t *rt = lifetime_sema_new(lifetime, "oberon", eObrTagTotal, tags);
