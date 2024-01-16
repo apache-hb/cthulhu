@@ -31,9 +31,10 @@ void ctu_init(driver_t *handle, tree_context_t *tree_context)
     CTU_UNUSED(tree_context);
 
     lifetime_t *lifetime = handle_get_lifetime(handle);
+    arena_t *arena = lifetime_get_arena(lifetime);
 
-    gRootModule = ctu_rt_mod(lifetime);
-    vector_t *path = ctu_rt_path();
+    gRootModule = ctu_rt_mod(lifetime, tree_context);
+    vector_t *path = ctu_rt_path(arena);
 
     context_t *ctx = compiled_new(handle, gRootModule);
     add_context(lifetime, path, ctx);

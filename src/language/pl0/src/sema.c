@@ -133,13 +133,10 @@ static tree_t *make_runtime_mod(lifetime_t *lifetime)
 
 static vector_t *make_runtime_path(arena_t *arena)
 {
-    vector_t *path = vector_of(2, arena);
-    vector_set(path, 0, "pl0");
-    vector_set(path, 1, "lang");
-    return path;
+    return str_split("pl0.lang", ".", arena);
 }
 
-static tree_t *get_string_type(tree_context_t *context, const node_t *node, size_t size)
+static tree_t *get_string_type(tree_context_t *context, const node_t *node, unsigned size)
 {
     mpz_t value;
     mpz_init_set_ui(value, size);
@@ -498,8 +495,6 @@ typedef struct {
 
 void pl0_forward_decls(context_t *context, tree_context_t *tree_context)
 {
-    CTU_UNUSED(tree_context);
-
     lifetime_t *lifetime = context_get_lifetime(context);
 
     pl0_t *root = context_get_ast(context);
@@ -537,6 +532,7 @@ void pl0_forward_decls(context_t *context, tree_context_t *tree_context)
         };
 
         tree_t *tree = tree_open_global(it->node, it->name, gIntRef, resolve);
+        tree_set_extra(tree, it);
         tree_set_storage(tree, const_storage);
         tree_set_attrib(tree, &kExportAttrib);
 
@@ -554,6 +550,7 @@ void pl0_forward_decls(context_t *context, tree_context_t *tree_context)
         };
 
         tree_t *tree = tree_open_global(it->node, it->name, gIntRef, resolve);
+        tree_set_extra(tree, it);
         tree_set_storage(tree, const_storage);
         tree_set_attrib(tree, &kExportAttrib);
 
@@ -564,7 +561,7 @@ void pl0_forward_decls(context_t *context, tree_context_t *tree_context)
     {
         pl0_t *it = vector_get(root->procs, i);
 
-        tree_t *signature = tree_type_closure(it->node, it->name, gVoidType, &kEmptyVector, eArityFixed);
+        tree_t *signature = tree_type_closure_new(tree_context, it->node, it->name, gVoidType, &kEmptyVector, eArityFixed);
         tree_resolve_info_t resolve = {
             .sema = sema,
             .user = it,
@@ -572,6 +569,7 @@ void pl0_forward_decls(context_t *context, tree_context_t *tree_context)
         };
 
         tree_t *tree = tree_open_function(it->node, it->name, signature, resolve);
+        tree_set_extra(tree, it);
         tree_set_attrib(tree, &kExportAttrib);
 
         set_proc(sema, ePl0TagProcs, it->name, tree);
@@ -617,18 +615,17 @@ void pl0_process_imports(context_t *context, tree_context_t *tree_context)
 
 void pl0_compile_module(context_t *context, tree_context_t *tree_context)
 {
-    CTU_UNUSED(tree_context);
-
     pl0_t *root = context_get_ast(context);
     tree_t *mod = context_get_module(context);
 
     if (root->entry != NULL)
     {
         tree_t *body = sema_stmt(mod, root->entry);
-        vector_push(&body->stmts, tree_stmt_return(root->node, tree_expr_unit(root->node, gVoidType)));
+        tree_t *empty = tree_expr_unit_new(tree_context, root->node, gVoidType);
+        vector_push(&body->stmts, tree_stmt_return(root->node, empty));
 
         // this is the entry point, we only support cli entry points in pl/0 for now
-        tree_t *signature = tree_type_closure(root->node, tree_get_name(mod), gVoidType, &kEmptyVector, eArityFixed);
+        tree_t *signature = tree_type_closure_new(tree_context, root->node, tree_get_name(mod), gVoidType, &kEmptyVector, eArityFixed);
         tree_t *tree = tree_decl_function(root->node, tree_get_name(mod), signature, &kEmptyVector, &kEmptyVector, body);
         tree_set_attrib(tree, &kEntryAttrib);
 

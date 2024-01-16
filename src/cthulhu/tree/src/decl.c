@@ -227,7 +227,7 @@ tree_t *tree_alias(const tree_t *tree, const char *name)
 
     arena_t *arena = get_global_arena();
     tree_t *copy = arena_memdup(tree, sizeof(tree_t), arena);
-    copy->name = name;
+    copy->decl_name = name;
     return copy;
 }
 

@@ -6,10 +6,19 @@
 
 #include "base/panic.h"
 #include "std/str.h"
+#include "std/set.h"
+
+static const tree_attribs_t kDefaultAttrib = {
+    .link = eLinkModule,
+    .visibility = eVisiblePrivate
+};
 
 typedef struct tree_context_t
 {
     arena_t *arena;
+
+    set_t *trees;
+
     const char *name;
     tree_info_t info;
 } tree_context_t;
@@ -46,6 +55,9 @@ static tree_t *tree_new(tree_context_t *context, tree_kind_t kind, const node_t 
     tree_t *tree = ARENA_MALLOC(sizeof(tree_t), "tree", context, context->arena);
     tree->kind = kind;
     tree->node = node;
+    tree->context = context;
+    tree->type = NULL;
+    tree->extra = NULL;
 
     return tree;
 }
@@ -59,7 +71,7 @@ static tree_t *tree_named_new(tree_context_t *context, tree_kind_t kind, const n
     CTASSERTF(kind_has_tag(kind, eTagName), "attempted to name a kind %d with %s that cannot be named", kind, name);
 
     tree_t *tree = tree_new(context, kind, node);
-    tree->name = name;
+    tree->decl_name = name;
 
     return tree;
 }
@@ -69,7 +81,7 @@ static tree_t *tree_type_new(tree_context_t *context, tree_kind_t kind, const no
     CTASSERTF(kind_has_tag(kind, eTagQual), "attempted to create a type of %s named %s that cannot be qualified", tree_kind_to_string(kind), name);
 
     tree_t *tree = tree_named_new(context, kind, node, name);
-    tree->attrib = NULL;
+    tree->attrib = &kDefaultAttrib;
     tree->resolve = NULL;
     tree_set_qualifiers(tree, eQualNone);
     return tree;
@@ -99,6 +111,10 @@ tree_context_t *tree_context_new(tree_info_t info, const char *name, arena_t *ar
 
     tree_context_t *context = ARENA_MALLOC(sizeof(tree_context_t), name, NULL, arena);
     context->arena = arena;
+
+    // TODO: hash consing once we generate the tree form
+    context->trees = set_new(0x1000, kTypeInfoPtr, arena);
+
     context->name = name;
     context->info = inner;
 
@@ -111,6 +127,14 @@ void tree_context_delete(tree_context_t *context)
     CTASSERT(context != NULL);
 
     arena_free(context, sizeof(tree_context_t), context->arena);
+}
+
+bool tree_context_contains(const tree_context_t *context, const tree_t *tree)
+{
+    CTASSERT(context != NULL);
+    CTASSERT(tree != NULL);
+
+    return set_contains(context->trees, tree);
 }
 
 USE_DECL
@@ -188,7 +212,7 @@ void tree_set_storage(tree_t *tree, tree_storage_t storage)
 {
     CTASSERTF(tree_has_tag(tree, eTagStorage), "tree type %s does not have storage", tree_kind_string(tree));
 
-    tree->storage = storage;
+    tree->decl_storage = storage;
 }
 
 USE_DECL
@@ -196,7 +220,7 @@ tree_storage_t tree_get_storage(const tree_t *tree)
 {
     CTASSERTF(tree_has_tag(tree, eTagStorage), "tree type %s does not have storage", tree_kind_string(tree));
 
-    return tree->storage;
+    return tree->decl_storage;
 }
 
 USE_DECL
@@ -214,7 +238,7 @@ const char *tree_get_name(const tree_t *tree)
 
     if (tree_is(tree, eTreeError)) return tree->message;
 
-    return tree->name;
+    return tree->decl_name;
 }
 
 USE_DECL
@@ -298,5 +322,25 @@ tree_t *tree_type_reference_new(tree_context_t *context, const node_t *node, con
 {
     tree_t *tree = tree_type_new(context, eTreeTypeReference, node, name);
     tree->ptr = pointee;
+    return tree;
+}
+
+///
+/// expressions
+///
+
+USE_DECL
+tree_t *tree_expr_empty_new(tree_context_t *context, const node_t *node, const tree_t *type)
+{
+    tree_t *tree = tree_new(context, eTreeExprEmpty, node);
+    tree->type = type;
+    return tree;
+}
+
+USE_DECL
+tree_t *tree_expr_unit_new(tree_context_t *context, const node_t *node, const tree_t *type)
+{
+    tree_t *tree = tree_new(context, eTreeExprUnit, node);
+    tree->type = type;
     return tree;
 }

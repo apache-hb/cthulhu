@@ -359,7 +359,7 @@ static void check_func_details(check_t *check, const tree_t *fn)
     if (fn->body == NULL) { return; }
 
     const tree_t *fn_type = tree_get_type(fn);
-    const tree_t *return_type = fn_type->result;
+    const tree_t *return_type = tree_fn_get_return(fn_type);
 
     check_func_body(check, return_type, fn->body);
 

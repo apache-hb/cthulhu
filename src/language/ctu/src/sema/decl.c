@@ -74,13 +74,14 @@ static void ctu_resolve_global(tree_t *sema, tree_t *self, void *user)
 
     size_t size = ctu_resolve_storage_size(real_type);
     const tree_t *ty = ctu_resolve_storage_type(real_type);
+    const char *name = tree_get_name(self);
 
     tree_storage_t storage = {
         .storage = ty,
         .length = size,
         .quals = decl->mut ? eQualMutable : eQualConst
     };
-    self->type = tree_type_reference(self->node, self->name, real_type);
+    self->type = tree_type_reference(self->node, name, real_type);
     tree_set_storage(self, storage);
     tree_close_global(self, expr);
 }

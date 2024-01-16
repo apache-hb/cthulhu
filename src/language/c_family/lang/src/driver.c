@@ -2,6 +2,7 @@
 #include "c/sema/sema.h"
 
 #include "memory/memory.h"
+#include "std/str.h"
 #include "std/vector.h"
 
 #include "scan/node.h"
@@ -16,10 +17,7 @@ static const tree_attribs_t kExportAttribs = {
 
 static vector_t *cc_lang_path(arena_t *arena)
 {
-    vector_t *path = vector_of(2, arena);
-    vector_set(path, 0, "cc");
-    vector_set(path, 1, "lang");
-    return path;
+    return str_split("c.lang", ".", arena);
 }
 
 static void add_digit(tree_t *mod, const char *name, digit_t digit, sign_t sign, tree_context_t *tree_context)

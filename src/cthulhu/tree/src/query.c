@@ -131,18 +131,9 @@ bool tree_has_vis(const tree_t *self, visibility_t visibility)
 /// quals
 ///
 
-#define EXPECT_STORAGE_DECL(SELF) CTASSERTF(tree_is(SELF, eTreeDeclGlobal) || tree_is(SELF, eTreeDeclLocal), "only globals and locals can have storage, got %s", tree_to_string(SELF))
-
-tree_storage_t get_storage(const tree_t *self)
-{
-    EXPECT_STORAGE_DECL(self);
-
-    return self->storage;
-}
-
 quals_t tree_get_storage_quals(const tree_t *self)
 {
-    tree_storage_t storage = get_storage(self);
+    tree_storage_t storage = tree_get_storage(self);
 
     quals_t quals = storage.quals;
     CTASSERTF((quals & (eQualConst | eQualMutable)) != (eQualConst | eQualMutable), "global %s has both const and mutable quals", tree_to_string(self));
@@ -152,7 +143,7 @@ quals_t tree_get_storage_quals(const tree_t *self)
 
 const tree_t *tree_get_storage_type(const tree_t *self)
 {
-    tree_storage_t storage = get_storage(self);
+    tree_storage_t storage = tree_get_storage(self);
 
     CTASSERTF(storage.storage != NULL, "global %s has no storage type", tree_to_string(self));
     return storage.storage;
@@ -160,7 +151,7 @@ const tree_t *tree_get_storage_type(const tree_t *self)
 
 size_t tree_get_storage_size(const tree_t *self)
 {
-    tree_storage_t storage = get_storage(self);
+    tree_storage_t storage = tree_get_storage(self);
 
     CTASSERTF(storage.length != SIZE_MAX, "global %s has no storage length", tree_to_string(self));
     return storage.length;
@@ -186,7 +177,7 @@ const tree_t *tree_fn_get_return(const tree_t *self)
     switch (tree_get_kind(self))
     {
     case eTreeTypeReference: return tree_fn_get_return(self->ptr);
-    case eTreeTypeClosure: return self->result;
+    case eTreeTypeClosure: return self->return_type;
     case eTreeDeclFunction: return tree_fn_get_return(tree_get_type(self));
 
     default: NEVER("invalid function kind %s", tree_to_string(self));

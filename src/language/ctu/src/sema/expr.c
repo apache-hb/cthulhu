@@ -655,7 +655,8 @@ static tree_t *sema_stmts(ctu_sema_t *sema, const ctu_t *stmt)
 
     size_t sizes[eCtuTagTotal] = {[eCtuTagTypes] = 4, [eCtuTagValues] = 4, [eCtuTagFunctions] = 4,};
 
-    tree_t *ctx = tree_module(sema->sema, stmt->node, decl->name, eCtuTagTotal, sizes);
+    const char *name = tree_get_name(decl);
+    tree_t *ctx = tree_module(sema->sema, stmt->node, name, eCtuTagTotal, sizes);
     arena_t *arena = get_global_arena();
     ctu_sema_t inner = ctu_sema_nested(sema, ctx, sema->decl, vector_new(len, arena));
     for (size_t i = 0; i < len; i++)

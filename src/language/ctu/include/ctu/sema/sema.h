@@ -26,7 +26,8 @@ typedef enum ctu_tag_t {
 /// sema context
 ///
 
-typedef struct ctu_sema_t {
+typedef struct ctu_sema_t
+{
     tree_t *sema; ///< current scope
     tree_t *decl; ///< current decl
     vector_t *block; ///< current statement block
@@ -73,5 +74,5 @@ tree_t *ctu_get_void_type(void);
 /// runtime module
 ///
 
-vector_t *ctu_rt_path(void);
-tree_t *ctu_rt_mod(lifetime_t *lifetime);
+vector_t *ctu_rt_path(arena_t *arena);
+tree_t *ctu_rt_mod(lifetime_t *lifetime,tree_context_t *tree_context);
