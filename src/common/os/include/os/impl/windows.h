@@ -19,3 +19,8 @@ typedef struct os_dir_t
 {
     WIN32_FIND_DATA data;
 } os_dir_t;
+
+typedef struct os_library_t
+{
+    HMODULE library;
+} os_library_t;

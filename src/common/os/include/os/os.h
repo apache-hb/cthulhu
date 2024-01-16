@@ -49,6 +49,11 @@ typedef enum os_dirent_t
 /// @brief error code
 typedef size_t os_error_t;
 
+/// @brief function pointer
+/// used for shared library symbols rather than void*
+/// because casting a function pointer to void* is undefined behavior
+typedef void (*os_fn_t)(void);
+
 /// @brief initialize the os api
 /// @note this must be called before using any other os api
 CT_OS_API void os_init(void);
@@ -61,6 +66,32 @@ CT_OS_API void os_init(void);
 /// @return the string representation of the error code
 NODISCARD RET_STRING
 CT_OS_API char *os_error_string(os_error_t error, IN_NOTNULL arena_t *arena);
+
+/// shared library api
+
+/// @brief open a shared library from disk
+///
+/// @param path the path to the library to open
+/// @param library the library handle to fill
+///
+/// @return 0 on success, error otherwise
+RET_INSPECT
+CT_OS_API os_error_t os_library_open(IN_STRING const char *path, IN_NOTNULL os_library_t *library);
+
+/// @brief close a shared library
+///
+/// @param library the library to close
+RET_INSPECT
+CT_OS_API void os_library_close(IN_NOTNULL os_library_t *library);
+
+/// @brief get a symbol from a shared library
+///
+/// @param library the library to get the symbol from
+/// @param name the name of the symbol to get
+///
+/// @return the symbol or NULL if it could not be found
+NODISCARD
+CT_OS_API os_fn_t os_library_symbol(IN_NOTNULL os_library_t *library, IN_STRING const char *name);
 
 /// filesytem api
 

@@ -54,7 +54,7 @@ option('frontend_gui', type : 'feature',
 
 # targets
 
-option('target_c_family', type : 'feature',
+option('target_cfamily', type : 'feature',
     description : 'build c family target',
     value : 'auto'
 )
@@ -66,8 +66,8 @@ option('target_debug', type : 'feature',
 
 option('default_target', type : 'combo',
     description : 'default target',
-    choices : ['c_family', 'debug'],
-    value : 'c_family'
+    choices : ['cfamily', 'debug'],
+    value : 'cfamily'
 )
 
 # trace options

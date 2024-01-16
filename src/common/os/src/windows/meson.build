@@ -1,4 +1,4 @@
-src = [ 'init.c', 'file.c', 'dir.c', 'fs.c', 'error.c' ]
+src = [ 'init.c', 'file.c', 'dir.c', 'fs.c', 'error.c', 'library.c' ]
 
 lib_osnative = library('os_windows', src,
     build_by_default : false,

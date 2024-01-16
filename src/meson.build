@@ -1,10 +1,19 @@
+# base libraries
 subdir('common')
+
+# compiler libraries
 subdir('cthulhu')
 
+# codegen drivers
+subdir('target')
+
+# language drivers
 subdir('driver')
 
+# interface support libraries
 subdir('support')
 
+# frontend programs
 subdir('interface')
 
 if driver_tests.allowed()

@@ -51,9 +51,21 @@ typedef struct emit_t
 /// @brief a target builder
 typedef void (*target_build_t)(emit_t *emit, vector_t *modules, map_t *deps);
 
+// TODO: currently the config is mutated so we need to make a new one
+//       every invocation. thats not ideal, we should return something immutable
+//       and pass in a copy with modifications.
+
+/// @brief get the config for this target
 typedef cfg_group_t *(*target_config_t)(cfg_group_t *root);
 
+// return a map_t<const char*, attrib_t>
 typedef map_t *(*target_attribs_t)(arena_t *arena);
+
+// TODO: work on attributes
+typedef struct attrib_t
+{
+    const char *name;
+} attrib_t;
 
 /// @brief a codegen target
 typedef struct target_t

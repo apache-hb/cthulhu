@@ -19,3 +19,8 @@ typedef struct os_dir_t
 {
     struct dirent *ent;
 } os_dir_t;
+
+typedef struct os_library_t
+{
+    void *library;
+} os_library_t;

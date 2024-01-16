@@ -62,7 +62,7 @@ lang_example = get_option('lang_example').disable_auto_if(meson.is_subproject())
 lang_c = get_option('lang_c').disable_auto_if(meson.is_subproject())
 lang_cpp = get_option('lang_cpp').disable_auto_if(meson.is_subproject())
 
-target_c_family = get_option('target_c_family')
+target_cfamily = get_option('target_cfamily')
 target_debug = get_option('target_debug').disable_auto_if(meson.is_subproject())
 default_target = get_option('default_target')
 
@@ -208,6 +208,7 @@ driver_summary = {}
 langs = {}
 interfaces = {}
 plugins = {}
+targets = {}
 
 setargv = []
 if cc.get_id() == 'msvc'
@@ -277,7 +278,7 @@ summary = {
         'Bison': bison,
     },
     'Targets': {
-        'C Family': target_c_family.allowed(),
+        'C Family': target_cfamily.allowed(),
         'Debug': target_debug.allowed(),
         'Default': default_target
     },
