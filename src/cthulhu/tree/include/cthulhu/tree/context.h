@@ -58,6 +58,10 @@ CT_TREE_API bool tree_context_contains(IN_NOTNULL const tree_context_t *context,
 
 CT_TREE_API char *tree_ctx_string(IN_NOTNULL const tree_context_t *ctx, IN_NOTNULL const tree_t *tree, IN_NOTNULL arena_t *arena);
 
+// TODO: take a per language key to verify the type
+CT_TREE_API void tree_set_extra(IN_NOTNULL tree_t *tree, void *extra);
+CT_TREE_API void *tree_get_extra(IN_NOTNULL const tree_t *tree);
+
 ///
 /// queries
 ///
