@@ -1,3 +1,4 @@
+#include "base/util.h"
 #include "core/macros.h"
 #include "io/io.h"
 #include "arena/arena.h"
@@ -144,7 +145,7 @@ static char *fmt_underline(text_cache_t *cache, const node_t *node, size_t limit
     where_t where = node_get_location(node);
 
     text_view_t view = cache_get_line(cache, where.first_line);
-    size_t width = MIN(view.size, limit);
+    size_t width = MIN(view.length, limit);
 
     typevec_t *padding = typevec_new(sizeof(char), width, arena);
     for (size_t i = 0; i < width; i++)
@@ -204,10 +205,10 @@ static void print_file_segment(rich_t *rich, const node_t *node, const char *mes
     const char *pretext = !isspace(source.text[0]) ? " " : "";
 
     io_printf(config.io, " %s |\n", padding);
-    io_printf(config.io, " %s |%s%.*s\n", line, pretext, (int)source.size, source.text);
+    io_printf(config.io, " %s |%s%.*s\n", line, pretext, (int)source.length, source.text);
     io_printf(config.io, " %s |%s%s %s.\n", padding, pretext, coloured_underline, first);
 
-    size_t extra_padding = strlen(underline);
+    size_t extra_padding = ctu_strlen(underline);
     char *extra = str_repeat(" ", extra_padding, rich->arena);
 
     size_t len = vector_len(lines);

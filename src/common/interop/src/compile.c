@@ -33,7 +33,7 @@ parse_result_t scan_buffer(scan_t *extra, const callbacks_t *callbacks)
     }
 
     text_view_t text = scan_source(extra);
-    state = callbacks->scan(text.text, text.size, scanner);
+    state = callbacks->scan(text.text, text.length, scanner);
     if (state == NULL)
     {
         return parse_error(eParseScanFailed, err);

@@ -32,18 +32,13 @@ cc = meson.get_compiler('c')
 target = target_machine.system()
 
 opt_paranoid = get_option('paranoid').disable_auto_if(is_release)
-
-frontend_gui = get_option('frontend_gui').disable_auto_if(meson.is_subproject())
-frontend_cli = get_option('frontend_cli')
-frontend_example = get_option('frontend_example').disable_auto_if(meson.is_subproject())
+opt_analyze = get_option('analyze')
 
 # disable unit tests if we are a subproject or release build
 # this is because they require some different flags that slow down the compiler.
 # but only on gcc
 unit_tests = get_option('unit_tests').disable_auto_if(is_release or meson.is_subproject())
 driver_tests = get_option('driver_tests').disable_auto_if(meson.is_subproject())
-
-opt_analyze = get_option('analyze')
 
 warning_level = get_option('warning_level').to_int()
 
@@ -54,6 +49,12 @@ tool_notify = get_option('tool_notify').disable_auto_if(is_release or meson.is_s
 tool_display = get_option('tool_display').disable_auto_if(is_release or meson.is_subproject())
 tool_error = get_option('tool_error').disable_auto_if(is_release or meson.is_subproject())
 
+# all the frontend programs
+frontend_gui = get_option('frontend_gui').disable_auto_if(meson.is_subproject())
+frontend_cli = get_option('frontend_cli')
+frontend_example = get_option('frontend_example').disable_auto_if(meson.is_subproject())
+
+# all the language frontends
 lang_ctu = get_option('lang_ctu')
 lang_pl0 = get_option('lang_pl0')
 lang_oberon = get_option('lang_oberon')
@@ -62,6 +63,7 @@ lang_example = get_option('lang_example').disable_auto_if(meson.is_subproject())
 lang_c = get_option('lang_c').disable_auto_if(meson.is_subproject())
 lang_cpp = get_option('lang_cpp').disable_auto_if(meson.is_subproject())
 
+# all the codegen targets
 target_cfamily = get_option('target_cfamily')
 target_debug = get_option('target_debug').disable_auto_if(meson.is_subproject())
 default_target = get_option('default_target')

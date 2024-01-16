@@ -1,5 +1,6 @@
 #include "common.h"
 
+#include "base/util.h"
 #include "core/macros.h"
 #include "io/io.h"
 #include "memory/memory.h"
@@ -161,16 +162,16 @@ char *fmt_left_align(arena_t *arena, size_t width, const char *fmt, ...)
     text_t msg = text_vformat(arena, fmt, args);
     va_end(args);
 
-    if (msg.size >= width) return msg.text;
+    if (msg.length >= width) return msg.text;
 
     size_t size = width - 1;
     char *result = ARENA_MALLOC(size, "fmt_left_align", NULL, arena);
     memset(result, ' ', width);
-    memcpy(result, msg.text, msg.size);
+    memcpy(result, msg.text, msg.length);
 
     result[width] = '\0';
 
-    arena_free(msg.text, msg.size, arena);
+    arena_free(msg.text, msg.length, arena);
 
     return result;
 }
@@ -184,16 +185,16 @@ char *fmt_right_align(arena_t *arena, size_t width, const char *fmt, ...)
     text_t msg = text_vformat(arena, fmt, args);
     va_end(args);
 
-    if (msg.size >= width) return msg.text;
+    if (msg.length >= width) return msg.text;
 
     size_t size = width - 1;
     char *result = ARENA_MALLOC(size, "fmt_right_align", NULL, arena);
     memset(result, ' ', width);
-    memcpy(result + (width - msg.size), msg.text, msg.size);
+    memcpy(result + (width - msg.length), msg.text, msg.length);
 
     result[width] = '\0';
 
-    arena_free(msg.text, msg.size, arena);
+    arena_free(msg.text, msg.length, arena);
 
     return result;
 }
@@ -228,7 +229,7 @@ static void load_lineinfo(text_cache_t *text)
     size_t offset = 0;
 
     const char *start = text->source.text;
-    const char *end = start + text->source.size;
+    const char *end = start + text->source.length;
 
     while (start < end)
     {
@@ -263,14 +264,10 @@ static text_view_t get_io_view(io_t *io)
 {
     if (io_error(io) != 0)
     {
-        text_view_t view = {.text = "", .size = 0};
-
-        return view;
+        return text_view_from("");
     }
 
-    text_view_t view = {.text = io_map(io), .size = io_size(io)};
-
-    return view;
+    return text_view_make(io_map(io), io_size(io));
 }
 
 static text_cache_t *text_cache_io(io_t *io, arena_t *arena)
@@ -381,16 +378,13 @@ text_view_t cache_get_line(text_cache_t *cache, size_t line)
 
     if (!has_line)
     {
-        text_view_t view = {.text = "", .size = 0};
-
-        return view; // line is out of bounds. why?
+        // line is out of bounds. why?
+        return text_view_make("", 0);
     }
 
     lineinfo_t *info = typevec_offset(cache->line_info, line);
 
-    text_view_t view = {.text = cache->source.text + info->offset, .size = info->length};
-
-    return view;
+    return text_view_make(cache->source.text + info->offset, info->length);
 }
 
 size_t cache_count_lines(text_cache_t *cache)
@@ -429,29 +423,33 @@ text_t cache_escape_line(text_cache_t *cache, size_t line, const colour_pallete_
 
     text_view_t view = cache_get_line(cache, line);
 
-    typevec_t *result = typevec_new(sizeof(char), view.size * 2, cache->arena);
+    typevec_t *result = typevec_new(sizeof(char), view.length * 2, cache->arena);
 
+    // we use a temporary buffer to format into because this is a hot path
+    // when reporting very long lines, snprintf is too slow
+
+    // 8 characters is enough for any 1 byte hex value
     char buffer[8] = "";
     bool in_colour = false;
     size_t used = column_limit;
-    for (size_t i = 0; i < view.size; i++)
+    for (size_t i = 0; i < view.length; i++)
     {
         char c = view.text[i];
         bool is_notprint = get_escaped_char(buffer, c);
         if (is_notprint && !in_colour)
         {
             const char *colour = colour_get(colours, COLOUR_UNKNOWN);
-            typevec_append(result, colour, strlen(colour));
+            typevec_append(result, colour, ctu_strlen(colour));
             in_colour = true;
         }
         else if (!is_notprint && in_colour)
         {
             const char *reset = colour_reset(colours);
-            typevec_append(result, reset, strlen(reset));
+            typevec_append(result, reset, ctu_strlen(reset));
             in_colour = false;
         }
 
-        typevec_append(result, buffer, strlen(buffer));
+        typevec_append(result, buffer, ctu_strlen(buffer));
 
         if (0 >= --used)
         {
@@ -461,7 +459,7 @@ text_t cache_escape_line(text_cache_t *cache, size_t line, const colour_pallete_
 
     text_t *ptr = ARENA_MALLOC(sizeof(text_t), "text", NULL, cache->arena);
     ptr->text = typevec_data(result);
-    ptr->size = typevec_len(result);
+    ptr->length = typevec_len(result);
 
     map_set(cache->cached_lines, (void *)(uintptr_t)(line + 1), ptr);
 

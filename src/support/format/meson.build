@@ -21,7 +21,7 @@ src = [
 libformat = library('format', src,
     build_by_default : false,
     c_args : user_args + [ '-DCT_FORMAT_BUILD=1' ],
-    dependencies : [ std, core, io, scan, notify, config, backtrace, memory, arena ],
+    dependencies : [ std, core, base, io, scan, notify, config, backtrace, memory, arena ],
     include_directories : format_include
 )
 

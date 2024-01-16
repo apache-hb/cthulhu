@@ -1,6 +1,7 @@
 #include "io/console.h"
-#include "core/macros.h"
 #include "io/impl.h"
+
+#include "core/macros.h"
 
 #include <stdio.h>
 

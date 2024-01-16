@@ -219,7 +219,7 @@ static size_t get_largest_entry(const typevec_t *entries)
         const entry_t *entry = typevec_offset(entries, i);
         CTASSERTF(entry != NULL, "entry at %zu is NULL", i);
 
-        size_t width = strlen(entry->symbol);
+        size_t width = ctu_strlen(entry->symbol);
         largest = MAX(width, largest);
     }
 
@@ -240,7 +240,7 @@ static symbol_match_info_t get_largest_collapsed_symbol(const collapsed_t *entri
 {
     CTASSERT(entries != NULL);
 
-    size_t largest = strlen(kUnknownSymbol);
+    size_t largest = ctu_strlen(kUnknownSymbol);
 
     for (size_t i = 0; i < len; i++)
     {
@@ -256,7 +256,7 @@ static symbol_match_info_t get_largest_collapsed_symbol(const collapsed_t *entri
             return info;
         }
 
-        size_t width = strlen(entry->entry->symbol);
+        size_t width = ctu_strlen(entry->entry->symbol);
         largest = MAX(width, largest);
     }
 
@@ -474,8 +474,8 @@ void bt_report_add(bt_report_t *report, const bt_frame_t *frame)
 
     entry_t entry = {
         .info = info,
-        .file = arena_strndup(symbol.path.text, symbol.path.size, report->arena),
-        .symbol = arena_strndup(symbol.name.text, symbol.name.size, report->arena),
+        .file = arena_strndup(symbol.path.text, symbol.path.length, report->arena),
+        .symbol = arena_strndup(symbol.name.text, symbol.name.length, report->arena),
         .line = symbol.line,
         .address = frame->address,
     };

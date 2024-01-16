@@ -61,7 +61,7 @@ size_t io_vprintf(io_t *io, const char *fmt, va_list args)
     }
 
     text_t text = text_vformat(io->arena, fmt, args);
-    return io_write(io, text.text, text.size);
+    return io_write(io, text.text, text.length);
 }
 
 USE_DECL

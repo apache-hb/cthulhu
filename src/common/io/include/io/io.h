@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_io_api.h>
+
 #include "os/os.h"
 
 #include "core/analyze.h"
@@ -7,12 +9,15 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-#include "io/impl.h"
-
 BEGIN_API
 
 /// @ingroup io
 /// @{
+
+typedef struct io_t io_t;
+
+/// @brief an io error code
+typedef os_error_t io_error_t;
 
 /// @brief destroy an IO object
 ///

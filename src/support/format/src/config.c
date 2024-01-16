@@ -1,6 +1,7 @@
 #include "format/config.h"
 #include "base/panic.h"
 
+#include "base/util.h"
 #include "io/io.h"
 
 #include "format/colour.h"
@@ -62,7 +63,7 @@ static size_t get_arg_length(const cfg_info_t *info, size_t long_arg_stride)
         {
             // +1 for the dash or slash
             // +1 for the space
-            len += strlen(info->short_args[i]) + 2;
+            len += ctu_strlen(info->short_args[i]) + 2;
         }
     }
 
@@ -71,7 +72,7 @@ static size_t get_arg_length(const cfg_info_t *info, size_t long_arg_stride)
         for (size_t i = 0; info->long_args[i]; i++)
         {
             // +1 for the space
-            len += strlen(info->long_args[i]) + 1 + long_arg_stride;
+            len += ctu_strlen(info->long_args[i]) + 1 + long_arg_stride;
         }
     }
 
@@ -122,7 +123,7 @@ static size_t print_field_args(format_config_t config, const cfg_info_t *info, b
         {
             char *coloured = colour_format(config.context, COLOUR_ARG, "%s%s", short_sep, info->short_args[i]);
             io_printf(config.io, "%s ", coloured);
-            len += strlen(info->short_args[i]) + 2;
+            len += ctu_strlen(info->short_args[i]) + 2;
         }
     }
 
@@ -132,7 +133,7 @@ static size_t print_field_args(format_config_t config, const cfg_info_t *info, b
         {
             char *coloured = colour_format(config.context, COLOUR_ARG, "%s%s", long_sep, info->long_args[i]);
             io_printf(config.io, "%s ", coloured);
-            len += strlen(info->long_args[i]) + 1 + strlen(long_sep);
+            len += ctu_strlen(info->long_args[i]) + 1 + ctu_strlen(long_sep);
         }
     }
 
@@ -327,7 +328,7 @@ static bool print_field_info(format_config_t options, alignment_info_t alignment
     if (first_newline == SIZE_MAX)
     {
         io_printf(options.io, "%s%s", pad, info->brief);
-        size_t after_brief = alignment.brief_alignment - strlen(info->brief);
+        size_t after_brief = alignment.brief_alignment - ctu_strlen(info->brief);
         char *pad2 = str_repeat(" ", after_brief, options.arena);
 
         io_printf(options.io, "%s", pad2);

@@ -1,8 +1,9 @@
 #pragma once
 
-#include <ctu_io_api.h>
+#include "io/io.h"
 
 #include "os/os.h"
+
 #include <stddef.h>
 #include <stdarg.h>
 
@@ -13,9 +14,6 @@ BEGIN_API
 
 /// @brief an io object
 typedef struct io_t io_t;
-
-/// @brief an io error code
-typedef os_error_t io_error_t;
 
 /// @brief io object read callback
 ///
@@ -127,6 +125,9 @@ typedef struct io_t
 
     /// @brief the name of this object
     const char *name;
+
+    /// @brief user data region
+    char data[];
 } io_t;
 
 // TODO: io_data and io_new should be private to the io module

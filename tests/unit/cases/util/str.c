@@ -1,4 +1,5 @@
 #include "arena/arena.h"
+#include "base/util.h"
 #include "unit/ct-test.h"
 
 #include "setup/memory.h"
@@ -264,14 +265,14 @@ int main(void)
 
     test_group_t normalizen_group = test_group(&suite, "str_normalizen");
     GROUP_EXPECT_PASS2(normalizen_group, "normalizen equals", {
-        char *normalized = str_normalizen("hello world!", 12, arena);
+        char *normalized = str_normalizen(text_view_make("hello world!", 12), arena);
         CTASSERT(str_equal(normalized, "hello world!"));
     });
     GROUP_EXPECT_PASS2(normalizen_group, "normalizen empty", {
-        char *normalized = str_normalizen("", 0, arena);
+        char *normalized = str_normalizen(text_view_make("", 0), arena);
         CTASSERT(str_equal(normalized, ""));
     });
-    GROUP_EXPECT_PANIC(normalizen_group, "normalizen null", (void)str_normalizen(NULL, 0, arena));
+    GROUP_EXPECT_PANIC(normalizen_group, "normalizen null", (void)str_normalizen(text_view_make(NULL, 0), arena));
 
     for (size_t i = 0; i < ESCAPES_LEN; i++)
     {
@@ -281,7 +282,7 @@ int main(void)
         char *expected = str_format(arena, "hello %s world", pair.unescaped);
 
         char *result = str_normalize(input, arena);
-        char *result_n = str_normalizen(input, strlen(input), arena);
+        char *result_n = str_normalizen(text_view_from(input), arena);
 
         char *name = str_format(arena, "escaped %s equal (`%s` != `%s`)", pair.escaped, expected, result);
         GROUP_EXPECT_PASS(normalize_group, name, str_equal(result, expected));

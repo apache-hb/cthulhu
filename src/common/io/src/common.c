@@ -13,7 +13,7 @@ void *io_data(io_t *io)
     // we do this rather than have a flexible array member because
     // C requires structs with flexible arrays are always the last
     // member of a struct, but io_t is a header struct.
-    return io + 1;
+    return io->data;
 }
 
 io_t *io_new(const io_callbacks_t *cb, os_access_t flags, const char *name, const void *data,

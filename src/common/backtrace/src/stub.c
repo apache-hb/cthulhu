@@ -19,7 +19,7 @@ void bt_read_inner(bt_trace_t callback, void *user)
 frame_resolve_t bt_resolve_inner(const bt_frame_t *frame, bt_symbol_t *symbol)
 {
     text_t name = symbol->name;
-    (void)snprintf(name.text, name.size, "%" PRI_ADDRESS, frame->address);
+    (void)snprintf(name.text, name.length, "%" PRI_ADDRESS, frame->address);
 
     return eResolveNothing;
 }

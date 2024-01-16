@@ -1,6 +1,7 @@
 #include "cthulhu/util/text.h"
 
 #include "base/panic.h"
+#include "base/util.h"
 #include "cthulhu/events/events.h"
 #include "arena/arena.h"
 #include "std/typed/vector.h"
@@ -69,10 +70,5 @@ text_t util_text_escape(logger_t *reports, const node_t *node, const char *text,
     char zero = '\0';
     typevec_push(vec, &zero);
 
-    text_t result = {
-        .text = typevec_data(vec),
-        .size = typevec_len(vec)
-    };
-
-    return result;
+    return text_make(typevec_data(vec), typevec_len(vec));
 }

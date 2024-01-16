@@ -1,5 +1,7 @@
 #include "io/io.h"
+#include "io/impl.h"
 
+#include "base/util.h"
 #include "base/panic.h"
 
 #include "core/macros.h"
@@ -83,5 +85,5 @@ io_t *io_string(const char *name, const char *string, arena_t *arena)
     CTASSERT(string != NULL);
     CTASSERT(arena != NULL);
 
-    return io_view(name, string, strlen(string), arena);
+    return io_view(name, string, ctu_strlen(string), arena);
 }

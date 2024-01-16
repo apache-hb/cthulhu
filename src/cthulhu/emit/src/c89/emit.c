@@ -1,3 +1,4 @@
+#include "base/util.h"
 #include "c89.h"
 
 #include "std/str.h"
@@ -49,7 +50,7 @@ static c89_source_t *source_for(c89_emit_t *emit, const ssa_module_t *mod, const
 
 static const char *format_path(const char *base, const char *name, arena_t *arena)
 {
-    if (strlen(base) == 0) { return name; }
+    if (ctu_strlen(base) == 0) { return name; }
     return str_format(arena, "%s/%s", base, name);
 }
 

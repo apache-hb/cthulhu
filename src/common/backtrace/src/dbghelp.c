@@ -83,11 +83,11 @@ frame_resolve_t bt_resolve_inner(const bt_frame_t *frame, bt_symbol_t *symbol)
     text_t path = symbol->path;
 
     symbol->line = 0;
-    strcpy_s(name.text, name.size, "<unknown>");
+    strcpy_s(name.text, name.length, "<unknown>");
 
     // cap the name size to a known maximum so we can put it on the stack rather than call malloc
     // we do this because this may be called in a signal handler and we don't want to allocate
-    ULONG name_size = MIN((ULONG)name.size, MAX_NAME_SIZE);
+    ULONG name_size = MIN((ULONG)name.length, MAX_NAME_SIZE);
     char buffer[sizeof(SYMBOL_INFO) + (MAX_NAME_SIZE - 1) * sizeof(TCHAR)];
     memset(buffer, 0, sizeof(SYMBOL_INFO)); // only zero the symbol info struct
 
@@ -105,7 +105,7 @@ frame_resolve_t bt_resolve_inner(const bt_frame_t *frame, bt_symbol_t *symbol)
         {
             // subtract 1 from the line number because dbghelp is 1-indexed
             symbol->line = line.LineNumber - 1;
-            strcpy_s(path.text, path.size, line.FileName);
+            strcpy_s(path.text, path.length, line.FileName);
 
             resolve |= eResolveLine | eResolveFile;
         }

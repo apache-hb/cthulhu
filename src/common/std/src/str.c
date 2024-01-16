@@ -100,7 +100,7 @@ static size_t str_rfind_any(const char *str, const char *letters)
     CTASSERT(str != NULL);
     CTASSERT(letters != NULL);
 
-    size_t i = strlen(str);
+    size_t i = ctu_strlen(str);
     while (i > 0)
     {
         i--;
@@ -196,7 +196,7 @@ bool str_startswith(const char *str, const char *prefix)
     CTASSERT(str != NULL);
     CTASSERT(prefix != NULL);
 
-    return strncmp(str, prefix, strlen(prefix)) == 0;
+    return strncmp(str, prefix, ctu_strlen(prefix)) == 0;
 }
 
 USE_DECL
@@ -205,8 +205,8 @@ bool str_endswith(const char *str, const char *suffix)
     CTASSERT(str != NULL);
     CTASSERT(suffix != NULL);
 
-    size_t lenstr = strlen(str);
-    size_t lensuffix = strlen(suffix);
+    size_t lenstr = ctu_strlen(str);
+    size_t lensuffix = ctu_strlen(suffix);
     if (lensuffix > lenstr)
     {
         return false;
@@ -236,13 +236,13 @@ char *str_join(const char *sep, vector_t *parts, arena_t *arena)
     }
 
     size_t len = 0;
-    size_t seplen = strlen(sep);
+    size_t seplen = ctu_strlen(sep);
     for (size_t i = 0; i < all; i++)
     {
         const char *part = vector_get(parts, i);
         CTASSERTF(part != NULL, "part[%zu] = NULL", i);
 
-        len += strlen(part);
+        len += ctu_strlen(part);
 
         if (i != 0)
         {
@@ -266,7 +266,7 @@ char *str_join(const char *sep, vector_t *parts, arena_t *arena)
         }
 
         const char *part = vector_get(parts, i);
-        size_t part_len = strlen(part);
+        size_t part_len = ctu_strlen(part);
         memcpy(out + idx, part, MIN(remaining, part_len));
         idx += part_len;
         remaining -= part_len;
@@ -287,7 +287,7 @@ char *str_repeat(const char *str, size_t times, arena_t *arena)
         return arena_strdup("", arena);
     }
 
-    size_t len = strlen(str);
+    size_t len = ctu_strlen(str);
     size_t outlen = len * times;
     char *out = ARENA_MALLOC(outlen + 1, "str_repeat", str, arena);
     size_t remaining = outlen;
@@ -317,7 +317,7 @@ static bool is_escape_char(char c)
     return false;
 }
 
-static bool safe_isprint(char c)
+static bool ctu_isprint(char c)
 {
     if (is_escape_char(c))
     {
@@ -335,12 +335,12 @@ static bool safe_isprint(char c)
 static size_t normlen(char c)
 {
     // TODO: this might overallocate size
-    return safe_isprint(c) ? 1 : 4;
+    return ctu_isprint(c) ? 1 : 4;
 }
 
 static size_t normstr(char *out, char c)
 {
-    if (safe_isprint(c))
+    if (ctu_isprint(c))
     {
         *out = c;
         return 1;
@@ -419,10 +419,13 @@ char *str_normalize(const char *input, arena_t *arena)
 }
 
 USE_DECL
-char *str_normalizen(const char *str, size_t len, arena_t *arena)
+char *str_normalizen(text_view_t text, arena_t *arena)
 {
-    CTASSERT(str != NULL);
+    CTASSERT(text.text != NULL);
     CTASSERT(arena != NULL);
+
+    const char *str = text.text;
+    size_t len = text.length;
 
     size_t length = 1;
     for (size_t i = 0; i < len; i++)
@@ -455,11 +458,11 @@ vector_t *str_split(IN_STRING const char *str, IN_STRING const char *sep, arena_
     CTASSERT(sep != NULL);
     CTASSERT(arena != NULL);
 
-    if (strlen(sep) == 0)
+    if (ctu_strlen(sep) == 0)
     {
         // split into individual characters
-        vector_t *result = vector_new(strlen(str), arena);
-        for (size_t i = 0; i < strlen(str); i++)
+        vector_t *result = vector_new(ctu_strlen(str), arena);
+        for (size_t i = 0; i < ctu_strlen(str); i++)
         {
             char *c = ARENA_MALLOC(2, "str_split", str, arena);
             c[0] = str[i];
@@ -469,7 +472,7 @@ vector_t *str_split(IN_STRING const char *str, IN_STRING const char *sep, arena_
         return result;
     }
 
-    size_t seplen = strlen(sep);
+    size_t seplen = ctu_strlen(sep);
     vector_t *result = vector_new(4, arena);
 
     // store the start of the current token
@@ -519,7 +522,7 @@ size_t text_hash(text_view_t text)
     CTASSERT(text.text != NULL);
 
     size_t hash = 0;
-    for (size_t i = 0; i < text.size; i++)
+    for (size_t i = 0; i < text.length; i++)
     {
         hash = (hash << 5) - hash + text.text[i];
     }
@@ -543,7 +546,7 @@ char *str_replace(const char *str, const char *search, const char *repl, arena_t
     CTASSERT(search != NULL);
     CTASSERT(repl != NULL);
 
-    if (strlen(search) == 0)
+    if (ctu_strlen(search) == 0)
     {
         return arena_strdup(str, arena);
     }
@@ -586,8 +589,8 @@ char *str_replace_many(const char *str, const map_t *repl, arena_t *arena)
         const map_entry_t *entry = find_matching_key(pairs, iter);
         if (entry != NULL)
         {
-            len += strlen(entry->value);
-            iter += strlen(entry->key);
+            len += ctu_strlen(entry->value);
+            iter += ctu_strlen(entry->key);
         }
         else
         {
@@ -604,9 +607,9 @@ char *str_replace_many(const char *str, const map_t *repl, arena_t *arena)
         const map_entry_t *entry = find_matching_key(pairs, str + offset);
         if (entry != NULL)
         {
-            memcpy(out + i, entry->value, strlen(entry->value));
-            i += strlen(entry->value);
-            offset += strlen(entry->key);
+            memcpy(out + i, entry->value, ctu_strlen(entry->value));
+            i += ctu_strlen(entry->value);
+            offset += ctu_strlen(entry->key);
         }
         else
         {
@@ -735,8 +738,8 @@ size_t str_rfind(const char *str, const char *sub)
     CTASSERT(str != NULL);
     CTASSERT(sub != NULL);
 
-    size_t len = strlen(str);
-    size_t sublen = strlen(sub);
+    size_t len = ctu_strlen(str);
+    size_t sublen = ctu_strlen(sub);
 
     return str_rfind_inner(str, len, sub, sublen);
 }

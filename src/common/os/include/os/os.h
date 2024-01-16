@@ -1,11 +1,17 @@
 #pragma once
 
-#include OS_API_HEADER
-
 #include <ctu_os_api.h>
 
 #include "core/analyze.h"
 #include "core/compiler.h"
+
+#if OS_WINDOWS
+#   include "impl/windows.h"
+#elif OS_LINUX || OS_APPLE
+#   include "impl/posix.h"
+#else
+#   error "unsupported platform"
+#endif
 
 #include <stdbool.h>
 

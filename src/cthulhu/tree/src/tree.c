@@ -1,4 +1,5 @@
 #include "arena/arena.h"
+#include "base/util.h"
 #include "common.h"
 
 #include "cthulhu/tree/query.h"
@@ -240,13 +241,8 @@ tree_t *tree_expr_string(const node_t *node, const tree_t *type, const char *val
 {
     CTASSERT(value != NULL);
 
-    text_view_t view = {
-        .text = value,
-        .size = length
-    };
-
     tree_t *self = tree_new(eTreeExprString, node, type);
-    self->string_value = view;
+    self->string_value = text_view_make(value, length);
     return self;
 }
 

@@ -7,7 +7,7 @@
 typedef struct text_t
 {
     char *text;  ///< the text itself
-    size_t size; ///< the number of bytes in the text
+    size_t length; ///< the number of characters in the text
 } text_t;
 
 /// @ingroup core
@@ -15,5 +15,5 @@ typedef struct text_t
 typedef struct text_view_t
 {
     const char *text; ///< the text itself
-    size_t size;      ///< the number of bytes in the text
+    size_t length;      ///< the number of characters in the text
 } text_view_t;

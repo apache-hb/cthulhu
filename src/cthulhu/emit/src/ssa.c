@@ -1,3 +1,4 @@
+#include "base/util.h"
 #include "common.h"
 
 #include "arena/arena.h"
@@ -315,7 +316,7 @@ static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
 
     io_t *io = fs_open(fs, file, eAccessWrite | eAccessText);
     write_string(io, "module {name=%s", mod->name);
-    if (strlen(path) > 0) { write_string(io, ", path=%s", path); }
+    if (ctu_strlen(path) > 0) { write_string(io, ", path=%s", path); }
     write_string(io, "}\n");
 
     write_string(io, "\n");

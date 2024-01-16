@@ -60,7 +60,7 @@ ssa_value_t *ssa_value_string(const ssa_type_t *type, text_view_t view)
     EXPECT_TYPE(type, eTypePointer);
 
     const char *text = view.text;
-    size_t length = view.size;
+    size_t length = view.length;
 
     ssa_type_pointer_t ptr = type->pointer;
     EXPECT_TYPE(ptr.pointer, eTypeDigit);

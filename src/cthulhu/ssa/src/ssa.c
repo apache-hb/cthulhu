@@ -1,3 +1,4 @@
+#include "base/util.h"
 #include "common/common.h"
 
 #include "cthulhu/tree/query.h"
@@ -25,12 +26,7 @@ static bool info_text_equals(const void *lhs, const void *rhs)
 {
     text_view_t *lhs_view = (text_view_t*)lhs;
     text_view_t *rhs_view = (text_view_t*)rhs;
-    if (lhs_view->size != rhs_view->size)
-    {
-        return false;
-    }
-
-    return strncmp(lhs_view->text, rhs_view->text, lhs_view->size) == 0;
+    return text_equal(*lhs_view, *rhs_view);
 }
 
 static const typeinfo_t kTypeInfoText = {
@@ -241,8 +237,8 @@ static ssa_symbol_t *intern_string(ssa_compile_t *ssa, const tree_t *tree)
 
     // we need the load type here because we're creating storage for this string
     const tree_t *inner = tree_ty_load_type(type);
-    ssa_storage_t storage = create_new_storage(ssa->types, inner, view.size + 1, eQualConst);
-    char *name = str_format(ssa->arena, "__string%zu", ssa->string_count++);
+    ssa_storage_t storage = create_new_storage(ssa->types, inner, view.length + 1, eQualConst);
+    char *name = str_format(ssa->arena, "ANON%zu_string", ssa->string_count++);
     ssa_symbol_t *it = symbol_new(ssa, name, type, attribs, storage);
     it->value = ssa_value_string(it->type, view);
     text_view_t *ptr = arena_memdup(&view, sizeof(text_view_t), ssa->arena);

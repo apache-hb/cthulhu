@@ -320,7 +320,7 @@ designator: IDENT { $$ = obr_expr_name(x, @$, $1); } /* this deviates from the o
 factor: designator { $$ = $1; }
     | designator LPAREN opt_expr_list RPAREN { $$ = obr_expr_call(x, @$, $1, $3); }
     | NUMBER { $$ = obr_expr_digit(x, @$, $1); }
-    | STRING { $$ = obr_expr_string(x, @$, $1.text, $1.size); }
+    | STRING { $$ = obr_expr_string(x, @$, $1.text, $1.length); }
     | LPAREN expr RPAREN { $$ = $2; }
     ;
 

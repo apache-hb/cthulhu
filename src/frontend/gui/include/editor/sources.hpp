@@ -18,7 +18,7 @@ namespace ed
 
         const char *get_title() const { return basename; }
         const char *get_path() const { return path.c_str(); }
-        size_t get_size() const { return source.size; }
+        size_t get_size() const { return source.length; }
 
         void draw();
 

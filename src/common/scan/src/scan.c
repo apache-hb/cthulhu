@@ -29,7 +29,7 @@ const scan_t kScanBuiltin = {
     .path = SCAN_BUILTIN_NAME,
     .tree = NULL,
 
-    .mapped = { .text = "", .size = 0, },
+    .mapped = { .text = "", .length = 0, },
 };
 
 USE_DECL

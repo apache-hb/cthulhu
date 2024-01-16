@@ -148,16 +148,12 @@ static map_t *vfs_query_dirents(fs_t *fs, inode_t *self)
 
 static io_t *vfs_query_file(fs_t *fs, inode_t *self, os_access_t flags)
 {
-    CTU_UNUSED(fs);
-
     virtual_file_t *file = inode_data(self);
     return vfs_io(file, flags, fs->arena);
 }
 
 static inode_t *vfs_create_dir(fs_t *fs, inode_t *self, const char *name)
 {
-    CTU_UNUSED(fs);
-
     virtual_dir_t *dir = inode_data(self);
     inode_t *node = virtual_dir(fs->arena);
     map_set(dir->dirents, name, node);
@@ -174,8 +170,6 @@ static void vfs_delete_dir(fs_t *fs, inode_t *self, const char *name)
 
 static inode_t *vfs_create_file(fs_t *fs, inode_t *self, const char *name)
 {
-    CTU_UNUSED(fs);
-
     virtual_dir_t *dir = inode_data(self);
 
     virtual_file_t file = {

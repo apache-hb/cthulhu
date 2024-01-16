@@ -9,8 +9,7 @@ base_include = include_directories('.', 'include')
 src = [
     'src/util.c',
     'src/panic.c',
-    'src/log.c',
-    'src/endian.c'
+    'src/log.c'
 ]
 
 libbase = library('base', src,

@@ -8,30 +8,13 @@ subdir('cthulhu')
 subdir('target')
 
 # language drivers
-subdir('driver')
+subdir('language')
 
-# interface support libraries
+# frontend and tool support libraries
 subdir('support')
 
 # frontend programs
-subdir('interface')
+subdir('frontend')
 
-if driver_tests.allowed()
-    subdir('tools/harness')
-endif
-
-if tool_notify.allowed()
-    subdir('tools/notify')
-endif
-
-if tool_diagnostic.allowed()
-    subdir('tools/diagnostic')
-endif
-
-if tool_display.allowed()
-    subdir('tools/display')
-endif
-
-if tool_error.allowed()
-    subdir('tools/error')
-endif
+# user and compiler tools
+subdir('tools')

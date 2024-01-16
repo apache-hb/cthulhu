@@ -1,3 +1,4 @@
+#include "base/util.h"
 #include "os/os.h"
 
 #include "base/panic.h"
@@ -44,7 +45,7 @@ os_error_t os_dir_create(const char *path, bool *create)
 
     // TODO: this is a bit of a hack to avoid a bug in mkdir_recursive
     // on linux it will pass an empty string into mkdir because of the leading `/`
-    if (strlen(path) == 0)
+    if (ctu_strlen(path) == 0)
     {
         *create = true;
         return 0;

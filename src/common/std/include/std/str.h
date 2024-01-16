@@ -128,13 +128,12 @@ CT_STD_API char *str_normalize(IN_STRING const char *str, IN_NOTNULL arena_t *ar
 ///
 /// normalize a string with length into a valid C string literal
 ///
-/// @param str the string to normalize
-/// @param len the length of the string
+/// @param text the text to normalize
 /// @param arena the arena to allocate the normalized string in
 ///
 /// @return the normalized string
 NODISCARD
-CT_STD_API char *str_normalizen(IN_READS(len) const char *str, size_t len, IN_NOTNULL arena_t *arena);
+CT_STD_API char *str_normalizen(text_view_t text, IN_NOTNULL arena_t *arena);
 
 /// @brief split a string into a vector by a separator
 ///

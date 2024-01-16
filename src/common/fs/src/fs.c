@@ -1,3 +1,4 @@
+#include "base/util.h"
 #include "common.h"
 
 #include "std/vector.h"
@@ -234,7 +235,7 @@ void fs_dir_create(fs_t *fs, const char *path)
 {
     CTASSERT(fs != NULL);
     CTASSERT(path != NULL);
-    CT_PARANOID_ASSERTF(strlen(path) > 0, "path cannot be empty");
+    CT_PARANOID_ASSERTF(ctu_strlen(path) > 0, "path cannot be empty");
 
     vector_t *parts = path_split(path, fs->arena);
     size_t len = vector_len(parts);

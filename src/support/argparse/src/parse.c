@@ -1,3 +1,4 @@
+#include "base/util.h"
 #include "common.h"
 
 #include "config/config.h"
@@ -25,7 +26,7 @@ static void push_single_arg(typevec_t *vec, const char *arg)
     // TODO: this is a bit of a bodge, i should think of a better
     // way to extract flags from the command line
     bool is_flag = arg[0] == '-' || arg[0] == '/';
-    size_t len = strlen(arg);
+    size_t len = ctu_strlen(arg);
 
     if (is_flag)
     {
@@ -131,7 +132,7 @@ static const char *get_lookup_name(const char *name, bool *negate, arena_t *aren
     // so we need to strip that off
 
     *negate = false;
-    size_t len = strlen(name);
+    size_t len = ctu_strlen(name);
 
     // something is wrong if the name is empty
     CTASSERT(len > 0);

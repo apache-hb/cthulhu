@@ -1,7 +1,6 @@
 # output targets
 
-* `c` c89 output
-* `cxx` c++ output (c++11 for now)
+* `cfamily` c and c++ output
 * `debug` string debug output
 
 * `target` helper library

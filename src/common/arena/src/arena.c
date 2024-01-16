@@ -1,6 +1,7 @@
 #include "arena/arena.h"
 
 #include "base/panic.h"
+#include "base/util.h"
 
 #include <string.h>
 
@@ -11,7 +12,7 @@ char *arena_strdup(const char *str, arena_t *arena)
 {
     CTASSERT(str != NULL);
 
-    size_t len = strlen(str);
+    size_t len = ctu_strlen(str);
     char *out = arena_malloc(len + 1, "strdup", arena, arena);
     memcpy(out, str, len);
     out[len] = '\0';

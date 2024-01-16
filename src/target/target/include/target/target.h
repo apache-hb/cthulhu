@@ -44,8 +44,6 @@ typedef struct emit_t
 
     /// @brief output layout
     file_layout_t layout;
-
-    cfg_group_t *config;
 } emit_t;
 
 /// @brief a target builder
@@ -60,6 +58,12 @@ typedef cfg_group_t *(*target_config_t)(cfg_group_t *root);
 
 // return a map_t<const char*, attrib_t>
 typedef map_t *(*target_attribs_t)(arena_t *arena);
+
+typedef struct attrib_map_t
+{
+    /// map_t<const char*, map_t<attrib_t>>
+    map_t *namespaces;
+} attrib_map_t;
 
 // TODO: work on attributes
 typedef struct attrib_t

@@ -108,6 +108,11 @@ option('analyze', type : 'feature',
     value : 'disabled'
 )
 
+option('dynamic_library', type : 'feature',
+    description : 'enable dynamic library loading support',
+    value : 'auto'
+)
+
 # tools
 
 option('tool_notify', type : 'feature',

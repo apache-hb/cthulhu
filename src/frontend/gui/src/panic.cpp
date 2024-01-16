@@ -112,8 +112,8 @@ static void trace_callback(const bt_frame_t *frame, void *user)
     stack_frame_t stack_frame = {
         .address = frame->address,
         .line = symbol.line,
-        .symbol = std::string(name.text, name.size),
-        .file = std::string(path.text, path.size),
+        .symbol = std::string(name.text, name.length),
+        .file = std::string(path.text, path.length),
     };
 
     info->frames.push_back(stack_frame);

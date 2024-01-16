@@ -142,7 +142,7 @@ c_ast_t *c_ast_cast(scan_t *scan, where_t where, c_ast_t *expr, c_ast_t *type)
 c_ast_t *c_ast_string(scan_t *scan, where_t where, text_t text)
 {
     c_ast_t *ast = c_ast_new(scan, where, eAstString);
-    ast->string = typevec_of_array(sizeof(char), text.text, text.size, scan_get_arena(scan));
+    ast->string = typevec_of_array(sizeof(char), text.text, text.length, scan_get_arena(scan));
     return ast;
 }
 
@@ -163,7 +163,7 @@ c_ast_t *c_ast_append_string(scan_t *scan, where_t where, c_ast_t *string, text_
         .last_column = where.last_column,
     };
 
-    typevec_append(string->string, text.text, text.size);
+    typevec_append(string->string, text.text, text.length);
     string->node = node_new(scan, it);
 
     return string;

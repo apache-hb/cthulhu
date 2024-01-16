@@ -1,3 +1,4 @@
+#include "base/util.h"
 #include "setup/setup.h"
 #include "editor/compile.hpp"
 #include "editor/config.hpp"
@@ -438,7 +439,7 @@ private:
 
             if (ImGui::Button("Add"))
             {
-                if (strlen(compile_name) == 0)
+                if (ctu_strlen(compile_name) == 0)
                 {
                     ImGui::OpenPopup(empty_compile_name_popup);
                 }

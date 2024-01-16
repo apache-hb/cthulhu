@@ -1,5 +1,6 @@
 #include "editor/sources.hpp"
 
+#include "base/util.h"
 #include "imgui/imgui.h"
 
 #include "io/io.h"
@@ -18,8 +19,7 @@ Source::Source(const char *str, arena_t *arena)
     os_error_t err = io_error(io);
     if (err == 0)
     {
-        source.size = io_size(io);
-        source.text = (const char*)io_map(io);
+        source = text_view_make((const char*)io_map(io), io_size(io));
     }
     else
     {
@@ -39,7 +39,7 @@ void Source::draw()
 
     if (ImGui::BeginChild(get_path(), ImVec2(0, 0), kSourceFlags))
     {
-        ImGui::TextUnformatted(source.text, source.text + source.size);
+        ImGui::TextUnformatted(source.text, source.text + source.length);
     }
 
     ImGui::EndChild();

@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 /// @defgroup endian Endianess and byte swapping
-/// @ingroup base
+/// @ingroup common
 /// @{
 
 /// @def CTU_BIG_ENDIAN
