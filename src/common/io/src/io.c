@@ -4,8 +4,6 @@
 #include "base/panic.h"
 #include "std/str.h"
 
-#include <string.h>
-
 void io_close(io_t *io)
 {
     CTASSERT(io != NULL);

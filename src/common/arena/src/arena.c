@@ -3,8 +3,6 @@
 #include "base/panic.h"
 #include "base/util.h"
 
-#include <string.h>
-
 /// arena allocator
 
 USE_DECL
@@ -14,7 +12,7 @@ char *arena_strdup(const char *str, arena_t *arena)
 
     size_t len = ctu_strlen(str);
     char *out = arena_malloc(len + 1, "strdup", arena, arena);
-    memcpy(out, str, len);
+    ctu_memcpy(out, str, len);
     out[len] = '\0';
     return out;
 }
@@ -25,7 +23,7 @@ char *arena_strndup(const char *str, size_t len, arena_t *arena)
     CTASSERT(str != NULL);
 
     char *out = arena_malloc(len + 1, "strndup", arena, arena);
-    memcpy(out, str, len);
+    ctu_memcpy(out, str, len);
     out[len] = '\0';
     return out;
 }
@@ -36,7 +34,7 @@ void *arena_memdup(const void *ptr, size_t size, arena_t *arena)
     CTASSERT(ptr != NULL);
 
     void *out = arena_malloc(size, "memdup", arena, arena);
-    memcpy(out, ptr, size);
+    ctu_memcpy(out, ptr, size);
     return out;
 }
 

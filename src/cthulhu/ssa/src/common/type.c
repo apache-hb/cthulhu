@@ -1,3 +1,4 @@
+#include "base/util.h"
 #include "common.h"
 
 #include "cthulhu/tree/query.h"
@@ -231,6 +232,6 @@ ssa_type_t *ssa_type_create_cached(map_t *cache, const tree_t *type)
     arena_t *arena = get_global_arena();
 
     ssa_type_t *result = ssa_type_create(cache, type, arena);
-    memcpy(temp, result, sizeof(ssa_type_t));
+    ctu_memcpy(temp, result, sizeof(ssa_type_t));
     return temp;
 }

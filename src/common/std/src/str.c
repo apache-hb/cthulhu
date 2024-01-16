@@ -1,17 +1,17 @@
 #include "std/str.h"
-#include "base/util.h"
+
 #include "std/map.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
 
 #include "arena/arena.h"
 
-#include "core/macros.h"
+#include "base/util.h"
 #include "base/panic.h"
 
+#include "core/macros.h"
+
 #include <limits.h>
-#include <stddef.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -196,7 +196,7 @@ bool str_startswith(const char *str, const char *prefix)
     CTASSERT(str != NULL);
     CTASSERT(prefix != NULL);
 
-    return strncmp(str, prefix, ctu_strlen(prefix)) == 0;
+    return ctu_strncmp(str, prefix, ctu_strlen(prefix)) == 0;
 }
 
 USE_DECL
@@ -212,7 +212,7 @@ bool str_endswith(const char *str, const char *suffix)
         return false;
     }
 
-    return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
+    return ctu_strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 }
 
 USE_DECL
@@ -260,14 +260,14 @@ char *str_join(const char *sep, vector_t *parts, arena_t *arena)
     {
         if (i != 0)
         {
-            memcpy(out + idx, sep, MIN(remaining, seplen));
+            ctu_memcpy(out + idx, sep, MIN(remaining, seplen));
             idx += seplen;
             remaining -= seplen;
         }
 
         const char *part = vector_get(parts, i);
         size_t part_len = ctu_strlen(part);
-        memcpy(out + idx, part, MIN(remaining, part_len));
+        ctu_memcpy(out + idx, part, MIN(remaining, part_len));
         idx += part_len;
         remaining -= part_len;
     }
@@ -293,7 +293,7 @@ char *str_repeat(const char *str, size_t times, arena_t *arena)
     size_t remaining = outlen;
     for (size_t i = 0; i < times; i++)
     {
-        memcpy(out + i * len, str, MIN(remaining, len));
+        ctu_memcpy(out + i * len, str, MIN(remaining, len));
         remaining -= len;
     }
     out[outlen] = 0;
@@ -607,7 +607,7 @@ char *str_replace_many(const char *str, const map_t *repl, arena_t *arena)
         const map_entry_t *entry = find_matching_key(pairs, str + offset);
         if (entry != NULL)
         {
-            memcpy(out + i, entry->value, ctu_strlen(entry->value));
+            ctu_memcpy(out + i, entry->value, ctu_strlen(entry->value));
             i += ctu_strlen(entry->value);
             offset += ctu_strlen(entry->key);
         }
@@ -723,7 +723,7 @@ static size_t str_rfind_inner(const char *str, size_t len, const char *sub, size
 
     while (len--)
     {
-        if (strncmp(str + len, sub, sublen) == 0)
+        if (ctu_strncmp(str + len, sub, sublen) == 0)
         {
             return len;
         }

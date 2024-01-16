@@ -84,6 +84,12 @@
 #endif
 // clang-format on
 
+#ifdef __cplusplus
+#   define CT_RESTRICT
+#else
+#   define CT_RESTRICT restrict
+#endif
+
 /// @def FUNCNAME
 /// @brief the name of the current function
 /// @warning the format of the string is compiler dependant, please dont try and parse it

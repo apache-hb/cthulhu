@@ -6,8 +6,6 @@
 
 #include "core/macros.h"
 
-#include <string.h>
-
 /// @brief a non-owning, read only view of data
 typedef struct view_t
 {
@@ -25,7 +23,7 @@ static size_t view_read(io_t *self, void *dst, size_t size)
 {
     view_t *mem = view_data(self);
     size_t len = MIN(size, mem->size - mem->offset);
-    memcpy(dst, mem->data + mem->offset, len);
+    ctu_memcpy(dst, mem->data + mem->offset, len);
     mem->offset += len;
     return len;
 }

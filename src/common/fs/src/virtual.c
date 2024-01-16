@@ -1,3 +1,4 @@
+#include "base/util.h"
 #include "common.h"
 
 #include "core/macros.h"
@@ -8,8 +9,6 @@
 #include "std/map.h"
 
 #include "io/impl.h"
-
-#include <string.h>
 
 typedef struct virtual_t
 {
@@ -49,7 +48,7 @@ static size_t vfs_read(io_t *self, void *dst, size_t size)
 {
     virtual_io_t *io = vfs_data(self);
     size_t len = MIN(size, io->data->used - io->offset);
-    memcpy(dst, io->data->data + io->offset, len);
+    ctu_memcpy(dst, io->data->data + io->offset, len);
     io->offset += len;
     return len;
 }
@@ -67,7 +66,7 @@ static size_t vfs_write(io_t *self, const void *src, size_t size)
         data->size = new_size;
     }
 
-    memcpy(data->data + io->offset, src, size);
+    ctu_memcpy(data->data + io->offset, src, size);
     io->offset += size;
 
     return size;

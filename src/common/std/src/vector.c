@@ -1,10 +1,9 @@
 #include "std/vector.h"
 #include "arena/arena.h"
 #include "base/panic.h"
+#include "base/util.h"
 
-#include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 
 /**
  * a vector of non-owning pointers
@@ -92,7 +91,7 @@ vector_t *vector_clone(vector_t *vector)
 
     size_t len = vector_len(vector);
     vector_t *clone = vector_of(len, vector->arena);
-    memcpy(clone->data, vector->data, len * sizeof(void *));
+    ctu_memcpy(clone->data, vector->data, len * sizeof(void *));
     return clone;
 }
 
@@ -180,7 +179,7 @@ void vector_append(vector_t **vector, const vector_t *other)
     size_t len = vector_len(other);
 
     vector_ensure(vector, VEC->used + len);
-    memcpy(VEC->data + VEC->used, other->data, len * sizeof(void *));
+    ctu_memcpy(VEC->data + VEC->used, other->data, len * sizeof(void *));
     VEC->used += len;
 }
 

@@ -35,6 +35,15 @@ int ctu_strncmp(const char *lhs, const char *rhs, size_t length)
 }
 
 USE_DECL
+void *ctu_memcpy(void *restrict dst, const void *restrict src, size_t size)
+{
+    CTASSERT(dst != NULL);
+    CTASSERT(src != NULL);
+
+    return memcpy(dst, src, size);
+}
+
+USE_DECL
 text_t text_make(char *text, size_t length)
 {
     CTASSERT(text != NULL);

@@ -22,6 +22,8 @@ BEGIN_API
 NODISCARD CONSTFN
 CT_BASE_API size_t ptrhash(const void *ptr);
 
+// stdlib wrappers
+
 /// @brief get the length of a string not including the null terminator
 /// equivalent to strlen but with safety checks
 ///
@@ -45,6 +47,20 @@ CT_BASE_API size_t ctu_strlen(IN_STRING const char *str);
 /// @return the comparison result
 NODISCARD CONSTFN
 CT_BASE_API int ctu_strncmp(IN_STRING const char *lhs, IN_STRING const char *rhs, size_t length);
+
+/// @brief copy memory from one location to another
+/// equivalent to memcpy but with safety checks
+///
+/// @pre @p dst and @p src must not be null and must be at least @p size bytes long
+///
+/// @param dst the destination
+/// @param src the source
+/// @param size the number of bytes to copy
+///
+/// @return the destination
+CT_BASE_API void *ctu_memcpy(OUT_WRITES(size) void *CT_RESTRICT dst, IN_READS(size) const void *CT_RESTRICT src, size_t size);
+
+// text api
 
 /// @brief create a new owning text array
 /// @p text must be a valid string at least @p length bytes long

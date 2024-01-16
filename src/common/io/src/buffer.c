@@ -2,9 +2,9 @@
 
 #include "core/macros.h"
 #include "arena/arena.h"
-#include "base/panic.h"
 
-#include <string.h>
+#include "base/panic.h"
+#include "base/util.h"
 
 /// @brief a read/write in memory file
 typedef struct buffer_t
@@ -25,7 +25,7 @@ static size_t mem_read(io_t *self, void *dst, size_t size)
 {
     buffer_t *mem = mem_data(self);
     size_t len = MIN(size, mem->used - mem->offset);
-    memcpy(dst, mem->data + mem->offset, len);
+    ctu_memcpy(dst, mem->data + mem->offset, len);
     mem->offset += len;
     return len;
 }
@@ -40,7 +40,7 @@ static size_t mem_write(io_t *self, const void *src, size_t size)
         mem->total = mem->offset + size;
     }
 
-    memcpy(mem->data + mem->offset, src, size);
+    ctu_memcpy(mem->data + mem->offset, src, size);
     mem->offset += size;
 
     return size;
@@ -97,7 +97,7 @@ io_t *io_memory(const char *name, const void *data, size_t size, os_access_t fla
         .offset = 0
     };
 
-    memcpy(buffer.data, data, size);
+    ctu_memcpy(buffer.data, data, size);
 
     io_t *io = io_new(&kBufferCallbacks, flags, name, &buffer, sizeof(buffer_t), arena);
     ARENA_REPARENT(buffer.data, io, arena);

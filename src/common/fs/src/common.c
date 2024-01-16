@@ -1,11 +1,10 @@
 #include "common.h"
 
 #include "arena/arena.h"
+#include "base/util.h"
 #include "std/str.h"
 
 #include "base/panic.h"
-
-#include <string.h>
 
 // inode api
 
@@ -19,7 +18,7 @@ static inode_t *inode_new(inode_type_t type, const void *data, size_t size, aren
 
     inode_t *inode = ARENA_MALLOC(sizeof(inode_t) + size, "inode", NULL, arena);
     inode->type = type;
-    memcpy(inode->data, data, size);
+    ctu_memcpy(inode->data, data, size);
     return inode;
 }
 
@@ -79,7 +78,7 @@ fs_t *fs_new(inode_t *root, const fs_callbacks_t *cb, const void *data, size_t s
     fs->cb = cb;
     fs->root = root;
 
-    memcpy(fs->data, data, size);
+    ctu_memcpy(fs->data, data, size);
 
     return fs;
 }

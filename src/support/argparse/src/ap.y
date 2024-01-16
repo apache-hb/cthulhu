@@ -69,8 +69,8 @@ ident: IDENT { $$ = $1; }
     | ASSIGN IDENT { $$ = $2; }
     ;
 
-number: NUMBER { memcpy($$, $1, sizeof(mpz_t)); }
-    | ASSIGN NUMBER { memcpy($$, $2, sizeof(mpz_t)); }
+number: NUMBER { mpz_init_set($$, $1); }
+    | ASSIGN NUMBER { mpz_init_set($$, $2); }
     ;
 
 %%

@@ -3,7 +3,6 @@
 #include "arena/arena.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
-#include <string.h>
 
 static c_ast_t *c_ast_new(scan_t *scan, where_t where, c_kind_t kind)
 {

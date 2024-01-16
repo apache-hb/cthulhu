@@ -1,3 +1,4 @@
+#include "base/util.h"
 #include "setup/setup.h"
 #include "format/colour.h"
 #include "base/log.h"
@@ -32,7 +33,6 @@
 #include <stdalign.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <string.h>
 
 #define CHECK_REPORTS(reports, msg)                         \
     do                                                      \
@@ -127,7 +127,7 @@ static void *user_realloc(void *ptr, size_t new_size, size_t old_size, void *use
     if (old->size >= new_size) return old->data;
 
     user_ptr_t *new = get_memory(data, new_size);
-    memcpy(new->data, old->data, old->size);
+    ctu_memcpy(new->data, old->data, old->size);
 
     data->realloc_count++;
 

@@ -13,7 +13,7 @@ src = [
 libendian = library('endian', src,
     build_by_default : false,
     c_args : user_args + [ '-DCT_ENDIAN_BUILD=1' ],
-    dependencies : core,
+    dependencies : [ core, base ],
     include_directories : endian_include
 )
 

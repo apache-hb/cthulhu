@@ -167,7 +167,7 @@ char *fmt_left_align(arena_t *arena, size_t width, const char *fmt, ...)
     size_t size = width - 1;
     char *result = ARENA_MALLOC(size, "fmt_left_align", NULL, arena);
     memset(result, ' ', width);
-    memcpy(result, msg.text, msg.length);
+    ctu_memcpy(result, msg.text, msg.length);
 
     result[width] = '\0';
 
@@ -190,7 +190,7 @@ char *fmt_right_align(arena_t *arena, size_t width, const char *fmt, ...)
     size_t size = width - 1;
     char *result = ARENA_MALLOC(size, "fmt_right_align", NULL, arena);
     memset(result, ' ', width);
-    memcpy(result + (width - msg.length), msg.text, msg.length);
+    ctu_memcpy(result + (width - msg.length), msg.text, msg.length);
 
     result[width] = '\0';
 

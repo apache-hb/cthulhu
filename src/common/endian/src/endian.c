@@ -1,4 +1,4 @@
-#include "base/endian.h"
+#include "endian/endian.h"
 #include "base/panic.h"
 
 #include <stdlib.h> // IWYU pragma: keep

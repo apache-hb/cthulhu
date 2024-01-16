@@ -1,9 +1,8 @@
+#include "base/util.h"
 #include "io/impl.h"
 
 #include "base/panic.h"
 #include "arena/arena.h"
-
-#include <string.h>
 
 void *io_data(io_t *io)
 {
@@ -35,7 +34,7 @@ io_t *io_new(const io_callbacks_t *cb, os_access_t flags, const char *name, cons
     if (size > 0)
     {
         CTASSERT(data != NULL);
-        memcpy(io_data(io), data, size);
+        ctu_memcpy(io_data(io), data, size);
     }
 
     io->cb = cb;

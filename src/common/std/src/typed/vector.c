@@ -1,12 +1,12 @@
 #include "std/typed/vector.h"
 
+#include "base/util.h"
 #include "core/macros.h"
 
 #include "arena/arena.h"
 #include "base/panic.h"
 
 #include <stdlib.h>
-#include <string.h>
 
 /// @brief A vector with a fixed type size.
 typedef struct typevec_t
@@ -28,11 +28,18 @@ typedef struct typevec_t
 
 // seperate from typevec_offset because we want to be able to get offsets
 // outside of the vector
-static void *get_offset_ptr(const typevec_t *vec, size_t index)
+static void *get_element_offset(const typevec_t *vec, size_t index)
 {
     CTASSERT(vec != NULL);
 
     return ((char*)vec->data) + (index * vec->type_size);
+}
+
+static void copy_elements(const typevec_t *vec, void *dst, const void *src, size_t count)
+{
+    CTASSERT(vec != NULL);
+
+    ctu_memcpy(dst, src, vec->type_size * count);
 }
 
 static void typevec_ensure(typevec_t *vec, size_t extra)
@@ -89,7 +96,7 @@ typevec_t *typevec_of_array(size_t type_size, const void *src, size_t count, are
     typevec_t *self = typevec_create(type_size, count, arena);
     self->used = count;
 
-    memcpy(self->data, src, type_size * count);
+    copy_elements(self, self->data, src, count);
 
     return self;
 }
@@ -105,7 +112,7 @@ typevec_t *typevec_slice(const typevec_t *vec, size_t start, size_t end)
     typevec_t *self = typevec_create(vec->type_size, len, vec->arena);
     self->used = len;
 
-    memcpy(self->data, typevec_offset(vec, start), len * vec->type_size);
+    copy_elements(self, self->data, typevec_offset(vec, start), len);
 
     return self;
 }
@@ -125,7 +132,7 @@ void typevec_set(typevec_t *vec, size_t index, const void *src)
     CTASSERT(src != NULL);
 
     void *dst = typevec_offset(vec, index);
-    memcpy(dst, src, vec->type_size);
+    copy_elements(vec, dst, src, 1);
 }
 
 USE_DECL
@@ -135,7 +142,7 @@ void typevec_get(const typevec_t *vec, size_t index, void *dst)
     CTASSERT(dst != NULL);
 
     void *src = typevec_offset(vec, index);
-    memcpy(dst, src, vec->type_size);
+    copy_elements(vec, dst, src, 1);
 }
 
 USE_DECL
@@ -153,8 +160,8 @@ void *typevec_push(typevec_t *vec, const void *src)
 
     typevec_ensure(vec, 1);
 
-    void *dst = get_offset_ptr(vec, vec->used++);
-    memcpy(dst, src, vec->type_size);
+    void *dst = get_element_offset(vec, vec->used++);
+    copy_elements(vec, dst, src, 1);
 
     return dst;
 }
@@ -167,8 +174,8 @@ void typevec_append(typevec_t *vec, const void *src, size_t len)
 
     typevec_ensure(vec, len);
 
-    void *dst = get_offset_ptr(vec, vec->used);
-    memcpy(dst, src, vec->type_size * len);
+    void *dst = get_element_offset(vec, vec->used);
+    ctu_memcpy(dst, src, vec->type_size * len);
     vec->used += len;
 }
 
@@ -178,7 +185,7 @@ void typevec_pop(typevec_t *vec, void *dst)
     CTASSERT(typevec_len(vec) > 0);
 
     void *src = typevec_offset(vec, --vec->used);
-    memcpy(dst, src, vec->type_size);
+    copy_elements(vec, dst, src, 1);
 }
 
 USE_DECL
