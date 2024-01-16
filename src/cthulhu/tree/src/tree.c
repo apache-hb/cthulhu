@@ -170,7 +170,7 @@ tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *re
     }
 
     tree_t *self = tree_decl(eTreeTypeClosure, node, NULL, name, eQualNone);
-    self->result = result;
+    self->return_type = result;
     self->params = params;
     self->arity = arity;
     return self;

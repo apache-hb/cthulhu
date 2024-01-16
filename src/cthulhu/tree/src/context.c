@@ -146,22 +146,6 @@ char *tree_ctx_string(const tree_context_t *ctx, const tree_t *tree, arena_t *ar
 /// getters and setters
 ///
 
-USE_DECL
-void tree_set_extra(tree_t *tree, void *extra)
-{
-    CTASSERT(tree != NULL);
-
-    tree->extra = extra;
-}
-
-USE_DECL
-void *tree_get_extra(const tree_t *tree)
-{
-    CTASSERT(tree != NULL);
-
-    return tree->extra;
-}
-
 static const char *tree_kind_string(const tree_t *tree)
 {
     return tree_kind_to_string(tree_get_kind(tree));

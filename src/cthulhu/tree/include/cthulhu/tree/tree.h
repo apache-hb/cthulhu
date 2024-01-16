@@ -69,7 +69,6 @@ typedef struct tree_t {
     tree_kind_t kind;
     const node_t *node;
     const tree_t *type;
-    void *extra;
 
     union {
         /* eTreeDigit */
@@ -201,7 +200,6 @@ typedef struct tree_t {
 
                         /* eTreeTypeClosure */
                         struct {
-                            const tree_t *result;
                             const tree_t *return_type;
                             arity_t arity;
                         };

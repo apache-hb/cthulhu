@@ -139,7 +139,7 @@ static vector_t *make_runtime_path(arena_t *arena)
     return path;
 }
 
-static tree_t *get_string_type(tree_context_t *context, const node_t *node, size_t size)
+static tree_t *get_string_type(tree_context_t *context, const node_t *node, unsigned size)
 {
     mpz_t value;
     mpz_init_set_ui(value, size);

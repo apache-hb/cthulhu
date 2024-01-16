@@ -186,7 +186,7 @@ const tree_t *tree_fn_get_return(const tree_t *self)
     switch (tree_get_kind(self))
     {
     case eTreeTypeReference: return tree_fn_get_return(self->ptr);
-    case eTreeTypeClosure: return self->result;
+    case eTreeTypeClosure: return self->return_type;
     case eTreeDeclFunction: return tree_fn_get_return(tree_get_type(self));
 
     default: NEVER("invalid function kind %s", tree_to_string(self));
