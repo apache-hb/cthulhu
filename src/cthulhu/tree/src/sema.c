@@ -12,14 +12,14 @@
 static tree_t *tree_module_new(const node_t *node, const char *name,
                                tree_t *parent, cookie_t *cookie,
                                logger_t *reports,
-                               size_t decls, const size_t *sizes)
+                               size_t decls, const size_t *sizes,
+                               arena_t *arena)
 {
     CTASSERTF(decls >= eSemaTotal, "module cannot be constructed with less than %d tags (%zu given)", eSemaTotal, decls);
     CTASSERT(reports != NULL);
 
-    arena_t *arena = get_global_arena();
-
     tree_t *self = tree_decl(eTreeDeclModule, node, NULL, name, eQualNone);
+    self->arena = arena;
     self->parent = parent;
     self->cookie = cookie;
     self->reports = reports;
@@ -37,21 +37,21 @@ static tree_t *tree_module_new(const node_t *node, const char *name,
     return self;
 }
 
-tree_t *tree_module_root(logger_t *reports, cookie_t *cookie, const node_t *node, const char *name, size_t decls, const size_t *sizes)
+tree_t *tree_module_root(logger_t *reports, cookie_t *cookie, const node_t *node, const char *name, size_t decls, const size_t *sizes, arena_t *arena)
 {
     return tree_module_new(
         node, name,
         /* parent = */ NULL,
         /* cookie = */ cookie,
         /* reports = */ reports,
-        decls, sizes);
+        decls, sizes, arena);
 }
 
 tree_t *tree_module(tree_t *parent, const node_t *node, const char *name, size_t decls, const size_t *sizes)
 {
     TREE_EXPECT(parent, eTreeDeclModule);
 
-    return tree_module_new(node, name, parent, parent->cookie, parent->reports, decls, sizes);
+    return tree_module_new(node, name, parent, parent->cookie, parent->reports, decls, sizes, parent->arena);
 }
 
 void *tree_module_get(tree_t *self, size_t tag, const char *name)

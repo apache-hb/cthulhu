@@ -48,7 +48,6 @@ static driver_t *handle_new(lifetime_t *lifetime, const language_t *lang)
 
     self->parent = lifetime;
     self->lang = lang;
-    self->tree_context = tree_context_new(lang->tree_info, lang->name, lifetime->arena);
 
     return self;
 }
@@ -137,7 +136,7 @@ void lifetime_add_language(lifetime_t *lifetime, const language_t *lang)
     }
 
     driver_t *handle = handle_new(lifetime, lang);
-    EXEC(lang, fn_create, handle, handle->tree_context);
+    EXEC(lang, fn_create, handle);
 }
 
 USE_DECL
@@ -290,7 +289,7 @@ void lifetime_run_stage(lifetime_t *lifetime, compile_stage_t stage)
             continue;
         }
 
-        fn_pass(ctx, ctx->tree_context);
+        fn_pass(ctx);
     }
 }
 

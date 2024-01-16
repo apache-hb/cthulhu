@@ -215,6 +215,7 @@ typedef struct tree_t {
 
                 /* eTreeDeclModule */
                 struct {
+                    arena_t *arena;
                     tree_t *parent;
                     cookie_t *cookie;
 
@@ -517,7 +518,7 @@ CT_TREE_API void tree_set_storage(tree_t *self, tree_storage_t storage);
 // will be emitted, they are also required to be valid tree_t objects
 // any custom slots can contain any data, but they will not be emitted
 
-CT_TREE_API tree_t *tree_module_root(logger_t *reports, cookie_t *cookie, const node_t *node, const char *name, size_t decls, const size_t *sizes);
+CT_TREE_API tree_t *tree_module_root(logger_t *reports, cookie_t *cookie, const node_t *node, const char *name, size_t decls, const size_t *sizes, arena_t *arena);
 
 /**
  * @brief create a new module

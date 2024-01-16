@@ -34,7 +34,6 @@ static context_t *context_inner_new(driver_t *handle, const char *name, void *as
     self->name = name;
     self->ast = ast;
     self->tree = root;
-    self->tree_context = handle->tree_context;
 
     return self;
 }
@@ -158,7 +157,8 @@ tree_t *lifetime_sema_new(lifetime_t *lifetime, const char *name, size_t len, co
 
     logger_t *reports = lifetime_get_logger(lifetime);
     cookie_t *cookie = lifetime_get_cookie(lifetime);
-    tree_t *root = tree_module_root(reports, cookie, node_builtin(), name, len, sizes);
+    arena_t *arena = lifetime_get_arena(lifetime);
+    tree_t *root = tree_module_root(reports, cookie, node_builtin(), name, len, sizes, arena);
 
     return root;
 }

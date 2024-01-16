@@ -37,8 +37,7 @@ typedef struct callbacks_t callbacks_t;
 /// @brief initialize a language driver
 ///
 /// @param driver the driver to initialize
-/// @param tree_context the tree context to use
-typedef void (*driver_create_t)(driver_t *driver, tree_context_t *tree_context);
+typedef void (*driver_create_t)(driver_t *driver);
 
 /// @brief destroy a language driver
 ///
@@ -87,8 +86,7 @@ typedef enum compile_stage_t
 /// @brief a driver pass to be run on each translation unit
 ///
 /// @param context the context that is being compiled
-/// @param tree_context the tree compilation context
-typedef void (*driver_pass_t)(context_t *context, tree_context_t *tree_context);
+typedef void (*driver_pass_t)(context_t *context);
 
 /// @brief a language drivers provided configuration
 typedef struct language_t
@@ -117,9 +115,6 @@ typedef struct language_t
 
     /// @brief called at shutdown
     driver_destroy_t fn_destroy;
-
-    /// @brief tree context information
-    tree_info_t tree_info;
 
     /// @brief parse a file into an AST
     /// @note if @a parse_callbacks is set, this function is ignored

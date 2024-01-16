@@ -35,7 +35,6 @@ typedef struct driver_t
 {
     lifetime_t *parent;
     const language_t *lang;
-    tree_context_t *tree_context;
 } driver_t;
 
 // per module in a compiler run
@@ -44,7 +43,6 @@ typedef struct context_t
 {
     lifetime_t *parent;
     const language_t *lang;
-    tree_context_t *tree_context;
 
     const char *name;
     void *ast;
