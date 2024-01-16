@@ -532,7 +532,6 @@ void pl0_forward_decls(context_t *context, tree_context_t *tree_context)
         };
 
         tree_t *tree = tree_open_global(it->node, it->name, gIntRef, resolve);
-        tree_set_extra(tree, it);
         tree_set_storage(tree, const_storage);
         tree_set_attrib(tree, &kExportAttrib);
 
@@ -550,7 +549,6 @@ void pl0_forward_decls(context_t *context, tree_context_t *tree_context)
         };
 
         tree_t *tree = tree_open_global(it->node, it->name, gIntRef, resolve);
-        tree_set_extra(tree, it);
         tree_set_storage(tree, const_storage);
         tree_set_attrib(tree, &kExportAttrib);
 
@@ -569,7 +567,6 @@ void pl0_forward_decls(context_t *context, tree_context_t *tree_context)
         };
 
         tree_t *tree = tree_open_function(it->node, it->name, signature, resolve);
-        tree_set_extra(tree, it);
         tree_set_attrib(tree, &kExportAttrib);
 
         set_proc(sema, ePl0TagProcs, it->name, tree);

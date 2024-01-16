@@ -26,7 +26,6 @@ tree_t *tree_new(tree_kind_t kind, const node_t *node, const tree_t *type)
     self->node = node;
     self->type = type;
     self->context = NULL;
-    self->extra = NULL;
 
     return self;
 }

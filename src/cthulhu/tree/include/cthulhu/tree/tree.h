@@ -73,7 +73,6 @@ typedef struct tree_t {
 
     const node_t *node;
     const tree_t *type;
-    void *extra;
 
     union {
         /* eTreeDigit */
