@@ -8,7 +8,6 @@
 #include "base/panic.h"
 
 #include "memory/memory.h"
-#include "std/str.h"
 #include "std/vector.h"
 
 #include "scan/node.h"
@@ -117,7 +116,7 @@ tree_t *obr_get_void_type(void)
     return gTypeVoid;
 }
 
-tree_t *obr_rt_mod(lifetime_t *lifetime, tree_context_t *tree_context)
+tree_t *obr_rt_mod(lifetime_t *lifetime)
 {
     size_t tags[eObrTagTotal] = {
         [eObrTagValues] = 32,
@@ -126,14 +125,12 @@ tree_t *obr_rt_mod(lifetime_t *lifetime, tree_context_t *tree_context)
         [eObrTagModules] = 32,
     };
 
-    const node_t *node = node_builtin();
-
-    gTypeBoolean = tree_type_bool_new(tree_context, node, "BOOLEAN");
-    gTypeChar = tree_type_digit_new(tree_context, node, "CHAR", eDigitChar, eSignSigned);
-    gTypeShort = tree_type_digit_new(tree_context, node, "SHORTINT", eDigitShort, eSignSigned);
-    gTypeInteger = tree_type_digit_new(tree_context, node, "INTEGER", eDigitInt, eSignSigned);
-    gTypeLong = tree_type_digit_new(tree_context, node, "LONGINT", eDigitLong, eSignSigned);
-    gTypeVoid = tree_type_unit_new(tree_context, node, "VOID");
+    gTypeBoolean = tree_type_bool(node_builtin(), "BOOLEAN", eQualNone);
+    gTypeChar = tree_type_digit(node_builtin(), "CHAR", eDigitChar, eSignSigned, eQualNone);
+    gTypeShort = tree_type_digit(node_builtin(), "SHORTINT", eDigitShort, eSignSigned, eQualNone);
+    gTypeInteger = tree_type_digit(node_builtin(), "INTEGER", eDigitInt, eSignSigned, eQualNone);
+    gTypeLong = tree_type_digit(node_builtin(), "LONGINT", eDigitLong, eSignSigned, eQualNone);
+    gTypeVoid = tree_type_unit(node_builtin(), "VOID");
 
     tree_t *rt = lifetime_sema_new(lifetime, "oberon", eObrTagTotal, tags);
     obr_add_decl(rt, eObrTagTypes, "BOOLEAN", gTypeBoolean);
@@ -146,7 +143,11 @@ tree_t *obr_rt_mod(lifetime_t *lifetime, tree_context_t *tree_context)
     return rt;
 }
 
-vector_t *obr_rt_path(arena_t *arena)
+vector_t *obr_rt_path(void)
 {
-    return str_split("oberon.lang", ".", arena);
+    arena_t *arena = get_global_arena();
+    vector_t *path = vector_new(2, arena);
+    vector_push(&path, "oberon");
+    vector_push(&path, "lang");
+    return path;
 }

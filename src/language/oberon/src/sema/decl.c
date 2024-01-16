@@ -141,8 +141,7 @@ static void resolve_proc(tree_t *sema, tree_t *self, void *user)
     for (size_t i = 0; i < param_count; i++)
     {
         tree_t *param = vector_get(params, i);
-        const char *id = tree_get_name(param);
-        obr_add_decl(ctx, eObrTagValues, id, param);
+        obr_add_decl(ctx, eObrTagValues, param->name, param);
     }
 
     tree_t *body = obr_sema_stmts(ctx, decl->node, decl->body);
@@ -291,7 +290,7 @@ static const tree_attribs_t kEntryPoint = {
     .link = eLinkEntryCli
 };
 
-tree_t *obr_add_init(tree_t *sema, obr_t *mod, tree_context_t *tree_context)
+tree_t *obr_add_init(tree_t *sema, obr_t *mod)
 {
     if (mod->init == NULL) { return NULL; }
 
@@ -301,7 +300,7 @@ tree_t *obr_add_init(tree_t *sema, obr_t *mod, tree_context_t *tree_context)
         .fn_resolve = obr_resolve_init
     };
 
-    tree_t *signature = tree_type_closure_new(tree_context, mod->node, mod->name, obr_get_void_type(), &kEmptyVector, eArityFixed);
+    tree_t *signature = tree_type_closure(mod->node, mod->name, obr_get_void_type(), &kEmptyVector, eArityFixed);
     tree_t *init = tree_open_function(mod->node, mod->name, signature, resolve);
     tree_set_attrib(init, &kEntryPoint);
     return init;

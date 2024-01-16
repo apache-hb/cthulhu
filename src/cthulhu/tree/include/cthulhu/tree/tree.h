@@ -67,10 +67,6 @@ typedef enum tree_kind_t {
 
 typedef struct tree_t {
     tree_kind_t kind;
-
-    // TODO: remove context pointer once we fully move to the new tree api
-    tree_context_t *context;
-
     const node_t *node;
     const tree_t *type;
     void *extra;
@@ -161,7 +157,7 @@ typedef struct tree_t {
 
         /* any declaration */
         struct {
-            const char *decl_name; ///< the name of the declaration
+            const char *name; ///< the name of the declaration
             const tree_attribs_t *attrib; ///< the attributes of the declaration
             const tree_resolve_info_t *resolve; ///< the resolve configuration of the declaration, NULL if resolved
             quals_t quals;
@@ -171,7 +167,7 @@ typedef struct tree_t {
                 struct {
                     const tree_t *ptr;
                     const tree_t *len;
-                    size_t length; // TODO: consteval
+                    size_t length;
                 };
 
                 /* eTreeTypeDigit */
@@ -205,6 +201,7 @@ typedef struct tree_t {
 
                         /* eTreeTypeClosure */
                         struct {
+                            const tree_t *result;
                             const tree_t *return_type;
                             arity_t arity;
                         };
@@ -213,7 +210,7 @@ typedef struct tree_t {
 
                 /* eTreeDeclGlobal|eTreeDeclLocal */
                 struct {
-                    tree_storage_t decl_storage;
+                    tree_storage_t storage;
 
                     tree_t *initial;
                 };
@@ -243,6 +240,55 @@ CT_TREE_API void tree_report(logger_t *reports, const tree_t *error);
 ///
 /// tree type interface
 ///
+
+/**
+ * @brief create an empty type, this is a type that has no values and can never be created in a well defined program
+ *
+ * @param node where this type was defined
+ * @param name the name of the type
+ * @return an empty type
+ */
+CT_TREE_API tree_t *tree_type_empty(const node_t *node, const char *name);
+
+/**
+ * @brief create a unit type, this is a type that has only one value. equivilent to void
+ *
+ * @param node where this type was defined
+ * @param name the name of the type
+ * @return a unit type
+ */
+CT_TREE_API tree_t *tree_type_unit(const node_t *node, const char *name);
+
+/**
+ * @brief create a bool type, this is a type that has only two values, true and false
+ *
+ * @param node where this type was defined
+ * @param name the name of the type
+ * @param quals the qualifiers of the type
+ * @return a bool type
+ */
+CT_TREE_API tree_t *tree_type_bool(const node_t *node, const char *name, quals_t quals);
+
+/**
+ * @brief create an opaque pointer type
+ *
+ * @param node where this type was defined
+ * @param name the name of the type
+ * @return tree_t*
+ */
+CT_TREE_API tree_t *tree_type_opaque(const node_t *node, const char *name);
+
+/**
+ * @brief create a digit type
+ *
+ * @param node where this type was defined
+ * @param name the name of the type
+ * @param digit the width of the digit
+ * @param sign the sign of the digit
+ * @param quals the qualifiers of the type
+ * @return a digit type
+ */
+CT_TREE_API tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sign_t sign, quals_t quals);
 
 /**
  * @brief create a function pointer type
@@ -291,6 +337,7 @@ CT_TREE_API tree_t *tree_type_array(const node_t *node, const char *name, const 
 /// tree expr interface
 ///
 
+CT_TREE_API tree_t *tree_expr_empty(const node_t *node, const tree_t *type);
 CT_TREE_API tree_t *tree_expr_unit(const node_t *node, const tree_t *type);
 CT_TREE_API tree_t *tree_expr_bool(const node_t *node, const tree_t *type, bool value);
 CT_TREE_API tree_t *tree_expr_digit(const node_t *node, const tree_t *type, const mpz_t value);
@@ -461,6 +508,8 @@ CT_TREE_API void tree_set_attrib(tree_t *self, const tree_attribs_t *attrib);
 CT_TREE_API void tree_set_type(tree_t *self, const tree_t *type);
 
 CT_TREE_API tree_t *tree_alias(const tree_t *tree, const char *name);
+
+CT_TREE_API void tree_set_storage(tree_t *self, tree_storage_t storage);
 
 ///
 /// tree sema interface

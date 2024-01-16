@@ -9,7 +9,6 @@
 #include "cthulhu/util/util.h"
 
 #include "memory/memory.h"
-#include "std/str.h"
 #include "std/vector.h"
 
 #include "base/panic.h"
@@ -167,29 +166,29 @@ static tree_t *gStringChar = NULL;
 
 #define DIGIT_TYPE(DIGIT, SIGN) gIntTypes[(DIGIT) * eSignTotal + (SIGN)]
 
-static tree_t *make_int_type(tree_context_t *tree_context, const char *name, digit_t digit, sign_t sign)
+static tree_t *make_int_type(const char *name, digit_t digit, sign_t sign)
 {
-    return (DIGIT_TYPE(digit, sign) = tree_type_digit_new(tree_context, node_builtin(), name, digit, sign));
+    return (DIGIT_TYPE(digit, sign) = tree_type_digit(node_builtin(), name, digit, sign, eQualNone));
 }
 
-static tree_t *make_bool_type(tree_context_t *tree_context, const char *name)
+static tree_t *make_bool_type(const char *name)
 {
-    return (gBoolType = tree_type_bool_new(tree_context, node_builtin(), name));
+    return (gBoolType = tree_type_bool(node_builtin(), name, eQualNone));
 }
 
-static tree_t *make_str_type(tree_context_t *tree_context, const char *name)
+static tree_t *make_str_type(const char *name)
 {
-    return (gStringType = tree_type_pointer_new(tree_context, node_builtin(), name, gStringChar, NULL));
+    return (gStringType = tree_type_pointer(node_builtin(), name, gStringChar, SIZE_MAX));
 }
 
-static tree_t *make_void_type(tree_context_t *tree_context, const char *name)
+static tree_t *make_void_type(const char *name)
 {
-    return (gVoidType = tree_type_unit_new(tree_context, node_builtin(), name));
+    return (gVoidType = tree_type_unit(node_builtin(), name));
 }
 
-static tree_t *make_opaque_type(tree_context_t *tree_context,const char *name)
+static tree_t *make_opaque_type(const char *name)
 {
-    return (gOpaqueType = tree_type_opaque_new(tree_context, node_builtin(), name));
+    return (gOpaqueType = tree_type_opaque(node_builtin(), name));
 }
 
 tree_t *ctu_get_int_type(digit_t digit, sign_t sign)
@@ -205,12 +204,16 @@ tree_t *ctu_get_void_type(void) { return gVoidType; }
 /// runtime and builtin modules
 ///
 
-vector_t *ctu_rt_path(arena_t *arena)
+vector_t *ctu_rt_path(void)
 {
-    return str_split("cthulhu.lang", ".", arena);
+    arena_t *arena = get_global_arena();
+    vector_t *path = vector_new(2, arena);
+    vector_push(&path, "cthulhu");
+    vector_push(&path, "lang");
+    return path;
 }
 
-tree_t *ctu_rt_mod(lifetime_t *lifetime, tree_context_t *tree_context)
+tree_t *ctu_rt_mod(lifetime_t *lifetime)
 {
     arena_t *arena = lifetime_get_arena(lifetime);
 
@@ -224,30 +227,29 @@ tree_t *ctu_rt_mod(lifetime_t *lifetime, tree_context_t *tree_context)
         [eCtuTagSuffixes] = 1,
     };
 
-    gStringChar = tree_type_digit_new(tree_context, node_builtin(), "letter", eDigitChar, eSignSigned);
-    tree_set_qualifiers(gStringChar, eQualConst);
+    gStringChar = tree_type_digit(node_builtin(), "letter", eDigitChar, eSignSigned, eQualConst);
 
     tree_t *root = lifetime_sema_new(lifetime, "runtime", eCtuTagTotal, sizes);
 
-    ctu_add_decl(root, eCtuTagTypes, "char", make_int_type(tree_context, "char", eDigitChar, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uchar", make_int_type(tree_context, "uchar", eDigitChar, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "char", make_int_type("char", eDigitChar, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uchar", make_int_type("uchar", eDigitChar, eSignUnsigned));
 
-    ctu_add_decl(root, eCtuTagTypes, "short", make_int_type(tree_context, "short", eDigitShort, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "ushort", make_int_type(tree_context, "ushort", eDigitShort, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "short", make_int_type("short", eDigitShort, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "ushort", make_int_type("ushort", eDigitShort, eSignUnsigned));
 
-    ctu_add_decl(root, eCtuTagTypes, "int", make_int_type(tree_context, "int", eDigitInt, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uint", make_int_type(tree_context, "uint", eDigitInt, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "int", make_int_type("int", eDigitInt, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uint", make_int_type("uint", eDigitInt, eSignUnsigned));
 
-    ctu_add_decl(root, eCtuTagTypes, "long", make_int_type(tree_context, "long", eDigitLong, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "ulong", make_int_type(tree_context, "ulong", eDigitLong, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "long", make_int_type("long", eDigitLong, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "ulong", make_int_type("ulong", eDigitLong, eSignUnsigned));
 
-    ctu_add_decl(root, eCtuTagTypes, "isize", make_int_type(tree_context, "isize", eDigitSize, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "usize", make_int_type(tree_context, "usize", eDigitSize, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "isize", make_int_type("isize", eDigitSize, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "usize", make_int_type("usize", eDigitSize, eSignUnsigned));
 
-    ctu_add_decl(root, eCtuTagTypes, "bool", make_bool_type(tree_context, "bool"));
-    ctu_add_decl(root, eCtuTagTypes, "str", make_str_type(tree_context, "str"));
-    ctu_add_decl(root, eCtuTagTypes, "void", make_void_type(tree_context, "void"));
-    ctu_add_decl(root, eCtuTagTypes, "opaque", make_opaque_type(tree_context, "opaque"));
+    ctu_add_decl(root, eCtuTagTypes, "bool", make_bool_type("bool"));
+    ctu_add_decl(root, eCtuTagTypes, "str", make_str_type("str"));
+    ctu_add_decl(root, eCtuTagTypes, "void", make_void_type("void"));
+    ctu_add_decl(root, eCtuTagTypes, "opaque", make_opaque_type("opaque"));
 
     ctu_init_attribs(root, arena);
 

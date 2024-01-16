@@ -55,7 +55,6 @@ static size_t sema_array_length(tree_t *sema, obr_t *expr)
     tree_t *it = obr_sema_rvalue(sema, expr, obr_get_integer_type());
     if (tree_is(it, eTreeExprDigit))
     {
-        // TODO: this should be in common or check
         int sign = mpz_sgn(it->digit_value);
         if (sign < 0)
         {

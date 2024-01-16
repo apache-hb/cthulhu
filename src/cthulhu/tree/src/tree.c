@@ -25,8 +25,6 @@ tree_t *tree_new(tree_kind_t kind, const node_t *node, const tree_t *type)
     self->kind = kind;
     self->node = node;
     self->type = type;
-    self->context = NULL;
-    self->extra = NULL;
 
     return self;
 }
@@ -37,7 +35,7 @@ tree_t *tree_decl(tree_kind_t kind, const node_t *node, const tree_t *type, cons
 
     tree_t *self = tree_new(kind, node, type);
 
-    self->decl_name = name;
+    self->name = name;
     self->attrib = &kDefaultAttrib;
     self->resolve = NULL;
     self->quals = quals;
@@ -131,6 +129,34 @@ static bool is_load_type(tree_kind_t kind)
 
 #define EXPECT_LOAD_TYPE(TYPE) CTASSERTF(is_load_type(tree_get_kind(TYPE)), "expected load type, found %s", tree_to_string(TYPE))
 
+tree_t *tree_type_empty(const node_t *node, const char *name)
+{
+    return tree_decl(eTreeTypeUnit, node, NULL, name, eQualNone);
+}
+
+tree_t *tree_type_unit(const node_t *node, const char *name)
+{
+    return tree_decl(eTreeTypeUnit, node, NULL, name, eQualNone);
+}
+
+tree_t *tree_type_bool(const node_t *node, const char *name, quals_t quals)
+{
+    return tree_decl(eTreeTypeBool, node, NULL, name, quals);
+}
+
+tree_t *tree_type_opaque(const node_t *node, const char *name)
+{
+    return tree_decl(eTreeTypeOpaque, node, NULL, name, eQualNone);
+}
+
+tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sign_t sign, quals_t quals)
+{
+    tree_t *self = tree_decl(eTreeTypeDigit, node, NULL, name, quals);
+    self->digit = digit;
+    self->sign = sign;
+    return self;
+}
+
 tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *result, vector_t *params, arity_t arity)
 {
     EXPECT_TYPE(result);
@@ -144,7 +170,7 @@ tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *re
     }
 
     tree_t *self = tree_decl(eTreeTypeClosure, node, NULL, name, eQualNone);
-    self->return_type = result;
+    self->result = result;
     self->params = params;
     self->arity = arity;
     return self;
@@ -182,6 +208,11 @@ tree_t *tree_type_reference(const node_t *node, const char *name, const tree_t *
 ///
 /// literal expressions
 ///
+
+tree_t *tree_expr_empty(const node_t *node, const tree_t *type)
+{
+    return tree_new(eTreeExprEmpty, node, type);
+}
 
 tree_t *tree_expr_unit(const node_t *node, const tree_t *type)
 {

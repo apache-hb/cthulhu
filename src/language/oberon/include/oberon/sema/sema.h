@@ -43,5 +43,5 @@ tree_t *obr_get_void_type(void); // VOID
 
 /// runtime module
 
-tree_t *obr_rt_mod(lifetime_t *lifetime, tree_context_t *tree_context);
-vector_t *obr_rt_path(arena_t *arena);
+tree_t *obr_rt_mod(lifetime_t *lifetime);
+vector_t *obr_rt_path(void);

@@ -19,16 +19,16 @@ TREE_TAG(eTagStorage, "storage", (1 << 3)) ///< this node type has a storage cla
 /// types
 ///
 
-TREE_KIND(eTreeTypeEmpty, "type_empty", eTagName | eTagQual) ///< a type that can never be created
-TREE_KIND(eTreeTypeUnit, "type_unit", eTagName | eTagQual) ///< a type with a single value
-TREE_KIND(eTreeTypeBool, "type_bool", eTagName | eTagQual) ///< a type with two values
-TREE_KIND(eTreeTypeOpaque, "type_opaque", eTagName | eTagQual)
+TREE_KIND(eTreeTypeEmpty, "type_empty", eTagName) ///< a type that can never be created
+TREE_KIND(eTreeTypeUnit, "type_unit", eTagName) ///< a type with a single value
+TREE_KIND(eTreeTypeBool, "type_bool", eTagName) ///< a type with two values
+TREE_KIND(eTreeTypeOpaque, "type_opaque", eTagName)
 TREE_KIND(eTreeTypeDigit, "type_digit", eTagName | eTagQual) ///< a digit with a fixed sign and width
-TREE_KIND(eTreeTypeClosure, "type_closure", eTagName | eTagQual) ///< a function pointer type (no captures)
+TREE_KIND(eTreeTypeClosure, "type_closure", eTagName) ///< a function pointer type (no captures)
 
-TREE_KIND(eTreeTypeReference, "type_reference", eTagName | eTagQual) ///< a reference to an object
-TREE_KIND(eTreeTypePointer, "type_pointer", eTagName | eTagQual) ///< a pointer to an object
-TREE_KIND(eTreeTypeArray, "type_array", eTagName | eTagQual) ///< an array of objects
+TREE_KIND(eTreeTypeReference, "type_reference", eTagName) ///< a reference to an object
+TREE_KIND(eTreeTypePointer, "type_pointer", eTagName) ///< a pointer to an object
+TREE_KIND(eTreeTypeArray, "type_array", eTagName) ///< an array of objects
 
 TREE_KIND(eTreeTypeStruct, "type_struct", eTagName)
 TREE_KIND(eTreeTypeUnion, "type_union", eTagName)

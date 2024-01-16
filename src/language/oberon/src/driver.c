@@ -19,7 +19,7 @@ void obr_create(driver_t *handle, tree_context_t *tree_context)
     CTU_UNUSED(tree_context);
 
     lifetime_t *lifetime = handle_get_lifetime(handle);
-    gRuntime = obr_rt_mod(lifetime, tree_context);
+    gRuntime = obr_rt_mod(lifetime);
 }
 
 void obr_forward_decls(context_t *context, tree_context_t *tree_context)
@@ -43,16 +43,14 @@ void obr_forward_decls(context_t *context, tree_context_t *tree_context)
         obr_t *decl = vector_get(root->decls, i);
         obr_forward_t fwd = obr_forward_decl(sema, decl);
         tree_t *it = fwd.decl;
-        const char *id = tree_get_name(it);
 
-        obr_add_decl(sema, fwd.tag, id, it);
+        obr_add_decl(sema, fwd.tag, it->name, it);
     }
 
-    tree_t *init = obr_add_init(sema, root, tree_context);
+    tree_t *init = obr_add_init(sema, root);
     if (init != NULL)
     {
-        const char *id = tree_get_name(init);
-        obr_add_decl(sema, eObrTagProcs, id, init); // TODO: pick a better name
+        obr_add_decl(sema, eObrTagProcs, init->name, init); // TODO: pick a better name
     }
 
     context_update(context, root, sema);
