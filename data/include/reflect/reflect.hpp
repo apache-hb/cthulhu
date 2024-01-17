@@ -63,5 +63,5 @@ namespace ctu {
 
     // customization point
     template<typename T>
-    consteval const auto& reflect() noexcept;
+    consteval auto reflect() noexcept;
 }
