@@ -399,7 +399,7 @@ static void reflect_enum(c89_emit_t *emit, io_t *io, const char *ns, const ssa_t
     for (size_t i = 0; i < len; i++)
     {
         const ssa_case_t *field = typevec_offset(it.cases, i);
-        io_printf(io, "\t\tcase_t { \"%s\", type_t::%s },\n", field->name, field->name);
+        io_printf(io, "\t\tcase_t { \"e%s\", type_t::e%s },\n", field->name, field->name);
     }
     io_printf(io, "\t};\n");
     io_printf(io, "};\n\n");
