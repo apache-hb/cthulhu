@@ -1,7 +1,6 @@
 #include "cmd.h"
 
 #include "config/config.h"
-#include "io/io.h"
 
 #include "format/notify.h"
 #include "std/vector.h"
@@ -57,6 +56,30 @@ static const cfg_info_t kOutputDir = {
     .long_args = kOutputDirLongArgs,
 };
 
+static const char *const kHeaderFileLongArgs[] = { "header", NULL };
+
+static const cfg_info_t kHeaderFile = {
+    .name = "header-file",
+    .brief = "Header file name override",
+    .long_args = kHeaderFileLongArgs,
+};
+
+static const char *const kSourceFileLongArgs[] = { "source", NULL };
+
+static const cfg_info_t kSourceFile = {
+    .name = "source-file",
+    .brief = "Source file name override",
+    .long_args = kSourceFileLongArgs,
+};
+
+static const char *const kReflectLongArgs[] = { "reflect", NULL };
+
+static const cfg_info_t kReflect = {
+    .name = "reflect",
+    .brief = "Emit reflection information",
+    .long_args = kReflectLongArgs,
+};
+
 static const char *const kReportStyleShortArgs[] = { "r", NULL };
 static const char *const kReportStyleLongArgs[] = { "report", NULL };
 
@@ -80,14 +103,18 @@ tool_t make_tool(arena_t *arena)
 
     cfg_field_t *emit_ir_field = config_bool(config, &kEmitIr, false);
 
-    cfg_field_t *warn_as_error_field = config_bool(config, &kWarnAsError, false);
+    cfg_field_t *output_dir_field = config_string(config, &kOutputDir, NULL);
+
+    cfg_field_t *header_file_field = config_string(config, &kHeaderFile, NULL);
+    cfg_field_t *source_file_field = config_string(config, &kSourceFile, NULL);
+
+    cfg_field_t *emit_reflect_field = config_bool(config, &kReflect, false);
 
     cfg_group_t *report_group = config_group(config, &kReportInfo);
+    cfg_field_t *warn_as_error_field = config_bool(report_group, &kWarnAsError, false);
 
     cfg_int_t report_limit_options = {.initial = 20, .min = 0, .max = 1000};
     cfg_field_t *report_limit_field = config_int(report_group, &kReportLimit, report_limit_options);
-
-    cfg_field_t *output_dir_field = config_string(report_group, &kOutputDir, NULL);
 
     cfg_enum_t report_style_options = {
         .options = kReportStyleChoices,
@@ -102,6 +129,9 @@ tool_t make_tool(arena_t *arena)
 
         .emit_ssa = emit_ir_field,
         .output_dir = output_dir_field,
+        .output_header = header_file_field,
+        .output_source = source_file_field,
+        .output_reflect = emit_reflect_field,
 
         .warn_as_error = warn_as_error_field,
         .report_limit = report_limit_field,

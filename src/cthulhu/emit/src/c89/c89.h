@@ -28,22 +28,44 @@ typedef struct c89_emit_t
     fs_t *fs;
     map_t *deps;
     vector_t *sources;
+
+    // simcoe: hacky way to override the output source and header
+    // makes the codegen behave like what meson generators want
+
+    bool emit_reflect;
+    bool file_override;
+
+    c89_source_t header_override;
+    c89_source_t source_override;
 } c89_emit_t;
 
 ///
 /// type formatting
 ///
 
-const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char *name, bool emit_const);
+typedef enum type_format_t {
+    eFormatEmitNone = 0,
+    eFormatEmitConst = 1 << 0,
+    eFormatEmitCxx = 1 << 1,
+} type_format_t;
+
+const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char *name, type_format_t flags);
 const char *c89_format_params(c89_emit_t *emit, typevec_t *params, bool variadic);
 
 const char *c89_format_storage(c89_emit_t *emit, ssa_storage_t storage, const char *name);
+
+c89_source_t *c89_get_source(c89_emit_t *emit, const ssa_module_t *mod);
+c89_source_t *c89_get_header(c89_emit_t *emit, const ssa_module_t *mod);
+
+io_t *c89_get_header_io(c89_emit_t *emit, const ssa_module_t *mod);
+io_t *c89_get_source_io(c89_emit_t *emit, const ssa_module_t *mod);
+char *get_namespace(const ssa_module_t *mod, arena_t *arena);
 
 ///
 /// symbol foward declarations
 ///
 
-void c89_proto_type(c89_emit_t *emit, const ssa_module_t *mod, const ssa_type_t *type);
+void c89_proto_type(c89_emit_t *emit, io_t *io, const ssa_type_t *type);
 void c89_proto_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *symbol);
 void c89_proto_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *symbol);
 
@@ -51,6 +73,6 @@ void c89_proto_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_sym
 /// symbol definitions
 ///
 
-void c89_define_type(c89_emit_t *emit, const ssa_module_t *mod, const ssa_type_t *type);
+void c89_define_type(c89_emit_t *emit, io_t *io, const ssa_type_t *type, const char *ns);
 void c89_define_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *symbol);
 void c89_define_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *symbol);

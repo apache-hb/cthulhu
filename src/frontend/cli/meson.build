@@ -11,3 +11,13 @@ cli = executable('cli', src,
     ],
     export_dynamic : true
 )
+
+codegen = generator(cli,
+    output : [ '@BASENAME@.reflect.c', '@BASENAME@.reflect.h' ],
+    arguments : [
+        '@INPUT@',
+        '--source=@OUTPUT0@',
+        '--header=@OUTPUT1@',
+        '--reflect'
+    ]
+)

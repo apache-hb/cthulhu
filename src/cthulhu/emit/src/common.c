@@ -10,8 +10,6 @@
 
 #include "base/panic.h"
 
-#include "core/macros.h"
-
 #include <stdarg.h>
 #include <string.h>
 #include <stdint.h>
@@ -24,8 +22,6 @@ static bool check_root_mod(vector_t *path, const char *id)
 
 char *begin_module(emit_t *emit, fs_t *fs, const ssa_module_t *mod)
 {
-    CTU_UNUSED(emit);
-
     // if the last element of the path and the module name are the same then remove the last element
     // this isnt required to be semanticly correct but it makes the output look nicer
 
@@ -97,6 +93,7 @@ char *get_step_from_block(emit_t *emit, const ssa_block_t *block, size_t index)
     return get_step_name(emit, step);
 }
 
+USE_DECL
 void write_string(io_t *io, const char *fmt, ...)
 {
     va_list args;

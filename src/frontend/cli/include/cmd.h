@@ -17,6 +17,9 @@ typedef struct tool_t
 
     cfg_field_t *emit_ssa;
     cfg_field_t *output_dir;
+    cfg_field_t *output_header;
+    cfg_field_t *output_source;
+    cfg_field_t *output_reflect;
 
     cfg_field_t *warn_as_error;
     cfg_field_t *report_limit;

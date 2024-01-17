@@ -76,6 +76,8 @@ typedef struct c89_emit_options_t
 {
     emit_options_t opts;
     bool emit_reflect_info;
+    const char *output_header;
+    const char *output_source;
 } c89_emit_options_t;
 
 typedef struct c89_emit_result_t

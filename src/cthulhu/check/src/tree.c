@@ -480,6 +480,7 @@ static void check_struct_type_recursion(check_t *check, const tree_t *type)
     case eTreeTypePointer:
     case eTreeTypeOpaque:
     case eTreeTypeClosure:
+    case eTreeTypeEnum:
         break;
 
     case eTreeTypeStruct:

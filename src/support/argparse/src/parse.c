@@ -54,6 +54,7 @@ static void push_single_arg(typevec_t *vec, const char *arg)
         {
             // otherwise just paste it in
             typevec_append(vec, arg, len);
+            return;
         }
     }
 

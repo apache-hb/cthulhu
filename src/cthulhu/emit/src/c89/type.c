@@ -1,6 +1,7 @@
 #include "c89.h"
 
 #include "arena/arena.h"
+#include "std/map.h"
 #include "std/vector.h"
 #include "std/str.h"
 
@@ -23,6 +24,16 @@ static const char *get_c89_digit(ssa_type_digit_t ty)
     case eDigit16: return (ty.sign == eSignUnsigned) ? "uint16_t" : "int16_t";
     case eDigit32: return (ty.sign == eSignUnsigned) ? "uint32_t" : "int32_t";
     case eDigit64: return (ty.sign == eSignUnsigned) ? "uint64_t" : "int64_t";
+
+    case eDigitFast8: return (ty.sign == eSignUnsigned) ? "uint_fast8_t" : "int_fast8_t";
+    case eDigitFast16: return (ty.sign == eSignUnsigned) ? "uint_fast16_t" : "int_fast16_t";
+    case eDigitFast32: return (ty.sign == eSignUnsigned) ? "uint_fast32_t" : "int_fast32_t";
+    case eDigitFast64: return (ty.sign == eSignUnsigned) ? "uint_fast64_t" : "int_fast64_t";
+
+    case eDigitLeast8: return (ty.sign == eSignUnsigned) ? "uint_least8_t" : "int_least8_t";
+    case eDigitLeast16: return (ty.sign == eSignUnsigned) ? "uint_least16_t" : "int_least16_t";
+    case eDigitLeast32: return (ty.sign == eSignUnsigned) ? "uint_least32_t" : "int_least32_t";
+    case eDigitLeast64: return (ty.sign == eSignUnsigned) ? "uint_least64_t" : "int_least64_t";
 
     default: NEVER("unknown digit %d", ty.digit);
     }
@@ -56,11 +67,51 @@ static const char *format_c89_pointer(c89_emit_t *emit, ssa_type_pointer_t point
     return c89_format_type(emit, pointer.pointer, tmp, true);
 }
 
-const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char *name, bool emit_const)
+static const char *format_c89_enum(c89_emit_t *emit, const ssa_type_t *type, const char *name, const char *quals, type_format_t flags)
+{
+    if (flags & eFormatEmitCxx)
+    {
+        const ssa_module_t *mod = map_get(emit->modmap, type);
+        const char *ns = get_namespace(mod, emit->arena);
+
+        return (name != NULL)
+            ? str_format(emit->arena, "%s%s::%s %s", quals, ns, type->name, name)
+            : str_format(emit->arena, "%s%s::%s", quals, ns, type->name);
+    }
+    else
+    {
+        return (name != NULL)
+            // TODO: this is a hack for abi stability
+            // update define_enum when this is updated
+            ? str_format(emit->arena, "%s %s_underlying_t %s", quals, type->name, name)
+            : str_format(emit->arena, "%s %s_underlying_t", quals, type->name);
+    }
+}
+
+static const char *format_c89_struct(c89_emit_t *emit, const ssa_type_t *type, const char *name, const char *quals, type_format_t flags)
+{
+    if (flags & eFormatEmitCxx)
+    {
+        const ssa_module_t *mod = map_get(emit->modmap, type);
+        const char *ns = get_namespace(mod, emit->arena);
+
+        return (name != NULL)
+            ? str_format(emit->arena, "%s%s::%s %s", quals, ns, type->name, name)
+            : str_format(emit->arena, "%s%s::%s", quals, ns, type->name);
+    }
+    else
+    {
+        return (name != NULL)
+            ? str_format(emit->arena, "%sstruct %s %s", quals, type->name, name)
+            : str_format(emit->arena, "%sstruct %s", quals, type->name);
+    }
+}
+
+const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char *name, type_format_t flags)
 {
     CTASSERT(type != NULL);
 
-    const char *quals = get_quals(type->quals, emit_const, emit->arena);
+    const char *quals = get_quals(type->quals, flags & eFormatEmitConst, emit->arena);
 
     switch (type->kind)
     {
@@ -86,15 +137,9 @@ const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char
     case eTypeClosure: return format_c89_closure(emit, quals, type->closure, name);
     case eTypePointer: return format_c89_pointer(emit, type->pointer, name);
 
-    case eTypeEnum: return (name != NULL)
-        // TODO: this is a hack for abi stability
-        // update define_enum when this is updated
-        ? str_format(emit->arena, "%s %s_underlying_t %s", quals, type->name, name)
-        : str_format(emit->arena, "%s %s_underlying_t", quals, type->name);
+    case eTypeEnum: return format_c89_enum(emit, type, name, quals, flags);
 
-    case eTypeStruct: return (name != NULL)
-        ? str_format(emit->arena, "%sstruct %s %s", quals, type->name, name)
-        : str_format(emit->arena, "%sstruct %s", quals, type->name);
+    case eTypeStruct: return format_c89_struct(emit, type, name, quals, flags);
 
     case eTypeEmpty: NEVER("cannot emit empty type `%s`", type->name);
     default: NEVER("unknown type %s", type_to_string(type, emit->arena));

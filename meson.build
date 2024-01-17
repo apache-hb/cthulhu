@@ -90,6 +90,8 @@ parts = version.split('.')
 source_dir = meson.project_source_root() / 'src'
 data_dir = meson.project_source_root() / 'data'
 
+reflect_include = include_directories('data/include')
+
 config_cdata = configuration_data()
 
 config_cdata.set('CTU_MAJOR', parts[0].to_int())

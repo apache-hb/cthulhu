@@ -469,4 +469,13 @@ CTU_EVENT(SyntaxError, {
     .description = "The parser encountered a syntax error",
 })
 
+CTU_EVENT(SourceAndHeaderOutput, {
+    .severity = eSeverityFatal,
+    .id = "M0066",
+    .brief = "Source and header both need to be specified",
+    .description =
+        "When generating C output files it is invalid to specify only "
+        "a source or header file, either both or neither must be specified",
+})
+
 #undef CTU_EVENT

@@ -247,6 +247,44 @@ tree_t *ctu_rt_mod(lifetime_t *lifetime)
     ctu_add_decl(root, eCtuTagTypes, "isize", make_int_type("isize", eDigitSize, eSignSigned));
     ctu_add_decl(root, eCtuTagTypes, "usize", make_int_type("usize", eDigitSize, eSignUnsigned));
 
+    // simcoe: these should be made into a library
+
+    ctu_add_decl(root, eCtuTagTypes, "int8", make_int_type("int8", eDigit8, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uint8", make_int_type("uint8", eDigit8, eSignUnsigned));
+
+    ctu_add_decl(root, eCtuTagTypes, "int16", make_int_type("int16", eDigit16, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uint16", make_int_type("uint16", eDigit16, eSignUnsigned));
+
+    ctu_add_decl(root, eCtuTagTypes, "int32", make_int_type("int32", eDigit32, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uint32", make_int_type("uint32", eDigit32, eSignUnsigned));
+
+    ctu_add_decl(root, eCtuTagTypes, "int64", make_int_type("int64", eDigit64, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uint64", make_int_type("uint64", eDigit64, eSignUnsigned));
+
+    ctu_add_decl(root, eCtuTagTypes, "intfast8", make_int_type("intfast8", eDigitFast8, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uintfast8", make_int_type("uintfast8", eDigitFast8, eSignUnsigned));
+
+    ctu_add_decl(root, eCtuTagTypes, "intfast16", make_int_type("intfast16", eDigitFast16, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uintfast16", make_int_type("uintfast16", eDigitFast16, eSignUnsigned));
+
+    ctu_add_decl(root, eCtuTagTypes, "intfast32", make_int_type("intfast32", eDigitFast32, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uintfast32", make_int_type("uintfast32", eDigitFast32, eSignUnsigned));
+
+    ctu_add_decl(root, eCtuTagTypes, "intfast64", make_int_type("intfast64", eDigitFast64, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uintfast64", make_int_type("uintfast64", eDigitFast64, eSignUnsigned));
+
+    ctu_add_decl(root, eCtuTagTypes, "intleast8", make_int_type("intleast8", eDigitLeast8, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uintleast8", make_int_type("uintleast8", eDigitLeast8, eSignUnsigned));
+
+    ctu_add_decl(root, eCtuTagTypes, "intleast16", make_int_type("intleast16", eDigitLeast16, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uintleast16", make_int_type("uintleast16", eDigitLeast16, eSignUnsigned));
+
+    ctu_add_decl(root, eCtuTagTypes, "intleast32", make_int_type("intleast32", eDigitLeast32, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uintleast32", make_int_type("uintleast32", eDigitLeast32, eSignUnsigned));
+
+    ctu_add_decl(root, eCtuTagTypes, "intleast64", make_int_type("intleast64", eDigitLeast64, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uintleast64", make_int_type("uintleast64", eDigitLeast64, eSignUnsigned));
+
     ctu_add_decl(root, eCtuTagTypes, "bool", make_bool_type("bool"));
     ctu_add_decl(root, eCtuTagTypes, "str", make_str_type("str"));
     ctu_add_decl(root, eCtuTagTypes, "void", make_void_type("void"));

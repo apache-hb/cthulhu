@@ -207,12 +207,23 @@ int main(int argc, const char **argv)
         CHECK_LOG(reports, "emitting ssa");
     }
 
-    c89_emit_options_t c89_emit_options = {.opts = base_emit_options};
+    const char *output_header = cfg_string_value(tool.output_header);
+    const char *output_source = cfg_string_value(tool.output_source);
+
+    c89_emit_options_t c89_emit_options = {
+        .opts = base_emit_options,
+        .emit_reflect_info = cfg_bool_value(tool.output_reflect),
+        .output_header = output_header,
+        .output_source = output_source,
+    };
     c89_emit_result_t c89_emit_result = emit_c89(&c89_emit_options);
     CTU_UNUSED(c89_emit_result); // TODO: check for errors
     CHECK_LOG(reports, "emitting c89");
 
     const char *outpath = "out";
+    if (output_header != NULL && output_source != NULL)
+        outpath = ".";
+
     fs_t *out = fs_physical(outpath, arena);
     if (out == NULL)
     {

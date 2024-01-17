@@ -37,7 +37,7 @@ static const char *get_absolute(fs_t *fs, inode_t *node, const char *path)
     const physical_t *self = fs_data(fs);
     const physical_dir_t *dir = inode_data(node);
 
-    CTASSERT(!is_special(self->root));
+    // CTASSERT(!is_special(self->root));
 
     if (is_special(dir->path) && is_special(path))
     {
