@@ -21,3 +21,13 @@ codegen = generator(cli,
         '--reflect'
     ]
 )
+
+reflect = generator(cli,
+    output : [ '@BASENAME@.reflect.h' ],
+    arguments : [
+        '@INPUT@',
+        '--source=@OUTPUT0@.discard.c',
+        '--header=@OUTPUT0@',
+        '--reflect'
+    ]
+)
