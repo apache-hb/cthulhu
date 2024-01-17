@@ -139,9 +139,9 @@ tree_t *tree_type_unit(const node_t *node, const char *name)
     return tree_decl(eTreeTypeUnit, node, NULL, name, eQualNone);
 }
 
-tree_t *tree_type_bool(const node_t *node, const char *name, quals_t quals)
+tree_t *tree_type_bool(const node_t *node, const char *name)
 {
-    return tree_decl(eTreeTypeBool, node, NULL, name, quals);
+    return tree_decl(eTreeTypeBool, node, NULL, name, eQualNone);
 }
 
 tree_t *tree_type_opaque(const node_t *node, const char *name)
@@ -149,9 +149,9 @@ tree_t *tree_type_opaque(const node_t *node, const char *name)
     return tree_decl(eTreeTypeOpaque, node, NULL, name, eQualNone);
 }
 
-tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sign_t sign, quals_t quals)
+tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sign_t sign)
 {
-    tree_t *self = tree_decl(eTreeTypeDigit, node, NULL, name, quals);
+    tree_t *self = tree_decl(eTreeTypeDigit, node, NULL, name, eQualNone);
     self->digit = digit;
     self->sign = sign;
     return self;

@@ -40,7 +40,7 @@ static void decl_close(tree_t *decl, tree_kind_t kind)
     decl->resolve = NULL;
 }
 
-tree_t *tree_resolve(cookie_t *cookie, const tree_t *decl)
+tree_t *tree_resolve(tree_cookie_t *cookie, const tree_t *decl)
 {
     tree_t *inner = (tree_t*)decl;
     if (tree_is(decl, eTreeError)) { return inner; }
@@ -136,10 +136,13 @@ void tree_close_function(tree_t *self, tree_t *body)
     decl_close(self, eTreeDeclFunction);
     self->body = body;
 
-    CTASSERTF(vector_len(self->params) == vector_len(self->type->params),
+    const vector_t *params = tree_fn_get_params(self);
+    arity_t arity = tree_fn_get_arity(self);
+
+    CTASSERTF(vector_len(self->params) == vector_len(params),
         "decl %s has %zu params, expected %zu%s parameter(s)",
         tree_get_name(self), vector_len(self->params),
-        vector_len(self->type->params), (self->type->arity == eArityFixed) ? "" : " or more"
+        vector_len(params), (arity == eArityFixed) ? "" : " or more"
     );
 }
 
@@ -212,13 +215,6 @@ void tree_set_attrib(tree_t *self, const tree_attribs_t *attrib)
     CTASSERT(self != NULL);
 
     self->attrib = attrib;
-}
-
-void tree_set_type(tree_t *self, const tree_t *type)
-{
-    CTASSERT(self != NULL);
-
-    self->type = type;
 }
 
 tree_t *tree_alias(const tree_t *tree, const char *name)

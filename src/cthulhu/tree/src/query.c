@@ -210,7 +210,10 @@ arity_t tree_fn_get_arity(const tree_t *self)
     switch (tree_get_kind(self))
     {
     case eTreeTypeClosure: return self->arity;
-    case eTreeDeclFunction: return self->type->arity;
+    case eTreeDeclFunction: {
+        const tree_t *type = tree_get_type(self);
+        return type->arity;
+    }
 
     default: NEVER("invalid function kind %s", tree_to_string(self));
     }

@@ -10,7 +10,7 @@
 #include "base/panic.h"
 
 static tree_t *tree_module_new(const node_t *node, const char *name,
-                               tree_t *parent, cookie_t *cookie,
+                               tree_t *parent, tree_cookie_t *cookie,
                                logger_t *reports,
                                size_t decls, const size_t *sizes,
                                arena_t *arena)
@@ -37,7 +37,7 @@ static tree_t *tree_module_new(const node_t *node, const char *name,
     return self;
 }
 
-tree_t *tree_module_root(logger_t *reports, cookie_t *cookie, const node_t *node, const char *name, size_t decls, const size_t *sizes, arena_t *arena)
+tree_t *tree_module_root(logger_t *reports, tree_cookie_t *cookie, const node_t *node, const char *name, size_t decls, const size_t *sizes, arena_t *arena)
 {
     return tree_module_new(
         node, name,
@@ -94,7 +94,7 @@ map_t *tree_module_tag(const tree_t *self, size_t tag)
     return vector_get(self->tags, tag);
 }
 
-cookie_t *tree_get_cookie(tree_t *self)
+tree_cookie_t *tree_get_cookie(tree_t *self)
 {
     TREE_EXPECT(self, eTreeDeclModule);
 

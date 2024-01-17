@@ -142,7 +142,7 @@ static tree_t *get_string_type(const node_t *node, size_t size)
 
 static tree_t *get_bool_type(const node_t *node)
 {
-    return tree_type_bool(node, "boolean", eQualNone);
+    return tree_type_bool(node, "boolean");
 }
 
 static tree_storage_t get_const_storage(const tree_t *type)
@@ -173,8 +173,8 @@ void pl0_init(driver_t *handle)
     lifetime_t *lifetime = handle_get_lifetime(handle);
     arena_t *arena = lifetime_get_arena(lifetime);
 
-    gIntType = tree_type_digit(node, "integer", eDigitInt, eSignSigned, eQualNone);
-    gCharType = tree_type_digit(node, "char", eDigitChar, eSignSigned, eQualNone);
+    gIntType = tree_type_digit(node, "integer", eDigitInt, eSignSigned);
+    gCharType = tree_type_digit(node, "char", eDigitChar, eSignSigned);
     gBoolType = get_bool_type(node);
 
     gVoidType = tree_type_unit(node, "void");
@@ -493,7 +493,7 @@ void pl0_forward_decls(context_t *context)
 
     pl0_t *root = context_get_ast(context);
     logger_t *reports = lifetime_get_logger(lifetime);
-    cookie_t *cookie = lifetime_get_cookie(lifetime);
+    tree_cookie_t *cookie = lifetime_get_cookie(lifetime);
     arena_t *arena = lifetime_get_arena(lifetime);
 
     size_t const_count = vector_len(root->consts);

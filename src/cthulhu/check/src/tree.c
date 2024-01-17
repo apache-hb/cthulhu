@@ -44,7 +44,8 @@ static bool check_simple(check_t *check, const tree_t *decl)
     CTASSERT(id != NULL);
     CTASSERT(!str_equal(id, ""));
 
-    CTASSERTF(decl->type != NULL, "decl `%s` has no type", id);
+    const tree_t *ty = tree_get_type(decl);
+    CTASSERTF(ty != NULL, "decl `%s` has no type", id);
 
     return true;
 }
@@ -505,7 +506,8 @@ static void check_aggregate_recursion(check_t *check, const tree_t *type)
         for (size_t i = 0; i < len; i++)
         {
             const tree_t *field = vector_get(type->fields, i);
-            check_struct_type_recursion(check, field->type);
+            const tree_t *ty = tree_get_type(field);
+            check_struct_type_recursion(check, ty);
         }
         vector_drop(check->type_stack);
     }
@@ -555,7 +557,8 @@ static void check_inner_type_recursion(check_t *check, const tree_t *type)
         for (size_t i = 0; i < len; i++)
         {
             const tree_t *param = vector_get(params, i);
-            check_type_recursion(check, param->type);
+            const tree_t *ty = tree_get_type(param);
+            check_type_recursion(check, ty);
         }
         break;
 

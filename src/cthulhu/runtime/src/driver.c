@@ -95,7 +95,7 @@ arena_t *lifetime_get_arena(lifetime_t *lifetime)
 }
 
 USE_DECL
-cookie_t *lifetime_get_cookie(lifetime_t *lifetime)
+tree_cookie_t *lifetime_get_cookie(lifetime_t *lifetime)
 {
     CTASSERT(lifetime != NULL);
 
@@ -156,7 +156,7 @@ tree_t *lifetime_sema_new(lifetime_t *lifetime, const char *name, size_t len, co
     CTASSERT(len > 0);
 
     logger_t *reports = lifetime_get_logger(lifetime);
-    cookie_t *cookie = lifetime_get_cookie(lifetime);
+    tree_cookie_t *cookie = lifetime_get_cookie(lifetime);
     arena_t *arena = lifetime_get_arena(lifetime);
     tree_t *root = tree_module_root(reports, cookie, node_builtin(), name, len, sizes, arena);
 

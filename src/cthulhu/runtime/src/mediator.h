@@ -26,7 +26,7 @@ typedef struct lifetime_t
     map_t *extensions;
     map_t *modules;
 
-    cookie_t cookie;
+    tree_cookie_t cookie;
 } lifetime_t;
 
 // per language inside a compiler run

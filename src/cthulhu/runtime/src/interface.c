@@ -92,7 +92,7 @@ lifetime_t *lifetime_new(mediator_t *mediator, arena_t *arena)
     self->extensions = map_optimal(16, kTypeInfoString, arena);
     self->modules = map_optimal(64, kTypeInfoString, arena);
 
-    cookie_t cookie = {
+    tree_cookie_t cookie = {
         .reports = logger,
         .stack = vector_new(16, arena),
     };

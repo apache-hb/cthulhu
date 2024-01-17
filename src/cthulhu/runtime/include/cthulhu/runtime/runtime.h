@@ -21,7 +21,7 @@ typedef struct diagnostic_t diagnostic_t;
 typedef struct vector_t vector_t;
 typedef struct ap_t ap_t;
 typedef struct tree_t tree_t;
-typedef struct cookie_t cookie_t;
+typedef struct tree_cookie_t tree_cookie_t;
 typedef struct scan_t scan_t;
 typedef struct logger_t logger_t;
 typedef struct cfg_group_t cfg_group_t;
@@ -155,7 +155,7 @@ CT_RUNTIME_API arena_t *lifetime_get_arena(IN_NOTNULL lifetime_t *lifetime);
 ///
 /// @return the cookie
 NODISCARD
-CT_RUNTIME_API cookie_t *lifetime_get_cookie(IN_NOTNULL lifetime_t *lifetime);
+CT_RUNTIME_API tree_cookie_t *lifetime_get_cookie(IN_NOTNULL lifetime_t *lifetime);
 
 /// @brief get the name of a compile stage
 ///

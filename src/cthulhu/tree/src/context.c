@@ -97,3 +97,10 @@ const tree_t *tree_get_type(const tree_t *tree)
 
     return tree->type;
 }
+
+void tree_set_type(tree_t *self, const tree_t *type)
+{
+    CTASSERTF(tree_has_tag(self, eTagType), "tree type %s does not have a type", tree_kind_string(self));
+
+    self->type = type;
+}

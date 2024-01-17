@@ -87,7 +87,7 @@ ssa_value_t *ssa_value_pointer(const ssa_type_t *type, const void *value)
 
 ssa_value_t *ssa_value_from(map_t *types, const tree_t *expr)
 {
-    const ssa_type_t *type = ssa_type_create_cached(types, expr->type);
+    const ssa_type_t *type = ssa_type_create_cached(types, tree_get_type(expr));
     switch (expr->kind)
     {
     case eTreeExprEmpty: return ssa_value_empty(type);

@@ -14,7 +14,7 @@ typedef struct map_t map_t;
 typedef struct node_t node_t;
 
 typedef struct tree_t tree_t;
-typedef struct cookie_t cookie_t;
+typedef struct tree_cookie_t tree_cookie_t;
 typedef struct diagnostic_t diagnostic_t;
 
 BEGIN_API
@@ -45,10 +45,10 @@ typedef struct tree_attribs_t {
     const char *deprecated; ///< the reason for deprecation, or NULL if not deprecated
 } tree_attribs_t;
 
-typedef struct cookie_t {
+typedef struct tree_cookie_t {
     logger_t *reports;
     vector_t *stack;
-} cookie_t;
+} tree_cookie_t;
 
 typedef struct tree_resolve_info_t {
     tree_t *sema;
@@ -217,7 +217,7 @@ typedef struct tree_t {
                 struct {
                     arena_t *arena;
                     tree_t *parent;
-                    cookie_t *cookie;
+                    tree_cookie_t *cookie;
 
                     logger_t *reports;
                     vector_t *tags; ///< vector_t<map_t<const char*, void*>*>
@@ -263,10 +263,9 @@ CT_TREE_API tree_t *tree_type_unit(const node_t *node, const char *name);
  *
  * @param node where this type was defined
  * @param name the name of the type
- * @param quals the qualifiers of the type
  * @return a bool type
  */
-CT_TREE_API tree_t *tree_type_bool(const node_t *node, const char *name, quals_t quals);
+CT_TREE_API tree_t *tree_type_bool(const node_t *node, const char *name);
 
 /**
  * @brief create an opaque pointer type
@@ -284,10 +283,9 @@ CT_TREE_API tree_t *tree_type_opaque(const node_t *node, const char *name);
  * @param name the name of the type
  * @param digit the width of the digit
  * @param sign the sign of the digit
- * @param quals the qualifiers of the type
  * @return a digit type
  */
-CT_TREE_API tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sign_t sign, quals_t quals);
+CT_TREE_API tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sign_t sign);
 
 /**
  * @brief create a function pointer type
@@ -425,7 +423,7 @@ CT_TREE_API tree_t *tree_stmt_jump(const node_t *node, tree_t *label, tree_jump_
 ///
 
 // delay the resolve of a declaration
-CT_TREE_API tree_t *tree_resolve(cookie_t *cookie, const tree_t *decl);
+CT_TREE_API tree_t *tree_resolve(tree_cookie_t *cookie, const tree_t *decl);
 CT_TREE_API tree_t *tree_resolve_type(const tree_t *decl);
 
 CT_TREE_API tree_t *tree_open_decl(const node_t *node, const char *name, tree_resolve_info_t resolve);
@@ -518,7 +516,7 @@ CT_TREE_API void tree_set_storage(tree_t *self, tree_storage_t storage);
 // will be emitted, they are also required to be valid tree_t objects
 // any custom slots can contain any data, but they will not be emitted
 
-CT_TREE_API tree_t *tree_module_root(logger_t *reports, cookie_t *cookie, const node_t *node, const char *name, size_t decls, const size_t *sizes, arena_t *arena);
+CT_TREE_API tree_t *tree_module_root(logger_t *reports, tree_cookie_t *cookie, const node_t *node, const char *name, size_t decls, const size_t *sizes, arena_t *arena);
 
 /**
  * @brief create a new module
@@ -563,7 +561,7 @@ CT_TREE_API map_t *tree_module_tag(const tree_t *self, size_t tag);
  * @param sema the module
  * @return the cookie
  */
-CT_TREE_API cookie_t *tree_get_cookie(tree_t *sema);
+CT_TREE_API tree_cookie_t *tree_get_cookie(tree_t *sema);
 
 /// @}
 

@@ -162,23 +162,23 @@ static tree_t *gVoidType = NULL;
 static tree_t *gOpaqueType = NULL;
 static tree_t *gStringType = NULL;
 
-static tree_t *gStringChar = NULL;
+static tree_t *gLetter = NULL;
 
 #define DIGIT_TYPE(DIGIT, SIGN) gIntTypes[(DIGIT) * eSignTotal + (SIGN)]
 
 static tree_t *make_int_type(const char *name, digit_t digit, sign_t sign)
 {
-    return (DIGIT_TYPE(digit, sign) = tree_type_digit(node_builtin(), name, digit, sign, eQualNone));
+    return (DIGIT_TYPE(digit, sign) = tree_type_digit(node_builtin(), name, digit, sign));
 }
 
 static tree_t *make_bool_type(const char *name)
 {
-    return (gBoolType = tree_type_bool(node_builtin(), name, eQualNone));
+    return (gBoolType = tree_type_bool(node_builtin(), name));
 }
 
 static tree_t *make_str_type(const char *name)
 {
-    return (gStringType = tree_type_pointer(node_builtin(), name, gStringChar, SIZE_MAX));
+    return (gStringType = tree_type_pointer(node_builtin(), name, gLetter, SIZE_MAX));
 }
 
 static tree_t *make_void_type(const char *name)
@@ -196,7 +196,7 @@ tree_t *ctu_get_int_type(digit_t digit, sign_t sign)
     return DIGIT_TYPE(digit, sign);
 }
 
-tree_t *ctu_get_char_type(void) { return gStringChar; }
+tree_t *ctu_get_char_type(void) { return gLetter; }
 tree_t *ctu_get_bool_type(void) { return gBoolType; }
 tree_t *ctu_get_void_type(void) { return gVoidType; }
 
@@ -227,7 +227,8 @@ tree_t *ctu_rt_mod(lifetime_t *lifetime)
         [eCtuTagSuffixes] = 1,
     };
 
-    gStringChar = tree_type_digit(node_builtin(), "letter", eDigitChar, eSignSigned, eQualConst);
+    gLetter = tree_type_digit(node_builtin(), "letter", eDigitChar, eSignSigned);
+    tree_set_qualifiers(gLetter, eQualConst);
 
     tree_t *root = lifetime_sema_new(lifetime, "runtime", eCtuTagTotal, sizes);
 

@@ -23,7 +23,7 @@ static vector_t *example_lang_path(void)
 static tree_t *example_lang_module(lifetime_t *lifetime)
 {
     logger_t *reports = lifetime_get_logger(lifetime);
-    cookie_t *cookie = lifetime_get_cookie(lifetime);
+    tree_cookie_t *cookie = lifetime_get_cookie(lifetime);
     arena_t *arena = lifetime_get_arena(lifetime);
 
     const node_t *node = node_builtin();

@@ -80,7 +80,8 @@ static void ctu_resolve_global(tree_t *sema, tree_t *self, void *user)
         .length = size,
         .quals = decl->mut ? eQualMutable : eQualConst
     };
-    self->type = tree_type_reference(self->node, self->name, real_type);
+    tree_t *ref = tree_type_reference(self->node, self->name, real_type);
+    tree_set_type(self, ref);
     tree_set_storage(self, storage);
     tree_close_global(self, expr);
 }
