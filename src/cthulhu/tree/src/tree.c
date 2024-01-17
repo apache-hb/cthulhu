@@ -39,6 +39,7 @@ tree_t *tree_decl(tree_kind_t kind, const node_t *node, const tree_t *type, cons
     self->attrib = &kDefaultAttrib;
     self->resolve = NULL;
     self->quals = quals;
+    self->eval_model = eEvalRuntime;
 
     return self;
 }

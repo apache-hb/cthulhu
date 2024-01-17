@@ -87,8 +87,10 @@ const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char
     case eTypePointer: return format_c89_pointer(emit, type->pointer, name);
 
     case eTypeEnum: return (name != NULL)
-        ? str_format(emit->arena, "%senum %s %s", quals, type->name, name)
-        : str_format(emit->arena, "%senum %s", quals, type->name);
+        // TODO: this is a hack for abi stability
+        // update define_enum when this is updated
+        ? str_format(emit->arena, "%s %s_underlying_t %s", quals, type->name, name)
+        : str_format(emit->arena, "%s %s_underlying_t", quals, type->name);
 
     case eTypeStruct: return (name != NULL)
         ? str_format(emit->arena, "%sstruct %s %s", quals, type->name, name)

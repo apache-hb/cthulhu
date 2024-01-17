@@ -2,11 +2,13 @@
 #   define TREE_TAG(ID, NAME, BIT)
 #endif
 
-TREE_TAG(eTagNone, "none", (0 << 0)) ///< no tags
-TREE_TAG(eTagName, "name", (1 << 0)) ///< the node type has a name
-TREE_TAG(eTagQual, "qual", (1 << 1)) ///< this node type has type qualifiers
-TREE_TAG(eTagType, "type", (1 << 2)) ///< this node type has a type it evaluates to
-TREE_TAG(eTagStorage, "storage", (1 << 3)) ///< this node type has a storage class
+TREE_TAG(eTagNone,    "none",       (0 << 0)) ///< no tags
+TREE_TAG(eTagName,    "name",       (1 << 0)) ///< the node type can have a name
+TREE_TAG(eTagQual,    "qual",       (1 << 1)) ///< this node type can have type qualifiers
+TREE_TAG(eTagIsType,  "is_a_type",  (1 << 2)) ///< this node type is a type
+TREE_TAG(eTagHasType, "has_a_type", (1 << 3)) ///< this node type has a type it evaluates to
+TREE_TAG(eTagStorage, "storage",    (1 << 4)) ///< this node type can have a storage class
+TREE_TAG(eTagEval,    "eval",       (1 << 5)) ///< this node type can have an evaluation model
 
 #undef TREE_TAG
 
@@ -19,44 +21,44 @@ TREE_TAG(eTagStorage, "storage", (1 << 3)) ///< this node type has a storage cla
 /// types
 ///
 
-TREE_KIND(eTreeTypeEmpty, "type_empty", eTagName | eTagQual) ///< a type that can never be created
-TREE_KIND(eTreeTypeUnit, "type_unit", eTagName | eTagQual) ///< a type with a single value
-TREE_KIND(eTreeTypeBool, "type_bool", eTagName | eTagQual) ///< a type with two values
-TREE_KIND(eTreeTypeOpaque, "type_opaque", eTagName | eTagQual)
-TREE_KIND(eTreeTypeDigit, "type_digit", eTagName | eTagQual) ///< a digit with a fixed sign and width
-TREE_KIND(eTreeTypeClosure, "type_closure", eTagName | eTagQual) ///< a function pointer type (no captures)
+TREE_KIND(eTreeTypeEmpty, "type_empty", eTagName | eTagQual | eTagIsType) ///< a type that can never be created
+TREE_KIND(eTreeTypeUnit, "type_unit", eTagName | eTagQual | eTagIsType) ///< a type with a single value
+TREE_KIND(eTreeTypeBool, "type_bool", eTagName | eTagQual | eTagIsType) ///< a type with two values
+TREE_KIND(eTreeTypeOpaque, "type_opaque", eTagName | eTagQual | eTagIsType)
+TREE_KIND(eTreeTypeDigit, "type_digit", eTagName | eTagQual | eTagIsType) ///< a digit with a fixed sign and width
+TREE_KIND(eTreeTypeClosure, "type_closure", eTagName | eTagQual | eTagIsType) ///< a function pointer type (no captures)
 
-TREE_KIND(eTreeTypeReference, "type_reference", eTagName | eTagQual) ///< a reference to an object
-TREE_KIND(eTreeTypePointer, "type_pointer", eTagName | eTagQual) ///< a pointer to an object
-TREE_KIND(eTreeTypeArray, "type_array", eTagName | eTagQual) ///< an array of objects
+TREE_KIND(eTreeTypeReference, "type_reference", eTagName | eTagQual | eTagIsType) ///< a reference to an object
+TREE_KIND(eTreeTypePointer, "type_pointer", eTagName | eTagQual | eTagIsType) ///< a pointer to an object
+TREE_KIND(eTreeTypeArray, "type_array", eTagName | eTagQual | eTagIsType) ///< an array of objects
 
-TREE_KIND(eTreeTypeStruct, "type_struct", eTagName)
-TREE_KIND(eTreeTypeUnion, "type_union", eTagName)
-TREE_KIND(eTreeTypeEnum, "type_enum", eTagName)
+TREE_KIND(eTreeTypeStruct, "type_struct", eTagName | eTagIsType)
+TREE_KIND(eTreeTypeUnion, "type_union", eTagName | eTagIsType)
+TREE_KIND(eTreeTypeEnum, "type_enum", eTagName | eTagIsType)
 
 ///
 /// expressions
 /// these yield a value
 ///
 
-TREE_KIND(eTreeExprEmpty, "expr_empty", eTagType) ///< an uninitialized value of a type
-TREE_KIND(eTreeExprUnit, "expr_unit", eTagType)
-TREE_KIND(eTreeExprBool, "expr_bool", eTagType)
-TREE_KIND(eTreeExprDigit, "expr_digit", eTagType)
-TREE_KIND(eTreeExprString, "expr_string", eTagType)
+TREE_KIND(eTreeExprEmpty, "expr_empty", eTagHasType) ///< an uninitialized value of a type
+TREE_KIND(eTreeExprUnit, "expr_unit", eTagHasType)
+TREE_KIND(eTreeExprBool, "expr_bool", eTagHasType)
+TREE_KIND(eTreeExprDigit, "expr_digit", eTagHasType)
+TREE_KIND(eTreeExprString, "expr_string", eTagHasType)
 
-TREE_KIND(eTreeExprCast, "expr_cast", eTagType)
-TREE_KIND(eTreeExprLoad, "expr_load", eTagType)
-TREE_KIND(eTreeExprReference, "expr_reference", eTagType)
-TREE_KIND(eTreeExprAddress, "expr_address", eTagType)
-TREE_KIND(eTreeExprUnary, "expr_unary", eTagType)
-TREE_KIND(eTreeExprBinary, "expr_binary", eTagType)
-TREE_KIND(eTreeExprCompare, "expr_compare", eTagType)
+TREE_KIND(eTreeExprCast, "expr_cast", eTagHasType)
+TREE_KIND(eTreeExprLoad, "expr_load", eTagHasType)
+TREE_KIND(eTreeExprReference, "expr_reference", eTagHasType)
+TREE_KIND(eTreeExprAddress, "expr_address", eTagHasType)
+TREE_KIND(eTreeExprUnary, "expr_unary", eTagHasType)
+TREE_KIND(eTreeExprBinary, "expr_binary", eTagHasType)
+TREE_KIND(eTreeExprCompare, "expr_compare", eTagHasType)
 
-TREE_KIND(eTreeExprField, "expr_field", eTagType) ///< get a reference to a field
-TREE_KIND(eTreeExprOffset, "expr_offset", eTagType)
+TREE_KIND(eTreeExprField, "expr_field", eTagHasType) ///< get a reference to a field
+TREE_KIND(eTreeExprOffset, "expr_offset", eTagHasType)
 
-TREE_KIND(eTreeExprCall, "expr_call", eTagType)
+TREE_KIND(eTreeExprCall, "expr_call", eTagHasType)
 
 ///
 /// statements
@@ -74,16 +76,16 @@ TREE_KIND(eTreeStmtJump, "stmt_jump", eTagNone) ///< loop related jumps
 /// declarations
 ///
 
-TREE_KIND(eTreeDeclGlobal, "decl_global", eTagType | eTagName | eTagStorage)
-TREE_KIND(eTreeDeclLocal, "decl_local", eTagType | eTagName | eTagStorage)
-TREE_KIND(eTreeDeclParam, "decl_param", eTagType | eTagName)
-TREE_KIND(eTreeDeclCase, "decl_case", eTagType | eTagName)
-TREE_KIND(eTreeDeclField, "decl_field", eTagType | eTagName)
-TREE_KIND(eTreeDeclFunction, "decl_function", eTagType | eTagName)
+TREE_KIND(eTreeDeclGlobal, "decl_global", eTagName | eTagStorage | eTagEval | eTagHasType)
+TREE_KIND(eTreeDeclLocal, "decl_local", eTagName | eTagStorage | eTagEval | eTagHasType)
+TREE_KIND(eTreeDeclParam, "decl_param", eTagName | eTagHasType)
+TREE_KIND(eTreeDeclCase, "decl_case", eTagName)
+TREE_KIND(eTreeDeclField, "decl_field", eTagName | eTagHasType)
+TREE_KIND(eTreeDeclFunction, "decl_function", eTagName | eTagEval | eTagHasType)
 TREE_KIND(eTreeDeclModule, "decl_module", eTagName)
 
-TREE_KIND(eTreePartial, "partial_type", eTagName) ///< unresolved type
-TREE_KIND(eTreeError, "error", eTagType | eTagName) ///< an error of some sort
+TREE_KIND(eTreePartial, "partial_type", eTagName | eTagIsType) ///< unresolved type
+TREE_KIND(eTreeError, "error", eTagName | eTagHasType) ///< an error of some sort
 
 #undef TREE_KIND
 
@@ -254,7 +256,7 @@ TREE_JUMP(eJumpContinue, "continue")
 #   define TREE_EVAL_MODEL(ID, NAME, BIT)
 #endif
 
-TREE_EVAL_MODEL(eTreeEvalRuntime, "runtime", (1 << 0))
-TREE_EVAL_MODEL(eTreeEvalCompile, "compile", (1 << 1))
+TREE_EVAL_MODEL(eEvalRuntime, "runtime", (1 << 0)) // can be evaluated at runtime
+TREE_EVAL_MODEL(eEvalCompile, "compile", (1 << 1)) // can be evaluated at compile time
 
 #undef TREE_EVAL_MODEL

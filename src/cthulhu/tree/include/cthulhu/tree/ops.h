@@ -105,6 +105,13 @@ typedef enum sign_t
     eSignTotal
 } sign_t;
 
+/// @brief tree evaluation model
+typedef enum eval_model_t
+{
+#define TREE_EVAL_MODEL(ID, STR, BITS) ID = (BITS),
+#include "tree.def"
+} eval_model_t;
+
 /// @brief get the pretty name of a unary operator
 ///
 /// @param op the operator to get the name of

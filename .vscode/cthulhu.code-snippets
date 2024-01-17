@@ -30,6 +30,7 @@
 			"src = []"
 			""
 			"lib$1 = library('$1', src,"
+			"   build_by_default : false,"
 			"	c_args : [ '-DCT_$2_BUILD=1' ],"
 			"	dependencies : [ core ],"
 			"	include_directories : [ $1_include ]"

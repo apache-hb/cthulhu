@@ -172,19 +172,36 @@ static const char *format_symbol(c89_emit_t *emit, const ssa_type_t *type, const
     return c89_format_type(emit, type, name, true);
 }
 
-static void define_enum(io_t *io, const ssa_type_t *type)
+static void define_enum(io_t *io, const ssa_type_t *type, c89_emit_t *emit)
 {
+    // update c89_format_type eTypeEnum when this is changed
     const ssa_type_enum_t it = type->sum;
     size_t len = typevec_len(it.cases);
-    write_string(io, "enum %s { /* %zu cases */\n", type->name, len);
+    const ssa_type_t *underlying = it.underlying;
+    char *under = str_format(emit->arena, "%s_underlying_t", type->name);
+    const char *tydef = c89_format_type(emit, underlying, under, false);
+    write_string(io, "typedef %s;\n", tydef);
+
+    write_string(io, "enum %s_cases_t { /* %zu cases */\n", type->name, len);
     for (size_t i = 0; i < len; i++)
     {
         const ssa_case_t *field = typevec_offset(it.cases, i);
 
         // TODO: formalize the name mangling for enum fields
-        write_string(io, "\t%s_%s = %s,\n", type->name, field->name, mpz_get_str(NULL, 10, field->value));
+        write_string(io, "\te%s%s = %s,\n", type->name, field->name, mpz_get_str(NULL, 10, field->value));
     }
     write_string(io, "};\n");
+
+    write_string(io, "#ifdef __cplusplus\n");
+    const char *under_cxx = c89_format_type(emit, underlying, NULL, false);
+    write_string(io, "enum class %s : %s {\n", type->name, under_cxx);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_case_t *field = typevec_offset(it.cases, i);
+        write_string(io, "\te%s = %s,\n", field->name, mpz_get_str(NULL, 10, field->value));
+    }
+    write_string(io, "};\n");
+    write_string(io, "#endif /* __cplusplus */ \n");
 }
 
 void c89_proto_type(c89_emit_t *emit, const ssa_module_t *mod, const ssa_type_t *type)
@@ -200,7 +217,7 @@ void c89_proto_type(c89_emit_t *emit, const ssa_module_t *mod, const ssa_type_t 
         break;
 
     case eTypeEnum:
-        define_enum(hdr->io, type);
+        define_enum(hdr->io, type, emit);
         break;
 
     default:
@@ -278,6 +295,26 @@ static void c89_proto_module(c89_emit_t *emit, const ssa_module_t *mod)
 
     proto_symbols(emit, mod, mod->globals, c89_proto_global);
     proto_symbols(emit, mod, mod->functions, c89_proto_function);
+}
+
+static void emit_type_info(c89_emit_t *emit, const ssa_module_t *mod, const ssa_type_t *type)
+{
+    c89_source_t *hdr = map_get(emit->hdrmap, mod);
+    write_string(hdr->io, "#if CTU_CXX_REFLECT\n");
+
+    // TODO: emit reflect data
+
+    write_string(hdr->io, "#endif /* CTU_CXX_REFLECT */\n");
+}
+
+static void emit_reflect_info(c89_emit_t *emit, const ssa_module_t *mod)
+{
+    size_t len = vector_len(mod->types);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_type_t *type = vector_get(mod->types, i);
+        emit_type_info(emit, mod, type);
+    }
 }
 
 /// bbs
@@ -832,6 +869,15 @@ c89_emit_result_t emit_c89(const c89_emit_options_t *options)
     {
         const ssa_module_t *mod = vector_get(opts.modules, i);
         c89_proto_module(&emit, mod);
+    }
+
+    if (options->emit_reflect_info)
+    {
+        for (size_t i = 0; i < len; i++)
+        {
+            const ssa_module_t *mod = vector_get(opts.modules, i);
+            emit_reflect_info(&emit.emit, mod);
+        }
     }
 
     for (size_t i = 0; i < len; i++)

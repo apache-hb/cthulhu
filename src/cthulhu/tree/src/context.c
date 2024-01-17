@@ -70,6 +70,22 @@ tree_storage_t tree_get_storage(const tree_t *tree)
 }
 
 USE_DECL
+void tree_set_eval(tree_t *tree, eval_model_t model)
+{
+    CTASSERTF(tree_has_tag(tree, eTagEval), "tree type %s does not have an evaluation model", tree_kind_string(tree));
+
+    tree->eval_model = model;
+}
+
+USE_DECL
+eval_model_t tree_get_eval(const tree_t *tree)
+{
+    CTASSERTF(tree_has_tag(tree, eTagEval), "tree type %s does not have an evaluation model", tree_kind_string(tree));
+
+    return tree->eval_model;
+}
+
+USE_DECL
 const node_t *tree_get_node(const tree_t *tree)
 {
     CTASSERT(tree != NULL); // all trees have nodes
@@ -90,7 +106,7 @@ const char *tree_get_name(const tree_t *tree)
 USE_DECL
 const tree_t *tree_get_type(const tree_t *tree)
 {
-    CTASSERTF(tree_has_tag(tree, eTagType), "tree type %s does not have a type", tree_kind_string(tree));
+    CTASSERTF(tree_has_tag(tree, eTagHasType), "tree type %s does not have a type", tree_kind_string(tree));
     CTASSERTF(tree->type != NULL, "tree type %s has not been set", tree_kind_string(tree));
 
     if (tree_is(tree, eTreeError)) return tree;
@@ -100,7 +116,7 @@ const tree_t *tree_get_type(const tree_t *tree)
 
 void tree_set_type(tree_t *self, const tree_t *type)
 {
-    CTASSERTF(tree_has_tag(self, eTagType), "tree type %s does not have a type", tree_kind_string(self));
+    CTASSERTF(tree_has_tag(self, eTagHasType), "tree type %s does not have a type", tree_kind_string(self));
 
     self->type = type;
 }

@@ -4,6 +4,8 @@
 
 #include "core/compiler.h"
 
+#include <stdbool.h>
+
 BEGIN_API
 
 /// @defgroup emit SSA emitter
@@ -73,6 +75,7 @@ CT_EMIT_API ssa_emit_result_t emit_ssa(const ssa_emit_options_t *options);
 typedef struct c89_emit_options_t
 {
     emit_options_t opts;
+    bool emit_reflect_info;
 } c89_emit_options_t;
 
 typedef struct c89_emit_result_t
