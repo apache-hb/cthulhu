@@ -40,7 +40,6 @@ src = [
 
 libformat = library('format', src,
     build_by_default : false,
-    link_with : [ libformat_core ],
     c_args : format_args,
     dependencies : [ std, base, io, scan, notify, config, backtrace, memory, arena, format_core ],
     include_directories : format_include
