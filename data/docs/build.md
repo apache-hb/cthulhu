@@ -36,10 +36,8 @@ ninja -C build test # run tests
 By default as a subproject the stable language drivers are built.
 If you want only a specific set of libraries you can disable everything with the following incantaion.
 
-I'll add a `-Deverything=disabled` at some point
-
 ```sh
-meson setup build -Dlang_ctu=disabled -Dlang_pl0=disabled -Dlang_oberon=disabled -Dlang_example=disabled -Dlang_c=disabled -Dlang_cpp=disabled -Dfrontend_cli=disabled -Dfrontend_example=disabled -Dfrontend_gui=disabled -Dtrace_memory=disabled -Dparanoid=disabled -Dunit_tests=disabled -Ddriver_tests=disabled -Ddoxygen=disabled -Dtool_notify=disabled -Dtool_diagnostic=disabled -Dtool_display=disabled -Dtool_error=disabled
+meson setup build -Dauto_features=disabled
 ```
 
 This does not disable the targets, so they are still available by `get_variable`. all targets are `build_by_default : false` so meson will compile them on demand.

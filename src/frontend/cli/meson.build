@@ -1,6 +1,7 @@
 src = [ 'src/cmd.c', 'main.c' ]
 
 cli = executable('cli', src,
+    build_by_default : false,
     include_directories : [ 'include' ],
     link_args : setargv,
     dependencies : [
@@ -8,8 +9,7 @@ cli = executable('cli', src,
         tree, ssa, emit, io, fs,
         scan, notify, config, events, setup, format,
         arena, check
-    ],
-    export_dynamic : true
+    ]
 )
 
 codegen = generator(cli,
