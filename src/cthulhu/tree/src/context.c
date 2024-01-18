@@ -32,7 +32,7 @@ static bool tree_has_tag(const tree_t *tree, tree_tags_t tags)
 /// getters and setters
 ///
 
-static const char *tree_kind_string(const tree_t *tree)
+static inline const char *tree_kind_string(const tree_t *tree)
 {
     return tree_kind_to_string(tree_get_kind(tree));
 }

@@ -2,10 +2,10 @@
 
 #include <ctu_format_api.h>
 
-#include "core/version_def.h"
-
-#include "core/analyze.h"
 #include "format/format.h"
+
+#include "core/version_def.h"
+#include "core/analyze.h"
 
 BEGIN_API
 

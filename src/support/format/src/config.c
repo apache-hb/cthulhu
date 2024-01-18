@@ -10,7 +10,7 @@
 #include "io/io.h"
 #include "config/config.h"
 
-#include "common.h"
+#include "common_simple.h"
 #include "std/str.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"

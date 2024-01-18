@@ -1,18 +1,20 @@
-#include "base/panic.h"
-#include "base/util.h"
-#include "common.h"
+#include "format/backtrace.h"
+#include "common_simple.h"
 
 #include "core/macros.h"
-#include "io/io.h"
+
+#include "base/panic.h"
+#include "base/util.h"
+
 #include "arena/arena.h"
-#include "format/notify.h"
 
 #include "backtrace/backtrace.h"
-#include "format/backtrace.h"
 
 #include "std/map.h"
 #include "std/str.h"
 #include "std/typed/vector.h"
+
+#include "io/io.h"
 
 #include <string.h>
 
