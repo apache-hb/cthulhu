@@ -754,7 +754,7 @@ size_t str_find(const char *str, const char *sub)
     return ptr == NULL ? SIZE_MAX : (size_t)(ptr - str);
 }
 
-USE_DECL
+USE_DECL NOALIAS
 char *str_erase(char *str, size_t len, const char *letters)
 {
     CTASSERT(str != NULL);

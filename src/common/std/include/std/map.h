@@ -65,7 +65,7 @@ CT_STD_API void map_set(IN_NOTNULL map_t *map, IN_NOTNULL const void *key, void 
 /// @param key the key to get the value for
 ///
 /// @return the value for @p key or NULL if the key is not found
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_STD_API void *map_get(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key);
 
 /// @brief get a value from a map or a default value
@@ -75,7 +75,7 @@ CT_STD_API void *map_get(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key
 /// @param other the default value to return if the key is not found
 ///
 /// @return the value named by @p key or @p other if the key is not found
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_STD_API void *map_get_default(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key, void *other);
 
 /// @brief check if a map contains a key
@@ -84,7 +84,7 @@ CT_STD_API void *map_get_default(IN_NOTNULL const map_t *map, IN_NOTNULL const v
 /// @param key the key to check for
 ///
 /// @retval true the map contains @p key
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_STD_API bool map_contains(IN_NOTNULL const map_t *map, IN_NOTNULL const void *key);
 
 /// @brief delete a key-value pair from a map
@@ -116,7 +116,7 @@ CT_STD_API typevec_t *map_entries(IN_NOTNULL map_t *map);
 /// @param map the map to get the size of
 ///
 /// @return the number of key-value pairs in the map
-NODISCARD
+NODISCARD PUREFN
 CT_STD_API size_t map_count(IN_NOTNULL const map_t *map);
 
 /// @brief clear all key-value pairs from a map
@@ -151,7 +151,7 @@ typedef struct map_iter_t
 /// @param map the map to iterate over
 ///
 /// @return the new iterator
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_STD_API map_iter_t map_iter(IN_NOTNULL map_t *map);
 
 /// @brief get the next key-value pair from a map iterator
@@ -160,7 +160,7 @@ CT_STD_API map_iter_t map_iter(IN_NOTNULL map_t *map);
 /// @param iter the iterator to get the next key-value pair from
 ///
 /// @return the next key-value pair
-NODISCARD
+NODISCARD NOALIAS
 CT_STD_API map_entry_t map_next(IN_NOTNULL map_iter_t *iter);
 
 /// @brief check if a map iterator has more elements
@@ -168,7 +168,7 @@ CT_STD_API map_entry_t map_next(IN_NOTNULL map_iter_t *iter);
 /// @param iter the iterator to check
 ///
 /// @retval true the iterator has more elements
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_STD_API bool map_has_next(IN_NOTNULL const map_iter_t *iter);
 
 /// @brief get the next key-value pair from a map iterator

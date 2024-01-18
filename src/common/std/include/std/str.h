@@ -77,7 +77,7 @@ CT_STD_API char *str_vformat(IN_NOTNULL arena_t *arena, IN_STRING const char *fm
 /// @param prefix the prefix to check for
 ///
 /// @return if str starts with prefix
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_STD_API bool str_startswith(IN_STRING const char *str, IN_STRING const char *prefix);
 
 /// @brief check if a string ends with a substring
@@ -86,7 +86,7 @@ CT_STD_API bool str_startswith(IN_STRING const char *str, IN_STRING const char *
 /// @param suffix the suffix to check for
 ///
 /// @return if str ends with suffix
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_STD_API bool str_endswith(IN_STRING const char *str, IN_STRING const char *suffix);
 
 /// @brief join strings
@@ -167,7 +167,7 @@ CT_STD_API const char *str_common_prefix(IN_NOTNULL vector_t *args, IN_NOTNULL a
 ///
 /// @return the index of the last instance of @p sub in @p str, or @a SIZE_MAX if
 /// sub is not found
-RET_INSPECT CONSTFN
+RET_INSPECT PUREFN
 CT_STD_API size_t str_rfind(IN_STRING const char *str, IN_STRING const char *sub);
 
 /// @brief find the first instance of a substring in a string
@@ -176,7 +176,7 @@ CT_STD_API size_t str_rfind(IN_STRING const char *str, IN_STRING const char *sub
 /// @param sub the substring to search for
 ///
 /// @return the index of the first instance of @p sub in @p str, or @a SIZE_MAX if @p sub is not found
-RET_INSPECT CONSTFN
+RET_INSPECT PUREFN
 CT_STD_API size_t str_find(IN_STRING const char *str, IN_STRING const char *sub);
 
 /// @brief check if a character is any of a set of characters
@@ -186,7 +186,7 @@ CT_STD_API size_t str_find(IN_STRING const char *str, IN_STRING const char *sub)
 ///
 /// @retval true @p c is any of @p chars
 /// @retval false @p c is not any of @p chars
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_STD_API bool char_is_any_of(char c, IN_STRING const char *chars);
 
 /// @brief check if a string contains a substring
@@ -195,7 +195,7 @@ CT_STD_API bool char_is_any_of(char c, IN_STRING const char *chars);
 /// @param search the substring to search for
 ///
 /// @return if @p sub is found in @p str
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_STD_API bool str_contains(IN_STRING const char *str, IN_STRING const char *search);
 
 /// @brief replace all instances of a substring in a string
@@ -226,7 +226,7 @@ CT_STD_API char *str_replace_many(IN_STRING const char *str, IN_NOTNULL const ma
 /// @param letters the letters to erase
 ///
 /// @return @p str with all instances of @p letters removed
-NODISCARD
+NODISCARD NOALIAS
 CT_STD_API char *str_erase(IN_READS(len) char *str, size_t len, IN_STRING const char *letters);
 
 /// @brief hash a string
@@ -234,7 +234,7 @@ CT_STD_API char *str_erase(IN_READS(len) char *str, size_t len, IN_STRING const 
 /// @param str the string to hash
 ///
 /// @return the hash
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_STD_API size_t str_hash(IN_STRING const char *str);
 
 /// @brief hash a string with a provided length
@@ -242,7 +242,7 @@ CT_STD_API size_t str_hash(IN_STRING const char *str);
 /// @param text the string to hash
 ///
 /// @return the hash
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_STD_API size_t text_hash(text_view_t text);
 
 /// @brief compare strings equality
@@ -253,7 +253,7 @@ CT_STD_API size_t text_hash(text_view_t text);
 /// @param rhs the right hand side of the comparison
 ///
 /// @return if the strings are equal
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_STD_API bool str_equal(IN_STRING const char *lhs, IN_STRING const char *rhs);
 
 /// @brief get the filename from a path

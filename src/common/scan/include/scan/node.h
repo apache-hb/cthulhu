@@ -54,7 +54,7 @@ typedef struct
 /// @param node the node to get the source file of
 ///
 /// @return the source file of @p node
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_SCAN_API const scan_t *node_get_scan(const node_t *node);
 
 /// @brief get the location of a node inside its source file
@@ -62,7 +62,7 @@ CT_SCAN_API const scan_t *node_get_scan(const node_t *node);
 /// @param node the node to get the location of
 ///
 /// @return the location of @p node
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_SCAN_API where_t node_get_location(const node_t *node);
 
 /// @brief create a new node in a given file at a given location
@@ -71,7 +71,7 @@ CT_SCAN_API where_t node_get_location(const node_t *node);
 /// @param where the location of this node
 ///
 /// @return the created node
-NODISCARD CONSTFN
+NODISCARD
 CT_SCAN_API node_t *node_new(const scan_t *scan, where_t where);
 
 /// @brief get the builtin node

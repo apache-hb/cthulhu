@@ -34,7 +34,7 @@ int ctu_strncmp(const char *lhs, const char *rhs, size_t length)
     return strncmp(lhs, rhs, length);
 }
 
-USE_DECL
+USE_DECL NOALIAS
 void *ctu_memcpy(void *restrict dst, const void *restrict src, size_t size)
 {
     CTASSERT(dst != NULL);

@@ -4,6 +4,8 @@
 
 #include "core/analyze.h"
 
+#include <stddef.h>
+
 BEGIN_API
 
 typedef struct arena_t arena_t;

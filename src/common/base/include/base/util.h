@@ -32,7 +32,7 @@ CT_BASE_API size_t ptrhash(const void *ptr);
 /// @param str the string
 ///
 /// @return the length of the string
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_BASE_API size_t ctu_strlen(IN_STRING const char *str);
 
 /// @brief compare two strings
@@ -45,7 +45,7 @@ CT_BASE_API size_t ctu_strlen(IN_STRING const char *str);
 /// @param length the length to compare
 ///
 /// @return the comparison result
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_BASE_API int ctu_strncmp(IN_STRING const char *lhs, IN_STRING const char *rhs, size_t length);
 
 /// @brief copy memory from one location to another
@@ -58,6 +58,7 @@ CT_BASE_API int ctu_strncmp(IN_STRING const char *lhs, IN_STRING const char *rhs
 /// @param size the number of bytes to copy
 ///
 /// @return the destination
+NOALIAS
 CT_BASE_API void *ctu_memcpy(OUT_WRITES(size) void *CT_RESTRICT dst, IN_READS(size) const void *CT_RESTRICT src, size_t size);
 
 // text api
@@ -81,7 +82,7 @@ CT_BASE_API text_t text_make(IN_STRING char *text, size_t length);
 /// @param text the text
 ///
 /// @return the text object
-CONSTFN
+PUREFN
 CT_BASE_API text_t text_from(IN_STRING char *text);
 
 /// @brief create a new non-owning text array
@@ -103,7 +104,7 @@ CT_BASE_API text_view_t text_view_make(IN_STRING const char *text, size_t length
 /// @param text the text
 ///
 /// @return the text object
-CONSTFN
+PUREFN
 CT_BASE_API text_view_t text_view_from(IN_STRING const char *text);
 
 /// @brief check if two text objects are equal
@@ -113,7 +114,7 @@ CT_BASE_API text_view_t text_view_from(IN_STRING const char *text);
 ///
 /// @retval true if @p lhs and @p rhs are equal
 /// @retval false otherwise
-CONSTFN
+PUREFN
 CT_BASE_API bool text_equal(text_view_t lhs, text_view_t rhs);
 
 /// @}

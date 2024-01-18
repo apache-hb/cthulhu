@@ -45,7 +45,7 @@ CT_STD_API const void *set_add(IN_NOTNULL set_t *set, IN_NOTNULL const void *key
 /// @param key the key to check for
 ///
 /// @return true if the set contains the key
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_STD_API bool set_contains(IN_NOTNULL const set_t *set, IN_NOTNULL const void *key);
 
 /// @brief remove a key from a set
@@ -60,7 +60,7 @@ CT_STD_API void set_delete(IN_NOTNULL set_t *set, IN_NOTNULL const void *key);
 /// @param set the set to check
 ///
 /// @return true if the set is empty
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_STD_API bool set_empty(IN_NOTNULL set_t *set);
 
 /// @brief clear all keys from a set
@@ -86,7 +86,7 @@ typedef struct set_iter_t
 /// @param set the set to iterate over
 ///
 /// @return the new iterator
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_STD_API set_iter_t set_iter(IN_NOTNULL set_t *set);
 
 /// @brief get the next item from a set iterator
@@ -104,7 +104,7 @@ CT_STD_API const void *set_next(IN_NOTNULL set_iter_t *iter);
 ///
 /// @retval true the iterator has more items
 /// @retval false the iterator has no more items
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_STD_API bool set_has_next(IN_NOTNULL set_iter_t *iter);
 
 /// @}

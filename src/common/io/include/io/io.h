@@ -31,7 +31,7 @@ CT_IO_API void io_close(OUT_PTR_INVALID io_t *io);
 /// @param arena the arena to allocate from
 ///
 /// @return the io object, or NULL on error
-NODISCARD CT_ALLOC(io_close)
+NODISCARD CTU_ALLOC(io_close)
 CT_IO_API io_t *io_file(IN_STRING const char *path, os_access_t mode, IN_NOTNULL arena_t *arena);
 
 /// @brief create an IO object from an initial view of memory
@@ -44,7 +44,7 @@ CT_IO_API io_t *io_file(IN_STRING const char *path, os_access_t mode, IN_NOTNULL
 /// @param arena the arena to allocate from
 ///
 /// @return the io object
-NODISCARD CT_ALLOC(io_close)
+NODISCARD CTU_ALLOC(io_close)
 CT_IO_API io_t *io_memory(IN_STRING const char *name, const void *data, size_t size, os_access_t flags, IN_NOTNULL arena_t *arena);
 
 /// @brief create an IO object in memory of a given size
@@ -56,7 +56,7 @@ CT_IO_API io_t *io_memory(IN_STRING const char *name, const void *data, size_t s
 /// @param arena the arena to allocate from
 ///
 /// @return the io object
-NODISCARD CT_ALLOC(io_close)
+NODISCARD CTU_ALLOC(io_close)
 CT_IO_API io_t *io_blob(IN_STRING const char *name, size_t size, os_access_t flags, IN_NOTNULL arena_t *arena);
 
 /// @brief create a readonly IO object for a given view of memory
@@ -68,7 +68,7 @@ CT_IO_API io_t *io_blob(IN_STRING const char *name, size_t size, os_access_t fla
 /// @param arena the arena to allocate from
 ///
 /// @return the IO view
-NODISCARD CT_ALLOC(io_close)
+NODISCARD CTU_ALLOC(io_close)
 CT_IO_API io_t *io_view(IN_STRING const char *name, IN_NOTNULL const void *data, size_t size, IN_NOTNULL arena_t *arena);
 
 /// @brief create an IO view of a string
@@ -79,7 +79,7 @@ CT_IO_API io_t *io_view(IN_STRING const char *name, IN_NOTNULL const void *data,
 /// @param arena the arena to allocate from
 ///
 /// @return the io object
-NODISCARD CT_ALLOC(io_close)
+NODISCARD CTU_ALLOC(io_close)
 CT_IO_API io_t *io_string(IN_STRING const char *name, IN_STRING const char *string, IN_NOTNULL arena_t *arena);
 
 /// @brief read from an io object

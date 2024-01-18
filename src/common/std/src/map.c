@@ -6,9 +6,7 @@
 #include "std/typed/vector.h"
 #include "std/vector.h"
 
-/// @brief how many buckets to search for after the current bucket
-/// with open addressing
-#define MAP_OPEN_ADDRESS_LENGTH 2
+// TODO: add quadratic probing and robin hood hashing
 
 // 90% load factor before resizing
 #define MAP_LOAD_FACTOR (90)
@@ -363,6 +361,7 @@ void map_reset(map_t *map)
 
 // iteration
 
+PUREFN
 static bucket_t *next_in_chain(bucket_t *entry)
 {
     if (entry == NULL || entry->key == NULL)
@@ -391,6 +390,7 @@ static bucket_t *next_in_chain(bucket_t *entry)
  * @param previous the previous bucket that was returned
  * @return bucket_t* the next bucket or NULL if there are no more buckets
  */
+PUREFN
 static bucket_t *find_next_bucket(map_t *map, size_t *index, bucket_t *previous)
 {
     bucket_t *entry = next_in_chain(previous);

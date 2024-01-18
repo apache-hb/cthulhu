@@ -106,7 +106,7 @@ CT_STD_API void vector_set(
 /// @param index the index to get
 ///
 /// @return the value at @p index
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_STD_API void *vector_get(
     IN_NOTNULL const vector_t *vector,
     size_t index
@@ -118,7 +118,7 @@ CT_STD_API void *vector_get(
 /// @param vector the vector to get the last element of
 ///
 /// @return the last element of @p vector
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_STD_API void *vector_tail(IN_NOTNULL const vector_t *vector);
 
 /// @brief get the length of a vector
@@ -126,7 +126,7 @@ CT_STD_API void *vector_tail(IN_NOTNULL const vector_t *vector);
 /// @param vector the vector to get the length of
 ///
 /// @return the length of @p vector
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_STD_API size_t vector_len(IN_NOTNULL const vector_t *vector);
 
 /// @brief append the contents of one vector to another
@@ -143,7 +143,7 @@ CT_STD_API void vector_append(IN_NOTNULL vector_t **vector, IN_NOTNULL const vec
 /// @param element the element to search for
 ///
 /// @return the index of @p element in @p vector or @a SIZE_MAX if not found
-RET_INSPECT CONSTFN
+RET_INSPECT PUREFN
 CT_STD_API size_t vector_find(IN_NOTNULL vector_t *vector, const void *element);
 
 /// @brief reset the contents of a vector

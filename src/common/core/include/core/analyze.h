@@ -82,6 +82,12 @@
 #   define CLANG_ATTRIB(...)
 #endif
 
+#if CC_MSVC
+#   define CTU_DECLSPEC(...) __declspec(__VA_ARGS__)
+#else
+#   define CTU_DECLSPEC(...)
+#endif
+
 #ifndef IN_NOTNULL
 #   define IN_NOTNULL CLANG_ATTRIB(nonnull)
 #endif
@@ -97,17 +103,54 @@
 #   define NODISCARD CTU_ATTRIB(warn_unused_result)
 #endif
 
+/// @def NOALIAS
+/// @brief mark a function as only modifying pointers passed to it
+/// the same as @a CONSTFN but allowed to modify/inspect pointers passed to it
+///
 /// @def CONSTFN
 /// @brief mark a function as const, has no side effects and always returns the same value for the same arguments
+/// @warning do not apply this to functions that take pointers as arguments
+///
 /// @def PUREFN
 /// @brief mark a function as pure, always returns the same value for the same arguments
+/// @warning must not depend on mutable global state or have side effects
+/// @note thats a lie actually, gcc says it may have calls to it optimized away via CSE
 
 #if CTU_DISABLE_FN_PURITY
+#   define NOALIAS
 #   define CONSTFN
 #   define PUREFN
 #else
+#   define NOALIAS CTU_DECLSPEC(noalias)
 #   define CONSTFN CTU_ATTRIB(const)
 #   define PUREFN CTU_ATTRIB(pure)
+#endif
+
+/// @def CTU_ALLOC
+/// @brief mark a function as allocating memory
+/// @def CTU_ALLOC_SIZE
+/// @brief mark a function as allocating memory with a specific size
+
+#if CC_MSVC
+#   define CTU_ALLOC(...) CTU_DECLSPEC(restrict) CTU_DECLSPEC(allocator)
+#else
+#   define CTU_ALLOC(...) CTU_ATTRIB(malloc(__VA_ARGS__))
+#endif
+
+#define CTU_ALLOC_SIZE(...) CTU_ATTRIB(alloc_size(__VA_ARGS__))
+
+#ifdef __cplusplus
+#   ifdef _MSC_VER
+#      define CT_RESTRICT __restrict
+#   elif CC_GNU
+#      define CT_RESTRICT __restrict__
+#   elif CC_CLANG
+#      define CT_RESTRICT __restrict
+#   else
+#      define CT_RESTRICT
+#   endif
+#else
+#   define CT_RESTRICT restrict
 #endif
 
 /// @def HOTFN
@@ -117,14 +160,6 @@
 
 #define HOTFN CTU_ATTRIB(hot)
 #define COLDFN CTU_ATTRIB(cold)
-
-/// @def CT_ALLOC
-/// @brief mark a function as allocating memory
-/// @def CT_ALLOC_SIZE
-/// @brief mark a function as allocating memory with a specific size
-
-#define CT_ALLOC(...) CTU_ATTRIB(malloc, malloc(__VA_ARGS__))
-#define CT_ALLOC_SIZE(...) CTU_ATTRIB(alloc_size(__VA_ARGS__))
 
 #ifndef RET_NOTNULL
 #   define RET_NOTNULL CTU_ATTRIB(returns_nonnull)

@@ -125,7 +125,7 @@ CT_ARENA_API void arena_free(
 /// @param parent the parent of the allocation
 ///
 /// @return the allocated pointer
-NODISCARD CT_ALLOC(arena_free) CT_ALLOC_SIZE(1)
+NODISCARD CTU_ALLOC(arena_free) CTU_ALLOC_SIZE(1)
 RET_NOTNULL
 CT_ARENA_API void *arena_malloc(
     IN_RANGE(!=, 0) size_t size,
@@ -156,7 +156,7 @@ CT_ARENA_API void *arena_realloc(
 /// @param arena the allocator to use
 ///
 /// @return the allocated copy of the string
-NODISCARD CT_ALLOC(arena_free)
+NODISCARD CTU_ALLOC(arena_free)
 CT_ARENA_API char *arena_strdup(
     IN_STRING const char *str,
     IN_NOTNULL arena_t *arena);
@@ -168,7 +168,7 @@ CT_ARENA_API char *arena_strdup(
 /// @param arena the allocator to use
 ///
 /// @return the allocated copy of the string
-NODISCARD CT_ALLOC(arena_free)
+NODISCARD CTU_ALLOC(arena_free)
 CT_ARENA_API char *arena_strndup(
     IN_READS(len) const char *str,
     IN_RANGE(>, 0) size_t len,
@@ -182,7 +182,7 @@ CT_ARENA_API char *arena_strndup(
 /// @param arena the allocator to use
 ///
 /// @return the duplicated memory
-NODISCARD CT_ALLOC(arena_free) CT_ALLOC_SIZE(2)
+NODISCARD CTU_ALLOC(arena_free) CTU_ALLOC_SIZE(2)
 CT_ARENA_API void *arena_memdup(
     IN_READS(size) const void *ptr,
     IN_RANGE(>, 0) size_t size,
@@ -237,10 +237,11 @@ CT_ARENA_API void arena_reparent(IN_NOTNULL const void *ptr, const void *parent,
 ///
 /// @return the allocated pointer
 
+// cast to (const void*) to support using these in C++
 #if CTU_TRACE_MEMORY
-#   define ARENA_RENAME(ptr, name, arena) arena_rename(ptr, name, arena)
-#   define ARENA_REPARENT(ptr, parent, arena) arena_reparent(ptr, parent, arena)
-#   define ARENA_MALLOC(size, name, parent, arena) arena_malloc(size, name, parent, arena)
+#   define ARENA_RENAME(ptr, name, arena) arena_rename((const void*)(ptr), name, arena)
+#   define ARENA_REPARENT(ptr, parent, arena) arena_reparent((const void*)(ptr), (const void*)(parent), arena)
+#   define ARENA_MALLOC(size, name, parent, arena) arena_malloc(size, name, (const void*)(parent), arena)
 #else
 #   define ARENA_RENAME(arena, ptr, name)
 #   define ARENA_REPARENT(arena, ptr, parent)

@@ -31,7 +31,7 @@ BEGIN_API
 /// @param scan the scanner to get the language of
 ///
 /// @return the language of @p scan
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_SCAN_API const char *scan_language(IN_NOTNULL const scan_t *scan);
 
 /// @brief get the path of a scanner
@@ -39,7 +39,7 @@ CT_SCAN_API const char *scan_language(IN_NOTNULL const scan_t *scan);
 /// @param scan the scanner to get the path of
 ///
 /// @return the path of @p scan
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_SCAN_API const char *scan_path(IN_NOTNULL const scan_t *scan);
 
 /// @brief get the compiled object from a scanner
@@ -47,7 +47,7 @@ CT_SCAN_API const char *scan_path(IN_NOTNULL const scan_t *scan);
 /// @param scan the scanner to get the user data of
 ///
 /// @return the user data of @p scan
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_SCAN_API void *scan_get(IN_NOTNULL scan_t *scan);
 
 /// @brief set the compiled object of a scanner
@@ -74,7 +74,7 @@ CT_SCAN_API void *scan_get_context(IN_NOTNULL const scan_t *scan);
 /// @param scan the scanner to get the text of
 ///
 /// @return the text of @p scan
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_SCAN_API text_view_t scan_source(IN_NOTNULL const scan_t *scan);
 
 /// @brief get the arena of a scanner
@@ -82,7 +82,7 @@ CT_SCAN_API text_view_t scan_source(IN_NOTNULL const scan_t *scan);
 /// @param scan the scanner to get the arena of
 ///
 /// @return the arena of @p scan
-NODISCARD CONSTFN
+NODISCARD PUREFN
 CT_SCAN_API arena_t *scan_get_arena(IN_NOTNULL const scan_t *scan);
 
 /// @brief read data from a scanner
@@ -92,7 +92,7 @@ CT_SCAN_API arena_t *scan_get_arena(IN_NOTNULL const scan_t *scan);
 /// @param size the number of bytes to read
 ///
 /// @return the number of bytes read
-NODISCARD RET_RANGE(0, size)
+NODISCARD RET_RANGE(0, size) NOALIAS
 CT_SCAN_API size_t scan_read(IN_NOTNULL scan_t *scan, OUT_WRITES(size) void *dst, size_t size);
 
 /// @brief create a scanner from an io source

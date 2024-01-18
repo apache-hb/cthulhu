@@ -1138,6 +1138,7 @@ c89_emit_result_t emit_c89(const c89_emit_options_t *options)
 {
     emit_options_t opts = options->opts;
     size_t len = vector_len(opts.modules);
+    c89_emit_result_t result = { 0 };
 
     arena_t *arena = opts.arena;
 
@@ -1238,8 +1239,6 @@ c89_emit_result_t emit_c89(const c89_emit_options_t *options)
     }
 
 cleanup:
-    c89_emit_result_t result = {
-        .sources = emit.sources,
-    };
+    result.sources = emit.sources;
     return result;
 }

@@ -19,7 +19,8 @@ BEGIN_API
 /// @brief get all common diagnostics
 ///
 /// @return all common diagnostics
-NODISCARD CONSTFN CT_EVENTS_API diagnostic_list_t get_common_diagnostics(void);
+NODISCARD CONSTFN
+CT_EVENTS_API diagnostic_list_t get_common_diagnostics(void);
 
 /// @brief signal that a scan error has occurred
 ///
