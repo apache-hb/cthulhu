@@ -64,6 +64,8 @@ CT_BASE_API extern panic_handler_t gPanicHandler;
 /// @param ... the arguments to format
 NORETURN CT_BASE_API ctpanic(panic_t panic, FMT_STRING const char *msg, ...) CT_PRINTF(2, 3);
 
+#define CTU_PANIC_INFO {__FILE__, __LINE__, FUNCNAME}
+
 /// @def CTU_PANIC(...)
 /// @brief panic with a message and optional format arguments
 ///
@@ -71,7 +73,7 @@ NORETURN CT_BASE_API ctpanic(panic_t panic, FMT_STRING const char *msg, ...) CT_
 #define CTU_PANIC(...)                                  \
     do                                                  \
     {                                                   \
-        panic_t panic = {__FILE__, __LINE__, FUNCNAME}; \
+        panic_t panic = CTU_PANIC_INFO; \
         ctpanic(panic, __VA_ARGS__);                    \
     } while (0)
 
