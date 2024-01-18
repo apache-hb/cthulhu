@@ -285,6 +285,9 @@ tree_t *ctu_rt_mod(lifetime_t *lifetime)
     ctu_add_decl(root, eCtuTagTypes, "intleast64", make_int_type("intleast64", eDigitLeast64, eSignSigned));
     ctu_add_decl(root, eCtuTagTypes, "uintleast64", make_int_type("uintleast64", eDigitLeast64, eSignUnsigned));
 
+    ctu_add_decl(root, eCtuTagTypes, "float", make_int_type("float", eDigitFloat, eSignDefault));
+    ctu_add_decl(root, eCtuTagTypes, "double", make_int_type("double", eDigitDouble, eSignDefault));
+
     ctu_add_decl(root, eCtuTagTypes, "bool", make_bool_type("bool"));
     ctu_add_decl(root, eCtuTagTypes, "str", make_str_type("str"));
     ctu_add_decl(root, eCtuTagTypes, "void", make_void_type("void"));

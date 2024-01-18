@@ -35,6 +35,9 @@ static const char *get_c89_digit(ssa_type_digit_t ty)
     case eDigitLeast32: return (ty.sign == eSignUnsigned) ? "uint_least32_t" : "int_least32_t";
     case eDigitLeast64: return (ty.sign == eSignUnsigned) ? "uint_least64_t" : "int_least64_t";
 
+    case eDigitFloat: return "float";
+    case eDigitDouble: return "double";
+
     default: NEVER("unknown digit %d", ty.digit);
     }
 }
