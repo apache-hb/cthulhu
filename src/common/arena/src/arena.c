@@ -11,7 +11,7 @@ char *arena_strdup(const char *str, arena_t *arena)
     CTASSERT(str != NULL);
 
     size_t len = ctu_strlen(str);
-    char *out = arena_malloc(len + 1, "strdup", arena, arena);
+    char *out = ARENA_MALLOC(len + 1, "strdup", str, arena);
     ctu_memcpy(out, str, len);
     out[len] = '\0';
     return out;
@@ -22,7 +22,7 @@ char *arena_strndup(const char *str, size_t len, arena_t *arena)
 {
     CTASSERT(str != NULL);
 
-    char *out = arena_malloc(len + 1, "strndup", arena, arena);
+    char *out = ARENA_MALLOC(len + 1, "strndup", str, arena);
     ctu_memcpy(out, str, len);
     out[len] = '\0';
     return out;
@@ -33,7 +33,7 @@ void *arena_memdup(const void *ptr, size_t size, arena_t *arena)
 {
     CTASSERT(ptr != NULL);
 
-    void *out = arena_malloc(size, "memdup", arena, arena);
+    void *out = ARENA_MALLOC(size, "memdup", ptr, arena);
     ctu_memcpy(out, ptr, size);
     return out;
 }
