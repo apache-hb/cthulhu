@@ -268,7 +268,9 @@ static void c89_proto_aggregate(c89_emit_t *emit, io_t *io, const char *ty, cons
     io_printf(io, "} /* %s */\n", ns);
     io_printf(io, "#endif /* __cplusplus */ \n");
 
+    write_string(io, "#if defined(CTU_CINTERFACE) || !defined(__cplusplus)\n");
     write_string(io, "%s %s;\n", ty, name);
+    write_string(io, "#endif /* CTU_CINTERFACE */\n");
 }
 
 void c89_proto_type(c89_emit_t *emit, io_t *io, const ssa_type_t *type)
