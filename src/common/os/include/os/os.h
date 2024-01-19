@@ -101,6 +101,9 @@ CT_OS_API os_fn_t os_library_symbol(IN_NOTNULL os_library_t *library, IN_STRING 
 
 /// filesytem api
 
+RET_INSPECT
+CT_OS_API os_error_t os_file_exists(IN_STRING const char *path, IN_NOTNULL bool *exists);
+
 /// @brief create a file
 ///
 /// @param path the path to the file to create

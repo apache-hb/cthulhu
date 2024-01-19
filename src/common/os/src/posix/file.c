@@ -37,6 +37,27 @@ static const char *get_access(os_access_t access)
 }
 
 USE_DECL
+os_error_t os_file_exists(const char *path, bool *exists)
+{
+    CTASSERT(path != NULL);
+    CTASSERT(exists != NULL);
+
+    if (access(path, F_OK) == 0)
+    {
+        *exists = true;
+        return 0;
+    }
+
+    if (errno == ENOENT)
+    {
+        *exists = false;
+        return 0;
+    }
+
+    return errno;
+}
+
+USE_DECL
 os_error_t os_file_open(const char *path, os_access_t access, os_file_t *file)
 {
     CTASSERT(path != NULL);
