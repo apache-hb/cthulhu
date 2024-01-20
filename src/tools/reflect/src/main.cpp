@@ -264,7 +264,5 @@ int main(int argc, const char **argv)
 
     CHECK_LOG(logger, "processing");
 
-    tool.emit_output(ast, file);
-
-    CHECK_LOG(logger, "emitting");
+    return tool.emit_output(ast, file);
 }
