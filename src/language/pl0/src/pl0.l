@@ -24,8 +24,7 @@ WS [ \t\r\v\n\f]
 "//".* ;
 "/*" { BEGIN(COMMENT); }
 <COMMENT>"*/" { BEGIN(INITIAL); }
-<COMMENT>\n ;
-<COMMENT>. ;
+<COMMENT>.|\n ;
 
 (?i:module) { return MODULE; }
 (?i:import) { return IMPORT; }

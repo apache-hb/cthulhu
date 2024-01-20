@@ -9,7 +9,7 @@ typedef struct names_t
     map_t *names;
 } names_t;
 
-typedef struct emit_t
+typedef struct visit_ast_t
 {
     arena_t *arena;
     logger_t *reports;

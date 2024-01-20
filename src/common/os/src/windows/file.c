@@ -106,7 +106,7 @@ os_error_t os_file_write(os_file_t *file, const void *buffer, size_t size, size_
 {
     CTASSERT(file != NULL);
     CTASSERT(buffer != NULL);
-    CTASSERT(size > 0 && size <= UINT32_MAX);
+    CTASSERTF(size > 0 && size <= UINT32_MAX, "size %zu out of range", size);
     CTASSERT(actual != NULL);
 
     DWORD written_size = 0;

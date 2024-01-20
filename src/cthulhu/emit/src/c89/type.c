@@ -17,8 +17,8 @@ static const char *get_c89_digit(ssa_type_digit_t ty)
     case eDigitShort: return (ty.sign == eSignUnsigned) ? "unsigned short" : "short";
     case eDigitInt: return (ty.sign == eSignUnsigned) ? "unsigned int" : "int";
     case eDigitLong: return (ty.sign == eSignUnsigned) ? "unsigned long" : "long";
-    case eDigitSize: return (ty.sign == eSignUnsigned) ? "size_t" : "ptrdiff_t";
-    case eDigitPtr: return (ty.sign == eSignUnsigned) ? "uintptr_t" : "intptr_t";
+    case eDigitSize: return (ty.sign == eSignSigned) ? "ptrdiff_t" : "size_t" ;
+    case eDigitPtr: return (ty.sign == eSignSigned) ? "intptr_t" : "uintptr_t";
 
     case eDigit8: return (ty.sign == eSignUnsigned) ? "uint8_t" : "int8_t";
     case eDigit16: return (ty.sign == eSignUnsigned) ? "uint16_t" : "int16_t";

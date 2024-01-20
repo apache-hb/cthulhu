@@ -14,12 +14,12 @@ static const version_info_t kToolVersion = {
 
 typedef struct tool_t
 {
-    cfg_group_t *config;
+    cfg_group_t *m_config;
 
     cfg_field_t *enum_argument;
     cfg_field_t *flag_argument;
 
-    default_options_t options;
+    default_options_t m_options;
 } tool_t;
 
 static const cfg_info_t kToolInfo = {
@@ -94,11 +94,11 @@ static tool_t make_config(arena_t *arena)
     cfg_field_t *flag_argument = config_flags(config, &kFlagInfo, flag_init);
 
     tool_t tool = {
-        .config = config,
+        .m_config = config,
         .enum_argument = enum_argument,
         .flag_argument = flag_argument,
 
-        .options = options,
+        .m_options = options,
     };
 
     return tool;
@@ -117,14 +117,14 @@ int main(int argc, const char **argv)
         .arena = arena,
         .io = io,
 
-        .group = tool.config,
+        .group = tool.m_config,
         .version = kToolVersion,
 
         .argc = argc,
         .argv = argv,
     };
 
-    int err = parse_commands(tool.options, config);
+    int err = parse_commands(tool.m_options, config);
     if (err == CT_EXIT_SHOULD_EXIT)
     {
         return CT_EXIT_OK;

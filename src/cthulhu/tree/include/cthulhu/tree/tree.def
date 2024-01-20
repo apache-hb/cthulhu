@@ -27,11 +27,13 @@ TREE_KIND(eTreeTypeBool, "type_bool", eTagName | eTagQual | eTagIsType) ///< a t
 TREE_KIND(eTreeTypeOpaque, "type_opaque", eTagName | eTagQual | eTagIsType)
 TREE_KIND(eTreeTypeDigit, "type_digit", eTagName | eTagQual | eTagIsType) ///< a digit with a fixed sign and width
 TREE_KIND(eTreeTypeClosure, "type_closure", eTagName | eTagQual | eTagIsType) ///< a function pointer type (no captures)
+TREE_KIND(eTreeTypeString, "type_string", eTagName | eTagQual | eTagIsType) ///< a string type
 
 TREE_KIND(eTreeTypeReference, "type_reference", eTagName | eTagQual | eTagIsType) ///< a reference to an object
 TREE_KIND(eTreeTypePointer, "type_pointer", eTagName | eTagQual | eTagIsType) ///< a pointer to an object
 TREE_KIND(eTreeTypeArray, "type_array", eTagName | eTagQual | eTagIsType) ///< an array of objects
 
+TREE_KIND(eTreeTypeClass, "type_class", eTagName | eTagIsType)
 TREE_KIND(eTreeTypeStruct, "type_struct", eTagName | eTagIsType)
 TREE_KIND(eTreeTypeUnion, "type_union", eTagName | eTagIsType)
 TREE_KIND(eTreeTypeEnum, "type_enum", eTagName | eTagIsType)
@@ -86,6 +88,10 @@ TREE_KIND(eTreeDeclModule, "decl_module", eTagName)
 
 TREE_KIND(eTreePartial, "partial_type", eTagName | eTagIsType) ///< unresolved type
 TREE_KIND(eTreeError, "error", eTagName | eTagHasType) ///< an error of some sort
+
+/// simcoe: hacks
+
+TREE_KIND(eTreeTypeName, "type_name", eTagName | eTagIsType) ///< a type name
 
 #undef TREE_KIND
 

@@ -17,49 +17,101 @@ namespace ctu {
         { it.get_name() } -> std::convertible_to<const char*>;
     };
 
-    class TypeInfo {
-        const char *name;
+    struct ObjectId {
+        uint64_t
+    };
+
+    class ObjectName {
+        const char *m_front;
+        const char *m_back;
 
     public:
-        virtual ~TypeInfo() = default;
-
-        consteval TypeInfo(const char *name) noexcept
-            : name(name)
+        consteval ObjectName(const char *front, const char *back) noexcept
+            : m_front(front)
+            , m_back(back)
         { }
 
-        constexpr const char *get_name() const noexcept { return name; }
+        constexpr operator const char*() const noexcept { return m_front; }
+        size_t length() const noexcept { return m_back - m_front; }
+
+        constexpr const char *begin() const noexcept { return m_front; }
+        constexpr const char *end() const noexcept { return m_back; }
+    };
+
+    namespace impl {
+        template<size_t N>
+        consteval ObjectName name(const char (&str)[N]) noexcept {
+            return ObjectName(str, str + N - 1);
+        }
+    }
+
+    class TypeInfo {
+        ObjectName m_name;
+        size_t m_size;
+        size_t m_align;
+
+        size_t m_hash;
+
+    public:
+        consteval TypeInfo(ObjectName name, size_t size, size_t align) noexcept
+            : m_name(name)
+            , m_size(size)
+            , m_align(align)
+        { }
+
+        constexpr ObjectName get_name() const noexcept { return m_name; }
+        constexpr size_t get_size() const noexcept { return m_size; }
+        constexpr size_t get_align() const noexcept { return m_align; }
     };
 
     template<typename T>
     class EnumCase {
-        const char *name;
-        T value;
+        ObjectName m_name;
+        T m_value;
 
     public:
-        consteval EnumCase(const char *name, T value) noexcept
-            : name(name)
-            , value(value)
+        consteval EnumCase(ObjectName name, T value) noexcept
+            : m_name(name)
+            , m_value(value)
         { }
 
-        constexpr const char *get_name() const noexcept { return name; }
-        constexpr T get_value() const noexcept { return value; }
+        constexpr ObjectName get_name() const noexcept { return m_name; }
+        constexpr T get_value() const noexcept { return m_value; }
     };
 
     class RecordField {
-        const char *name;
+        ObjectName m_name;
+        size_t m_index;
 
     public:
-        consteval RecordField(const char *name) noexcept
-            : name(name)
+        consteval RecordField(ObjectName name, size_t index) noexcept
+            : m_name(name)
+            , m_index(index)
         { }
 
-        constexpr const char *get_name() const noexcept { return name; }
+        constexpr ObjectName get_name() const noexcept { return m_name; }
+        constexpr size_t get_index() const noexcept { return m_index; }
     };
 
-    namespace impl {
-        template<typename T>
-        class TypeInfoHandle;
-    }
+    template<typename T>
+    class ReflectObject { };
+
+    template<typename T>
+    struct ReflectInfo {
+        /// @brief the pretty name of the type
+        static constexpr ObjectName kObjectName = impl::name("<unknown>");
+
+        static constexpr size_t kTypeSize = sizeof(T);
+        static constexpr size_t kTypeAlign = alignof(T);
+
+        /// @brief alias to the ReflectObject of this type
+        using reflect_t = void;
+
+        using type_t = T;
+        using const_type_t = const T;
+        using pointer_t = T*;
+        using const_pointer_t = const T*;
+    };
 
     // customization point
     template<typename T>

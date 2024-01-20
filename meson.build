@@ -70,11 +70,16 @@ default_target = get_option('default_target')
 
 # tools like this are user facing, so dont disable them in release mode
 tool_diagnostic = get_option('tool_diagnostic').disable_auto_if(meson.is_subproject())
+tool_reflect = get_option('tool_reflect').disable_auto_if(meson.is_subproject())
 
-if frontend_gui.allowed()
-    has_cpp = add_languages('cpp', native : false, required : frontend_gui.enabled())
+needs_cpp = tool_reflect.enabled() or frontend_gui.enabled()
+wants_cpp = tool_reflect.allowed() or frontend_gui.allowed()
+
+if wants_cpp
+    has_cpp = add_languages('cpp', native : false, required : needs_cpp)
 
     frontend_gui = frontend_gui.require(has_cpp)
+    tool_reflect = tool_reflect.require(has_cpp)
 endif
 
 frontend_gui = frontend_gui.require(target == 'windows')
@@ -89,8 +94,6 @@ parts = version.split('.')
 
 source_dir = meson.project_source_root() / 'src'
 data_dir = meson.project_source_root() / 'data'
-
-reflect_include = include_directories('data/include')
 
 config_cdata = configuration_data()
 
@@ -313,7 +316,8 @@ summary = {
         'Notify': tool_notify.allowed(),
         'Diagnostics': tool_diagnostic.allowed(),
         'Display': tool_display.allowed(),
-        'Error': tool_error.allowed()
+        'Error': tool_error.allowed(),
+        'Reflect': tool_reflect.allowed()
     },
     'Documentation': {
         'Doxygen': doxygen

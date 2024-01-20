@@ -18,3 +18,7 @@ endif
 if tool_error.allowed()
     subdir('error')
 endif
+
+if tool_reflect.allowed()
+    subdir('reflect')
+endif

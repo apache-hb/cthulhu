@@ -478,4 +478,12 @@ CTU_EVENT(SourceAndHeaderOutput, {
         "a source or header file, either both or neither must be specified",
 })
 
+CTU_EVENT(ExactlyOneSourceFile, {
+    .severity = eSeverityFatal,
+    .id = "M0067",
+    .brief = "Tool expects exactly one source file",
+    .description =
+        "The tool expects exactly one source file, but multiple were provided",
+})
+
 #undef CTU_EVENT

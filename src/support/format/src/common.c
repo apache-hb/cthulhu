@@ -398,17 +398,6 @@ text_t cache_escape_line(text_cache_t *cache, size_t line, const colour_pallete_
     return *ptr;
 }
 
-static bool events_equal(const event_t *lhs, const event_t *rhs)
-{
-    if (lhs == rhs) return true;
-    if (lhs == NULL || rhs == NULL) return false;
-
-    if (lhs->diagnostic == rhs->diagnostic) return true;
-    if (str_equal(lhs->message, rhs->message)) return true;
-
-    return false;
-}
-
 static bool set_has_option(set_t *set, const diagnostic_t *diag)
 {
     if (set == NULL) return false;
@@ -442,9 +431,6 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
     size_t error_count = 0;
     size_t bug_count = 0;
 
-    event_t *first = NULL;
-    const event_t *prev = NULL;
-    size_t repeat = 0;
 
     for (size_t i = 0; i < len; i++)
     {
@@ -455,42 +441,24 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
             continue;
         }
 
-        if (!events_equal(event, prev))
+        switch (diag->severity)
         {
-            // merge consecutive events with the same message
-            if (repeat > 0)
-            {
-                first->message = str_format(arena, "%s (repeated %zu times)", first->message, repeat);
-            }
+        case eSeverityWarn:
+            warn_budget -= 1;
+            if (warn_budget == 0) continue;
+            break;
 
-            switch (diag->severity)
-            {
-            case eSeverityWarn:
-                warn_budget -= 1;
-                if (warn_budget == 0) continue;
-                break;
+        case eSeverityFatal:
+            error_budget -= 1;
+            if (error_budget == 0) continue;
+            break;
 
-            case eSeverityFatal:
-                error_budget -= 1;
-                if (error_budget == 0) continue;
-                break;
-
-            default: break;
-            }
-
-            text.config.override_fatal = set_has_option(config.error_warnings, diag);
-
-            const event_t *chosen = first != NULL ? first : event;
-            fn(text, chosen);
-            prev = event;
-            repeat = 0;
-            first = NULL;
+        default: break;
         }
-        else
-        {
-            if (first == NULL) first = event;
-            repeat += 1;
-        }
+
+        text.config.override_fatal = set_has_option(config.error_warnings, diag);
+
+        fn(text, event);
 
         switch (diag->severity)
         {

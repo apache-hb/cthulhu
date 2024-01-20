@@ -40,21 +40,21 @@ typedef struct callbacks_t
 #define CTU_CALLBACKS(id, prefix)                                                               \
     static int prefix##_##id##_##init(scan_t *extra, void *scanner)                             \
     {                                                                                           \
-        return prefix##lex_init_extra(extra, scanner);                                          \
+        return prefix##lex_init_extra(extra, (yyscan_t*)scanner);                                          \
     }                                                                                           \
     static int prefix##_##id##_parse(void *scanner, scan_t *extra)                              \
     {                                                                                           \
-        return prefix##parse(scanner, extra);                                                   \
+        return prefix##parse(scanner, (scan_t*)extra);                                                   \
     }                                                                                           \
     static void *prefix##_##id##_scan(const char *text, size_t size, void *scanner)             \
     {                                                                                           \
         CTASSERTF(size <= INT_MAX, #prefix "_scan (size = %zu > %d, name = %s)", size, INT_MAX, \
-                  scan_path(scanner));                                                          \
+                  scan_path((scan_t*)scanner));                                                          \
         return prefix##_scan_bytes(text, (int)size, scanner);                                   \
     }                                                                                           \
     static void prefix##_##id##_destroy_buffer(void *buffer, void *scanner)                     \
     {                                                                                           \
-        prefix##_delete_buffer(buffer, scanner);                                                \
+        prefix##_delete_buffer((YY_BUFFER_STATE)buffer, scanner);                                                \
     }                                                                                           \
     static void prefix##_##id##_destroy(void *scanner)                                          \
     {                                                                                           \

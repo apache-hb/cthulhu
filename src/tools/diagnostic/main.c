@@ -70,7 +70,7 @@ typedef struct tool_t
     cfg_field_t *print_all_diags;
     cfg_field_t *print_one_diag;
 
-    default_options_t options;
+    default_options_t m_options;
 } tool_t;
 
 static tool_t make_config(arena_t *arena, langs_t langs)
@@ -120,7 +120,7 @@ static tool_t make_config(arena_t *arena, langs_t langs)
         .print_all_diags = print_all_diags,
         .print_one_diag = print_one_diag,
 
-        .options = options,
+        .m_options = options,
     };
 
     return config;
@@ -245,7 +245,7 @@ int main(int argc, const char **argv)
 
     ap_t *ap = ap_new(config.group, config.arena);
 
-    int err = parse_argparse(ap, tool.options, config);
+    int err = parse_argparse(ap, tool.m_options, config);
     if (err == CT_EXIT_SHOULD_EXIT)
     {
         return CT_EXIT_OK;

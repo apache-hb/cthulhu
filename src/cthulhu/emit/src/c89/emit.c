@@ -385,14 +385,14 @@ static void reflect_enum(c89_emit_t *emit, io_t *io, const char *ns, const ssa_t
     // simcoe: make this based around decorators in the language frontends.
     //         use a skeleton file like flex/bison do and fill that out instead of this mess.
 
-    io_printf(io, "template<> class ctu::impl::TypeInfoHandle<%s::%s> : ctu::TypeInfo {\n", ns, type->name);
+    io_printf(io, "template<> class ctu::ReflectObject<%s::%s> : public ctu::TypeInfo {\n", ns, type->name);
     io_printf(io, "\tusing super_t = ctu::TypeInfo;\n");
     io_printf(io, "public:\n"); // type aliases
     io_printf(io, "\tusing type_t = %s::%s;\n", ns, type->name);
     io_printf(io, "\tusing case_t = ctu::EnumCase<type_t>;\n");
     io_printf(io, "\tusing underlying_t = %s;\n", c89_format_type(emit, it.underlying, NULL, false));
     io_printf(io, "\n"); // constructors and getters
-    io_printf(io, "\tconsteval TypeInfoHandle() noexcept : super_t(\"%s::%s\") { }\n\n", ns, type->name);
+    io_printf(io, "\tconsteval ReflectObject() noexcept : super_t(\"%s::%s\") { }\n\n", ns, type->name);
     io_printf(io, "\tconstexpr static underlying_t to_underlying(type_t value) noexcept { return static_cast<underlying_t>(value); }\n");
     io_printf(io, "\tconstexpr static type_t from_underlying(underlying_t value) noexcept { return static_cast<type_t>(value); }\n\n");
     io_printf(io, "\tconstexpr std::span<const case_t> get_cases() const noexcept { return kCaseData; }\n");
@@ -406,9 +406,10 @@ static void reflect_enum(c89_emit_t *emit, io_t *io, const char *ns, const ssa_t
     io_printf(io, "\t};\n");
     io_printf(io, "};\n\n");
 
+    io_printf(io, "template<> struct ctu::ReflectInfo<%s::%s> {\n\tusing reflect_t = impl::TypeInfoHandle<%s::%s>;\n};\n\n", ns, type->name, ns, type->name);
     io_printf(io, "template<>\n");
     io_printf(io, "consteval auto ctu::reflect<%s::%s>() noexcept {\n", ns, type->name);
-    io_printf(io, "\treturn impl::TypeInfoHandle<%s::%s>{};\n", ns, type->name);
+    io_printf(io, "\treturn ctu::ReflectInfo<%s::%s>{};\n", ns, type->name);
     io_printf(io, "}\n\n");
 }
 
@@ -419,7 +420,7 @@ static void reflect_struct(c89_emit_t *emit, io_t *io, const char *ns, const ssa
     ssa_type_record_t it = type->record;
     size_t len = typevec_len(it.fields);
 
-    io_printf(io, "template<> class ctu::impl::TypeInfoHandle<%s::%s> : ctu::TypeInfo {\n", ns, type->name);
+    io_printf(io, "template<> class ctu::impl::TypeInfoHandle<%s::%s> : public ctu::TypeInfo {\n", ns, type->name);
     io_printf(io, "\tusing super_t = ctu::TypeInfo;\n");
     io_printf(io, "public:\n"); // type aliases
     io_printf(io, "\tusing type_t = %s::%s;\n", ns, type->name);
@@ -457,9 +458,10 @@ static void reflect_struct(c89_emit_t *emit, io_t *io, const char *ns, const ssa
     io_printf(io, "\t};\n");
     io_printf(io, "};\n\n");
 
+    io_printf(io, "template<> struct ctu::ReflectInfo<%s::%s> {\n\tusing reflect_t = impl::TypeInfoHandle<%s::%s>;\n};\n\n", ns, type->name, ns, type->name);
     io_printf(io, "template<>\n");
     io_printf(io, "consteval auto ctu::reflect<%s::%s>() noexcept {\n", ns, type->name);
-    io_printf(io, "\treturn impl::TypeInfoHandle<%s::%s>{};\n", ns, type->name);
+    io_printf(io, "\treturn ctu::ReflectInfo<%s::%s>{};\n", ns, type->name);
     io_printf(io, "}\n\n");
 }
 

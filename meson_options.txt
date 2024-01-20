@@ -134,3 +134,8 @@ option('tool_error', type : 'feature',
     description : 'build backtrace exception testing tool',
     value : 'auto'
 )
+
+option('tool_reflect', type : 'feature',
+    description : 'build reflection language',
+    value : 'auto'
+)

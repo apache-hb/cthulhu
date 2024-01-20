@@ -64,3 +64,4 @@ DONT_COMMIT_THIS
 
 # we do want to commit the snippets
 !.vscode/cthulhu.code-snippets
+out.cpp
