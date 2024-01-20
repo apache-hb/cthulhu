@@ -12,6 +12,8 @@ library_deps = [ util ]
 
 cli_deps = [ setup, config, io, argparse, format ]
 
+cpp = meson.get_compiler('cpp')
+
 args = cpp.get_supported_arguments('/wd4201', '-Wno-format-security')
 
 ref = library('ref', src,
