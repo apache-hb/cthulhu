@@ -773,7 +773,6 @@ void Variant::emit_impl(out_t& out) const
         out.writeln("constexpr {}() = delete;", get_name());
     }
 
-    out.writeln("constexpr operator {}() const {{ return m_value; }}", under);
     out.writeln("constexpr operator inner_t() const {{ return (inner_t)m_value; }}", under);
 
     out.writeln("constexpr {}(const {}& other) : m_value(other.m_value) {{ }}", get_name(), get_name());
@@ -783,6 +782,7 @@ void Variant::emit_impl(out_t& out) const
     out.writeln("constexpr {}& operator=(const {}&& other) {{ m_value = other.m_value; return *this; }}", get_name(), get_name());
 
     out.writeln("constexpr {} to_underlying() const {{ return m_value; }}", under);
+    out.writeln("constexpr inner_t as_integral() const {{ return (inner_t)m_value; }}");
 
     out.nl();
     out.writeln("constexpr bool operator==(const {}& other) const {{ return m_value == other.m_value; }}", get_name());
