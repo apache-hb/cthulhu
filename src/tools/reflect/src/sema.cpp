@@ -795,9 +795,9 @@ void Variant::emit_impl(out_t& out) const
     if (!is_bitflags && !is_iterator && !is_iterator)
     {
         out.nl();
-        out.writeln("constexpr bool is_valid(underlying_t value) const {{");
+        out.writeln("constexpr bool is_valid() const {{");
         out.enter();
-        out.writeln("switch (value) {{");
+        out.writeln("switch (m_value) {{");
         for (auto c : m_cases)
         {
             out.writeln("case e{}: return true;", c->get_name());
