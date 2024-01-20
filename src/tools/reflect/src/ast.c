@@ -223,7 +223,7 @@ ref_ast_t *ref_case(scan_t *scan, where_t where, char *name, mpz_t value, bool i
 {
     ref_ast_t *ast = ref_ast_decl(scan, where, eAstCase, name);
     mpz_init_set(ast->value, value);
-    if (is_default) ast->flags |= eDeclDefault;
+    ast->is_default = is_default;
     return ast;
 }
 
