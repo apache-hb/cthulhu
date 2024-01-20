@@ -586,8 +586,6 @@ void Variant::resolve(Sema& sema)
         CTASSERTF(!cases.contains(field->name), "duplicate case %s", field->name);
         cases[field->name] = c;
 
-        printf("case %s\n", field->name);
-
         m_cases.push_back(c);
     });
 
