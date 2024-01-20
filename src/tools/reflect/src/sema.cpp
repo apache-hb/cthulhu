@@ -338,6 +338,9 @@ Case::Case(ref_ast_t *ast)
 
 void Case::resolve(Sema&)
 {
+    if (is_resolved()) return;
+    finish_resolve();
+
     mpz_init_set(m_value, m_ast->value);
     finish_resolve();
 }
@@ -357,6 +360,9 @@ static ref_ast_t *get_attrib(vector_t *attribs, ref_kind_t kind)
 }
 
 void Method::resolve(Sema& sema) {
+    if (is_resolved()) return;
+    finish_resolve();
+
     if (m_return != nullptr)
         m_return = sema.resolve_decl(m_return);
 
@@ -488,6 +494,9 @@ Class::Class(ref_ast_t *ast)
 
 void Class::resolve(Sema& sema)
 {
+    if (is_resolved()) return;
+    finish_resolve();
+
     std::map<std::string, Field*> fields;
     std::map<std::string, Method*> methods;
 
@@ -542,6 +551,9 @@ Struct::Struct(ref_ast_t *ast)
 
 void Struct::resolve(Sema& sema)
 {
+    if (is_resolved()) return;
+    finish_resolve();
+
     std::map<const char*, Field*> fields;
 
     vec_foreach<ref_ast_t*>(m_ast->fields, [&](auto field) {
@@ -563,6 +575,9 @@ Variant::Variant(ref_ast_t *ast)
 
 void Variant::resolve(Sema& sema)
 {
+    if (is_resolved()) return;
+    finish_resolve();
+
     std::map<const char*, Case*> cases;
 
     vec_foreach<ref_ast_t*>(m_ast->cases, [&](auto field) {
@@ -570,6 +585,8 @@ void Variant::resolve(Sema& sema)
         c->resolve(sema);
         CTASSERTF(!cases.contains(field->name), "duplicate case %s", field->name);
         cases[field->name] = c;
+
+        printf("case %s\n", field->name);
 
         m_cases.push_back(c);
     });
@@ -582,8 +599,6 @@ void Variant::resolve(Sema& sema)
     }
 
     m_default_case = m_ast->default_case ? cases[m_ast->default_case->name] : nullptr;
-
-    finish_resolve();
 }
 
 static const char *digit_cxx_name(digit_t digit, sign_t sign)

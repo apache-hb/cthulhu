@@ -533,6 +533,11 @@ namespace refl {
             out.writeln("class {};", get_name());
         }
 
+        std::string get_cxx_name(const char *name) const override
+        {
+            return (name == nullptr) ? get_name() : std::format("{} {}", get_name(), name);
+        }
+
         void emit_impl(out_t& out) const override;
 
         void emit_reflection(Sema& sema, out_t& out) const override;
@@ -558,6 +563,11 @@ namespace refl {
         void emit_proto(out_t& out) const override
         {
             out.writeln("struct {};", get_name());
+        }
+
+        std::string get_cxx_name(const char *name) const override
+        {
+            return (name == nullptr) ? get_name() : std::format("{} {}", get_name(), name);
         }
 
         void emit_impl(out_t& out) const override;

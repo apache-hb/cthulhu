@@ -4,8 +4,8 @@
 #include <stddef.h>
 
 namespace ctu {
-    class ObjectField;
-    class TypeInfoBase;
+    struct ObjectField;
+    struct TypeInfoBase;
 
     class ObjectName {
         const char *m_front;
