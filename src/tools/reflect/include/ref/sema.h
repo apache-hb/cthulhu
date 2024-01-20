@@ -502,9 +502,9 @@ namespace refl {
     class Case : public Decl {
         ref_ast_t *m_ast = nullptr;
 
+    public:
         mpz_t m_value;
 
-    public:
         Case(ref_ast_t *ast);
 
         void resolve(Sema& sema) override;

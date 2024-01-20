@@ -792,8 +792,33 @@ void Variant::emit_impl(out_t& out) const
     bool is_arithmatic = get_attrib(m_ast->attributes, eAstAttribArithmatic) != nullptr;
     bool is_iterator = get_attrib(m_ast->attributes, eAstAttribIterator) != nullptr;
 
+    if (!is_bitflags && !is_iterator && !is_iterator)
+    {
+        out.nl();
+        out.writeln("constexpr bool is_valid(underlying_t value) const {{");
+        out.enter();
+        out.writeln("switch (value) {{");
+        for (auto c : m_cases)
+        {
+            out.writeln("case e{}: return true;", c->get_name());
+        }
+        out.writeln("default: return false;");
+        out.writeln("}}");
+        out.leave();
+        out.writeln("}};");
+    }
+
     if (is_bitflags)
     {
+        std::string flags;
+        for (auto c : m_cases)
+        {
+            if (!flags.empty())
+                flags += " | ";
+            flags += std::format("e{}", c->get_name());
+        }
+        out.writeln("static constexpr {} kNone = {}(0);", get_name(), get_name());
+        out.writeln("static constexpr {} kMask = {}({});", get_name(), flags);
         // emit bitwise operators
         out.nl();
         out.writeln("constexpr {} operator~() const {{ return {}(~m_value); }}", get_name(), get_name());
@@ -811,6 +836,9 @@ void Variant::emit_impl(out_t& out) const
         out.writeln("constexpr {}& set({} other) {{ m_value |= other; return *this; }}", get_name(), under);
         out.writeln("constexpr {}& reset({} other) {{ m_value &= ~other; return *this; }}", get_name(), under);
         out.writeln("constexpr {}& flip({} other) {{ m_value ^= other; return *this; }}", get_name(), under);
+
+        // is_valid is defined as no invalid flags set
+        out.writeln("constexpr bool is_valid() const {{ return (m_value & ~kMask) == 0; }}");
     }
 
     if (is_arithmatic)
@@ -827,16 +855,68 @@ void Variant::emit_impl(out_t& out) const
         out.writeln("constexpr {}& operator*=(const {}& other) {{ m_value *= other.m_value; return *this; }}", get_name(), get_name());
         out.writeln("constexpr {}& operator/=(const {}& other) {{ m_value /= other.m_value; return *this; }}", get_name(), get_name());
         out.writeln("constexpr {}& operator%=(const {}& other) {{ m_value %= other.m_value; return *this; }}", get_name(), get_name());
+
+        // is_valid is not defined for arithmatic types
     }
+
 
     if (is_iterator)
     {
+        mpz_t lowest_value;
+        std::string lowest_name;
+
+        mpz_t highest_value;
+        std::string highest_name;
+
+        for (auto c : m_cases)
+        {
+            if (lowest_name.empty())
+            {
+                mpz_init_set(lowest_value, c->m_value);
+                lowest_name = c->get_name();
+            }
+            else
+            {
+                if (mpz_cmp(c->m_value, lowest_value) < 0)
+                {
+                    mpz_set(lowest_value, c->m_value);
+                    lowest_name = c->get_name();
+                }
+            }
+
+            if (highest_name.empty())
+            {
+                mpz_init_set(highest_value, c->m_value);
+                highest_name = c->get_name();
+            }
+            else
+            {
+                if (mpz_cmp(c->m_value, highest_value) > 0)
+                {
+                    mpz_set(highest_value, c->m_value);
+                    highest_name = c->get_name();
+                }
+            }
+        }
+        out.writeln("static constexpr {} kBegin = {}({});", get_name(), get_name(), lowest_name);
+        out.writeln("static constexpr {} kEnd = {}({});", get_name(), get_name(), highest_name);
+
         // implement increment/decrement operators
         out.nl();
         out.writeln("constexpr {}& operator++() {{ ++m_value; return *this; }}", get_name());
         out.writeln("constexpr {} operator++(int) {{ return {}(m_value++); }}", get_name(), get_name());
         out.writeln("constexpr {}& operator--() {{ --m_value; return *this; }}", get_name());
         out.writeln("constexpr {} operator--(int) {{ return {}(m_value--); }}", get_name(), get_name());
+
+        // comparison operators
+        out.nl();
+        out.writeln("constexpr bool operator<(const {}& other) const {{ return m_value < other.m_value; }}", get_name());
+        out.writeln("constexpr bool operator>(const {}& other) const {{ return m_value > other.m_value; }}", get_name());
+        out.writeln("constexpr bool operator<=(const {}& other) const {{ return m_value <= other.m_value; }}", get_name());
+        out.writeln("constexpr bool operator>=(const {}& other) const {{ return m_value >= other.m_value; }}", get_name());
+
+        // is valid is defined as being within the range of the enum
+        out.writeln("constexpr bool is_valid() const {{ return m_value >= kBegin && m_value <= kEnd; }}");
     }
 
     out.leave();
@@ -1056,16 +1136,6 @@ void Variant::emit_reflection(Sema& sema, out_t& out) const
         emit_ctor(out);
         out.nl();
 
-        out.writeln("constexpr bool is_valid(underlying_t value) const {{");
-        out.enter();
-            out.writeln("for (auto option : kCases) {{");
-            out.enter();
-            out.writeln("if (option.value.to_underlying() == value) return true;");
-            out.leave();
-            out.writeln("}}");
-            out.writeln("return false;");
-        out.leave();
-        out.writeln("}};");
         out.nl();
         out.writeln("constexpr ObjectName to_string(type_t value) const {{");
         out.enter();
