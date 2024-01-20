@@ -784,6 +784,10 @@ void Variant::emit_impl(out_t& out) const
 
     out.writeln("constexpr {} to_underlying() const {{ return m_value; }}", under);
 
+    out.nl();
+    out.writeln("constexpr bool operator==(const {}& other) const {{ return m_value == other.m_value; }}", get_name());
+    out.writeln("constexpr bool operator!=(const {}& other) const {{ return m_value != other.m_value; }}", get_name());
+
     bool is_bitflags = get_attrib(m_ast->attributes, eAstAttribBitflags) != nullptr;
     bool is_arithmatic = get_attrib(m_ast->attributes, eAstAttribArithmatic) != nullptr;
     bool is_iterator = get_attrib(m_ast->attributes, eAstAttribIterator) != nullptr;
