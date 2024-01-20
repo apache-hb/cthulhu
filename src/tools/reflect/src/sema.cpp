@@ -800,7 +800,7 @@ void Variant::emit_impl(out_t& out) const
         out.writeln("switch (m_value) {{");
         for (auto c : m_cases)
         {
-            out.writeln("case e{}: return true;", c->get_name());
+            out.writeln("case ({})e{}: return true;", under, c->get_name());
         }
         out.writeln("default: return false;");
         out.writeln("}}");
