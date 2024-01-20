@@ -757,10 +757,10 @@ void Variant::emit_impl(out_t& out) const
     out.writeln("{} m_value;", under);
     out.nl();
     out.writeln("constexpr {}({} value) : m_value(value) {{ }}", get_name(), under);
-    out.writeln("constexpr {}(inner_t value) : m_value(({})value) {{ }}", get_name(), under);
     out.leave();
     out.writeln("public:");
     out.enter();
+    out.writeln("constexpr {}(inner_t value) : m_value(({})value) {{ }}", get_name(), under);
     out.writeln("using enum inner_t;");
     out.nl();
     if (m_default_case)
