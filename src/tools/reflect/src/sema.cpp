@@ -725,7 +725,7 @@ void Case::emit_impl(out_t& out) const
 
 void Variant::emit_proto(out_t& out) const
 {
-    out.writeln("struct {};", get_name());
+    out.writeln("class {};", get_name());
 }
 
 static void get_type_id(ref_ast_t *ast, mpz_t out)
