@@ -249,7 +249,7 @@ void Sema::emit_all(io_t *source, io_t *header, const char *file)
     s.writeln("// Generated from '{}'", file);
     s.writeln("// Dont edit this file, it will be overwritten on the next build");
     s.nl();
-    char *base = str_basename(io_name(header), get_global_arena());
+    char *base = str_filename(io_name(header), get_global_arena());
     s.writeln("#include \"{}\"", base);
     s.nl();
 
