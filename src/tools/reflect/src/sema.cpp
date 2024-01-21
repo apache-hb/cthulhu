@@ -1059,7 +1059,7 @@ static void emit_reflect_hook(out_t& out, const std::string& id)
 
 static void emit_info_header(out_t& out, const std::string& id)
 {
-    out.writeln("template<> class TypeInfo<{}> : TypeInfoBase {{", id);
+    out.writeln("template<> class TypeInfo<{}> : public TypeInfoBase {{", id);
     out.writeln("public:");
 }
 
