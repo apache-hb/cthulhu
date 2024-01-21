@@ -140,6 +140,7 @@ typedef struct ref_ast_t {
 
         /* eAstProgram */
         struct {
+            char *api;
             vector_t *mod;
             vector_t *imports;
             vector_t *decls;
@@ -241,7 +242,7 @@ ref_ast_t *ref_unary(scan_t *scan, where_t where, unary_t op, ref_ast_t *expr);
 ref_ast_t *ref_binary(scan_t *scan, where_t where, binary_t op, ref_ast_t *lhs, ref_ast_t *rhs);
 ref_ast_t *ref_compare(scan_t *scan, where_t where, compare_t op, ref_ast_t *lhs, ref_ast_t *rhs);
 
-ref_ast_t *ref_program(scan_t *scan, where_t where, vector_t *mod, vector_t *imports, vector_t *decls);
+ref_ast_t *ref_program(scan_t *scan, where_t where, vector_t *mod, char *api, vector_t *imports, vector_t *decls);
 
 ref_ast_t *ref_import(scan_t *scan, where_t where, text_t text);
 

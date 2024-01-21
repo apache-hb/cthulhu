@@ -60,6 +60,7 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 
 <*>"module" { return TOK_MODULE; }
 <*>"import" { return TOK_IMPORT; }
+<*>"api" { return TOK_API; }
 
 <*>"class" { return TOK_CLASS; }
 <*>"virtual" { return TOK_VIRTUAL; }

@@ -61,10 +61,11 @@ ref_ast_t *ref_compare(scan_t *scan, where_t where, compare_t op, ref_ast_t *lhs
     return ast;
 }
 
-ref_ast_t *ref_program(scan_t *scan, where_t where, vector_t *mod, vector_t *imports, vector_t *decls)
+ref_ast_t *ref_program(scan_t *scan, where_t where, vector_t *mod, char *api, vector_t *imports, vector_t *decls)
 {
     ref_ast_t *ast = ref_ast_new(scan, where, eAstProgram);
     ast->mod = mod;
+    ast->api = api;
     ast->imports = imports;
     ast->decls = decls;
     return ast;

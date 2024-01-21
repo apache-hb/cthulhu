@@ -114,6 +114,8 @@ Decl *Sema::get_decl(const char *name) const
 
 void Sema::forward_module(ref_ast_t *mod)
 {
+    if (mod->api) m_api = mod->api;
+
     vec_foreach<ref_ast_t*>(mod->imports, [&](auto import) {
         imports.push_back(import->ident);
     });
@@ -239,7 +241,7 @@ Type *Sema::resolve_generic(ref_ast_t *ast)
 void Sema::emit_all(io_t *source, io_t *header, const char *file)
 {
     // header preamble
-    out_t h;
+    out_t h = this;
     h.writeln("#pragma once");
     h.writeln("// Generated from '{}'", file);
     h.writeln("// Dont edit this file, it will be overwritten on the next build");
@@ -248,7 +250,7 @@ void Sema::emit_all(io_t *source, io_t *header, const char *file)
     h.nl();
 
     // source preamble
-    out_t s;
+    out_t s = this;
     s.writeln("// Generated from '{}'", file);
     s.writeln("// Dont edit this file, it will be overwritten on the next build");
     s.nl();

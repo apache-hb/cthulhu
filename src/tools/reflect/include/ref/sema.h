@@ -33,10 +33,18 @@ typedef struct ref_emit_t
     io_t *source;
 } ref_emit_t;
 
+namespace refl { class Sema; }
+
 struct out_t
 {
+    refl::Sema *sema;
+
     std::stringstream m_stream;
     size_t m_depth = 0;
+
+    out_t(refl::Sema *i)
+        : sema(i)
+    { }
 
     void dump(io_t *io)
     {
@@ -132,12 +140,15 @@ namespace refl {
         declmap_t m_decls;
 
         std::string m_namespace;
+        const char *m_api = nullptr;
 
         std::vector<std::string> imports;
 
     public:
         Sema(const Sema&) = delete;
         Sema& operator=(const Sema&) = delete;
+
+        const char *get_api() const { return m_api; }
 
         const std::string& get_namespace() const { return m_namespace; }
 

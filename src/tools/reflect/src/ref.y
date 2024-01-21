@@ -79,7 +79,6 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     decl_seq
     class_body_seq
     case_seq
-    module
     opt_attrib_seq
     attrib_seq
     type_list
@@ -93,6 +92,9 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
 %type<typevec> string_list
 %type<param> passing
 %type<layout> layout_types
+
+%type<ident>
+    opt_api
 
 %type<boolean>
     opt_export
@@ -194,6 +196,7 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     TOK_C_ENUM "c_enum"
     TOK_FACADE "facade"
     TOK_RENAME "rename"
+    TOK_API "api"
 
     TOK_TRUE "true"
     TOK_FALSE "false"
@@ -211,9 +214,10 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %%
 
-program: module opt_import_seq decl_seq { scan_set(x, ref_program(x, @$, $1, $2, $3)); };
+program: TOK_MODULE path opt_api TOK_SEMICOLON opt_import_seq decl_seq { scan_set(x, ref_program(x, @$, $2, $3, $5, $6)); };
 
-module: TOK_MODULE path TOK_SEMICOLON { $$ = $2; }
+opt_api: %empty { $$ = NULL; }
+    | TOK_API TOK_IDENT { $$ = $2; }
     ;
 
 opt_import_seq: %empty { $$ = &kEmptyVector; }
