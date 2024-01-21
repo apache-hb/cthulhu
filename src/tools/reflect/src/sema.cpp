@@ -845,6 +845,9 @@ void Variant::emit_impl(out_t& out) const
     if (is_iterator)
     {
         out.nl();
+        out.writeln("static constexpr auto kBegin = (inner_t)((underlying_t)0);");
+        out.writeln("static constexpr auto kEnd = (inner_t)(~(underlying_t)0);");
+        out.nl();
         out.writeln("class Iterator {{");
         out.enter();
         out.writeln("inner_t m_value;");
