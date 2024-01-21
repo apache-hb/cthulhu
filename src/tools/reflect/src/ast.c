@@ -350,3 +350,10 @@ ref_ast_t *ref_attrib_noreflect(scan_t *scan, where_t where)
 {
     return ref_ast_new(scan, where, eAstAttribNoReflect);
 }
+
+ref_ast_t *ref_attrib_external(scan_t *scan, where_t where, bool c_enum)
+{
+    ref_ast_t *ast = ref_ast_new(scan, where, eAstAttribExternal);
+    ast->c_enum = c_enum;
+    return ast;
+}

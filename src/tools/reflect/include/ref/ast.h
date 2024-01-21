@@ -68,6 +68,7 @@ typedef enum ref_kind_t {
     eAstAttribCxxName, // c++ name for implementation
     eAstAttribRemote, // enable rpc
     eAstAttribNoReflect, // dont reflect
+    eAstAttribExternal, // external type
 
     eAstCount
 } ref_kind_t;
@@ -118,6 +119,9 @@ typedef struct ref_ast_t {
 
         /* eAstIdent, eAstName */
         char *ident;
+
+        /* eAstAttribExternal */
+        bool c_enum;
 
         /* eAstBool */
         bool boolean;
@@ -277,6 +281,7 @@ ref_ast_t *ref_attrib_iterator(scan_t *scan, where_t where);
 ref_ast_t *ref_attrib_cxxname(scan_t *scan, where_t where, char *ident);
 ref_ast_t *ref_attrib_remote(scan_t *scan, where_t where);
 ref_ast_t *ref_attrib_noreflect(scan_t *scan, where_t where);
+ref_ast_t *ref_attrib_external(scan_t *scan, where_t where, bool c_enum);
 
 ref_ast_t *ref_attrib_assert(scan_t *scan, where_t where, typevec_t *before, typevec_t *after, typevec_t *always);
 

@@ -606,6 +606,10 @@ namespace refl {
             if (m_underlying != nullptr)
                 deps.add(m_underlying);
         }
+
+        size_t max_tostring() const;
+
+        size_t max_tostring_bitflags() const;
     };
 
     class Expr : public Tree {

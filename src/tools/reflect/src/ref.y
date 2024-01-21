@@ -187,6 +187,9 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     TOK_REMOTE "remote"
     TOK_OPAQUE "opaque"
     TOK_NOREFLECT "noreflect"
+    TOK_EXTERNAL "external"
+    TOK_CBUFFER "cbuffer"
+    TOK_C_ENUM "c_enum"
 
     TOK_TRUE "true"
     TOK_FALSE "false"
@@ -355,6 +358,8 @@ attrib: TOK_TRANSIENT { $$ = ref_attrib_transient(x, @$); }
     | TOK_CXXNAME TOK_LPAREN TOK_IDENT TOK_RPAREN { $$ = ref_attrib_cxxname(x, @$, $3); }
     | TOK_REMOTE { $$ = ref_attrib_remote(x, @$); }
     | TOK_NOREFLECT { $$ = ref_attrib_noreflect(x, @$); }
+    | TOK_EXTERNAL { $$ = ref_attrib_external(x, @$, false); }
+    | TOK_EXTERNAL TOK_LPAREN TOK_C_ENUM TOK_RPAREN { $$ = ref_attrib_external(x, @$, true); }
     ;
 
 layout_types: TOK_OPTIMAL { $$ = eLayoutOptimal; }

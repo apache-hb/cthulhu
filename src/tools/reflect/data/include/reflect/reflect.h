@@ -22,17 +22,121 @@ namespace ctu {
 
         constexpr size_t size() const { return m_back - m_front; }
         constexpr const char *data() const { return m_front; }
+
+        constexpr char operator[](size_t index) const {
+            return m_front[index];
+        }
+    };
+
+    template<size_t N>
+    class SmallString {
+        static_assert(N > 0, "SmallString is too small");
+
+        char m_data[N + 1] = {};
+        size_t m_size;
+
+        constexpr static size_t int_length(auto value, int base) {
+            size_t len = 0;
+            while (value) {
+                value /= base;
+                len++;
+            }
+
+            return len;
+        }
+
+        constexpr static size_t str_length(const char *str) {
+            size_t len = 0;
+            while (*str++) {
+                len++;
+            }
+
+            return len;
+        }
+
+    public:
+        constexpr SmallString(const char *str = "") : m_size(str_length(str)) {
+            for (size_t i = 0; i < m_size; i++) {
+                m_data[i] = str[i];
+            }
+        }
+
+        constexpr SmallString(const ObjectName& name) : m_size(name.size()) {
+            for (size_t i = 0; i < m_size; i++) {
+                m_data[i] = name[i];
+            }
+        }
+
+        template<size_t M>
+        constexpr SmallString(const char (&str)[M]) : m_size(M - 1) {
+            static_assert(M <= N, "string is too large");
+            for (size_t i = 0; i < M; i++) {
+                m_data[i] = str[i];
+            }
+        }
+
+        constexpr SmallString(auto number, int base) : m_size(int_length(number, base)) {
+            for (size_t i = 0; i < m_size; i++) {
+                auto digit = number % base;
+                number /= base;
+
+                m_data[m_size - i - 1] = '0' + digit;
+            }
+        }
+
+        constexpr void append(const char *str) {
+            auto len = str_length(str);
+            for (size_t i = 0; i < len; i++) {
+                m_data[m_size + i] = str[i];
+            }
+
+            m_size += len;
+        }
+
+        constexpr void append(const ObjectName& name) {
+            for (size_t i = 0; i < name.size(); i++) {
+                m_data[m_size + i] = name[i];
+            }
+
+            m_size += name.size();
+        }
+
+        constexpr SmallString& operator+=(const ObjectName& name) {
+            append(name);
+            return *this;
+        }
+
+        constexpr SmallString& operator+=(const char *str) {
+            append(str);
+            return *this;
+        }
+
+        constexpr void append_int(uint64_t value, int base = 10) {
+            auto len = int_length(value, base);
+
+            for (size_t i = 0; i < len; i++) {
+                auto digit = value % base;
+                value /= base;
+
+                m_data[m_size + len - i - 1] = '0' + digit;
+            }
+        }
+
+        constexpr size_t size() const { return m_size; }
+        constexpr const char *data() const { return m_data; }
+        constexpr const char *begin() const { return m_data; }
+        constexpr const char *end() const { return m_data + m_size; }
     };
 
     class Empty {};
 
     class ObjectId {
-        size_t m_id;
+        uint32_t m_id;
 
     public:
-        consteval ObjectId(size_t id) : m_id(id) { }
+        consteval ObjectId(uint32_t id) : m_id(id) { }
 
-        constexpr size_t id() const { return m_id; }
+        constexpr uint32_t id() const { return m_id; }
     };
 
     class OutOfBounds {
@@ -128,4 +232,9 @@ namespace ctu {
 
     template<typename T>
     consteval auto reflect();
+
+    template<typename T>
+    concept Reflected = requires {
+        reflect<T>();
+    };
 }

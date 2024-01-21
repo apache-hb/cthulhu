@@ -45,6 +45,9 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 <ATTRIBUTE>"cxxname" { return TOK_CXXNAME; }
 <ATTRIBUTE>"remote" { return TOK_REMOTE; }
 <ATTRIBUTE>"noreflect" { return TOK_NOREFLECT; }
+<ATTRIBUTE>"external" { return TOK_EXTERNAL; }
+<ATTRIBUTE>"cbuffer" { return TOK_CBUFFER; }
+<ATTRIBUTE>"c_enum" { return TOK_C_ENUM; }
 
 <*>{WS}+ ;
 

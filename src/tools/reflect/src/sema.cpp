@@ -61,6 +61,9 @@ declmap_t refl::get_builtin_types()
         { "int", new IntType("int", eDigitInt, eSignSigned) },
         { "uint", new IntType("uint", eDigitInt, eSignUnsigned) },
 
+        { "long", new IntType("long", eDigitLong, eSignSigned) },
+        { "ulong", new IntType("ulong", eDigitLong, eSignUnsigned) },
+
         { "int8", new IntType("int8", eDigit8, eSignSigned) },
         { "int16", new IntType("int16", eDigit16, eSignSigned) },
         { "int32", new IntType("int32", eDigit32, eSignSigned) },
@@ -610,6 +613,7 @@ static const char *digit_cxx_name(digit_t digit, sign_t sign)
     case eDigit64: return (sign == eSignUnsigned) ? "uint64_t" : "int64_t";
 
     case eDigitInt: return (sign == eSignUnsigned) ? "unsigned int" : "int";
+    case eDigitLong: return (sign == eSignUnsigned) ? "unsigned long" : "long";
     case eDigitSize: return (sign == eSignUnsigned) ? "size_t" : "ptrdiff_t";
 
     default: NEVER("invalid digit");
@@ -708,11 +712,15 @@ static void emit_record(out_t& out, ref_privacy_t privacy, const char *name, Typ
 
 void Class::emit_impl(out_t& out) const
 {
+    if (get_attrib(m_ast->attributes, eAstAttribExternal))
+        return;
     emit_record(out, ePrivacyPrivate, get_name(), m_parent, "class", m_fields, m_methods);
 }
 
 void Struct::emit_impl(out_t& out) const
 {
+    if (get_attrib(m_ast->attributes, eAstAttribExternal))
+        return;
     emit_record(out, ePrivacyPublic, get_name(), nullptr, "struct", m_fields, std::vector<Method*>());
 }
 
@@ -726,26 +734,45 @@ void Variant::emit_proto(out_t& out) const
     out.writeln("class {};", get_name());
 }
 
+static uint32_t type_hash(const char *name)
+{
+    uint32_t hash = 0xFFFFFFFF;
+
+    while (*name)
+    {
+        hash ^= *name++;
+        for (int i = 0; i < 8; i++)
+        {
+            hash = (hash >> 1) ^ (0xEDB88320 & -(hash & 1));
+        }
+    }
+
+    return ~hash;
+}
+
 static void get_type_id(ref_ast_t *ast, mpz_t out)
 {
     ref_ast_t *attrib = get_attrib(ast->attributes, eAstAttribTypeId);
     if (attrib)
     {
+        CTASSERTF(mpz_fits_uint_p(attrib->id), "invalid type id %s, must fit in a uint32_t", mpz_get_str(nullptr, 10, attrib->id));
         mpz_init_set(out, attrib->id);
     }
     else
     {
-        mpz_init_set_ui(out, str_hash(ast->name));
+        mpz_init_set_ui(out, type_hash(ast->name));
     }
 }
 
 void Variant::emit_impl(out_t& out) const
 {
+    if (get_attrib(m_ast->attributes, eAstAttribExternal))
+        return;
     auto under = m_underlying->get_cxx_name(nullptr);
     out.writeln("class {} {{", get_name());
     out.enter();
     out.writeln("friend class ctu::TypeInfo<{}>;", get_name());
-    out.writeln("enum class inner_t : {} {{", under);
+    out.writeln("enum InnerType : {} {{", under);
         out.enter();
         for (auto c : m_cases)
         {
@@ -760,8 +787,8 @@ void Variant::emit_impl(out_t& out) const
     out.writeln("public:");
     out.enter();
     out.writeln("constexpr {}({} value) : m_value(value) {{ }}", get_name(), under);
-    out.writeln("constexpr {}(inner_t value) : m_value(({})value) {{ }}", get_name(), under);
-    out.writeln("using enum inner_t;");
+    out.writeln("constexpr {}(InnerType value) : m_value(({})value) {{ }}", get_name(), under);
+    out.writeln("using enum InnerType;");
     out.nl();
     if (m_default_case)
     {
@@ -773,7 +800,7 @@ void Variant::emit_impl(out_t& out) const
         out.writeln("constexpr {}() = delete;", get_name());
     }
 
-    out.writeln("constexpr operator inner_t() const {{ return (inner_t)m_value; }}", under);
+    out.writeln("constexpr operator InnerType() const {{ return (InnerType)m_value; }}", under);
 
     out.writeln("constexpr {}(const {}& other) : m_value(other.m_value) {{ }}", get_name(), get_name());
     out.writeln("constexpr {}& operator=(const {}& other) {{ m_value = other.m_value; return *this; }}", get_name(), get_name());
@@ -782,7 +809,7 @@ void Variant::emit_impl(out_t& out) const
     out.writeln("constexpr {}& operator=(const {}&& other) {{ m_value = other.m_value; return *this; }}", get_name(), get_name());
 
     out.writeln("constexpr {} to_underlying() const {{ return m_value; }}", under);
-    out.writeln("constexpr inner_t as_integral() const {{ return (inner_t)m_value; }}");
+    out.writeln("constexpr InnerType as_integral() const {{ return (InnerType)m_value; }}");
 
     out.nl();
     out.writeln("constexpr bool operator==(const {}& other) const {{ return m_value == other.m_value; }}", get_name());
@@ -817,8 +844,8 @@ void Variant::emit_impl(out_t& out) const
                 flags += " | ";
             flags += std::format("e{}", c->get_name());
         }
-        out.writeln("static constexpr {} kNone = {}(0);", get_name(), get_name());
-        out.writeln("static constexpr {} kMask = {}({});", get_name(), flags);
+        out.writeln("static constexpr {} none() {{ return {}(0); }};", get_name(), get_name());
+        out.writeln("static constexpr {} mask() {{ return {}({}); }};", get_name(), get_name(), flags);
         // emit bitwise operators
         out.nl();
         out.writeln("constexpr {} operator~() const {{ return {}(~m_value); }}", get_name(), get_name());
@@ -838,7 +865,7 @@ void Variant::emit_impl(out_t& out) const
         out.writeln("constexpr {}& flip({} other) {{ m_value ^= other; return *this; }}", get_name(), under);
 
         // is_valid is defined as no invalid flags set
-        out.writeln("constexpr bool is_valid() const {{ return (m_value & ~kMask) == 0; }}");
+        out.writeln("constexpr bool is_valid() const {{ return (m_value & ~mask()) == 0; }}");
     }
 
     if (is_arithmatic)
@@ -1008,7 +1035,7 @@ static void emit_reflect_hook(out_t& out, const std::string& id)
 {
     out.writeln("template<> consteval auto reflect<{}>() {{", id);
     out.enter();
-    out.writeln("return TypeInfo<{}>{{}};", id, id);
+    out.writeln("return TypeInfo<{}>{{}};", id);
     out.leave();
     out.writeln("}}");
 }
@@ -1019,6 +1046,19 @@ static void emit_info_header(out_t& out, const std::string& id)
     out.writeln("public:");
 }
 
+static std::string get_decl_name(ref_ast_t *ast, Sema& sema, const char *name)
+{
+    ref_ast_t *external = get_attrib(ast->attributes, eAstAttribExternal);
+    if (external)
+    {
+        return name;
+    }
+    else
+    {
+        return std::format("{}::{}", sema.get_namespace(), name);
+    }
+}
+
 void Struct::emit_reflection(Sema& sema, out_t& out) const
 {
     if (ref_ast_t *noreflect = get_attrib(m_ast->attributes, eAstAttribNoReflect); noreflect)
@@ -1026,7 +1066,7 @@ void Struct::emit_reflection(Sema& sema, out_t& out) const
         return;
     }
 
-    auto id = std::format("{}::{}", sema.get_namespace(), get_name());
+    auto id = get_decl_name(m_ast, sema, get_name());
 
     mpz_t typeid_value;
     get_type_id(m_ast, typeid_value);
@@ -1057,7 +1097,7 @@ void Class::emit_reflection(Sema& sema, out_t& out) const
         return;
     }
 
-    auto id = std::format("{}::{}", sema.get_namespace(), get_name());
+    auto id = get_decl_name(m_ast, sema, get_name());
     auto parent = m_parent ? m_parent->get_cxx_name(nullptr) : "void";
 
     mpz_t typeid_value;
@@ -1096,6 +1136,35 @@ void Class::emit_reflection(Sema& sema, out_t& out) const
     out.nl();
 }
 
+size_t Variant::max_tostring() const {
+    if (get_attrib(m_ast->attributes, eAstAttribBitflags))
+        return max_tostring_bitflags();
+
+    size_t max = 0;
+
+    for (auto c : m_cases)
+    {
+        size_t len = strlen(c->get_name());
+        if (len > max)
+            max = len;
+    }
+
+    return max + 1;
+}
+
+size_t Variant::max_tostring_bitflags() const {
+    // sum all the cases + 1 for each comma
+    size_t max = 0;
+
+    for (auto c : m_cases)
+    {
+        size_t len = strlen(c->get_name());
+        max += len + 1;
+    }
+
+    return max;
+}
+
 void Variant::emit_reflection(Sema& sema, out_t& out) const
 {
     if (ref_ast_t *noreflect = get_attrib(m_ast->attributes, eAstAttribNoReflect); noreflect)
@@ -1103,17 +1172,23 @@ void Variant::emit_reflection(Sema& sema, out_t& out) const
         return;
     }
 
-    auto id = std::format("{}::{}", sema.get_namespace(), get_name());
+    auto id = get_decl_name(m_ast, sema, get_name());
     auto underlying = m_underlying->get_cxx_name(nullptr);
 
     mpz_t typeid_value;
     get_type_id(m_ast, typeid_value);
+    bool is_bitflags = get_attrib(m_ast->attributes, eAstAttribBitflags) != nullptr;
+
+    size_t max_tostring_length = max_tostring();
 
     emit_info_header(out, id);
         out.enter();
         out.writeln("using type_t = {};", id);
         out.writeln("using underlying_t = {};", underlying);
         out.writeln("using case_t = ctu::EnumCase<{}>;", id);
+        out.nl();
+        out.writeln("static constexpr size_t kMaxLength = {};", max_tostring_length);
+        out.writeln("using string_t = SmallString<kMaxLength>;");
         out.nl();
         emit_name_info(out, id, m_ast);
         if (m_underlying)
@@ -1137,14 +1212,34 @@ void Variant::emit_reflection(Sema& sema, out_t& out) const
         out.nl();
 
         out.nl();
-        out.writeln("constexpr ObjectName to_string(type_t value) const {{");
+        out.writeln("constexpr string_t to_string(type_t value, int base = 10) const {{");
         out.enter();
+        if (is_bitflags)
+        {
+            out.writeln("string_t result;");
+            out.writeln("bool first = true;");
+            out.writeln("for (auto option : kCases) {{");
+            out.enter();
+            out.writeln("if ((value & option.value) == option.value) {{");
+            out.enter();
+            out.writeln("if (!first) result += \", \";");
+            out.writeln("result += option.name;");
+            out.writeln("first = false;");
+            out.leave();
+            out.writeln("}}");
+            out.leave();
+            out.writeln("}}");
+            out.writeln("return result;");
+        }
+        else
+        {
             out.writeln("for (auto option : kCases) {{");
             out.enter();
             out.writeln("if (option.value == value) return option.name;");
             out.leave();
             out.writeln("}}");
-            out.writeln("return impl::kUnknown;");
+            out.writeln("return string_t(value.to_underlying(), base);");
+        }
         out.leave();
         out.writeln("}};");
     out.leave();
