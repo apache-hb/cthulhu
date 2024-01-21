@@ -245,14 +245,6 @@ namespace ctu {
     };
 
     PRIMITIVE_TYPEINFO(bool, 1)
-    PRIMITIVE_TYPEINFO(char, 2)
-    PRIMITIVE_TYPEINFO(short, 3)
-    PRIMITIVE_TYPEINFO(int, 4)
-    PRIMITIVE_TYPEINFO(long, 5)
-    PRIMITIVE_TYPEINFO(unsigned char, 6)
-    PRIMITIVE_TYPEINFO(unsigned short, 7)
-    PRIMITIVE_TYPEINFO(unsigned int, 8)
-    PRIMITIVE_TYPEINFO(unsigned long, 9)
     PRIMITIVE_TYPEINFO(int8_t, 10)
     PRIMITIVE_TYPEINFO(int16_t, 11)
     PRIMITIVE_TYPEINFO(int32_t, 12)
