@@ -1246,7 +1246,7 @@ void Variant::emit_reflection(Sema& sema, out_t& out) const
         out.nl();
 
         out.nl();
-        out.writeln("constexpr string_t to_string(type_t value, int base = 10) const {{");
+        out.writeln("constexpr string_t to_string(type_t value, [[maybe_unused]] int base = 10) const {{");
         out.enter();
         if (is_bitflags)
         {
