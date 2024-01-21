@@ -382,6 +382,7 @@ attrib: TOK_TRANSIENT { $$ = ref_attrib_transient(x, @$); }
 layout_types: TOK_OPTIMAL { $$ = eLayoutOptimal; }
     | TOK_PACKED { $$ = eLayoutPacked; }
     | TOK_SYSTEM { $$ = eLayoutSystem; }
+    | TOK_CBUFFER { $$ = eLayoutCBuffer; }
     ;
 
 string_list: TOK_STRING { $$ = stringlist_begin(x, @$, $1); }

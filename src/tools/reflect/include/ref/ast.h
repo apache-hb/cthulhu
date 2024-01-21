@@ -89,6 +89,7 @@ typedef enum ref_layout_t {
     eLayoutOptimal, // optimize for speed
     eLayoutPacked, // optimize for size
     eLayoutSystem, // use system default
+    eLayoutCBuffer, // use cbuffer layout
 
     eLayoutCount
 } ref_layout_t;
