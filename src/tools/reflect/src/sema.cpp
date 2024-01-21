@@ -897,7 +897,7 @@ void Variant::emit_impl(out_t& out) const
     out.writeln("constexpr {}(const {}&& other) : m_value(other.m_value) {{ }}", get_name(), get_name());
     out.writeln("constexpr {}& operator=(const {}&& other) {{ m_value = other.m_value; return *this; }}", get_name(), get_name());
 
-    out.writeln("constexpr {} as_integral() const {{ return ({})m_value; }}", under, under);
+    out.writeln("constexpr underlying_t as_integral() const {{ return ({})m_value; }}", under);
     out.writeln("constexpr inner_t as_enum() const {{ return m_value; }}");
 
     out.nl();
