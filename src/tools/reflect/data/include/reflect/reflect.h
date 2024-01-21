@@ -245,15 +245,18 @@ namespace ctu {
     };
 
     PRIMITIVE_TYPEINFO(bool, 1)
-    PRIMITIVE_TYPEINFO(int8_t, 10)
-    PRIMITIVE_TYPEINFO(int16_t, 11)
-    PRIMITIVE_TYPEINFO(int32_t, 12)
-    PRIMITIVE_TYPEINFO(int64_t, 13)
-    PRIMITIVE_TYPEINFO(uint8_t, 14)
-    PRIMITIVE_TYPEINFO(uint16_t, 15)
-    PRIMITIVE_TYPEINFO(uint32_t, 16)
-    PRIMITIVE_TYPEINFO(uint64_t, 17)
-    PRIMITIVE_TYPEINFO(float, 18)
+    PRIMITIVE_TYPEINFO(char, 10)
+    PRIMITIVE_TYPEINFO(short, 11)
+    PRIMITIVE_TYPEINFO(int, 12)
+    PRIMITIVE_TYPEINFO(long, 13)
+    PRIMITIVE_TYPEINFO(long long, 14)
+    PRIMITIVE_TYPEINFO(unsigned char, 15)
+    PRIMITIVE_TYPEINFO(unsigned short, 16)
+    PRIMITIVE_TYPEINFO(unsigned int, 17)
+    PRIMITIVE_TYPEINFO(unsigned long, 18)
+    PRIMITIVE_TYPEINFO(unsigned long long, 19)
+    PRIMITIVE_TYPEINFO(float, 20)
+    PRIMITIVE_TYPEINFO(double, 21)
 
     template<typename T>
     consteval auto reflect();
