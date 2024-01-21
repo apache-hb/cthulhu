@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <type_traits>
 
 #define REFLECT_ENUM_BITFLAGS(T, U) \
     constexpr T operator|(T lhs, T rhs) { return (T)((U)lhs | (U)rhs); } \
