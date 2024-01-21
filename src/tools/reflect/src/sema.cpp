@@ -889,8 +889,8 @@ void Variant::emit_impl(out_t& out) const
     out.writeln("constexpr inner_t as_enum() const {{ return m_value; }}");
 
     out.nl();
-    out.writeln("constexpr bool operator==(const {}& other) const {{ return m_value == other.m_value; }}", get_name());
-    out.writeln("constexpr bool operator!=(const {}& other) const {{ return m_value != other.m_value; }}", get_name());
+    out.writeln("constexpr bool operator==(inner_t other) const {{ return m_value == other; }}");
+    out.writeln("constexpr bool operator!=(inner_t other) const {{ return m_value != other; }}");
 
     if (!is_bitflags && !is_arithmatic)
     {
