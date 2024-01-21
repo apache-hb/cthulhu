@@ -217,6 +217,9 @@ namespace ctu {
         const size_t align;
         const ObjectId id;
 
+        constexpr ObjectName get_name() const { return name; }
+        constexpr size_t get_size() const { return size; }
+        constexpr size_t get_align() const { return align; }
         constexpr uint32_t get_id() const { return id.get_id(); }
     };
 
