@@ -254,8 +254,6 @@ namespace ctu {
     PRIMITIVE_TYPEINFO(uint32_t, 16)
     PRIMITIVE_TYPEINFO(uint64_t, 17)
     PRIMITIVE_TYPEINFO(float, 18)
-    PRIMITIVE_TYPEINFO(size_t, 19)
-    PRIMITIVE_TYPEINFO(ptrdiff_t, 20)
 
     template<typename T>
     consteval auto reflect();
