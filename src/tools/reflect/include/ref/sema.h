@@ -92,7 +92,8 @@ namespace refl {
         eKindTypeByte,
         eKindTypeInt,
         eKindTypeFloat,
-        eKindTypePointer
+        eKindTypePointer,
+        eKindTypeOpaque
     };
 
     class Tree;
@@ -251,19 +252,22 @@ namespace refl {
         virtual std::string get_cxx_name(const char *) const { return ""; }
 
         bool is_type() const override { return true; }
+        virtual const char *get_opaque_name() const { return nullptr; }
     };
 
     class OpaqueType : public Type {
     public:
         OpaqueType(const node_t *node, const char *name)
-            : Type(node, eKindTypePointer, name)
-        { }
+            : Type(node, eKindTypeOpaque, name)
+        { CTASSERT(name != nullptr); }
 
         void resolve(Sema&) override { finish_resolve(); }
 
         std::string get_cxx_name(const char *name) const override {
             return (name == nullptr) ? get_name() : std::format("{} {}", get_name(), name);
         }
+
+        const char *get_opaque_name() const override { return get_name(); }
     };
 
     class GenericType : public Type {

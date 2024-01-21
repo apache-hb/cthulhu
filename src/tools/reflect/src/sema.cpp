@@ -606,7 +606,7 @@ void Variant::resolve(Sema& sema)
     {
         m_underlying = sema.resolve_type(m_ast->underlying);
         CTASSERTF(m_underlying != nullptr, "invalid underlying type");
-        CTASSERTF(m_underlying->get_kind() == eKindTypeInt, "invalid underlying type %s", m_underlying->get_name());
+        CTASSERTF(m_underlying->get_kind() == eKindTypeInt || m_underlying->get_opaque_name() != nullptr, "invalid underlying type %s", m_underlying->get_name());
     }
 
     m_default_case = m_ast->default_case ? cases[m_ast->default_case->name] : nullptr;
@@ -797,9 +797,18 @@ void Variant::emit_impl(out_t& out) const
     bool is_iterator = get_attrib(m_ast->attributes, eAstAttribIterator) != nullptr;
 
     auto under = m_underlying->get_cxx_name(nullptr);
+    const char *opaque = m_underlying->get_opaque_name();
     out.writeln("namespace impl {{");
     out.enter();
-    out.writeln("enum class {} : {} {{", get_name(), under);
+    if (opaque)
+    {
+        out.writeln("using {}_underlying_t = std::underlying_type_t<{}>;", get_name(), opaque);
+        out.writeln("enum class {} : {}_underlying_t {{", get_name(), get_name());
+    }
+    else
+    {
+        out.writeln("enum class {} : {} {{", get_name(), under);
+    }
     out.enter();
     for (auto c : m_cases)
     {
@@ -1191,6 +1200,7 @@ void Variant::emit_reflection(Sema& sema, out_t& out) const
 
     auto id = get_decl_name(m_ast, sema, get_name());
     auto underlying = m_underlying->get_cxx_name(nullptr);
+    const char *opaque_name = m_underlying->get_opaque_name();
 
     mpz_t typeid_value;
     get_type_id(m_ast, typeid_value);
@@ -1201,7 +1211,14 @@ void Variant::emit_reflection(Sema& sema, out_t& out) const
     emit_info_header(out, id);
         out.enter();
         out.writeln("using type_t = {};", id);
-        out.writeln("using underlying_t = {};", underlying);
+        if (opaque_name)
+        {
+            out.writeln("using underlying_t = std::underlying_type_t<{}>;", opaque_name);
+        }
+        else
+        {
+            out.writeln("using underlying_t = {};", underlying);
+        }
         out.writeln("using case_t = ctu::EnumCase<{}>;", id);
         out.nl();
         out.writeln("static constexpr size_t kMaxLength = {};", max_tostring_length);
@@ -1209,7 +1226,7 @@ void Variant::emit_reflection(Sema& sema, out_t& out) const
         out.nl();
         emit_name_info(out, id, m_ast);
         if (m_underlying)
-            out.writeln("static constexpr TypeInfo<{}> kUnderlying{{}};", underlying);
+            out.writeln("static constexpr TypeInfo<underlying_t> kUnderlying{{}};");
         else
             out.writeln("static TypeInfo<void> kUnderlying{{}};");
 
