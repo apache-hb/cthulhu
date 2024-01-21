@@ -829,7 +829,7 @@ void Variant::emit_impl(out_t& out) const
     out.writeln("class {} {{", get_name());
     out.enter();
     out.writeln("friend class ctu::TypeInfo<{}>;", get_name());
-    out.writeln("using underlying_t = {};", under);
+    out.writeln("using underlying_t = std::underlying_type_t<impl::{}>;", get_name());
     out.writeln("using inner_t = impl::{};", get_name());
     out.nl();
     out.writeln("inner_t m_value;");
