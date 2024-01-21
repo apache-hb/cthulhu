@@ -74,8 +74,8 @@ declmap_t refl::get_builtin_types()
         { "uint32", new IntType("uint32", eDigit32, eSignUnsigned) },
         { "uint64", new IntType("uint64", eDigit64, eSignUnsigned) },
 
-        { "usize", new IntType("usize", eDigit64, eSignUnsigned) },
-        { "isize", new IntType("isize", eDigit64, eSignSigned) },
+        { "usize", new IntType("usize", eDigitSize, eSignUnsigned) },
+        { "isize", new IntType("isize", eDigitSize, eSignSigned) },
 
         { "float", new FloatType("float") },
 
@@ -794,6 +794,7 @@ void Variant::emit_impl(out_t& out) const
 {
     bool is_bitflags = get_attrib(m_ast->attributes, eAstAttribBitflags) != nullptr;
     bool is_arithmatic = get_attrib(m_ast->attributes, eAstAttribArithmatic) != nullptr;
+    bool is_iterator = get_attrib(m_ast->attributes, eAstAttribIterator) != nullptr;
 
     auto under = m_underlying->get_cxx_name(nullptr);
     out.writeln("namespace impl {{");
@@ -810,6 +811,11 @@ void Variant::emit_impl(out_t& out) const
     out.writeln("REFLECT_ENUM_COMPARE({}, {})", get_name(), under);
     if (is_bitflags) out.writeln("REFLECT_ENUM_BITFLAGS({}, {});", get_name(), under);
     if (is_arithmatic) out.writeln("REFLECT_ENUM_ARITHMATIC({}, {});", get_name(), under);
+    if (is_iterator) out.writeln("REFLECT_ENUM_ITERATOR({}, {});", get_name(), under);
+
+    if (is_iterator || is_arithmatic)
+        CTASSERTF(is_iterator ^ is_arithmatic, "enum %s cannot be both an iterator and arithmatic", get_name());
+
     out.writeln("}} // namespace impl");
     out.writeln("class {} {{", get_name());
     out.enter();
@@ -834,6 +840,41 @@ void Variant::emit_impl(out_t& out) const
     else
     {
         out.writeln("constexpr {}() = delete;", get_name());
+    }
+
+    if (is_iterator)
+    {
+        out.nl();
+        out.writeln("class Iterator {{");
+        out.enter();
+        out.writeln("inner_t m_value;");
+        out.leave();
+        out.writeln("public:");
+        out.enter();
+        out.writeln("constexpr Iterator(inner_t value) : m_value(value) {{ }}");
+        out.writeln("constexpr Iterator& operator++() {{ m_value = (inner_t)((underlying_t)m_value + 1); return *this; }}");
+        out.writeln("constexpr Iterator operator++(int) {{ Iterator it = *this; ++(*this); return it; }}");
+        out.writeln("constexpr bool operator==(const Iterator& other) const {{ return m_value == other.m_value; }}");
+        out.writeln("constexpr bool operator!=(const Iterator& other) const {{ return m_value != other.m_value; }}");
+        out.writeln("constexpr {} operator*() const {{ return m_value; }}", get_name());
+        out.leave();
+        out.writeln("}};");
+        out.nl();
+        out.writeln("class Range {{");
+        out.enter();
+        out.writeln("inner_t m_begin;");
+        out.writeln("inner_t m_end;");
+        out.leave();
+        out.writeln("public:");
+        out.enter();
+        out.writeln("constexpr Range(inner_t begin, inner_t end) : m_begin(begin), m_end(end) {{ }}");
+        out.writeln("constexpr Iterator begin() const {{ return Iterator(m_begin); }}");
+        out.writeln("constexpr Iterator end() const {{ return Iterator(m_end); }}");
+        out.leave();
+        out.writeln("}};");
+        out.nl();
+
+        out.writeln("static constexpr Range range(inner_t begin, inner_t end) {{ return Range(begin, end); }}");
     }
 
     out.writeln("constexpr operator inner_t() const {{ return m_value; }}");

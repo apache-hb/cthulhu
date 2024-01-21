@@ -24,6 +24,11 @@
     constexpr bool operator<=(T lhs, T rhs) { return (U)lhs <= (U)rhs; } \
     constexpr bool operator>=(T lhs, T rhs) { return (U)lhs >= (U)rhs; }
 
+    // this is the only stuff that can be done in a constexpr context
+#define REFLECT_ENUM_ITERATOR(T, U) \
+    constexpr T operator+(T lhs, T rhs) { return (T)((U)lhs + (U)rhs); } \
+    constexpr T operator-(T lhs, T rhs) { return (T)((U)lhs - (U)rhs); }
+
 namespace ctu {
     struct ObjectField;
     struct TypeInfoBase;
