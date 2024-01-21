@@ -528,10 +528,7 @@ namespace refl {
 
         void resolve(Sema& sema) override;
 
-        void emit_proto(out_t& out) const override
-        {
-            out.writeln("class {};", get_name());
-        }
+        void emit_proto(out_t& out) const override;
 
         std::string get_cxx_name(const char *name) const override
         {
@@ -560,10 +557,7 @@ namespace refl {
 
         void resolve(Sema& sema) override;
 
-        void emit_proto(out_t& out) const override
-        {
-            out.writeln("struct {};", get_name());
-        }
+        void emit_proto(out_t& out) const override;
 
         std::string get_cxx_name(const char *name) const override
         {

@@ -741,7 +741,23 @@ void Case::emit_impl(out_t& out) const
 
 void Variant::emit_proto(out_t& out) const
 {
+    if (get_attrib(m_ast->attributes, eAstAttribExternal) || get_attrib(m_ast->attributes, eAstAttribFacade))
+        return;
     out.writeln("class {};", get_name());
+}
+
+void Class::emit_proto(out_t& out) const
+{
+    if (get_attrib(m_ast->attributes, eAstAttribExternal) || get_attrib(m_ast->attributes, eAstAttribFacade))
+        return;
+    out.writeln("class {};", get_name());
+}
+
+void Struct::emit_proto(out_t& out) const
+{
+    if (get_attrib(m_ast->attributes, eAstAttribExternal) || get_attrib(m_ast->attributes, eAstAttribFacade))
+        return;
+    out.writeln("struct {};", get_name());
 }
 
 static uint32_t type_hash(const char *name)
