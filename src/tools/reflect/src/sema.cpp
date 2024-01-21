@@ -768,39 +768,53 @@ void Variant::emit_impl(out_t& out) const
 {
     if (get_attrib(m_ast->attributes, eAstAttribExternal))
         return;
+
+    bool is_bitflags = get_attrib(m_ast->attributes, eAstAttribBitflags) != nullptr;
+    bool is_arithmatic = get_attrib(m_ast->attributes, eAstAttribArithmatic) != nullptr;
+    bool is_iterator = get_attrib(m_ast->attributes, eAstAttribIterator) != nullptr;
+
     auto under = m_underlying->get_cxx_name(nullptr);
+    out.writeln("namespace impl {{");
+    out.enter();
+    out.writeln("enum class {} : {} {{", get_name(), under);
+    out.enter();
+    for (auto c : m_cases)
+    {
+        c->emit_impl(out);
+    }
+    out.leave();
+    out.writeln("}};");
+    out.leave();
+    out.writeln("REFLECT_ENUM_COMPARE({}, {})", get_name(), under);
+    if (is_bitflags) out.writeln("REFLECT_ENUM_BITFLAGS({}, {});", get_name(), under);
+    if (is_arithmatic) out.writeln("REFLECT_ENUM_ARITHMATIC({}, {});", get_name(), under);
+    out.writeln("}} // namespace impl");
     out.writeln("class {} {{", get_name());
     out.enter();
     out.writeln("friend class ctu::TypeInfo<{}>;", get_name());
-    out.writeln("enum InnerType : {} {{", under);
-        out.enter();
-        for (auto c : m_cases)
-        {
-            c->emit_impl(out);
-        }
-        out.leave();
-    out.writeln("}};");
+    out.writeln("using underlying_t = {};", under);
+    out.writeln("using inner_t = impl::{};", get_name());
     out.nl();
-    out.writeln("{} m_value;", under);
+    out.writeln("inner_t m_value;");
     out.nl();
     out.leave();
     out.writeln("public:");
     out.enter();
-    out.writeln("constexpr {}({} value) : m_value(value) {{ }}", get_name(), under);
-    out.writeln("constexpr {}(InnerType value) : m_value(({})value) {{ }}", get_name(), under);
-    out.writeln("using enum InnerType;");
+    out.writeln("constexpr {}({} value) : m_value((inner_t)value) {{ }}", get_name(), under);
+    out.writeln("constexpr {}(inner_t value) : m_value(value) {{ }}", get_name());
+    out.writeln("using enum inner_t;");
     out.nl();
     if (m_default_case)
     {
         out.writeln("static constexpr auto kDefaultCase = e{};", m_default_case->get_name());
-        out.writeln("constexpr {}() : m_value(({})kDefaultCase) {{ }}", get_name(), under);
+        out.writeln("constexpr {}() : m_value(kDefaultCase) {{ }}", get_name());
     }
     else
     {
         out.writeln("constexpr {}() = delete;", get_name());
     }
 
-    out.writeln("constexpr operator InnerType() const {{ return (InnerType)m_value; }}", under);
+    out.writeln("constexpr operator inner_t() const {{ return m_value; }}");
 
     out.writeln("constexpr {}(const {}& other) : m_value(other.m_value) {{ }}", get_name(), get_name());
     out.writeln("constexpr {}& operator=(const {}& other) {{ m_value = other.m_value; return *this; }}", get_name(), get_name());
@@ -808,16 +822,12 @@ void Variant::emit_impl(out_t& out) const
     out.writeln("constexpr {}(const {}&& other) : m_value(other.m_value) {{ }}", get_name(), get_name());
     out.writeln("constexpr {}& operator=(const {}&& other) {{ m_value = other.m_value; return *this; }}", get_name(), get_name());
 
-    out.writeln("constexpr {} to_underlying() const {{ return m_value; }}", under);
-    out.writeln("constexpr InnerType as_integral() const {{ return (InnerType)m_value; }}");
+    out.writeln("constexpr {} as_integral() const {{ return ({})m_value; }}", under, under);
+    out.writeln("constexpr inner_t as_enum() const {{ return m_value; }}");
 
     out.nl();
     out.writeln("constexpr bool operator==(const {}& other) const {{ return m_value == other.m_value; }}", get_name());
     out.writeln("constexpr bool operator!=(const {}& other) const {{ return m_value != other.m_value; }}", get_name());
-
-    bool is_bitflags = get_attrib(m_ast->attributes, eAstAttribBitflags) != nullptr;
-    bool is_arithmatic = get_attrib(m_ast->attributes, eAstAttribArithmatic) != nullptr;
-    bool is_iterator = get_attrib(m_ast->attributes, eAstAttribIterator) != nullptr;
 
     if (!is_bitflags && !is_iterator && !is_iterator)
     {
@@ -827,7 +837,7 @@ void Variant::emit_impl(out_t& out) const
         out.writeln("switch (m_value) {{");
         for (auto c : m_cases)
         {
-            out.writeln("case ({})e{}: return true;", under, c->get_name());
+            out.writeln("case e{}: return true;", c->get_name());
         }
         out.writeln("default: return false;");
         out.writeln("}}");
@@ -844,44 +854,44 @@ void Variant::emit_impl(out_t& out) const
                 flags += " | ";
             flags += std::format("e{}", c->get_name());
         }
-        out.writeln("static constexpr {} none() {{ return {}(0); }};", get_name(), get_name());
+        out.writeln("static constexpr {} none() {{ return {}((inner_t)0); }};", get_name(), get_name());
         out.writeln("static constexpr {} mask() {{ return {}({}); }};", get_name(), get_name(), flags);
         // emit bitwise operators
         out.nl();
-        out.writeln("constexpr {} operator~() const {{ return {}(~m_value); }}", get_name(), get_name());
-        out.writeln("constexpr {} operator|(const {}& other) const {{ return {}(m_value | other.m_value); }}", get_name(), get_name(), get_name());
-        out.writeln("constexpr {} operator&(const {}& other) const {{ return {}(m_value & other.m_value); }}", get_name(), get_name(), get_name());
-        out.writeln("constexpr {} operator^(const {}& other) const {{ return {}(m_value ^ other.m_value); }}", get_name(), get_name(), get_name());
-        out.writeln("constexpr {}& operator|=(const {}& other) {{ m_value |= other.m_value; return *this; }}", get_name(), get_name());
-        out.writeln("constexpr {}& operator&=(const {}& other) {{ m_value &= other.m_value; return *this; }}", get_name(), get_name());
-        out.writeln("constexpr {}& operator^=(const {}& other) {{ m_value ^= other.m_value; return *this; }}", get_name(), get_name());
+        out.writeln("constexpr {} operator~() const {{ return ~m_value; }}", get_name());
+        out.writeln("constexpr {} operator|(const {}& other) const {{ return m_value | other.m_value; }}", get_name(), get_name());
+        out.writeln("constexpr {} operator&(const {}& other) const {{ return m_value & other.m_value; }}", get_name(), get_name());
+        out.writeln("constexpr {} operator^(const {}& other) const {{ return m_value ^ other.m_value; }}", get_name(), get_name());
+        out.writeln("constexpr {}& operator|=(const {}& other) {{ m_value = m_value | other.m_value; return *this; }}", get_name(), get_name());
+        out.writeln("constexpr {}& operator&=(const {}& other) {{ m_value = m_value & other.m_value; return *this; }}", get_name(), get_name());
+        out.writeln("constexpr {}& operator^=(const {}& other) {{ m_value = m_value ^ other.m_value; return *this; }}", get_name(), get_name());
 
-        out.writeln("constexpr bool test({} other) const {{ return (m_value & other) != 0; }}", under);
-        out.writeln("constexpr bool any({} other) const {{ return (m_value & other) != 0; }}", under);
-        out.writeln("constexpr bool all({} other) const {{ return (m_value & other) == other; }}", under);
-        out.writeln("constexpr bool none({} other) const {{ return (m_value & other) == 0; }}", under);
-        out.writeln("constexpr {}& set({} other) {{ m_value |= other; return *this; }}", get_name(), under);
-        out.writeln("constexpr {}& reset({} other) {{ m_value &= ~other; return *this; }}", get_name(), under);
-        out.writeln("constexpr {}& flip({} other) {{ m_value ^= other; return *this; }}", get_name(), under);
+        out.writeln("constexpr bool test(inner_t other) const {{ return (m_value & other) != none(); }}");
+        out.writeln("constexpr bool any(inner_t other) const {{ return (m_value & other) != none(); }}");
+        out.writeln("constexpr bool all(inner_t other) const {{ return (m_value & other) == other; }}");
+        out.writeln("constexpr bool none(inner_t other) const {{ return (m_value & other) == none(); }}");
+        out.writeln("constexpr {}& set(inner_t other) {{ m_value = m_value | other; return *this; }}", get_name());
+        out.writeln("constexpr {}& reset(inner_t other) {{ m_value = m_value & ~other; return *this; }}", get_name());
+        out.writeln("constexpr {}& flip(inner_t other) {{ m_value = m_value ^ other; return *this; }}", get_name());
 
         // is_valid is defined as no invalid flags set
-        out.writeln("constexpr bool is_valid() const {{ return (m_value & ~mask()) == 0; }}");
+        out.writeln("constexpr bool is_valid() const {{ return (m_value & ~mask()) == none(); }}");
     }
 
     if (is_arithmatic)
     {
         // implement arithmatic operators
         out.nl();
-        out.writeln("constexpr {} operator+(const {}& other) const {{ return {}(m_value + other.m_value); }}", get_name(), get_name(), get_name());
-        out.writeln("constexpr {} operator-(const {}& other) const {{ return {}(m_value - other.m_value); }}", get_name(), get_name(), get_name());
-        out.writeln("constexpr {} operator*(const {}& other) const {{ return {}(m_value * other.m_value); }}", get_name(), get_name(), get_name());
-        out.writeln("constexpr {} operator/(const {}& other) const {{ return {}(m_value / other.m_value); }}", get_name(), get_name(), get_name());
-        out.writeln("constexpr {} operator%(const {}& other) const {{ return {}(m_value % other.m_value); }}", get_name(), get_name(), get_name());
-        out.writeln("constexpr {}& operator+=(const {}& other) {{ m_value += other.m_value; return *this; }}", get_name(), get_name());
-        out.writeln("constexpr {}& operator-=(const {}& other) {{ m_value -= other.m_value; return *this; }}", get_name(), get_name());
-        out.writeln("constexpr {}& operator*=(const {}& other) {{ m_value *= other.m_value; return *this; }}", get_name(), get_name());
-        out.writeln("constexpr {}& operator/=(const {}& other) {{ m_value /= other.m_value; return *this; }}", get_name(), get_name());
-        out.writeln("constexpr {}& operator%=(const {}& other) {{ m_value %= other.m_value; return *this; }}", get_name(), get_name());
+        out.writeln("constexpr {} operator+(const {}& other) const {{ return m_value + other.m_value; }}", get_name(), get_name());
+        out.writeln("constexpr {} operator-(const {}& other) const {{ return m_value - other.m_value; }}", get_name(), get_name());
+        out.writeln("constexpr {} operator*(const {}& other) const {{ return m_value * other.m_value; }}", get_name(), get_name());
+        out.writeln("constexpr {} operator/(const {}& other) const {{ return m_value / other.m_value; }}", get_name(), get_name());
+        out.writeln("constexpr {} operator%(const {}& other) const {{ return m_value % other.m_value; }}", get_name(), get_name());
+        out.writeln("constexpr {}& operator+=(const {}& other) {{ m_value = m_value + other.m_value; return *this; }}", get_name(), get_name());
+        out.writeln("constexpr {}& operator-=(const {}& other) {{ m_value = m_value - other.m_value; return *this; }}", get_name(), get_name());
+        out.writeln("constexpr {}& operator*=(const {}& other) {{ m_value = m_value * other.m_value; return *this; }}", get_name(), get_name());
+        out.writeln("constexpr {}& operator/=(const {}& other) {{ m_value = m_value / other.m_value; return *this; }}", get_name(), get_name());
+        out.writeln("constexpr {}& operator%=(const {}& other) {{ m_value = m_value % other.m_value; return *this; }}", get_name(), get_name());
 
         // is_valid is not defined for arithmatic types
     }
@@ -930,10 +940,10 @@ void Variant::emit_impl(out_t& out) const
 
         // implement increment/decrement operators
         out.nl();
-        out.writeln("constexpr {}& operator++() {{ ++m_value; return *this; }}", get_name());
-        out.writeln("constexpr {} operator++(int) {{ return {}(m_value++); }}", get_name(), get_name());
-        out.writeln("constexpr {}& operator--() {{ --m_value; return *this; }}", get_name());
-        out.writeln("constexpr {} operator--(int) {{ return {}(m_value--); }}", get_name(), get_name());
+        out.writeln("constexpr {}& operator++() {{ m_value = m_value + (inner_t)1; return *this; }}", get_name());
+        out.writeln("constexpr {} operator++(int) {{ auto tmp = *this; m_value = m_value + (inner_t)1; return tmp; }}", get_name());
+        out.writeln("constexpr {}& operator--() {{ m_value = m_value - (inner_t)1; return *this; }}", get_name());
+        out.writeln("constexpr {} operator--(int) {{ auto tmp = *this; m_value = m_value - (inner_t)1; return tmp; }}", get_name());
 
         // comparison operators
         out.nl();
@@ -948,6 +958,7 @@ void Variant::emit_impl(out_t& out) const
 
     out.leave();
     out.writeln("}};");
+    out.nl();
     out.writeln("static_assert(sizeof({}) == sizeof({}), \"{} size mismatch\");", get_name(), under, get_name());
 }
 
@@ -1238,7 +1249,7 @@ void Variant::emit_reflection(Sema& sema, out_t& out) const
             out.writeln("if (option.value == value) return option.name;");
             out.leave();
             out.writeln("}}");
-            out.writeln("return string_t(value.to_underlying(), base);");
+            out.writeln("return string_t(value.as_integral(), base);");
         }
         out.leave();
         out.writeln("}};");
