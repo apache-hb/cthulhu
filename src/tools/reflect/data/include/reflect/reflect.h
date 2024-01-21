@@ -162,7 +162,7 @@ namespace ctu {
     public:
         consteval ObjectId(uint32_t id) : m_id(id) { }
 
-        constexpr uint32_t id() const { return m_id; }
+        constexpr uint32_t get_id() const { return m_id; }
     };
 
     class OutOfBounds {
@@ -216,6 +216,8 @@ namespace ctu {
         const size_t size;
         const size_t align;
         const ObjectId id;
+
+        constexpr uint32_t get_id() const { return id.id(); }
     };
 
     template<typename T>
