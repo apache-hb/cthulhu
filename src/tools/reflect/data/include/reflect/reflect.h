@@ -217,7 +217,7 @@ namespace ctu {
         const size_t align;
         const ObjectId id;
 
-        constexpr uint32_t get_id() const { return id.id(); }
+        constexpr uint32_t get_id() const { return id.get_id(); }
     };
 
     template<typename T>
