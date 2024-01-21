@@ -71,6 +71,8 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     opt_return_type
     param
     import
+    case_item_inner
+    case_value
 
 %type<vector>
     path
@@ -190,6 +192,8 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     TOK_EXTERNAL "external"
     TOK_CBUFFER "cbuffer"
     TOK_C_ENUM "c_enum"
+    TOK_FACADE "facade"
+    TOK_RENAME "rename"
 
     TOK_TRUE "true"
     TOK_FALSE "false"
@@ -253,8 +257,15 @@ case_seq: case_item { $$ = vector_init($1, BISON_ARENA(x)); }
     | case_seq case_item { vector_push(&$1, $2); $$ = $1; }
     ;
 
-case_item: TOK_CASE TOK_IDENT TOK_ASSIGN TOK_INTEGER { $$ = ref_case(x, @$, $2, $4, false); }
-    | TOK_DEFAULT TOK_IDENT TOK_ASSIGN TOK_INTEGER { $$ = ref_case(x, @$, $2, $4, true); }
+case_item: opt_attrib_seq case_item_inner { ref_set_attribs($2, $1); $$ = $2; }
+    ;
+
+case_item_inner: TOK_CASE TOK_IDENT TOK_ASSIGN case_value { $$ = ref_case(x, @$, $2, $4, false); }
+    | TOK_DEFAULT TOK_IDENT TOK_ASSIGN case_value { $$ = ref_case(x, @$, $2, $4, true); }
+    ;
+
+case_value: TOK_INTEGER { $$ = ref_integer(x, @$, $1); }
+    | TOK_OPAQUE TOK_LPAREN TOK_IDENT TOK_RPAREN { $$ = ref_name(x, @$, $3); }
     ;
 
 underlying: TOK_COLON type { $$ = $2; }
@@ -360,6 +371,8 @@ attrib: TOK_TRANSIENT { $$ = ref_attrib_transient(x, @$); }
     | TOK_NOREFLECT { $$ = ref_attrib_noreflect(x, @$); }
     | TOK_EXTERNAL { $$ = ref_attrib_external(x, @$, false); }
     | TOK_EXTERNAL TOK_LPAREN TOK_C_ENUM TOK_RPAREN { $$ = ref_attrib_external(x, @$, true); }
+    | TOK_FACADE { $$ = ref_attrib_facade(x, @$); }
+    | TOK_RENAME TOK_LPAREN TOK_IDENT TOK_RPAREN { $$ = ref_attrib_rename(x, @$, $3); }
     ;
 
 layout_types: TOK_OPTIMAL { $$ = eLayoutOptimal; }

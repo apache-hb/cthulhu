@@ -68,7 +68,9 @@ typedef enum ref_kind_t {
     eAstAttribCxxName, // c++ name for implementation
     eAstAttribRemote, // enable rpc
     eAstAttribNoReflect, // dont reflect
+    eAstAttribFacade, // generate facade
     eAstAttribExternal, // external type
+    eAstAttribRename,
 
     eAstCount
 } ref_kind_t;
@@ -212,7 +214,7 @@ typedef struct ref_ast_t {
                 /* eAstCase */
                 struct {
                     bool is_default;
-                    mpz_t value;
+                    ref_ast_t *value;
                 };
             };
         };
@@ -260,7 +262,7 @@ ref_ast_t *ref_pointer(scan_t *scan, where_t where, ref_ast_t *type);
 
 ref_ast_t *ref_variant(scan_t *scan, where_t where, char *name, ref_ast_t *underlying, vector_t *cases);
 
-ref_ast_t *ref_case(scan_t *scan, where_t where, char *name, mpz_t value, bool is_default);
+ref_ast_t *ref_case(scan_t *scan, where_t where, char *name, ref_ast_t *value, bool is_default);
 
 ref_ast_t *ref_opaque(scan_t *scan, where_t where, char *ident);
 ref_ast_t *ref_opaque_text(scan_t *scan, where_t where, text_t text);
@@ -282,6 +284,8 @@ ref_ast_t *ref_attrib_cxxname(scan_t *scan, where_t where, char *ident);
 ref_ast_t *ref_attrib_remote(scan_t *scan, where_t where);
 ref_ast_t *ref_attrib_noreflect(scan_t *scan, where_t where);
 ref_ast_t *ref_attrib_external(scan_t *scan, where_t where, bool c_enum);
+ref_ast_t *ref_attrib_facade(scan_t *scan, where_t where);
+ref_ast_t *ref_attrib_rename(scan_t *scan, where_t where, char *ident);
 
 ref_ast_t *ref_attrib_assert(scan_t *scan, where_t where, typevec_t *before, typevec_t *after, typevec_t *always);
 

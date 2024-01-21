@@ -503,8 +503,6 @@ namespace refl {
         ref_ast_t *m_ast = nullptr;
 
     public:
-        mpz_t m_value;
-
         Case(ref_ast_t *ast);
 
         void resolve(Sema& sema) override;
@@ -513,6 +511,8 @@ namespace refl {
 
         void emit_value(out_t& out) const;
         void emit_case(out_t& out) const;
+
+        std::string get_value() const;
     };
 
     class Class final : public Type {
@@ -599,6 +599,7 @@ namespace refl {
 
         void emit_proto(out_t& out) const override;
         void emit_impl(out_t& out) const override;
+        void emit_facade(out_t& out) const;
 
         void emit_reflection(Sema& sema, out_t& out) const override;
 

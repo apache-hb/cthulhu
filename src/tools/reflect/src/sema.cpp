@@ -344,8 +344,18 @@ void Case::resolve(Sema&)
     if (is_resolved()) return;
     finish_resolve();
 
-    mpz_init_set(m_value, m_ast->value);
     finish_resolve();
+}
+
+std::string Case::get_value() const {
+    CTASSERT(m_ast->value != nullptr);
+    switch (m_ast->value->kind)
+    {
+    case eAstName: return m_ast->value->ident;
+    case eAstInteger: return mpz_get_str(nullptr, 10, m_ast->value->integer);
+
+    default: NEVER("invalid case value %d", m_ast->value->kind);
+    }
 }
 
 static ref_ast_t *get_attrib(vector_t *attribs, ref_kind_t kind)
@@ -726,7 +736,7 @@ void Struct::emit_impl(out_t& out) const
 
 void Case::emit_impl(out_t& out) const
 {
-    out.writeln("e{} = {},", get_name(), mpz_get_str(nullptr, 10, m_value));
+    out.writeln("e{} = {},", get_name(), get_value());
 }
 
 void Variant::emit_proto(out_t& out) const
@@ -766,12 +776,8 @@ static void get_type_id(ref_ast_t *ast, mpz_t out)
 
 void Variant::emit_impl(out_t& out) const
 {
-    if (get_attrib(m_ast->attributes, eAstAttribExternal))
-        return;
-
     bool is_bitflags = get_attrib(m_ast->attributes, eAstAttribBitflags) != nullptr;
     bool is_arithmatic = get_attrib(m_ast->attributes, eAstAttribArithmatic) != nullptr;
-    bool is_iterator = get_attrib(m_ast->attributes, eAstAttribIterator) != nullptr;
 
     auto under = m_underlying->get_cxx_name(nullptr);
     out.writeln("namespace impl {{");
@@ -829,7 +835,7 @@ void Variant::emit_impl(out_t& out) const
     out.writeln("constexpr bool operator==(const {}& other) const {{ return m_value == other.m_value; }}", get_name());
     out.writeln("constexpr bool operator!=(const {}& other) const {{ return m_value != other.m_value; }}", get_name());
 
-    if (!is_bitflags && !is_iterator && !is_iterator)
+    if (!is_bitflags && !is_arithmatic)
     {
         out.nl();
         out.writeln("constexpr bool is_valid() const {{");
@@ -894,66 +900,6 @@ void Variant::emit_impl(out_t& out) const
         out.writeln("constexpr {}& operator%=(const {}& other) {{ m_value = m_value % other.m_value; return *this; }}", get_name(), get_name());
 
         // is_valid is not defined for arithmatic types
-    }
-
-
-    if (is_iterator)
-    {
-        mpz_t lowest_value;
-        std::string lowest_name;
-
-        mpz_t highest_value;
-        std::string highest_name;
-
-        for (auto c : m_cases)
-        {
-            if (lowest_name.empty())
-            {
-                mpz_init_set(lowest_value, c->m_value);
-                lowest_name = c->get_name();
-            }
-            else
-            {
-                if (mpz_cmp(c->m_value, lowest_value) < 0)
-                {
-                    mpz_set(lowest_value, c->m_value);
-                    lowest_name = c->get_name();
-                }
-            }
-
-            if (highest_name.empty())
-            {
-                mpz_init_set(highest_value, c->m_value);
-                highest_name = c->get_name();
-            }
-            else
-            {
-                if (mpz_cmp(c->m_value, highest_value) > 0)
-                {
-                    mpz_set(highest_value, c->m_value);
-                    highest_name = c->get_name();
-                }
-            }
-        }
-        out.writeln("static constexpr {} kBegin = {}({});", get_name(), get_name(), lowest_name);
-        out.writeln("static constexpr {} kEnd = {}({});", get_name(), get_name(), highest_name);
-
-        // implement increment/decrement operators
-        out.nl();
-        out.writeln("constexpr {}& operator++() {{ m_value = m_value + (inner_t)1; return *this; }}", get_name());
-        out.writeln("constexpr {} operator++(int) {{ auto tmp = *this; m_value = m_value + (inner_t)1; return tmp; }}", get_name());
-        out.writeln("constexpr {}& operator--() {{ m_value = m_value - (inner_t)1; return *this; }}", get_name());
-        out.writeln("constexpr {} operator--(int) {{ auto tmp = *this; m_value = m_value - (inner_t)1; return tmp; }}", get_name());
-
-        // comparison operators
-        out.nl();
-        out.writeln("constexpr bool operator<(const {}& other) const {{ return m_value < other.m_value; }}", get_name());
-        out.writeln("constexpr bool operator>(const {}& other) const {{ return m_value > other.m_value; }}", get_name());
-        out.writeln("constexpr bool operator<=(const {}& other) const {{ return m_value <= other.m_value; }}", get_name());
-        out.writeln("constexpr bool operator>=(const {}& other) const {{ return m_value >= other.m_value; }}", get_name());
-
-        // is valid is defined as being within the range of the enum
-        out.writeln("constexpr bool is_valid() const {{ return m_value >= kBegin && m_value <= kEnd; }}");
     }
 
     out.leave();

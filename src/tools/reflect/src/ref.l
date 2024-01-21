@@ -48,6 +48,8 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 <ATTRIBUTE>"external" { return TOK_EXTERNAL; }
 <ATTRIBUTE>"cbuffer" { return TOK_CBUFFER; }
 <ATTRIBUTE>"c_enum" { return TOK_C_ENUM; }
+<ATTRIBUTE>"facade" { return TOK_FACADE; }
+<ATTRIBUTE>"rename" { return TOK_RENAME; }
 
 <*>{WS}+ ;
 

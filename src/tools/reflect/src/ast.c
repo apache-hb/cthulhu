@@ -219,10 +219,10 @@ ref_ast_t *ref_variant(scan_t *scan, where_t where, char *name, ref_ast_t *under
     return ast;
 }
 
-ref_ast_t *ref_case(scan_t *scan, where_t where, char *name, mpz_t value, bool is_default)
+ref_ast_t *ref_case(scan_t *scan, where_t where, char *name, ref_ast_t *value, bool is_default)
 {
     ref_ast_t *ast = ref_ast_decl(scan, where, eAstCase, name);
-    mpz_init_set(ast->value, value);
+    ast->value = value;
     ast->is_default = is_default;
     return ast;
 }
@@ -349,6 +349,18 @@ ref_ast_t *ref_attrib_remote(scan_t *scan, where_t where)
 ref_ast_t *ref_attrib_noreflect(scan_t *scan, where_t where)
 {
     return ref_ast_new(scan, where, eAstAttribNoReflect);
+}
+
+ref_ast_t *ref_attrib_facade(scan_t *scan, where_t where)
+{
+    return ref_ast_new(scan, where, eAstAttribFacade);
+}
+
+ref_ast_t *ref_attrib_rename(scan_t *scan, where_t where, char *ident)
+{
+    ref_ast_t *ast = ref_ast_new(scan, where, eAstAttribRename);
+    ast->ident = ident;
+    return ast;
 }
 
 ref_ast_t *ref_attrib_external(scan_t *scan, where_t where, bool c_enum)
