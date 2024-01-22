@@ -896,6 +896,8 @@ void Variant::emit_impl(out_t& out) const
     out.enter();
     out.writeln("using underlying_t = std::underlying_type_t<impl::%s>;", get_name());
     out.writeln("using inner_t = impl::%s;", get_name());
+    out.writeln("using Underlying = underlying_t;");
+    out.writeln("using Inner = inner_t;");
     out.nl();
     out.leave();
     out.writeln("private:");
@@ -1173,6 +1175,8 @@ void Struct::emit_reflection(Sema& sema, out_t& out) const
         out.enter();
         out.writeln("using type_t = %s;", id);
         out.writeln("using field_t = ctu::ObjectField;");
+        out.writeln("using Type = type_t;");
+        out.writeln("using Field = field_t;");
         out.nl();
         emit_name_info(out, id, m_ast);
         out.nl();
@@ -1207,6 +1211,10 @@ void Class::emit_reflection(Sema& sema, out_t& out) const
         out.writeln("using super_t = %s;", parent);
         out.writeln("using field_t = ctu::ObjectField;");
         out.writeln("using method_t = ctu::ObjectMethod;");
+        out.writeln("using Type = type_t;");
+        out.writeln("using Super = super_t;");
+        out.writeln("using Field = field_t;");
+        out.writeln("using Method = method_t;");
         out.nl();
         emit_name_info(out, id, m_ast);
         out.writeln("static constexpr bool kHasSuper = %s;", m_parent != nullptr ? "true" : "false");
@@ -1286,6 +1294,11 @@ void Variant::emit_reflection(Sema& sema, out_t& out) const
         out.nl();
         out.writeln("static constexpr size_t kMaxLength = %zu;", max_tostring_length);
         out.writeln("using string_t = SmallString<kMaxLength>;");
+        out.nl();
+        out.writeln("using Type = type_t;");
+        out.writeln("using Underlying = underlying_t;");
+        out.writeln("using Case = case_t;");
+        out.writeln("using String = string_t;");
         out.nl();
         emit_name_info(out, id, m_ast);
         if (m_parent)
