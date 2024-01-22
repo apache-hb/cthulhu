@@ -889,7 +889,7 @@ void Variant::emit_impl(out_t& out) const
     out.writeln("using inner_t = impl::%s;", get_name());
     if (is_facade)
     {
-        out.writeln("using facade_t = impl::%s;", m_parent->get_opaque_name());
+        out.writeln("using facade_t = impl::%s;", m_parent->get_cxx_name(nullptr));
     }
     out.writeln("using Underlying = underlying_t;");
     out.writeln("using Inner = inner_t;");
