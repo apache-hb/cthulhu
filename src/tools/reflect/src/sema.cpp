@@ -835,7 +835,7 @@ void Variant::emit_impl(out_t& out) const
 
     const char *ty = nullptr;
     bool is_facade = get_attrib(m_ast->attributes, eAstAttribFacade) != nullptr;
-    CTASSERTF(m_parent != nullptr, "facade enum %s must have a parent", get_name());
+    if (is_facade) CTASSERTF(m_parent != nullptr, "facade enum %s must have a parent", get_name());
 
     out.writeln("namespace impl {");
     out.enter();
