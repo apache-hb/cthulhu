@@ -1131,7 +1131,7 @@ static void emit_record_visit(out_t& out, const char* id, const Vector<Field*>& 
         for (size_t i = 0; i < fields.size(); ++i)
         {
             auto f = fields.get(i);
-            out.writeln("fn(object.%s);", f->get_name());
+            out.writeln("fn(kFields[%zu], object.%s);", i, f->get_name());
         }
     out.leave();
     out.writeln("};");
