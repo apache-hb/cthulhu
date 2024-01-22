@@ -32,7 +32,7 @@ cc = meson.get_compiler('c')
 target = target_machine.system()
 
 opt_paranoid = get_option('paranoid').disable_auto_if(is_release)
-opt_analyze = get_option('analyze')
+opt_analyze = get_option('analyze').disable_auto_if(meson.is_subproject())
 
 # disable unit tests if we are a subproject or release build
 # this is because they require some different flags that slow down the compiler.
@@ -51,7 +51,7 @@ tool_error = get_option('tool_error').disable_auto_if(is_release or meson.is_sub
 
 # all the frontend programs
 frontend_gui = get_option('frontend_gui').disable_auto_if(meson.is_subproject())
-frontend_cli = get_option('frontend_cli')
+frontend_cli = get_option('frontend_cli').disable_auto_if(meson.is_subproject())
 frontend_example = get_option('frontend_example').disable_auto_if(meson.is_subproject())
 
 # all the language frontends
@@ -64,9 +64,9 @@ lang_c = get_option('lang_c').disable_auto_if(meson.is_subproject())
 lang_cpp = get_option('lang_cpp').disable_auto_if(meson.is_subproject())
 
 # all the codegen targets
-target_cfamily = get_option('target_cfamily')
+target_cfamily = get_option('target_cfamily').disable_auto_if(meson.is_subproject())
 target_debug = get_option('target_debug').disable_auto_if(meson.is_subproject())
-default_target = get_option('default_target')
+default_target = get_option('default_target').disable_auto_if(meson.is_subproject())
 
 # tools like this are user facing, so dont disable them in release mode
 tool_diagnostic = get_option('tool_diagnostic').disable_auto_if(meson.is_subproject())
