@@ -1,16 +1,12 @@
 #pragma once
 
 #include "base/panic.h"
-#include "cthulhu/events/events.h"
 #include "io/io.h"
 #include "notify/notify.h"
 #include "ref/ast.h"
 #include "scan/node.h"
+#include "std/map.h"
 
-#include <map>
-#include <span>
-#include <string>
-#include <utility>
 #include <vector>
 #include <format>
 #include <sstream>
@@ -34,6 +30,41 @@ typedef struct ref_emit_t
 } ref_emit_t;
 
 namespace refl { class Sema; }
+
+
+using vector_str_t = std::vector<std::string>;
+
+template<typename K, typename V>
+class Map {
+    map_t *m_map;
+
+    static_assert(std::is_same_v<K, const char*>, "lol");
+
+public:
+    Map(size_t size, arena_t *arena)
+        : m_map(map_optimal(size, kTypeInfoString, arena))
+    { }
+
+    Map(map_t *map)
+        : m_map(map)
+    { }
+
+    V get(const K& key) const {
+        return (V)map_get(m_map, (const void*)key);
+    }
+
+    void set(const K& key, V value) {
+        map_set(m_map, (const void*)key, (void*)value);
+    }
+
+    void foreach(auto&& fn) {
+        map_iter_t iter = map_iter(m_map);
+        while (map_has_next(&iter)) {
+            map_entry_t entry = map_next(&iter);
+            fn((K)entry.key, (V)entry.value);
+        }
+    }
+};
 
 struct out_t
 {
@@ -129,7 +160,7 @@ namespace refl {
         }
     };
 
-    using declmap_t = std::map<std::string, Decl*>;
+    using declmap_t = Map<const char*, Decl*>;
 
     declmap_t get_builtin_types();
 
@@ -142,7 +173,7 @@ namespace refl {
         std::string m_namespace;
         const char *m_api = nullptr;
 
-        std::vector<std::string> imports;
+        vector_str_t imports;
 
     public:
         Sema(const Sema&) = delete;
@@ -156,6 +187,7 @@ namespace refl {
             : m_parent(parent)
             , m_resolve(parent->m_resolve)
             , m_logger(parent->m_logger)
+            , m_decls(parent->m_decls)
         { }
 
         Sema(logger_t *logger)
@@ -309,8 +341,10 @@ namespace refl {
 
     class TemplateInstance;
 
+    using vec_type_t = std::vector<Type*>;
+
     class TemplateType : public Type {
-        std::vector<std::string> m_params;
+        vector_str_t m_params;
 
     protected:
         void add_param(std::string param) { m_params.push_back(std::move(param)); }
@@ -320,11 +354,11 @@ namespace refl {
             : Type(node, eKindTypeTemplate, name)
         { }
 
-        std::span<const std::string> get_params() const { return m_params; }
+        const vector_str_t& get_params() const { return m_params; }
 
         void resolve(Sema&) override { finish_resolve(); }
 
-        virtual Type *instantiate(Sema& sema, std::span<Type*> args) const = 0;
+        virtual Type *instantiate(Sema& sema, const vec_type_t& args) const = 0;
     };
 
     class AtomicType : public Type {
@@ -353,7 +387,7 @@ namespace refl {
 
         void resolve(Sema&) override { finish_resolve(); }
 
-        Type *instantiate(Sema&, std::span<Type*> args) const override {
+        Type *instantiate(Sema&, const vec_type_t& args) const override {
             CTASSERT(args.size() == 1);
             return new AtomicType(get_node(), args[0]);
         }
@@ -385,7 +419,7 @@ namespace refl {
 
         void resolve(Sema&) override { finish_resolve(); }
 
-        Type *instantiate(Sema&, std::span<Type*> args) const override {
+        Type *instantiate(Sema&, const vec_type_t& args) const override {
             CTASSERT(args.size() == 1);
             return new ConstType(get_node(), args[0]);
         }

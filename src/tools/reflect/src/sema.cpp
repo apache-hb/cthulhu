@@ -31,17 +31,6 @@ void ResolveStack::leave_decl()
     m_stack.pop_back();
 }
 
-template<typename K, typename V>
-static void map_foreach(map_t *map, auto&& fn)
-{
-    map_iter_t iter = map_iter(map);
-    while (map_has_next(&iter))
-    {
-        map_entry_t entry = map_next(&iter);
-        fn((K)entry.key, (V)entry.value);
-    }
-}
-
 template<typename T>
 static void vec_foreach(vector_t *vec, auto&& fn)
 {
@@ -51,60 +40,48 @@ static void vec_foreach(vector_t *vec, auto&& fn)
 
 declmap_t refl::get_builtin_types()
 {
-    declmap_t decls = {
-        { "opaque", new MemoryType("opaque") },
-        { "void", new VoidType("void") },
-        { "string", new StringType("string") },
-        { "bool", new BoolType("bool") },
-        { "byte", new IntType("byte", eDigit8, eSignUnsigned) },
+    declmap_t decls { 64, get_global_arena() };
 
-        { "int", new IntType("int", eDigitInt, eSignSigned) },
-        { "uint", new IntType("uint", eDigitInt, eSignUnsigned) },
-
-        { "long", new IntType("long", eDigitLong, eSignSigned) },
-        { "ulong", new IntType("ulong", eDigitLong, eSignUnsigned) },
-
-        { "int8", new IntType("int8", eDigit8, eSignSigned) },
-        { "int16", new IntType("int16", eDigit16, eSignSigned) },
-        { "int32", new IntType("int32", eDigit32, eSignSigned) },
-        { "int64", new IntType("int64", eDigit64, eSignSigned) },
-
-        { "uint8", new IntType("uint8", eDigit8, eSignUnsigned) },
-        { "uint16", new IntType("uint16", eDigit16, eSignUnsigned) },
-        { "uint32", new IntType("uint32", eDigit32, eSignUnsigned) },
-        { "uint64", new IntType("uint64", eDigit64, eSignUnsigned) },
-
-        { "fast8", new IntType("intfast8", eDigitFast8, eSignSigned) },
-        { "fast16", new IntType("intfast16", eDigitFast16, eSignSigned) },
-        { "fast32", new IntType("intfast32", eDigitFast32, eSignSigned) },
-        { "fast64", new IntType("intfast64", eDigitFast64, eSignSigned) },
-
-        { "ufast8", new IntType("uintfast8", eDigitFast8, eSignUnsigned) },
-        { "ufast16", new IntType("uintfast16", eDigitFast16, eSignUnsigned) },
-        { "ufast32", new IntType("uintfast32", eDigitFast32, eSignUnsigned) },
-        { "ufast64", new IntType("uintfast64", eDigitFast64, eSignUnsigned) },
-
-        { "least8", new IntType("intleast8", eDigitLeast8, eSignSigned) },
-        { "least16", new IntType("intleast16", eDigitLeast16, eSignSigned) },
-        { "least32", new IntType("intleast32", eDigitLeast32, eSignSigned) },
-        { "least64", new IntType("intleast64", eDigitLeast64, eSignSigned) },
-
-        { "uleast8", new IntType("uintleast8", eDigitLeast8, eSignUnsigned) },
-        { "uleast16", new IntType("uintleast16", eDigitLeast16, eSignUnsigned) },
-        { "uleast32", new IntType("uintleast32", eDigitLeast32, eSignUnsigned) },
-        { "uleast64", new IntType("uintleast64", eDigitLeast64, eSignUnsigned) },
-
-        { "intptr", new IntType("intptr", eDigitPtr, eSignSigned) },
-        { "uintptr", new IntType("uintptr", eDigitPtr, eSignUnsigned) },
-
-        { "usize", new IntType("usize", eDigitSize, eSignUnsigned) },
-        { "isize", new IntType("isize", eDigitSize, eSignSigned) },
-
-        { "float", new FloatType("float") },
-
-        { "atomic", new TemplateAtomic("atomic") },
-        { "const", new TemplateConst("const") }
-    };
+    decls.set("opaque", new MemoryType("opaque"));
+    decls.set("void", new VoidType("void"));
+    decls.set("string", new StringType("string"));
+    decls.set("bool", new BoolType("bool"));
+    decls.set("byte", new IntType("byte", eDigit8, eSignUnsigned));
+    decls.set("int", new IntType("int", eDigitInt, eSignSigned));
+    decls.set("uint", new IntType("uint", eDigitInt, eSignUnsigned));
+    decls.set("long", new IntType("long", eDigitLong, eSignSigned));
+    decls.set("ulong", new IntType("ulong", eDigitLong, eSignUnsigned));
+    decls.set("int8", new IntType("int8", eDigit8, eSignSigned));
+    decls.set("int16", new IntType("int16", eDigit16, eSignSigned));
+    decls.set("int32", new IntType("int32", eDigit32, eSignSigned));
+    decls.set("int64", new IntType("int64", eDigit64, eSignSigned));
+    decls.set("uint8", new IntType("uint8", eDigit8, eSignUnsigned));
+    decls.set("uint16", new IntType("uint16", eDigit16, eSignUnsigned));
+    decls.set("uint32", new IntType("uint32", eDigit32, eSignUnsigned));
+    decls.set("uint64", new IntType("uint64", eDigit64, eSignUnsigned));
+    decls.set("fast8", new IntType("intfast8", eDigitFast8, eSignSigned));
+    decls.set("fast16", new IntType("intfast16", eDigitFast16, eSignSigned));
+    decls.set("fast32", new IntType("intfast32", eDigitFast32, eSignSigned));
+    decls.set("fast64", new IntType("intfast64", eDigitFast64, eSignSigned));
+    decls.set("ufast8", new IntType("uintfast8", eDigitFast8, eSignUnsigned));
+    decls.set("ufast16", new IntType("uintfast16", eDigitFast16, eSignUnsigned));
+    decls.set("ufast32", new IntType("uintfast32", eDigitFast32, eSignUnsigned));
+    decls.set("ufast64", new IntType("uintfast64", eDigitFast64, eSignUnsigned));
+    decls.set("least8", new IntType("intleast8", eDigitLeast8, eSignSigned));
+    decls.set("least16", new IntType("intleast16", eDigitLeast16, eSignSigned));
+    decls.set("least32", new IntType("intleast32", eDigitLeast32, eSignSigned));
+    decls.set("least64", new IntType("intleast64", eDigitLeast64, eSignSigned));
+    decls.set("uleast8", new IntType("uintleast8", eDigitLeast8, eSignUnsigned));
+    decls.set("uleast16", new IntType("uintleast16", eDigitLeast16, eSignUnsigned));
+    decls.set("uleast32", new IntType("uintleast32", eDigitLeast32, eSignUnsigned));
+    decls.set("uleast64", new IntType("uintleast64", eDigitLeast64, eSignUnsigned));
+    decls.set("intptr", new IntType("intptr", eDigitPtr, eSignSigned));
+    decls.set("uintptr", new IntType("uintptr", eDigitPtr, eSignUnsigned));
+    decls.set("usize", new IntType("usize", eDigitSize, eSignUnsigned));
+    decls.set("isize", new IntType("isize", eDigitSize, eSignSigned));
+    decls.set("float", new FloatType("float"));
+    decls.set("atomic", new TemplateAtomic("atomic"));
+    decls.set("const", new TemplateConst("const"));
 
     return decls;
 }
@@ -121,14 +98,14 @@ void Sema::add_decl(const char *name, Decl *decl)
     }
     else
     {
-        m_decls[name] = decl;
+        m_decls.set(name, decl);
     }
 }
 
 Decl *Sema::get_decl(const char *name) const
 {
-    if (auto it = m_decls.find(name); it != m_decls.end())
-        return it->second;
+    if (Decl* it = m_decls.get(name))
+        return it;
 
     if (m_parent)
         return m_parent->get_decl(name);
@@ -173,8 +150,9 @@ Decl *Sema::forward_decl(const char *name, ref_ast_t *ast)
 
 void Sema::resolve_all()
 {
-    for (auto& [name, decl] : m_decls)
+    m_decls.foreach([&](auto, auto decl) {
         resolve_decl(decl);
+    });
 }
 
 Type *Sema::resolve_type(ref_ast_t *ast)
@@ -299,19 +277,19 @@ void Sema::emit_all(io_t *source, io_t *header, const char *file)
 
     h.writeln("// prototypes");
 
-    for (auto& [name, decl] : m_decls)
+    m_decls.foreach([&](auto, auto decl) {
         decl->emit_proto(h);
+    });
 
     h.nl();
     h.writeln("// implementation");
 
     DeclDepends depends;
 
-    for (auto& [name, decl] : m_decls)
-    {
+    m_decls.foreach([&](auto, auto decl) {
         decl->get_deps(depends);
         depends.add(decl);
-    }
+    });
 
     for (auto& decl : depends.m_depends)
     {
@@ -406,12 +384,12 @@ void Method::resolve(Sema& sema) {
         m_return = sema.resolve_decl(m_return);
 
     if (m_ast->method_params != nullptr) {
-        std::map<std::string, Param*> params;
+        Map<const char*, Param*> params { vector_len(m_ast->method_params), get_global_arena() };
 
         vec_foreach<ref_ast_t*>(m_ast->method_params, [&](auto param) {
             auto p = new Param(param);
-            CTASSERTF(!params.contains(param->name), "duplicate parameter %s", param->name);
-            params[param->name] = p;
+            CTASSERTF(!params.get(param->name), "duplicate parameter %s", param->name);
+            params.set(param->name, p);
             p->resolve(sema);
             m_params.push_back(p);
         });
@@ -531,13 +509,13 @@ void Method::emit_thunk(out_t& out) const {
 
 void RecordType::resolve(Sema& sema)
 {
-    std::map<std::string, Method*> methods;
+    Map<const char*, Method*> methods { vector_len(m_ast->methods), get_global_arena() };
 
     vec_foreach<ref_ast_t*>(m_ast->methods, [&](auto method) {
         Method *m = new Method(method);
         m->resolve(sema);
-        CTASSERTF(!methods.contains(method->name), "duplicate method %s", method->name);
-        methods[method->name] = m;
+        CTASSERTF(!methods.get(method->name), "duplicate method %s", method->name);
+        methods.set(method->name, m);
 
         m_methods.push_back(m);
     });
@@ -676,10 +654,9 @@ void Class::resolve(Sema& sema)
 
     RecordType::resolve(sema);
 
-    std::map<std::string, Field*> fields;
+    Map<const char*, Field*> fields { vector_len(m_ast->tparams), get_global_arena() };
 
     // TODO
-    // std::map<const char*, GenericType*> tparams;
 
     if (m_ast->tparams != NULL && vector_len(m_ast->tparams) > 0)
     {
@@ -697,8 +674,8 @@ void Class::resolve(Sema& sema)
     vec_foreach<ref_ast_t*>(m_ast->fields, [&](auto field) {
         Field *f = new Field(field);
         f->resolve(sema);
-        CTASSERTF(!fields.contains(field->name), "duplicate field %s", field->name);
-        fields[field->name] = f;
+        CTASSERTF(!fields.get(field->name), "duplicate field %s", field->name);
+        fields.set(field->name, f);
 
         m_fields.push_back(f);
     });
@@ -721,13 +698,13 @@ void Struct::resolve(Sema& sema)
     finish_resolve();
     RecordType::resolve(sema);
 
-    std::map<const char*, Field*> fields;
+    Map<const char*, Field*> fields { vector_len(m_ast->tparams), get_global_arena() };
 
     vec_foreach<ref_ast_t*>(m_ast->fields, [&](auto field) {
         Field *f = new Field(field);
         f->resolve(sema);
-        CTASSERTF(!fields.contains(field->name), "duplicate field %s", field->name);
-        fields[field->name] = f;
+        CTASSERTF(!fields.get(field->name), "duplicate field %s", field->name);
+        fields.set(field->name, f);
 
         m_fields.push_back(f);
     });
@@ -746,13 +723,13 @@ void Variant::resolve(Sema& sema)
 
     RecordType::resolve(sema);
 
-    std::map<const char*, Case*> cases;
+    Map<const char*, Case*> cases { vector_len(m_ast->cases), get_global_arena() };
 
     vec_foreach<ref_ast_t*>(m_ast->cases, [&](auto field) {
         Case *c = new Case(field);
         c->resolve(sema);
-        CTASSERTF(!cases.contains(field->name), "duplicate case %s", field->name);
-        cases[field->name] = c;
+        CTASSERTF(!cases.get(field->name), "duplicate case %s", field->name);
+        cases.set(field->name, c);
 
         m_cases.push_back(c);
     });
@@ -762,7 +739,7 @@ void Variant::resolve(Sema& sema)
         CTASSERTF(m_parent->get_kind() == eKindTypeInt || m_parent->get_opaque_name() != nullptr, "invalid underlying type %s", m_parent->get_name());
     }
 
-    m_default_case = m_ast->default_case ? cases[m_ast->default_case->name] : nullptr;
+    m_default_case = m_ast->default_case ? cases.get(m_ast->default_case->name) : nullptr;
 }
 
 static const char *digit_cxx_name(digit_t digit, sign_t sign)
