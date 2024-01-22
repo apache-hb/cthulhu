@@ -157,10 +157,10 @@ struct tool_t
     int emit_output(ref_ast_t *ast, const char *file)
     {
         const char *header_path = cfg_string_value(m_output_header);
-        const char *source_path = cfg_string_value(m_output_source);
+        //const char *source_path = cfg_string_value(m_output_source);
         io_t *header = open_file(header_path, eAccessWrite, &kEvent_FailedToCreateOutputFile);
-        io_t *source = open_file(source_path, eAccessWrite, &kEvent_FailedToCreateOutputFile);
-        if (header == nullptr || source == nullptr) return CT_EXIT_ERROR;
+        //io_t *source = open_file(source_path, eAccessWrite, &kEvent_FailedToCreateOutputFile);
+        if (header == nullptr) return CT_EXIT_ERROR;
 
         // ref_emit_t emit = {
         //     .file = file,
@@ -194,7 +194,7 @@ struct tool_t
         sema.resolve_all();
         CHECK_LOG(m_logger, "resolving");
 
-        sema.emit_all(source, header, file);
+        sema.emit_all(header, file);
         CHECK_LOG(m_logger, "emitting");
 
         return CT_EXIT_OK;

@@ -281,7 +281,7 @@ namespace refl {
         Type *resolve_type(ref_ast_t *ast);
         Type *resolve_generic(ref_ast_t *ast);
 
-        void emit_all(io_t *source, io_t *header, const char *file);
+        void emit_all(io_t *header, const char *file);
 
         Decl *forward_decl(const char *name, ref_ast_t *ast);
 

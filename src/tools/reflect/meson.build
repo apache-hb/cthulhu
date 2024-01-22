@@ -33,8 +33,8 @@ reflect_cli = executable('reflect_cli', src,
 )
 
 reflect = generator(reflect_cli,
-    output : [ '@BASENAME@.reflect.h', '@BASENAME@.reflect.cpp' ],
-    arguments : [ '/header:@OUTPUT0@', '/source:@OUTPUT1@', '@INPUT@' ]
+    output : [ '@BASENAME@.reflect.h' ],
+    arguments : [ '/header:@OUTPUT0@', '@INPUT@' ]
 )
 
 reflect_include = include_directories('data/include')

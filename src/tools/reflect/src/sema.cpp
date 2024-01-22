@@ -238,7 +238,7 @@ Type *Sema::resolve_generic(ref_ast_t *ast)
     return tmpl->instantiate(*this, params);
 }
 
-void Sema::emit_all(io_t *source, io_t *header, const char *file)
+void Sema::emit_all(io_t *header, const char *file)
 {
     // header preamble
     out_t h = this;
@@ -248,15 +248,6 @@ void Sema::emit_all(io_t *source, io_t *header, const char *file)
     h.nl();
     h.writeln("#include \"reflect/reflect.h\"");
     h.nl();
-
-    // source preamble
-    out_t s = this;
-    s.writeln("// Generated from '%s'", file);
-    s.writeln("// Dont edit this file, it will be overwritten on the next build");
-    s.nl();
-    char *base = str_filename(io_name(header), get_global_arena());
-    s.writeln("#include \"%s\"", base);
-    s.nl();
 
     imports.foreach([&](auto fd) {
         if (fd[0] == '<')
@@ -311,7 +302,6 @@ void Sema::emit_all(io_t *source, io_t *header, const char *file)
     h.writeln("} // namespace ctu");
 
     h.dump(header);
-    s.dump(source);
 }
 
 void Field::resolve(Sema& sema)
