@@ -74,6 +74,29 @@ declmap_t refl::get_builtin_types()
         { "uint32", new IntType("uint32", eDigit32, eSignUnsigned) },
         { "uint64", new IntType("uint64", eDigit64, eSignUnsigned) },
 
+        { "fast8", new IntType("intfast8", eDigitFast8, eSignSigned) },
+        { "fast16", new IntType("intfast16", eDigitFast16, eSignSigned) },
+        { "fast32", new IntType("intfast32", eDigitFast32, eSignSigned) },
+        { "fast64", new IntType("intfast64", eDigitFast64, eSignSigned) },
+
+        { "ufast8", new IntType("uintfast8", eDigitFast8, eSignUnsigned) },
+        { "ufast16", new IntType("uintfast16", eDigitFast16, eSignUnsigned) },
+        { "ufast32", new IntType("uintfast32", eDigitFast32, eSignUnsigned) },
+        { "ufast64", new IntType("uintfast64", eDigitFast64, eSignUnsigned) },
+
+        { "least8", new IntType("intleast8", eDigitLeast8, eSignSigned) },
+        { "least16", new IntType("intleast16", eDigitLeast16, eSignSigned) },
+        { "least32", new IntType("intleast32", eDigitLeast32, eSignSigned) },
+        { "least64", new IntType("intleast64", eDigitLeast64, eSignSigned) },
+
+        { "uleast8", new IntType("uintleast8", eDigitLeast8, eSignUnsigned) },
+        { "uleast16", new IntType("uintleast16", eDigitLeast16, eSignUnsigned) },
+        { "uleast32", new IntType("uintleast32", eDigitLeast32, eSignUnsigned) },
+        { "uleast64", new IntType("uintleast64", eDigitLeast64, eSignUnsigned) },
+
+        { "intptr", new IntType("intptr", eDigitPtr, eSignSigned) },
+        { "uintptr", new IntType("uintptr", eDigitPtr, eSignUnsigned) },
+
         { "usize", new IntType("usize", eDigitSize, eSignUnsigned) },
         { "isize", new IntType("isize", eDigitSize, eSignSigned) },
 
@@ -746,12 +769,23 @@ static const char *digit_cxx_name(digit_t digit, sign_t sign)
 {
     switch (digit)
     {
-    case eDigitChar: return (sign == eSignUnsigned) ? "unsigned char" : "char";
     case eDigit8: return (sign == eSignUnsigned) ? "uint8_t" : "int8_t";
     case eDigit16: return (sign == eSignUnsigned) ? "uint16_t" : "int16_t";
     case eDigit32: return (sign == eSignUnsigned) ? "uint32_t" : "int32_t";
     case eDigit64: return (sign == eSignUnsigned) ? "uint64_t" : "int64_t";
 
+    case eDigitFast8: return (sign == eSignUnsigned) ? "uint_fast8_t" : "int_fast8_t";
+    case eDigitFast16: return (sign == eSignUnsigned) ? "uint_fast16_t" : "int_fast16_t";
+    case eDigitFast32: return (sign == eSignUnsigned) ? "uint_fast32_t" : "int_fast32_t";
+    case eDigitFast64: return (sign == eSignUnsigned) ? "uint_fast64_t" : "int_fast64_t";
+
+    case eDigitLeast8: return (sign == eSignUnsigned) ? "uint_least8_t" : "int_least8_t";
+    case eDigitLeast16: return (sign == eSignUnsigned) ? "uint_least16_t" : "int_least16_t";
+    case eDigitLeast32: return (sign == eSignUnsigned) ? "uint_least32_t" : "int_least32_t";
+    case eDigitLeast64: return (sign == eSignUnsigned) ? "uint_least64_t" : "int_least64_t";
+
+    case eDigitChar: return (sign == eSignUnsigned) ? "unsigned char" : "char";
+    case eDigitShort: return (sign == eSignUnsigned) ? "unsigned short" : "short";
     case eDigitInt: return (sign == eSignUnsigned) ? "unsigned int" : "int";
     case eDigitLong: return (sign == eSignUnsigned) ? "unsigned long" : "long";
     case eDigitSize: return (sign == eSignUnsigned) ? "size_t" : "ptrdiff_t";
