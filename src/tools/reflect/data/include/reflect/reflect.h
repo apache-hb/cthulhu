@@ -18,8 +18,6 @@
     constexpr T operator%(T lhs, T rhs) { return (T)((U)lhs % (U)rhs); }
 
 #define REFLECT_ENUM_COMPARE(T, U) \
-    constexpr bool operator==(T lhs, T rhs) { return (U)lhs == (U)rhs; } \
-    constexpr bool operator!=(T lhs, T rhs) { return (U)lhs != (U)rhs; } \
     constexpr bool operator<(T lhs, T rhs) { return (U)lhs < (U)rhs; } \
     constexpr bool operator>(T lhs, T rhs) { return (U)lhs > (U)rhs; } \
     constexpr bool operator<=(T lhs, T rhs) { return (U)lhs <= (U)rhs; } \
@@ -189,13 +187,13 @@ namespace ctu {
         const T value;
     };
 
-    enum Access {
+    enum Access : uint_fast8_t {
         ePublic,
         eProtected,
         ePrivate,
     };
 
-    enum Attribs {
+    enum Attribs : uint_fast8_t {
         eAttribNone = 0,
         eAttribTransient = 1 << 0,
     };

@@ -79,7 +79,8 @@ declmap_t refl::get_builtin_types()
 
         { "float", new FloatType("float") },
 
-        { "atomic", new TemplateAtomic("atomic") }
+        { "atomic", new TemplateAtomic("atomic") },
+        { "const", new TemplateConst("const") }
     };
 
     return decls;
@@ -406,7 +407,7 @@ static const char *get_privacy(ref_privacy_t privacy)
     case ePrivacyPublic: return "public";
     case ePrivacyPrivate: return "private";
     case ePrivacyProtected: return "protected";
-    default: NEVER("invalid privacy");
+    default: NEVER("invalid privacy %d", privacy);
     }
 }
 
@@ -431,7 +432,7 @@ void Method::emit_impl(out_t& out) const {
 
     const char *privacy = ::get_privacy(m_ast->privacy);
 
-    bool is_const = m_ast->const_method;
+    bool is_const = m_ast->flags & eDeclConst;
 
     if (m_thunk)
     {
@@ -466,11 +467,14 @@ void Method::emit_method(out_t& out) const {
 
     std::string inner = attrib ? attrib->ident : std::format("impl_{}", get_name());
 
-    bool is_const = m_ast->const_method;
+    bool is_const = m_ast->flags & eDeclConst;
+    bool is_virtual = m_ast->flags & eDeclVirtual;
+
+    const char *virt_str = is_virtual ? "virtual " : "";
 
     if (m_thunk)
     {
-        out.writeln("{}({}) {}{{", it, params, is_const ? "const " : "");
+        out.writeln("{}{}({}) {}{{", virt_str, it, params, is_const ? "const " : "");
         out.enter();
         out.writeln("return {}({});", inner, args);
         out.leave();
@@ -478,7 +482,7 @@ void Method::emit_method(out_t& out) const {
     }
     else
     {
-        out.writeln("{}({}){};", it, params, is_const ? " const" : "");
+        out.writeln("{}{}({}){};", virt_str, it, params, is_const ? " const" : "");
     }
 }
 
@@ -502,9 +506,144 @@ void Method::emit_thunk(out_t& out) const {
     out.writeln("{}({});", it, params);
 }
 
+void RecordType::resolve(Sema& sema)
+{
+    std::map<std::string, Method*> methods;
+
+    vec_foreach<ref_ast_t*>(m_ast->methods, [&](auto method) {
+        Method *m = new Method(method);
+        m->resolve(sema);
+        CTASSERTF(!methods.contains(method->name), "duplicate method %s", method->name);
+        methods[method->name] = m;
+
+        m_methods.push_back(m);
+    });
+
+    if (m_ast->parent != nullptr)
+    {
+        m_parent = sema.resolve_type(m_ast->parent);
+        CTASSERTF(m_parent != nullptr, "invalid parent type");
+    }
+}
+
+void RecordType::emit_proto(out_t& out) const
+{
+    if (get_attrib(m_ast->attributes, eAstAttribExternal) || get_attrib(m_ast->attributes, eAstAttribFacade))
+        return;
+    out.writeln("{} {};", m_record, get_name());
+}
+
+ref_privacy_t RecordType::emit_methods(out_t& out, ref_privacy_t privacy) const
+{
+    out.writeln("// methods");
+
+    for (auto method : m_methods)
+    {
+        if (privacy != method->get_privacy() && method->get_privacy() != ePrivacyDefault)
+        {
+            privacy = method->get_privacy();
+            out.leave();
+            out.writeln("{}:", get_privacy(privacy));
+            out.enter();
+        }
+        method->emit_method(out);
+    }
+
+    out.writeln("// thunks");
+
+    bool emit_private = false;
+
+    for (auto method : m_methods)
+    {
+        if (!method->should_emit_thunk())
+        {
+            continue;
+        }
+
+        if (!emit_private)
+        {
+            emit_private = true;
+            out.leave();
+            out.writeln("private:");
+            out.enter();
+        }
+
+        method->emit_thunk(out);
+    }
+
+    return ePrivacyPrivate;
+}
+
+void RecordType::emit_begin_record(out_t& out, bool write_parent) const
+{
+    bool is_final = m_ast->flags & eDeclSealed;
+    const char *fin = is_final ? " final " : " ";
+    if (m_parent && write_parent)
+    {
+        out.writeln("{} {}{}: public {} {{", m_record, get_name(), fin, m_parent->get_name());
+    }
+    else
+    {
+        out.writeln("{} {}{}{{", m_record, get_name(), fin);
+    }
+    out.enter();
+
+    out.writeln("friend class ctu::TypeInfo<{}>;", get_name());
+}
+
+void RecordType::emit_ctors(out_t&) const  {
+
+}
+
+ref_privacy_t RecordType::emit_dtors(out_t& out, ref_privacy_t privacy) const {
+    bool is_virtual = m_ast->flags & eDeclVirtual;
+
+    if (!is_virtual)
+        return privacy;
+
+    if (privacy != ePrivacyPublic)
+    {
+        privacy = ePrivacyPublic;
+        out.leave();
+        out.writeln("{}:", get_privacy(privacy));
+        out.enter();
+    }
+
+    out.writeln("virtual ~{}() = default;", get_name());
+
+    return privacy;
+}
+
+
+void RecordType::emit_end_record(out_t& out) const
+{
+    out.leave();
+    out.writeln("}};");
+}
+
+ref_privacy_t RecordType::emit_fields(out_t& out, const std::vector<Field*>& fields, ref_privacy_t privacy) const
+{
+    out.writeln("// fields");
+
+    for (auto field : fields)
+    {
+        ref_privacy_t field_privacy = field->get_privacy();
+        if (field_privacy != privacy)
+        {
+            privacy = field_privacy;
+            out.leave();
+            out.writeln("{}:", get_privacy(field_privacy));
+            out.enter();
+        }
+
+        field->emit_field(out);
+    }
+
+    return privacy;
+}
+
 Class::Class(ref_ast_t *ast)
-    : Type(ast->node, eKindClass, ast->name)
-    , m_ast(ast)
+    : RecordType(ast, eKindClass, "class")
 { }
 
 void Class::resolve(Sema& sema)
@@ -512,8 +651,9 @@ void Class::resolve(Sema& sema)
     if (is_resolved()) return;
     finish_resolve();
 
+    RecordType::resolve(sema);
+
     std::map<std::string, Field*> fields;
-    std::map<std::string, Method*> methods;
 
     // TODO
     // std::map<const char*, GenericType*> tparams;
@@ -531,15 +671,6 @@ void Class::resolve(Sema& sema)
         // });
     }
 
-    vec_foreach<ref_ast_t*>(m_ast->methods, [&](auto method) {
-        Method *m = new Method(method);
-        m->resolve(sema);
-        CTASSERTF(!methods.contains(method->name), "duplicate method %s", method->name);
-        methods[method->name] = m;
-
-        m_methods.push_back(m);
-    });
-
     vec_foreach<ref_ast_t*>(m_ast->fields, [&](auto field) {
         Field *f = new Field(field);
         f->resolve(sema);
@@ -549,10 +680,8 @@ void Class::resolve(Sema& sema)
         m_fields.push_back(f);
     });
 
-    if (m_ast->parent != nullptr)
+    if (m_parent != nullptr)
     {
-        m_parent = sema.resolve_type(m_ast->parent);
-        CTASSERTF(m_parent != nullptr, "invalid parent type");
         CTASSERTF(m_parent->get_kind() == eKindClass, "invalid parent type %s", m_parent->get_name());
     }
 
@@ -560,14 +689,14 @@ void Class::resolve(Sema& sema)
 }
 
 Struct::Struct(ref_ast_t *ast)
-    : Type(ast->node, eKindStruct, ast->name)
-    , m_ast(ast)
+    : RecordType(ast, eKindStruct, "struct")
 { }
 
 void Struct::resolve(Sema& sema)
 {
     if (is_resolved()) return;
     finish_resolve();
+    RecordType::resolve(sema);
 
     std::map<const char*, Field*> fields;
 
@@ -584,14 +713,15 @@ void Struct::resolve(Sema& sema)
 }
 
 Variant::Variant(ref_ast_t *ast)
-    : Type(ast->node, eKindStruct, ast->name)
-    , m_ast(ast)
+    : RecordType(ast, eKindVariant, "class")
 { }
 
 void Variant::resolve(Sema& sema)
 {
     if (is_resolved()) return;
     finish_resolve();
+
+    RecordType::resolve(sema);
 
     std::map<const char*, Case*> cases;
 
@@ -604,11 +734,9 @@ void Variant::resolve(Sema& sema)
         m_cases.push_back(c);
     });
 
-    if (m_ast->underlying)
+    if (m_parent)
     {
-        m_underlying = sema.resolve_type(m_ast->underlying);
-        CTASSERTF(m_underlying != nullptr, "invalid underlying type");
-        CTASSERTF(m_underlying->get_kind() == eKindTypeInt || m_underlying->get_opaque_name() != nullptr, "invalid underlying type %s", m_underlying->get_name());
+        CTASSERTF(m_parent->get_kind() == eKindTypeInt || m_parent->get_opaque_name() != nullptr, "invalid underlying type %s", m_parent->get_name());
     }
 
     m_default_case = m_ast->default_case ? cases[m_ast->default_case->name] : nullptr;
@@ -651,115 +779,33 @@ void Field::emit_field(out_t& out) const
     out.writeln("{};", it);
 }
 
-static void emit_record(out_t& out, ref_privacy_t privacy, const char *name, Type *parent, const char *ty, const std::vector<Field*>& fields, const std::vector<Method*>& methods)
-{
-    if (parent)
-    {
-        out.writeln("{} {} : public {} {{", ty, name, parent->get_name());
-    }
-    else
-    {
-        out.writeln("{} {} {{", ty, name);
-    }
-    out.enter();
-
-    out.writeln("friend class ctu::TypeInfo<{}>;", name);
-
-    out.writeln("// fields");
-
-    for (auto field : fields)
-    {
-        ref_privacy_t field_privacy = field->get_privacy();
-        if (field_privacy != privacy)
-        {
-            privacy = field_privacy;
-            out.leave();
-            out.writeln("{}:", get_privacy(field_privacy));
-            out.enter();
-        }
-
-        field->emit_field(out);
-    }
-
-    out.writeln("// methods");
-
-    for (auto method : methods)
-    {
-        ref_privacy_t field_privacy = method->get_privacy();
-        if (field_privacy != privacy)
-        {
-            privacy = field_privacy;
-            out.leave();
-            out.writeln("{}:", get_privacy(field_privacy));
-            out.enter();
-        }
-
-        method->emit_method(out);
-    }
-
-    out.writeln("// thunks");
-
-    bool emit_private = false;
-    for (auto method : methods)
-    {
-        if (!method->should_emit_thunk())
-        {
-            continue;
-        }
-
-        if (!emit_private)
-        {
-            emit_private = true;
-            out.leave();
-            out.writeln("private:");
-            out.enter();
-        }
-
-        method->emit_thunk(out);
-    }
-
-    out.leave();
-    out.writeln("}};");
-}
-
 void Class::emit_impl(out_t& out) const
 {
     if (get_attrib(m_ast->attributes, eAstAttribExternal))
         return;
-    emit_record(out, ePrivacyPrivate, get_name(), m_parent, "class", m_fields, m_methods);
+
+    emit_begin_record(out);
+    auto priv = emit_dtors(out, ePrivacyPrivate);
+    priv = emit_fields(out, m_fields, priv);
+    priv = emit_methods(out, priv);
+    emit_end_record(out);
 }
 
 void Struct::emit_impl(out_t& out) const
 {
     if (get_attrib(m_ast->attributes, eAstAttribExternal))
         return;
-    emit_record(out, ePrivacyPublic, get_name(), nullptr, "struct", m_fields, std::vector<Method*>());
+
+    emit_begin_record(out);
+    auto priv = emit_dtors(out, ePrivacyPublic);
+    priv = emit_fields(out, m_fields, priv);
+    priv = emit_methods(out, priv);
+    emit_end_record(out);
 }
 
 void Case::emit_impl(out_t& out) const
 {
     out.writeln("e{} = {},", get_name(), get_value());
-}
-
-void Variant::emit_proto(out_t& out) const
-{
-    if (get_attrib(m_ast->attributes, eAstAttribExternal) || get_attrib(m_ast->attributes, eAstAttribFacade))
-        return;
-    out.writeln("class {};", get_name());
-}
-
-void Class::emit_proto(out_t& out) const
-{
-    if (get_attrib(m_ast->attributes, eAstAttribExternal) || get_attrib(m_ast->attributes, eAstAttribFacade))
-        return;
-    out.writeln("class {};", get_name());
-}
-
-void Struct::emit_proto(out_t& out) const
-{
-    if (get_attrib(m_ast->attributes, eAstAttribExternal) || get_attrib(m_ast->attributes, eAstAttribFacade))
-        return;
-    out.writeln("struct {};", get_name());
 }
 
 static uint32_t type_hash(const char *name)
@@ -798,19 +844,34 @@ void Variant::emit_impl(out_t& out) const
     bool is_arithmatic = get_attrib(m_ast->attributes, eAstAttribArithmatic) != nullptr;
     bool is_iterator = get_attrib(m_ast->attributes, eAstAttribIterator) != nullptr;
 
-    auto under = m_underlying->get_cxx_name(nullptr);
-    const char *opaque = m_underlying->get_opaque_name();
+    std::string ty;
+    std::string under;
     out.writeln("namespace impl {{");
     out.enter();
-    if (opaque)
+    if (m_parent)
     {
-        out.writeln("using {}_underlying_t = std::underlying_type_t<{}>;", get_name(), opaque);
-        out.writeln("enum class {} : {}_underlying_t {{", get_name(), get_name());
+        std::string underlying = m_parent->get_cxx_name(nullptr);
+        const char *opaque = m_parent->get_opaque_name();
+        if (opaque)
+        {
+            ty = std::format("{}_underlying_t", get_name());
+            under = std::format("impl::{}", ty);
+            out.writeln("using {}_underlying_t = std::underlying_type_t<{}>;", get_name(), opaque);
+            out.writeln("enum class {} : {}_underlying_t {{", get_name(), get_name());
+        }
+        else
+        {
+            ty = underlying;
+            under = underlying;
+            out.writeln("enum class {} : {} {{", get_name(), underlying);
+        }
     }
     else
     {
-        out.writeln("enum class {} : {} {{", get_name(), under);
+        under = std::format("impl::{}", get_name());
+        out.writeln("enum class {} {{", get_name());
     }
+
     out.enter();
     for (auto c : m_cases)
     {
@@ -818,28 +879,38 @@ void Variant::emit_impl(out_t& out) const
     }
     out.leave();
     out.writeln("}};");
+    if (!m_parent)
+    {
+        ty = std::format("{}_underlying_t", get_name());
+        out.writeln("using {}_underlying_t = std::underlying_type_t<{}>;", get_name(), get_name());
+    }
+    out.writeln("REFLECT_ENUM_COMPARE({}, {})", get_name(), ty);
+    if (is_bitflags) out.writeln("REFLECT_ENUM_BITFLAGS({}, {});", get_name(), ty);
+    if (is_arithmatic) out.writeln("REFLECT_ENUM_ARITHMATIC({}, {});", get_name(), ty);
+    if (is_iterator) out.writeln("REFLECT_ENUM_ITERATOR({}, {});", get_name(), ty);
+
     out.leave();
-    out.writeln("REFLECT_ENUM_COMPARE({}, {})", get_name(), under);
-    if (is_bitflags) out.writeln("REFLECT_ENUM_BITFLAGS({}, {});", get_name(), under);
-    if (is_arithmatic) out.writeln("REFLECT_ENUM_ARITHMATIC({}, {});", get_name(), under);
-    if (is_iterator) out.writeln("REFLECT_ENUM_ITERATOR({}, {});", get_name(), under);
+    out.writeln("}} // namespace impl");
 
     if (is_iterator || is_arithmatic)
         CTASSERTF(is_iterator ^ is_arithmatic, "enum %s cannot be both an iterator and arithmatic", get_name());
 
-    out.writeln("}} // namespace impl");
-    out.writeln("class {} {{", get_name());
+    emit_begin_record(out, false);
+    out.leave();
+    out.writeln("public:");
     out.enter();
-    out.writeln("friend class ctu::TypeInfo<{}>;", get_name());
     out.writeln("using underlying_t = std::underlying_type_t<impl::{}>;", get_name());
     out.writeln("using inner_t = impl::{};", get_name());
     out.nl();
+    out.leave();
+    out.writeln("private:");
+    out.enter();
     out.writeln("inner_t m_value;");
     out.nl();
     out.leave();
     out.writeln("public:");
     out.enter();
-    out.writeln("constexpr {}({} value) : m_value((inner_t)value) {{ }}", get_name(), under);
+    out.writeln("constexpr {}(underlying_t value) : m_value((inner_t)value) {{ }}", get_name());
     out.writeln("constexpr {}(inner_t value) : m_value(value) {{ }}", get_name());
     out.writeln("using enum inner_t;");
     out.nl();
@@ -899,7 +970,7 @@ void Variant::emit_impl(out_t& out) const
     // out.writeln("constexpr {}(const {}&& other) = default;", get_name(), get_name());
     // out.writeln("constexpr {}& operator=(const {}&& other) = default;", get_name(), get_name());
 
-    out.writeln("constexpr underlying_t as_integral() const {{ return ({})m_value; }}", under);
+    out.writeln("constexpr underlying_t as_integral() const {{ return (underlying_t)m_value; }}");
     out.writeln("constexpr inner_t as_enum() const {{ return m_value; }}");
 
     out.nl();
@@ -976,10 +1047,11 @@ void Variant::emit_impl(out_t& out) const
         // is_valid is not defined for arithmatic types
     }
 
-    out.leave();
-    out.writeln("}};");
+    emit_methods(out, ePrivacyPublic);
+
+    emit_end_record(out);
     out.nl();
-    out.writeln("static_assert(sizeof({}) == sizeof({}), \"{} size mismatch\");", get_name(), under, get_name());
+    out.writeln("static_assert(sizeof({}) == sizeof({}::underlying_t), \"{} size mismatch\");", get_name(), get_name(), get_name());
 }
 
 static void emit_name_info(out_t& out, const std::string& id, ref_ast_t *ast)
@@ -1204,8 +1276,6 @@ void Variant::emit_reflection(Sema& sema, out_t& out) const
     }
 
     auto id = get_decl_name(m_ast, sema, get_name());
-    auto underlying = m_underlying->get_cxx_name(nullptr);
-    const char *opaque_name = m_underlying->get_opaque_name();
 
     mpz_t typeid_value;
     get_type_id(m_ast, typeid_value);
@@ -1216,24 +1286,17 @@ void Variant::emit_reflection(Sema& sema, out_t& out) const
     emit_info_header(out, id);
         out.enter();
         out.writeln("using type_t = {};", id);
-        if (opaque_name)
-        {
-            out.writeln("using underlying_t = std::underlying_type_t<{}>;", opaque_name);
-        }
-        else
-        {
-            out.writeln("using underlying_t = {};", underlying);
-        }
+        out.writeln("using underlying_t = {}::underlying_t;", id);
         out.writeln("using case_t = ctu::EnumCase<{}>;", id);
         out.nl();
         out.writeln("static constexpr size_t kMaxLength = {};", max_tostring_length);
         out.writeln("using string_t = SmallString<kMaxLength>;");
         out.nl();
         emit_name_info(out, id, m_ast);
-        if (m_underlying)
+        if (m_parent)
             out.writeln("static constexpr TypeInfo<underlying_t> kUnderlying{{}};");
         else
-            out.writeln("static TypeInfo<void> kUnderlying{{}};");
+            out.writeln("static constexpr TypeInfo<void> kUnderlying{{}};");
 
         out.writeln("static constexpr bool kHasDefault = {};", m_default_case != nullptr);
         if (m_default_case)

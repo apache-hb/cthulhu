@@ -41,7 +41,6 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 <ATTRIBUTE>"assert" { return TOK_ASSERT; }
 <ATTRIBUTE>"deprecated" { return TOK_DEPRECATED; }
 <ATTRIBUTE>"typeid" { return TOK_TYPEID; }
-<ATTRIBUTE>"sealed" { return TOK_SEALED; }
 <ATTRIBUTE>"cxxname" { return TOK_CXXNAME; }
 <ATTRIBUTE>"remote" { return TOK_REMOTE; }
 <ATTRIBUTE>"noreflect" { return TOK_NOREFLECT; }
@@ -50,6 +49,7 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 <ATTRIBUTE>"c_enum" { return TOK_C_ENUM; }
 <ATTRIBUTE>"facade" { return TOK_FACADE; }
 <ATTRIBUTE>"rename" { return TOK_RENAME; }
+<ATTRIBUTE>"internal" { return TOK_INTERNAL; }
 
 <*>{WS}+ ;
 
@@ -61,6 +61,7 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 <*>"module" { return TOK_MODULE; }
 <*>"import" { return TOK_IMPORT; }
 <*>"api" { return TOK_API; }
+<*>"final" { return TOK_SEALED; }
 
 <*>"class" { return TOK_CLASS; }
 <*>"virtual" { return TOK_VIRTUAL; }

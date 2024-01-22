@@ -152,13 +152,13 @@ ref_ast_t *ref_field(scan_t *scan, where_t where, char *name, ref_ast_t *type, r
     return ast;
 }
 
-ref_ast_t *ref_method(scan_t *scan, where_t where, bool const_method, char *name, vector_t *params, ref_ast_t *type, ref_ast_t *body)
+ref_ast_t *ref_method(scan_t *scan, where_t where, ref_flags_t flags, char *name, vector_t *params, ref_ast_t *type, ref_ast_t *body)
 {
     ref_ast_t *ast = ref_ast_decl(scan, where, eAstMethod, name);
     ast->return_type = type;
     ast->method_params = params;
     ast->body = body;
-    ast->const_method = const_method;
+    ast->flags = flags;
     return ast;
 }
 
@@ -185,7 +185,7 @@ ref_ast_t *ref_pointer(scan_t *scan, where_t where, ref_ast_t *type)
     return ast;
 }
 
-ref_ast_t *ref_name(scan_t *scan, where_t where, char *ident)
+ref_ast_t *ref_name(scan_t *scan, where_t where, const char *ident)
 {
     ref_ast_t *ast = ref_ast_new(scan, where, eAstName);
     ast->ident = ident;
@@ -195,14 +195,26 @@ ref_ast_t *ref_name(scan_t *scan, where_t where, char *ident)
 ref_ast_t *ref_variant(scan_t *scan, where_t where, char *name, ref_ast_t *underlying, vector_t *cases)
 {
     ref_ast_t *ast = ref_ast_decl(scan, where, eAstVariant, name);
-    ast->underlying = underlying;
-    ast->cases = cases;
+    ast->parent = underlying;
+    ast->methods = &kEmptyVector;
     ast->default_case = NULL;
-
     size_t len = vector_len(cases);
+    vector_t *case_list = vector_new(len, scan_get_arena(scan));
+    vector_t *method_list = vector_new(len, scan_get_arena(scan));
+
     for (size_t i = 0; i < len; i++)
     {
         ref_ast_t *decl = vector_get(cases, i);
+        if (decl->kind == eAstMethod)
+        {
+            vector_push(&method_list, decl);
+            continue;
+        }
+
+        CTASSERTF(decl->kind == eAstCase, "variant '%s' contains non-case/method decl", name);
+
+        vector_push(&case_list, decl);
+
         if (!decl->is_default) continue;
 
         if (ast->default_case != NULL)
@@ -216,6 +228,9 @@ ref_ast_t *ref_variant(scan_t *scan, where_t where, char *name, ref_ast_t *under
             ast->default_case = decl;
         }
     }
+
+    ast->cases = case_list;
+    ast->methods = method_list;
 
     return ast;
 }
@@ -272,18 +287,10 @@ void ref_set_attribs(ref_ast_t *ast, vector_t *attributes)
     ast->attributes = attributes;
 }
 
-void ref_set_export(ref_ast_t *ast, bool exported)
+void ref_set_flags(ref_ast_t *ast, ref_flags_t flags)
 {
     CTASSERT(ast != NULL);
-
-    if (exported)
-    {
-        ast->flags |= eDeclExported;
-    }
-    else
-    {
-        ast->flags &= ~eDeclExported;
-    }
+    ast->flags = flags;
 }
 
 ref_ast_t *ref_attrib_transient(scan_t *scan, where_t where)

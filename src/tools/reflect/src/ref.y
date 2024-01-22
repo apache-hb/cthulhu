@@ -31,6 +31,7 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
 
     ref_layout_t layout;
     ref_param_t param;
+    ref_flags_t flags;
 
     text_t string;
     bool boolean;
@@ -47,7 +48,6 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     opt_assign
 
     expr
-    underlying
     variant_decl
     case_item
     struct_decl
@@ -73,6 +73,7 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     import
     case_item_inner
     case_value
+    method_decl
 
 %type<vector>
     path
@@ -92,13 +93,10 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
 %type<typevec> string_list
 %type<param> passing
 %type<layout> layout_types
+%type<flags> opt_decl_flags_seq decl_flags_seq decl_flag
 
 %type<ident>
     opt_api
-
-%type<boolean>
-    opt_export
-    opt_const
 
 %token<ident> TOK_IDENT "identifier"
 %token<integer> TOK_INTEGER "integer literal"
@@ -197,6 +195,7 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     TOK_FACADE "facade"
     TOK_RENAME "rename"
     TOK_API "api"
+    TOK_INTERNAL "internal"
 
     TOK_TRUE "true"
     TOK_FALSE "false"
@@ -235,11 +234,25 @@ decl_seq: decl { $$ = vector_init($1, BISON_ARENA(x)); }
     | decl_seq decl { vector_push(&$1, $2); $$ = $1; }
     ;
 
-decl: opt_attrib_seq opt_export decl_body {
+decl: opt_attrib_seq opt_decl_flags_seq decl_body {
         ref_set_attribs($3, $1);
-        ref_set_export($3, $2);
+        ref_set_flags($3, $2);
         $$ = $3;
     }
+    ;
+
+opt_decl_flags_seq: %empty { $$ = eDeclNone; }
+    | decl_flags_seq { $$ = $1; }
+    ;
+
+decl_flags_seq: decl_flag { $$ = $1; }
+    | decl_flags_seq decl_flag { $$ = $1 | $2; }
+    ;
+
+decl_flag: TOK_VIRTUAL { $$ = eDeclVirtual; }
+    | TOK_SEALED { $$ = eDeclSealed; }
+    | TOK_EXPORT { $$ = eDeclExported; }
+    | TOK_CONST { $$ = eDeclConst; }
     ;
 
 decl_body: class_decl { $$ = $1; }
@@ -254,7 +267,7 @@ opt_inherit: %empty { $$ = NULL; }
 struct_decl: TOK_STRUCT TOK_IDENT opt_tparams opt_inherit TOK_LBRACE class_body_seq TOK_RBRACE { $$ = ref_struct(x, @$, $2, $3, $4, $6); }
     ;
 
-variant_decl: TOK_VARIANT TOK_IDENT underlying TOK_LBRACE case_seq TOK_RBRACE { $$ = ref_variant(x, @$, $2, $3, $5); }
+variant_decl: TOK_VARIANT TOK_IDENT opt_inherit TOK_LBRACE case_seq TOK_RBRACE { $$ = ref_variant(x, @$, $2, $3, $5); }
     ;
 
 case_seq: case_item { $$ = vector_init($1, BISON_ARENA(x)); }
@@ -266,13 +279,11 @@ case_item: opt_attrib_seq case_item_inner { ref_set_attribs($2, $1); $$ = $2; }
 
 case_item_inner: TOK_CASE TOK_IDENT TOK_ASSIGN case_value { $$ = ref_case(x, @$, $2, $4, false); }
     | TOK_DEFAULT TOK_IDENT TOK_ASSIGN case_value { $$ = ref_case(x, @$, $2, $4, true); }
+    | opt_decl_flags_seq method_decl TOK_SEMICOLON { ref_set_flags($2, $1); $$ = $2; }
     ;
 
 case_value: TOK_INTEGER { $$ = ref_integer(x, @$, $1); }
     | TOK_OPAQUE TOK_LPAREN TOK_IDENT TOK_RPAREN { $$ = ref_name(x, @$, $3); }
-    ;
-
-underlying: TOK_COLON type { $$ = $2; }
     ;
 
 class_decl: TOK_CLASS TOK_IDENT opt_tparams opt_inherit TOK_LBRACE class_body_seq TOK_RBRACE { $$ = ref_class(x, @$, $2, $3, $4, $6); }
@@ -298,11 +309,10 @@ class_body_item: privacy_decl { $$ = $1; }
     ;
 
 class_body_inner: TOK_IDENT TOK_COLON type opt_assign { $$ = ref_field(x, @$, $1, $3, $4); }
-    | opt_const TOK_DEF TOK_IDENT opt_params opt_return_type opt_assign { $$ = ref_method(x, @$, $1, $3, $4, $5, $6); }
+    | opt_decl_flags_seq method_decl { ref_set_flags($2, $1); $$ = $2; }
     ;
 
-opt_const: %empty { $$ = false; }
-    | TOK_CONST { $$ = true; }
+method_decl: TOK_DEF TOK_IDENT opt_params opt_return_type opt_assign { $$ = ref_method(x, @$, eDeclNone, $2, $3, $4, $5); }
     ;
 
 opt_return_type: %empty { $$ = NULL; }
@@ -331,10 +341,6 @@ privacy_decl: TOK_PRIVATE TOK_COLON { $$ = ref_privacy(x, @$, ePrivacyPrivate); 
     | TOK_PUBLIC TOK_COLON { $$ = ref_privacy(x, @$, ePrivacyPublic); }
     ;
 
-opt_export: %empty { $$ = false; }
-    | TOK_EXPORT { $$ = true; }
-    ;
-
 opt_assign: %empty { $$ = NULL; }
     | TOK_ASSIGN expr { $$ = $2; }
     ;
@@ -344,6 +350,7 @@ type: TOK_IDENT { $$ = ref_name(x, @$, $1); }
     | TOK_MUL type { $$ = ref_pointer(x, @$, $2); }
     | TOK_OPAQUE TOK_LPAREN TOK_STRING TOK_RPAREN { $$ = ref_opaque_text(x, @$, $3); }
     | TOK_OPAQUE TOK_LPAREN TOK_IDENT TOK_RPAREN { $$ = ref_opaque(x, @$, $3); }
+    | TOK_CONST TOK_LT type TOK_GT { $$ = ref_instance(x, @$, ref_name(x, @$, "const"), vector_init($3, BISON_ARENA(x))); }
     ;
 
 type_list: type { $$ = vector_init($1, BISON_ARENA(x)); }
@@ -379,7 +386,7 @@ attrib: TOK_TRANSIENT { $$ = ref_attrib_transient(x, @$); }
     | TOK_RENAME TOK_LPAREN TOK_IDENT TOK_RPAREN { $$ = ref_attrib_rename(x, @$, $3); }
     ;
 
-layout_types: TOK_OPTIMAL { $$ = eLayoutOptimal; }
+layout_types: TOK_INTERNAL { $$ = eLayoutOptimal; }
     | TOK_PACKED { $$ = eLayoutPacked; }
     | TOK_SYSTEM { $$ = eLayoutSystem; }
     | TOK_CBUFFER { $$ = eLayoutCBuffer; }

@@ -359,11 +359,36 @@ namespace refl {
         }
     };
 
-    class TemplateInstance : public Type {
+    class ConstType : public Type {
+        const Type *m_underlying = nullptr;
+
     public:
-        TemplateInstance(ref_ast_t *ast)
-            : Type(ast->node, eKindTypeInstance, ast->name)
+        ConstType(const node_t *node, const Type *underlying)
+            : Type(node, underlying->get_kind(), underlying->get_name())
+            , m_underlying(underlying)
         { }
+
+        void resolve(Sema&) override { finish_resolve(); }
+
+        std::string get_cxx_name(const char *name) const override {
+            auto inner = std::format("const {}", m_underlying->get_cxx_name(nullptr));
+            return (name == nullptr) ? inner : std::format("{} {}", inner, name);
+        }
+    };
+
+    class TemplateConst : public TemplateType {
+        void init() { add_param("T"); }
+    public:
+        TemplateConst(const char *name)
+            : TemplateType(node_builtin(), name)
+        { init(); }
+
+        void resolve(Sema&) override { finish_resolve(); }
+
+        Type *instantiate(Sema&, std::span<Type*> args) const override {
+            CTASSERT(args.size() == 1);
+            return new ConstType(get_node(), args[0]);
+        }
     };
 
     class IntType : public Type {
@@ -509,6 +534,12 @@ namespace refl {
         void emit_thunk(out_t& out) const;
         void emit_method(out_t& out) const;
 
+        void resolve_deps(DeclDepends& deps) const {
+            if (m_return) deps.add(m_return);
+            for (auto param : m_params)
+                deps.add(param->get_type());
+        }
+
         bool should_emit_thunk() const { return m_thunk; }
 
         ref_privacy_t get_privacy() const { return m_ast->privacy; }
@@ -530,92 +561,96 @@ namespace refl {
         std::string get_value() const;
     };
 
-    class Class final : public Type {
-        ref_ast_t *m_ast = nullptr;
+    class RecordType : public Type {
+        const char *m_record = nullptr;
 
+    protected:
+        ref_ast_t *m_ast = nullptr;
+        std::vector<Method*> m_methods;
         Type *m_parent = nullptr;
 
-        std::vector<Field*> m_fields;
-        std::vector<Method*> m_methods;
+        RecordType(ref_ast_t *ast, TreeKind kind, const char *record)
+            : Type(ast->node, kind, ast->name)
+            , m_record(record)
+            , m_ast(ast)
+        { }
+
+        ref_privacy_t emit_methods(out_t& out, ref_privacy_t privacy) const;
+
+        void emit_begin_record(out_t& out, bool write_parent = true) const;
+        void emit_ctors(out_t& out) const;
+        ref_privacy_t emit_dtors(out_t& out, ref_privacy_t privacy) const;
+
+        void emit_end_record(out_t& out) const;
+        ref_privacy_t emit_fields(out_t& out, const std::vector<Field*>& fields, ref_privacy_t privacy) const;
 
     public:
-        Class(ref_ast_t *ast);
-
         void resolve(Sema& sema) override;
 
         void emit_proto(out_t& out) const override;
 
-        std::string get_cxx_name(const char *name) const override
-        {
+        std::string get_cxx_name(const char *name) const override {
             return (name == nullptr) ? get_name() : std::format("{} {}", get_name(), name);
         }
+
+        void get_deps(DeclDepends& deps) const override {
+            if (m_parent != nullptr)
+                deps.add(m_parent);
+
+            for (auto method : m_methods)
+                method->resolve_deps(deps);
+        }
+    };
+
+    class Class final : public RecordType {
+        std::vector<Field*> m_fields;
+    public:
+        Class(ref_ast_t *ast);
+
+        void resolve(Sema& sema) override;
 
         void emit_impl(out_t& out) const override;
 
         void emit_reflection(Sema& sema, out_t& out) const override;
 
         void get_deps(DeclDepends& deps) const override {
-            if (m_parent != nullptr)
-                deps.add(m_parent);
-
+            RecordType::get_deps(deps);
             for (auto field : m_fields)
                 deps.add(field->get_type());
         }
     };
 
-    class Struct final : public Type {
-        ref_ast_t *m_ast = nullptr;
-
+    class Struct final : public RecordType {
         std::vector<Field*> m_fields;
     public:
         Struct(ref_ast_t *ast);
 
         void resolve(Sema& sema) override;
 
-        void emit_proto(out_t& out) const override;
-
-        std::string get_cxx_name(const char *name) const override
-        {
-            return (name == nullptr) ? get_name() : std::format("{} {}", get_name(), name);
-        }
-
         void emit_impl(out_t& out) const override;
 
         void emit_reflection(Sema& sema, out_t& out) const override;
 
         void get_deps(DeclDepends& deps) const override {
+            RecordType::get_deps(deps);
             for (auto field : m_fields)
                 deps.add(field->get_type());
         }
     };
 
-    class Variant : public Type {
-        ref_ast_t *m_ast = nullptr;
-
-        Type *m_underlying = nullptr;
-
+    class Variant : public RecordType {
         std::vector<Case*> m_cases;
 
         Case *m_default_case = nullptr;
     public:
         Variant(ref_ast_t *ast);
 
-        std::string get_cxx_name(const char *name) const override {
-            return (name == nullptr) ? get_name() : std::format("{} {}", get_name(), name);
-        }
-
         void resolve(Sema& sema) override;
 
-        void emit_proto(out_t& out) const override;
         void emit_impl(out_t& out) const override;
         void emit_facade(out_t& out) const;
 
         void emit_reflection(Sema& sema, out_t& out) const override;
-
-        void get_deps(DeclDepends& deps) const override {
-            if (m_underlying != nullptr)
-                deps.add(m_underlying);
-        }
 
         size_t max_tostring() const;
 

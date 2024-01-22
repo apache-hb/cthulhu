@@ -97,11 +97,9 @@ typedef enum ref_layout_t {
 typedef enum ref_flags_t {
     eDeclNone = 0,
     eDeclExported = 1 << 0,
-    eDeclTransient = 1 << 1,
+    eDeclSealed = 1 << 1,
     eDeclVirtual = 1 << 2,
     eDeclConst = 1 << 3,
-    eDeclBitFlags = 1 << 4,
-    eDeclDefault = 1 << 5,
 } ref_flags_t;
 
 typedef enum ref_param_t {
@@ -121,7 +119,7 @@ typedef struct ref_ast_t {
         mpz_t digit;
 
         /* eAstIdent, eAstName */
-        char *ident;
+        const char *ident;
 
         /* eAstAttribExternal */
         bool c_enum;
@@ -187,15 +185,17 @@ typedef struct ref_ast_t {
                 /* eAstClass, eAstStruct */
                 struct {
                     ref_ast_t *parent;
-                    vector_t *fields;
                     vector_t *methods;
-                };
 
-                /* eAstVariant */
-                struct {
-                    ref_ast_t *underlying;
-                    ref_ast_t *default_case;
-                    vector_t *cases;
+                    union {
+                        vector_t *fields;
+
+                        /* eAstVariant */
+                        struct {
+                            ref_ast_t *default_case;
+                            vector_t *cases;
+                        };
+                    };
                 };
 
                 /* eAstField, eAstConst, eAstParam */
@@ -210,7 +210,6 @@ typedef struct ref_ast_t {
                     ref_ast_t *return_type;
                     vector_t *method_params;
                     ref_ast_t *body;
-                    bool const_method;
                 };
 
                 /* eAstCase */
@@ -253,10 +252,10 @@ ref_ast_t *ref_struct(scan_t *scan, where_t where, char *name, vector_t *params,
 
 ref_ast_t *ref_privacy(scan_t *scan, where_t where, ref_privacy_t privacy);
 
-ref_ast_t *ref_name(scan_t *scan, where_t where, char *ident);
+ref_ast_t *ref_name(scan_t *scan, where_t where, const char *ident);
 
 ref_ast_t *ref_field(scan_t *scan, where_t where, char *name, ref_ast_t *type, ref_ast_t *value);
-ref_ast_t *ref_method(scan_t *scan, where_t where, bool const_method, char *name, vector_t *params, ref_ast_t *type, ref_ast_t *body);
+ref_ast_t *ref_method(scan_t *scan, where_t where, ref_flags_t flags, char *name, vector_t *params, ref_ast_t *type, ref_ast_t *body);
 ref_ast_t *ref_param(scan_t *scan, where_t where, char *name, ref_param_t param, ref_ast_t *type);
 
 ref_ast_t *ref_instance(scan_t *scan, where_t where, ref_ast_t *type, vector_t *params);
@@ -292,6 +291,6 @@ ref_ast_t *ref_attrib_rename(scan_t *scan, where_t where, char *ident);
 ref_ast_t *ref_attrib_assert(scan_t *scan, where_t where, typevec_t *before, typevec_t *after, typevec_t *always);
 
 void ref_set_attribs(ref_ast_t *ast, vector_t *attributes);
-void ref_set_export(ref_ast_t *ast, bool exported);
+void ref_set_flags(ref_ast_t *ast, ref_flags_t flags);
 
 END_API
