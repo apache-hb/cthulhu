@@ -433,15 +433,15 @@ void Method::emit_impl(out_t& out) const {
 
     if (m_thunk)
     {
-        out.writeln("%s: %s(%s) %s{", privacy, it, params.c_str(), is_const ? "const " : "");
+        out.writeln("%s: %s(%.*s) %s{", privacy, it, (int)params.size(), params.c_str(), is_const ? "const " : "");
         out.enter();
-        out.writeln("return %s(%s);", inner, args.c_str());
+        out.writeln("return %s(%.*s);", inner, (int)args.size(), args.c_str());
         out.leave();
         out.writeln("}");
     }
     else
     {
-        out.writeln("%s: %s(%s)%s;", privacy, it, params.c_str(), is_const ? " const" : "");
+        out.writeln("%s: %s(%.*s)%s;", privacy, it, (int)params.size(), params.c_str(), is_const ? " const" : "");
     }
 }
 
@@ -470,15 +470,15 @@ void Method::emit_method(out_t& out) const {
 
     if (m_thunk)
     {
-        out.writeln("%s%s(%s) %s{", virt_str, it, params.c_str(), is_const ? "const " : "");
+        out.writeln("%s%s(%.*s) %s{", virt_str, it, (int)params.size(), params.c_str(), is_const ? "const " : "");
         out.enter();
-        out.writeln("return %s(%s);", inner, args.c_str());
+        out.writeln("return %s(%.*s);", inner, (int)args.size(), args.c_str());
         out.leave();
         out.writeln("}");
     }
     else
     {
-        out.writeln("%s%s(%s)%s;", virt_str, it, params.c_str(), is_const ? " const" : "");
+        out.writeln("%s%s(%.*s)%s;", virt_str, it, (int)params.size(), params.c_str(), is_const ? " const" : "");
     }
 }
 
@@ -495,7 +495,7 @@ void Method::emit_thunk(out_t& out) const {
     });
 
 
-    out.writeln("%s(%s);", it, params.c_str());
+    out.writeln("%s(%.*s);", it, (int)params.size(), params.c_str());
 }
 
 void RecordType::resolve(Sema& sema)
@@ -1001,7 +1001,7 @@ void Variant::emit_impl(out_t& out) const
             flags += refl_fmt("e%s", c->get_name());
         });
         out.writeln("static constexpr %s none() { return %s((inner_t)0); };", get_name(), get_name());
-        out.writeln("static constexpr %s mask() { return %s(%s); };", get_name(), get_name(), flags.c_str());
+        out.writeln("static constexpr %s mask() { return %s(%.*s); };", get_name(), get_name(), (int)flags.size(), flags.c_str());
         // emit bitwise operators
         out.nl();
         out.writeln("constexpr %s operator~() const { return ~m_value; }", get_name());
