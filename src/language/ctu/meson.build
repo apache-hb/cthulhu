@@ -19,6 +19,7 @@ src = [
 ]
 
 ctu = library('ctu', src,
+    build_by_default : false,
     dependencies : [
         base, memory, std, runtime,
         interop, scan, notify, tree,
