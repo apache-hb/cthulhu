@@ -66,7 +66,7 @@ lang_cpp = get_option('lang_cpp').disable_auto_if(meson.is_subproject())
 # all the codegen targets
 target_cfamily = get_option('target_cfamily').disable_auto_if(meson.is_subproject())
 target_debug = get_option('target_debug').disable_auto_if(meson.is_subproject())
-default_target = get_option('default_target').disable_auto_if(meson.is_subproject())
+default_target = get_option('default_target')
 
 # tools like this are user facing, so dont disable them in release mode
 tool_diagnostic = get_option('tool_diagnostic').disable_auto_if(meson.is_subproject())
