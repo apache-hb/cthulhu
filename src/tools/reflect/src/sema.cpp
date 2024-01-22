@@ -770,7 +770,7 @@ void Field::emit_field(out_t& out) const
 
 void Class::emit_impl(out_t& out) const
 {
-    if (get_attrib(m_ast->attributes, eAstAttribExternal))
+    if (get_attrib(m_ast->attributes, eAstAttribExternal) || get_attrib(m_ast->attributes, eAstAttribFacade))
         return;
 
     emit_begin_record(out);
@@ -782,7 +782,7 @@ void Class::emit_impl(out_t& out) const
 
 void Struct::emit_impl(out_t& out) const
 {
-    if (get_attrib(m_ast->attributes, eAstAttribExternal))
+    if (get_attrib(m_ast->attributes, eAstAttribExternal) || get_attrib(m_ast->attributes, eAstAttribFacade))
         return;
 
     emit_begin_record(out);
@@ -834,11 +834,12 @@ void Variant::emit_impl(out_t& out) const
     bool is_iterator = get_attrib(m_ast->attributes, eAstAttribIterator) != nullptr;
 
     const char *ty = nullptr;
+    bool is_facade = get_attrib(m_ast->attributes, eAstAttribFacade) != nullptr;
     out.writeln("namespace impl {");
     out.enter();
     if (m_parent)
     {
-        const char* underlying = m_parent->get_cxx_name(nullptr);
+        const char *underlying = m_parent->get_cxx_name(nullptr);
         const char *opaque = m_parent->get_opaque_name();
         if (opaque)
         {
@@ -886,8 +887,16 @@ void Variant::emit_impl(out_t& out) const
     out.enter();
     out.writeln("using underlying_t = std::underlying_type_t<impl::%s>;", get_name());
     out.writeln("using inner_t = impl::%s;", get_name());
+    if (is_facade)
+    {
+        out.writeln("using facade_t = impl::%s;", m_parent->get_opaque_name());
+    }
     out.writeln("using Underlying = underlying_t;");
     out.writeln("using Inner = inner_t;");
+    if (is_facade)
+    {
+        out.writeln("using Facade = facade_t;");
+    }
     out.nl();
     out.leave();
     out.writeln("private:");
@@ -959,6 +968,10 @@ void Variant::emit_impl(out_t& out) const
 
     out.writeln("constexpr underlying_t as_integral() const { return (underlying_t)m_value; }");
     out.writeln("constexpr inner_t as_enum() const { return m_value; }");
+    if (is_facade)
+    {
+        out.writeln("constexpr facade_t as_facade() const { return (facade_t)m_value; }");
+    }
 
     out.nl();
     out.writeln("constexpr bool operator==(inner_t other) const { return m_value == other; }");
