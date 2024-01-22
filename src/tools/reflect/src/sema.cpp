@@ -835,13 +835,13 @@ void Variant::emit_impl(out_t& out) const
 
     const char *ty = nullptr;
     bool is_facade = get_attrib(m_ast->attributes, eAstAttribFacade) != nullptr;
+    CTASSERTF(m_parent != nullptr, "facade enum %s must have a parent", get_name());
+
     out.writeln("namespace impl {");
     out.enter();
     if (m_parent)
     {
-        const char *underlying = m_parent->get_cxx_name(nullptr);
-        const char *opaque = m_parent->get_opaque_name();
-        if (opaque)
+        if (const char *opaque = m_parent->get_opaque_name())
         {
             ty = refl_fmt("%s_underlying_t", get_name());
             out.writeln("using %s_underlying_t = std::underlying_type_t<%s>;", get_name(), opaque);
@@ -849,6 +849,7 @@ void Variant::emit_impl(out_t& out) const
         }
         else
         {
+            const char *underlying = m_parent->get_cxx_name(nullptr);
             ty = underlying;
             out.writeln("enum class %s : %s {", get_name(), underlying);
         }
@@ -889,7 +890,14 @@ void Variant::emit_impl(out_t& out) const
     out.writeln("using inner_t = impl::%s;", get_name());
     if (is_facade)
     {
-        out.writeln("using facade_t = impl::%s;", m_parent->get_cxx_name(nullptr));
+        if (const char *opaque = m_parent->get_opaque_name())
+        {
+            out.writeln("using facade_t = %s;", opaque);
+        }
+        else
+        {
+            out.writeln("using facade_t = impl::%s;", m_parent->get_cxx_name(nullptr));
+        }
     }
     out.writeln("using Underlying = underlying_t;");
     out.writeln("using Inner = inner_t;");
