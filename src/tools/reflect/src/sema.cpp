@@ -867,7 +867,7 @@ void Variant::emit_impl(out_t& out) const
         out.enter();
         out.writeln("constexpr Iterator(inner_t value) : m_value(value) {{ }}");
         out.writeln("constexpr Iterator& operator++() {{ m_value = (inner_t)((underlying_t)m_value + 1); return *this; }}");
-        out.writeln("constexpr Iterator operator++(int) {{ Iterator it = *this; ++(*this); return it; }}");
+        out.writeln("constexpr const Iterator operator++(int) {{ Iterator it = *this; ++(*this); return it; }}");
         out.writeln("constexpr bool operator==(const Iterator& other) const {{ return m_value == other.m_value; }}");
         out.writeln("constexpr bool operator!=(const Iterator& other) const {{ return m_value != other.m_value; }}");
         out.writeln("constexpr {} operator*() const {{ return m_value; }}", get_name());
@@ -914,8 +914,11 @@ void Variant::emit_impl(out_t& out) const
         out.writeln("switch (m_value) {{");
         for (auto c : m_cases)
         {
-            out.writeln("case e{}: return true;", c->get_name());
+            out.writeln("case e{}:", c->get_name());
         }
+        out.enter();
+        out.writeln("return true;");
+        out.leave();
         out.writeln("default: return false;");
         out.writeln("}}");
         out.leave();
