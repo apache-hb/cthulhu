@@ -202,11 +202,13 @@ ref_ast_t *ref_variant(scan_t *scan, where_t where, char *name, ref_ast_t *under
     vector_t *case_list = vector_new(len, scan_get_arena(scan));
     vector_t *method_list = vector_new(len, scan_get_arena(scan));
 
+    ref_privacy_t privacy = ePrivacyPublic;
     for (size_t i = 0; i < len; i++)
     {
         ref_ast_t *decl = vector_get(cases, i);
         if (decl->kind == eAstMethod)
         {
+            decl->privacy = privacy;
             vector_push(&method_list, decl);
             continue;
         }

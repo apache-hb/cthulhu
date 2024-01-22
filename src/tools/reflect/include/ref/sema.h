@@ -2,16 +2,16 @@
 
 #include "arena/arena.h"
 #include "base/panic.h"
+#include "base/util.h"
 #include "io/io.h"
 #include "memory/memory.h"
 #include "notify/notify.h"
 #include "ref/ast.h"
 #include "scan/node.h"
 #include "std/map.h"
+#include "std/str.h"
+#include "std/typed/vector.h"
 #include "std/vector.h"
-
-#include <format>
-#include <sstream>
 
 typedef struct logger_t logger_t;
 typedef struct vector_t vector_t;
@@ -33,10 +33,13 @@ typedef struct ref_emit_t
 
 namespace refl { class Sema; }
 
+char *refl_fmt(const char *fmt, auto&&... args) {
+    return ::str_format(get_global_arena(), fmt, args...);
+}
+
 template<typename T>
 class Vector {
     vector_t *m_vec;
-    static_assert(std::is_pointer_v<T>, "need pointer data");
 
 public:
     Vector(size_t size, arena_t *arena)
@@ -78,12 +81,39 @@ public:
 
 using vector_str_t = Vector<const char*>;
 
+class String {
+    typevec_t *m_data;
+
+public:
+    String()
+        : m_data(typevec_new(sizeof(char), 256, get_global_arena()))
+    { }
+
+    const char *c_str() const {
+        return (const char*)typevec_data(m_data);
+    }
+
+    size_t size() const {
+        return typevec_len(m_data);
+    }
+
+    void append(const char *str) {
+        typevec_append(m_data, str, ctu_strlen(str));
+    }
+
+    String& operator+=(const char *str) {
+        append(str);
+        return *this;
+    }
+
+    bool empty() const {
+        return size() == 0;
+    }
+};
+
 template<typename K, typename V>
 class Map {
     map_t *m_map;
-
-    static_assert(std::is_same_v<K, const char*>, "need string key");
-    static_assert(std::is_pointer_v<V>, "need pointer data");
 
 public:
     Map(size_t size, arena_t *arena)
@@ -115,7 +145,7 @@ struct out_t
 {
     refl::Sema *sema;
 
-    std::stringstream m_stream;
+    typevec_t *m_data = typevec_new(sizeof(char), 0x1000, get_global_arena());
     size_t m_depth = 0;
 
     out_t(refl::Sema *i)
@@ -124,8 +154,7 @@ struct out_t
 
     void dump(io_t *io)
     {
-        auto str = m_stream.str();
-        io_write(io, str.data(), str.size());
+        io_write(io, (void*)typevec_data(m_data), typevec_len(m_data));
     }
 
     void enter() { m_depth += 1; }
@@ -133,24 +162,25 @@ struct out_t
 
     void indent()
     {
-        for (size_t i = 0; i < m_depth; i++) { m_stream << "    "; }
+        for (size_t i = 0; i < m_depth; i++) { typevec_append(m_data, "    ", 4); }
     }
 
     void writeln(const char *fmt, auto&&... args)
     {
         indent();
-        m_stream << std::vformat(fmt, std::make_format_args(args...));
+        write(fmt, args...);
         nl();
     }
 
     void write(const char *fmt, auto&&... args)
     {
-        m_stream << std::vformat(fmt, std::make_format_args(args...));
+        auto it = text_format(get_global_arena(), fmt, args...);
+        typevec_append(m_data, it.text, it.length);
     }
 
     void nl()
     {
-        m_stream << "\n";
+        typevec_push(m_data, "\n");
     }
 };
 
@@ -337,7 +367,7 @@ namespace refl {
             : Decl(node, kind, name)
         { }
 
-        virtual std::string get_cxx_name(const char *) const { return ""; }
+        virtual const char* get_cxx_name(const char *) const { return ""; }
 
         bool is_type() const override { return true; }
         virtual const char *get_opaque_name() const { return nullptr; }
@@ -351,8 +381,8 @@ namespace refl {
 
         void resolve(Sema&) override { finish_resolve(); }
 
-        std::string get_cxx_name(const char *name) const override {
-            return (name == nullptr) ? get_name() : std::format("{} {}", get_name(), name);
+        const char* get_cxx_name(const char *name) const override {
+            return (name == nullptr) ? get_name() : refl_fmt("%s %s", get_name(), name);
         }
 
         const char *get_opaque_name() const override { return get_name(); }
@@ -377,10 +407,10 @@ namespace refl {
 
         void resolve(Sema&) override { finish_resolve(); }
 
-        std::string get_cxx_name(const char *name) const override {
+        const char* get_cxx_name(const char *name) const override {
             auto inner =  m_pointee->get_cxx_name(nullptr);
-            return (name == nullptr) ? std::format("{}*", inner)
-                                     : std::format("{} *{}", inner, name);
+            return (name == nullptr) ? refl_fmt("%s*", inner)
+                                     : refl_fmt("%s *%s", inner, name);
         }
     };
 
@@ -417,9 +447,9 @@ namespace refl {
 
         void resolve(Sema&) override { finish_resolve(); }
 
-        std::string get_cxx_name(const char *name) const override {
-            auto inner = std::format("std::atomic<{}>", m_underlying->get_cxx_name(nullptr));
-            return (name == nullptr) ? inner : std::format("{} {}", inner, name);
+        const char* get_cxx_name(const char *name) const override {
+            auto inner = refl_fmt("std::atomic<%s>", m_underlying->get_cxx_name(nullptr));
+            return (name == nullptr) ? inner : refl_fmt("%s %s", inner, name);
         }
     };
 
@@ -449,9 +479,9 @@ namespace refl {
 
         void resolve(Sema&) override { finish_resolve(); }
 
-        std::string get_cxx_name(const char *name) const override {
-            auto inner = std::format("const {}", m_underlying->get_cxx_name(nullptr));
-            return (name == nullptr) ? inner : std::format("{} {}", inner, name);
+        const char* get_cxx_name(const char *name) const override {
+            auto inner = refl_fmt("const %s", m_underlying->get_cxx_name(nullptr));
+            return (name == nullptr) ? inner : refl_fmt("%s %s", inner, name);
         }
     };
 
@@ -483,7 +513,7 @@ namespace refl {
 
         void resolve(Sema&) override { finish_resolve(); }
 
-        std::string get_cxx_name(const char *name) const override;
+        const char* get_cxx_name(const char *name) const override;
 
         digit_t get_digit() const { return m_digit; }
         sign_t get_sign() const { return m_sign; }
@@ -495,9 +525,9 @@ namespace refl {
             : Type(node_builtin(), eKindTypeFloat, name)
         { }
 
-        std::string get_cxx_name(const char *name) const override
+        const char* get_cxx_name(const char *name) const override
         {
-            return (name == nullptr) ? "float" : std::format("float {}", name);
+            return (name == nullptr) ? "float" : refl_fmt("float %s", name);
         }
 
         void resolve(Sema&) override { finish_resolve(); }
@@ -509,9 +539,9 @@ namespace refl {
             : Type(node_builtin(), eKindTypeBool, name)
         { }
 
-        std::string get_cxx_name(const char *name) const override
+        const char* get_cxx_name(const char *name) const override
         {
-            return (name == nullptr) ? "bool" : std::format("bool {}", name);
+            return (name == nullptr) ? "bool" : refl_fmt("bool %s", name);
         }
 
         void resolve(Sema&) override { finish_resolve(); }
@@ -525,9 +555,9 @@ namespace refl {
 
         void resolve(Sema&) override { finish_resolve(); }
 
-        std::string get_cxx_name(const char *name) const override
+        const char* get_cxx_name(const char *name) const override
         {
-            return (name == nullptr) ? "const char*" : std::format("const char *{}", name);
+            return (name == nullptr) ? "const char*" : refl_fmt("const char *%s", name);
         }
     };
 
@@ -537,9 +567,9 @@ namespace refl {
             : Type(node_builtin(), eKindTypeVoid, name)
         { }
 
-        std::string get_cxx_name(const char *name) const override
+        const char* get_cxx_name(const char *name) const override
         {
-            return (name == nullptr) ? "void" : std::format("void {}", name);
+            return (name == nullptr) ? "void" : refl_fmt("void %s", name);
         }
 
         void resolve(Sema&) override { finish_resolve(); }
@@ -551,9 +581,9 @@ namespace refl {
             : Type(node_builtin(), eKindTypeMemory, name)
         { }
 
-        std::string get_cxx_name(const char *name) const override
+        const char* get_cxx_name(const char *name) const override
         {
-            return (name == nullptr) ? "void*" : std::format("void *{}", name);
+            return (name == nullptr) ? "void*" : refl_fmt("void *%s", name);
         }
 
         void resolve(Sema&) override { finish_resolve(); }
@@ -636,7 +666,7 @@ namespace refl {
         void emit_value(out_t& out) const;
         void emit_case(out_t& out) const;
 
-        std::string get_value() const;
+        const char* get_value() const;
     };
 
     class RecordType : public Type {
@@ -667,8 +697,8 @@ namespace refl {
 
         void emit_proto(out_t& out) const override;
 
-        std::string get_cxx_name(const char *name) const override {
-            return (name == nullptr) ? get_name() : std::format("{} {}", get_name(), name);
+        const char* get_cxx_name(const char *name) const override {
+            return (name == nullptr) ? get_name() : refl_fmt("%s %s", get_name(), name);
         }
 
         void get_deps(DeclDepends& deps) const override {

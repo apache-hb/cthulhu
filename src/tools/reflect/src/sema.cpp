@@ -243,7 +243,7 @@ void Sema::emit_all(io_t *source, io_t *header, const char *file)
     // header preamble
     out_t h = this;
     h.writeln("#pragma once");
-    h.writeln("// Generated from '{}'", file);
+    h.writeln("// Generated from '%s'", file);
     h.writeln("// Dont edit this file, it will be overwritten on the next build");
     h.nl();
     h.writeln("#include \"reflect/reflect.h\"");
@@ -251,25 +251,25 @@ void Sema::emit_all(io_t *source, io_t *header, const char *file)
 
     // source preamble
     out_t s = this;
-    s.writeln("// Generated from '{}'", file);
+    s.writeln("// Generated from '%s'", file);
     s.writeln("// Dont edit this file, it will be overwritten on the next build");
     s.nl();
     char *base = str_filename(io_name(header), get_global_arena());
-    s.writeln("#include \"{}\"", base);
+    s.writeln("#include \"%s\"", base);
     s.nl();
 
     imports.foreach([&](auto fd) {
         if (fd[0] == '<')
         {
-            h.writeln("#include {}", fd);
+            h.writeln("#include %s", fd);
         }
         else
         {
-            h.writeln("#include \"{}\"", fd);
+            h.writeln("#include \"%s\"", fd);
         }
     });
 
-    h.writeln("namespace {} {{", m_namespace);
+    h.writeln("namespace %s {", m_namespace);
     h.enter();
 
     h.writeln("// prototypes");
@@ -294,10 +294,10 @@ void Sema::emit_all(io_t *source, io_t *header, const char *file)
     });
 
     h.leave();
-    h.writeln("}} // namespace {}", m_namespace);
+    h.writeln("} // namespace %s", m_namespace);
 
     h.nl();
-    h.writeln("namespace ctu {{");
+    h.writeln("namespace ctu {");
     h.enter();
     h.writeln("// reflection");
 
@@ -308,7 +308,7 @@ void Sema::emit_all(io_t *source, io_t *header, const char *file)
 
 
     h.leave();
-    h.writeln("}} // namespace ctu");
+    h.writeln("} // namespace ctu");
 
     h.dump(header);
     s.dump(source);
@@ -348,7 +348,7 @@ void Case::resolve(Sema&)
     finish_resolve();
 }
 
-std::string Case::get_value() const {
+const char* Case::get_value() const {
     CTASSERT(m_ast->value != nullptr);
     switch (m_ast->value->kind)
     {
@@ -412,8 +412,8 @@ static const char *get_privacy(ref_privacy_t privacy)
 void Method::emit_impl(out_t& out) const {
     Type *ret = m_return ? m_return->get_type() : new VoidType("void");
     auto it = ret->get_cxx_name(get_name());
-    std::string params;
-    std::string args;
+    String params;
+    String args;
     m_params.foreach([&](auto param) {
         if (!args.empty())
             args += ", ";
@@ -425,7 +425,7 @@ void Method::emit_impl(out_t& out) const {
 
     ref_ast_t *attrib = get_attrib(m_ast->attributes, eAstAttribCxxName);
 
-    std::string inner = attrib ? attrib->ident : std::format("impl_{}", get_name());
+    const char* inner = attrib ? attrib->ident : refl_fmt("impl_%s", get_name());
 
     const char *privacy = ::get_privacy(m_ast->privacy);
 
@@ -433,23 +433,23 @@ void Method::emit_impl(out_t& out) const {
 
     if (m_thunk)
     {
-        out.writeln("{}: {}({}) {}{{", privacy, it, params, is_const ? "const " : "");
+        out.writeln("%s: %s(%s) %s{", privacy, it, params.c_str(), is_const ? "const " : "");
         out.enter();
-        out.writeln("return {}({});", inner, args);
+        out.writeln("return %s(%s);", inner, args.c_str());
         out.leave();
-        out.writeln("}}");
+        out.writeln("}");
     }
     else
     {
-        out.writeln("{}: {}({}){};", privacy, it, params, is_const ? " const" : "");
+        out.writeln("%s: %s(%s)%s;", privacy, it, params.c_str(), is_const ? " const" : "");
     }
 }
 
 void Method::emit_method(out_t& out) const {
     Type *ret = m_return ? m_return->get_type() : new VoidType("void");
     auto it = ret->get_cxx_name(get_name());
-    std::string params;
-    std::string args;
+    String params;
+    String args;
     m_params.foreach([&](auto param) {
         if (!args.empty())
             args += ", ";
@@ -461,7 +461,7 @@ void Method::emit_method(out_t& out) const {
 
     ref_ast_t *attrib = get_attrib(m_ast->attributes, eAstAttribCxxName);
 
-    std::string inner = attrib ? attrib->ident : std::format("impl_{}", get_name());
+    const char* inner = attrib ? attrib->ident : refl_fmt("impl_%s", get_name());
 
     bool is_const = m_ast->flags & eDeclConst;
     bool is_virtual = m_ast->flags & eDeclVirtual;
@@ -470,36 +470,32 @@ void Method::emit_method(out_t& out) const {
 
     if (m_thunk)
     {
-        out.writeln("{}{}({}) {}{{", virt_str, it, params, is_const ? "const " : "");
+        out.writeln("%s%s(%s) %s{", virt_str, it, params.c_str(), is_const ? "const " : "");
         out.enter();
-        out.writeln("return {}({});", inner, args);
+        out.writeln("return %s(%s);", inner, args.c_str());
         out.leave();
-        out.writeln("}}");
+        out.writeln("}");
     }
     else
     {
-        out.writeln("{}{}({}){};", virt_str, it, params, is_const ? " const" : "");
+        out.writeln("%s%s(%s)%s;", virt_str, it, params.c_str(), is_const ? " const" : "");
     }
 }
 
 void Method::emit_thunk(out_t& out) const {
     Type *ret = m_return ? m_return->get_type() : new VoidType("void");
     ref_ast_t *attrib = get_attrib(m_ast->attributes, eAstAttribCxxName);
-    std::string inner = attrib ? attrib->ident : std::format("impl_{}", get_name());
-    auto it = ret->get_cxx_name(inner.c_str());
-    std::string params;
-    std::string args;
+    const char* inner = attrib ? attrib->ident : refl_fmt("impl_%s", get_name());
+    auto it = ret->get_cxx_name(inner);
+    String params;
     m_params.foreach([&](auto param) {
-        if (!args.empty())
-            args += ", ";
         if (!params.empty())
             params += ", ";
         params += param->get_type()->get_cxx_name(param->get_name());
-        args += param->get_name();
     });
 
 
-    out.writeln("{}({});", it, params);
+    out.writeln("%s(%s);", it, params.c_str());
 }
 
 void RecordType::resolve(Sema& sema)
@@ -526,7 +522,7 @@ void RecordType::emit_proto(out_t& out) const
 {
     if (get_attrib(m_ast->attributes, eAstAttribExternal) || get_attrib(m_ast->attributes, eAstAttribFacade))
         return;
-    out.writeln("{} {};", m_record, get_name());
+    out.writeln("%s %s;", m_record, get_name());
 }
 
 ref_privacy_t RecordType::emit_methods(out_t& out, ref_privacy_t privacy) const
@@ -538,7 +534,7 @@ ref_privacy_t RecordType::emit_methods(out_t& out, ref_privacy_t privacy) const
         {
             privacy = method->get_privacy();
             out.leave();
-            out.writeln("{}:", get_privacy(privacy));
+            out.writeln("%s:", get_privacy(privacy));
             out.enter();
         }
         method->emit_impl(out);
@@ -575,15 +571,15 @@ void RecordType::emit_begin_record(out_t& out, bool write_parent) const
     const char *fin = is_final ? " final " : " ";
     if (m_parent && write_parent)
     {
-        out.writeln("{} {}{}: public {} {{", m_record, get_name(), fin, m_parent->get_name());
+        out.writeln("%s %s%s: public %s {", m_record, get_name(), fin, m_parent->get_name());
     }
     else
     {
-        out.writeln("{} {}{}{{", m_record, get_name(), fin);
+        out.writeln("%s %s%s{", m_record, get_name(), fin);
     }
     out.enter();
 
-    out.writeln("friend class ctu::TypeInfo<{}>;", get_name());
+    out.writeln("friend class ctu::TypeInfo<%s>;", get_name());
 }
 
 void RecordType::emit_ctors(out_t&) const  {
@@ -600,11 +596,11 @@ ref_privacy_t RecordType::emit_dtors(out_t& out, ref_privacy_t privacy) const {
     {
         privacy = ePrivacyPublic;
         out.leave();
-        out.writeln("{}:", get_privacy(privacy));
+        out.writeln("%s:", get_privacy(privacy));
         out.enter();
     }
 
-    out.writeln("virtual ~{}() = default;", get_name());
+    out.writeln("virtual ~%s() = default;", get_name());
 
     return privacy;
 }
@@ -613,7 +609,7 @@ ref_privacy_t RecordType::emit_dtors(out_t& out, ref_privacy_t privacy) const {
 void RecordType::emit_end_record(out_t& out) const
 {
     out.leave();
-    out.writeln("}};");
+    out.writeln("};");
 }
 
 ref_privacy_t RecordType::emit_fields(out_t& out, const Vector<Field*>& fields, ref_privacy_t privacy) const
@@ -625,7 +621,7 @@ ref_privacy_t RecordType::emit_fields(out_t& out, const Vector<Field*>& fields, 
         {
             privacy = field->get_privacy();
             out.leave();
-            out.writeln("{}:", get_privacy(privacy));
+            out.writeln("%s:", get_privacy(privacy));
             out.enter();
         }
 
@@ -763,23 +759,23 @@ static const char *digit_cxx_name(digit_t digit, sign_t sign)
     }
 }
 
-std::string IntType::get_cxx_name(const char *name) const
+const char* IntType::get_cxx_name(const char *name) const
 {
     const char *type = digit_cxx_name(m_digit, m_sign);
-    return (name == nullptr) ? type : std::format("{} {}", type, name);
+    return (name == nullptr) ? type : refl_fmt("%s %s", type, name);
 }
 
 void Field::emit_impl(out_t& out) const
 {
     const char *privacy = ::get_privacy(m_ast->privacy);
     auto it = get_type()->get_cxx_name(get_name());
-    out.writeln("{}: {};", privacy, it);
+    out.writeln("%s: %s;", privacy, it);
 }
 
 void Field::emit_field(out_t& out) const
 {
     auto it = get_type()->get_cxx_name(get_name());
-    out.writeln("{};", it);
+    out.writeln("%s;", it);
 }
 
 void Class::emit_impl(out_t& out) const
@@ -808,7 +804,7 @@ void Struct::emit_impl(out_t& out) const
 
 void Case::emit_impl(out_t& out) const
 {
-    out.writeln("e{} = {},", get_name(), get_value());
+    out.writeln("e%s = %s,", get_name(), get_value());
 }
 
 static uint32_t type_hash(const char *name)
@@ -847,32 +843,28 @@ void Variant::emit_impl(out_t& out) const
     bool is_arithmatic = get_attrib(m_ast->attributes, eAstAttribArithmatic) != nullptr;
     bool is_iterator = get_attrib(m_ast->attributes, eAstAttribIterator) != nullptr;
 
-    std::string ty;
-    std::string under;
-    out.writeln("namespace impl {{");
+    const char *ty = nullptr;
+    out.writeln("namespace impl {");
     out.enter();
     if (m_parent)
     {
-        std::string underlying = m_parent->get_cxx_name(nullptr);
+        const char* underlying = m_parent->get_cxx_name(nullptr);
         const char *opaque = m_parent->get_opaque_name();
         if (opaque)
         {
-            ty = std::format("{}_underlying_t", get_name());
-            under = std::format("impl::{}", ty);
-            out.writeln("using {}_underlying_t = std::underlying_type_t<{}>;", get_name(), opaque);
-            out.writeln("enum class {} : {}_underlying_t {{", get_name(), get_name());
+            ty = refl_fmt("%s_underlying_t", get_name());
+            out.writeln("using %s_underlying_t = std::underlying_type_t<%s>;", get_name(), opaque);
+            out.writeln("enum class %s : %s_underlying_t {", get_name(), get_name());
         }
         else
         {
             ty = underlying;
-            under = underlying;
-            out.writeln("enum class {} : {} {{", get_name(), underlying);
+            out.writeln("enum class %s : %s {", get_name(), underlying);
         }
     }
     else
     {
-        under = std::format("impl::{}", get_name());
-        out.writeln("enum class {} {{", get_name());
+        out.writeln("enum class %s {", get_name());
     }
 
     out.enter();
@@ -881,19 +873,19 @@ void Variant::emit_impl(out_t& out) const
         c->emit_impl(out);
     });
     out.leave();
-    out.writeln("}};");
+    out.writeln("};");
     if (!m_parent)
     {
-        ty = std::format("{}_underlying_t", get_name());
-        out.writeln("using {}_underlying_t = std::underlying_type_t<{}>;", get_name(), get_name());
+        ty = refl_fmt("%s_underlying_t", get_name());
+        out.writeln("using %s_underlying_t = std::underlying_type_t<%s>;", get_name(), get_name());
     }
-    out.writeln("REFLECT_ENUM_COMPARE({}, {})", get_name(), ty);
-    if (is_bitflags) out.writeln("REFLECT_ENUM_BITFLAGS({}, {});", get_name(), ty);
-    if (is_arithmatic) out.writeln("REFLECT_ENUM_ARITHMATIC({}, {});", get_name(), ty);
-    if (is_iterator) out.writeln("REFLECT_ENUM_ITERATOR({}, {});", get_name(), ty);
+    out.writeln("REFLECT_ENUM_COMPARE(%s, %s)", get_name(), ty);
+    if (is_bitflags) out.writeln("REFLECT_ENUM_BITFLAGS(%s, %s);", get_name(), ty);
+    if (is_arithmatic) out.writeln("REFLECT_ENUM_ARITHMATIC(%s, %s);", get_name(), ty);
+    if (is_iterator) out.writeln("REFLECT_ENUM_ITERATOR(%s, %s);", get_name(), ty);
 
     out.leave();
-    out.writeln("}} // namespace impl");
+    out.writeln("} // namespace impl");
 
     if (is_iterator || is_arithmatic)
         CTASSERTF(is_iterator ^ is_arithmatic, "enum %s cannot be both an iterator and arithmatic", get_name());
@@ -902,8 +894,8 @@ void Variant::emit_impl(out_t& out) const
     out.leave();
     out.writeln("public:");
     out.enter();
-    out.writeln("using underlying_t = std::underlying_type_t<impl::{}>;", get_name());
-    out.writeln("using inner_t = impl::{};", get_name());
+    out.writeln("using underlying_t = std::underlying_type_t<impl::%s>;", get_name());
+    out.writeln("using inner_t = impl::%s;", get_name());
     out.nl();
     out.leave();
     out.writeln("private:");
@@ -913,18 +905,18 @@ void Variant::emit_impl(out_t& out) const
     out.leave();
     out.writeln("public:");
     out.enter();
-    out.writeln("constexpr {}(underlying_t value) : m_value((inner_t)value) {{ }}", get_name());
-    out.writeln("constexpr {}(inner_t value) : m_value(value) {{ }}", get_name());
+    out.writeln("constexpr %s(underlying_t value) : m_value((inner_t)value) { }", get_name());
+    out.writeln("constexpr %s(inner_t value) : m_value(value) { }", get_name());
     out.writeln("using enum inner_t;");
     out.nl();
     if (m_default_case)
     {
-        out.writeln("static constexpr auto kDefaultCase = e{};", m_default_case->get_name());
-        out.writeln("constexpr {}() : m_value(kDefaultCase) {{ }}", get_name());
+        out.writeln("static constexpr auto kDefaultCase = e%s;", m_default_case->get_name());
+        out.writeln("constexpr %s() : m_value(kDefaultCase) { }", get_name());
     }
     else
     {
-        out.writeln("constexpr {}() = delete;", get_name());
+        out.writeln("constexpr %s() = delete;", get_name());
     }
 
     if (is_iterator)
@@ -933,119 +925,119 @@ void Variant::emit_impl(out_t& out) const
         out.writeln("static constexpr auto kBegin = (inner_t)((underlying_t)0);");
         out.writeln("static constexpr auto kEnd = (inner_t)(~(underlying_t)0);");
         out.nl();
-        out.writeln("class Iterator {{");
+        out.writeln("class Iterator {");
         out.enter();
         out.writeln("inner_t m_value;");
         out.leave();
         out.writeln("public:");
         out.enter();
-        out.writeln("constexpr Iterator(inner_t value) : m_value(value) {{ }}");
-        out.writeln("constexpr Iterator& operator++() {{ m_value = (inner_t)((underlying_t)m_value + 1); return *this; }}");
-        out.writeln("constexpr const Iterator operator++(int) {{ Iterator it = *this; ++(*this); return it; }}");
-        out.writeln("constexpr bool operator==(const Iterator& other) const {{ return m_value == other.m_value; }}");
-        out.writeln("constexpr bool operator!=(const Iterator& other) const {{ return m_value != other.m_value; }}");
-        out.writeln("constexpr {} operator*() const {{ return m_value; }}", get_name());
+        out.writeln("constexpr Iterator(inner_t value) : m_value(value) { }");
+        out.writeln("constexpr Iterator& operator++() { m_value = (inner_t)((underlying_t)m_value + 1); return *this; }");
+        out.writeln("constexpr const Iterator operator++(int) { Iterator it = *this; ++(*this); return it; }");
+        out.writeln("constexpr bool operator==(const Iterator& other) const { return m_value == other.m_value; }");
+        out.writeln("constexpr bool operator!=(const Iterator& other) const { return m_value != other.m_value; }");
+        out.writeln("constexpr %s operator*() const { return m_value; }", get_name());
         out.leave();
-        out.writeln("}};");
+        out.writeln("};");
         out.nl();
-        out.writeln("class Range {{");
+        out.writeln("class Range {");
         out.enter();
         out.writeln("inner_t m_begin;");
         out.writeln("inner_t m_end;");
         out.leave();
         out.writeln("public:");
         out.enter();
-        out.writeln("constexpr Range(inner_t begin, inner_t end) : m_begin(begin), m_end(end) {{ }}");
-        out.writeln("constexpr Iterator begin() const {{ return Iterator(m_begin); }}");
-        out.writeln("constexpr Iterator end() const {{ return Iterator(m_end); }}");
+        out.writeln("constexpr Range(inner_t begin, inner_t end) : m_begin(begin), m_end(end) { }");
+        out.writeln("constexpr Iterator begin() const { return Iterator(m_begin); }");
+        out.writeln("constexpr Iterator end() const { return Iterator(m_end); }");
         out.leave();
-        out.writeln("}};");
+        out.writeln("};");
         out.nl();
 
-        out.writeln("static constexpr Range range(inner_t begin, inner_t end) {{ return Range(begin, end); }}");
+        out.writeln("static constexpr Range range(inner_t begin, inner_t end) { return Range(begin, end); }");
     }
 
-    out.writeln("constexpr operator inner_t() const {{ return m_value; }}");
+    out.writeln("constexpr operator inner_t() const { return m_value; }");
 
-    // out.writeln("constexpr {}(const {}& other) = default;", get_name(), get_name());
-    // out.writeln("constexpr {}& operator=(const {}& other) = default;", get_name(), get_name());
+    // out.writeln("constexpr %s(const %s& other) = default;", get_name(), get_name());
+    // out.writeln("constexpr %s& operator=(const %s& other) = default;", get_name(), get_name());
 
-    // out.writeln("constexpr {}(const {}&& other) = default;", get_name(), get_name());
-    // out.writeln("constexpr {}& operator=(const {}&& other) = default;", get_name(), get_name());
+    // out.writeln("constexpr %s(const %s&& other) = default;", get_name(), get_name());
+    // out.writeln("constexpr %s& operator=(const %s&& other) = default;", get_name(), get_name());
 
-    out.writeln("constexpr underlying_t as_integral() const {{ return (underlying_t)m_value; }}");
-    out.writeln("constexpr inner_t as_enum() const {{ return m_value; }}");
+    out.writeln("constexpr underlying_t as_integral() const { return (underlying_t)m_value; }");
+    out.writeln("constexpr inner_t as_enum() const { return m_value; }");
 
     out.nl();
-    out.writeln("constexpr bool operator==(inner_t other) const {{ return m_value == other; }}");
-    out.writeln("constexpr bool operator!=(inner_t other) const {{ return m_value != other; }}");
+    out.writeln("constexpr bool operator==(inner_t other) const { return m_value == other; }");
+    out.writeln("constexpr bool operator!=(inner_t other) const { return m_value != other; }");
 
     if (!is_bitflags && !is_arithmatic)
     {
         out.nl();
-        out.writeln("constexpr bool is_valid() const {{");
+        out.writeln("constexpr bool is_valid() const {");
         out.enter();
-        out.writeln("switch (m_value) {{");
+        out.writeln("switch (m_value) {");
         m_cases.foreach([&](auto c)
         {
-            out.writeln("case e{}:", c->get_name());
+            out.writeln("case e%s:", c->get_name());
         });
         out.enter();
         out.writeln("return true;");
         out.leave();
         out.writeln("default: return false;");
-        out.writeln("}}");
+        out.writeln("}");
         out.leave();
-        out.writeln("}};");
+        out.writeln("};");
     }
 
     if (is_bitflags)
     {
-        std::string flags;
+        String flags;
         m_cases.foreach([&](auto c)
         {
             if (!flags.empty())
                 flags += " | ";
-            flags += std::format("e{}", c->get_name());
+            flags += refl_fmt("e%s", c->get_name());
         });
-        out.writeln("static constexpr {} none() {{ return {}((inner_t)0); }};", get_name(), get_name());
-        out.writeln("static constexpr {} mask() {{ return {}({}); }};", get_name(), get_name(), flags);
+        out.writeln("static constexpr %s none() { return %s((inner_t)0); };", get_name(), get_name());
+        out.writeln("static constexpr %s mask() { return %s(%s); };", get_name(), get_name(), flags.c_str());
         // emit bitwise operators
         out.nl();
-        out.writeln("constexpr {} operator~() const {{ return ~m_value; }}", get_name());
-        out.writeln("constexpr {} operator|(const {}& other) const {{ return m_value | other.m_value; }}", get_name(), get_name());
-        out.writeln("constexpr {} operator&(const {}& other) const {{ return m_value & other.m_value; }}", get_name(), get_name());
-        out.writeln("constexpr {} operator^(const {}& other) const {{ return m_value ^ other.m_value; }}", get_name(), get_name());
-        out.writeln("constexpr {}& operator|=(const {}& other) {{ m_value = m_value | other.m_value; return *this; }}", get_name(), get_name());
-        out.writeln("constexpr {}& operator&=(const {}& other) {{ m_value = m_value & other.m_value; return *this; }}", get_name(), get_name());
-        out.writeln("constexpr {}& operator^=(const {}& other) {{ m_value = m_value ^ other.m_value; return *this; }}", get_name(), get_name());
+        out.writeln("constexpr %s operator~() const { return ~m_value; }", get_name());
+        out.writeln("constexpr %s operator|(const %s& other) const { return m_value | other.m_value; }", get_name(), get_name());
+        out.writeln("constexpr %s operator&(const %s& other) const { return m_value & other.m_value; }", get_name(), get_name());
+        out.writeln("constexpr %s operator^(const %s& other) const { return m_value ^ other.m_value; }", get_name(), get_name());
+        out.writeln("constexpr %s& operator|=(const %s& other) { m_value = m_value | other.m_value; return *this; }", get_name(), get_name());
+        out.writeln("constexpr %s& operator&=(const %s& other) { m_value = m_value & other.m_value; return *this; }", get_name(), get_name());
+        out.writeln("constexpr %s& operator^=(const %s& other) { m_value = m_value ^ other.m_value; return *this; }", get_name(), get_name());
 
-        out.writeln("constexpr bool test(inner_t other) const {{ return (m_value & other) != none(); }}");
-        out.writeln("constexpr bool any(inner_t other) const {{ return (m_value & other) != none(); }}");
-        out.writeln("constexpr bool all(inner_t other) const {{ return (m_value & other) == other; }}");
-        out.writeln("constexpr bool none(inner_t other) const {{ return (m_value & other) == none(); }}");
-        out.writeln("constexpr {}& set(inner_t other) {{ m_value = m_value | other; return *this; }}", get_name());
-        out.writeln("constexpr {}& reset(inner_t other) {{ m_value = m_value & ~other; return *this; }}", get_name());
-        out.writeln("constexpr {}& flip(inner_t other) {{ m_value = m_value ^ other; return *this; }}", get_name());
+        out.writeln("constexpr bool test(inner_t other) const { return (m_value & other) != none(); }");
+        out.writeln("constexpr bool any(inner_t other) const { return (m_value & other) != none(); }");
+        out.writeln("constexpr bool all(inner_t other) const { return (m_value & other) == other; }");
+        out.writeln("constexpr bool none(inner_t other) const { return (m_value & other) == none(); }");
+        out.writeln("constexpr %s& set(inner_t other) { m_value = m_value | other; return *this; }", get_name());
+        out.writeln("constexpr %s& reset(inner_t other) { m_value = m_value & ~other; return *this; }", get_name());
+        out.writeln("constexpr %s& flip(inner_t other) { m_value = m_value ^ other; return *this; }", get_name());
 
         // is_valid is defined as no invalid flags set
-        out.writeln("constexpr bool is_valid() const {{ return (m_value & ~mask()) == none(); }}");
+        out.writeln("constexpr bool is_valid() const { return (m_value & ~mask()) == none(); }");
     }
 
     if (is_arithmatic)
     {
         // implement arithmatic operators
         out.nl();
-        out.writeln("constexpr {} operator+(const {}& other) const {{ return m_value + other.m_value; }}", get_name(), get_name());
-        out.writeln("constexpr {} operator-(const {}& other) const {{ return m_value - other.m_value; }}", get_name(), get_name());
-        out.writeln("constexpr {} operator*(const {}& other) const {{ return m_value * other.m_value; }}", get_name(), get_name());
-        out.writeln("constexpr {} operator/(const {}& other) const {{ return m_value / other.m_value; }}", get_name(), get_name());
-        out.writeln("constexpr {} operator%(const {}& other) const {{ return m_value % other.m_value; }}", get_name(), get_name());
-        out.writeln("constexpr {}& operator+=(const {}& other) {{ m_value = m_value + other.m_value; return *this; }}", get_name(), get_name());
-        out.writeln("constexpr {}& operator-=(const {}& other) {{ m_value = m_value - other.m_value; return *this; }}", get_name(), get_name());
-        out.writeln("constexpr {}& operator*=(const {}& other) {{ m_value = m_value * other.m_value; return *this; }}", get_name(), get_name());
-        out.writeln("constexpr {}& operator/=(const {}& other) {{ m_value = m_value / other.m_value; return *this; }}", get_name(), get_name());
-        out.writeln("constexpr {}& operator%=(const {}& other) {{ m_value = m_value % other.m_value; return *this; }}", get_name(), get_name());
+        out.writeln("constexpr %s operator+(const %s& other) const { return m_value + other.m_value; }", get_name(), get_name());
+        out.writeln("constexpr %s operator-(const %s& other) const { return m_value - other.m_value; }", get_name(), get_name());
+        out.writeln("constexpr %s operator*(const %s& other) const { return m_value * other.m_value; }", get_name(), get_name());
+        out.writeln("constexpr %s operator/(const %s& other) const { return m_value / other.m_value; }", get_name(), get_name());
+        out.writeln("constexpr %s operator%(const %s& other) const { return m_value %% other.m_value; }", get_name(), get_name());
+        out.writeln("constexpr %s& operator+=(const %s& other) { m_value = m_value + other.m_value; return *this; }", get_name(), get_name());
+        out.writeln("constexpr %s& operator-=(const %s& other) { m_value = m_value - other.m_value; return *this; }", get_name(), get_name());
+        out.writeln("constexpr %s& operator*=(const %s& other) { m_value = m_value * other.m_value; return *this; }", get_name(), get_name());
+        out.writeln("constexpr %s& operator/=(const %s& other) { m_value = m_value / other.m_value; return *this; }", get_name(), get_name());
+        out.writeln("constexpr %s& operator%=(const %s& other) { m_value = m_value %% other.m_value; return *this; }", get_name(), get_name());
 
         // is_valid is not defined for arithmatic types
     }
@@ -1054,17 +1046,17 @@ void Variant::emit_impl(out_t& out) const
 
     emit_end_record(out);
     out.nl();
-    out.writeln("static_assert(sizeof({}) == sizeof({}::underlying_t), \"{} size mismatch\");", get_name(), get_name(), get_name());
+    out.writeln("static_assert(sizeof(%s) == sizeof(%s::underlying_t), \"%s size mismatch\");", get_name(), get_name(), get_name());
 }
 
-static void emit_name_info(out_t& out, const std::string& id, ref_ast_t *ast)
+static void emit_name_info(out_t& out, const char* id, ref_ast_t *ast)
 {
     mpz_t typeid_value;
     get_type_id(ast, typeid_value);
 
-    out.writeln("static constexpr ObjectName kFullName = impl::objname(\"{}\");", id);
-    out.writeln("static constexpr ObjectName kName = impl::objname(\"{}\");", ast->name);
-    out.writeln("static constexpr ObjectId kTypeId = {};", mpz_get_str(nullptr, 10, typeid_value));
+    out.writeln("static constexpr ObjectName kFullName = impl::objname(\"%s\");", id);
+    out.writeln("static constexpr ObjectName kName = impl::objname(\"%s\");", ast->name);
+    out.writeln("static constexpr ObjectId kTypeId = %s;", mpz_get_str(nullptr, 10, typeid_value));
 }
 
 static const char *access_name(ref_privacy_t privacy)
@@ -1078,7 +1070,7 @@ static const char *access_name(ref_privacy_t privacy)
     }
 }
 
-static std::string attribs_name(ref_ast_t *ast)
+static const char* attribs_name(ref_ast_t *ast)
 {
     ref_ast_t *transient = get_attrib(ast->attributes, eAstAttribTransient);
     if (transient) return "eAttribTransient";
@@ -1088,71 +1080,71 @@ static std::string attribs_name(ref_ast_t *ast)
 
 static void emit_record_fields(out_t& out, const Vector<Field*>& fields)
 {
-    out.writeln("static constexpr field_t kFields[{}] = {{", fields.size());
+    out.writeln("static constexpr field_t kFields[%zu] = {", fields.size());
         out.enter();
         for (size_t i = 0; i < fields.size(); ++i)
         {
             auto f = fields.get(i);
-            out.writeln("field_t {{");
+            out.writeln("field_t {");
             out.enter();
-            out.writeln(".name    = impl::objname(\"{}\"),", f->get_name());
-            out.writeln(".index   = {},", i);
-            out.writeln(".access  = {},", access_name(f->get_privacy()));
-            out.writeln(".attribs = {}", attribs_name(f->get_ast()));
+            out.writeln(".name    = impl::objname(\"%s\"),", f->get_name());
+            out.writeln(".index   = %zu,", i);
+            out.writeln(".access  = %s,", access_name(f->get_privacy()));
+            out.writeln(".attribs = %s", attribs_name(f->get_ast()));
             out.leave();
-            out.writeln("}},");
+            out.writeln("},");
         }
         out.leave();
-    out.writeln("}};");
+    out.writeln("};");
 }
 
-static void emit_record_visit(out_t& out, const std::string& id, const Vector<Field*>& fields)
+static void emit_record_visit(out_t& out, const char* id, const Vector<Field*>& fields)
 {
-    out.writeln("constexpr auto visit_field({}& object, const field_t& field, auto&& fn) const {{", id);
+    out.writeln("constexpr auto visit_field(%s& object, const field_t& field, auto&& fn) const {", id);
     out.enter();
-        out.writeln("switch (field.index) {{");
+        out.writeln("switch (field.index) {");
         for (size_t i = 0; i < fields.size(); ++i)
         {
             auto f = fields.get(i);
-            out.writeln("case {}: return fn(object.{});", i, f->get_name());
+            out.writeln("case %zu: return fn(object.%s);", i, f->get_name());
         }
-        out.writeln("default: return fn(ctu::OutOfBounds{{field.index}});");
-        out.writeln("}}");
+        out.writeln("default: return fn(ctu::OutOfBounds{field.index});");
+        out.writeln("}");
     out.leave();
-    out.writeln("}};");
+    out.writeln("};");
     out.nl();
-    out.writeln("constexpr void foreach({}& object, auto&& fn) const {{", id);
+    out.writeln("constexpr void foreach(%s& object, auto&& fn) const {", id);
     out.enter();
         for (size_t i = 0; i < fields.size(); ++i)
         {
             auto f = fields.get(i);
-            out.writeln("fn(object.{});", f->get_name());
+            out.writeln("fn(object.%s);", f->get_name());
         }
     out.leave();
-    out.writeln("}};");
+    out.writeln("};");
 }
 
 static void emit_ctor(out_t& out)
 {
-    out.writeln("consteval TypeInfo() : TypeInfoBase(kName, sizeof(type_t), alignof(type_t), kTypeId) {{ }}");
+    out.writeln("consteval TypeInfo() : TypeInfoBase(kName, sizeof(type_t), alignof(type_t), kTypeId) { }");
 }
 
-static void emit_reflect_hook(out_t& out, const std::string& id)
+static void emit_reflect_hook(out_t& out, const char* id)
 {
-    out.writeln("template<> consteval auto reflect<{}>() {{", id);
+    out.writeln("template<> consteval auto reflect<%s>() {", id);
     out.enter();
-    out.writeln("return TypeInfo<{}>{{}};", id);
+    out.writeln("return TypeInfo<%s>{};", id);
     out.leave();
-    out.writeln("}}");
+    out.writeln("}");
 }
 
-static void emit_info_header(out_t& out, const std::string& id)
+static void emit_info_header(out_t& out, const char* id)
 {
-    out.writeln("template<> class TypeInfo<{}> : public TypeInfoBase {{", id);
+    out.writeln("template<> class TypeInfo<%s> : public TypeInfoBase {", id);
     out.writeln("public:");
 }
 
-static std::string get_decl_name(ref_ast_t *ast, Sema& sema, const char *name)
+static const char* get_decl_name(ref_ast_t *ast, Sema& sema, const char *name)
 {
     ref_ast_t *external = get_attrib(ast->attributes, eAstAttribExternal);
     if (external)
@@ -1161,7 +1153,7 @@ static std::string get_decl_name(ref_ast_t *ast, Sema& sema, const char *name)
     }
     else
     {
-        return std::format("{}::{}", sema.get_namespace(), name);
+        return refl_fmt("%s::%s", sema.get_namespace(), name);
     }
 }
 
@@ -1179,7 +1171,7 @@ void Struct::emit_reflection(Sema& sema, out_t& out) const
 
     emit_info_header(out, id);
         out.enter();
-        out.writeln("using type_t = {};", id);
+        out.writeln("using type_t = %s;", id);
         out.writeln("using field_t = ctu::ObjectField;");
         out.nl();
         emit_name_info(out, id, m_ast);
@@ -1190,7 +1182,7 @@ void Struct::emit_reflection(Sema& sema, out_t& out) const
         out.nl();
         emit_record_visit(out, id, m_fields);
         out.leave();
-    out.writeln("}};");
+    out.writeln("};");
     out.nl();
     emit_reflect_hook(out, id);
     out.nl();
@@ -1211,32 +1203,32 @@ void Class::emit_reflection(Sema& sema, out_t& out) const
 
     emit_info_header(out, id);
         out.enter();
-        out.writeln("using type_t = {};", id);
-        out.writeln("using super_t = {};", parent);
+        out.writeln("using type_t = %s;", id);
+        out.writeln("using super_t = %s;", parent);
         out.writeln("using field_t = ctu::ObjectField;");
         out.writeln("using method_t = ctu::ObjectMethod;");
         out.nl();
         emit_name_info(out, id, m_ast);
-        out.writeln("static constexpr bool kHasSuper = {};", m_parent != nullptr);
-        out.writeln("static constexpr TypeInfo<{}> kSuper{{}};", parent);
+        out.writeln("static constexpr bool kHasSuper = %s;", m_parent != nullptr ? "true" : "false");
+        out.writeln("static constexpr TypeInfo<%s> kSuper{};", parent);
         out.nl();
         emit_record_fields(out, m_fields);
         out.nl();
         out.writeln("// methods");
-        out.writeln("static constexpr method_t kMethods[{}] = {{", m_methods.size());
+        out.writeln("static constexpr method_t kMethods[%zu] = {", m_methods.size());
             out.enter();
             for (size_t i = 0; i < m_methods.size(); ++i)
             {
                 auto m = m_methods.get(i);
-                out.writeln("method_t {{ .name = impl::objname(\"{}\"), .index = {} }},", m->get_name(), i);
+                out.writeln("method_t { .name = impl::objname(\"%s\"), .index = %zu },", m->get_name(), i);
             }
             out.leave();
-        out.writeln("}};");
+        out.writeln("};");
         emit_ctor(out);
         out.nl();
         emit_record_visit(out, id, m_fields);
         out.leave();
-    out.writeln("}};");
+    out.writeln("};");
     out.nl();
     emit_reflect_hook(out, id);
     out.nl();
@@ -1288,68 +1280,68 @@ void Variant::emit_reflection(Sema& sema, out_t& out) const
 
     emit_info_header(out, id);
         out.enter();
-        out.writeln("using type_t = {};", id);
-        out.writeln("using underlying_t = {}::underlying_t;", id);
-        out.writeln("using case_t = ctu::EnumCase<{}>;", id);
+        out.writeln("using type_t = %s;", id);
+        out.writeln("using underlying_t = %s::underlying_t;", id);
+        out.writeln("using case_t = ctu::EnumCase<%s>;", id);
         out.nl();
-        out.writeln("static constexpr size_t kMaxLength = {};", max_tostring_length);
+        out.writeln("static constexpr size_t kMaxLength = %zu;", max_tostring_length);
         out.writeln("using string_t = SmallString<kMaxLength>;");
         out.nl();
         emit_name_info(out, id, m_ast);
         if (m_parent)
-            out.writeln("static constexpr TypeInfo<underlying_t> kUnderlying{{}};");
+            out.writeln("static constexpr TypeInfo<underlying_t> kUnderlying{};");
         else
-            out.writeln("static constexpr TypeInfo<void> kUnderlying{{}};");
+            out.writeln("static constexpr TypeInfo<void> kUnderlying{};");
 
-        out.writeln("static constexpr bool kHasDefault = {};", m_default_case != nullptr);
+        out.writeln("static constexpr bool kHasDefault = %s;", m_default_case != nullptr ? "true" : "false");
         if (m_default_case)
-            out.writeln("static constexpr {} kDefaultCase = {}::e{};", id, id, m_default_case->get_name());
+            out.writeln("static constexpr %s kDefaultCase = %s::e%s;", id, id, m_default_case->get_name());
 
         out.nl();
-        out.writeln("static constexpr case_t kCases[{}] = {{", m_cases.size());
+        out.writeln("static constexpr case_t kCases[%zu] = {", m_cases.size());
             out.enter();
             m_cases.foreach([&](auto c) {
-                out.writeln("case_t {{ impl::objname(\"e{}\"), {}::e{} }},", c->get_name(), id, c->get_name());
+                out.writeln("case_t { impl::objname(\"e%s\"), %s::e%s },", c->get_name(), id, c->get_name());
             });
             out.leave();
-        out.writeln("}};");
+        out.writeln("};");
         out.nl();
         emit_ctor(out);
         out.nl();
 
         out.nl();
-        out.writeln("constexpr string_t to_string(type_t value, [[maybe_unused]] int base = 10) const {{");
+        out.writeln("constexpr string_t to_string(type_t value, [[maybe_unused]] int base = 10) const {");
         out.enter();
         if (is_bitflags)
         {
             out.writeln("string_t result;");
             out.writeln("bool first = true;");
-            out.writeln("for (auto option : kCases) {{");
+            out.writeln("for (auto option : kCases) {");
             out.enter();
-            out.writeln("if ((value & option.value) == option.value) {{");
+            out.writeln("if ((value & option.value) == option.value) {");
             out.enter();
             out.writeln("if (!first) result += \", \";");
             out.writeln("result += option.name;");
             out.writeln("first = false;");
             out.leave();
-            out.writeln("}}");
+            out.writeln("}");
             out.leave();
-            out.writeln("}}");
+            out.writeln("}");
             out.writeln("return result;");
         }
         else
         {
-            out.writeln("for (auto option : kCases) {{");
+            out.writeln("for (auto option : kCases) {");
             out.enter();
             out.writeln("if (option.value == value) return option.name;");
             out.leave();
-            out.writeln("}}");
+            out.writeln("}");
             out.writeln("return string_t(value.as_integral(), base);");
         }
         out.leave();
-        out.writeln("}};");
+        out.writeln("};");
     out.leave();
-    out.writeln("}};");
+    out.writeln("};");
 
     out.nl();
     emit_reflect_hook(out, id);
