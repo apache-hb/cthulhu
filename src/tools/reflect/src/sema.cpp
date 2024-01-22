@@ -896,7 +896,7 @@ void Variant::emit_impl(out_t& out) const
         }
         else
         {
-            out.writeln("using facade_t = impl::%s;", m_parent->get_cxx_name(nullptr));
+            out.writeln("using facade_t = %s;", m_parent->get_cxx_name(nullptr));
         }
     }
     out.writeln("using Underlying = underlying_t;");
