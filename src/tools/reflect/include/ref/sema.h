@@ -1,11 +1,14 @@
 #pragma once
 
+#include "arena/arena.h"
 #include "base/panic.h"
 #include "io/io.h"
+#include "memory/memory.h"
 #include "notify/notify.h"
 #include "ref/ast.h"
 #include "scan/node.h"
 #include "std/map.h"
+#include "std/vector.h"
 
 #include <vector>
 #include <format>
@@ -31,14 +34,57 @@ typedef struct ref_emit_t
 
 namespace refl { class Sema; }
 
+template<typename T>
+class Vector {
+    vector_t *m_vec;
+    static_assert(std::is_pointer_v<T>, "need pointer data");
 
-using vector_str_t = std::vector<std::string>;
+public:
+    Vector(size_t size, arena_t *arena)
+        : m_vec(vector_new(size, arena))
+    { }
+
+    Vector(vector_t *vec)
+        : m_vec(vec)
+    { }
+
+    T get(size_t index) const {
+        return (T)vector_get(m_vec, index);
+    }
+
+    void set(size_t index, T value) {
+        vector_set(m_vec, index, (void*)value);
+    }
+
+    void push(T value) {
+        ::vector_push(&m_vec, (void*)value);
+    }
+
+    void pop() { vector_drop(m_vec); }
+
+    size_t find(T value) {
+        return vector_find(m_vec, (const void*)value);
+    }
+
+    size_t size() const {
+        return vector_len(m_vec);
+    }
+
+    void foreach(auto&& fn) const {
+        for (size_t i = 0; i < size(); i++) {
+            fn((T)vector_get(m_vec, i));
+        }
+    }
+};
+
+using vector_str_t = Vector<const char*>;
 
 template<typename K, typename V>
 class Map {
     map_t *m_map;
 
-    static_assert(std::is_same_v<K, const char*>, "lol");
+    static_assert(std::is_same_v<K, const char*>, "need string key");
+    static_assert(std::is_pointer_v<V>, "need pointer data");
 
 public:
     Map(size_t size, arena_t *arena)
@@ -143,7 +189,7 @@ namespace refl {
     class Expr;
 
     class ResolveStack {
-        std::vector<Decl*> m_stack;
+        Vector<Decl*> m_stack { 32, get_global_arena() };
 
     public:
         bool enter_decl(Sema& sema, Decl *decl);
@@ -152,11 +198,11 @@ namespace refl {
 
     class DeclDepends {
     public:
-        std::vector<Decl*> m_depends;
+        Vector<Decl*> m_depends;
         void add(Decl *decl) {
             CTASSERTF(decl != nullptr, "decl is null");
-            if (auto it = std::find(m_depends.begin(), m_depends.end(), decl); it == m_depends.end())
-                m_depends.push_back(decl);
+            if (m_depends.find(decl) == SIZE_MAX)
+                m_depends.push(decl);
         }
     };
 
@@ -170,10 +216,10 @@ namespace refl {
         logger_t *m_logger;
         declmap_t m_decls;
 
-        std::string m_namespace;
+        const char* m_namespace;
         const char *m_api = nullptr;
 
-        vector_str_t imports;
+        vector_str_t imports { 32, get_global_arena() };
 
     public:
         Sema(const Sema&) = delete;
@@ -181,7 +227,7 @@ namespace refl {
 
         const char *get_api() const { return m_api; }
 
-        const std::string& get_namespace() const { return m_namespace; }
+        const char* get_namespace() const { return m_namespace; }
 
         Sema(Sema *parent)
             : m_parent(parent)
@@ -341,13 +387,13 @@ namespace refl {
 
     class TemplateInstance;
 
-    using vec_type_t = std::vector<Type*>;
+    using vec_type_t = Vector<Type*>;
 
     class TemplateType : public Type {
-        vector_str_t m_params;
+        vector_str_t m_params { 32, get_global_arena()};
 
     protected:
-        void add_param(std::string param) { m_params.push_back(std::move(param)); }
+        void add_param(const char* str) { m_params.push(arena_strdup(str, get_global_arena())); }
 
     public:
         TemplateType(const node_t *node, const char *name)
@@ -389,7 +435,7 @@ namespace refl {
 
         Type *instantiate(Sema&, const vec_type_t& args) const override {
             CTASSERT(args.size() == 1);
-            return new AtomicType(get_node(), args[0]);
+            return new AtomicType(get_node(), args.get(0));
         }
     };
 
@@ -421,7 +467,7 @@ namespace refl {
 
         Type *instantiate(Sema&, const vec_type_t& args) const override {
             CTASSERT(args.size() == 1);
-            return new ConstType(get_node(), args[0]);
+            return new ConstType(get_node(), args.get(0));
         }
     };
 
@@ -550,7 +596,7 @@ namespace refl {
     class Method : public Decl {
         ref_ast_t *m_ast = nullptr;
 
-        std::vector<Param*> m_params;
+        Vector<Param*> m_params { 32, get_global_arena() };
 
         Type *m_return = nullptr;
 
@@ -570,8 +616,7 @@ namespace refl {
 
         void resolve_deps(DeclDepends& deps) const {
             if (m_return) deps.add(m_return);
-            for (auto param : m_params)
-                deps.add(param->get_type());
+            m_params.foreach([&](Param *param) { deps.add(param->get_type()); });
         }
 
         bool should_emit_thunk() const { return m_thunk; }
@@ -600,7 +645,7 @@ namespace refl {
 
     protected:
         ref_ast_t *m_ast = nullptr;
-        std::vector<Method*> m_methods;
+        Vector<Method*> m_methods { 32, get_global_arena() };
         Type *m_parent = nullptr;
 
         RecordType(ref_ast_t *ast, TreeKind kind, const char *record)
@@ -616,7 +661,7 @@ namespace refl {
         ref_privacy_t emit_dtors(out_t& out, ref_privacy_t privacy) const;
 
         void emit_end_record(out_t& out) const;
-        ref_privacy_t emit_fields(out_t& out, const std::vector<Field*>& fields, ref_privacy_t privacy) const;
+        ref_privacy_t emit_fields(out_t& out, const Vector<Field*>& fields, ref_privacy_t privacy) const;
 
     public:
         void resolve(Sema& sema) override;
@@ -631,13 +676,14 @@ namespace refl {
             if (m_parent != nullptr)
                 deps.add(m_parent);
 
-            for (auto method : m_methods)
+            m_methods.foreach([&](Method *method) {
                 method->resolve_deps(deps);
+            });
         }
     };
 
     class Class final : public RecordType {
-        std::vector<Field*> m_fields;
+        Vector<Field*> m_fields { 32, get_global_arena() };
     public:
         Class(ref_ast_t *ast);
 
@@ -649,13 +695,14 @@ namespace refl {
 
         void get_deps(DeclDepends& deps) const override {
             RecordType::get_deps(deps);
-            for (auto field : m_fields)
+            m_fields.foreach([&](Field *field) {
                 deps.add(field->get_type());
+            });
         }
     };
 
     class Struct final : public RecordType {
-        std::vector<Field*> m_fields;
+        Vector<Field*> m_fields { 32, get_global_arena() };
     public:
         Struct(ref_ast_t *ast);
 
@@ -667,13 +714,14 @@ namespace refl {
 
         void get_deps(DeclDepends& deps) const override {
             RecordType::get_deps(deps);
-            for (auto field : m_fields)
+            m_fields.foreach([&](Field *field) {
                 deps.add(field->get_type());
+            });
         }
     };
 
     class Variant : public RecordType {
-        std::vector<Case*> m_cases;
+        Vector<Case*> m_cases { 32, get_global_arena() };
 
         Case *m_default_case = nullptr;
     public:
@@ -694,13 +742,6 @@ namespace refl {
     class Expr : public Tree {
     public:
         Type *m_type;
-    };
-
-    class Module : public Decl {
-    public:
-        std::vector<std::string> m_path;
-
-        std::vector<Decl*> m_types;
     };
 
     void emit_module(Module *module, io_t *header, io_t *source);

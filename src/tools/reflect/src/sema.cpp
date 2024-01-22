@@ -10,25 +10,23 @@ using namespace refl;
 
 bool ResolveStack::enter_decl(Sema& sema, Decl *decl)
 {
-    if (auto it = std::find(m_stack.begin(), m_stack.end(), decl); it != m_stack.end())
+    if (m_stack.find(decl) != SIZE_MAX)
     {
         event_builder_t event = sema.report(&kEvent_RecursiveEval, decl->get_node(), "recursive evaluation of %s", decl->get_name());
-        for (auto it = m_stack.begin(); it != m_stack.end(); ++it)
-        {
-            Decl *decl = *it;
+        m_stack.foreach([&](auto decl) {
             msg_append(event, decl->get_node(), "  %s", decl->get_name());
-        }
+        });
         return false;
     }
 
-    m_stack.push_back(decl);
+    m_stack.push(decl);
     return true;
 }
 
 void ResolveStack::leave_decl()
 {
-    CTASSERT(!m_stack.empty());
-    m_stack.pop_back();
+    CTASSERT(m_stack.size());
+    m_stack.pop();
 }
 
 template<typename T>
@@ -118,7 +116,7 @@ void Sema::forward_module(ref_ast_t *mod)
     if (mod->api) m_api = mod->api;
 
     vec_foreach<ref_ast_t*>(mod->imports, [&](auto import) {
-        imports.push_back(import->ident);
+        imports.push(import->ident);
     });
     m_namespace = str_join("::", mod->mod, get_global_arena());
     vec_foreach<ref_ast_t*>(mod->decls, [&](auto decl) {
@@ -221,7 +219,7 @@ Type *Sema::resolve_generic(ref_ast_t *ast)
         return nullptr;
     }
 
-    std::vector<Type*> params;
+    Vector<Type*> params { vector_len(ast->params), get_global_arena() };
     vec_foreach<ref_ast_t*>(ast->params, [&](auto param) {
         Type *type = resolve_type(param);
         if (type == nullptr)
@@ -229,7 +227,7 @@ Type *Sema::resolve_generic(ref_ast_t *ast)
             report(&kEvent_InvalidType, param->node, "invalid template parameter");
             return;
         }
-        params.push_back(type);
+        params.push(type);
     });
 
     if (params.size() != vector_len(ast->params))
@@ -260,8 +258,7 @@ void Sema::emit_all(io_t *source, io_t *header, const char *file)
     s.writeln("#include \"{}\"", base);
     s.nl();
 
-    for (auto fd : imports)
-    {
+    imports.foreach([&](auto fd) {
         if (fd[0] == '<')
         {
             h.writeln("#include {}", fd);
@@ -270,7 +267,7 @@ void Sema::emit_all(io_t *source, io_t *header, const char *file)
         {
             h.writeln("#include \"{}\"", fd);
         }
-    }
+    });
 
     h.writeln("namespace {} {{", m_namespace);
     h.enter();
@@ -284,18 +281,17 @@ void Sema::emit_all(io_t *source, io_t *header, const char *file)
     h.nl();
     h.writeln("// implementation");
 
-    DeclDepends depends;
+    DeclDepends depends { { 64, get_global_arena() } };
 
     m_decls.foreach([&](auto, auto decl) {
         decl->get_deps(depends);
         depends.add(decl);
     });
 
-    for (auto& decl : depends.m_depends)
-    {
+    depends.m_depends.foreach([&](auto decl) {
         CTASSERT(decl != nullptr);
         decl->emit_impl(h);
-    }
+    });
 
     h.leave();
     h.writeln("}} // namespace {}", m_namespace);
@@ -305,10 +301,11 @@ void Sema::emit_all(io_t *source, io_t *header, const char *file)
     h.enter();
     h.writeln("// reflection");
 
-    for (auto& decl : depends.m_depends)
-    {
+    depends.m_depends.foreach([&](auto decl) {
+        CTASSERT(decl != nullptr);
         decl->emit_reflection(*this, h);
-    }
+    });
+
 
     h.leave();
     h.writeln("}} // namespace ctu");
@@ -391,7 +388,7 @@ void Method::resolve(Sema& sema) {
             CTASSERTF(!params.get(param->name), "duplicate parameter %s", param->name);
             params.set(param->name, p);
             p->resolve(sema);
-            m_params.push_back(p);
+            m_params.push(p);
         });
     }
 
@@ -417,15 +414,14 @@ void Method::emit_impl(out_t& out) const {
     auto it = ret->get_cxx_name(get_name());
     std::string params;
     std::string args;
-    for (auto param : m_params)
-    {
+    m_params.foreach([&](auto param) {
         if (!args.empty())
             args += ", ";
         if (!params.empty())
             params += ", ";
         params += param->get_type()->get_cxx_name(param->get_name());
         args += param->get_name();
-    }
+    });
 
     ref_ast_t *attrib = get_attrib(m_ast->attributes, eAstAttribCxxName);
 
@@ -454,15 +450,14 @@ void Method::emit_method(out_t& out) const {
     auto it = ret->get_cxx_name(get_name());
     std::string params;
     std::string args;
-    for (auto param : m_params)
-    {
+    m_params.foreach([&](auto param) {
         if (!args.empty())
             args += ", ";
         if (!params.empty())
             params += ", ";
         params += param->get_type()->get_cxx_name(param->get_name());
         args += param->get_name();
-    }
+    });
 
     ref_ast_t *attrib = get_attrib(m_ast->attributes, eAstAttribCxxName);
 
@@ -494,15 +489,15 @@ void Method::emit_thunk(out_t& out) const {
     auto it = ret->get_cxx_name(inner.c_str());
     std::string params;
     std::string args;
-    for (auto param : m_params)
-    {
+    m_params.foreach([&](auto param) {
         if (!args.empty())
             args += ", ";
         if (!params.empty())
             params += ", ";
         params += param->get_type()->get_cxx_name(param->get_name());
         args += param->get_name();
-    }
+    });
+
 
     out.writeln("{}({});", it, params);
 }
@@ -517,7 +512,7 @@ void RecordType::resolve(Sema& sema)
         CTASSERTF(!methods.get(method->name), "duplicate method %s", method->name);
         methods.set(method->name, m);
 
-        m_methods.push_back(m);
+        m_methods.push(m);
     });
 
     if (m_ast->parent != nullptr)
@@ -538,8 +533,7 @@ ref_privacy_t RecordType::emit_methods(out_t& out, ref_privacy_t privacy) const
 {
     out.writeln("// methods");
 
-    for (auto method : m_methods)
-    {
+    m_methods.foreach([&](auto method) {
         if (privacy != method->get_privacy() && method->get_privacy() != ePrivacyDefault)
         {
             privacy = method->get_privacy();
@@ -547,18 +541,18 @@ ref_privacy_t RecordType::emit_methods(out_t& out, ref_privacy_t privacy) const
             out.writeln("{}:", get_privacy(privacy));
             out.enter();
         }
-        method->emit_method(out);
-    }
+        method->emit_impl(out);
+    });
+
 
     out.writeln("// thunks");
 
     bool emit_private = false;
 
-    for (auto method : m_methods)
-    {
+    m_methods.foreach([&](auto method) {
         if (!method->should_emit_thunk())
         {
-            continue;
+            return;
         }
 
         if (!emit_private)
@@ -570,7 +564,7 @@ ref_privacy_t RecordType::emit_methods(out_t& out, ref_privacy_t privacy) const
         }
 
         method->emit_thunk(out);
-    }
+    });
 
     return ePrivacyPrivate;
 }
@@ -622,23 +616,21 @@ void RecordType::emit_end_record(out_t& out) const
     out.writeln("}};");
 }
 
-ref_privacy_t RecordType::emit_fields(out_t& out, const std::vector<Field*>& fields, ref_privacy_t privacy) const
+ref_privacy_t RecordType::emit_fields(out_t& out, const Vector<Field*>& fields, ref_privacy_t privacy) const
 {
     out.writeln("// fields");
 
-    for (auto field : fields)
-    {
-        ref_privacy_t field_privacy = field->get_privacy();
-        if (field_privacy != privacy)
+    fields.foreach([&](auto field) {
+        if (privacy != field->get_privacy())
         {
-            privacy = field_privacy;
+            privacy = field->get_privacy();
             out.leave();
-            out.writeln("{}:", get_privacy(field_privacy));
+            out.writeln("{}:", get_privacy(privacy));
             out.enter();
         }
 
         field->emit_field(out);
-    }
+    });
 
     return privacy;
 }
@@ -677,7 +669,7 @@ void Class::resolve(Sema& sema)
         CTASSERTF(!fields.get(field->name), "duplicate field %s", field->name);
         fields.set(field->name, f);
 
-        m_fields.push_back(f);
+        m_fields.push(f);
     });
 
     if (m_parent != nullptr)
@@ -706,7 +698,7 @@ void Struct::resolve(Sema& sema)
         CTASSERTF(!fields.get(field->name), "duplicate field %s", field->name);
         fields.set(field->name, f);
 
-        m_fields.push_back(f);
+        m_fields.push(f);
     });
 
     finish_resolve();
@@ -731,7 +723,7 @@ void Variant::resolve(Sema& sema)
         CTASSERTF(!cases.get(field->name), "duplicate case %s", field->name);
         cases.set(field->name, c);
 
-        m_cases.push_back(c);
+        m_cases.push(c);
     });
 
     if (m_parent)
@@ -884,10 +876,10 @@ void Variant::emit_impl(out_t& out) const
     }
 
     out.enter();
-    for (auto c : m_cases)
+    m_cases.foreach([&](auto c)
     {
         c->emit_impl(out);
-    }
+    });
     out.leave();
     out.writeln("}};");
     if (!m_parent)
@@ -994,10 +986,10 @@ void Variant::emit_impl(out_t& out) const
         out.writeln("constexpr bool is_valid() const {{");
         out.enter();
         out.writeln("switch (m_value) {{");
-        for (auto c : m_cases)
+        m_cases.foreach([&](auto c)
         {
             out.writeln("case e{}:", c->get_name());
-        }
+        });
         out.enter();
         out.writeln("return true;");
         out.leave();
@@ -1010,12 +1002,12 @@ void Variant::emit_impl(out_t& out) const
     if (is_bitflags)
     {
         std::string flags;
-        for (auto c : m_cases)
+        m_cases.foreach([&](auto c)
         {
             if (!flags.empty())
                 flags += " | ";
             flags += std::format("e{}", c->get_name());
-        }
+        });
         out.writeln("static constexpr {} none() {{ return {}((inner_t)0); }};", get_name(), get_name());
         out.writeln("static constexpr {} mask() {{ return {}({}); }};", get_name(), get_name(), flags);
         // emit bitwise operators
@@ -1094,13 +1086,13 @@ static std::string attribs_name(ref_ast_t *ast)
     return "eAttribNone";
 }
 
-static void emit_record_fields(out_t& out, const std::vector<Field*>& fields)
+static void emit_record_fields(out_t& out, const Vector<Field*>& fields)
 {
     out.writeln("static constexpr field_t kFields[{}] = {{", fields.size());
         out.enter();
         for (size_t i = 0; i < fields.size(); ++i)
         {
-            auto f = fields[i];
+            auto f = fields.get(i);
             out.writeln("field_t {{");
             out.enter();
             out.writeln(".name    = impl::objname(\"{}\"),", f->get_name());
@@ -1114,14 +1106,14 @@ static void emit_record_fields(out_t& out, const std::vector<Field*>& fields)
     out.writeln("}};");
 }
 
-static void emit_record_visit(out_t& out, const std::string& id, const std::vector<Field*>& fields)
+static void emit_record_visit(out_t& out, const std::string& id, const Vector<Field*>& fields)
 {
     out.writeln("constexpr auto visit_field({}& object, const field_t& field, auto&& fn) const {{", id);
     out.enter();
         out.writeln("switch (field.index) {{");
         for (size_t i = 0; i < fields.size(); ++i)
         {
-            auto f = fields[i];
+            auto f = fields.get(i);
             out.writeln("case {}: return fn(object.{});", i, f->get_name());
         }
         out.writeln("default: return fn(ctu::OutOfBounds{{field.index}});");
@@ -1133,7 +1125,7 @@ static void emit_record_visit(out_t& out, const std::string& id, const std::vect
     out.enter();
         for (size_t i = 0; i < fields.size(); ++i)
         {
-            auto f = fields[i];
+            auto f = fields.get(i);
             out.writeln("fn(object.{});", f->get_name());
         }
     out.leave();
@@ -1235,7 +1227,7 @@ void Class::emit_reflection(Sema& sema, out_t& out) const
             out.enter();
             for (size_t i = 0; i < m_methods.size(); ++i)
             {
-                auto m = m_methods[i];
+                auto m = m_methods.get(i);
                 out.writeln("method_t {{ .name = impl::objname(\"{}\"), .index = {} }},", m->get_name(), i);
             }
             out.leave();
@@ -1256,12 +1248,12 @@ size_t Variant::max_tostring() const {
 
     size_t max = 0;
 
-    for (auto c : m_cases)
+    m_cases.foreach([&](auto c)
     {
         size_t len = strlen(c->get_name());
         if (len > max)
             max = len;
-    }
+    });
 
     return max + 1;
 }
@@ -1270,11 +1262,11 @@ size_t Variant::max_tostring_bitflags() const {
     // sum all the cases + 1 for each comma
     size_t max = 0;
 
-    for (auto c : m_cases)
+    m_cases.foreach([&](auto c)
     {
         size_t len = strlen(c->get_name());
         max += len + 1;
-    }
+    });
 
     return max;
 }
@@ -1316,8 +1308,9 @@ void Variant::emit_reflection(Sema& sema, out_t& out) const
         out.nl();
         out.writeln("static constexpr case_t kCases[{}] = {{", m_cases.size());
             out.enter();
-            for (auto c : m_cases)
+            m_cases.foreach([&](auto c) {
                 out.writeln("case_t {{ impl::objname(\"e{}\"), {}::e{} }},", c->get_name(), id, c->get_name());
+            });
             out.leave();
         out.writeln("}};");
         out.nl();
