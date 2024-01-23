@@ -1270,13 +1270,13 @@ size_t Variant::max_tostring() const {
 }
 
 size_t Variant::max_tostring_bitflags() const {
-    // sum all the cases + 1 for each comma
+    // sum all the cases + 2 for each comma and space
     size_t max = 0;
 
     m_cases.foreach([&](auto c)
     {
         size_t len = strlen(c->get_name());
-        max += len + 1;
+        max += len + 2;
     });
 
     return max;
