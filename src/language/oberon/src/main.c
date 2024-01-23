@@ -16,7 +16,7 @@ CTU_CALLBACKS(kCallbacks, obr);
 
 static void *obr_preparse(driver_t *handle, scan_t *scan)
 {
-    CTU_UNUSED(scan);
+    CT_UNUSED(scan);
 
     lifetime_t *lifetime = handle_get_lifetime(handle);
     arena_t *arena = lifetime_get_arena(lifetime);
@@ -31,7 +31,7 @@ static void *obr_preparse(driver_t *handle, scan_t *scan)
 
 static void obr_postparse(driver_t *handle, scan_t *scan, void *tree)
 {
-    CTU_UNUSED(scan);
+    CT_UNUSED(scan);
 
     vector_t *modules = tree;
 
@@ -47,7 +47,7 @@ static void obr_postparse(driver_t *handle, scan_t *scan, void *tree)
     }
 }
 
-static void obr_destroy(driver_t *handle) { CTU_UNUSED(handle); }
+static void obr_destroy(driver_t *handle) { CT_UNUSED(handle); }
 
 #define NEW_EVENT(id, ...) const diagnostic_t kEvent_##id = __VA_ARGS__;
 #include "oberon/events.def"

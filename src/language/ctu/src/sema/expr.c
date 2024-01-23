@@ -102,9 +102,9 @@ static tree_t *sema_decl_name(tree_t *sema, const node_t *node, vector_t *path, 
 static tree_t *verify_expr_type(tree_t *sema, tree_kind_t kind, const tree_t *type,
                                 const char *expr_kind, tree_t *expr)
 {
-    CTU_UNUSED(sema);
-    CTU_UNUSED(kind);
-    CTU_UNUSED(expr_kind);
+    CT_UNUSED(sema);
+    CT_UNUSED(kind);
+    CT_UNUSED(expr_kind);
 
     if (type == NULL)
     {
@@ -163,7 +163,7 @@ static tree_t *sema_cast(ctu_sema_t *sema, const ctu_t *expr)
 
 static tree_t *sema_string(tree_t *sema, const ctu_t *expr, const tree_t *implicit_type)
 {
-    CTU_UNUSED(sema);
+    CT_UNUSED(sema);
 
     // +1 length for the nul terminator
     tree_t *type = tree_type_array(expr->node, "str", ctu_get_char_type(), expr->length + 1);

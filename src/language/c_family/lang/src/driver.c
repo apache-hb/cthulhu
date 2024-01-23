@@ -93,5 +93,5 @@ void cc_create(driver_t *handle)
 
 void cc_destroy(driver_t *handle)
 {
-    CTU_UNUSED(handle);
+    CT_UNUSED(handle);
 }

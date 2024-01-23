@@ -18,14 +18,14 @@ namespace ed
 
         virtual void set_name(const void *ptr, const char *new_name)
         {
-            CTU_UNUSED(ptr);
-            CTU_UNUSED(new_name);
+            CT_UNUSED(ptr);
+            CT_UNUSED(new_name);
         }
 
         virtual void set_parent(const void *ptr, const void *parent)
         {
-            CTU_UNUSED(ptr);
-            CTU_UNUSED(parent);
+            CT_UNUSED(ptr);
+            CT_UNUSED(parent);
         }
 
         void install_global();

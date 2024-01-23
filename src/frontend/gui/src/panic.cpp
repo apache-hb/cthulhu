@@ -17,8 +17,8 @@ static ed::PanicInfo gPanicInfo = {};
 
 void ed::install_panic_handler()
 {
-    gPanicHandler = [](panic_t panic, const char *fmt, va_list args) {
-        gPanicInfo.capture_trace(panic, fmt, args);
+    gPanicHandler = [](source_info_t location, const char *fmt, va_list args) {
+        gPanicInfo.capture_trace(location, fmt, args);
         std::longjmp(gPanicEnv, 1); // NOLINT
     };
 }
@@ -119,7 +119,7 @@ static void trace_callback(const bt_frame_t *frame, void *user)
     info->frames.push_back(stack_frame);
 }
 
-void PanicInfo::capture_trace(panic_t panic, const char *fmt, va_list args)
+void PanicInfo::capture_trace(source_info_t location, const char *fmt, va_list args)
 {
     arena_t *arena = get_global_arena();
     trace_capture_t capture = {
@@ -131,7 +131,7 @@ void PanicInfo::capture_trace(panic_t panic, const char *fmt, va_list args)
 
     bt_read(trace_callback, &capture);
 
-    info = panic;
+    info = location;
     message = str_vformat(arena, fmt, args);
     has_error = true;
 }

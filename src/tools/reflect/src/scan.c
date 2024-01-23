@@ -24,7 +24,7 @@ void ref_parse_digit(mpz_t digit, scan_t *scan, where_t where, const char *str, 
 
 typevec_t *stringlist_begin(scan_t *scan, where_t where, text_t text)
 {
-    CTU_UNUSED(where);
+    CT_UNUSED(where);
 
     arena_t *arena = scan_get_arena(scan);
 
@@ -40,7 +40,7 @@ typevec_t *stringlist_append(typevec_t *list, text_t text)
 
 void referror(where_t *where, void *state, scan_t *scan, const char *msg)
 {
-    CTU_UNUSED(state);
+    CT_UNUSED(state);
 
     ref_scan_t *ctx = ref_scan_context(scan);
 

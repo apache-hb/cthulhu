@@ -82,7 +82,7 @@
 #   define CLANG_ATTRIB(...)
 #endif
 
-#if CC_MSVC
+#if CT_CC_MSVC
 #   define CTU_DECLSPEC(...) __declspec(__VA_ARGS__)
 #else
 #   define CTU_DECLSPEC(...)
@@ -131,7 +131,7 @@
 /// @def CTU_ALLOC_SIZE
 /// @brief mark a function as allocating memory with a specific size
 
-#if CC_MSVC
+#if CT_CC_MSVC
 #   define CTU_ALLOC(...) CTU_DECLSPEC(restrict) CTU_DECLSPEC(allocator)
 #else
 #   define CTU_ALLOC(...) CTU_ATTRIB(malloc(__VA_ARGS__))
@@ -142,9 +142,9 @@
 #ifdef __cplusplus
 #   ifdef _MSC_VER
 #      define CT_RESTRICT __restrict
-#   elif CC_GNU
+#   elif CT_CC_GNU
 #      define CT_RESTRICT __restrict__
-#   elif CC_CLANG
+#   elif CT_CC_CLANG
 #      define CT_RESTRICT __restrict
 #   else
 #      define CT_RESTRICT

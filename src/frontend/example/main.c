@@ -164,7 +164,7 @@ int main(int argc, const char **argv)
 
     ssa_emit_result_t ssa_emit_result = emit_ssa(&ssa_emit_options);
     CHECK_LOG(logger, "emitting ssa");
-    CTU_UNUSED(ssa_emit_result); // TODO: check for errors
+    CT_UNUSED(ssa_emit_result); // TODO: check for errors
 
     c89_emit_options_t c89_emit_options = {.opts = base_options};
 

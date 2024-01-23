@@ -21,7 +21,7 @@ c_ast_t *cc_get_typedef_name(cc_scan_t *scan, const char *name)
 
 void ccerror(where_t *where, void *state, scan_t *scan, const char *msg)
 {
-    CTU_UNUSED(state);
+    CT_UNUSED(state);
 
     cc_scan_t *ctx = cc_scan_context(scan);
 

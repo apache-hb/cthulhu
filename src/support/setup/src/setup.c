@@ -275,7 +275,7 @@ int parse_argparse(ap_t *ap, default_options_t options, tool_config_t config)
     return process_default_options(options, config);
 }
 
-static void pretty_panic_handler(panic_t panic, const char *fmt, va_list args)
+static void pretty_panic_handler(source_info_t location, const char *fmt, va_list args)
 {
     arena_t *arena = get_global_arena();
     bt_report_t *report = bt_report_collect(arena);
@@ -295,7 +295,7 @@ static void pretty_panic_handler(panic_t panic, const char *fmt, va_list args)
 
     char *msg = str_vformat(arena, fmt, args);
 
-    io_printf(io, "[panic][%s:%zu] => %s: %s\n", panic.file, panic.line, panic.function, msg);
+    io_printf(io, "[panic][%s:%zu] => %s: %s\n", location.file, location.line, location.function, msg);
 
     print_backtrace(backtrace_config, report);
     exit(CT_EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)

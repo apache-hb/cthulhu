@@ -19,7 +19,7 @@
 
 static tree_t *sema_digit(tree_t *sema, obr_t *expr, const tree_t *implicit_type)
 {
-    CTU_UNUSED(sema);
+    CT_UNUSED(sema);
 
     // TODO: get correct digit size
     const tree_t *type = implicit_type == NULL
@@ -31,7 +31,7 @@ static tree_t *sema_digit(tree_t *sema, obr_t *expr, const tree_t *implicit_type
 
 static tree_t *sema_string(tree_t *sema, obr_t *expr)
 {
-    CTU_UNUSED(sema);
+    CT_UNUSED(sema);
 
     tree_t *str = obr_get_string_type(expr->node, expr->length);
     return tree_expr_string(expr->node, str, expr->text, expr->length);

@@ -33,7 +33,7 @@ static vector_t *find_mod_path(ctu_t *ast, const char *fp, arena_t *arena)
 
 static void *ctu_preparse(driver_t *driver, scan_t *scan)
 {
-    CTU_UNUSED(scan);
+    CT_UNUSED(scan);
 
     lifetime_t *lifetime = handle_get_lifetime(driver);
     arena_t *arena = lifetime_get_arena(lifetime);

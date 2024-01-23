@@ -6,19 +6,19 @@
 
 static void bt_error_begin(size_t error, void *user)
 {
-    CTU_UNUSED(error);
-    CTU_UNUSED(user);
+    CT_UNUSED(error);
+    CT_UNUSED(user);
 }
 
 static void bt_error_next(const bt_frame_t *frame, void *user)
 {
-    CTU_UNUSED(user);
-    CTU_UNUSED(frame);
+    CT_UNUSED(user);
+    CT_UNUSED(frame);
 }
 
 static void bt_error_end(void *user)
 {
-    CTU_UNUSED(user);
+    CT_UNUSED(user);
     exit(CT_EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
 }
 

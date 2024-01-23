@@ -6,12 +6,12 @@
 
 static void jvm_create(driver_t *handle)
 {
-    CTU_UNUSED(handle);
+    CT_UNUSED(handle);
 }
 
 static void jvm_destroy(driver_t *handle)
 {
-    CTU_UNUSED(handle);
+    CT_UNUSED(handle);
 }
 
 static const char *const kLangNames[] = { "class", "jar", NULL };

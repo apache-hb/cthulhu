@@ -31,7 +31,7 @@ ctu_digit_t ctu_parse_digit(scan_t *scan, where_t where, const char *str, size_t
 
 void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg)
 {
-    CTU_UNUSED(state);
+    CT_UNUSED(state);
 
     ctu_scan_t *ctx = ctu_scan_context(scan);
 

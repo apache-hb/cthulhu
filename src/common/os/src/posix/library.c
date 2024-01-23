@@ -31,7 +31,7 @@ void os_library_close(os_library_t *library)
 
 // casting a object pointer to a function pointer is unspecified behavior
 // gnu warns on it, but posix requires it so we disable the warning
-#if CC_GNU
+#if CT_CC_GNU
 #   pragma GCC diagnostic push
 #   pragma GCC diagnostic ignored "-Wpedantic"
 #endif
@@ -45,6 +45,6 @@ os_fn_t os_library_symbol(os_library_t *library, const char *name)
     return (void(*)(void))dlsym(library->library, name);
 }
 
-#if CC_GNU
+#if CT_CC_GNU
 #   pragma GCC diagnostic pop
 #endif

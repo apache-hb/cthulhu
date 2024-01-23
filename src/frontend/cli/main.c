@@ -217,7 +217,7 @@ int main(int argc, const char **argv)
         .output_source = output_source,
     };
     c89_emit_result_t c89_emit_result = emit_c89(&c89_emit_options);
-    CTU_UNUSED(c89_emit_result); // TODO: check for errors
+    CT_UNUSED(c89_emit_result); // TODO: check for errors
     CHECK_LOG(reports, "emitting c89");
 
     const char *outpath = "out";

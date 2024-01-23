@@ -140,7 +140,7 @@ void tree_close_function(tree_t *self, tree_t *body)
     const vector_t *params = tree_fn_get_params(self);
     arity_t arity = tree_fn_get_arity(self);
 
-    CTU_UNUSED(arity);
+    CT_UNUSED(arity);
 
     CTASSERTF(vector_len(self->params) == vector_len(params),
         "decl %s has %zu params, expected %zu%s parameter(s)",

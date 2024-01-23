@@ -15,9 +15,9 @@
 
 #if __cplusplus >= 201402L
 #   define CTU_DEPRECATED(msg) [[deprecated(msg)]]
-#elif CC_MSVC
+#elif CT_CC_MSVC
 #   define CTU_DEPRECATED(msg) __declspec(deprecated(msg))
-#elif CC_CLANG || CC_GNU
+#elif CT_CC_CLANG || CT_CC_GNU
 #   define CTU_DEPRECATED(msg) __attribute__((deprecated(msg)))
 #else
 #   define CTU_DEPRECATED(msg)
@@ -39,9 +39,9 @@
 /// aligns @p X to the next power of 2 of @p ALIGN
 #define CT_ALIGN_POW2(X, ALIGN) (((X) + (ALIGN)-1) & ~((ALIGN)-1))
 
-/// @def CTU_UNUSED(x)
+/// @def CT_UNUSED(x)
 /// @brief mark a variable as unused
-#define CTU_UNUSED(x) ((void)(x))
+#define CT_UNUSED(x) ((void)(x))
 
 #define CT_INNER_STR(x) #x
 #define CT_STR(x) CT_INNER_STR(x)

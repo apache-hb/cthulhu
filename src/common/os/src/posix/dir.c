@@ -14,7 +14,7 @@ os_error_t os_iter_begin(const char *path, os_iter_t *result, arena_t *arena)
     CTASSERT(path != NULL);
     CTASSERT(result != NULL);
 
-    CTU_UNUSED(arena);
+    CT_UNUSED(arena);
 
     DIR *dir = opendir(path);
     if (dir == NULL)

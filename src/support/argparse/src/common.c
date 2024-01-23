@@ -165,8 +165,8 @@ void ap_on_invalid(scan_t *scan, char *value)
 
 void aperror(where_t *where, void *state, scan_t *scan, const char *msg)
 {
-    CTU_UNUSED(state);
-    CTU_UNUSED(where);
+    CT_UNUSED(state);
+    CT_UNUSED(where);
 
     ap_t *self = scan_get_context(scan);
 

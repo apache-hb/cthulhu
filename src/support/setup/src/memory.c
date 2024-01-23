@@ -9,23 +9,23 @@
 
 static void *default_malloc(size_t size, void *user)
 {
-    CTU_UNUSED(user);
+    CT_UNUSED(user);
 
     return malloc(size);
 }
 
 static void *default_realloc(void *ptr, size_t new_size, size_t old_size, void *user)
 {
-    CTU_UNUSED(user);
-    CTU_UNUSED(old_size);
+    CT_UNUSED(user);
+    CT_UNUSED(old_size);
 
     return realloc(ptr, new_size);
 }
 
 static void default_free(void *ptr, size_t size, void *user)
 {
-    CTU_UNUSED(user);
-    CTU_UNUSED(size);
+    CT_UNUSED(user);
+    CT_UNUSED(size);
 
     free(ptr);
 }

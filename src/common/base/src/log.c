@@ -3,8 +3,8 @@
 
 static void default_verbose(const char *fmt, va_list args)
 {
-    CTU_UNUSED(fmt);
-    CTU_UNUSED(args);
+    CT_UNUSED(fmt);
+    CT_UNUSED(args);
 }
 
 verbose_t gVerboseCallback = default_verbose;

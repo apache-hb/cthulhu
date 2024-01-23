@@ -4,6 +4,8 @@ GFI = good first issue
 
 ## First priority
 
+- prefix all config macros with `CTU_` and all other macros with `CT`
+
 - support for feeding sources directly into compilers
     - the intermediate step is annoying to users
 

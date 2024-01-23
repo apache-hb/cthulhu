@@ -29,8 +29,11 @@ BEGIN_API
 /// for expensive assertions that shouldnt be used too often
 /// use these for things that you do not want being turned into assumes due to the execution cost
 
+// TODO: move source_info_t into core
+// semanticly wrong for it to be in base
+
 /// @brief panic location information
-typedef struct
+typedef struct source_info_t
 {
     /// @brief the file the panic occurred in
     FIELD_STRING const char *file;
@@ -39,17 +42,18 @@ typedef struct
     size_t line;
 
     /// @brief the function the panic occurred in
+    /// @note this could also be the name of a variable in some uses in c++
     FIELD_STRING const char *function;
-} panic_t;
+} source_info_t;
 
 /// @brief panic handler function
-/// @param panic the panic information
+/// @param location the source location of the panic
 /// @param fmt the format string
 /// @param args the format arguments
 ///
 /// @note this function should not allocate memory using a compiler arena
 /// @note this function should not return
-typedef void (*panic_handler_t)(panic_t panic, const char *fmt, va_list args);
+typedef void (*panic_handler_t)(source_info_t location, const char *fmt, va_list args);
 
 /// @brief the global panic handler.
 ///
@@ -59,51 +63,60 @@ CT_BASE_API extern panic_handler_t gPanicHandler;
 
 /// @brief panic with a message, file, and line
 ///
-/// @param panic the panic information
+/// @param location the source location of the panic
 /// @param msg the message to panic with
 /// @param ... the arguments to format
-NORETURN CT_BASE_API ctpanic(panic_t panic, FMT_STRING const char *msg, ...) CT_PRINTF(2, 3);
+NORETURN CT_BASE_API ctu_panic(source_info_t location, FMT_STRING const char *msg, ...) CT_PRINTF(2, 3);
 
-#define CTU_PANIC_INFO {__FILE__, __LINE__, FUNCNAME}
+/// @brief panic with a message, file, and line
+///
+/// @param location the source location of the panic
+/// @param msg the message to panic with
+/// @param args the arguments to format
+NORETURN CT_BASE_API ctu_vpanic(source_info_t location, FMT_STRING const char *msg, va_list args);
 
-/// @def CTU_PANIC(...)
+/// @def CT_SOURCE_HERE
+/// @brief the source location of the current line
+#define CT_SOURCE_HERE {__FILE__, __LINE__, CT_FUNCNAME}
+
+/// @def CT_PANIC(...)
 /// @brief panic with a message and optional format arguments
 ///
 /// @param ... the format string and optional arguments to format
-#define CTU_PANIC(...)                                  \
+#define CT_PANIC(...)                                  \
     do                                                  \
     {                                                   \
-        panic_t panic = CTU_PANIC_INFO; \
-        ctpanic(panic, __VA_ARGS__);                    \
+        source_info_t panic_source = CT_SOURCE_HERE; \
+        ctu_panic(panic_source, __VA_ARGS__);                    \
     } while (0)
 
-/// @def CTU_ALWAYS_ASSERTF(expr, ...)
+/// @def CTASSERTF_ALWAYS(expr, ...)
 /// @brief assert a condition with a message and optional format arguments
 /// @note this always expands to a panic
 ///
 /// @param expr the condition to assert
 /// @param ... the format string and optional arguments to format
 
-#define CTU_ALWAYS_ASSERTF(expr, ...) \
+#define CTASSERTF_ALWAYS(expr, ...) \
     do                                \
     {                                 \
         if (!(expr))                  \
         {                             \
-            CTU_PANIC(__VA_ARGS__);   \
+            CT_PANIC(__VA_ARGS__);   \
         }                             \
     } while (0)
 
 /// @def CTASSERTF(expr, ...)
 /// @brief assert a condition with a message and optional format arguments
-/// @note in release builds this expands to @a CTU_ASSUME
+/// @note in release builds this expands to @a CT_ASSUME
 ///
 /// @param expr the condition to assert
 /// @param ... the format string and optional arguments to format
 
 #if CTU_DEBUG
-#   define CTASSERTF(expr, ...) CTU_ALWAYS_ASSERTF(expr, __VA_ARGS__)
+#   define CTASSERTF(expr, ...) CTASSERTF_ALWAYS(expr, __VA_ARGS__)
 #else
-#   define CTASSERTF(expr, ...) CTU_ASSUME(expr)
+#   define CTASSERTF(expr, ...) CT_ASSUME(expr)
 #endif
 
 /// @def CTASSERTM(expr, msg)
@@ -123,7 +136,7 @@ NORETURN CT_BASE_API ctpanic(panic_t panic, FMT_STRING const char *msg, ...) CT_
 /// @brief assert that a code path is never reached
 ///
 /// @param ... the format string and optional arguments to format
-#define NEVER(...) CTU_PANIC(__VA_ARGS__)
+#define NEVER(...) CT_PANIC(__VA_ARGS__)
 
 #if CTU_PARANOID
 #   define CT_PARANOID(...) __VA_ARGS__

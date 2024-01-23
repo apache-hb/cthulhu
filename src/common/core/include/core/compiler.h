@@ -10,13 +10,17 @@
 // always detect clang first because it pretends to be gcc and msvc
 // note: i hate that clang does this
 #if defined(__clang__)
-#   define CC_CLANG 1
+#   define CT_CC_CLANG 1
 #elif defined(__GNUC__)
-#   define CC_GNU 1
+#   define CT_CC_GNU 1
 #elif defined(_MSC_VER)
-#   define CC_MSVC 1
+#   define CT_CC_MSVC 1
 #else
 #   error "unknown compiler"
+#endif
+
+#if defined(__clang__) && defined(_MSC_VER)
+#   define CT_CC_CLANGCL 1
 #endif
 
 #if defined(__linux__)
@@ -36,9 +40,9 @@
 #endif
 
 #ifndef NORETURN
-#   if CC_CLANG || CC_GNU
+#   if CT_CC_CLANG || CT_CC_GNU
 #      define NORETURN __attribute__((noreturn)) void
-#   elif CC_MSVC
+#   elif CT_CC_MSVC
 #      define NORETURN __declspec(noreturn) void
 #   else
 #      define NORETURN void
@@ -54,15 +58,15 @@
 #endif
 
 
-/// @def CTU_ASSUME(expr)
+/// @def CT_ASSUME(expr)
 /// @brief assume that @a expr is true
 /// @warning this is a compiler hint that can be used to optimize code
 ///       use with caution
 
-#ifdef CC_MSVC
-#   define CTU_ASSUME(expr) __assume(expr)
-#elif CC_GNU || CC_CLANG
-#   define CTU_ASSUME(expr)                                                                                            \
+#ifdef CT_CC_MSVC
+#   define CT_ASSUME(expr) __assume(expr)
+#elif CT_CC_GNU || CT_CC_CLANG
+#   define CT_ASSUME(expr)                                                                                            \
         do                                                                                                              \
         {                                                                                                               \
             if (!(expr))                                                                                                \
@@ -71,7 +75,7 @@
             }                                                                                                           \
         } while (0)
 #else
-#   define CTU_ASSUME(expr) ((void)0)
+#   define CT_ASSUME(expr) ((void)0)
 #endif
 
 // clang-format off
@@ -84,20 +88,20 @@
 #endif
 // clang-format on
 
-/// @def FUNCNAME
+/// @def CT_FUNCNAME
 /// @brief the name of the current function
 /// @warning the format of the string is compiler dependant, please dont try and parse it
 
-#if CC_GNU && CTU_HAS_PRETTY_FUNCTION
-#   define FUNCNAME __PRETTY_FUNCTION__
+#if CT_CC_GNU && CTU_HAS_PRETTY_FUNCTION
+#   define CT_FUNCNAME __PRETTY_FUNCTION__
 #endif
 
-#ifndef FUNCNAME
-#   define FUNCNAME __func__
+#ifndef CT_FUNCNAME
+#   define CT_FUNCNAME __func__
 #endif
 
 // byteswapping
-#if CC_MSVC
+#if CT_CC_MSVC
 #   define BYTESWAP_U16(x) _byteswap_ushort(x)
 #   define BYTESWAP_U32(x) _byteswap_ulong(x)
 #   define BYTESWAP_U64(x) _byteswap_uint64(x)
@@ -107,7 +111,7 @@
 #   define BYTESWAP_U64(x) __builtin_bswap64(x)
 #endif
 
-// we use _MSC_VER rather than CC_MSVC because both clang-cl and msvc define it
+// we use _MSC_VER rather than CT_CC_MSVC because both clang-cl and msvc define it
 // and we want to detect both
 #ifdef _MSC_VER
 #   define CT_EXPORT __declspec(dllexport)

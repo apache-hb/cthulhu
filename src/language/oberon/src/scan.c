@@ -11,7 +11,7 @@ obr_scan_t *obr_scan_context(scan_t *scan)
 
 void obrerror(where_t *where, void *state, scan_t *scan, const char *msg)
 {
-    CTU_UNUSED(state);
+    CT_UNUSED(state);
 
     obr_scan_t *ctx = obr_scan_context(scan);
 

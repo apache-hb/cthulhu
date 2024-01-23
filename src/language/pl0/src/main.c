@@ -20,7 +20,7 @@ CTU_CALLBACKS(kCallbacks, pl0);
 
 static void *pl0_preparse(driver_t *handle, scan_t *scan)
 {
-    CTU_UNUSED(scan);
+    CT_UNUSED(scan);
 
     lifetime_t *lifetime = handle_get_lifetime(handle);
     logger_t *reports = lifetime_get_logger(lifetime);

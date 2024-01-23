@@ -17,7 +17,7 @@ CTU_CALLBACKS(kCallbacks, cc);
 
 static void *cc_preparse(driver_t *handle, scan_t *scan)
 {
-    CTU_UNUSED(scan);
+    CT_UNUSED(scan);
 
     lifetime_t *lifetime = handle_get_lifetime(handle);
     logger_t *reports = lifetime_get_logger(lifetime);
@@ -33,9 +33,9 @@ static void *cc_preparse(driver_t *handle, scan_t *scan)
 
 static void cc_postparse(driver_t *handle, scan_t *scan, void *tree)
 {
-    CTU_UNUSED(handle);
-    CTU_UNUSED(scan);
-    CTU_UNUSED(tree);
+    CT_UNUSED(handle);
+    CT_UNUSED(scan);
+    CT_UNUSED(tree);
 
     ctu_log("cc_postparse");
 }

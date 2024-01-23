@@ -490,8 +490,8 @@ private:
 
 int main(int argc, const char **argv)
 {
-    CTU_UNUSED(argc);
-    CTU_UNUSED(argv);
+    CT_UNUSED(argc);
+    CT_UNUSED(argv);
 
     if (!draw::create(L"Editor"))
     {

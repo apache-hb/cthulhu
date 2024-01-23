@@ -415,7 +415,7 @@ static void reflect_enum(c89_emit_t *emit, io_t *io, const char *ns, const ssa_t
 
 static void reflect_struct(c89_emit_t *emit, io_t *io, const char *ns, const ssa_type_t *type)
 {
-    CTU_UNUSED(emit);
+    CT_UNUSED(emit);
 
     ssa_type_record_t it = type->record;
     size_t len = typevec_len(it.fields);

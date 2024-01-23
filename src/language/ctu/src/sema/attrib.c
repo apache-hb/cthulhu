@@ -211,7 +211,7 @@ static void apply_extern(tree_t *sema, tree_t *decl, vector_t *args)
 
 static void apply_layout(tree_t *sema, tree_t *decl, vector_t *args)
 {
-    CTU_UNUSED(args);
+    CT_UNUSED(args);
 
     if (!tree_is(decl, eTreeTypeStruct))
     {

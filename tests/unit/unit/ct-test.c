@@ -28,7 +28,7 @@ typedef enum test_error_t
 
 typedef struct test_exception_t
 {
-    panic_t panic;
+    source_info_t location;
     char *msg;
 } test_exception_t;
 
@@ -105,13 +105,13 @@ static arena_t *gTestArena = NULL;
 
 jmp_buf gPanicJump = { 0 };
 
-static void test_panic_handler(panic_t panic, const char *fmt, va_list args)
+static void test_panic_handler(source_info_t location, const char *fmt, va_list args)
 {
     if (!gExpectingPanic)
     {
         io_t *io = io_stdout();
 
-        io_printf(io, "unexpected panic [%s:%zu] => %s: ", panic.file, panic.line, panic.function);
+        io_printf(io, "unexpected panic [%s:%zu] => %s: ", location.file, location.line, location.function);
         io_vprintf(io, fmt, args);
         io_printf(io, "\n");
 
@@ -133,7 +133,7 @@ static void test_panic_handler(panic_t panic, const char *fmt, va_list args)
     }
 
     char *msg = str_vformat(gTestArena, fmt, args);
-    test_exception_t ex = { panic, msg };
+    test_exception_t ex = { location, msg };
     gPanicException = ex;
     longjmp(gPanicJump, 1);
 }
@@ -151,23 +151,23 @@ void test_install_panic_handler(void)
 
 static void *ef_malloc(size_t size, void *self)
 {
-    CTU_UNUSED(self);
+    CT_UNUSED(self);
 
     NEVER("bzzt! electric fence hit with malloc of size %zu", size);
 }
 
 static void *ef_realloc(void *ptr, size_t new_size, size_t old_size, void *self)
 {
-    CTU_UNUSED(ptr);
-    CTU_UNUSED(self);
+    CT_UNUSED(ptr);
+    CT_UNUSED(self);
 
     NEVER("bzzt! electric fence hit with realloc of size %zu old %zu", new_size, old_size);
 }
 
 static void ef_free(void *ptr, size_t size, void *self)
 {
-    CTU_UNUSED(ptr);
-    CTU_UNUSED(self);
+    CT_UNUSED(ptr);
+    CT_UNUSED(self);
 
     NEVER("bzzt! electric fence hit with free of size %zu", size);
 }

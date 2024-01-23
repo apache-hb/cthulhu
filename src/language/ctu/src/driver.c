@@ -119,5 +119,5 @@ void ctu_process_imports(context_t *context)
 
 void ctu_compile_module(context_t *context)
 {
-    CTU_UNUSED(context);
+    CT_UNUSED(context);
 }

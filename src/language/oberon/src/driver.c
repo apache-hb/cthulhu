@@ -99,5 +99,5 @@ void obr_process_imports(context_t *context)
 
 void obr_compile_module(context_t *context)
 {
-    CTU_UNUSED(context);
+    CT_UNUSED(context);
 }

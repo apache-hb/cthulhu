@@ -7,14 +7,14 @@
 
 static size_t con_out_write(io_t *self, const char *fmt, va_list args)
 {
-    CTU_UNUSED(self);
+    CT_UNUSED(self);
 
     return vfprintf(stdout, fmt, args);
 }
 
 static size_t con_error_write(io_t *self, const char *fmt, va_list args)
 {
-    CTU_UNUSED(self);
+    CT_UNUSED(self);
 
     return vfprintf(stderr, fmt, args);
 }

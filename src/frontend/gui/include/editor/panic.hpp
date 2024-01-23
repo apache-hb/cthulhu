@@ -28,14 +28,14 @@ namespace ed
     public:
         bool has_error = false;
 
-        panic_t info = {};
+        source_info_t info = {};
         std::string message;
         std::vector<stack_frame_t> frames;
 
         bool has_info() const { return has_error; }
         void reset();
 
-        void capture_trace(panic_t panic, const char *fmt, va_list args);
+        void capture_trace(source_info_t location, const char *fmt, va_list args);
         void draw();
     };
 

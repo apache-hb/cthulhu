@@ -118,7 +118,7 @@ static void *user_malloc(size_t size, void *user)
 
 static void *user_realloc(void *ptr, size_t new_size, size_t old_size, void *user)
 {
-    CTU_UNUSED(old_size);
+    CT_UNUSED(old_size);
 
     user_arena_t *data = (user_arena_t *)user;
 
@@ -136,8 +136,8 @@ static void *user_realloc(void *ptr, size_t new_size, size_t old_size, void *use
 
 static void user_free(void *ptr, size_t size, void *user)
 {
-    CTU_UNUSED(ptr);
-    CTU_UNUSED(size);
+    CT_UNUSED(ptr);
+    CT_UNUSED(size);
 
     user_arena_t *data = (user_arena_t *)user;
 
@@ -283,7 +283,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
 
     ssa_emit_result_t ssa_emit_result = emit_ssa(&emit_options);
     CHECK_LOG(reports, "emitting ssa");
-    CTU_UNUSED(ssa_emit_result); // TODO: check for errors
+    CT_UNUSED(ssa_emit_result); // TODO: check for errors
 
     c89_emit_options_t c89_emit_options = {.opts = base_options};
 

@@ -545,7 +545,7 @@ void text_report_rich(text_config_t config, const event_t *event)
 
     typevec_t *primary = collect_primary_segments(&ctx, event->segments, event);
     size_t count = typevec_len(primary);
-    CTU_UNUSED(count);
+    CT_UNUSED(count);
 
     print_file_header(&ctx, event->node);
     print_file_segments(&ctx, primary);

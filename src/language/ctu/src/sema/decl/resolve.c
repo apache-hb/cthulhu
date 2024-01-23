@@ -12,8 +12,8 @@ ctu_t *begin_resolve(tree_t *sema, tree_t *self, void *user, ctu_kind_t kind)
     ctu_t *decl = user;
     CTASSERTF(decl->kind == kind, "decl %s is not a %d", decl->name, kind);
 
-    CTU_UNUSED(sema);
-    CTU_UNUSED(self);
+    CT_UNUSED(sema);
+    CT_UNUSED(self);
 
     return decl;
 }
