@@ -32,7 +32,7 @@ typedef struct map_t map_t;
 ///
 /// @return the formatted string
 NODISCARD CT_PRINTF(2, 3)
-CT_STD_API text_t text_format(IN_NOTNULL arena_t *arena, FMT_STRING const char *fmt, ...);
+CT_STD_API text_t text_format(IN_NOTNULL arena_t *arena, CT_FMT_STRING const char *fmt, ...);
 
 /// @brief format a string
 ///
@@ -57,7 +57,7 @@ CT_STD_API text_t text_vformat(IN_NOTNULL arena_t *arena, IN_STRING const char *
 ///
 /// @return the formatted string
 NODISCARD CT_PRINTF(2, 3)
-CT_STD_API char *str_format(IN_NOTNULL arena_t *arena, FMT_STRING const char *fmt, ...);
+CT_STD_API char *str_format(IN_NOTNULL arena_t *arena, CT_FMT_STRING const char *fmt, ...);
 
 /// @brief format a string
 ///

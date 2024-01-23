@@ -110,7 +110,7 @@ CT_IO_API size_t io_write(IN_NOTNULL io_t *io, IN_READS(size) const void *src, s
 /// @param ... the format arguments
 ///
 /// @return the number of bytes actually written
-CT_IO_API size_t io_printf(IN_NOTNULL io_t *io, FMT_STRING const char *fmt, ...) CT_PRINTF(2, 3);
+CT_IO_API size_t io_printf(IN_NOTNULL io_t *io, CT_FMT_STRING const char *fmt, ...) CT_PRINTF(2, 3);
 
 /// @brief vprintf to an io object
 /// @pre the io object must have been created with the @a eAccessWrite flag

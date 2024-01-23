@@ -85,7 +85,7 @@ CT_FORMAT_API char *colour_text(format_context_t context, IN_RANGE(<, eColourCou
 ///
 /// @return the coloured string
 CT_PRINTF(3, 4)
-CT_FORMAT_API char *colour_format(format_context_t context, IN_RANGE(<, eColourCount) colour_t idx, FMT_STRING const char *fmt, ...);
+CT_FORMAT_API char *colour_format(format_context_t context, IN_RANGE(<, eColourCount) colour_t idx, CT_FMT_STRING const char *fmt, ...);
 
 /// @brief format a string and add colour to it
 ///

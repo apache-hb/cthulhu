@@ -126,7 +126,7 @@ CT_NOTIFY_API event_builder_t msg_notify(
     IN_NOTNULL logger_t *logs,
     const diagnostic_t *diagnostic,
     const node_t *node,
-    FMT_STRING const char *fmt, ...);
+    CT_FMT_STRING const char *fmt, ...);
 
 /// @brief notify the logger of a new message
 ///
@@ -153,7 +153,7 @@ CT_PRINTF(3, 4)
 CT_NOTIFY_API void msg_append(
     event_builder_t builder,
     const node_t *node,
-    FMT_STRING const char *fmt, ...);
+    CT_FMT_STRING const char *fmt, ...);
 
 /// @brief append additional information to a message
 ///
@@ -174,7 +174,7 @@ CT_NOTIFY_API void msg_vappend(
 CT_PRINTF(2, 3)
 CT_NOTIFY_API void msg_note(
     event_builder_t builder,
-    FMT_STRING const char *fmt, ...);
+    CT_FMT_STRING const char *fmt, ...);
 
 /// @brief add a note to an existing message
 ///

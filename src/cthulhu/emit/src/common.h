@@ -29,6 +29,6 @@ char *get_block_name(emit_t *emit, const ssa_block_t *block);
 char *get_step_from_block(emit_t *emit, const ssa_block_t *block, size_t index);
 
 CT_PRINTF(2, 3)
-void write_string(io_t *io, FMT_STRING const char *fmt, ...);
+void write_string(io_t *io, CT_FMT_STRING const char *fmt, ...);
 
 const char *type_to_string(const ssa_type_t *type, arena_t *arena);

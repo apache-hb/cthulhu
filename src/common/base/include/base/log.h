@@ -36,7 +36,7 @@ CT_BASE_API bool ctu_log_enabled(void);
 /// @param fmt the format string
 /// @param ... the format arguments
 CT_PRINTF(1, 2)
-CT_BASE_API void ctu_log(FMT_STRING const char *fmt, ...);
+CT_BASE_API void ctu_log(CT_FMT_STRING const char *fmt, ...);
 
 /// @brief log a message
 ///

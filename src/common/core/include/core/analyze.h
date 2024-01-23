@@ -13,7 +13,7 @@
 
 #if __has_include(<sal.h>)
 #   include <sal.h>
-#   define FMT_STRING _Printf_format_string_
+#   define CT_FMT_STRING _Printf_format_string_
 #   define USE_DECL _Use_decl_annotations_
 #   ifndef NODISCARD
 #      define NODISCARD _Check_return_
@@ -35,7 +35,7 @@
 #   define IN_STRING _In_z_
 #   define IN_RANGE(cmp, it) _In_range_(cmp, it)
 #else
-#   define FMT_STRING
+#   define CT_FMT_STRING
 #   define USE_DECL
 #   define IN_READS(expr)
 #   define OUT_WRITES(expr)
@@ -183,7 +183,7 @@
 /// @def NODISCARD
 /// @brief mark a function as returning a value that must be used
 
-/// @def FMT_STRING
+/// @def CT_FMT_STRING
 /// @brief mark a function parameter as a printf format string
 
 /// @def USE_DECL
