@@ -1497,6 +1497,25 @@ size_t Variant::max_tostring_bitflags() const {
     return max;
 }
 
+Case *Variant::get_zero_case() const
+{
+    if (m_cases.size() == 0)
+        return nullptr;
+
+    for (size_t i = 0; i < m_cases.size(); ++i)
+    {
+        auto c = m_cases.get(i);
+        mpz_t id;
+        if (c->get_integer(id))
+        {
+            if (mpz_cmp_ui(id, 0) == 0)
+                return c;
+        }
+    }
+
+    return nullptr;
+}
+
 void Variant::emit_reflection(Sema& sema, out_t& out) const
 {
     if (type_is_internal(m_ast))
@@ -1551,11 +1570,23 @@ void Variant::emit_reflection(Sema& sema, out_t& out) const
         out.enter();
         if (is_bitflags)
         {
+            Case *zero = get_zero_case();
             out.writeln("string_t result;");
+            if (zero != nullptr)
+            {
+                out.writeln("if (value == %s::e%s) return impl::objname(\"%s\");", id, zero->get_name(), zero->get_repr());
+            }
             out.writeln("bool first = true;");
             out.writeln("for (auto option : kCases) {");
             out.enter();
-            out.writeln("if ((option.value != 0) && ((value & option.value) == option.value)) {");
+            if (zero != nullptr)
+            {
+                out.writeln("if ((option.value != %s::e%s) && (value & option.value) == option.value) {", id, zero->get_name());
+            }
+            else
+            {
+                out.writeln("if ((value & option.value) == option.value) {");
+            }
             out.enter();
             out.writeln("if (!first) result += \", \";");
             out.writeln("result += option.name;");

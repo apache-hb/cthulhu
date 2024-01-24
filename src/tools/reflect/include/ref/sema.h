@@ -823,6 +823,7 @@ namespace refl {
         void emit_facade(out_t& out) const;
 
         void emit_reflection(Sema& sema, out_t& out) const override;
+        Case *get_zero_case() const;
 
         void emit_default_is_valid(out_t& out) const;
 
