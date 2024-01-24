@@ -1,7 +1,16 @@
 #include "base/panic.h"
 
 #include "os/os.h"
+
 #include <stdint.h>
+
+#if CTU_WIN32_TRICKERY
+#   include <errhandlingapi.h>
+#   include <handleapi.h>
+#   include <fileapi.h>
+#   include <winbase.h>
+#   include <winerror.h>
+#endif
 
 static DWORD get_access(os_access_t access)
 {

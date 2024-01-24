@@ -113,6 +113,11 @@ option('dynamic_library', type : 'feature',
     value : 'auto'
 )
 
+option('win32_trickery', type : 'feature',
+    description : 'enable some slightly hacky win32 handling to speed up builds',
+    value : 'disabled'
+)
+
 # tools
 
 option('tool_notify', type : 'feature',

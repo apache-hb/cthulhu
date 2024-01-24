@@ -920,10 +920,7 @@ static uint32_t type_hash(const char *name)
     while (*name)
     {
         hash ^= *name++;
-        for (int i = 0; i < 8; i++)
-        {
-            hash = (hash >> 1) ^ (0xEDB88320 & -(hash & 1));
-        }
+        hash *= 16777619;
     }
 
     return ~hash;

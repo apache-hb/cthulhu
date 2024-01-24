@@ -2,6 +2,9 @@
 
 #include "core/win32.h" // IWYU pragma: export
 
+#include <windef.h>
+#include <minwinbase.h>
+
 typedef struct os_file_t
 {
     const char *path;

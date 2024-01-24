@@ -1,7 +1,7 @@
 #include "os/os.h"
 
-#include <crtdbg.h>
 #include <stdlib.h>
+#include <crtdbg.h>
 
 void os_init(void)
 {

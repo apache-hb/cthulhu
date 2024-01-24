@@ -33,13 +33,13 @@ target = target_machine.system()
 
 opt_paranoid = get_option('paranoid').disable_auto_if(is_release)
 opt_analyze = get_option('analyze').disable_auto_if(meson.is_subproject())
+win32_trickery = get_option('win32_trickery')
 
 # disable unit tests if we are a subproject or release build
 # this is because they require some different flags that slow down the compiler.
 # but only on gcc
 unit_tests = get_option('unit_tests').disable_auto_if(is_release or meson.is_subproject())
 driver_tests = get_option('driver_tests').disable_auto_if(meson.is_subproject())
-
 warning_level = get_option('warning_level').to_int()
 
 trace_memory = get_option('trace_memory').disable_auto_if(is_release or meson.is_subproject())
@@ -104,6 +104,7 @@ config_cdata.set('CTU_PATCH', parts[2].to_int())
 config_cdata.set10('CTU_DEBUG', is_debug)
 config_cdata.set10('CTU_PARANOID', opt_paranoid.allowed())
 config_cdata.set10('CTU_BUILD_SHARED', default_library == 'shared')
+config_cdata.set10('CTU_WIN32_TRICKERY', win32_trickery.allowed())
 
 # we use `__attribute__((const|pure))` heavily, but during unit tests we
 # violate function preconditions to test assertions.
@@ -284,6 +285,7 @@ summary = {
         'Paranoid asserts': opt_paranoid.allowed(),
         'Flex': flex,
         'Bison': bison,
+        'Win32 trickery': win32_trickery.allowed(),
     },
     'Targets': {
         'C Family': target_cfamily.allowed(),

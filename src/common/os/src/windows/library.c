@@ -2,6 +2,10 @@
 
 #include "base/panic.h"
 
+#if CTU_WIN32_TRICKERY
+#   include <winbase.h>
+#endif
+
 USE_DECL
 os_error_t os_library_open(const char *path, os_library_t *library)
 {

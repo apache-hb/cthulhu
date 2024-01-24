@@ -89,10 +89,6 @@ TREE_KIND(eTreeDeclModule, "decl_module", eTagName)
 TREE_KIND(eTreePartial, "partial_type", eTagName | eTagIsType) ///< unresolved type
 TREE_KIND(eTreeError, "error", eTagName | eTagHasType) ///< an error of some sort
 
-/// simcoe: hacks
-
-TREE_KIND(eTreeTypeName, "type_name", eTagName | eTagIsType) ///< a type name
-
 #undef TREE_KIND
 
 #ifndef DIGIT_KIND

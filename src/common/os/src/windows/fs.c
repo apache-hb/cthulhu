@@ -4,6 +4,14 @@
 
 #include "os/os.h"
 
+#if CTU_WIN32_TRICKERY
+#   include <errhandlingapi.h>
+#   include <fileapi.h>
+#   include <handleapi.h>
+#   include <processenv.h>
+#   include <winerror.h>
+#endif
+
 // TODO: this feels janky
 USE_DECL
 os_error_t os_file_create(const char *path)

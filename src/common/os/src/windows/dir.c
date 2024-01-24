@@ -7,6 +7,10 @@
 
 #include "std/str.h"
 
+#if CTU_WIN32_TRICKERY
+#   include <winbase.h>
+#endif
+
 static BOOL find_next(HANDLE handle, WIN32_FIND_DATA *data, DWORD *error)
 {
     BOOL result = FindNextFile(handle, data);
