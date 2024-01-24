@@ -421,6 +421,8 @@ static bool has_attrib_tag(vector_t *attribs, ref_attrib_tag_t tag)
     ref_ast_t *attrib = get_attrib(attribs, eAstAttribTag);
     if (!attrib) return false;
 
+    printf("found tag: %d %d\n", attrib->tag, tag);
+
     return attrib->tag == tag;
 }
 
@@ -576,7 +578,7 @@ void RecordType::resolve(Sema& sema)
 
 static bool type_is_external(ref_ast_t *ast)
 {
-    return !has_attrib_tag(ast->attributes, eAttribExternal);
+    return has_attrib_tag(ast->attributes, eAttribExternal);
 }
 
 static bool type_is_facade(ref_ast_t *ast)
@@ -972,7 +974,7 @@ void Variant::emit_impl(out_t& out) const
     if (is_external || is_facade)
     {
         CTASSERTF(m_parent != nullptr, "enum %s must have a parent because it is not implemented internally", get_name());
-        CTASSERTF(is_facade ^ is_external, "enum %s cannot be both a facade and external", get_name());
+        CTASSERTF(!(is_facade && is_external), "enum %s cannot be both a facade and external", get_name());
     }
 
     out.writeln("namespace impl {");

@@ -83,8 +83,6 @@ typedef enum ref_attrib_tag_t {
     // this wraps an external type, which is defined, but not by us
     eAttribExternal,
 
-    eAttribFacadeUnscopedEnum, // facade over a c style unscoped enum
-
     eAttribLayoutSystem, // match system abi
 
     // stable abi for serialization
