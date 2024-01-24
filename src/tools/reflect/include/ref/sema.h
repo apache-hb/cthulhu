@@ -666,7 +666,7 @@ namespace refl {
 
         void emit_impl(out_t& out) const override;
         void emit_thunk(out_t& out) const;
-        void emit_method(Sema& sema, out_t& out, RecordType& parent) const;
+        void emit_method(out_t& out, const RecordType& parent) const;
 
         void resolve_deps(DeclDepends& deps) const {
             if (m_return) deps.add(m_return);

@@ -428,8 +428,8 @@ void Method::resolve(Sema& sema) {
     if (is_resolved()) return;
     finish_resolve();
 
-    if (m_return != nullptr)
-        m_return = sema.resolve_decl(m_return);
+    if (m_ast->return_type != nullptr)
+        m_return = sema.resolve_type(m_ast->return_type);
 
     if (m_ast->method_params != nullptr) {
         Map<const char*, Param*> params { vector_len(m_ast->method_params), get_global_arena() };
@@ -496,8 +496,8 @@ void Method::emit_impl(out_t& out) const {
     }
 }
 
-void Method::emit_method(Sema& sema, out_t& out, RecordType& parent) const {
-    Type *ret = m_return ? m_return->get_type() : new VoidType("void");
+void Method::emit_method(out_t& out, const RecordType& parent) const {
+    Type *ret = m_return ? m_return : new VoidType("void");
     auto it = ret->get_cxx_name(get_name());
     String params;
     String args;
@@ -519,7 +519,7 @@ void Method::emit_method(Sema& sema, out_t& out, RecordType& parent) const {
 
     if (is_virtual && !parent.is_virtual())
     {
-        sema.report(&kEvent_VirtualMethodOnNonVirtualClass, m_ast->node, "virtual method %s on non-virtual class %s", get_name(), parent.get_name());
+        NEVER("virtual method %s on non-virtual class %s", get_name(), parent.get_name());
     }
 
     const char *virt_str = is_virtual ? "virtual " : "";
@@ -614,7 +614,7 @@ ref_privacy_t RecordType::emit_methods(out_t& out, ref_privacy_t privacy) const
             out.writeln("%s:", get_privacy(privacy));
             out.enter();
         }
-        method->emit_impl(out);
+        method->emit_method(out, *this);
     });
 
 
