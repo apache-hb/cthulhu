@@ -62,6 +62,7 @@ typedef enum ref_kind_t {
     eAstAttribAlign, // alignment for serialization
     eAstAttribCxxName, // c++ name for implementation
     eAstAttribRemote, // enable rpc
+    eAstAttribFormat, // string name
 
     eAstAttribTag, // a tag attribute, one of ref_attrib_tag_t
 
@@ -290,7 +291,7 @@ ref_ast_t *ref_attrib_typeid(scan_t *scan, where_t where, ref_ast_t *expr);
 ref_ast_t *ref_attrib_alignas(scan_t *scan, where_t where, ref_ast_t *expr);
 ref_ast_t *ref_attrib_cxxname(scan_t *scan, where_t where, char *ident);
 ref_ast_t *ref_attrib_remote(scan_t *scan, where_t where);
-ref_ast_t *ref_attrib_rename(scan_t *scan, where_t where, char *ident);
+ref_ast_t *ref_attrib_format(scan_t *scan, where_t where, typevec_t *ident);
 
 ref_ast_t *ref_attrib_tag(scan_t *scan, where_t where, ref_attrib_tag_t tag);
 

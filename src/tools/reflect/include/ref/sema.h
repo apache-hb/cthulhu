@@ -349,6 +349,7 @@ namespace refl {
 
     public:
         const char *get_name() const { return m_name; }
+        virtual const char *get_repr() const { return m_name; }
         bool is_resolved() const { return m_resolved; }
         Type *get_type() const { return m_type; }
 
@@ -611,9 +612,20 @@ namespace refl {
         void resolve(Sema&) override { finish_resolve(); }
     };
 
-    class Field : public Decl {
+    class TreeBackedDecl : public Decl {
+    protected:
         ref_ast_t *m_ast = nullptr;
 
+        TreeBackedDecl(ref_ast_t *ast, TreeKind kind)
+            : Decl(ast->node, kind, ast->name)
+            , m_ast(ast)
+        { }
+
+    public:
+        const char *get_repr() const override;
+    };
+
+    class Field : public TreeBackedDecl {
     public:
         Field(ref_ast_t *ast);
 
@@ -629,12 +641,10 @@ namespace refl {
         ref_ast_t *get_ast() const { return m_ast; }
     };
 
-    class Param : public Decl {
-        ref_ast_t *m_ast = nullptr;
+    class Param : public TreeBackedDecl {
     public:
         Param(ref_ast_t *ast)
-            : Decl(ast->node, eKindParam, ast->name)
-            , m_ast(ast)
+            : TreeBackedDecl(ast, eKindParam)
         { }
 
         void resolve(Sema& sema) override {
@@ -647,9 +657,7 @@ namespace refl {
 
     class RecordType;
 
-    class Method : public Decl {
-        ref_ast_t *m_ast = nullptr;
-
+    class Method : public TreeBackedDecl {
         Vector<Param*> m_params { 32, get_global_arena() };
 
         Type *m_return = nullptr;
@@ -658,8 +666,7 @@ namespace refl {
 
     public:
         Method(ref_ast_t *ast)
-            : Decl(ast->node, eKindMethod, ast->name)
-            , m_ast(ast)
+            : TreeBackedDecl(ast, eKindMethod)
         { }
 
         void resolve(Sema& sema) override;
@@ -678,14 +685,14 @@ namespace refl {
         ref_privacy_t get_privacy() const { return m_ast->privacy; }
     };
 
-    class Case : public Decl {
-        ref_ast_t *m_ast = nullptr;
-
+    class Case : public TreeBackedDecl {
         eval_result_t m_eval = eEvalInvalid;
         mpz_t digit_value = {};
 
     public:
         Case(ref_ast_t *ast);
+
+        const char *get_repr() const override;
 
         void resolve(Sema& sema) override;
 

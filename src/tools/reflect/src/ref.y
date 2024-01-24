@@ -195,6 +195,7 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     TOK_INTERNAL "internal"
     TOK_EXTERNAL "external"
     TOK_ORDERED "ordered"
+    TOK_FORMAT "format"
 
     TOK_NULL "null"
     TOK_TRUE "true"
@@ -377,6 +378,7 @@ attrib: TOK_DEPRECATED TOK_LPAREN string_list TOK_RPAREN { $$ = ref_attrib_depre
     | TOK_ALIGNAS TOK_LPAREN expr TOK_RPAREN { $$ = ref_attrib_alignas(x, @$, $3); }
     | TOK_CXXNAME TOK_LPAREN TOK_IDENT TOK_RPAREN { $$ = ref_attrib_cxxname(x, @$, $3); }
     | TOK_REMOTE { $$ = ref_attrib_remote(x, @$); }
+    | TOK_FORMAT TOK_LPAREN string_list TOK_RPAREN { $$ = ref_attrib_format(x, @$, $3); }
     | simple_attrib { $$ = ref_attrib_tag(x, @$, $1); }
     ;
 

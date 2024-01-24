@@ -350,9 +350,38 @@ void Field::resolve(Sema& sema)
 }
 
 Field::Field(ref_ast_t *ast)
-    : Decl(ast->node, eKindField, ast->name)
-    , m_ast(ast)
+    : TreeBackedDecl(ast, eKindField)
 { }
+
+static ref_ast_t *get_attrib(vector_t *attribs, ref_kind_t kind)
+{
+    CTASSERT(attribs != nullptr);
+
+    size_t len = vector_len(attribs);
+    for (size_t i = 0; i < len; i++)
+    {
+        ref_ast_t *attrib = (ref_ast_t*)vector_get(attribs, i);
+        if (attrib->kind == kind)
+            return attrib;
+    }
+    return nullptr;
+}
+
+const char *TreeBackedDecl::get_repr() const
+{
+    ref_ast_t *repr = get_attrib(m_ast->attributes, eAstAttribFormat);
+    if (repr) return repr->ident;
+
+    return get_name();
+}
+
+const char *Case::get_repr() const
+{
+    ref_ast_t *repr = get_attrib(m_ast->attributes, eAstAttribFormat);
+    if (repr) return repr->ident;
+
+    return refl_fmt("e%s", get_name());
+}
 
 void Field::resolve_type(Sema& sema)
 {
@@ -366,8 +395,7 @@ void Field::resolve_type(Sema& sema)
 }
 
 Case::Case(ref_ast_t *ast)
-    : Decl(ast->node, eKindCase, ast->name)
-    , m_ast(ast)
+    : TreeBackedDecl(ast, eKindCase)
 { }
 
 void Case::resolve(Sema& sema)
@@ -400,20 +428,6 @@ bool Case::get_integer(mpz_t out) const {
     }
 
     return false;
-}
-
-static ref_ast_t *get_attrib(vector_t *attribs, ref_kind_t kind)
-{
-    CTASSERT(attribs != nullptr);
-
-    size_t len = vector_len(attribs);
-    for (size_t i = 0; i < len; i++)
-    {
-        ref_ast_t *attrib = (ref_ast_t*)vector_get(attribs, i);
-        if (attrib->kind == kind)
-            return attrib;
-    }
-    return nullptr;
 }
 
 static bool has_attrib_tag(vector_t *attribs, ref_attrib_tag_t tag)
@@ -1426,7 +1440,7 @@ void Class::emit_reflection(Sema& sema, out_t& out) const
             for (size_t i = 0; i < m_methods.size(); ++i)
             {
                 auto m = m_methods.get(i);
-                out.writeln("method_t { .name = impl::objname(\"%s\"), .index = %zu },", m->get_name(), i);
+                out.writeln("method_t { .name = impl::objname(\"%s\"), .index = %zu },", m->get_repr(), i);
             }
             out.leave();
         out.writeln("};");
@@ -1511,7 +1525,7 @@ void Variant::emit_reflection(Sema& sema, out_t& out) const
         out.writeln("static constexpr case_t kCases[%zu] = {", m_cases.size());
             out.enter();
             m_cases.foreach([&](auto c) {
-                out.writeln("case_t { impl::objname(\"e%s\"), %s::e%s },", c->get_name(), id, c->get_name());
+                out.writeln("case_t { impl::objname(\"%s\"), %s::e%s },", c->get_repr(), id, c->get_name());
             });
             out.leave();
         out.writeln("};");

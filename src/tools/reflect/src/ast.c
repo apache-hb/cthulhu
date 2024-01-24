@@ -346,6 +346,14 @@ ref_ast_t *ref_attrib_cxxname(scan_t *scan, where_t where, char *ident)
     return ast;
 }
 
+ref_ast_t *ref_attrib_format(scan_t *scan, where_t where, typevec_t *ident)
+{
+    ref_ast_t *ast = ref_ast_new(scan, where, eAstAttribFormat);
+    typevec_push(ident, "\0");
+    ast->ident = typevec_data(ident);
+    return ast;
+}
+
 ref_ast_t *ref_attrib_remote(scan_t *scan, where_t where)
 {
     return ref_ast_new(scan, where, eAstAttribRemote);
