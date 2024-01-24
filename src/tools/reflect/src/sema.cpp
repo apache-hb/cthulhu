@@ -367,6 +367,19 @@ static ref_ast_t *get_attrib(vector_t *attribs, ref_kind_t kind)
     return nullptr;
 }
 
+const char *get_doc(vector_t *attribs, const char *key)
+{
+    ref_ast_t *docs = get_attrib(attribs, eAstAttribDocs);
+    if (docs == nullptr)
+        return nullptr;
+
+    const char *doc = (const char*)map_get(docs->docs, key);
+    if (doc == nullptr)
+        return nullptr;
+
+    return doc;
+}
+
 const char *TreeBackedDecl::get_repr() const
 {
     ref_ast_t *repr = get_attrib(m_ast->attributes, eAstAttribFormat);

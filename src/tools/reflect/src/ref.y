@@ -13,6 +13,7 @@
 
 %code requires {
     #include "std/vector.h"
+    #include "std/map.h"
     #include "ref/ast.h"
     #include "ref/scan.h"
     #define YYSTYPE REFSTYPE
@@ -28,11 +29,13 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     ref_ast_t *ast;
     vector_t *vector;
     typevec_t *typevec;
+    map_t *map;
 
     ref_param_t param;
     ref_flags_t flags;
     ref_attrib_tag_t attrib;
     ref_privacy_t privacy;
+    ref_pair_t pair;
 
     text_t string;
     bool boolean;
@@ -96,6 +99,8 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
 %type<flags> opt_decl_flags_seq decl_flags_seq decl_flag
 %type<attrib> simple_attrib layout_attrib
 %type<privacy> privacy_spec
+%type<pair> doc_item
+%type<map> doc_body
 
 %type<ident>
     opt_api
@@ -174,8 +179,7 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
 
     TOK_TRANSIENT "transient"
     TOK_CONFIG "config"
-    TOK_CATEGORY "category"
-    TOK_BRIEF "brief"
+    TOK_DOC "doc"
     TOK_ASSERT "assert"
     TOK_DEPRECATED "deprecated"
     TOK_TYPEID "typeid"
@@ -380,6 +384,14 @@ attrib: TOK_DEPRECATED TOK_LPAREN string_list TOK_RPAREN { $$ = ref_attrib_depre
     | TOK_REMOTE { $$ = ref_attrib_remote(x, @$); }
     | TOK_FORMAT TOK_LPAREN string_list TOK_RPAREN { $$ = ref_attrib_format(x, @$, $3); }
     | simple_attrib { $$ = ref_attrib_tag(x, @$, $1); }
+    | TOK_DOC TOK_LPAREN doc_body TOK_RPAREN { $$ = ref_attrib_docs(x, @$, $3); }
+    ;
+
+doc_body: doc_item { $$ = map_new(32, kTypeInfoString, BISON_ARENA(x)); map_set($$, $1.ident, $1.body); }
+    | doc_body doc_item { map_set($1, $2.ident, $2.body); $$ = $1; }
+    ;
+
+doc_item: TOK_IDENT TOK_ASSIGN string_list { $$ = ref_pair($1, $3); }
     ;
 
 simple_attrib: TOK_TRANSIENT { $$ = eAttribTransient; }

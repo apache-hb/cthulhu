@@ -41,6 +41,16 @@ ref_ast_t *ref_unary(scan_t *scan, where_t where, unary_t op, ref_ast_t *expr)
     return ast;
 }
 
+ref_pair_t ref_pair(char *ident, typevec_t *body)
+{
+    typevec_push(body, "\0");
+    ref_pair_t pair = {
+        .ident = ident,
+        .body = typevec_data(body),
+    };
+    return pair;
+}
+
 ref_ast_t *ref_binary(scan_t *scan, where_t where, binary_t op, ref_ast_t *lhs, ref_ast_t *rhs)
 {
     ref_ast_t *ast = ref_ast_new(scan, where, eAstBinary);
@@ -351,6 +361,13 @@ ref_ast_t *ref_attrib_format(scan_t *scan, where_t where, typevec_t *ident)
     ref_ast_t *ast = ref_ast_new(scan, where, eAstAttribFormat);
     typevec_push(ident, "\0");
     ast->ident = typevec_data(ident);
+    return ast;
+}
+
+ref_ast_t *ref_attrib_docs(scan_t *scan, where_t where, map_t *docs)
+{
+    ref_ast_t *ast = ref_ast_new(scan, where, eAstAttribDocs);
+    ast->docs = docs;
     return ast;
 }
 

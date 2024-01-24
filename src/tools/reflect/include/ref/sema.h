@@ -210,7 +210,8 @@ namespace refl {
         eKindTypeFloat,
         eKindTypePointer,
         eKindReference,
-        eKindTypeOpaque
+        eKindTypeOpaque,
+        eKindTypeAlias
     };
 
     class Tree;
@@ -712,7 +713,7 @@ namespace refl {
 
     public:
         TypeAlias(ref_ast_t *ast)
-            : Type(ast->node, eKindTypeInstance, ast->name)
+            : Type(ast->node, eKindTypeAlias, ast->name)
             , m_ast(ast)
         { }
 

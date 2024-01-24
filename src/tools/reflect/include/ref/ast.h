@@ -15,6 +15,7 @@ typedef struct vector_t vector_t;
 typedef struct scan_t scan_t;
 typedef struct node_t node_t;
 typedef struct typevec_t typevec_t;
+typedef struct map_t map_t;
 
 BEGIN_API
 
@@ -63,6 +64,7 @@ typedef enum ref_kind_t {
     eAstAttribCxxName, // c++ name for implementation
     eAstAttribRemote, // enable rpc
     eAstAttribFormat, // string name
+    eAstAttribDocs, // documentation
 
     eAstAttribTag, // a tag attribute, one of ref_attrib_tag_t
 
@@ -241,6 +243,9 @@ typedef struct ref_ast_t {
         /* eAstAttribDeprecated */
         char *message;
 
+        /* eAstAttribDocs */
+        map_t *docs;
+
         /* eAstAttribAssert */
         struct {
             vector_t *before;
@@ -249,6 +254,13 @@ typedef struct ref_ast_t {
         };
     };
 } ref_ast_t;
+
+typedef struct ref_pair_t {
+    char *ident;
+    typevec_t *body;
+} ref_pair_t;
+
+ref_pair_t ref_pair(char *ident, typevec_t *body);
 
 ref_ast_t *ref_unary(scan_t *scan, where_t where, unary_t op, ref_ast_t *expr);
 ref_ast_t *ref_binary(scan_t *scan, where_t where, binary_t op, ref_ast_t *lhs, ref_ast_t *rhs);
@@ -292,6 +304,7 @@ ref_ast_t *ref_attrib_alignas(scan_t *scan, where_t where, ref_ast_t *expr);
 ref_ast_t *ref_attrib_cxxname(scan_t *scan, where_t where, char *ident);
 ref_ast_t *ref_attrib_remote(scan_t *scan, where_t where);
 ref_ast_t *ref_attrib_format(scan_t *scan, where_t where, typevec_t *ident);
+ref_ast_t *ref_attrib_docs(scan_t *scan, where_t where, map_t *docs);
 
 ref_ast_t *ref_attrib_tag(scan_t *scan, where_t where, ref_attrib_tag_t tag);
 

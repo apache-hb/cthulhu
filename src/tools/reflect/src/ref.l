@@ -30,7 +30,7 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 
 <ATTRIBUTE>"alignas" { return TOK_ALIGNAS; }
 <ATTRIBUTE>"config" { return TOK_CONFIG; }
-<ATTRIBUTE>"brief" { return TOK_BRIEF; }
+<ATTRIBUTE>"doc" { return TOK_DOC; }
 <ATTRIBUTE>"assert" { return TOK_ASSERT; }
 <ATTRIBUTE>"remote" { return TOK_REMOTE; }
 
