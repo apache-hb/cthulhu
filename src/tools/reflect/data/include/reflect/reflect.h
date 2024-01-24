@@ -198,7 +198,7 @@ namespace ctu {
         eAttribTransient = 1 << 0,
     };
 
-    enum TypeLayout : uint8_fast_t {
+    enum TypeLayout : uint_fast8_t {
         eLayoutSystem,
         eLayoutConstBuffer,
         eLayoutPacked,
