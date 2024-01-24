@@ -7,6 +7,7 @@
 #include "memory/memory.h"
 #include "notify/notify.h"
 #include "ref/ast.h"
+#include "ref/eval.h"
 #include "scan/node.h"
 #include "std/map.h"
 #include "std/str.h"
@@ -189,8 +190,9 @@ namespace refl {
         eKindProgram,
 
         eKindClass,
-        eKindStruct,
         eKindVariant,
+        eKindAlias,
+
         eKindField,
         eKindParam,
         eKindCase,
@@ -207,6 +209,7 @@ namespace refl {
         eKindTypeInt,
         eKindTypeFloat,
         eKindTypePointer,
+        eKindReference,
         eKindTypeOpaque
     };
 
@@ -255,6 +258,7 @@ namespace refl {
         Sema& operator=(const Sema&) = delete;
 
         const char *get_api() const { return m_api; }
+        logger_t *get_logger() const { return m_logger; }
 
         const char* get_namespace() const { return m_namespace; }
 
@@ -397,21 +401,38 @@ namespace refl {
         void resolve(Sema&) override { finish_resolve(); }
     };
 
-    class PointerType : public Type {
+    class AddressType : public Type {
         Type *m_pointee = nullptr;
+        const char *m_symbol = nullptr;
+
     public:
-        PointerType(const node_t *node, Type *pointee)
-            : Type(node, eKindTypePointer, nullptr)
+        AddressType(const node_t *node, TreeKind kind, Type *pointee, const char *symbol)
+            : Type(node, kind, nullptr)
             , m_pointee(pointee)
+            , m_symbol(symbol)
         { }
 
-        void resolve(Sema&) override { finish_resolve(); }
+        void resolve(Sema&) override { }
 
         const char* get_cxx_name(const char *name) const override {
             auto inner =  m_pointee->get_cxx_name(nullptr);
-            return (name == nullptr) ? refl_fmt("%s*", inner)
-                                     : refl_fmt("%s *%s", inner, name);
+            return (name == nullptr) ? refl_fmt("%s%s", inner, m_symbol)
+                                     : refl_fmt("%s %s%s", inner, m_symbol, name);
         }
+    };
+
+    class PointerType : public AddressType {
+    public:
+        PointerType(const node_t *node, Type *pointee)
+            : AddressType(node, eKindTypePointer, pointee, "*")
+        { }
+    };
+
+    class ReferenceType : public AddressType {
+    public:
+        ReferenceType(const node_t *node, Type *pointee)
+            : AddressType(node, eKindReference, pointee, "&")
+        { }
     };
 
     class TemplateInstance;
@@ -622,6 +643,8 @@ namespace refl {
         }
     };
 
+    class RecordType;
+
     class Method : public Decl {
         ref_ast_t *m_ast = nullptr;
 
@@ -641,7 +664,7 @@ namespace refl {
 
         void emit_impl(out_t& out) const override;
         void emit_thunk(out_t& out) const;
-        void emit_method(out_t& out) const;
+        void emit_method(Sema& sema, out_t& out, RecordType& parent) const;
 
         void resolve_deps(DeclDepends& deps) const {
             if (m_return) deps.add(m_return);
@@ -656,6 +679,9 @@ namespace refl {
     class Case : public Decl {
         ref_ast_t *m_ast = nullptr;
 
+        eval_result_t m_eval = eEvalInvalid;
+        mpz_t digit_value = {};
+
     public:
         Case(ref_ast_t *ast);
 
@@ -667,6 +693,25 @@ namespace refl {
         void emit_case(out_t& out) const;
 
         const char* get_value() const;
+
+        bool get_integer(mpz_t out) const;
+    };
+
+    class TypeAlias : public Type {
+        ref_ast_t *m_ast = nullptr;
+        Type *m_alias = nullptr;
+
+    public:
+        TypeAlias(ref_ast_t *ast)
+            : Type(ast->node, eKindTypeInstance, ast->name)
+            , m_ast(ast)
+        { }
+
+        void resolve(Sema& sema) override {
+            if (is_resolved()) return;
+
+            m_alias = sema.resolve_type(m_ast->type);
+        }
     };
 
     class RecordType : public Type {
@@ -709,6 +754,9 @@ namespace refl {
                 method->resolve_deps(deps);
             });
         }
+
+        bool is_virtual() const { return m_ast->flags & eDeclVirtual; }
+        bool is_final() const { return m_ast->flags & eDeclSealed; }
     };
 
     class Class final : public RecordType {
@@ -762,6 +810,8 @@ namespace refl {
         void emit_facade(out_t& out) const;
 
         void emit_reflection(Sema& sema, out_t& out) const override;
+
+        void emit_default_is_valid(out_t& out) const;
 
         size_t max_tostring() const;
 

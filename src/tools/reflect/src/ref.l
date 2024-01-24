@@ -18,6 +18,7 @@
 %x COMMENT
 
 %x ATTRIBUTE
+%x TEMPLATE
 
 WS [ \t\r\v\n\f]
 ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
@@ -27,28 +28,30 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 <INITIAL>"[[" { yy_push_state(ATTRIBUTE, yyscanner); return TOK_BEGIN_ATTRIBUTE; }
 <ATTRIBUTE>"]]" { yy_pop_state(yyscanner); return TOK_END_ATTRIBUTE; }
 
-<ATTRIBUTE>"layout" { return TOK_LAYOUT; }
 <ATTRIBUTE>"alignas" { return TOK_ALIGNAS; }
-<ATTRIBUTE>"optimal" { return TOK_OPTIMAL; }
-<ATTRIBUTE>"packed" { return TOK_PACKED; }
-<ATTRIBUTE>"system" { return TOK_SYSTEM; }
-<ATTRIBUTE>"bitflags" { return TOK_BITFLAGS; }
-<ATTRIBUTE>"arithmatic" { return TOK_ARITHMATIC; }
-<ATTRIBUTE>"iterator" { return TOK_ITERATOR; }
-<ATTRIBUTE>"transient" { return TOK_TRANSIENT; }
 <ATTRIBUTE>"config" { return TOK_CONFIG; }
 <ATTRIBUTE>"brief" { return TOK_BRIEF; }
 <ATTRIBUTE>"assert" { return TOK_ASSERT; }
+<ATTRIBUTE>"remote" { return TOK_REMOTE; }
+
+    /* reflection attributes */
+<ATTRIBUTE>"transient" { return TOK_TRANSIENT; }
 <ATTRIBUTE>"deprecated" { return TOK_DEPRECATED; }
 <ATTRIBUTE>"typeid" { return TOK_TYPEID; }
 <ATTRIBUTE>"cxxname" { return TOK_CXXNAME; }
-<ATTRIBUTE>"remote" { return TOK_REMOTE; }
-<ATTRIBUTE>"noreflect" { return TOK_NOREFLECT; }
-<ATTRIBUTE>"external" { return TOK_EXTERNAL; }
-<ATTRIBUTE>"cbuffer" { return TOK_CBUFFER; }
-<ATTRIBUTE>"c_enum" { return TOK_C_ENUM; }
 <ATTRIBUTE>"facade" { return TOK_FACADE; }
-<ATTRIBUTE>"rename" { return TOK_RENAME; }
+
+    /* enum attributes */
+<ATTRIBUTE>"bitflags" { return TOK_BITFLAGS; }
+<ATTRIBUTE>"arithmatic" { return TOK_ARITHMATIC; }
+<ATTRIBUTE>"iterator" { return TOK_ITERATOR; }
+<ATTRIBUTE>"ordered" { return TOK_ORDERED; }
+
+    /* type layout control */
+<ATTRIBUTE>"layout" { return TOK_LAYOUT; }
+<ATTRIBUTE>"packed" { return TOK_PACKED; }
+<ATTRIBUTE>"system" { return TOK_SYSTEM; }
+<ATTRIBUTE>"cbuffer" { return TOK_CBUFFER; }
 <ATTRIBUTE>"internal" { return TOK_INTERNAL; }
 
 <*>{WS}+ ;
@@ -67,7 +70,7 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 <*>"virtual" { return TOK_VIRTUAL; }
 <*>"variant" { return TOK_VARIANT; }
 <*>"struct" { return TOK_STRUCT; }
-<*>"alias" { return TOK_ALIAS; }
+<*>"using" { return TOK_ALIAS; }
 
 <*>"public" { return TOK_PUBLIC; }
 <*>"private" { return TOK_PRIVATE; }
@@ -83,6 +86,7 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 <*>"delete" { return TOK_DELETE; }
 <*>"default" { return TOK_DEFAULT; }
 
+<*>"null" { return TOK_NULL; }
 <*>"true" { return TOK_TRUE; }
 <*>"false" { return TOK_FALSE; }
 <*>"opaque" { return TOK_OPAQUE; }
@@ -102,6 +106,9 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 
 <*>"&&" { return TOK_AND; }
 <*>"||" { return TOK_OR; }
+
+<*>"!<" { yy_push_state(TEMPLATE, yyscanner); return TOK_BEGIN_TEMPLATE; }
+<TEMPLATE>">" { yy_pop_state(yyscanner); return TOK_END_TEMPLATE; }
 
 <*>"<=" { return TOK_LTE; }
 <*>"<" { return TOK_LT; }

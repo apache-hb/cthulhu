@@ -486,4 +486,38 @@ CTU_EVENT(ExactlyOneSourceFile, {
         "The tool expects exactly one source file, but multiple were provided",
 })
 
+CTU_EVENT(CannotEvalExpression, {
+    .severity = eSeverityWarn,
+    .id = "M0068",
+    .brief = "Evaluation of an expression failed",
+    .description =
+        "The compiler was unable to evaluate an expression, "
+        "this may be due to an unsupported feature or a bug in the compiler.",
+})
+
+CTU_EVENT(InexactIntegerDivision, {
+    .severity = eSeverityWarn,
+    .id = "M0069",
+    .brief = "Inexact integer division",
+    .description =
+        "An integer division was not exact, "
+        "This behaviour is not consistent between languages or compiler versions.",
+})
+
+CTU_EVENT(ShiftByNegative, {
+    .severity = eSeverityFatal,
+    .id = "M0070",
+    .brief = "Shift by negative",
+    .description =
+        "A bit shift by a negative amount was encountered.",
+})
+
+CTU_EVENT(IntegerOverflow, {
+    .severity = eSeverityFatal,
+    .id = "M0071",
+    .brief = "Integer overflow",
+    .description =
+        "An integer overflow was encountered.",
+})
+
 #undef CTU_EVENT

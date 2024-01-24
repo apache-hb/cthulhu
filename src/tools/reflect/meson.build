@@ -1,6 +1,8 @@
 src = [
     'src/scan.c',
     'src/ast.c',
+    'src/eval.c',
+    'src/events.c',
     'src/sema.cpp',
     lex.process('src/ref.l'),
     parse.process('src/ref.y')
@@ -10,7 +12,7 @@ deps = [ interop, gmp, scan, notify, events, std, memory, io, tree ]
 
 library_deps = [ util ]
 
-cli_deps = [ setup, config, io, argparse, format ]
+cli_deps = [ setup, config, argparse, format ]
 
 cpp = meson.get_compiler('cpp')
 

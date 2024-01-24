@@ -29,9 +29,10 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     vector_t *vector;
     typevec_t *typevec;
 
-    ref_layout_t layout;
     ref_param_t param;
     ref_flags_t flags;
+    ref_attrib_tag_t attrib;
+    ref_privacy_t privacy;
 
     text_t string;
     bool boolean;
@@ -42,7 +43,6 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
 %type<ast>
     decl decl_body
     class_body_item
-    privacy_decl
     class_decl
     type
     opt_assign
@@ -74,6 +74,7 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     case_item_inner
     case_value
     method_decl
+    ctor_decl
 
 %type<vector>
     path
@@ -92,8 +93,9 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %type<typevec> string_list
 %type<param> passing
-%type<layout> layout_types
 %type<flags> opt_decl_flags_seq decl_flags_seq decl_flag
+%type<attrib> simple_attrib layout_attrib
+%type<privacy> privacy_spec
 
 %type<ident>
     opt_api
@@ -181,22 +183,19 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     TOK_SYSTEM "system"
     TOK_BITFLAGS "bitflags"
     TOK_ALIGNAS "alignas"
-    TOK_OPTIMAL "optimal"
     TOK_PACKED "packed"
     TOK_ARITHMATIC "arithmatic"
     TOK_ITERATOR "iterator"
     TOK_CXXNAME "cxxname"
     TOK_REMOTE "remote"
     TOK_OPAQUE "opaque"
-    TOK_NOREFLECT "noreflect"
-    TOK_EXTERNAL "external"
     TOK_CBUFFER "cbuffer"
-    TOK_C_ENUM "c_enum"
     TOK_FACADE "facade"
-    TOK_RENAME "rename"
     TOK_API "api"
     TOK_INTERNAL "internal"
+    TOK_ORDERED "ordered"
 
+    TOK_NULL "null"
     TOK_TRUE "true"
     TOK_FALSE "false"
     TOK_SEALED "sealed"
@@ -207,7 +206,8 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     TOK_OUT "out"
     TOK_INOUT "inout"
 
-%left TOK_MUL TOK_LT TOK_GT
+    TOK_BEGIN_TEMPLATE "!< (begin template)"
+    TOK_END_TEMPLATE "> (end template)"
 
 %start program
 
@@ -251,7 +251,6 @@ decl_flags_seq: decl_flag { $$ = $1; }
 
 decl_flag: TOK_VIRTUAL { $$ = eDeclVirtual; }
     | TOK_SEALED { $$ = eDeclSealed; }
-    | TOK_EXPORT { $$ = eDeclExported; }
     | TOK_CONST { $$ = eDeclConst; }
     ;
 
@@ -282,15 +281,15 @@ case_item_inner: TOK_CASE TOK_IDENT TOK_ASSIGN case_value { $$ = ref_case(x, @$,
     | opt_decl_flags_seq method_decl TOK_SEMICOLON { ref_set_flags($2, $1); $$ = $2; }
     ;
 
-case_value: TOK_INTEGER { $$ = ref_integer(x, @$, $1); }
-    | TOK_OPAQUE TOK_LPAREN TOK_IDENT TOK_RPAREN { $$ = ref_name(x, @$, $3); }
+case_value: expr { $$ = $1; }
+    | TOK_OPAQUE TOK_LPAREN TOK_IDENT TOK_RPAREN { $$ = ref_opaque(x, @$, $3); }
     ;
 
 class_decl: TOK_CLASS TOK_IDENT opt_tparams opt_inherit TOK_LBRACE class_body_seq TOK_RBRACE { $$ = ref_class(x, @$, $2, $3, $4, $6); }
     ;
 
 opt_tparams: %empty { $$ = &kEmptyVector; }
-    | TOK_LT ident_list TOK_GT { $$ = $2; }
+    | TOK_BEGIN_TEMPLATE ident_list TOK_END_TEMPLATE { $$ = $2; }
     ;
 
 ident_list: TOK_IDENT { $$ = vector_init($1, BISON_ARENA(x)); }
@@ -301,15 +300,21 @@ class_body_seq: class_body_item { $$ = vector_init($1, BISON_ARENA(x)); }
     | class_body_seq class_body_item { vector_push(&$1, $2); $$ = $1; }
     ;
 
-class_body_item: privacy_decl { $$ = $1; }
-    | opt_attrib_seq class_body_inner TOK_SEMICOLON {
-        ref_set_attribs($2, $1);
-        $$ = $2;
-    }
+class_body_item: privacy_spec TOK_COLON { $$ = ref_privacy(x, @$, $1); }
+    | opt_attrib_seq class_body_inner TOK_SEMICOLON { ref_set_attribs($2, $1); $$ = $2; }
     ;
 
 class_body_inner: TOK_IDENT TOK_COLON type opt_assign { $$ = ref_field(x, @$, $1, $3, $4); }
     | opt_decl_flags_seq method_decl { ref_set_flags($2, $1); $$ = $2; }
+    | ctor_decl { $$ = $1; }
+    ;
+
+privacy_spec: TOK_PRIVATE { $$ = ePrivacyPrivate; }
+    | TOK_PROTECTED { $$ = ePrivacyProtected; }
+    | TOK_PUBLIC { $$ = ePrivacyPublic; }
+    ;
+
+ctor_decl: TOK_NEW TOK_LPAREN TOK_RPAREN { $$ = ref_ctor(x, @$, &kEmptyVector, NULL); }
     ;
 
 method_decl: TOK_DEF TOK_IDENT opt_params opt_return_type opt_assign { $$ = ref_method(x, @$, eDeclNone, $2, $3, $4, $5); }
@@ -330,27 +335,23 @@ param_list: param { $$ = vector_init($1, BISON_ARENA(x)); }
 passing: %empty { $$ = eParamIn; }
     | TOK_IN { $$ = eParamIn; }
     | TOK_OUT { $$ = eParamOut; }
-    | TOK_INOUT { $$ = eParamInOut; }
+    | TOK_BITAND { $$ = eParamInOut; }
     ;
 
 param: passing TOK_IDENT TOK_COLON type { $$ = ref_param(x, @$, $2, $1, $4); }
-    ;
-
-privacy_decl: TOK_PRIVATE TOK_COLON { $$ = ref_privacy(x, @$, ePrivacyPrivate); }
-    | TOK_PROTECTED TOK_COLON { $$ = ref_privacy(x, @$, ePrivacyProtected); }
-    | TOK_PUBLIC TOK_COLON { $$ = ref_privacy(x, @$, ePrivacyPublic); }
     ;
 
 opt_assign: %empty { $$ = NULL; }
     | TOK_ASSIGN expr { $$ = $2; }
     ;
 
-type: TOK_IDENT { $$ = ref_name(x, @$, $1); }
-    | type TOK_LT type_list TOK_GT { $$ = ref_instance(x, @$, $1, $3); }
+type: TOK_IDENT { $$ = ref_ident(x, @$, $1); }
+    | TOK_BEGIN_TEMPLATE type TOK_COLON type_list TOK_END_TEMPLATE { $$ = ref_instance(x, @$, $2, $4); }
     | TOK_MUL type { $$ = ref_pointer(x, @$, $2); }
+    | TOK_BITAND type { $$ = ref_reference(x, @$, $2); }
     | TOK_OPAQUE TOK_LPAREN TOK_STRING TOK_RPAREN { $$ = ref_opaque_text(x, @$, $3); }
     | TOK_OPAQUE TOK_LPAREN TOK_IDENT TOK_RPAREN { $$ = ref_opaque(x, @$, $3); }
-    | TOK_CONST TOK_LT type TOK_GT { $$ = ref_instance(x, @$, ref_name(x, @$, "const"), vector_init($3, BISON_ARENA(x))); }
+    | TOK_BEGIN_TEMPLATE TOK_CONST TOK_COLON type TOK_END_TEMPLATE { $$ = ref_instance(x, @$, ref_ident(x, @$, (char*)"const"), vector_init($4, BISON_ARENA(x))); }
     ;
 
 type_list: type { $$ = vector_init($1, BISON_ARENA(x)); }
@@ -369,34 +370,36 @@ attrib_seq: attrib { $$ = vector_init($1, BISON_ARENA(x)); }
     | attrib_seq TOK_COMMA attrib { vector_push(&$1, $3); $$ = $1; }
     ;
 
-attrib: TOK_TRANSIENT { $$ = ref_attrib_transient(x, @$); }
-    | TOK_DEPRECATED TOK_LPAREN string_list TOK_RPAREN { $$ = ref_attrib_deprecated(x, @$, $3); }
-    | TOK_TYPEID TOK_LPAREN TOK_INTEGER TOK_RPAREN { $$ = ref_attrib_typeid(x, @$, $3); }
-    | TOK_LAYOUT TOK_LPAREN layout_types TOK_RPAREN { $$ = ref_attrib_layout(x, @$, $3); }
-    | TOK_ALIGNAS TOK_LPAREN TOK_INTEGER TOK_RPAREN { $$ = ref_attrib_alignas(x, @$, $3); }
-    | TOK_BITFLAGS { $$ = ref_attrib_bitflags(x, @$); }
-    | TOK_ARITHMATIC { $$ = ref_attrib_arithmatic(x, @$); }
-    | TOK_ITERATOR { $$ = ref_attrib_iterator(x, @$); }
+attrib: TOK_DEPRECATED TOK_LPAREN string_list TOK_RPAREN { $$ = ref_attrib_deprecated(x, @$, $3); }
+    | TOK_TYPEID TOK_LPAREN expr TOK_RPAREN { $$ = ref_attrib_typeid(x, @$, $3); }
+    | TOK_LAYOUT TOK_LPAREN layout_attrib TOK_RPAREN { $$ = ref_attrib_tag(x, @$, $3); }
+    | TOK_ALIGNAS TOK_LPAREN expr TOK_RPAREN { $$ = ref_attrib_alignas(x, @$, $3); }
     | TOK_CXXNAME TOK_LPAREN TOK_IDENT TOK_RPAREN { $$ = ref_attrib_cxxname(x, @$, $3); }
     | TOK_REMOTE { $$ = ref_attrib_remote(x, @$); }
-    | TOK_NOREFLECT { $$ = ref_attrib_noreflect(x, @$); }
-    | TOK_EXTERNAL { $$ = ref_attrib_external(x, @$, false); }
-    | TOK_EXTERNAL TOK_LPAREN TOK_C_ENUM TOK_RPAREN { $$ = ref_attrib_external(x, @$, true); }
-    | TOK_FACADE { $$ = ref_attrib_facade(x, @$); }
-    | TOK_RENAME TOK_LPAREN TOK_IDENT TOK_RPAREN { $$ = ref_attrib_rename(x, @$, $3); }
+    | simple_attrib { $$ = ref_attrib_tag(x, @$, $1); }
     ;
 
-layout_types: TOK_INTERNAL { $$ = eLayoutOptimal; }
-    | TOK_PACKED { $$ = eLayoutPacked; }
-    | TOK_SYSTEM { $$ = eLayoutSystem; }
-    | TOK_CBUFFER { $$ = eLayoutCBuffer; }
+simple_attrib: TOK_TRANSIENT { $$ = eAttribTransient; }
+    | TOK_BITFLAGS { $$ = eAttribBitflags; }
+    | TOK_ARITHMATIC { $$ = eAttribArithmatic; }
+    | TOK_ITERATOR { $$ = eAttribIterator; }
+    | TOK_ORDERED { $$ = eAttribOrdered; }
+    | TOK_INTERNAL { $$ = eAttribInternal; }
+    | TOK_FACADE { $$ = eAttribFacade; }
+    ;
+
+layout_attrib: TOK_SYSTEM { $$ = eAttribLayoutSystem; }
+    | TOK_EXPORT { $$ = eAttribLayoutStable; }
+    | TOK_CBUFFER { $$ = eAttribLayoutCBuffer; }
+    | TOK_PACKED { $$ = eAttribLayoutPacked; }
+    | TOK_DEFAULT { $$ = eAttribLayoutAny; }
     ;
 
 string_list: TOK_STRING { $$ = stringlist_begin(x, @$, $1); }
     | string_list TOK_STRING { $$ = stringlist_append($1, $2); }
     ;
 
-primary_expression: TOK_IDENT { $$ = ref_name(x, @$, $1); }
+primary_expression: TOK_IDENT { $$ = ref_ident(x, @$, $1); }
     | string_list { $$ = ref_string(x, @$, $1); }
     | TOK_LPAREN expr TOK_RPAREN { $$ = $2; }
     | TOK_INTEGER { $$ = ref_integer(x, @$, $1); }
@@ -408,6 +411,8 @@ postfix_expression: primary_expression { $$ = $1; }
     ;
 
 unary_expression: postfix_expression { $$ = $1; }
+    | TOK_NOT unary_expression { $$ = ref_unary(x, @$, eUnaryNot, $2); }
+    | TOK_MINUS unary_expression { $$ = ref_unary(x, @$, eUnaryNeg, $2); }
     ;
 
 multiplicative_expression: unary_expression { $$ = $1; }

@@ -25,8 +25,6 @@ static ref_ast_t *ref_ast_new(scan_t *scan, where_t where, ref_kind_t kind)
 
 static ref_ast_t *ref_ast_decl(scan_t *scan, where_t where, ref_kind_t kind, char *name)
 {
-    CTASSERT(name != NULL);
-
     ref_ast_t *ast = ref_ast_new(scan, where, kind);
     ast->flags = eDeclNone;
     ast->name = name;
@@ -170,6 +168,14 @@ ref_ast_t *ref_param(scan_t *scan, where_t where, char *name, ref_param_t param,
     return ast;
 }
 
+ref_ast_t *ref_ctor(scan_t *scan, where_t where, vector_t *params, ref_ast_t *body)
+{
+    ref_ast_t *ast = ref_ast_decl(scan, where, eAstConstructor, NULL);
+    ast->method_params = params;
+    ast->body = body;
+    return ast;
+}
+
 ref_ast_t *ref_instance(scan_t *scan, where_t where, ref_ast_t *type, vector_t *params)
 {
     ref_ast_t *ast = ref_ast_new(scan, where, eAstInstance);
@@ -185,10 +191,10 @@ ref_ast_t *ref_pointer(scan_t *scan, where_t where, ref_ast_t *type)
     return ast;
 }
 
-ref_ast_t *ref_name(scan_t *scan, where_t where, const char *ident)
+ref_ast_t *ref_reference(scan_t *scan, where_t where, ref_ast_t *type)
 {
-    ref_ast_t *ast = ref_ast_new(scan, where, eAstName);
-    ast->ident = ident;
+    ref_ast_t *ast = ref_ast_new(scan, where, eAstReference);
+    ast->ptr = type;
     return ast;
 }
 
@@ -259,10 +265,17 @@ ref_ast_t *ref_opaque_text(scan_t *scan, where_t where, text_t text)
     return ref_opaque(scan, where, ident);
 }
 
-ref_ast_t *ref_integer(scan_t *scan, where_t where, mpz_t digit)
+ref_ast_t *ref_ident(scan_t *scan, where_t where, char *ident)
+{
+    ref_ast_t *ast = ref_ast_new(scan, where, eAstIdent);
+    ast->ident = ident;
+    return ast;
+}
+
+ref_ast_t *ref_integer(scan_t *scan, where_t where, mpz_t integer)
 {
     ref_ast_t *ast = ref_ast_new(scan, where, eAstInteger);
-    mpz_init_set(ast->digit, digit);
+    mpz_init_set(ast->integer, integer);
     return ast;
 }
 
@@ -293,11 +306,15 @@ void ref_set_flags(ref_ast_t *ast, ref_flags_t flags)
 {
     CTASSERT(ast != NULL);
     ast->flags = flags;
-}
 
-ref_ast_t *ref_attrib_transient(scan_t *scan, where_t where)
-{
-    return ref_ast_new(scan, where, eAstAttribTransient);
+    if (flags & eDeclPrivate)
+        ast->privacy = ePrivacyPrivate;
+
+    if (flags & eDeclPublic)
+        ast->privacy = ePrivacyPublic;
+
+    if (flags & eDeclProtected)
+        ast->privacy = ePrivacyProtected;
 }
 
 ref_ast_t *ref_attrib_deprecated(scan_t *scan, where_t where, typevec_t *message)
@@ -308,40 +325,18 @@ ref_ast_t *ref_attrib_deprecated(scan_t *scan, where_t where, typevec_t *message
     return ast;
 }
 
-ref_ast_t *ref_attrib_typeid(scan_t *scan, where_t where, mpz_t id)
+ref_ast_t *ref_attrib_typeid(scan_t *scan, where_t where, ref_ast_t *expr)
 {
     ref_ast_t *ast = ref_ast_new(scan, where, eAstAttribTypeId);
-    mpz_init_set(ast->id, id);
+    ast->expr = expr;
     return ast;
 }
 
-ref_ast_t *ref_attrib_layout(scan_t *scan, where_t where, ref_layout_t layout)
-{
-    ref_ast_t *ast = ref_ast_new(scan, where, eAstAttribLayout);
-    ast->layout = layout;
-    return ast;
-}
-
-ref_ast_t *ref_attrib_alignas(scan_t *scan, where_t where, mpz_t align)
+ref_ast_t *ref_attrib_alignas(scan_t *scan, where_t where, ref_ast_t *expr)
 {
     ref_ast_t *ast = ref_ast_new(scan, where, eAstAttribAlign);
-    mpz_init_set(ast->align, align);
+    ast->expr = expr;
     return ast;
-}
-
-ref_ast_t *ref_attrib_bitflags(scan_t *scan, where_t where)
-{
-    return ref_ast_new(scan, where, eAstAttribBitflags);
-}
-
-ref_ast_t *ref_attrib_arithmatic(scan_t *scan, where_t where)
-{
-    return ref_ast_new(scan, where, eAstAttribArithmatic);
-}
-
-ref_ast_t *ref_attrib_iterator(scan_t *scan, where_t where)
-{
-    return ref_ast_new(scan, where, eAstAttribIterator);
 }
 
 ref_ast_t *ref_attrib_cxxname(scan_t *scan, where_t where, char *ident)
@@ -356,26 +351,9 @@ ref_ast_t *ref_attrib_remote(scan_t *scan, where_t where)
     return ref_ast_new(scan, where, eAstAttribRemote);
 }
 
-ref_ast_t *ref_attrib_noreflect(scan_t *scan, where_t where)
+ref_ast_t *ref_attrib_tag(scan_t *scan, where_t where, ref_attrib_tag_t tag)
 {
-    return ref_ast_new(scan, where, eAstAttribNoReflect);
-}
-
-ref_ast_t *ref_attrib_facade(scan_t *scan, where_t where)
-{
-    return ref_ast_new(scan, where, eAstAttribFacade);
-}
-
-ref_ast_t *ref_attrib_rename(scan_t *scan, where_t where, char *ident)
-{
-    ref_ast_t *ast = ref_ast_new(scan, where, eAstAttribRename);
-    ast->ident = ident;
-    return ast;
-}
-
-ref_ast_t *ref_attrib_external(scan_t *scan, where_t where, bool c_enum)
-{
-    ref_ast_t *ast = ref_ast_new(scan, where, eAstAttribExternal);
-    ast->c_enum = c_enum;
+    ref_ast_t *ast = ref_ast_new(scan, where, eAstAttribTag);
+    ast->tag = tag;
     return ast;
 }

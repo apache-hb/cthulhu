@@ -2,6 +2,8 @@
 #include "cthulhu/events/events.h"
 #include "memory/memory.h"
 #include "ref/ast.h"
+#include "ref/eval.h"
+#include "ref/events.h"
 #include "std/map.h"
 #include "std/str.h"
 #include "std/vector.h"
@@ -158,7 +160,7 @@ Type *Sema::resolve_type(ref_ast_t *ast)
     CTASSERT(ast != nullptr);
     switch (ast->kind)
     {
-    case eAstName: {
+    case eAstIdent: {
         Decl *decl = get_decl(ast->ident);
         if (decl == nullptr)
         {
@@ -182,6 +184,40 @@ Type *Sema::resolve_type(ref_ast_t *ast)
         }
 
         return new PointerType(ast->node, type);
+    }
+    case eAstReference: {
+        Type *type = resolve_type(ast->ptr);
+        if (type == nullptr)
+        {
+            report(&kEvent_InvalidType, ast->node, "invalid reference type");
+            return nullptr;
+        }
+
+        if (type->get_kind() == eKindReference)
+        {
+            report(&kEvent_InvalidType, ast->node, "cannot make a reference to a reference");
+            return nullptr;
+        }
+
+        if (type->get_kind() == eKindTypePointer)
+        {
+            report(&kEvent_InvalidType, ast->node, "cannot make a reference to memory");
+            return nullptr;
+        }
+
+        if (type->get_kind() == eKindTypeVoid)
+        {
+            report(&kEvent_InvalidType, ast->node, "cannot make a reference to void");
+            return nullptr;
+        }
+
+        if (type->get_kind() == eKindTypeMemory)
+        {
+            report(&kEvent_InvalidType, ast->node, "cannot make a reference to memory");
+            return nullptr;
+        }
+
+        return new ReferenceType(ast->node, type);
     }
     case eAstOpaque: {
         return new OpaqueType(ast->node, ast->ident);
@@ -306,6 +342,9 @@ void Sema::emit_all(io_t *header, const char *file)
 
 void Field::resolve(Sema& sema)
 {
+    if (is_resolved()) return;
+    finish_resolve();
+
     resolve_type(sema);
 }
 
@@ -330,23 +369,36 @@ Case::Case(ref_ast_t *ast)
     , m_ast(ast)
 { }
 
-void Case::resolve(Sema&)
+void Case::resolve(Sema& sema)
 {
     if (is_resolved()) return;
     finish_resolve();
 
-    finish_resolve();
+    if (m_ast->value != nullptr)
+    {
+        m_eval = eval_expr(digit_value, sema.get_logger(), m_ast->value);
+    }
 }
 
 const char* Case::get_value() const {
     CTASSERT(m_ast->value != nullptr);
-    switch (m_ast->value->kind)
-    {
-    case eAstName: return m_ast->value->ident;
-    case eAstInteger: return mpz_get_str(nullptr, 10, m_ast->value->integer);
 
-    default: NEVER("invalid case value %d", m_ast->value->kind);
+    if (m_ast->value->kind == eAstOpaque)
+        return m_ast->value->ident;
+
+    CTASSERTF(m_eval == eEvalOk, "could not compute case value for %s", get_name());
+
+    return mpz_get_str(nullptr, 10, digit_value);
+}
+
+bool Case::get_integer(mpz_t out) const {
+    if (m_eval == eEvalOk)
+    {
+        mpz_init_set(out, digit_value);
+        return true;
     }
+
+    return false;
 }
 
 static ref_ast_t *get_attrib(vector_t *attribs, ref_kind_t kind)
@@ -361,6 +413,14 @@ static ref_ast_t *get_attrib(vector_t *attribs, ref_kind_t kind)
             return attrib;
     }
     return nullptr;
+}
+
+static bool has_attrib_tag(vector_t *attribs, ref_attrib_tag_t tag)
+{
+    ref_ast_t *attrib = get_attrib(attribs, eAstAttribTag);
+    if (!attrib) return false;
+
+    return attrib->tag == tag;
 }
 
 void Method::resolve(Sema& sema) {
@@ -435,7 +495,7 @@ void Method::emit_impl(out_t& out) const {
     }
 }
 
-void Method::emit_method(out_t& out) const {
+void Method::emit_method(Sema& sema, out_t& out, RecordType& parent) const {
     Type *ret = m_return ? m_return->get_type() : new VoidType("void");
     auto it = ret->get_cxx_name(get_name());
     String params;
@@ -455,6 +515,11 @@ void Method::emit_method(out_t& out) const {
 
     bool is_const = m_ast->flags & eDeclConst;
     bool is_virtual = m_ast->flags & eDeclVirtual;
+
+    if (is_virtual && !parent.is_virtual())
+    {
+        sema.report(&kEvent_VirtualMethodOnNonVirtualClass, m_ast->node, "virtual method %s on non-virtual class %s", get_name(), parent.get_name());
+    }
 
     const char *virt_str = is_virtual ? "virtual " : "";
 
@@ -510,7 +575,7 @@ void RecordType::resolve(Sema& sema)
 
 void RecordType::emit_proto(out_t& out) const
 {
-    if (get_attrib(m_ast->attributes, eAstAttribExternal) || get_attrib(m_ast->attributes, eAstAttribFacade))
+    if (has_attrib_tag(m_ast->attributes, eAttribFacade))
         return;
     out.writeln("%s %s;", m_record, get_name());
 }
@@ -557,9 +622,8 @@ ref_privacy_t RecordType::emit_methods(out_t& out, ref_privacy_t privacy) const
 
 void RecordType::emit_begin_record(out_t& out, bool write_parent) const
 {
-    bool is_final = m_ast->flags & eDeclSealed;
-    const char *fin = is_final ? " final " : " ";
-    if (m_parent && write_parent)
+    const char *fin = is_final() ? " final " : " ";
+    if (is_final() && write_parent)
     {
         out.writeln("%s %s%s: public %s {", m_record, get_name(), fin, m_parent->get_name());
     }
@@ -577,9 +641,7 @@ void RecordType::emit_ctors(out_t&) const  {
 }
 
 ref_privacy_t RecordType::emit_dtors(out_t& out, ref_privacy_t privacy) const {
-    bool is_virtual = m_ast->flags & eDeclVirtual;
-
-    if (!is_virtual)
+    if (!is_virtual())
         return privacy;
 
     if (privacy != ePrivacyPublic)
@@ -667,7 +729,7 @@ void Class::resolve(Sema& sema)
 }
 
 Struct::Struct(ref_ast_t *ast)
-    : RecordType(ast, eKindStruct, "struct")
+    : RecordType(ast, eKindClass, "struct")
 { }
 
 void Struct::resolve(Sema& sema)
@@ -770,7 +832,7 @@ void Field::emit_field(out_t& out) const
 
 void Class::emit_impl(out_t& out) const
 {
-    if (get_attrib(m_ast->attributes, eAstAttribExternal) || get_attrib(m_ast->attributes, eAstAttribFacade))
+    if (has_attrib_tag(m_ast->attributes, eAttribFacade))
         return;
 
     emit_begin_record(out);
@@ -782,7 +844,7 @@ void Class::emit_impl(out_t& out) const
 
 void Struct::emit_impl(out_t& out) const
 {
-    if (get_attrib(m_ast->attributes, eAstAttribExternal) || get_attrib(m_ast->attributes, eAstAttribFacade))
+    if (has_attrib_tag(m_ast->attributes, eAttribFacade))
         return;
 
     emit_begin_record(out);
@@ -813,13 +875,21 @@ static uint32_t type_hash(const char *name)
     return ~hash;
 }
 
-static void get_type_id(ref_ast_t *ast, mpz_t out)
+static void get_type_id(Sema& sema, ref_ast_t *ast, mpz_t out)
 {
     ref_ast_t *attrib = get_attrib(ast->attributes, eAstAttribTypeId);
     if (attrib)
     {
-        CTASSERTF(mpz_fits_uint_p(attrib->id), "invalid type id %s, must fit in a uint32_t", mpz_get_str(nullptr, 10, attrib->id));
-        mpz_init_set(out, attrib->id);
+        if (eval_expr(out, sema.get_logger(), attrib->expr) != eEvalOk)
+        {
+            sema.report(&kEvent_InvalidType, attrib->node, "could not evaluate typeid to an integer");
+            return;
+        }
+
+        if (!mpz_fits_uint_p(out))
+        {
+            sema.report(&kEvent_IntegerOverflow, attrib->node, "typeid must fit in a uint32_t");
+        }
     }
     else
     {
@@ -827,14 +897,60 @@ static void get_type_id(ref_ast_t *ast, mpz_t out)
     }
 }
 
+void Variant::emit_default_is_valid(out_t& out) const
+{
+    size_t len = m_cases.size();
+    typevec_t *found = typevec_new(sizeof(mpz_t), len, get_global_arena());
+
+    auto has_value = [&](mpz_t value) -> bool {
+        for (size_t i = 0; i < typevec_len(found); i++)
+        {
+            mpz_t *it = (mpz_t*)typevec_offset(found, i);
+            if (mpz_cmp(*it, value) == 0)
+                return true;
+        }
+        return false;
+    };
+
+    out.nl();
+    out.writeln("constexpr bool is_valid() const {");
+    out.enter();
+    out.writeln("switch (m_value) {");
+    m_cases.foreach([&](Case *c)
+    {
+        mpz_t id;
+        if (c->get_integer(id))
+        {
+            // if we found a duplicate, dont emit this case
+            if (has_value(id))
+            {
+                out.writeln("// duplicate case %s", c->get_name());
+                return;
+            }
+
+            typevec_push(found, &id);
+        }
+
+        out.writeln("case e%s:", c->get_name());
+    });
+    out.enter();
+    out.writeln("return true;");
+    out.leave();
+    out.writeln("default: return false;");
+    out.writeln("}");
+    out.leave();
+    out.writeln("};");
+}
+
 void Variant::emit_impl(out_t& out) const
 {
-    bool is_bitflags = get_attrib(m_ast->attributes, eAstAttribBitflags) != nullptr;
-    bool is_arithmatic = get_attrib(m_ast->attributes, eAstAttribArithmatic) != nullptr;
-    bool is_iterator = get_attrib(m_ast->attributes, eAstAttribIterator) != nullptr;
+    bool is_ordered = has_attrib_tag(m_ast->attributes, eAttribOrdered);
+    bool is_bitflags = has_attrib_tag(m_ast->attributes, eAttribBitflags);
+    bool is_arithmatic = has_attrib_tag(m_ast->attributes, eAttribArithmatic);
+    bool is_iterator = has_attrib_tag(m_ast->attributes, eAttribIterator);
 
     const char *ty = nullptr;
-    bool is_facade = get_attrib(m_ast->attributes, eAstAttribFacade) != nullptr;
+    bool is_facade = has_attrib_tag(m_ast->attributes, eAttribFacade);
     if (is_facade) CTASSERTF(m_parent != nullptr, "facade enum %s must have a parent", get_name());
 
     out.writeln("namespace impl {");
@@ -871,7 +987,7 @@ void Variant::emit_impl(out_t& out) const
         ty = refl_fmt("%s_underlying_t", get_name());
         out.writeln("using %s_underlying_t = std::underlying_type_t<%s>;", get_name(), get_name());
     }
-    out.writeln("REFLECT_ENUM_COMPARE(%s, %s)", get_name(), ty);
+    if (is_arithmatic || is_iterator || is_ordered) out.writeln("REFLECT_ENUM_COMPARE(%s, %s)", get_name(), ty);
     if (is_bitflags) out.writeln("REFLECT_ENUM_BITFLAGS(%s, %s);", get_name(), ty);
     if (is_arithmatic) out.writeln("REFLECT_ENUM_ARITHMATIC(%s, %s);", get_name(), ty);
     if (is_iterator) out.writeln("REFLECT_ENUM_ITERATOR(%s, %s);", get_name(), ty);
@@ -987,21 +1103,7 @@ void Variant::emit_impl(out_t& out) const
 
     if (!is_bitflags && !is_arithmatic)
     {
-        out.nl();
-        out.writeln("constexpr bool is_valid() const {");
-        out.enter();
-        out.writeln("switch (m_value) {");
-        m_cases.foreach([&](auto c)
-        {
-            out.writeln("case e%s:", c->get_name());
-        });
-        out.enter();
-        out.writeln("return true;");
-        out.leave();
-        out.writeln("default: return false;");
-        out.writeln("}");
-        out.leave();
-        out.writeln("};");
+        emit_default_is_valid(out);
     }
 
     if (is_bitflags)
@@ -1055,6 +1157,15 @@ void Variant::emit_impl(out_t& out) const
         // is_valid is not defined for arithmatic types
     }
 
+    if (is_ordered)
+    {
+        out.nl();
+        out.writeln("constexpr bool operator<(const %s& other) const { return m_value < other.m_value; }", get_name());
+        out.writeln("constexpr bool operator<=(const %s& other) const { return m_value <= other.m_value; }", get_name());
+        out.writeln("constexpr bool operator>(const %s& other) const { return m_value > other.m_value; }", get_name());
+        out.writeln("constexpr bool operator>=(const %s& other) const { return m_value >= other.m_value; }", get_name());
+    }
+
     emit_methods(out, ePrivacyPublic);
 
     emit_end_record(out);
@@ -1062,10 +1173,10 @@ void Variant::emit_impl(out_t& out) const
     out.writeln("static_assert(sizeof(%s) == sizeof(%s::underlying_t), \"%s size mismatch\");", get_name(), get_name(), get_name());
 }
 
-static void emit_name_info(out_t& out, const char* id, ref_ast_t *ast)
+static void emit_name_info(Sema& sema, out_t& out, const char* id, ref_ast_t *ast)
 {
     mpz_t typeid_value;
-    get_type_id(ast, typeid_value);
+    get_type_id(sema, ast, typeid_value);
 
     out.writeln("static constexpr ObjectName kFullName = impl::objname(\"%s\");", id);
     out.writeln("static constexpr ObjectName kName = impl::objname(\"%s\");", ast->name);
@@ -1085,8 +1196,8 @@ static const char *access_name(ref_privacy_t privacy)
 
 static const char* attribs_name(ref_ast_t *ast)
 {
-    ref_ast_t *transient = get_attrib(ast->attributes, eAstAttribTransient);
-    if (transient) return "eAttribTransient";
+    if (has_attrib_tag(ast->attributes, eAttribTransient))
+        return "eAttribTransient";
 
     return "eAttribNone";
 }
@@ -1159,8 +1270,8 @@ static void emit_info_header(out_t& out, const char* id)
 
 static const char* get_decl_name(ref_ast_t *ast, Sema& sema, const char *name)
 {
-    ref_ast_t *external = get_attrib(ast->attributes, eAstAttribExternal);
-    if (external)
+    bool is_facade = has_attrib_tag(ast->attributes, eAttribFacade);
+    if (is_facade)
     {
         return name;
     }
@@ -1172,15 +1283,13 @@ static const char* get_decl_name(ref_ast_t *ast, Sema& sema, const char *name)
 
 void Struct::emit_reflection(Sema& sema, out_t& out) const
 {
-    if (ref_ast_t *noreflect = get_attrib(m_ast->attributes, eAstAttribNoReflect); noreflect)
-    {
+    if (has_attrib_tag(m_ast->attributes, eAttribInternal))
         return;
-    }
 
     auto id = get_decl_name(m_ast, sema, get_name());
 
     mpz_t typeid_value;
-    get_type_id(m_ast, typeid_value);
+    get_type_id(sema, m_ast, typeid_value);
 
     emit_info_header(out, id);
         out.enter();
@@ -1189,7 +1298,7 @@ void Struct::emit_reflection(Sema& sema, out_t& out) const
         out.writeln("using Type = type_t;");
         out.writeln("using Field = field_t;");
         out.nl();
-        emit_name_info(out, id, m_ast);
+        emit_name_info(sema, out, id, m_ast);
         out.nl();
         emit_record_fields(out, m_fields);
         out.nl();
@@ -1205,16 +1314,14 @@ void Struct::emit_reflection(Sema& sema, out_t& out) const
 
 void Class::emit_reflection(Sema& sema, out_t& out) const
 {
-    if (ref_ast_t *noreflect = get_attrib(m_ast->attributes, eAstAttribNoReflect); noreflect)
-    {
+    if (has_attrib_tag(m_ast->attributes, eAttribInternal))
         return;
-    }
 
     auto id = get_decl_name(m_ast, sema, get_name());
     auto parent = m_parent ? m_parent->get_cxx_name(nullptr) : "void";
 
     mpz_t typeid_value;
-    get_type_id(m_ast, typeid_value);
+    get_type_id(sema, m_ast, typeid_value);
 
     emit_info_header(out, id);
         out.enter();
@@ -1227,7 +1334,7 @@ void Class::emit_reflection(Sema& sema, out_t& out) const
         out.writeln("using Field = field_t;");
         out.writeln("using Method = method_t;");
         out.nl();
-        emit_name_info(out, id, m_ast);
+        emit_name_info(sema, out, id, m_ast);
         out.writeln("static constexpr bool kHasSuper = %s;", m_parent != nullptr ? "true" : "false");
         out.writeln("static constexpr TypeInfo<%s> kSuper{};", parent);
         out.nl();
@@ -1254,7 +1361,7 @@ void Class::emit_reflection(Sema& sema, out_t& out) const
 }
 
 size_t Variant::max_tostring() const {
-    if (get_attrib(m_ast->attributes, eAstAttribBitflags))
+    if (has_attrib_tag(m_ast->attributes, eAttribBitflags))
         return max_tostring_bitflags();
 
     size_t max = 0;
@@ -1284,16 +1391,14 @@ size_t Variant::max_tostring_bitflags() const {
 
 void Variant::emit_reflection(Sema& sema, out_t& out) const
 {
-    if (ref_ast_t *noreflect = get_attrib(m_ast->attributes, eAstAttribNoReflect); noreflect)
-    {
+    if (has_attrib_tag(m_ast->attributes, eAttribInternal))
         return;
-    }
 
     auto id = get_decl_name(m_ast, sema, get_name());
 
     mpz_t typeid_value;
-    get_type_id(m_ast, typeid_value);
-    bool is_bitflags = get_attrib(m_ast->attributes, eAstAttribBitflags) != nullptr;
+    get_type_id(sema, m_ast, typeid_value);
+    bool is_bitflags = has_attrib_tag(m_ast->attributes, eAttribBitflags);
 
     size_t max_tostring_length = max_tostring();
 
@@ -1311,7 +1416,7 @@ void Variant::emit_reflection(Sema& sema, out_t& out) const
         out.writeln("using Case = case_t;");
         out.writeln("using String = string_t;");
         out.nl();
-        emit_name_info(out, id, m_ast);
+        emit_name_info(sema, out, id, m_ast);
         if (m_parent)
             out.writeln("static constexpr TypeInfo<underlying_t> kUnderlying{};");
         else

@@ -187,7 +187,7 @@ namespace ctu {
         const T value;
     };
 
-    enum Access : uint_fast8_t {
+    enum FieldAccess : uint_fast8_t {
         ePublic,
         eProtected,
         ePrivate,
@@ -201,7 +201,7 @@ namespace ctu {
     struct ObjectField {
         const ObjectName name;
         const size_t index;
-        const Access access;
+        const FieldAccess access;
         const Attribs attribs;
     };
 
