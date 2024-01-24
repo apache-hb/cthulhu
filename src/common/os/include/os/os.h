@@ -6,7 +6,7 @@
 #include "core/compiler.h"
 
 #if OS_WINDOWS
-#   include "impl/windows.h"
+#   include "impl/win32.h"
 #elif OS_LINUX || OS_APPLE
 #   include "impl/posix.h"
 #else
@@ -286,6 +286,14 @@ CT_OS_API os_error_t os_file_seek(IN_NOTNULL os_file_t *file, size_t offset, siz
 /// @return an error if the file position could not be retrieved
 NODISCARD
 CT_OS_API os_error_t os_file_tell(IN_NOTNULL os_file_t *file, IN_NOTNULL size_t *actual);
+
+
+// TODO: use these instead of os_file_map to avoid leaks
+NODISCARD
+CT_OS_API os_error_t os_file_map2(IN_NOTNULL os_file_t *file, os_mapping_t *mapping);
+
+NODISCARD
+CT_OS_API void os_file_unmap(IN_NOTNULL os_mapping_t *mapping);
 
 /// @brief map a file into memory
 ///

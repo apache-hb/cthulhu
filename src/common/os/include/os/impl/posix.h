@@ -9,6 +9,11 @@ typedef struct os_file_t
     FILE *file;
 } os_file_t;
 
+typedef struct os_mapping_t
+{
+    void *data;
+} os_mapping_t;
+
 typedef struct os_iter_t
 {
     DIR *dir;

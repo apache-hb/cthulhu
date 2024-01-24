@@ -11,6 +11,11 @@ typedef struct os_file_t
     HANDLE handle;
 } os_file_t;
 
+typedef struct os_mapping_t
+{
+    HANDLE handle;
+} os_mapping_t;
+
 typedef struct os_iter_t
 {
     HANDLE find;
