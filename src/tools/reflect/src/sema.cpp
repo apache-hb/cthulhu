@@ -7,7 +7,6 @@
 #include "std/map.h"
 #include "std/str.h"
 #include "std/vector.h"
-#include <cstdio>
 
 using namespace refl;
 
@@ -420,8 +419,6 @@ static bool has_attrib_tag(vector_t *attribs, ref_attrib_tag_t tag)
 {
     ref_ast_t *attrib = get_attrib(attribs, eAstAttribTag);
     if (!attrib) return false;
-
-    printf("found tag: %d %d\n", attrib->tag, tag);
 
     return attrib->tag == tag;
 }
