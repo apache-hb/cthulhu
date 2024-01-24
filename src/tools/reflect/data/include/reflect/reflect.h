@@ -105,7 +105,7 @@ namespace ctu {
                 auto digit = number % base;
                 number /= base;
 
-                m_data[m_size - i - 1] = '0' + digit;
+                m_data[m_size - i - 1] = static_cast<char>('0' + digit);
             }
         }
 
