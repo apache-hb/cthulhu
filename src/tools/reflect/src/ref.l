@@ -40,6 +40,7 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 <ATTRIBUTE>"typeid" { return TOK_TYPEID; }
 <ATTRIBUTE>"cxxname" { return TOK_CXXNAME; }
 <ATTRIBUTE>"facade" { return TOK_FACADE; }
+<ATTRIBUTE>"external" { return TOK_EXTERNAL; }
 
     /* enum attributes */
 <ATTRIBUTE>"bitflags" { return TOK_BITFLAGS; }

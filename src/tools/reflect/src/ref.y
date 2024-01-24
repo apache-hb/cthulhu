@@ -193,6 +193,7 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     TOK_FACADE "facade"
     TOK_API "api"
     TOK_INTERNAL "internal"
+    TOK_EXTERNAL "external"
     TOK_ORDERED "ordered"
 
     TOK_NULL "null"
@@ -386,6 +387,7 @@ simple_attrib: TOK_TRANSIENT { $$ = eAttribTransient; }
     | TOK_ORDERED { $$ = eAttribOrdered; }
     | TOK_INTERNAL { $$ = eAttribInternal; }
     | TOK_FACADE { $$ = eAttribFacade; }
+    | TOK_EXTERNAL { $$ = eAttribExternal; }
     ;
 
 layout_attrib: TOK_SYSTEM { $$ = eAttribLayoutSystem; }

@@ -75,7 +75,14 @@ typedef enum ref_attrib_tag_t {
     eAttribIterator, // this enum is an iterator, define increment/decrement operators and generate begin/end functions
     eAttribOrdered, // allow order comparison of enums
     eAttribInternal, // dont generate reflection data for this type
-    eAttribFacade, // this
+
+    // this is a synthetic type, it pretends a type exists when it does not
+    // for wrapping things like WM_* or SW_* macros and the like
+    eAttribFacade,
+
+    // this wraps an external type, which is defined, but not by us
+    eAttribExternal,
+
     eAttribFacadeUnscopedEnum, // facade over a c style unscoped enum
 
     eAttribLayoutSystem, // match system abi

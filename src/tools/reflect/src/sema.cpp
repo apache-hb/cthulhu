@@ -7,6 +7,7 @@
 #include "std/map.h"
 #include "std/str.h"
 #include "std/vector.h"
+#include <cstdio>
 
 using namespace refl;
 
@@ -573,9 +574,25 @@ void RecordType::resolve(Sema& sema)
     }
 }
 
+static bool type_is_external(ref_ast_t *ast)
+{
+    return !has_attrib_tag(ast->attributes, eAttribExternal);
+}
+
+static bool type_is_facade(ref_ast_t *ast)
+{
+    return has_attrib_tag(ast->attributes, eAttribFacade);
+}
+
+// internal types have no reflection data
+static bool type_is_internal(ref_ast_t *ast)
+{
+    return has_attrib_tag(ast->attributes, eAttribInternal);
+}
+
 void RecordType::emit_proto(out_t& out) const
 {
-    if (has_attrib_tag(m_ast->attributes, eAttribFacade))
+    if (type_is_external(m_ast))
         return;
     out.writeln("%s %s;", m_record, get_name());
 }
@@ -623,7 +640,7 @@ ref_privacy_t RecordType::emit_methods(out_t& out, ref_privacy_t privacy) const
 void RecordType::emit_begin_record(out_t& out, bool write_parent) const
 {
     const char *fin = is_final() ? " final " : " ";
-    if (is_final() && write_parent)
+    if (m_parent && write_parent)
     {
         out.writeln("%s %s%s: public %s {", m_record, get_name(), fin, m_parent->get_name());
     }
@@ -832,7 +849,7 @@ void Field::emit_field(out_t& out) const
 
 void Class::emit_impl(out_t& out) const
 {
-    if (has_attrib_tag(m_ast->attributes, eAttribFacade))
+    if (type_is_external(m_ast))
         return;
 
     emit_begin_record(out);
@@ -844,7 +861,7 @@ void Class::emit_impl(out_t& out) const
 
 void Struct::emit_impl(out_t& out) const
 {
-    if (has_attrib_tag(m_ast->attributes, eAttribFacade))
+    if (type_is_external(m_ast))
         return;
 
     emit_begin_record(out);
@@ -950,8 +967,13 @@ void Variant::emit_impl(out_t& out) const
     bool is_iterator = has_attrib_tag(m_ast->attributes, eAttribIterator);
 
     const char *ty = nullptr;
-    bool is_facade = has_attrib_tag(m_ast->attributes, eAttribFacade);
-    if (is_facade) CTASSERTF(m_parent != nullptr, "facade enum %s must have a parent", get_name());
+    bool is_external = type_is_external(m_ast);
+    bool is_facade = type_is_facade(m_ast);
+    if (is_external || is_facade)
+    {
+        CTASSERTF(m_parent != nullptr, "enum %s must have a parent because it is not implemented internally", get_name());
+        CTASSERTF(is_facade ^ is_external, "enum %s cannot be both a facade and external", get_name());
+    }
 
     out.writeln("namespace impl {");
     out.enter();
@@ -1270,8 +1292,8 @@ static void emit_info_header(out_t& out, const char* id)
 
 static const char* get_decl_name(ref_ast_t *ast, Sema& sema, const char *name)
 {
-    bool is_facade = has_attrib_tag(ast->attributes, eAttribFacade);
-    if (is_facade)
+    bool is_external = type_is_external(ast);
+    if (is_external)
     {
         return name;
     }
@@ -1283,7 +1305,7 @@ static const char* get_decl_name(ref_ast_t *ast, Sema& sema, const char *name)
 
 void Struct::emit_reflection(Sema& sema, out_t& out) const
 {
-    if (has_attrib_tag(m_ast->attributes, eAttribInternal))
+    if (type_is_internal(m_ast))
         return;
 
     auto id = get_decl_name(m_ast, sema, get_name());
@@ -1314,7 +1336,7 @@ void Struct::emit_reflection(Sema& sema, out_t& out) const
 
 void Class::emit_reflection(Sema& sema, out_t& out) const
 {
-    if (has_attrib_tag(m_ast->attributes, eAttribInternal))
+    if (type_is_internal(m_ast))
         return;
 
     auto id = get_decl_name(m_ast, sema, get_name());
@@ -1391,7 +1413,7 @@ size_t Variant::max_tostring_bitflags() const {
 
 void Variant::emit_reflection(Sema& sema, out_t& out) const
 {
-    if (has_attrib_tag(m_ast->attributes, eAttribInternal))
+    if (type_is_internal(m_ast))
         return;
 
     auto id = get_decl_name(m_ast, sema, get_name());
