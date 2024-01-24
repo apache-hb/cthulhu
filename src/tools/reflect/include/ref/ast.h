@@ -78,22 +78,29 @@ typedef enum ref_attrib_tag_t {
 
     // this is a synthetic type, it pretends a type exists when it does not
     // for wrapping things like WM_* or SW_* macros and the like
+    // providing an opaque parent type allows wrapping externally defined
+    // c style enums
     eAttribFacade,
 
     // this wraps an external type, which is defined, but not by us
     eAttribExternal,
 
-    eAttribLayoutSystem, // match system abi
+    // match system abi
+    eAttribLayoutSystem,
 
-    // stable abi for serialization
+    // stable abi for persistent serialization
     // TODO: what should we match, protobuf, flatbuffers, capnproto, etc?
     eAttribLayoutStable,
 
     // optimize for d3d cbuffer transfer
     // TODO: need math types for this
     eAttribLayoutCBuffer,
-    eAttribLayoutPacked, // pack fields
-    eAttribLayoutAny, // pick the best internal layout
+
+    // pack fields
+    eAttribLayoutPacked,
+
+    // pick the best internal layout
+    eAttribLayoutAny,
 } ref_attrib_tag_t;
 
 typedef enum ref_privacy_t {

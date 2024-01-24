@@ -1,4 +1,5 @@
 #include "ref/sema.h"
+#include "core/macros.h"
 #include "cthulhu/events/events.h"
 #include "memory/memory.h"
 #include "ref/ast.h"
@@ -589,6 +590,11 @@ static bool type_is_internal(ref_ast_t *ast)
     return has_attrib_tag(ast->attributes, eAttribInternal);
 }
 
+bool RecordType::is_stable_layout() const
+{
+    return has_attrib_tag(m_ast->attributes, eAttribLayoutStable);
+}
+
 void RecordType::emit_proto(out_t& out) const
 {
     if (type_is_external(m_ast))
@@ -844,6 +850,11 @@ void Field::emit_field(out_t& out) const
 {
     auto it = get_type()->get_cxx_name(get_name());
     out.writeln("%s;", it);
+}
+
+bool Field::is_transient() const
+{
+    return has_attrib_tag(m_ast->attributes, eAttribTransient);
 }
 
 void Class::emit_impl(out_t& out) const
@@ -1194,6 +1205,40 @@ void Variant::emit_impl(out_t& out) const
     out.writeln("static_assert(sizeof(%s) == sizeof(%s::underlying_t), \"%s size mismatch\");", get_name(), get_name(), get_name());
 }
 
+static ref_attrib_tag_t get_type_layout(ref_ast_t *ast)
+{
+    bool is_stable = has_attrib_tag(ast->attributes, eAttribLayoutStable);
+    bool is_packed = has_attrib_tag(ast->attributes, eAttribLayoutPacked);
+    bool is_system = has_attrib_tag(ast->attributes, eAttribLayoutSystem);
+    bool is_cbuffer = has_attrib_tag(ast->attributes, eAttribLayoutCBuffer);
+
+    if (is_stable || is_packed || is_system || is_cbuffer)
+    {
+        CTASSERTF(!(is_stable && is_packed && is_system && is_cbuffer), "type %s has multiple layouts", ast->name);
+
+        if (is_stable) return eAttribLayoutStable;
+        if (is_packed) return eAttribLayoutPacked;
+        if (is_system) return eAttribLayoutSystem;
+        if (is_cbuffer) return eAttribLayoutCBuffer;
+    }
+
+    return eAttribLayoutAny;
+}
+
+static const char *layout_enum_name(ref_attrib_tag_t tag)
+{
+    switch (tag)
+    {
+    case eAttribLayoutStable: return "eLayoutStable";
+    case eAttribLayoutSystem: return "eLayoutSystem";
+    case eAttribLayoutPacked: return "eLayoutPacked";
+    case eAttribLayoutCBuffer: return "eLayoutCBuffer";
+    case eAttribLayoutAny: return "eLayoutAny";
+
+    default: NEVER("invalid layout %d", tag);
+    }
+}
+
 static void emit_name_info(Sema& sema, out_t& out, const char* id, ref_ast_t *ast)
 {
     mpz_t typeid_value;
@@ -1202,6 +1247,12 @@ static void emit_name_info(Sema& sema, out_t& out, const char* id, ref_ast_t *as
     out.writeln("static constexpr ObjectName kFullName = impl::objname(\"%s\");", id);
     out.writeln("static constexpr ObjectName kName = impl::objname(\"%s\");", ast->name);
     out.writeln("static constexpr ObjectId kTypeId = %s;", mpz_get_str(nullptr, 10, typeid_value));
+    out.nl();
+
+    auto layout = get_type_layout(ast);
+    const char *layout_name = layout_enum_name(layout);
+
+    out.writeln("static constexpr TypeLayout kTypeLayout = %s;", layout_name);
 }
 
 static const char *access_name(ref_privacy_t privacy)
@@ -1302,6 +1353,13 @@ static const char* get_decl_name(ref_ast_t *ast, Sema& sema, const char *name)
     }
 }
 
+void RecordType::emit_serialize(out_t& out, const char *id, const Vector<Field*>& fields) const
+{
+    CT_UNUSED(out);
+    CT_UNUSED(id);
+    CT_UNUSED(fields);
+}
+
 void Struct::emit_reflection(Sema& sema, out_t& out) const
 {
     if (type_is_internal(m_ast))
@@ -1326,6 +1384,7 @@ void Struct::emit_reflection(Sema& sema, out_t& out) const
         emit_ctor(out);
         out.nl();
         emit_record_visit(out, id, m_fields);
+        emit_serialize(out, id, m_fields);
         out.leave();
     out.writeln("};");
     out.nl();
@@ -1374,6 +1433,7 @@ void Class::emit_reflection(Sema& sema, out_t& out) const
         emit_ctor(out);
         out.nl();
         emit_record_visit(out, id, m_fields);
+        emit_serialize(out, id, m_fields);
         out.leave();
     out.writeln("};");
     out.nl();

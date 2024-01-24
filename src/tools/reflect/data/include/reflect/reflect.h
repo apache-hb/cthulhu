@@ -198,6 +198,14 @@ namespace ctu {
         eAttribTransient = 1 << 0,
     };
 
+    enum TypeLayout : uint8_fast_t {
+        eLayoutSystem,
+        eLayoutConstBuffer,
+        eLayoutPacked,
+        eLayoutAny,
+        eLayoutStable
+    };
+
     struct ObjectField {
         const ObjectName name;
         const size_t index;

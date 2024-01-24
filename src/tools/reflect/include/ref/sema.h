@@ -374,6 +374,7 @@ namespace refl {
         virtual const char* get_cxx_name(const char *) const { return ""; }
 
         bool is_type() const override { return true; }
+        bool is_record_type() const { return get_kind() == eKindClass || get_kind() == eKindVariant; }
         virtual const char *get_opaque_name() const { return nullptr; }
     };
 
@@ -623,6 +624,7 @@ namespace refl {
         void emit_field(out_t& out) const;
 
         ref_privacy_t get_privacy() const { return m_ast->privacy; }
+        bool is_transient() const;
 
         ref_ast_t *get_ast() const { return m_ast; }
     };
@@ -737,6 +739,8 @@ namespace refl {
         void emit_end_record(out_t& out) const;
         ref_privacy_t emit_fields(out_t& out, const Vector<Field*>& fields, ref_privacy_t privacy) const;
 
+        void emit_serialize(out_t& out, const char *id, const Vector<Field*>& fields) const;
+
     public:
         void resolve(Sema& sema) override;
 
@@ -757,6 +761,7 @@ namespace refl {
 
         bool is_virtual() const { return m_ast->flags & eDeclVirtual; }
         bool is_final() const { return m_ast->flags & eDeclSealed; }
+        bool is_stable_layout() const;
     };
 
     class Class final : public RecordType {
