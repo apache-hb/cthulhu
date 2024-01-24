@@ -1088,7 +1088,7 @@ void Variant::emit_impl(out_t& out) const
     out.enter();
     out.writeln("constexpr %s(underlying_t value) : m_value((inner_t)value) { }", get_name());
     out.writeln("constexpr %s(inner_t value) : m_value(value) { }", get_name());
-    out.writeln("using enum inner_t;");
+    out.writeln("using enum impl::%s;", get_name());
     out.nl();
     if (m_default_case)
     {
