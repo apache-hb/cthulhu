@@ -1555,7 +1555,7 @@ void Variant::emit_reflection(Sema& sema, out_t& out) const
             out.writeln("bool first = true;");
             out.writeln("for (auto option : kCases) {");
             out.enter();
-            out.writeln("if ((value & option.value) == option.value) {");
+            out.writeln("if ((option.value != 0) && ((value & option.value) == option.value)) {");
             out.enter();
             out.writeln("if (!first) result += \", \";");
             out.writeln("result += option.name;");
