@@ -292,7 +292,6 @@ CT_OS_API os_error_t os_file_tell(IN_NOTNULL os_file_t *file, IN_NOTNULL size_t 
 NODISCARD
 CT_OS_API os_error_t os_file_map2(IN_NOTNULL os_file_t *file, os_mapping_t *mapping);
 
-NODISCARD
 CT_OS_API void os_file_unmap(IN_NOTNULL os_mapping_t *mapping);
 
 /// @brief map a file into memory
