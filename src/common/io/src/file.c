@@ -5,18 +5,24 @@
 
 #include <stdint.h>
 
-static os_file_t *fd_data(io_t *self)
+typedef struct io_file_t
 {
-    os_file_t *file = io_data(self);
+    os_file_t file;
+    os_mapping_t mapping;
+} io_file_t;
+
+static io_file_t *fd_data(io_t *self)
+{
+    io_file_t *file = io_data(self);
     return file;
 }
 
 static size_t fd_read(io_t *self, void *dst, size_t size)
 {
-    os_file_t *file = fd_data(self);
+    io_file_t *file = fd_data(self);
 
     size_t read = 0;
-    self->error = os_file_read(file, dst, size, &read);
+    self->error = os_file_read(&file->file, dst, size, &read);
     if (self->error != 0) return SIZE_MAX;
 
     return read;
@@ -24,10 +30,10 @@ static size_t fd_read(io_t *self, void *dst, size_t size)
 
 static size_t fd_write(io_t *self, const void *src, size_t size)
 {
-    os_file_t *file = fd_data(self);
+    io_file_t *file = fd_data(self);
 
     size_t written = 0;
-    self->error = os_file_write(file, src, size, &written);
+    self->error = os_file_write(&file->file, src, size, &written);
     if (self->error != 0) return SIZE_MAX;
 
     return written;
@@ -35,10 +41,10 @@ static size_t fd_write(io_t *self, const void *src, size_t size)
 
 static size_t fd_size(io_t *self)
 {
-    os_file_t *file = fd_data(self);
+    io_file_t *file = fd_data(self);
 
     size_t size = 0;
-    self->error = os_file_size(file, &size);
+    self->error = os_file_size(&file->file, &size);
     if (self->error != 0) return SIZE_MAX;
 
     return size;
@@ -46,10 +52,10 @@ static size_t fd_size(io_t *self)
 
 static size_t fd_seek(io_t *self, size_t offset)
 {
-    os_file_t *file = fd_data(self);
+    io_file_t *file = fd_data(self);
 
     size_t seek = 0;
-    self->error = os_file_seek(file, offset, &seek);
+    self->error = os_file_seek(&file->file, offset, &seek);
     if (self->error != 0) return SIZE_MAX;
 
     return seek;
@@ -57,21 +63,25 @@ static size_t fd_seek(io_t *self, size_t offset)
 
 static const void *fd_map(io_t *self)
 {
-    os_file_t *file = fd_data(self);
+    io_file_t *file = fd_data(self);
 
-    const void *data = NULL;
-    self->error = os_file_map(file, &data);
-    if (self->error != 0) return NULL;
+    if (!os_mapping_active(&file->mapping))
+    {
+        size_t size = io_size(self);
+        self->error = os_file_map(&file->file, eProtectRead, size, &file->mapping);
+        if (self->error != 0) return NULL;
+    }
 
-    return data;
+    return os_mapping_data(&file->mapping);
 }
 
 static void fd_close(io_t *self)
 {
-    os_file_t *file = fd_data(self);
+    io_file_t *file = fd_data(self);
     if (io_error(self) == 0)
     {
-        os_file_close(file);
+        os_file_unmap(&file->mapping);
+        os_file_close(&file->file);
     }
 }
 
@@ -95,7 +105,11 @@ io_t *io_file(const char *path, os_access_t mode, arena_t *arena)
     os_file_t fd = { 0 };
     os_error_t err = os_file_open(path, mode, &fd);
 
-    io_t *io = io_new(&kFileCallbacks, mode, path, &fd, sizeof(os_file_t), arena);
+    io_file_t data = {
+        .file = fd,
+    };
+
+    io_t *io = io_new(&kFileCallbacks, mode, path, &data, sizeof(io_file_t), arena);
     io->error = err;
 
     return io;

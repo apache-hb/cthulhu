@@ -8,6 +8,54 @@
 
 #include <sys/mman.h>
 
+USE_DECL
+os_error_t os_file_copy(const char *src, const char *dst)
+{
+    CTASSERT(src != NULL);
+    CTASSERT(dst != NULL);
+
+    // do naive copy for now
+    // theres a pile of platform specific calls to do this faster
+    // copyfile on macos, sendfile on linux, copy_file_range on bsd, etc
+
+    FILE *src_file = fopen(src, "rb");
+    if (src_file == NULL)
+    {
+        return errno;
+    }
+
+    FILE *dst_file = fopen(dst, "wb");
+    if (dst_file == NULL)
+    {
+        fclose(src_file); // TODO: duplicated logic with cleanup
+        return errno;
+    }
+
+    char buffer[4096];
+    size_t read = 0;
+    size_t written = 0;
+
+    int result = 0;
+
+    while ((read = fread(buffer, 1, sizeof(buffer), src_file)) > 0)
+    {
+        written = fwrite(buffer, 1, read, dst_file);
+
+        if (written < read)
+        {
+            if (ferror(dst_file))
+            {
+                result = errno;
+                break;
+            }
+        }
+    }
+
+    fclose(src_file);
+    fclose(dst_file);
+    return result;
+}
+
 static const char *get_access(os_access_t access)
 {
     if (access & eAccessText)
@@ -84,6 +132,7 @@ void os_file_close(os_file_t *file)
 {
     CTASSERT(file != NULL);
 
+    // TODO: check result
     (void)fclose(file->file);
 }
 
@@ -185,26 +234,76 @@ os_error_t os_file_tell(os_file_t *file, size_t *actual)
     return errno;
 }
 
+static int get_mmap_prot(os_protect_t protect)
+{
+    // TODO: i hope prot_none is 0
+    int result = PROT_NONE;
+
+    if (protect & eProtectRead)
+    {
+        result |= PROT_READ;
+    }
+
+    if (protect & eProtectWrite)
+    {
+        result |= PROT_WRITE;
+    }
+
+    if (protect & eProtectExecute)
+    {
+        result |= PROT_EXEC;
+    }
+
+    return result;
+}
+
 USE_DECL
-os_error_t os_file_map(os_file_t *file, const void **mapped)
+os_error_t os_file_map(os_file_t *file, os_protect_t protect, size_t size, os_mapping_t *mapping)
 {
     CTASSERT(file != NULL);
-    CTASSERT(mapped != NULL);
+    CTASSERT(mapping != NULL);
 
-    size_t size = 0;
-    os_error_t err = os_file_size(file, &size);
-    if (err) { return err; }
+    int prot = get_mmap_prot(protect);
 
     int fd = fileno(file->file);
-    void *ptr = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
+    void *ptr = mmap(NULL, size, prot, MAP_PRIVATE, fd, 0);
 
     if (ptr == MAP_FAILED)
     {
         return errno;
     }
 
-    *mapped = ptr;
+    os_mapping_t result = {
+        .data = ptr,
+        .size = size,
+    };
+
+    *mapping = result;
     return 0;
+}
+
+USE_DECL
+void os_file_unmap(os_mapping_t *mapping)
+{
+    CTASSERT(mapping != NULL);
+
+    munmap(mapping->data, mapping->size);
+}
+
+USE_DECL
+void *os_mapping_data(os_mapping_t *mapping)
+{
+    CTASSERT(mapping != NULL);
+
+    return mapping->data;
+}
+
+USE_DECL
+bool os_mapping_active(os_mapping_t *mapping)
+{
+    CTASSERT(mapping != NULL);
+
+    return mapping->data != NULL;
 }
 
 USE_DECL

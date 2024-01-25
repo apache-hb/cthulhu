@@ -21,6 +21,11 @@ typedef struct arena_t arena_t;
 
 /// @defgroup os Platform OS api wrapper
 /// @ingroup common
+/// @brief OS api wrappers, for portability
+///
+/// TODO: an os file path abstraction would be nice to have
+///       currently if we want to support long paths on windows we would need to do sneaky allocations
+///       which we dont advertise in the api.
 /// @{
 
 /// @brief file handle
@@ -40,6 +45,16 @@ typedef enum os_mode_t
 
     eAccessText = (1 << 2), ///< enable eof translation
 } os_access_t;
+
+/// @brief file mapping memory protection
+typedef enum os_protect_t
+{
+    eProtectNone = 0, ///< memory cannot be accessed
+
+    eProtectRead = (1 << 0), ///< memory can be read
+    eProtectWrite = (1 << 1), ///< memory can be written to (does not imply read)
+    eProtectExecute = (1 << 2), ///< memory can be executed (does not imply read or write)
+} os_protect_t;
 
 /// @brief directory entry type
 typedef enum os_dirent_t
@@ -102,6 +117,15 @@ CT_OS_API os_fn_t os_library_symbol(IN_NOTNULL os_library_t *library, IN_STRING 
 /// filesytem api
 
 RET_INSPECT
+CT_OS_API os_error_t os_file_copy(IN_STRING const char *src, IN_STRING const char *dst);
+
+/// @brief check if a file exists
+///
+/// @param path the path to the file to check
+/// @param exists true if the file exists, false otherwise
+///
+/// @return error if the file could not be checked
+RET_INSPECT
 CT_OS_API os_error_t os_file_exists(IN_STRING const char *path, IN_NOTNULL bool *exists);
 
 /// @brief create a file
@@ -163,7 +187,7 @@ CT_OS_API os_dirent_t os_dirent_type(IN_STRING const char *path);
 ///
 /// @return the current working directory
 /// @return an error if the current working directory could not be retrieved
-NODISCARD
+RET_INSPECT
 CT_OS_API os_error_t os_dir_current(OUT_WRITES(size) char *cwd, size_t size);
 
 /// directory iteration
@@ -176,7 +200,7 @@ CT_OS_API os_error_t os_dir_current(OUT_WRITES(size) char *cwd, size_t size);
 /// @param arena the arena to allocate from
 ///
 /// @return result containing either a valid iterator or an error, NULL if dir does not exist
-NODISCARD
+RET_INSPECT
 CT_OS_API os_error_t os_iter_begin(IN_STRING const char *path, os_iter_t *iter, IN_NOTNULL arena_t *arena);
 
 /// @brief close a directory iterator
@@ -198,6 +222,7 @@ CT_OS_API bool os_iter_next(IN_NOTNULL os_iter_t *iter, os_dir_t *dir);
 /// @param iter iterator to check
 ///
 /// @return the error state of the iterator
+RET_INSPECT
 CT_OS_API os_error_t os_iter_error(IN_NOTNULL os_iter_t *iter);
 
 /// @brief get the name of a directory entry
@@ -219,7 +244,7 @@ CT_OS_API char *os_dir_name(IN_NOTNULL os_dir_t *dir, IN_NOTNULL arena_t *arena)
 ///
 /// @return a file handle on success
 /// @return an error if the file could not be opened
-NODISCARD
+RET_INSPECT
 CT_OS_API os_error_t os_file_open(IN_STRING const char *path, os_access_t access, os_file_t *file);
 
 /// @brief close a file
@@ -236,7 +261,7 @@ CT_OS_API void os_file_close(OUT_PTR_INVALID os_file_t *file);
 ///
 /// @return the number of bytes read
 /// @return an error if the file could not be read from
-NODISCARD
+RET_INSPECT
 CT_OS_API os_error_t os_file_read(
         IN_NOTNULL os_file_t *file,
         void *buffer,
@@ -252,7 +277,7 @@ CT_OS_API os_error_t os_file_read(
 ///
 /// @return the number of bytes written
 /// @return an error if the file could not be written to
-NODISCARD
+RET_INSPECT
 CT_OS_API os_error_t os_file_write(
         IN_NOTNULL os_file_t *file,
         IN_READS(size) const void *buffer,
@@ -265,7 +290,7 @@ CT_OS_API os_error_t os_file_write(
 /// @param actual the size of the file
 ///
 /// @return an error if the file size could not be retrieved
-NODISCARD
+RET_INSPECT
 CT_OS_API os_error_t os_file_size(IN_NOTNULL os_file_t *file, IN_NOTNULL size_t *actual);
 
 /// @brief seek to a position in a file
@@ -275,7 +300,7 @@ CT_OS_API os_error_t os_file_size(IN_NOTNULL os_file_t *file, IN_NOTNULL size_t 
 /// @param actual the actual offset after seeking
 ///
 /// @return an error if the file could not be seeked
-NODISCARD
+RET_INSPECT
 CT_OS_API os_error_t os_file_seek(IN_NOTNULL os_file_t *file, size_t offset, size_t *actual);
 
 /// @brief get the current position in a file
@@ -284,24 +309,42 @@ CT_OS_API os_error_t os_file_seek(IN_NOTNULL os_file_t *file, size_t offset, siz
 /// @param actual the current position in the file
 ///
 /// @return an error if the file position could not be retrieved
-NODISCARD
+RET_INSPECT
 CT_OS_API os_error_t os_file_tell(IN_NOTNULL os_file_t *file, IN_NOTNULL size_t *actual);
-
-
-// TODO: use these instead of os_file_map to avoid leaks
-NODISCARD
-CT_OS_API os_error_t os_file_map2(IN_NOTNULL os_file_t *file, os_mapping_t *mapping);
-
-CT_OS_API void os_file_unmap(IN_NOTNULL os_mapping_t *mapping);
 
 /// @brief map a file into memory
 ///
 /// @param file the file to map
-/// @param mapped the mapped memory
+/// @param protect the memory protection to use
+/// @param size the size of the mapping
+/// @param mapping the mapping to fill
 ///
 /// @return an error if the file could not be mapped
+RET_INSPECT
+CT_OS_API os_error_t os_file_map(IN_NOTNULL os_file_t *file, os_protect_t protect, size_t size, os_mapping_t *mapping);
+
+/// @brief unmap a file from memory
+/// @note invalidates all memory pointers returned by @a os_mapping_data
+///
+/// @param mapping the mapping to unmap
+CT_OS_API void os_file_unmap(IN_NOTNULL os_mapping_t *mapping);
+
+/// @brief get the data of a file mapping
+///
+/// @param mapping the mapping to get the data of
+///
+/// @return the data of the mapping
 NODISCARD
-CT_OS_API os_error_t os_file_map(IN_NOTNULL os_file_t *file, IN_NOTNULL const void **mapped);
+CT_OS_API void *os_mapping_data(IN_NOTNULL os_mapping_t *mapping);
+
+/// @brief does the mapping object contain a valid mapping
+/// checks if the mapping data exists, not for the validity of the mapping
+///
+/// @param mapping the mapping to check
+///
+/// @return true if the mapping is valid
+NODISCARD
+CT_OS_API bool os_mapping_active(IN_NOTNULL os_mapping_t *mapping);
 
 /// @brief get the name of a file
 ///

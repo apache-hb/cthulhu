@@ -12,6 +12,7 @@ typedef struct os_file_t
 typedef struct os_mapping_t
 {
     void *data;
+    size_t size;
 } os_mapping_t;
 
 typedef struct os_iter_t

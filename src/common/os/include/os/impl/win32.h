@@ -14,6 +14,7 @@ typedef struct os_file_t
 typedef struct os_mapping_t
 {
     HANDLE handle;
+    LPVOID view;
 } os_mapping_t;
 
 typedef struct os_iter_t
