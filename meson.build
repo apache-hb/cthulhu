@@ -117,8 +117,6 @@ config_cdata.set10('CTU_HAS_PRETTY_FUNCTION', warning_level < 3)
 
 config_cdata.set10('CTU_TRACE_MEMORY', trace_memory.allowed())
 
-gmp = dependency('gmp', fallback : [ 'mini_gmp', 'gmp' ])
-
 # args for all code
 args = cc.get_supported_arguments(
     # we use flexible array members
