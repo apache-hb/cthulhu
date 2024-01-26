@@ -23,6 +23,7 @@
 !*.obr
 
 # dont ignore readme and build files
+!LICENSE
 !*.md
 !*.build
 !meson_options.txt
@@ -58,10 +59,8 @@ out.c
 node_modules/
 interface/gui/interface/imgui/examples/example_android_opengl3/android/app/src/main/AndroidManifest.xml
 out.h
-
-# lets not get sued
+out.cpp
 DONT_COMMIT_THIS
 
 # we do want to commit the snippets
 !.vscode/cthulhu.code-snippets
-out.cpp

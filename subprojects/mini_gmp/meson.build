@@ -1,6 +1,7 @@
 project('mini_gmp', 'c',
     version : '6.0.0',
     license : 'LGPLv3',
+    license_files : 'LICENSE',
     default_options : [
         'warning_level=1',
         'werror=false'
