@@ -21,8 +21,6 @@ size_t get_num_width(size_t num);
 char *fmt_left_align(arena_t *arena, size_t width, const char *fmt, ...);
 char *fmt_right_align(arena_t *arena, size_t width, const char *fmt, ...);
 
-// TODO: this all wont work with dynamic linking
-
 ///
 /// version 2 of the common stuff
 ///

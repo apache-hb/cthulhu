@@ -35,6 +35,11 @@ typedef struct print_backtrace_t
 
     /// @brief is the first line of the file line 0 or line 1
     bool zero_indexed_lines;
+
+    /// @brief path to the root of the projects source directory
+    /// if this is set then paths that are under this directory will be trimmed
+    /// to be relative to this directory. all other paths remain unchanged
+    const char *project_source_path;
 } print_backtrace_t;
 
 /// @brief create a new backtrace report

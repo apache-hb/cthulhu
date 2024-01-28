@@ -74,6 +74,12 @@ typedef struct backtrace_t
 
     /// the current alignment of the symbol names
     size_t symbol_align;
+
+    /// the length of the source root
+    size_t source_root_len;
+
+    /// arena
+    arena_t *arena;
 } backtrace_t;
 
 /// @brief a single possibly collapsed frame
@@ -156,9 +162,11 @@ static size_t collapse_frame(const typevec_t *entries, size_t start, arena_t *ar
             if (entry->address == first->address)
             {
                 size_t count = match_sequence(buffer, entries, i, collapsed);
-                if (count) return count;
 
-                // i think this is correct...
+                // if we matched more then we're done
+                if (count != 0) return count;
+
+                // otherwise break out and push just the single entry
                 break;
             }
             else
@@ -211,7 +219,8 @@ static typevec_t *collapse_frames(const typevec_t *frames, arena_t *arena)
 // the length of a pointer in hex, plus the 0x prefix
 #define PTR_TEXT_LEN (2 + 2 * sizeof(void*))
 
-static size_t get_largest_entry(const typevec_t *entries)
+// get the longest symbol in a sequence of entries
+static size_t get_longest_symbol(const typevec_t *entries)
 {
     size_t len = typevec_len(entries);
     size_t largest = 0;
@@ -269,7 +278,22 @@ static symbol_match_info_t get_largest_collapsed_symbol(const collapsed_t *entri
     return info;
 }
 
-static char *fmt_entry_location(backtrace_t *pass, const entry_t *entry)
+static const char *get_file_path(backtrace_t *pass, const char *file)
+{
+    print_backtrace_t config = pass->options;
+    const char *path = config.project_source_path;
+    size_t len = pass->source_root_len;
+
+    if (path == NULL)
+        return file;
+
+    if (str_startswith(file, path))
+        return str_format(pass->arena, "%s", file + len);
+
+    return file;
+}
+
+static const char *fmt_entry_location(backtrace_t *pass, const entry_t *entry)
 {
     print_backtrace_t config = pass->options;
 
@@ -277,6 +301,8 @@ static char *fmt_entry_location(backtrace_t *pass, const entry_t *entry)
 
     if (resolved & eResolveFile)
     {
+        const char *file = get_file_path(pass, entry->file);
+
         if (resolved & eResolveLine)
         {
             where_t where = {
@@ -290,11 +316,11 @@ static char *fmt_entry_location(backtrace_t *pass, const entry_t *entry)
                 .zero_indexed_lines = config.zero_indexed_lines,
             };
 
-            char *out = fmt_source_location(source_config, entry->file, where);
+            char *out = fmt_source_location(source_config, file, where);
             return str_format(pass->format_context.arena, "(%s)", out);
         }
 
-        return entry->file;
+        return file;
     }
 
     return colour_format(pass->format_context, COLOUR_ADDR, "0x%" PRI_ADDRESS, entry->address);
@@ -309,7 +335,7 @@ static char *fmt_entry(backtrace_t *pass, size_t symbol_align, const entry_t *en
 
     // we only need the @ seperator if we only have the address
     bool needs_seperator = !((resolved & eResolveFile) && (resolved & eResolveLine));
-    char *where = fmt_entry_location(pass, entry);
+    const char *where = fmt_entry_location(pass, entry);
     const char *name = (resolved & eResolveName) ? entry->symbol : kUnknownSymbol;
 
     char *it = fmt_right_align(options.arena, symbol_align, "%s", name);
@@ -349,7 +375,7 @@ static void print_frame_sequence(backtrace_t *pass, size_t index, const typevec_
 
     size_t len = typevec_len(sequence);
 
-    size_t largest = get_largest_entry(sequence);
+    size_t largest = get_longest_symbol(sequence);
 
     char *idx = fmt_index(pass, index);
     char *coloured = colour_format(pass->format_context, COLOUR_RECURSE, "%zu", repeat);
@@ -399,7 +425,17 @@ void print_backtrace(print_backtrace_t print, bt_report_t *report)
         .frames = frames,
         .index_align = align,
         .symbol_align = symbol_align.largest_symbol,
+        .arena = options.arena,
     };
+
+    const char *source_path = print.project_source_path;
+    if (source_path)
+    {
+        size_t len = ctu_strlen(source_path);
+        if (source_path[len - 1] != '/' && source_path[len - 1] != '\\')
+            len += 1;
+        pass.source_root_len = len;
+    }
 
     for (size_t i = 0; i < frame_count; i++)
     {

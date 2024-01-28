@@ -16,6 +16,8 @@
 
 #include "scan/node.h"
 
+#include <tool_config.h>
+
 typedef struct tool_t
 {
     cfg_group_t *m_config;
@@ -398,6 +400,10 @@ static void do_backtrace(io_t *io, arena_t *arena)
 {
     io_printf(io, "\n=== backtrace ===\n\n");
 
+    const char *source_root = TOOL_ROOT;
+
+    io_printf(io, "source root: %s\n\n", source_root);
+
     print_options_t options = {
         .arena = arena,
         .io = io,
@@ -408,12 +414,14 @@ static void do_backtrace(io_t *io, arena_t *arena)
         .options = options,
         .heading_style = eHeadingGeneric,
         .zero_indexed_lines = false,
+        .project_source_path = source_root,
     };
 
     print_backtrace_t config2 = {
         .options = options,
         .heading_style = eHeadingMicrosoft,
         .zero_indexed_lines = true,
+        .project_source_path = source_root,
     };
 
     recurse(15, config1, arena);

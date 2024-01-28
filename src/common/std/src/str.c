@@ -658,7 +658,7 @@ const char *str_common_prefix(vector_t *args, arena_t *arena)
     }
 
     size_t size = len * sizeof(char *);
-    char **strings = ARENA_MALLOC(size, "str_common_prefix", NULL, arena);
+    char **strings = ARENA_MALLOC(size, "str_common_prefix", args, arena);
 
     size_t lower = SIZE_MAX;
 
