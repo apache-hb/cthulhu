@@ -152,6 +152,13 @@ ref_ast_t *ref_privacy(scan_t *scan, where_t where, ref_privacy_t privacy)
     return ast;
 }
 
+ref_ast_t *ref_using(scan_t *scan, where_t where, char *name, ref_ast_t *type)
+{
+    ref_ast_t *ast = ref_ast_decl(scan, where, eAstAlias, name);
+    ast->type = type;
+    return ast;
+}
+
 ref_ast_t *ref_field(scan_t *scan, where_t where, char *name, ref_ast_t *type, ref_ast_t *value)
 {
     ref_ast_t *ast = ref_ast_decl(scan, where, eAstField, name);
@@ -186,13 +193,28 @@ ref_ast_t *ref_ctor(scan_t *scan, where_t where, vector_t *params, ref_ast_t *bo
     return ast;
 }
 
-ref_ast_t *ref_instance(scan_t *scan, where_t where, ref_ast_t *type, vector_t *params)
+ref_ast_t *ref_span(scan_t *scan, where_t where, ref_ast_t *type)
 {
-    ref_ast_t *ast = ref_ast_new(scan, where, eAstInstance);
-    ast->generic = type;
-    ast->params = params;
+    ref_ast_t *ast = ref_ast_new(scan, where, eAstSpan);
+    ast->ptr = type;
     return ast;
 }
+
+ref_ast_t *ref_array(scan_t *scan, where_t where, ref_ast_t *type, ref_ast_t *size)
+{
+    ref_ast_t *ast = ref_ast_new(scan, where, eAstArray);
+    ast->ptr = type;
+    ast->size = size;
+    return ast;
+}
+
+ref_ast_t *ref_vector(scan_t *scan, where_t where, ref_ast_t *type)
+{
+    ref_ast_t *ast = ref_ast_new(scan, where, eAstVector);
+    ast->ptr = type;
+    return ast;
+}
+
 
 ref_ast_t *ref_pointer(scan_t *scan, where_t where, ref_ast_t *type)
 {

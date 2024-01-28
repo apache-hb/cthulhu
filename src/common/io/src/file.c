@@ -61,14 +61,14 @@ static size_t fd_seek(io_t *self, size_t offset)
     return seek;
 }
 
-static const void *fd_map(io_t *self)
+static void *fd_map(io_t *self, os_protect_t protect)
 {
     io_file_t *file = fd_data(self);
 
     if (!os_mapping_active(&file->mapping))
     {
         size_t size = io_size(self);
-        self->error = os_file_map(&file->file, eProtectRead, size, &file->mapping);
+        self->error = os_file_map(&file->file, protect, size, &file->mapping);
         if (self->error != 0) return NULL;
     }
 

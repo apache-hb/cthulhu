@@ -36,6 +36,14 @@ static const cfg_info_t kOutputHeaderInfo = {
     .long_args = kOutputHeaderArgs,
 };
 
+static const char *const kOutputShaderFile[] = { "shader", NULL };
+
+static const cfg_info_t kOutputShaderInfo = {
+    .name = "shader",
+    .brief = "Output shader file",
+    .long_args = kOutputShaderFile,
+};
+
 static const char *const kOutputSourceArgs[] = { "source", NULL };
 
 static const cfg_info_t kOutputSourceInfo = {
@@ -84,6 +92,7 @@ struct tool_t
 
         m_output_header = config_string(m_config, &kOutputHeaderInfo, "reflect.h");
         m_output_source = config_string(m_config, &kOutputSourceInfo, "reflect.cpp");
+        m_output_shader = config_string(m_config, &kOutputShaderInfo, "reflect.hlsl");
 
         m_options = get_default_options(m_config);
 
@@ -138,6 +147,8 @@ struct tool_t
 
         parse_result_t result = scan_buffer(scan, &kCallbacks);
         if (result.result != eParseOk) return;
+
+        //m_sema.import_module((ref_ast_t *)result.tree);
     }
 
     ref_ast_t *process_file(const char *path)
@@ -157,18 +168,8 @@ struct tool_t
     int emit_output(ref_ast_t *ast, const char *file)
     {
         const char *header_path = cfg_string_value(m_output_header);
-        //const char *source_path = cfg_string_value(m_output_source);
         io_t *header = open_file(header_path, eAccessWrite, &kEvent_FailedToCreateOutputFile);
-        //io_t *source = open_file(source_path, eAccessWrite, &kEvent_FailedToCreateOutputFile);
         if (header == nullptr) return CT_EXIT_ERROR;
-
-        // ref_emit_t emit = {
-        //     .file = file,
-        //     .logger = m_logger,
-        //     .ast = ast,
-        //     .header = header,
-        //     .source = source,
-        // };
 
         text_config_t text_config = {
             .config = {
@@ -186,15 +187,13 @@ struct tool_t
             .text_config = text_config,
         };
 
-        refl::Sema sema { m_logger };
-
-        sema.forward_module(ast);
+        m_sema.forward_module(ast);
         CHECK_LOG(m_logger, "forwarding");
 
-        sema.resolve_all();
+        m_sema.resolve_all();
         CHECK_LOG(m_logger, "resolving");
 
-        sema.emit_all(header, file);
+        m_sema.emit_all(header, file);
         CHECK_LOG(m_logger, "emitting");
 
         return CT_EXIT_OK;
@@ -209,8 +208,10 @@ struct tool_t
 
     cfg_field_t *m_output_header = nullptr;
     cfg_field_t *m_output_source = nullptr;
+    cfg_field_t *m_output_shader = nullptr;
 
     default_options_t m_options = {};
+    refl::Sema m_sema { m_logger };
 };
 
 int main(int argc, const char **argv)

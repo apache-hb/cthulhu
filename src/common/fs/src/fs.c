@@ -338,7 +338,8 @@ static void sync_file(fs_t *dst_fs, fs_t *src_fs, inode_t *dst_node, inode_t *sr
     size_t size = io_size(src_io);
     if (size > 0)
     {
-        const void *data = io_map(src_io);
+        const void *data = io_map(src_io, eProtectRead);
+        CTASSERTF(data != NULL, "failed to map file during sync (path = %s)", io_name(src_io));
         io_write(dst_io, data, size);
     }
 

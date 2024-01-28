@@ -147,13 +147,19 @@ CT_IO_API size_t io_size(IN_NOTNULL io_t *io);
 NODISCARD
 CT_IO_API size_t io_seek(IN_NOTNULL io_t *io, size_t offset);
 
-/// @brief map an io objects backing into memory
+/// @brief map an io object into memory
+/// maps an io objects entire contents into memory.
+///
+/// @warning while the return value is a mutable pointer, the writability
+/// of the memory is determined by @p protect as well as the access mode
+/// the io object was created with.
 ///
 /// @param io the io object to map from
+/// @param protect the protection level of the memory
 ///
 /// @return memory mapping to the contents
 NODISCARD
-CT_IO_API const void *io_map(IN_NOTNULL io_t *io);
+CT_IO_API void *io_map(IN_NOTNULL io_t *io, os_protect_t protect);
 
 /// @brief get the last error from the io object
 ///

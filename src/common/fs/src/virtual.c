@@ -85,8 +85,10 @@ static size_t vfs_seek(io_t *self, size_t offset)
     return io->offset;
 }
 
-static const void *vfs_map(io_t *self)
+static void *vfs_map(io_t *self, os_protect_t protect)
 {
+    CTASSERTF(!(protect & eProtectExecute), "cannot map vfs io object as executable `%s`", io_name(self));
+
     virtual_io_t *io = vfs_data(self);
     return io->data->data;
 }

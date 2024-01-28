@@ -41,11 +41,12 @@ static size_t view_seek(io_t *self, size_t offset)
     return mem->offset;
 }
 
-static const void *view_map(io_t *self)
+static void *view_map(io_t *self, os_protect_t protect)
 {
+    CTASSERTF(protect == eProtectRead, "cannot map view with protection %d", protect);
     view_t *mem = view_data(self);
 
-    return mem->data;
+    return (void*)mem->data;
 }
 
 static const io_callbacks_t kViewCallbacks = {

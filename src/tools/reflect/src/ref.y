@@ -78,6 +78,7 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     case_value
     method_decl
     ctor_decl
+    using_decl
 
 %type<vector>
     path
@@ -86,7 +87,6 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     case_seq
     opt_attrib_seq
     attrib_seq
-    type_list
     ident_list
     opt_tparams
     opt_params
@@ -200,6 +200,7 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     TOK_EXTERNAL "external"
     TOK_ORDERED "ordered"
     TOK_FORMAT "format"
+    TOK_INPUT "input"
 
     TOK_NULL "null"
     TOK_TRUE "true"
@@ -210,7 +211,6 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
 
     TOK_IN "in"
     TOK_OUT "out"
-    TOK_INOUT "inout"
 
     TOK_BEGIN_TEMPLATE "!< (begin template)"
     TOK_END_TEMPLATE "> (end template)"
@@ -263,10 +263,14 @@ decl_flag: TOK_VIRTUAL { $$ = eDeclVirtual; }
 decl_body: class_decl { $$ = $1; }
     | variant_decl { $$ = $1; }
     | struct_decl { $$ = $1; }
+    | using_decl { $$ = $1; }
     ;
 
 opt_inherit: %empty { $$ = NULL; }
     | TOK_COLON type { $$ = $2; }
+    ;
+
+using_decl: TOK_ALIAS TOK_IDENT TOK_ASSIGN type { $$ = ref_using(x, @$, $2, $4); }
     ;
 
 struct_decl: TOK_STRUCT TOK_IDENT opt_tparams opt_inherit TOK_LBRACE class_body_seq TOK_RBRACE { $$ = ref_struct(x, @$, $2, $3, $4, $6); }
@@ -352,16 +356,11 @@ opt_assign: %empty { $$ = NULL; }
     ;
 
 type: TOK_IDENT { $$ = ref_ident(x, @$, $1); }
-    | TOK_BEGIN_TEMPLATE type TOK_COLON type_list TOK_END_TEMPLATE { $$ = ref_instance(x, @$, $2, $4); }
     | TOK_MUL type { $$ = ref_pointer(x, @$, $2); }
     | TOK_BITAND type { $$ = ref_reference(x, @$, $2); }
+    | TOK_LSQUARE type TOK_RSQUARE { $$ = ref_vector(x, @$, $2); }
     | TOK_OPAQUE TOK_LPAREN TOK_STRING TOK_RPAREN { $$ = ref_opaque_text(x, @$, $3); }
     | TOK_OPAQUE TOK_LPAREN TOK_IDENT TOK_RPAREN { $$ = ref_opaque(x, @$, $3); }
-    | TOK_BEGIN_TEMPLATE TOK_CONST TOK_COLON type TOK_END_TEMPLATE { $$ = ref_instance(x, @$, ref_ident(x, @$, (char*)"const"), vector_init($4, BISON_ARENA(x))); }
-    ;
-
-type_list: type { $$ = vector_init($1, BISON_ARENA(x)); }
-    | type_list TOK_COMMA type { vector_push(&$1, $3); $$ = $1; }
     ;
 
 path: TOK_IDENT { $$ = vector_init($1, BISON_ARENA(x)); }
@@ -409,6 +408,7 @@ layout_attrib: TOK_SYSTEM { $$ = eAttribLayoutSystem; }
     | TOK_CBUFFER { $$ = eAttribLayoutCBuffer; }
     | TOK_PACKED { $$ = eAttribLayoutPacked; }
     | TOK_DEFAULT { $$ = eAttribLayoutAny; }
+    | TOK_INPUT { $$ = eAttribLayoutInput; }
     ;
 
 string_list: TOK_STRING { $$ = stringlist_begin(x, @$, $1); }

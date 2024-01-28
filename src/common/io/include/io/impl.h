@@ -65,9 +65,10 @@ typedef size_t (*io_seek_t)(io_t *self, size_t offset);
 /// map an io objects backing data into memory
 ///
 /// @param self the io object
+/// @param protect the protection flags for the memory
 ///
 /// @return the backing memory
-typedef const void *(*io_map_t)(io_t *self);
+typedef void *(*io_map_t)(io_t *self, os_protect_t protect);
 
 /// @brief io close callback
 /// destroy an io objects backing data and any associated resources

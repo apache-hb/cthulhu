@@ -42,8 +42,6 @@ typedef enum os_mode_t
 {
     eAccessRead = (1 << 0),  ///< file is readable
     eAccessWrite = (1 << 1), ///< file is writeable, does not imply readable
-
-    eAccessText = (1 << 2), ///< enable eof translation
 } os_access_t;
 
 /// @brief file mapping memory protection

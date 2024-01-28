@@ -31,14 +31,14 @@ static const io_callbacks_t kConsoleErrorCallbacks = {
 
 static io_t gConsoleOutIo = {
     .cb = &kConsoleOutCallbacks,
-    .flags = eAccessWrite | eAccessText,
+    .flags = eAccessWrite,
     .arena = NULL,
     .name = "stdout",
 };
 
 static io_t gConsoleErrorIo = {
     .cb = &kConsoleErrorCallbacks,
-    .flags = eAccessWrite | eAccessText,
+    .flags = eAccessWrite,
     .arena = NULL,
     .name = "stderr",
 };

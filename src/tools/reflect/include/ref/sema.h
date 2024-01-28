@@ -280,11 +280,12 @@ namespace refl {
         void add_decl(const char *name, Decl *decl);
         Decl *get_decl(const char *name) const;
 
+        void import_module(ref_ast_t *mod);
+
         void forward_module(ref_ast_t *mod);
         void resolve_all();
 
         Type *resolve_type(ref_ast_t *ast);
-        Type *resolve_generic(ref_ast_t *ast);
 
         void emit_all(io_t *header, const char *file);
 
@@ -368,12 +369,24 @@ namespace refl {
     };
 
     class Type : public Decl {
+        size_t m_sizeof = 0;
+        size_t m_alignof = 0;
+
+    protected:
+        void set_sizeof(size_t size) { m_sizeof = size; }
+        void set_alignof(size_t align) { m_alignof = align; }
+
     public:
-        Type(const node_t *node, TreeKind kind, const char *name)
+        Type(const node_t *node, TreeKind kind, const char *name, size_t size, size_t align)
             : Decl(node, kind, name)
+            , m_sizeof(size)
+            , m_alignof(align)
         { }
 
         virtual const char* get_cxx_name(const char *) const { return ""; }
+
+        size_t get_sizeof() const { return m_sizeof; }
+        size_t get_alignof() const { return m_alignof; }
 
         bool is_type() const override { return true; }
         bool is_record_type() const { return get_kind() == eKindClass || get_kind() == eKindVariant; }
@@ -383,7 +396,7 @@ namespace refl {
     class OpaqueType : public Type {
     public:
         OpaqueType(const node_t *node, const char *name)
-            : Type(node, eKindTypeOpaque, name)
+            : Type(node, eKindTypeOpaque, name, sizeof(void*), alignof(void*))
         { CTASSERT(name != nullptr); }
 
         void resolve(Sema&) override { finish_resolve(); }
@@ -395,22 +408,13 @@ namespace refl {
         const char *get_opaque_name() const override { return get_name(); }
     };
 
-    class GenericType : public Type {
-    public:
-        GenericType(ref_ast_t *ast)
-            : Type(ast->node, eKindTypeTemplate, ast->name)
-        { }
-
-        void resolve(Sema&) override { finish_resolve(); }
-    };
-
     class AddressType : public Type {
         Type *m_pointee = nullptr;
         const char *m_symbol = nullptr;
 
     public:
         AddressType(const node_t *node, TreeKind kind, Type *pointee, const char *symbol)
-            : Type(node, kind, nullptr)
+            : Type(node, kind, nullptr, sizeof(void*), alignof(void*))
             , m_pointee(pointee)
             , m_symbol(symbol)
         { }
@@ -438,102 +442,12 @@ namespace refl {
         { }
     };
 
-    class TemplateInstance;
-
-    using vec_type_t = Vector<Type*>;
-
-    class TemplateType : public Type {
-        vector_str_t m_params { 32, get_global_arena()};
-
-    protected:
-        void add_param(const char* str) { m_params.push(arena_strdup(str, get_global_arena())); }
-
-    public:
-        TemplateType(const node_t *node, const char *name)
-            : Type(node, eKindTypeTemplate, name)
-        { }
-
-        const vector_str_t& get_params() const { return m_params; }
-
-        void resolve(Sema&) override { finish_resolve(); }
-
-        virtual Type *instantiate(Sema& sema, const vec_type_t& args) const = 0;
-    };
-
-    class AtomicType : public Type {
-        const Type *m_underlying = nullptr;
-
-    public:
-        AtomicType(const node_t *node, const Type *underlying)
-            : Type(node, underlying->get_kind(), underlying->get_name())
-            , m_underlying(underlying)
-        { }
-
-        void resolve(Sema&) override { finish_resolve(); }
-
-        const char* get_cxx_name(const char *name) const override {
-            auto inner = refl_fmt("std::atomic<%s>", m_underlying->get_cxx_name(nullptr));
-            return (name == nullptr) ? inner : refl_fmt("%s %s", inner, name);
-        }
-    };
-
-    class TemplateAtomic : public TemplateType {
-        void init() { add_param("T"); }
-    public:
-        TemplateAtomic(const char *name)
-            : TemplateType(node_builtin(), name)
-        { init(); }
-
-        void resolve(Sema&) override { finish_resolve(); }
-
-        Type *instantiate(Sema&, const vec_type_t& args) const override {
-            CTASSERT(args.size() == 1);
-            return new AtomicType(get_node(), args.get(0));
-        }
-    };
-
-    class ConstType : public Type {
-        const Type *m_underlying = nullptr;
-
-    public:
-        ConstType(const node_t *node, const Type *underlying)
-            : Type(node, underlying->get_kind(), underlying->get_name())
-            , m_underlying(underlying)
-        { }
-
-        void resolve(Sema&) override { finish_resolve(); }
-
-        const char* get_cxx_name(const char *name) const override {
-            auto inner = refl_fmt("const %s", m_underlying->get_cxx_name(nullptr));
-            return (name == nullptr) ? inner : refl_fmt("%s %s", inner, name);
-        }
-    };
-
-    class TemplateConst : public TemplateType {
-        void init() { add_param("T"); }
-    public:
-        TemplateConst(const char *name)
-            : TemplateType(node_builtin(), name)
-        { init(); }
-
-        void resolve(Sema&) override { finish_resolve(); }
-
-        Type *instantiate(Sema&, const vec_type_t& args) const override {
-            CTASSERT(args.size() == 1);
-            return new ConstType(get_node(), args.get(0));
-        }
-    };
-
     class IntType : public Type {
         digit_t m_digit;
         sign_t m_sign;
 
     public:
-        IntType(const char *name, digit_t digit, sign_t sign)
-            : Type(node_builtin(), eKindTypeInt, name)
-            , m_digit(digit)
-            , m_sign(sign)
-        { }
+        IntType(const char *name, digit_t digit, sign_t sign);
 
         void resolve(Sema&) override { finish_resolve(); }
 
@@ -546,7 +460,7 @@ namespace refl {
     class FloatType : public Type {
     public:
         FloatType(const char *name)
-            : Type(node_builtin(), eKindTypeFloat, name)
+            : Type(node_builtin(), eKindTypeFloat, name, sizeof(float), alignof(float))
         { }
 
         const char* get_cxx_name(const char *name) const override
@@ -560,7 +474,7 @@ namespace refl {
     class BoolType : public Type {
     public:
         BoolType(const char *name)
-            : Type(node_builtin(), eKindTypeBool, name)
+            : Type(node_builtin(), eKindTypeBool, name, sizeof(bool), alignof(bool))
         { }
 
         const char* get_cxx_name(const char *name) const override
@@ -574,7 +488,7 @@ namespace refl {
     class StringType : public Type {
     public:
         StringType(const char *name)
-            : Type(node_builtin(), eKindTypeString, name)
+            : Type(node_builtin(), eKindTypeString, name, sizeof(const char*), alignof(const char*))
         { }
 
         void resolve(Sema&) override { finish_resolve(); }
@@ -588,7 +502,7 @@ namespace refl {
     class VoidType : public Type {
     public:
         VoidType(const char *name)
-            : Type(node_builtin(), eKindTypeVoid, name)
+            : Type(node_builtin(), eKindTypeVoid, name, 0, 0)
         { }
 
         const char* get_cxx_name(const char *name) const override
@@ -602,7 +516,7 @@ namespace refl {
     class MemoryType : public Type {
     public:
         MemoryType(const char *name)
-            : Type(node_builtin(), eKindTypeMemory, name)
+            : Type(node_builtin(), eKindTypeMemory, name, sizeof(void*), alignof(void*))
         { }
 
         const char* get_cxx_name(const char *name) const override
@@ -709,18 +623,26 @@ namespace refl {
 
     class TypeAlias : public Type {
         ref_ast_t *m_ast = nullptr;
-        Type *m_alias = nullptr;
-
     public:
         TypeAlias(ref_ast_t *ast)
-            : Type(ast->node, eKindTypeAlias, ast->name)
+            : Type(ast->node, eKindTypeAlias, ast->name, 0, 0)
             , m_ast(ast)
         { }
 
         void resolve(Sema& sema) override {
             if (is_resolved()) return;
+            finish_resolve();
 
-            m_alias = sema.resolve_type(m_ast->type);
+            Type *type = sema.resolve_type(m_ast->type);
+
+            set_type(type);
+            set_alignof(type->get_alignof());
+            set_sizeof(type->get_sizeof());
+        }
+
+        const char *get_cxx_name(const char *name) const override {
+            Type *type = get_type();
+            return type->get_cxx_name(name);
         }
     };
 
@@ -733,7 +655,7 @@ namespace refl {
         Type *m_parent = nullptr;
 
         RecordType(ref_ast_t *ast, TreeKind kind, const char *record)
-            : Type(ast->node, kind, ast->name)
+            : Type(ast->node, kind, ast->name, 0, 0)
             , m_record(record)
             , m_ast(ast)
         { }

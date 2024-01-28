@@ -118,7 +118,7 @@ int main(int argc, const char **argv)
             io_printf(con, "no language found for file: %s\n", path);
         }
 
-        io_t *io = make_file(logger, path, eAccessRead | eAccessText, arena);
+        io_t *io = make_file(logger, path, eAccessRead, arena);
         if (io != NULL)
         {
             lifetime_parse(lifetime, lang, io);

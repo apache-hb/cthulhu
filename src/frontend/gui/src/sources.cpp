@@ -8,18 +8,26 @@
 
 using namespace ed;
 
-static constexpr os_access_t kAccess = os_access_t(eAccessRead | eAccessText);
-
 Source::Source(const char *str, arena_t *arena)
     : path(str)
-    , io(io_file(path.c_str(), kAccess, arena))
+    , io(io_file(path.c_str(), eAccessRead, arena))
 {
     basename = str_filename(path.c_str(), arena);
 
     os_error_t err = io_error(io);
     if (err == 0)
     {
-        source = text_view_make((const char*)io_map(io), io_size(io));
+        const void *data = io_map(io, eProtectRead);
+        size_t size = io_size(io);
+
+        if (data == nullptr)
+        {
+            error_string = os_error_string(io_error(io), arena);
+        }
+        else
+        {
+            source = text_view_make((const char *)data, size);
+        }
     }
     else
     {

@@ -16,7 +16,7 @@ USE_DECL
 size_t io_read(io_t *io, void *dst, size_t size)
 {
     CTASSERT(io != NULL);
-    CTASSERTF(io->flags & eAccessRead, "io.read(%s) flags not readable", io_name(io));
+    CTASSERTF(io->flags & eAccessRead, "cannot io_read(%s). flags did not include eAccessRead", io_name(io));
     CTASSERTF(io->cb->fn_read, "fn_read not provided for `%s`", io->name);
 
     return io->cb->fn_read(io, dst, size);
@@ -26,7 +26,7 @@ USE_DECL
 size_t io_write(io_t *io, const void *src, size_t size)
 {
     CTASSERT(io != NULL);
-    CTASSERTF(io->flags & eAccessWrite, "io.write(%s) flags not writable", io_name(io));
+    CTASSERTF(io->flags & eAccessWrite, "cannot io_write(%s). flags did not include eAccessWrite", io_name(io));
     CTASSERTF(io->cb->fn_write, "fn_write not provided for `%s`", io->name);
 
     return io->cb->fn_write(io, src, size);
@@ -89,17 +89,27 @@ const char *io_name(const io_t *io)
 }
 
 USE_DECL
-const void *io_map(io_t *io)
+void *io_map(io_t *io, os_protect_t protect)
 {
     CTASSERT(io != NULL);
     CTASSERTF(io->cb->fn_map, "fn_map not provided for `%s`", io->name);
 
-    // once a file is mapped, it is read-only
-    io->flags = eAccessRead;
+    CTASSERTF(protect != eProtectNone, "cannot io_map(%s). protect is eProtectNone", io_name(io));
+
+    // validate protect against access flags
+    if (protect & eProtectRead)
+    {
+        CTASSERTF(io->flags & eAccessRead, "io.map(%s) flags not readable", io_name(io));
+    }
+
+    if (protect & eProtectWrite)
+    {
+        CTASSERTF(io->flags & eAccessWrite, "io.map(%s) flags not writable", io_name(io));
+    }
 
     if (io_size(io) == 0) { return ""; }
 
-    return io->cb->fn_map(io);
+    return io->cb->fn_map(io, protect);
 }
 
 USE_DECL

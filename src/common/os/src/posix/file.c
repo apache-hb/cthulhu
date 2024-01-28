@@ -58,19 +58,6 @@ os_error_t os_file_copy(const char *src, const char *dst)
 
 static const char *get_access(os_access_t access)
 {
-    if (access & eAccessText)
-    {
-        if (access & eAccessWrite)
-        {
-            return "w";
-        }
-
-        if (access & eAccessRead)
-        {
-            return "r";
-        }
-    }
-
     if (access & eAccessWrite)
     {
         return "wb";
@@ -268,18 +255,15 @@ os_error_t os_file_map(os_file_t *file, os_protect_t protect, size_t size, os_ma
     int fd = fileno(file->file);
     void *ptr = mmap(NULL, size, prot, MAP_PRIVATE, fd, 0);
 
-    if (ptr == MAP_FAILED)
-    {
-        return errno;
-    }
-
     os_mapping_t result = {
         .data = ptr,
         .size = size,
     };
 
     *mapping = result;
-    return 0;
+
+    // always store the result of mmap in the mapping so we can check for MAP_FAILED
+    return (ptr == MAP_FAILED) ? errno : 0;
 }
 
 USE_DECL
@@ -303,7 +287,9 @@ bool os_mapping_active(os_mapping_t *mapping)
 {
     CTASSERT(mapping != NULL);
 
-    return mapping->data != NULL;
+    // if mmap ever gives us 0 as a valid address we'll need to change this
+    return mapping->data != NULL
+        && mapping->data != MAP_FAILED;
 }
 
 USE_DECL

@@ -33,7 +33,7 @@ static c89_source_t *header_for(c89_emit_t *emit, const ssa_module_t *mod, const
     char *it = str_format(emit->arena, "include/%s.h", path);
     fs_file_create(emit->fs, it);
 
-    io_t *io = fs_open(emit->fs, it, eAccessWrite | eAccessText);
+    io_t *io = fs_open(emit->fs, it, eAccessWrite);
     c89_source_t *source = source_new(io, str_format(emit->arena, "%s.h", path), emit->arena);
     map_set(emit->hdrmap, mod, source);
     return source;
@@ -44,7 +44,7 @@ static c89_source_t *source_for(c89_emit_t *emit, const ssa_module_t *mod, const
     char *it = str_format(emit->arena, "src/%s.c", path);
     fs_file_create(emit->fs, it);
 
-    io_t *io = fs_open(emit->fs, it, eAccessWrite | eAccessText);
+    io_t *io = fs_open(emit->fs, it, eAccessWrite);
     c89_source_t *source = source_new(io, it, emit->arena);
     map_set(emit->srcmap, mod, source);
     return source;
@@ -1188,10 +1188,10 @@ c89_emit_result_t emit_c89(const c89_emit_options_t *options)
         emit.file_override = true;
 
         fs_file_create(opts.fs, header_out);
-        io_t *header_io = fs_open(opts.fs, header_out, eAccessWrite | eAccessText);
+        io_t *header_io = fs_open(opts.fs, header_out, eAccessWrite);
 
         fs_file_create(opts.fs, source_out);
-        io_t *source_io = fs_open(opts.fs, source_out, eAccessWrite | eAccessText);
+        io_t *source_io = fs_open(opts.fs, source_out, eAccessWrite);
 
         c89_source_t header = {
             .io = header_io,

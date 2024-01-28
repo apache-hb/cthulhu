@@ -239,7 +239,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
         const char *ext = str_ext(path, arena);
         const language_t *lang = lifetime_get_language(lifetime, ext);
 
-        io_t *io = make_file(path, eAccessRead | eAccessText, arena);
+        io_t *io = make_file(path, eAccessRead, arena);
 
         lifetime_parse(lifetime, lang, io);
 

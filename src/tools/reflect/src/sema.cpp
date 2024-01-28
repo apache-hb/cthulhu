@@ -81,8 +81,6 @@ declmap_t refl::get_builtin_types()
     decls.set("usize", new IntType("usize", eDigitSize, eSignUnsigned));
     decls.set("isize", new IntType("isize", eDigitSize, eSignSigned));
     decls.set("float", new FloatType("float"));
-    decls.set("atomic", new TemplateAtomic("atomic"));
-    decls.set("const", new TemplateConst("const"));
 
     return decls;
 }
@@ -145,6 +143,11 @@ Decl *Sema::forward_decl(const char *name, ref_ast_t *ast)
         add_decl(name, var);
         return var;
     }
+    case eAstAlias: {
+        TypeAlias *alias = new TypeAlias(ast);
+        add_decl(name, alias);
+        return alias;
+    }
     default: return nullptr;
     }
 }
@@ -172,9 +175,6 @@ Type *Sema::resolve_type(ref_ast_t *ast)
         CTASSERTF(decl->is_type(), "expected type, got %s", decl->get_name());
         CTASSERTF(decl->is_resolved(), "expected resolved type, got %s", decl->get_name());
         return static_cast<Type*>(decl);
-    }
-    case eAstInstance: {
-        return resolve_generic(ast);
     }
     case eAstPointer: {
         Type *type = resolve_type(ast->ptr);
@@ -229,50 +229,6 @@ Type *Sema::resolve_type(ref_ast_t *ast)
         return nullptr;
     }
     }
-}
-
-Type *Sema::resolve_generic(ref_ast_t *ast)
-{
-    CTASSERT(ast != nullptr);
-
-    Decl *decl = resolve_type(ast->generic);
-    if (decl == nullptr)
-    {
-        report(&kEvent_SymbolNotFound, ast->node, "unresolved template type '%s'", ast->generic->ident);
-        return nullptr;
-    }
-
-    if (!decl->is_template())
-    {
-        report(&kEvent_InvalidType, ast->node, "expected template type, got '%s'", decl->get_name());
-        return nullptr;
-    }
-
-    TemplateType *tmpl = static_cast<TemplateType*>(decl);
-    if (tmpl->get_params().size() != vector_len(ast->params))
-    {
-        event_builder_t evt = report(&kEvent_InvalidType, ast->node, "invalid number of template parameters for '%s'", decl->get_name());
-        msg_note(evt, "expected %zu, got %zu", tmpl->get_params().size(), vector_len(ast->params));
-        return nullptr;
-    }
-
-    Vector<Type*> params { vector_len(ast->params), get_global_arena() };
-    vec_foreach<ref_ast_t*>(ast->params, [&](auto param) {
-        Type *type = resolve_type(param);
-        if (type == nullptr)
-        {
-            report(&kEvent_InvalidType, param->node, "invalid template parameter");
-            return;
-        }
-        params.push(type);
-    });
-
-    if (params.size() != vector_len(ast->params))
-    {
-        return nullptr;
-    }
-
-    return tmpl->instantiate(*this, params);
 }
 
 void Sema::emit_all(io_t *header, const char *file)
@@ -859,6 +815,72 @@ static const char *digit_cxx_name(digit_t digit, sign_t sign)
     default: NEVER("invalid digit");
     }
 }
+
+static size_t digit_sizeof(digit_t digit)
+{
+    switch (digit)
+    {
+    case eDigit8: return sizeof(uint8_t);
+    case eDigit16: return sizeof(uint16_t);
+    case eDigit32: return sizeof(uint32_t);
+    case eDigit64: return sizeof(uint64_t);
+
+    case eDigitFast8: return sizeof(uint_fast8_t);
+    case eDigitFast16: return sizeof(uint_fast16_t);
+    case eDigitFast32: return sizeof(uint_fast32_t);
+    case eDigitFast64: return sizeof(uint_fast64_t);
+
+    case eDigitLeast8: return sizeof(uint_least8_t);
+    case eDigitLeast16: return sizeof(uint_least16_t);
+    case eDigitLeast32: return sizeof(uint_least32_t);
+    case eDigitLeast64: return sizeof(uint_least64_t);
+
+    case eDigitChar: return sizeof(char);
+    case eDigitShort: return sizeof(short);
+    case eDigitInt: return sizeof(int);
+    case eDigitLong: return sizeof(long);
+    case eDigitSize: return sizeof(size_t);
+    case eDigitPtr: return sizeof(intptr_t);
+
+    default: NEVER("invalid digit %d", digit);
+    }
+}
+
+static size_t digit_alignof(digit_t digit)
+{
+    switch (digit)
+    {
+    case eDigit8: return alignof(uint8_t);
+    case eDigit16: return alignof(uint16_t);
+    case eDigit32: return alignof(uint32_t);
+    case eDigit64: return alignof(uint64_t);
+
+    case eDigitFast8: return alignof(uint_fast8_t);
+    case eDigitFast16: return alignof(uint_fast16_t);
+    case eDigitFast32: return alignof(uint_fast32_t);
+    case eDigitFast64: return alignof(uint_fast64_t);
+
+    case eDigitLeast8: return alignof(uint_least8_t);
+    case eDigitLeast16: return alignof(uint_least16_t);
+    case eDigitLeast32: return alignof(uint_least32_t);
+    case eDigitLeast64: return alignof(uint_least64_t);
+
+    case eDigitChar: return alignof(char);
+    case eDigitShort: return alignof(short);
+    case eDigitInt: return alignof(int);
+    case eDigitLong: return alignof(long);
+    case eDigitSize: return alignof(size_t);
+    case eDigitPtr: return alignof(intptr_t);
+
+    default: NEVER("invalid digit %d", digit);
+    }
+}
+
+IntType::IntType(const char *name, digit_t digit, sign_t sign)
+    : Type(node_builtin(), eKindTypeInt, name, digit_sizeof(digit), digit_alignof(digit))
+    , m_digit(digit)
+    , m_sign(sign)
+{ }
 
 const char* IntType::get_cxx_name(const char *name) const
 {

@@ -133,7 +133,12 @@ scan_t *scan_io(const char *language, io_t *io, arena_t *arena)
     self->tree = NULL;
     self->context = NULL;
 
-    self->mapped = text_view_make(io_map(io), io_size(io));
+    const void *region = io_map(io, eProtectRead);
+    size_t size = io_size(io);
+
+    CTASSERTF(region != NULL, "failed to map %s", path);
+
+    self->mapped = text_view_make(region, size);
 
     return self;
 }

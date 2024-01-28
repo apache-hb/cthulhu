@@ -54,6 +54,7 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 <ATTRIBUTE>"packed" { return TOK_PACKED; }
 <ATTRIBUTE>"system" { return TOK_SYSTEM; }
 <ATTRIBUTE>"cbuffer" { return TOK_CBUFFER; }
+<ATTRIBUTE>"input" { return TOK_INPUT; }
 <ATTRIBUTE>"internal" { return TOK_INTERNAL; }
 
 <*>{WS}+ ;
@@ -95,7 +96,6 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 
 <*>"in" { return TOK_IN; }
 <*>"out" { return TOK_OUT; }
-<*>"inout" { return TOK_INOUT; }
 
 <*>"{" { return TOK_LBRACE; }
 <*>"}" { return TOK_RBRACE; }

@@ -59,8 +59,10 @@ static size_t mem_seek(io_t *self, size_t offset)
     return mem->offset;
 }
 
-static const void *mem_map(io_t *self)
+static void *mem_map(io_t *self, os_protect_t protect)
 {
+    CTASSERTF(!(protect & eProtectExecute), "cannot map memory object as executable `%s`", io_name(self));
+
     buffer_t *mem = mem_data(self);
 
     return mem->data;

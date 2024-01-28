@@ -314,7 +314,7 @@ static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
     char *file = str_format(base->arena, "%s/%s.ssa", path, mod->name);
     fs_file_create(fs, file);
 
-    io_t *io = fs_open(fs, file, eAccessWrite | eAccessText);
+    io_t *io = fs_open(fs, file, eAccessWrite);
     write_string(io, "module {name=%s", mod->name);
     if (ctu_strlen(path) > 0) { write_string(io, ", path=%s", path); }
     write_string(io, "}\n");

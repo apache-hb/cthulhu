@@ -30,11 +30,6 @@ typedef enum ref_kind_t {
     eAstStruct,
     eAstAlias,
 
-    eAstConst,
-
-    eAstArray,
-    eAstVector,
-
     eAstPrivacy,
     eAstField,
     eAstMethod,
@@ -46,10 +41,13 @@ typedef enum ref_kind_t {
     eAstInteger,
     eAstBool,
 
-    eAstInstance,
-    eAstPointer,
-    eAstOpaque,
-    eAstReference,
+    eAstPointer, // a pointer
+    eAstOpaque, // an opaque type, for stuff external to the reflection system
+    eAstReference, // a reference, c++ semantics
+
+    eAstSpan,
+    eAstArray,
+    eAstVector,
 
     eAstIdent,
     eAstBinary,
@@ -101,6 +99,9 @@ typedef enum ref_attrib_tag_t {
 
     // pack fields
     eAttribLayoutPacked,
+
+    // d3d12 input elements
+    eAttribLayoutInput,
 
     // pick the best internal layout
     eAttribLayoutAny,
@@ -187,7 +188,14 @@ typedef struct ref_ast_t {
             vector_t *params;
         };
 
-        struct ref_ast_t *ptr;
+        /* eAstSpan, eAstVector, eAstArray */
+        struct {
+            struct ref_ast_t *ptr;
+
+            /* only used in eAstArray for now */
+            /* maybe in the future eAstSpan will also use this */
+            struct ref_ast_t *size;
+        };
 
         struct {
             /* eAstPrivacy, eDeclField, eDeclMethod */
@@ -275,15 +283,24 @@ ref_ast_t *ref_class(scan_t *scan, where_t where, char *name, vector_t *params, 
 ref_ast_t *ref_struct(scan_t *scan, where_t where, char *name, vector_t *params, ref_ast_t *parent, vector_t *body);
 
 ref_ast_t *ref_privacy(scan_t *scan, where_t where, ref_privacy_t privacy);
+ref_ast_t *ref_using(scan_t *scan, where_t where, char *name, ref_ast_t *type);
 
 ref_ast_t *ref_field(scan_t *scan, where_t where, char *name, ref_ast_t *type, ref_ast_t *value);
 ref_ast_t *ref_method(scan_t *scan, where_t where, ref_flags_t flags, char *name, vector_t *params, ref_ast_t *type, ref_ast_t *body);
 ref_ast_t *ref_param(scan_t *scan, where_t where, char *name, ref_param_t param, ref_ast_t *type);
 ref_ast_t *ref_ctor(scan_t *scan, where_t where, vector_t *params, ref_ast_t *body);
 
-ref_ast_t *ref_instance(scan_t *scan, where_t where, ref_ast_t *type, vector_t *params);
 ref_ast_t *ref_pointer(scan_t *scan, where_t where, ref_ast_t *type);
 ref_ast_t *ref_reference(scan_t *scan, where_t where, ref_ast_t *type);
+
+// non-owning view over a range of values
+ref_ast_t *ref_span(scan_t *scan, where_t where, ref_ast_t *type);
+
+// owning fixed size array of values
+ref_ast_t *ref_array(scan_t *scan, where_t where, ref_ast_t *type, ref_ast_t *size);
+
+// owning variable size array of values
+ref_ast_t *ref_vector(scan_t *scan, where_t where, ref_ast_t *type);
 
 ref_ast_t *ref_variant(scan_t *scan, where_t where, char *name, ref_ast_t *underlying, vector_t *cases);
 

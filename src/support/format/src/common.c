@@ -199,7 +199,12 @@ static text_view_t get_io_view(io_t *io)
         return text_view_from("");
     }
 
-    return text_view_make(io_map(io), io_size(io));
+    const void *memory = io_map(io, eProtectRead);
+    size_t size = io_size(io);
+
+    CTASSERTF(memory != NULL, "io_map(%s) failed", io_name(io));
+
+    return text_view_make(memory, size);
 }
 
 static text_cache_t *text_cache_io(io_t *io, arena_t *arena)
@@ -276,7 +281,7 @@ text_cache_t *cache_emplace_file(cache_map_t *map, const char *path)
     text_cache_t *cache = map_get(map->map, path);
     if (cache != NULL && cache_is_valid(cache)) return cache;
 
-    io_t *io = io_file(path, eAccessRead | eAccessText, map->arena);
+    io_t *io = io_file(path, eAccessRead, map->arena);
     text_cache_t *text = text_cache_io(io, map->arena);
 
     // always insert the cache, even if it is invalid.
