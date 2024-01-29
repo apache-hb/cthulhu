@@ -40,6 +40,10 @@
 			"	link_with : lib$1,"
 			"	include_directories : [ $1_include ]"
 			")"
+			""
+			"install_headers($1_api, subdir : '$1')"
+			"install_subdir('include', install_dir : 'include')"
+			""
 		]
 	},
 	"Flex prelude": {

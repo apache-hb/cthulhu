@@ -24,6 +24,7 @@ os_api_build = '-DCT_OS_BUILD=1'
 # would do now but time crunch
 lib_oscommon = static_library('os_common', src,
     build_by_default : false,
+    install : not meson.is_subproject(),
     c_args : user_args + [ os_api_build ],
     dependencies : [ core, base, arena, std ],
     include_directories : [ os_include, os_impl_include ]
@@ -31,7 +32,6 @@ lib_oscommon = static_library('os_common', src,
 
 os_common = declare_dependency(
     link_with : lib_oscommon,
-    compile_args : [ os_api_build ],
     dependencies : [ core ],
     include_directories : [ os_include, os_impl_include ]
 )
@@ -47,3 +47,6 @@ os = declare_dependency(
     dependencies : [ core ],
     include_directories : os_include
 )
+
+install_headers(os_api)
+install_subdir('include', install_dir : 'include')

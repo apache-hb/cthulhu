@@ -13,6 +13,7 @@ src = [
 
 libruntime = library('runtime', src,
     build_by_default : false,
+    install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_RUNTIME_BUILD=1' ],
     include_directories : runtime_include,
     dependencies : [
@@ -27,3 +28,6 @@ runtime = declare_dependency(
     include_directories : runtime_include,
     dependencies : [ base, std, notify, tree ]
 )
+
+install_headers(runtime_api)
+install_subdir('include', install_dir : 'include')

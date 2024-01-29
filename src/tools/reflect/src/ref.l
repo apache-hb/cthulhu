@@ -19,6 +19,7 @@
 
 %x ATTRIBUTE
 %x TEMPLATE
+%x CONFIG
 
 WS [ \t\r\v\n\f]
 ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
@@ -29,7 +30,6 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 <ATTRIBUTE>"]]" { yy_pop_state(yyscanner); return TOK_END_ATTRIBUTE; }
 
 <ATTRIBUTE>"alignas" { return TOK_ALIGNAS; }
-<ATTRIBUTE>"config" { return TOK_CONFIG; }
 <ATTRIBUTE>"doc" { return TOK_DOC; }
 <ATTRIBUTE>"assert" { return TOK_ASSERT; }
 <ATTRIBUTE>"remote" { return TOK_REMOTE; }
@@ -63,6 +63,9 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 <*>"/*" { yy_push_state(COMMENT, yyscanner); }
 <COMMENT>"*/" { yy_pop_state(yyscanner); }
 <COMMENT>.|\n ;
+
+<*>"config" { yy_push_state(CONFIG, yyscanner); return TOK_CONFIG; }
+<CONFIG>";" { yy_pop_state(yyscanner); return TOK_END_CONFIG; }
 
 <*>"module" { return TOK_MODULE; }
 <*>"import" { return TOK_IMPORT; }

@@ -13,6 +13,7 @@ src = [
 
 libscan = library('scan', src,
     build_by_default : false,
+    install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_SCAN_BUILD=1' ],
     dependencies : [ arena, std, io, os ],
     include_directories : scan_include
@@ -23,3 +24,6 @@ scan = declare_dependency(
     dependencies : [ core, base, os ],
     include_directories : scan_include
 )
+
+install_headers(scan_api)
+install_subdir('include', install_dir : 'include')

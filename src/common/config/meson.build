@@ -13,10 +13,11 @@ src = [
 ]
 
 libconfig = library('config', src,
-    c_args : user_args + [ '-DCT_CONFIG_BUILD=1' ],
     build_by_default : false,
-    include_directories : config_include,
-    dependencies : [ base, std, arena, io ]
+    install : not meson.is_subproject(),
+    c_args : user_args + [ '-DCT_CONFIG_BUILD=1' ],
+    dependencies : [ base, std, arena, io ],
+    include_directories : config_include
 )
 
 config = declare_dependency(
@@ -24,3 +25,6 @@ config = declare_dependency(
     include_directories : config_include,
     dependencies : [ base, std ]
 )
+
+install_headers(config_api)
+install_subdir('include', install_dir : 'include')

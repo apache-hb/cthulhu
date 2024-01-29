@@ -19,6 +19,7 @@ src = [
 
 libio = library('io', src,
     build_by_default : false,
+    install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_IO_BUILD=1' ],
     dependencies : [ std, os, arena ],
     include_directories : io_include
@@ -29,3 +30,6 @@ io = declare_dependency(
     dependencies : [ os ],
     include_directories : io_include
 )
+
+install_headers(io_api)
+install_subdir('include', install_dir : 'include')

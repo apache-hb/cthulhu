@@ -26,6 +26,7 @@ endif
 
 libbacktrace = library('backtrace', src,
     build_by_default : false,
+    install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_BACKTRACE_BUILD=1' ],
     include_directories : backtrace_include,
     dependencies : [ backtrace_deps, core ]
@@ -36,3 +37,6 @@ backtrace = declare_dependency(
     include_directories : backtrace_include,
     dependencies : [ core ]
 )
+
+install_headers(backtrace_api)
+install_subdir('include', install_dir : 'include')

@@ -6,6 +6,7 @@ osnative_args = cc.get_supported_arguments('-Wno-switch', '/wd4063')
 
 lib_osnative = library('os_windows', src,
     build_by_default : false,
-    c_args : user_args + osnative_args,
+    install : not meson.is_subproject(),
+    c_args : user_args + osnative_args + [ os_api_build ],
     dependencies : [ arena, std, os_common ]
 )

@@ -37,6 +37,8 @@ As alot of code can be shared, adding a feature for one language may often requi
 <h2>Getting started</h2>
 @subpage building Building the compiler
 
+@subpage usage Consuming the framework as a library.
+
 @subpage contrib Contributing to Cthulhu
 
 @subpage todo The ever growing todo list

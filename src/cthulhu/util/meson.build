@@ -14,6 +14,7 @@ src = [
 
 libutil = library('util', src,
     build_by_default : false,
+    install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_UTIL_BUILD=1' ],
     include_directories : util_include,
     dependencies : [ memory, base, std, scan, events, tree, arena ]
@@ -24,3 +25,6 @@ util = declare_dependency(
     include_directories : util_include,
     dependencies : [ base ]
 )
+
+install_headers(util_api)
+install_subdir('include', install_dir : 'include')

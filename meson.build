@@ -276,6 +276,36 @@ if doxygen.found()
     run_target('docs', command : [ doxygen, doxy_cfg ])
 endif
 
+pkgconfig = import('pkgconfig')
+
+common_deps = [
+    core, backtrace, base, arena, std, os,
+    io, scan, fs,
+    interop, config, notify
+]
+
+runtime_deps = [
+    memory, events, tree, eval, ssa,
+    util, emit, runtime, check
+]
+
+pkg_common = pkgconfig.generate(
+    description : 'Cthulhu base libraries',
+    libraries : common_deps,
+    version : meson.project_version(),
+    name : 'cthulhu-base',
+    filebase : 'cthulhu-base'
+)
+
+pkg_runtime = pkgconfig.generate(
+    description : 'Cthulhu runtime library components',
+    libraries : runtime_deps,
+    requires : 'cthulhu-base',
+    version : meson.project_version(),
+    name : 'cthulhu-runtime',
+    filebase : 'cthulhu-runtime'
+)
+
 summary = {
     'Build': {
         'Debug': is_debug,

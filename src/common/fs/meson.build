@@ -18,6 +18,7 @@ fs_args = cc.get_supported_arguments('/wd4324')
 
 libfs = library('fs', src,
     build_by_default : false,
+    install : not meson.is_subproject(),
     c_args : user_args + fs_args + [ '-DCT_FS_BUILD=1' ],
     dependencies : [ arena, std, os, io ],
     include_directories : [ fs_include, fs_impl_include ]
@@ -28,3 +29,6 @@ fs = declare_dependency(
     dependencies : [ os ],
     include_directories : fs_include
 )
+
+install_headers(fs_api)
+install_subdir('include', install_dir : 'include')

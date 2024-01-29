@@ -19,6 +19,7 @@ src = [
 
 libstd = library('std', src,
     build_by_default : false,
+    install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_STD_BUILD=1' ],
     dependencies : [ arena, base ],
     include_directories : std_include
@@ -29,3 +30,6 @@ std = declare_dependency(
     dependencies : base,
     include_directories : std_include
 )
+
+install_headers(std_api)
+install_subdir('include', install_dir : 'include')

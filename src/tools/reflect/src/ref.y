@@ -179,6 +179,7 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
 
     TOK_TRANSIENT "transient"
     TOK_CONFIG "config"
+    TOK_END_CONFIG "; (end config)"
     TOK_DOC "doc"
     TOK_ASSERT "assert"
     TOK_DEPRECATED "deprecated"

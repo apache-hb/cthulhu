@@ -13,6 +13,7 @@ src = [
 
 libinterop = library('interop', src,
     build_by_default : false,
+    install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_INTEROP_BUILD=1' ],
     dependencies : [ arena, scan ],
     include_directories : interop_include
@@ -23,3 +24,6 @@ interop = declare_dependency(
     dependencies : [ arena, scan ],
     include_directories : interop_include
 )
+
+install_headers(interop_api)
+install_subdir('include', install_dir : 'include')

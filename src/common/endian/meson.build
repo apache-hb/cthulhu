@@ -12,6 +12,7 @@ src = [
 
 libendian = library('endian', src,
     build_by_default : false,
+    install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_ENDIAN_BUILD=1' ],
     dependencies : [ core, base ],
     include_directories : endian_include
@@ -22,3 +23,6 @@ endian = declare_dependency(
     dependencies : core,
     include_directories : endian_include
 )
+
+install_headers(endian_api)
+install_subdir('include', install_dir : 'include')

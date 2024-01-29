@@ -17,6 +17,7 @@ src = [
 
 libemit = library('emit', src,
     build_by_default : false,
+    install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_EMIT_BUILD=1' ],
     include_directories : [ emit_impl_include, emit_include ],
     dependencies : [ arena, base, ssa, std, io, fs, scan, events, interop ]
@@ -27,3 +28,6 @@ emit = declare_dependency(
     include_directories : emit_include,
     dependencies : [ base, ssa ]
 )
+
+install_headers(emit_api)
+install_subdir('include', install_dir : 'include')
