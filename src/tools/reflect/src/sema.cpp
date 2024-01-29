@@ -43,7 +43,7 @@ declmap_t refl::get_builtin_types()
 {
     declmap_t decls { 64, get_global_arena() };
 
-    decls.set("opaque", new MemoryType("opaque"));
+    decls.set("memory", new MemoryType("memory"));
     decls.set("void", new VoidType("void"));
     decls.set("string", new StringType("string"));
     decls.set("bool", new BoolType("bool"));
