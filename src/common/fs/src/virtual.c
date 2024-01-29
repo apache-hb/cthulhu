@@ -47,7 +47,7 @@ static virtual_io_t *vfs_data(io_t *self)
 static size_t vfs_read(io_t *self, void *dst, size_t size)
 {
     virtual_io_t *io = vfs_data(self);
-    size_t len = MIN(size, io->data->used - io->offset);
+    size_t len = CT_MIN(size, io->data->used - io->offset);
     ctu_memcpy(dst, io->data->data + io->offset, len);
     io->offset += len;
     return len;
@@ -58,10 +58,10 @@ static size_t vfs_write(io_t *self, const void *src, size_t size)
     virtual_io_t *io = vfs_data(self);
     virtual_file_t *data = io->data;
 
-    data->used = MAX(data->used, io->offset + size);
+    data->used = CT_MAX(data->used, io->offset + size);
     if (io->offset + size > data->size)
     {
-        size_t new_size = MAX(data->size * 2, io->offset + size);
+        size_t new_size = CT_MAX(data->size * 2, io->offset + size);
         data->data = arena_realloc(data->data, new_size, data->size, self->arena);
         data->size = new_size;
     }
@@ -81,7 +81,7 @@ static size_t vfs_size(io_t *self)
 static size_t vfs_seek(io_t *self, size_t offset)
 {
     virtual_io_t *io = vfs_data(self);
-    io->offset = MIN(offset, io->data->used);
+    io->offset = CT_MIN(offset, io->data->used);
     return io->offset;
 }
 

@@ -94,7 +94,7 @@ text_view_t scan_source(const scan_t *scan)
     return scan->mapped;
 }
 
-USE_DECL NOALIAS
+USE_DECL CT_NOALIAS
 size_t scan_read(scan_t *scan, void *dst, size_t size)
 {
     CTASSERT(scan != NULL);

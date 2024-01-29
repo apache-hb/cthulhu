@@ -54,7 +54,7 @@ os_error_t mkdir_recursive(const char *path, bool *create, arena_t *arena)
     CTASSERT(path != NULL);
     CTASSERT(create != NULL);
 
-    size_t index = str_rfind(path, NATIVE_PATH_SEPARATOR);
+    size_t index = str_rfind(path, CT_NATIVE_PATH_SEPARATOR);
     if (index != SIZE_MAX)
     {
         // create parent directory

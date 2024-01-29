@@ -9,7 +9,7 @@ static const version_info_t kToolVersion = {
     .license = "GPLv3",
     .desc = "Display format testing tool",
     .author = "Elliot Haisley",
-    .version = NEW_VERSION(0, 0, 1),
+    .version = CT_NEW_VERSION(0, 0, 1),
 };
 
 typedef struct tool_t

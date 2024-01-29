@@ -6,7 +6,7 @@
 
 #include <stdbool.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @defgroup emit SSA emitter
 /// @brief Emitter for SSA form
@@ -94,4 +94,4 @@ CT_EMIT_API c89_emit_result_t emit_c89(const c89_emit_options_t *options);
 
 /// @}
 
-END_API
+CT_END_API

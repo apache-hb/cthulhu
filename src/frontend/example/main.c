@@ -34,7 +34,7 @@
 //     .license = "GPLv3",
 //     .desc = "Example compiler interface",
 //     .author = "Elliot Haisley",
-//     .version = NEW_VERSION(0, 0, 1),
+//     .version = CT_NEW_VERSION(0, 0, 1),
 // };
 
 static int check_reports(logger_t *logger, report_config_t config, const char *title)

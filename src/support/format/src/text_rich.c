@@ -74,7 +74,7 @@ static where_t get_first_line(const typevec_t *segments)
             continue;
 
         where_t where = node_get_location(segment->node);
-        first_line = MIN(first_line, where.first_line);
+        first_line = CT_MIN(first_line, where.first_line);
         break;
     }
 
@@ -145,7 +145,7 @@ static char *fmt_underline(text_cache_t *cache, const node_t *node, size_t limit
     where_t where = node_get_location(node);
 
     text_view_t view = cache_get_line(cache, where.first_line);
-    size_t width = MIN(view.length, limit);
+    size_t width = CT_MIN(view.length, limit);
 
     typevec_t *padding = typevec_new(sizeof(char), width, arena);
     for (size_t i = 0; i < width; i++)
@@ -160,7 +160,7 @@ static char *fmt_underline(text_cache_t *cache, const node_t *node, size_t limit
     size_t underline_width = width;
     if (where.first_line == where.last_line)
     {
-        underline_width = MIN(where.last_column - where.first_column, 1);
+        underline_width = CT_MIN(where.last_column - where.first_column, 1);
     }
 
     const char *lines = (underline_width > 1) ? str_repeat("~", underline_width - 1, arena) : "";
@@ -182,7 +182,7 @@ static void print_file_segment(rich_t *rich, const node_t *node, const char *mes
     size_t data_line = where.first_line;
 
     size_t display_line = get_line_number(config.config, node);
-    size_t width = get_num_width(MAX(display_line, rich->largest_line));
+    size_t width = get_num_width(CT_MAX(display_line, rich->largest_line));
     char *padding = str_repeat(" ", width, rich->arena);
     char *line = fmt_left_align(rich->arena, width, "%zu", display_line);
 
@@ -311,7 +311,7 @@ static typevec_t *collect_segments(rich_t *rich, const typevec_t *all, const sca
         if (node_has_line(other))
         {
             where_t where = node_get_location(other);
-            rich->largest_line = MAX(rich->largest_line, where.first_line);
+            rich->largest_line = CT_MAX(rich->largest_line, where.first_line);
         }
 
         typevec_push(primary, segment);
@@ -448,7 +448,7 @@ static size_t longest_segment_line(const typevec_t *segments)
             continue;
 
         where_t where = node_get_location(segment->node);
-        longest = MAX(longest, where.first_line);
+        longest = CT_MAX(longest, where.first_line);
     }
 
     return longest;

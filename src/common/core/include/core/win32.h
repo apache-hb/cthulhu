@@ -13,6 +13,10 @@
 #define VC_EXTRALEAN
 
 #if CTU_WIN32_TRICKERY
+// prevents other headers from detecting if windows.h has already been included
+// and then undoing our work here. its on the user to include this header first
+// and any transitive includes that their code may have
+#   define _INC_WINDOWS
 // detect amd64, x86, or arm and define them ourselves
 #   if defined(_M_IX86)
 #       define _X86_

@@ -9,7 +9,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @defgroup memory Arena memory allocation
 /// @brief Global and arena memory management
@@ -125,7 +125,7 @@ CT_ARENA_API void arena_free(
 /// @param parent the parent of the allocation
 ///
 /// @return the allocated pointer
-NODISCARD CTU_ALLOC(arena_free) CTU_ALLOC_SIZE(1)
+CT_NODISCARD CT_ALLOC(arena_free) CT_ALLOC_SIZE(1)
 RET_NOTNULL
 CT_ARENA_API void *arena_malloc(
     IN_RANGE(!=, 0) size_t size,
@@ -142,7 +142,7 @@ CT_ARENA_API void *arena_malloc(
 /// @param old_size the old size of the allocation
 ///
 /// @return the reallocated pointer
-NODISCARD
+CT_NODISCARD
 RET_NOTNULL
 CT_ARENA_API void *arena_realloc(
     OUT_PTR_INVALID void *ptr,
@@ -156,7 +156,7 @@ CT_ARENA_API void *arena_realloc(
 /// @param arena the allocator to use
 ///
 /// @return the allocated copy of the string
-NODISCARD CTU_ALLOC(arena_free)
+CT_NODISCARD CT_ALLOC(arena_free)
 CT_ARENA_API char *arena_strdup(
     IN_STRING const char *str,
     IN_NOTNULL arena_t *arena);
@@ -168,7 +168,7 @@ CT_ARENA_API char *arena_strdup(
 /// @param arena the allocator to use
 ///
 /// @return the allocated copy of the string
-NODISCARD CTU_ALLOC(arena_free)
+CT_NODISCARD CT_ALLOC(arena_free)
 CT_ARENA_API char *arena_strndup(
     IN_READS(len) const char *str,
     IN_RANGE(>, 0) size_t len,
@@ -182,7 +182,7 @@ CT_ARENA_API char *arena_strndup(
 /// @param arena the allocator to use
 ///
 /// @return the duplicated memory
-NODISCARD CTU_ALLOC(arena_free) CTU_ALLOC_SIZE(2)
+CT_NODISCARD CT_ALLOC(arena_free) CT_ALLOC_SIZE(2)
 CT_ARENA_API void *arena_memdup(
     IN_READS(size) const void *ptr,
     IN_RANGE(>, 0) size_t size,
@@ -193,7 +193,7 @@ CT_ARENA_API void *arena_memdup(
 /// @param arena the allocator to use
 ///
 /// @return the user data pointer
-NODISCARD
+CT_NODISCARD
 CT_ARENA_API void *arena_data(IN_NOTNULL arena_t *arena);
 
 /// @brief rename a pointer in a custom allocator
@@ -270,4 +270,4 @@ CT_ARENA_API void arena_reparent(IN_NOTNULL const void *ptr, const void *parent,
 
 /// @} // Memory Management
 
-END_API
+CT_END_API

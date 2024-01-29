@@ -48,14 +48,14 @@ static bucket_t *impl_bucket_new(const void *key, void *value, arena_t *arena)
     return entry;
 }
 
-HOTFN
+CT_HOTFN
 static bucket_t *map_get_bucket(map_t *map, size_t hash)
 {
     size_t index = hash % map->size;
     return &map->data[index];
 }
 
-HOTFN
+CT_HOTFN
 static const bucket_t *map_get_bucket_const(const map_t *map, size_t hash)
 {
     size_t index = hash % map->size;
@@ -156,28 +156,28 @@ size_t map_count(const map_t *map)
 
 // info functions
 
-HOTFN
+CT_HOTFN
 static size_t impl_key_hash(const map_t *map, const void *key)
 {
     const typeinfo_t *info = &map->info;
     return info->hash(key);
 }
 
-HOTFN
+CT_HOTFN
 static bool impl_key_equal(const map_t *map, const void *lhs, const void *rhs)
 {
     const typeinfo_t *info = &map->info;
     return info->equals(lhs, rhs);
 }
 
-HOTFN
+CT_HOTFN
 static const bucket_t *impl_bucket_get_const(const map_t *map, const void *key)
 {
     size_t hash = impl_key_hash(map, key);
     return map_get_bucket_const(map, hash);
 }
 
-HOTFN
+CT_HOTFN
 static bucket_t *impl_bucket_get(map_t *map, const void *key)
 {
     size_t hash = impl_key_hash(map, key);
@@ -232,7 +232,7 @@ static bool impl_insert_into_bucket(map_t *map, bucket_t *bucket, const void *ke
     return false;
 }
 
-HOTFN
+CT_HOTFN
 static void impl_resize(map_t *map, size_t new_size)
 {
     bucket_t *old_data = map->data;
@@ -261,7 +261,7 @@ static void impl_resize(map_t *map, size_t new_size)
     arena_free(old_data, sizeof(bucket_t) * old_size, map->arena);
 }
 
-USE_DECL HOTFN
+USE_DECL CT_HOTFN
 void map_set(map_t *map, const void *key, void *value)
 {
     CTASSERT(map != NULL);
@@ -291,7 +291,7 @@ void map_set(map_t *map, const void *key, void *value)
     }
 }
 
-USE_DECL HOTFN
+USE_DECL CT_HOTFN
 void *map_get(const map_t *map, const void *key)
 {
     CTASSERT(map != NULL);
@@ -300,7 +300,7 @@ void *map_get(const map_t *map, const void *key)
     return map_get_default(map, key, NULL);
 }
 
-USE_DECL HOTFN
+USE_DECL CT_HOTFN
 void *map_get_default(const map_t *map, const void *key, void *other)
 {
     CTASSERT(map != NULL);
@@ -361,7 +361,7 @@ void map_reset(map_t *map)
 
 // iteration
 
-PUREFN
+CT_PUREFN
 static bucket_t *next_in_chain(bucket_t *entry)
 {
     if (entry == NULL || entry->key == NULL)
@@ -390,7 +390,7 @@ static bucket_t *next_in_chain(bucket_t *entry)
  * @param previous the previous bucket that was returned
  * @return bucket_t* the next bucket or NULL if there are no more buckets
  */
-PUREFN
+CT_PUREFN
 static bucket_t *find_next_bucket(map_t *map, size_t *index, bucket_t *previous)
 {
     bucket_t *entry = next_in_chain(previous);

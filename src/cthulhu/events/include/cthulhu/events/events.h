@@ -6,7 +6,7 @@
 
 #include "notify/notify.h"
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @defgroup events Compiler events
 /// @ingroup runtime
@@ -19,7 +19,7 @@ BEGIN_API
 /// @brief get all common diagnostics
 ///
 /// @return all common diagnostics
-NODISCARD CONSTFN
+CT_NODISCARD CT_CONSTFN
 CT_EVENTS_API diagnostic_list_t get_common_diagnostics(void);
 
 /// @brief signal that a scan error has occurred
@@ -53,4 +53,4 @@ CT_EVENTS_API event_builder_t evt_symbol_shadowed(IN_NOTNULL logger_t *logger,
 
 /// @}
 
-END_API
+CT_END_API

@@ -2,7 +2,7 @@
 
 #include <ctu_eval_api.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct eval_t eval_t;
 typedef struct arena_t arena_t;
@@ -15,4 +15,4 @@ typedef struct eval_config_t
     size_t ops_limit;
 } eval_config_t;
 
-END_API
+CT_END_API

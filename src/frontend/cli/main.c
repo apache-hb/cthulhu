@@ -32,7 +32,7 @@ static const version_info_t kToolVersion = {
     .license = "GPLv3",
     .desc = "Cthulhu Compiler Collection CLI",
     .author = "Elliot Haisley",
-    .version = NEW_VERSION(0, 0, 3),
+    .version = CT_NEW_VERSION(0, 0, 3),
 };
 
 static void parse_source(lifetime_t *lifetime, const char *path)

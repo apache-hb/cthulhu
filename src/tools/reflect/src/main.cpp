@@ -16,10 +16,10 @@
 #include "ref/sema.h"
 #include "setup/setup.h"
 
-BEGIN_API
+CT_BEGIN_API
 #include "ref_bison.h" // IWYU pragma: keep
 #include "ref_flex.h" // IWYU pragma: keep
-END_API
+CT_END_API
 
 CTU_CALLBACKS(kCallbacks, ref);
 
@@ -56,7 +56,7 @@ static const version_info_t kToolVersion = {
     .license = "LGPLv3",
     .desc = "Simcoe C++ reflection metadata generator",
     .author = "Temptation Games",
-    .version = NEW_VERSION(1, 0, 0),
+    .version = CT_NEW_VERSION(1, 0, 0),
 };
 
 static int check_reports(logger_t *logger, report_config_t config, const char *title)

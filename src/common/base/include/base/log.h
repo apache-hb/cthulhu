@@ -8,7 +8,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @defgroup log Verbose logging
 /// @ingroup base
@@ -46,4 +46,4 @@ CT_BASE_API void ctu_vlog(IN_STRING const char *fmt, va_list args);
 
 /// @}
 
-END_API
+CT_END_API

@@ -11,7 +11,7 @@
 typedef struct io_t io_t;
 typedef struct scan_t scan_t;
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @defgroup interop Flex/Bison interop utils
 /// @brief Flex/Bison interop utils for easier integration
@@ -99,4 +99,4 @@ CT_INTEROP_API parse_result_t scan_buffer(IN_NOTNULL scan_t *extra, IN_NOTNULL c
 
 /// @}
 
-END_API
+CT_END_API

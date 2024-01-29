@@ -8,32 +8,32 @@
 /// @{
 
 #ifdef __cplusplus
-#   define STATIC_ASSERT(expr, msg) static_assert(expr, msg)
+#   define CT_STATIC_ASSERT(expr, msg) static_assert(expr, msg)
 #else
-#   define STATIC_ASSERT(expr, msg) _Static_assert(expr, msg)
+#   define CT_STATIC_ASSERT(expr, msg) _Static_assert(expr, msg)
 #endif
 
 #if __cplusplus >= 201402L
-#   define CTU_DEPRECATED(msg) [[deprecated(msg)]]
+#   define CT_DEPRECATED(msg) [[deprecated(msg)]]
 #elif CT_CC_MSVC
-#   define CTU_DEPRECATED(msg) __declspec(deprecated(msg))
+#   define CT_DEPRECATED(msg) __declspec(deprecated(msg))
 #elif CT_CC_CLANG || CT_CC_GNU
-#   define CTU_DEPRECATED(msg) __attribute__((deprecated(msg)))
+#   define CT_DEPRECATED(msg) __attribute__((deprecated(msg)))
 #else
-#   define CTU_DEPRECATED(msg)
+#   define CT_DEPRECATED(msg)
 #endif
 
-/// @def CTU_DEPRECATED(msg)
+/// @def CT_DEPRECATED(msg)
 /// @brief mark a function as deprecated
 /// @param msg the message to display when the function is used
 
-/// @def MAX(lhs, rhs)
+/// @def CT_MAX(lhs, rhs)
 /// returns the maximum of @a lhs and @a rhs
-#define MAX(L, R) ((L) > (R) ? (L) : (R))
+#define CT_MAX(L, R) ((L) > (R) ? (L) : (R))
 
-/// @def MIN(lhs, rhs)
+/// @def CT_MIN(lhs, rhs)
 /// returns the minimum of @a lhs and @a rhs
-#define MIN(L, R) ((L) < (R) ? (L) : (R))
+#define CT_MIN(L, R) ((L) < (R) ? (L) : (R))
 
 /// @def CT_ALIGN_POW2(X, ALIGN)
 /// aligns @p X to the next power of 2 of @p ALIGN

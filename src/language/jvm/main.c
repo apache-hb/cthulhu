@@ -23,7 +23,7 @@ const language_t kJvmModule = {
         .license = "LGPLv3",
         .desc = "Java bytecode interop driver",
         .author = "Elliot Haisley",
-        .version = NEW_VERSION(1, 0, 0)
+        .version = CT_NEW_VERSION(1, 0, 0)
     },
 
     .exts = kLangNames,

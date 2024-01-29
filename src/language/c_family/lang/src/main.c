@@ -54,7 +54,7 @@ CT_DRIVER_API const language_t kCModule = {
         .license = "LGPLv3",
         .desc = "C language driver",
         .author = "Elliot Haisley",
-        .version = NEW_VERSION(0, 0, 1),
+        .version = CT_NEW_VERSION(0, 0, 1),
     },
 
     .exts = kLangNames,

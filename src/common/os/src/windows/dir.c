@@ -27,7 +27,7 @@ os_error_t os_iter_begin(const char *path, os_iter_t *result, arena_t *arena)
     CTASSERT(path != NULL);
     CTASSERT(result != NULL);
 
-    char *wild = str_format(arena, "%s" NATIVE_PATH_SEPARATOR "*", path);
+    char *wild = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "*", path);
 
     WIN32_FIND_DATA data;
     DWORD error = ERROR_SUCCESS;

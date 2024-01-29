@@ -7,7 +7,7 @@
 #include "core/version_def.h"
 #include "core/analyze.h"
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @defgroup format_version Format version information
 /// @ingroup format
@@ -30,4 +30,4 @@ CT_FORMAT_API void print_version(print_version_t config, version_info_t version,
 
 /// @}
 
-END_API
+CT_END_API

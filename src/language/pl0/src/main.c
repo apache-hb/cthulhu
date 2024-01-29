@@ -60,7 +60,7 @@ CT_DRIVER_API const language_t kPl0Module = {
         .license = "LGPLv3",
         .desc = "PL/0 language driver",
         .author = "Elliot Haisley",
-        .version = NEW_VERSION(2, 3, 2)
+        .version = CT_NEW_VERSION(2, 3, 2)
     },
 
     .exts = kLangNames,

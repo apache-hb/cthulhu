@@ -314,15 +314,15 @@ int main(void)
     const char *no_common_prefix = str_common_prefix(no_common, arena);
 
     vector_t *common = vector_of(2, arena);
-    vector_set(common, 0, (void *)"hello" NATIVE_PATH_SEPARATOR "stuff");
-    vector_set(common, 1, (void *)"hello" NATIVE_PATH_SEPARATOR " world");
+    vector_set(common, 0, (void *)"hello" CT_NATIVE_PATH_SEPARATOR "stuff");
+    vector_set(common, 1, (void *)"hello" CT_NATIVE_PATH_SEPARATOR " world");
 
     const char *some_prefix = str_common_prefix(common, arena);
 
     test_group_t group = test_group(&suite, "str_common_prefix");
     GROUP_EXPECT_PASS(group, "one arg", str_equal(one_prefix, "hello"));
     GROUP_EXPECT_PASS(group, "no common", str_equal(no_common_prefix, ""));
-    GROUP_EXPECT_PASS(group, "common", str_equal(some_prefix, "hello" NATIVE_PATH_SEPARATOR));
+    GROUP_EXPECT_PASS(group, "common", str_equal(some_prefix, "hello" CT_NATIVE_PATH_SEPARATOR));
 
     return test_suite_finish(&suite);
 }

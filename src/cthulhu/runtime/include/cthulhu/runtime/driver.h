@@ -4,7 +4,7 @@
 
 #include <stddef.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct vector_t vector_t;
 
@@ -98,4 +98,4 @@ CT_RUNTIME_API tree_t *lifetime_sema_new(IN_NOTNULL lifetime_t *lifetime, IN_STR
 
 /// @}
 
-END_API
+CT_END_API

@@ -4,7 +4,7 @@
 
 #include "core/compiler.h"
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct io_t io_t;
 
@@ -23,4 +23,4 @@ CT_IO_API io_t *io_stderr(void);
 
 /// @}
 
-END_API
+CT_END_API

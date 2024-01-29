@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct arena_t arena_t;
 typedef struct typevec_t typevec_t;
@@ -191,7 +191,7 @@ CT_CONFIG_API cfg_field_t *config_flags(IN_NOTNULL cfg_group_t *group, IN_NOTNUL
 /// @param field the field to get the type of
 ///
 /// @return the type of @p field
-PUREFN
+CT_PUREFN
 CT_CONFIG_API cfg_type_t cfg_get_type(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the information about a configuration field
@@ -199,7 +199,7 @@ CT_CONFIG_API cfg_type_t cfg_get_type(IN_NOTNULL const cfg_field_t *field);
 /// @param field the field to get the information about
 ///
 /// @return the information about @p field
-PUREFN RET_NOTNULL
+CT_PUREFN RET_NOTNULL
 CT_CONFIG_API const cfg_info_t *cfg_get_info(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the information about a configuration group
@@ -207,7 +207,7 @@ CT_CONFIG_API const cfg_info_t *cfg_get_info(IN_NOTNULL const cfg_field_t *field
 /// @param config the configuration group to get the information about
 ///
 /// @return the information about @p config
-PUREFN RET_NOTNULL
+CT_PUREFN RET_NOTNULL
 CT_CONFIG_API const cfg_info_t *cfg_group_info(IN_NOTNULL const cfg_group_t *config);
 
 /// @brief get the information about an integer field
@@ -215,7 +215,7 @@ CT_CONFIG_API const cfg_info_t *cfg_group_info(IN_NOTNULL const cfg_group_t *con
 /// @param field the field to get the information about
 ///
 /// @return the information about @p field
-PUREFN RET_NOTNULL
+CT_PUREFN RET_NOTNULL
 CT_CONFIG_API const cfg_int_t *cfg_int_info(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the information about a yes/no field
@@ -223,7 +223,7 @@ CT_CONFIG_API const cfg_int_t *cfg_int_info(IN_NOTNULL const cfg_field_t *field)
 /// @param field the field to get the information about
 ///
 /// @return the information about @p field
-PUREFN
+CT_PUREFN
 CT_CONFIG_API bool cfg_bool_info(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the information about a string field
@@ -231,7 +231,7 @@ CT_CONFIG_API bool cfg_bool_info(IN_NOTNULL const cfg_field_t *field);
 /// @param field the field to get the information about
 ///
 /// @return the information about @p field
-PUREFN
+CT_PUREFN
 CT_CONFIG_API const char *cfg_string_info(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the information about a choice field
@@ -239,7 +239,7 @@ CT_CONFIG_API const char *cfg_string_info(IN_NOTNULL const cfg_field_t *field);
 /// @param field the field to get the information about
 ///
 /// @return the information about @p field
-PUREFN RET_NOTNULL
+CT_PUREFN RET_NOTNULL
 CT_CONFIG_API const cfg_enum_t *cfg_enum_info(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the information about a flags field
@@ -247,7 +247,7 @@ CT_CONFIG_API const cfg_enum_t *cfg_enum_info(IN_NOTNULL const cfg_field_t *fiel
 /// @param field the field to get the information about
 ///
 /// @return the information about @p field
-PUREFN RET_NOTNULL
+CT_PUREFN RET_NOTNULL
 CT_CONFIG_API const cfg_flags_t *cfg_flags_info(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the name of a configuration type
@@ -255,7 +255,7 @@ CT_CONFIG_API const cfg_flags_t *cfg_flags_info(IN_NOTNULL const cfg_field_t *fi
 /// @param type the type to get the name of
 ///
 /// @return the name of @p type
-CONSTFN RET_NOTNULL
+CT_CONSTFN RET_NOTNULL
 CT_CONFIG_API const char *cfg_type_name(IN_RANGE(<, eConfigCount) cfg_type_t type);
 
 /// @brief get all subgroups in a configuration group
@@ -263,7 +263,7 @@ CT_CONFIG_API const char *cfg_type_name(IN_RANGE(<, eConfigCount) cfg_type_t typ
 /// @param config the configuration group to get the subgroups from
 ///
 /// @return the subgroups in @p config
-PUREFN RET_NOTNULL
+CT_PUREFN RET_NOTNULL
 CT_CONFIG_API typevec_t *cfg_get_groups(IN_NOTNULL const cfg_group_t *config);
 
 /// @brief get all fields in a configuration group
@@ -271,7 +271,7 @@ CT_CONFIG_API typevec_t *cfg_get_groups(IN_NOTNULL const cfg_group_t *config);
 /// @param config the configuration group to get the fields from
 ///
 /// @return the fields in @p config
-PUREFN RET_NOTNULL
+CT_PUREFN RET_NOTNULL
 CT_CONFIG_API vector_t *cfg_get_fields(IN_NOTNULL const cfg_group_t *config);
 
 /// @} // ConfigReflect
@@ -286,7 +286,7 @@ CT_CONFIG_API vector_t *cfg_get_fields(IN_NOTNULL const cfg_group_t *config);
 /// @param field the field to get the value of
 ///
 /// @return the current value of @p field
-PUREFN
+CT_PUREFN
 CT_CONFIG_API int cfg_int_value(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the current boolean value of a configuration field
@@ -294,7 +294,7 @@ CT_CONFIG_API int cfg_int_value(IN_NOTNULL const cfg_field_t *field);
 /// @param field the field to get the value of
 ///
 /// @return the current value of @p field
-PUREFN
+CT_PUREFN
 CT_CONFIG_API bool cfg_bool_value(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the current string value of a configuration field
@@ -302,7 +302,7 @@ CT_CONFIG_API bool cfg_bool_value(IN_NOTNULL const cfg_field_t *field);
 /// @param field the field to get the value of
 ///
 /// @return the current value of @p field
-PUREFN
+CT_PUREFN
 CT_CONFIG_API const char *cfg_string_value(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the current vector value of a configuration field
@@ -310,7 +310,7 @@ CT_CONFIG_API const char *cfg_string_value(IN_NOTNULL const cfg_field_t *field);
 /// @param field the field to get the value of
 ///
 /// @return the current value of @p field
-PUREFN
+CT_PUREFN
 CT_CONFIG_API vector_t *cfg_vector_value(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the current enum value of a configuration field
@@ -318,7 +318,7 @@ CT_CONFIG_API vector_t *cfg_vector_value(IN_NOTNULL const cfg_field_t *field);
 /// @param field the field to get the value of
 ///
 /// @return the current value of @p field
-PUREFN
+CT_PUREFN
 CT_CONFIG_API size_t cfg_enum_value(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the current flags value of a configuration field
@@ -326,7 +326,7 @@ CT_CONFIG_API size_t cfg_enum_value(IN_NOTNULL const cfg_field_t *field);
 /// @param field the field to get the value of
 ///
 /// @return the current value of @p field
-PUREFN
+CT_PUREFN
 CT_CONFIG_API size_t cfg_flags_value(IN_NOTNULL const cfg_field_t *field);
 
 /// @} // ConfigRead
@@ -342,7 +342,7 @@ CT_CONFIG_API size_t cfg_flags_value(IN_NOTNULL const cfg_field_t *field);
 /// @param value the new value
 ///
 /// @return true if the value was valid, false otherwise
-NODISCARD
+CT_NODISCARD
 CT_CONFIG_API bool cfg_set_int(IN_NOTNULL cfg_field_t *field, int value);
 
 /// @brief set the current value of a bool field
@@ -391,7 +391,7 @@ CT_CONFIG_API void cfg_set_enum_value(IN_NOTNULL cfg_field_t *field, size_t valu
 ///
 /// @retval true if the choice was valid and the field was updated
 /// @retval false otherwise
-NODISCARD
+CT_NODISCARD
 CT_CONFIG_API bool cfg_set_flag(IN_NOTNULL cfg_field_t *field, const char *choice, bool set);
 
 /// @brief set the current value of a flags field
@@ -407,4 +407,4 @@ CT_CONFIG_API void cfg_set_flag_value(IN_NOTNULL cfg_field_t *field, size_t valu
 
 /// @} // Config
 
-END_API
+CT_END_API

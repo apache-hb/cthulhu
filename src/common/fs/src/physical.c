@@ -46,15 +46,15 @@ static const char *get_absolute(fs_t *fs, inode_t *node, const char *path)
 
     if (is_special(dir->path) && !is_special(path))
     {
-        return str_format(fs->arena, "%s" NATIVE_PATH_SEPARATOR "%s", self->root, path);
+        return str_format(fs->arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s", self->root, path);
     }
 
     if (!is_special(dir->path) && is_special(path))
     {
-        return str_format(fs->arena, "%s" NATIVE_PATH_SEPARATOR "%s", self->root, dir->path);
+        return str_format(fs->arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s", self->root, dir->path);
     }
 
-    return str_format(fs->arena, "%s" NATIVE_PATH_SEPARATOR "%s" NATIVE_PATH_SEPARATOR "%s", self->root, dir->path, path);
+    return str_format(fs->arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s" CT_NATIVE_PATH_SEPARATOR "%s", self->root, dir->path, path);
 }
 
 static const char *get_relative(inode_t *node, const char *path, arena_t *arena)
@@ -73,7 +73,7 @@ static const char *get_relative(inode_t *node, const char *path, arena_t *arena)
 
     CTASSERT(!is_special(dir->path) && !is_special(path));
 
-    return str_format(arena, "%s" NATIVE_PATH_SEPARATOR "%s", dir->path, path);
+    return str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s", dir->path, path);
 }
 
 static inode_t *physical_dir(const char *path, arena_t *arena)

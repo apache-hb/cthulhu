@@ -8,7 +8,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @defgroup panic Assertions and panic handling
 /// @ingroup base
@@ -66,14 +66,14 @@ CT_BASE_API extern panic_handler_t gPanicHandler;
 /// @param location the source location of the panic
 /// @param msg the message to panic with
 /// @param ... the arguments to format
-NORETURN CT_BASE_API ctu_panic(source_info_t location, CT_FMT_STRING const char *msg, ...) CT_PRINTF(2, 3);
+CT_NORETURN CT_BASE_API ctu_panic(source_info_t location, CT_FMT_STRING const char *msg, ...) CT_PRINTF(2, 3);
 
 /// @brief panic with a message, file, and line
 ///
 /// @param location the source location of the panic
 /// @param msg the message to panic with
 /// @param args the arguments to format
-NORETURN CT_BASE_API ctu_vpanic(source_info_t location, CT_FMT_STRING const char *msg, va_list args);
+CT_NORETURN CT_BASE_API ctu_vpanic(source_info_t location, CT_FMT_STRING const char *msg, va_list args);
 
 /// @def CT_SOURCE_HERE
 /// @brief the source location of the current line
@@ -154,4 +154,4 @@ NORETURN CT_BASE_API ctu_vpanic(source_info_t location, CT_FMT_STRING const char
 
 /// @} // Panic
 
-END_API
+CT_END_API

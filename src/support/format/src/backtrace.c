@@ -231,7 +231,7 @@ static size_t get_longest_symbol(const typevec_t *entries)
         CTASSERTF(entry != NULL, "entry at %zu is NULL", i);
 
         size_t width = ctu_strlen(entry->symbol);
-        largest = MAX(width, largest);
+        largest = CT_MAX(width, largest);
     }
 
     return largest;
@@ -268,7 +268,7 @@ static symbol_match_info_t get_largest_collapsed_symbol(const collapsed_t *entri
         }
 
         size_t width = ctu_strlen(entry->entry->symbol);
-        largest = MAX(width, largest);
+        largest = CT_MAX(width, largest);
     }
 
     symbol_match_info_t info = {

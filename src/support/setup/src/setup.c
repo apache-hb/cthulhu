@@ -22,7 +22,7 @@
 #include "std/vector.h"
 #include <stdlib.h>
 
-#if OS_WINDOWS
+#if CT_OS_WINDOWS
 #   define DISPLAY_WIN_STYLE true
 #else
 #   define DISPLAY_WIN_STYLE false

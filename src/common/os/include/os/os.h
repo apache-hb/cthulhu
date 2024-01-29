@@ -5,9 +5,9 @@
 #include "core/analyze.h"
 #include "core/compiler.h"
 
-#if OS_WINDOWS
+#if CT_OS_WINDOWS
 #   include "impl/win32.h"
-#elif OS_LINUX || OS_APPLE
+#elif CT_OS_LINUX || CT_OS_APPLE
 #   include "impl/posix.h"
 #else
 #   error "unsupported platform"
@@ -15,7 +15,7 @@
 
 #include <stdbool.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct arena_t arena_t;
 
@@ -83,7 +83,7 @@ CT_OS_API void os_init(void);
 /// @param arena the arena to allocate from
 ///
 /// @return the string representation of the error code
-NODISCARD RET_STRING
+CT_NODISCARD RET_STRING
 CT_OS_API char *os_error_string(os_error_t error, IN_NOTNULL arena_t *arena);
 
 /// shared library api
@@ -109,7 +109,7 @@ CT_OS_API void os_library_close(IN_NOTNULL os_library_t *library);
 /// @param name the name of the symbol to get
 ///
 /// @return the symbol or NULL if it could not be found
-NODISCARD
+CT_NODISCARD
 CT_OS_API os_fn_t os_library_symbol(IN_NOTNULL os_library_t *library, IN_STRING const char *name);
 
 /// filesytem api
@@ -178,7 +178,7 @@ CT_OS_API bool os_dir_exists(IN_STRING const char *path);
 ///
 /// @return the type of the inode entry
 /// @return an error if the inode entry could not be checked
-NODISCARD
+CT_NODISCARD
 CT_OS_API os_dirent_t os_dirent_type(IN_STRING const char *path);
 
 /// @brief get the current working directory
@@ -212,7 +212,7 @@ CT_OS_API void os_iter_end(IN_NOTNULL os_iter_t *iter);
 /// @param dir directory entry to fill
 ///
 /// @return true if a directory entry was found
-NODISCARD
+CT_NODISCARD
 CT_OS_API bool os_iter_next(IN_NOTNULL os_iter_t *iter, os_dir_t *dir);
 
 /// @brief get the error state of a directory iterator
@@ -229,7 +229,7 @@ CT_OS_API os_error_t os_iter_error(IN_NOTNULL os_iter_t *iter);
 /// @param arena the arena to allocate from
 ///
 /// @return the name of the directory entry
-NODISCARD
+CT_NODISCARD
 CT_OS_API char *os_dir_name(IN_NOTNULL os_dir_t *dir, IN_NOTNULL arena_t *arena);
 
 /// file api
@@ -332,7 +332,7 @@ CT_OS_API void os_file_unmap(IN_NOTNULL os_mapping_t *mapping);
 /// @param mapping the mapping to get the data of
 ///
 /// @return the data of the mapping
-NODISCARD
+CT_NODISCARD
 CT_OS_API void *os_mapping_data(IN_NOTNULL os_mapping_t *mapping);
 
 /// @brief does the mapping object contain a valid mapping
@@ -341,7 +341,7 @@ CT_OS_API void *os_mapping_data(IN_NOTNULL os_mapping_t *mapping);
 /// @param mapping the mapping to check
 ///
 /// @return true if the mapping is valid
-NODISCARD
+CT_NODISCARD
 CT_OS_API bool os_mapping_active(IN_NOTNULL os_mapping_t *mapping);
 
 /// @brief get the name of a file
@@ -349,9 +349,9 @@ CT_OS_API bool os_mapping_active(IN_NOTNULL os_mapping_t *mapping);
 /// @param file the file to get the name of
 ///
 /// @return the name of the file
-NODISCARD
+CT_NODISCARD
 CT_OS_API const char *os_file_name(IN_NOTNULL os_file_t *file);
 
 /// @}
 
-END_API
+CT_END_API

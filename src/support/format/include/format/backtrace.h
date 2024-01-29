@@ -8,7 +8,7 @@
 
 #include <stdbool.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct arena_t arena_t;
 typedef struct typevec_t typevec_t;
@@ -67,4 +67,4 @@ CT_FORMAT_API void print_backtrace(print_backtrace_t print, IN_NOTNULL bt_report
 
 /// @}
 
-END_API
+CT_END_API

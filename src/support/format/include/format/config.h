@@ -8,7 +8,7 @@
 
 #include <stdbool.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct cfg_group_t cfg_group_t;
 
@@ -37,4 +37,4 @@ typedef struct print_config_t
 /// @param config the config object to print
 CT_FORMAT_API void print_config(print_config_t print, IN_NOTNULL const cfg_group_t *config);
 
-END_API
+CT_END_API

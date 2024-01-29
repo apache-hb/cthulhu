@@ -6,7 +6,7 @@
 
 #include "base/panic.h"
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @defgroup flex_bison_macros Helpers for flex and bison driver frontends
 /// @ingroup interop
@@ -72,4 +72,4 @@ CT_INTEROP_API void flex_update(IN_NOTNULL where_t *where, IN_READS(steps) const
 
 /// @}
 
-END_API
+CT_END_API

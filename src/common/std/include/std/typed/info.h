@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @defgroup type_info Type information
 /// @ingroup standard
@@ -53,4 +53,4 @@ CT_STD_API extern const typeinfo_t kTypeInfoPtr;
 
 /// @}
 
-END_API
+CT_END_API

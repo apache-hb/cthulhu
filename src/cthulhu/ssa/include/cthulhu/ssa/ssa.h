@@ -9,7 +9,7 @@
 #include <gmp.h>
 #include <stdbool.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @defgroup ssa SSA form IR
 /// @brief SSA form IR
@@ -348,4 +348,4 @@ CT_SSA_API const char *ssa_opcode_name(ssa_opcode_t opcode);
 
 /// @}
 
-END_API
+CT_END_API

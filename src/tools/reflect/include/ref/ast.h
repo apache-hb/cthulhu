@@ -17,7 +17,7 @@ typedef struct node_t node_t;
 typedef struct typevec_t typevec_t;
 typedef struct map_t map_t;
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct ref_ast_t ref_ast_t;
 
@@ -330,4 +330,4 @@ ref_ast_t *ref_attrib_assert(scan_t *scan, where_t where, typevec_t *before, typ
 void ref_set_attribs(ref_ast_t *ast, vector_t *attributes);
 void ref_set_flags(ref_ast_t *ast, ref_flags_t flags);
 
-END_API
+CT_END_API

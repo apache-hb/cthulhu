@@ -5,17 +5,17 @@
 
 uint16_t endian_swap16(uint16_t value)
 {
-    return BYTESWAP_U16(value);
+    return CT_BSWAP_U16(value);
 }
 
 uint32_t endian_swap32(uint32_t value)
 {
-    return BYTESWAP_U32(value);
+    return CT_BSWAP_U32(value);
 }
 
 uint64_t endian_swap64(uint64_t value)
 {
-    return BYTESWAP_U64(value);
+    return CT_BSWAP_U64(value);
 }
 
 USE_DECL

@@ -20,7 +20,7 @@ static const version_info_t kToolVersion = {
     .license = "GPLv3",
     .author = "Elliot Haisley",
     .desc = "Cthulhu diagnostic lookup and query tool",
-    .version = NEW_VERSION(0, 0, 1),
+    .version = CT_NEW_VERSION(0, 0, 1),
 };
 
 static const cfg_info_t kGroupInfo = {
@@ -170,9 +170,9 @@ static void print_lang_info(io_t *io, const language_t *lang)
     diagnostic_list_t diagnostics = lang->diagnostics;
     version_info_t version = lang->version;
 
-    int major = VERSION_MAJOR(version.version);
-    int minor = VERSION_MINOR(version.version);
-    int patch = VERSION_PATCH(version.version);
+    int major = CT_VERSION_MAJOR(version.version);
+    int minor = CT_VERSION_MINOR(version.version);
+    int patch = CT_VERSION_PATCH(version.version);
 
     io_printf(io, "%s:\n", lang->name);
     io_printf(io, "  id: %s\n", lang->id);

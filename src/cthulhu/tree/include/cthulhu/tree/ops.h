@@ -5,7 +5,7 @@
 #include "core/compiler.h"
 #include "core/analyze.h"
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @ingroup tree
 /// @{
@@ -202,4 +202,4 @@ CT_TREE_API const char *vis_name(IN_RANGE(<, eVisibileTotal) visibility_t vis);
 
 /// @}
 
-END_API
+CT_END_API

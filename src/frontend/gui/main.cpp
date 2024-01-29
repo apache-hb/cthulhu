@@ -20,7 +20,7 @@ static const version_info_t kVersionInfo = {
     .license = "GPLv3",
     .desc = "Cthulhu Compiler Collection GUI",
     .author = "Elliot Haisley",
-    .version = NEW_VERSION(0, 0, 1)
+    .version = CT_NEW_VERSION(0, 0, 1)
 };
 
 class VersionInfo
@@ -40,9 +40,9 @@ public:
 
             ImGui::Text("Framework version: %d.%d.%d", CTU_MAJOR, CTU_MINOR, CTU_PATCH);
 
-            int major = VERSION_MAJOR(info.version);
-            int minor = VERSION_MINOR(info.version);
-            int patch = VERSION_PATCH(info.version);
+            int major = CT_VERSION_MAJOR(info.version);
+            int minor = CT_VERSION_MINOR(info.version);
+            int patch = CT_VERSION_PATCH(info.version);
             ImGui::Text("Frontend version: %d.%d.%d", major, minor, patch);
 
             ImGui::Text("Author: %s", info.author);
@@ -55,9 +55,9 @@ public:
 public:
     static void draw_version(const char *id, version_t version)
     {
-        int major = VERSION_MAJOR(version);
-        int minor = VERSION_MINOR(version);
-        int patch = VERSION_PATCH(version);
+        int major = CT_VERSION_MAJOR(version);
+        int minor = CT_VERSION_MINOR(version);
+        int patch = CT_VERSION_PATCH(version);
 
         ImGui::Text("%s: %d.%d.%d", id, major, minor, patch);
     }

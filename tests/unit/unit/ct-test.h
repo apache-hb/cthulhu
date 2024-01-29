@@ -9,7 +9,7 @@
 #include <setjmp.h>
 #include <stdbool.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct test_suite_t test_suite_t;
 typedef struct test_group_t test_group_t;
@@ -132,4 +132,4 @@ typedef struct test_group_t
         group_notify_failure(&GROUP, ID);                                                                              \
     } while (0)
 
-END_API
+CT_END_API

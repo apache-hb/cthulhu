@@ -28,7 +28,7 @@ int main(void)
     {
         test_group_t group = test_group(&suite, "current dir");
 
-        fs_t *fs = fs_physical(str_format(arena, "%s" NATIVE_PATH_SEPARATOR "data" NATIVE_PATH_SEPARATOR "unit-test-data", cwd), arena);
+        fs_t *fs = fs_physical(str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "data" CT_NATIVE_PATH_SEPARATOR "unit-test-data", cwd), arena);
 
         GROUP_EXPECT_PASS(group, "fs_physical() should return a valid fs_t pointer", fs != NULL);
     }
@@ -36,7 +36,7 @@ int main(void)
     {
         test_group_t group = test_group(&suite, "other");
 
-        fs_t *fs = fs_physical(str_format(arena, "%s" NATIVE_PATH_SEPARATOR "data" NATIVE_PATH_SEPARATOR "unit-test-data", cwd), arena);
+        fs_t *fs = fs_physical(str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "data" CT_NATIVE_PATH_SEPARATOR "unit-test-data", cwd), arena);
 
         GROUP_EXPECT_PASS(group, "fs_physical() should return a valid fs_t pointer", fs != NULL);
 

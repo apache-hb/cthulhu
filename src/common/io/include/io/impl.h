@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @ingroup io
 /// @{
@@ -140,7 +140,7 @@ typedef struct io_t
 /// @param io the io object
 ///
 /// @return the user data
-PUREFN
+CT_PUREFN
 CT_IO_API void *io_data(IN_NOTNULL io_t *io);
 
 /// @brief create a new IO object for a given interface
@@ -165,4 +165,4 @@ CT_IO_API io_t *io_new(
 
 /// @}
 
-END_API
+CT_END_API

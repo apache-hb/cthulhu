@@ -5,7 +5,7 @@
 
 #include <stddef.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @ingroup notify
 /// @{
@@ -53,4 +53,4 @@ typedef struct diagnostic_list_t
 
 /// @}
 
-END_API
+CT_END_API

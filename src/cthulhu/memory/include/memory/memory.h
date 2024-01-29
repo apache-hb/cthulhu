@@ -4,7 +4,7 @@
 
 #include "core/analyze.h"
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct arena_t arena_t;
 
@@ -33,4 +33,4 @@ CT_MEMORY_API void init_gmp_arena(IN_NOTNULL arena_t *arena);
 
 /// @} // global_memory
 
-END_API
+CT_END_API

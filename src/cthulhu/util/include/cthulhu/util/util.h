@@ -12,7 +12,7 @@ typedef struct tree_t tree_t;
 typedef struct vector_t vector_t;
 typedef struct node_t node_t;
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @defgroup runtime_util Driver utility functions
 /// @brief Utility functions for the runtime
@@ -86,4 +86,4 @@ CT_UTIL_API bool util_eval_digit(mpz_t value, const tree_t *expr);
 
 /// @}
 
-END_API
+CT_END_API

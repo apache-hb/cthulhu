@@ -6,7 +6,7 @@
 
 #include "cthulhu/runtime/runtime.h"
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @defgroup langs Language driver enumeration
 /// @ingroup support
@@ -30,4 +30,4 @@ CT_SUPPORT_API langs_t get_langs(void);
 
 /// @}
 
-END_API
+CT_END_API

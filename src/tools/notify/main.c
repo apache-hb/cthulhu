@@ -34,7 +34,7 @@ static const version_info_t kToolVersion = {
     .license = "GPLv3",
     .desc = "Notification testing tool",
     .author = "Elliot Haisley",
-    .version = NEW_VERSION(0, 0, 1),
+    .version = CT_NEW_VERSION(0, 0, 1),
 };
 
 static const cfg_info_t kToolInfo = {
@@ -73,7 +73,7 @@ static const cfg_choice_t kHeadingOptions[] = {
 };
 #define HEADING_OPTION_COUNT (sizeof(kHeadingOptions) / sizeof(cfg_choice_t))
 
-#if OS_WINDOWS
+#if CT_OS_WINDOWS
 #   define HEADING_DEFAULT_OPTION eHeadingMicrosoft
 #else
 #   define HEADING_DEFAULT_OPTION eHeadingGeneric

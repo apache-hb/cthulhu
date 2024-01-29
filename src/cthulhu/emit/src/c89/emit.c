@@ -177,7 +177,7 @@ static void emit_required_headers(c89_emit_t *emit, const ssa_module_t *mod)
     // for symbols that are externally visible
 
     size_t len = vector_len(mod->globals);
-    set_t *requires = set_new(MAX(len, 1), kTypeInfoPtr, emit->arena); // set of modules required by this module
+    set_t *requires = set_new(CT_MAX(len, 1), kTypeInfoPtr, emit->arena); // set of modules required by this module
 
     get_required_headers(emit, requires, mod, mod->globals);
     get_required_headers(emit, requires, mod, mod->functions);

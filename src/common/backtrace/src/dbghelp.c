@@ -96,7 +96,7 @@ frame_resolve_t bt_resolve_inner(const bt_frame_t *frame, bt_symbol_t *symbol)
 
     // cap the name size to a known maximum so we can put it on the stack rather than call malloc
     // we do this because this may be called in a signal handler and we don't want to allocate
-    ULONG name_size = MIN((ULONG)name.length, MAX_NAME_SIZE);
+    ULONG name_size = CT_MIN((ULONG)name.length, MAX_NAME_SIZE);
     char buffer[sizeof(SYMBOL_INFO) + (MAX_NAME_SIZE - 1) * sizeof(TCHAR)];
     memset(buffer, 0, sizeof(SYMBOL_INFO)); // only zero the symbol info struct
 

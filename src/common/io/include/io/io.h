@@ -9,7 +9,7 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @ingroup io
 /// @{
@@ -31,7 +31,7 @@ CT_IO_API void io_close(OUT_PTR_INVALID io_t *io);
 /// @param arena the arena to allocate from
 ///
 /// @return the io object, or NULL on error
-NODISCARD CTU_ALLOC(io_close)
+CT_NODISCARD CT_ALLOC(io_close)
 CT_IO_API io_t *io_file(IN_STRING const char *path, os_access_t mode, IN_NOTNULL arena_t *arena);
 
 /// @brief create an IO object from an initial view of memory
@@ -44,7 +44,7 @@ CT_IO_API io_t *io_file(IN_STRING const char *path, os_access_t mode, IN_NOTNULL
 /// @param arena the arena to allocate from
 ///
 /// @return the io object
-NODISCARD CTU_ALLOC(io_close)
+CT_NODISCARD CT_ALLOC(io_close)
 CT_IO_API io_t *io_memory(IN_STRING const char *name, const void *data, size_t size, os_access_t flags, IN_NOTNULL arena_t *arena);
 
 /// @brief create an IO object in memory of a given size
@@ -56,7 +56,7 @@ CT_IO_API io_t *io_memory(IN_STRING const char *name, const void *data, size_t s
 /// @param arena the arena to allocate from
 ///
 /// @return the io object
-NODISCARD CTU_ALLOC(io_close)
+CT_NODISCARD CT_ALLOC(io_close)
 CT_IO_API io_t *io_blob(IN_STRING const char *name, size_t size, os_access_t flags, IN_NOTNULL arena_t *arena);
 
 /// @brief create a readonly IO object for a given view of memory
@@ -68,7 +68,7 @@ CT_IO_API io_t *io_blob(IN_STRING const char *name, size_t size, os_access_t fla
 /// @param arena the arena to allocate from
 ///
 /// @return the IO view
-NODISCARD CTU_ALLOC(io_close)
+CT_NODISCARD CT_ALLOC(io_close)
 CT_IO_API io_t *io_view(IN_STRING const char *name, IN_NOTNULL const void *data, size_t size, IN_NOTNULL arena_t *arena);
 
 /// @brief create an IO view of a string
@@ -79,7 +79,7 @@ CT_IO_API io_t *io_view(IN_STRING const char *name, IN_NOTNULL const void *data,
 /// @param arena the arena to allocate from
 ///
 /// @return the io object
-NODISCARD CTU_ALLOC(io_close)
+CT_NODISCARD CT_ALLOC(io_close)
 CT_IO_API io_t *io_string(IN_STRING const char *name, IN_STRING const char *string, IN_NOTNULL arena_t *arena);
 
 /// @brief read from an io object
@@ -127,7 +127,7 @@ CT_IO_API size_t io_vprintf(IN_NOTNULL io_t *io, IN_STRING const char *fmt, va_l
 /// @param io the io object
 ///
 /// @return the name of the object
-NODISCARD
+CT_NODISCARD
 CT_IO_API const char *io_name(IN_NOTNULL const io_t *io);
 
 /// @brief get the total size of an io objects contents
@@ -135,7 +135,7 @@ CT_IO_API const char *io_name(IN_NOTNULL const io_t *io);
 /// @param io the io object
 ///
 /// @return the total size in bytes of its contents
-NODISCARD
+CT_NODISCARD
 CT_IO_API size_t io_size(IN_NOTNULL io_t *io);
 
 /// @brief seek to an absolute offset in a file
@@ -144,7 +144,7 @@ CT_IO_API size_t io_size(IN_NOTNULL io_t *io);
 /// @param offset the offset to seek to
 ///
 /// @return the offset after seeking
-NODISCARD
+CT_NODISCARD
 CT_IO_API size_t io_seek(IN_NOTNULL io_t *io, size_t offset);
 
 /// @brief map an io object into memory
@@ -158,7 +158,7 @@ CT_IO_API size_t io_seek(IN_NOTNULL io_t *io, size_t offset);
 /// @param protect the protection level of the memory
 ///
 /// @return memory mapping to the contents
-NODISCARD
+CT_NODISCARD
 CT_IO_API void *io_map(IN_NOTNULL io_t *io, os_protect_t protect);
 
 /// @brief get the last error from the io object
@@ -166,9 +166,9 @@ CT_IO_API void *io_map(IN_NOTNULL io_t *io, os_protect_t protect);
 /// @param io the io object
 ///
 /// @return the last set error
-NODISCARD RET_INSPECT
+CT_NODISCARD RET_INSPECT
 CT_IO_API io_error_t io_error(IN_NOTNULL const io_t *io);
 
 /// @} // IO
 
-END_API
+CT_END_API

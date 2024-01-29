@@ -12,7 +12,7 @@ typedef struct logger_t logger_t;
 typedef struct node_t node_t;
 typedef struct arena_t arena_t;
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @ingroup runtime_util
 /// @{
@@ -30,4 +30,4 @@ CT_UTIL_API text_t util_text_escape(IN_NOTNULL logger_t *reports, IN_NOTNULL con
 
 /// @}
 
-END_API
+CT_END_API

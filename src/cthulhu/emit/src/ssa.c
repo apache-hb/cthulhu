@@ -65,7 +65,7 @@ static const char *pointer_value_to_string(const ssa_value_t *value, arena_t *ar
 {
     size_t len = vector_len(value->data);
     vector_t *parts = vector_new(16, arena);
-    for (size_t i = 0; i < MIN(len, 16); i++)
+    for (size_t i = 0; i < CT_MIN(len, 16); i++)
     {
         const ssa_value_t *elem = vector_get(value->data, i);
         const char *it = value_to_string(elem, arena);

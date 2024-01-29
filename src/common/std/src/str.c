@@ -151,7 +151,7 @@ char *str_directory(const char *path, arena_t *arena)
     CTASSERT(path != NULL);
     CTASSERT(arena != NULL);
 
-    size_t idx = str_rfind_any(path, PATH_SEPERATORS);
+    size_t idx = str_rfind_any(path, CT_PATH_SEPERATORS);
     if (idx == SIZE_MAX)
     {
         return arena_strdup(".", arena);
@@ -166,7 +166,7 @@ char *str_basename(const char *path, arena_t *arena)
     CTASSERT(path != NULL);
     CTASSERT(arena != NULL);
 
-    size_t idx = str_rfind_any(path, PATH_SEPERATORS);
+    size_t idx = str_rfind_any(path, CT_PATH_SEPERATORS);
     if (idx == SIZE_MAX)
     {
         return str_noext(path, arena);
@@ -181,7 +181,7 @@ char *str_filename(const char *path, arena_t *arena)
     CTASSERT(path != NULL);
     CTASSERT(arena != NULL);
 
-    size_t idx = str_rfind_any(path, PATH_SEPERATORS);
+    size_t idx = str_rfind_any(path, CT_PATH_SEPERATORS);
     if (idx == SIZE_MAX)
     {
         return arena_strdup(path, arena);
@@ -260,14 +260,14 @@ char *str_join(const char *sep, vector_t *parts, arena_t *arena)
     {
         if (i != 0)
         {
-            ctu_memcpy(out + idx, sep, MIN(remaining, seplen));
+            ctu_memcpy(out + idx, sep, CT_MIN(remaining, seplen));
             idx += seplen;
             remaining -= seplen;
         }
 
         const char *part = vector_get(parts, i);
         size_t part_len = ctu_strlen(part);
-        ctu_memcpy(out + idx, part, MIN(remaining, part_len));
+        ctu_memcpy(out + idx, part, CT_MIN(remaining, part_len));
         idx += part_len;
         remaining -= part_len;
     }
@@ -293,7 +293,7 @@ char *str_repeat(const char *str, size_t times, arena_t *arena)
     size_t remaining = outlen;
     for (size_t i = 0; i < times; i++)
     {
-        ctu_memcpy(out + i * len, str, MIN(remaining, len));
+        ctu_memcpy(out + i * len, str, CT_MIN(remaining, len));
         remaining -= len;
     }
     out[outlen] = 0;
@@ -671,10 +671,10 @@ const char *str_common_prefix(vector_t *args, arena_t *arena)
 
         // find the last path seperator
         // we find the common prefix up to the last path seperator
-        size_t find = str_rfind_any(arg, PATH_SEPERATORS) + 1;
+        size_t find = str_rfind_any(arg, CT_PATH_SEPERATORS) + 1;
         strings[i] = arena_strndup(arg, find, arena);
 
-        lower = MIN(lower, find);
+        lower = CT_MIN(lower, find);
     }
 
     // no common prefix was found
@@ -754,7 +754,7 @@ size_t str_find(const char *str, const char *sub)
     return ptr == NULL ? SIZE_MAX : (size_t)(ptr - str);
 }
 
-USE_DECL NOALIAS
+USE_DECL CT_NOALIAS
 char *str_erase(char *str, size_t len, const char *letters)
 {
     CTASSERT(str != NULL);

@@ -28,7 +28,7 @@ const language_t kExampleModule = {
         .license = "GPLv3",
         .desc = "Example language driver",
         .author = "Elliot Haisley",
-        .version = NEW_VERSION(1, 0, 1)
+        .version = CT_NEW_VERSION(1, 0, 1)
     },
 
     /// default extensions

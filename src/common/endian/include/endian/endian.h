@@ -18,15 +18,15 @@
 /// @def CTU_BYTE_ORDER
 /// @brief the native byte order
 
-#if OS_WINDOWS
+#if CT_OS_WINDOWS
 #   include "core/win32.h" // IWYU pragma: keep
 #   define CTU_BIG_ENDIAN REG_DWORD_BIG_ENDIAN
 #   define CTU_LITTLE_ENDIAN REG_DWORD_LITTLE_ENDIAN
 #   define CTU_BYTE_ORDER REG_DWORD
 #else
-#   if OS_LINUX
+#   if CT_OS_LINUX
 #      include <endian.h>
-#   elif OS_APPLE
+#   elif CT_OS_APPLE
 #      include <machine/endian.h>
 #   endif
 #   define CTU_BIG_ENDIAN __ORDER_BIG_ENDIAN__
@@ -34,7 +34,7 @@
 #   define CTU_BYTE_ORDER __BYTE_ORDER__
 #endif
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @brief endianess enum
 typedef enum endian_t
@@ -50,7 +50,7 @@ typedef enum endian_t
 /// @param value the value to swap
 ///
 /// @return the swapped value
-NODISCARD CONSTFN
+CT_NODISCARD CT_CONSTFN
 CT_BASE_API uint16_t endian_swap16(uint16_t value);
 
 /// @brief swap the endianess of a 32-bit value
@@ -58,7 +58,7 @@ CT_BASE_API uint16_t endian_swap16(uint16_t value);
 /// @param value the value to swap
 ///
 /// @return the swapped value
-NODISCARD CONSTFN
+CT_NODISCARD CT_CONSTFN
 CT_BASE_API uint32_t endian_swap32(uint32_t value);
 
 /// @brief swap the endianess of a 64-bit value
@@ -66,7 +66,7 @@ CT_BASE_API uint32_t endian_swap32(uint32_t value);
 /// @param value the value to swap
 ///
 /// @return the swapped value
-NODISCARD CONSTFN
+CT_NODISCARD CT_CONSTFN
 CT_BASE_API uint64_t endian_swap64(uint64_t value);
 
 /// @brief convert a 16-bit value of a given endianess to the native endianess
@@ -75,7 +75,7 @@ CT_BASE_API uint64_t endian_swap64(uint64_t value);
 /// @param order the endianess of @a value
 ///
 /// @return the converted value
-NODISCARD CONSTFN
+CT_NODISCARD CT_CONSTFN
 CT_BASE_API uint16_t native_order16(uint16_t value, IN_RANGE(<, eEndianTotal) endian_t order);
 
 /// @brief convert a 32-bit value of a given endianess to the native endianess
@@ -84,7 +84,7 @@ CT_BASE_API uint16_t native_order16(uint16_t value, IN_RANGE(<, eEndianTotal) en
 /// @param order the endianess of @a value
 ///
 /// @return the converted value
-NODISCARD CONSTFN
+CT_NODISCARD CT_CONSTFN
 CT_BASE_API uint32_t native_order32(uint32_t value, IN_RANGE(<, eEndianTotal) endian_t order);
 
 /// @brief convert a 64-bit value of a given endianess to the native endianess
@@ -93,9 +93,9 @@ CT_BASE_API uint32_t native_order32(uint32_t value, IN_RANGE(<, eEndianTotal) en
 /// @param order the endianess of @a value
 ///
 /// @return the converted value
-NODISCARD CONSTFN
+CT_NODISCARD CT_CONSTFN
 CT_BASE_API uint64_t native_order64(uint64_t value, IN_RANGE(<, eEndianTotal) endian_t order);
 
 /// @}
 
-END_API
+CT_END_API

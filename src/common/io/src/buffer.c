@@ -24,7 +24,7 @@ static buffer_t *mem_data(io_t *self)
 static size_t mem_read(io_t *self, void *dst, size_t size)
 {
     buffer_t *mem = mem_data(self);
-    size_t len = MIN(size, mem->used - mem->offset);
+    size_t len = CT_MIN(size, mem->used - mem->offset);
     ctu_memcpy(dst, mem->data + mem->offset, len);
     mem->offset += len;
     return len;
@@ -33,7 +33,7 @@ static size_t mem_read(io_t *self, void *dst, size_t size)
 static size_t mem_write(io_t *self, const void *src, size_t size)
 {
     buffer_t *mem = mem_data(self);
-    mem->used = MAX(mem->used, mem->offset + size);
+    mem->used = CT_MAX(mem->used, mem->offset + size);
     if (mem->offset + size > mem->total)
     {
         mem->data = arena_realloc(mem->data, mem->offset + size, mem->total, self->arena);
@@ -55,7 +55,7 @@ static size_t mem_size(io_t *self)
 static size_t mem_seek(io_t *self, size_t offset)
 {
     buffer_t *mem = mem_data(self);
-    mem->offset = MIN(offset, mem->used);
+    mem->offset = CT_MIN(offset, mem->used);
     return mem->offset;
 }
 

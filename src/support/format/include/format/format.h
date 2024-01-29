@@ -2,7 +2,7 @@
 
 #include "core/compiler.h"
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct arena_t arena_t;
 typedef struct io_t io_t;
@@ -40,4 +40,4 @@ typedef struct print_options_t
 
 /// @}
 
-END_API
+CT_END_API

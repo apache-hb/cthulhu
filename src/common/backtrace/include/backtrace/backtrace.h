@@ -12,7 +12,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @defgroup backtrace Stacktrace library
 /// @brief Backtrace library
@@ -113,7 +113,7 @@ CT_BACKTRACE_API void bt_init(void);
 /// @brief get the backtrace backend name
 ///
 /// @return the backtrace backend name
-RET_STRING CONSTFN
+RET_STRING CT_CONSTFN
 CT_BACKTRACE_API const char *bt_backend(void);
 
 /// @brief get a backtrace from the current location using a callback
@@ -134,4 +134,4 @@ CT_BACKTRACE_API frame_resolve_t bt_resolve_symbol(IN_NOTNULL const bt_frame_t *
 
 /// @}
 
-END_API
+CT_END_API

@@ -7,7 +7,7 @@
 
 #include <stdbool.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct event_t event_t;
 typedef struct typevec_t typevec_t;
@@ -61,4 +61,4 @@ CT_FORMAT_API void print_notify_many(print_notify_t config, IN_NOTNULL const typ
 
 /// @}
 
-END_API
+CT_END_API

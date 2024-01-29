@@ -7,7 +7,7 @@
 
 #include <stddef.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct arena_t arena_t;
 
@@ -38,7 +38,7 @@ CT_STD_API void vector_delete(OUT_PTR_INVALID vector_t *vector);
 /// @param arena the arena to allocate from
 ///
 /// @return a new vector
-NODISCARD
+CT_NODISCARD
 CT_STD_API vector_t *vector_new(size_t size, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new vector with a specified length
@@ -49,7 +49,7 @@ CT_STD_API vector_t *vector_new(size_t size, IN_NOTNULL arena_t *arena);
 /// @param arena the arena to allocate from
 ///
 /// @return a new vector
-NODISCARD
+CT_NODISCARD
 CT_STD_API vector_t *vector_of(size_t len, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new vector with a single initial value
@@ -64,7 +64,7 @@ CT_STD_API vector_t *vector_of(size_t len, IN_NOTNULL arena_t *arena);
 /// @param arena the arena to allocate from
 ///
 /// @return a new vector
-NODISCARD
+CT_NODISCARD
 CT_STD_API vector_t *vector_init(void *value, IN_NOTNULL arena_t *arena);
 
 /// @brief clone a vector
@@ -72,7 +72,7 @@ CT_STD_API vector_t *vector_init(void *value, IN_NOTNULL arena_t *arena);
 /// @param vector the vector to clone
 ///
 /// @return a new vector with the same contents as @p vector
-NODISCARD
+CT_NODISCARD
 CT_STD_API vector_t *vector_clone(IN_NOTNULL vector_t *vector);
 
 /// @brief push a value onto the end of a vector
@@ -106,7 +106,7 @@ CT_STD_API void vector_set(
 /// @param index the index to get
 ///
 /// @return the value at @p index
-NODISCARD PUREFN
+CT_NODISCARD CT_PUREFN
 CT_STD_API void *vector_get(
     IN_NOTNULL const vector_t *vector,
     size_t index
@@ -118,7 +118,7 @@ CT_STD_API void *vector_get(
 /// @param vector the vector to get the last element of
 ///
 /// @return the last element of @p vector
-NODISCARD PUREFN
+CT_NODISCARD CT_PUREFN
 CT_STD_API void *vector_tail(IN_NOTNULL const vector_t *vector);
 
 /// @brief get the length of a vector
@@ -126,7 +126,7 @@ CT_STD_API void *vector_tail(IN_NOTNULL const vector_t *vector);
 /// @param vector the vector to get the length of
 ///
 /// @return the length of @p vector
-NODISCARD PUREFN
+CT_NODISCARD CT_PUREFN
 CT_STD_API size_t vector_len(IN_NOTNULL const vector_t *vector);
 
 /// @brief append the contents of one vector to another
@@ -143,7 +143,7 @@ CT_STD_API void vector_append(IN_NOTNULL vector_t **vector, IN_NOTNULL const vec
 /// @param element the element to search for
 ///
 /// @return the index of @p element in @p vector or @a SIZE_MAX if not found
-RET_INSPECT PUREFN
+RET_INSPECT CT_PUREFN
 CT_STD_API size_t vector_find(IN_NOTNULL vector_t *vector, const void *element);
 
 /// @brief reset the contents of a vector
@@ -162,4 +162,4 @@ CT_STD_API void **vector_data(IN_NOTNULL vector_t *vec);
 
 /// @}
 
-END_API
+CT_END_API

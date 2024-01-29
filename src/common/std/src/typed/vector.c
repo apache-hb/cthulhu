@@ -48,7 +48,7 @@ static void typevec_ensure(typevec_t *vec, size_t extra)
 
     if (vec->used + extra > vec->size)
     {
-        size_t new_size = MAX(vec->size * 2, vec->used + extra);
+        size_t new_size = CT_MAX(vec->size * 2, vec->used + extra);
 
         vec->data = arena_realloc(vec->data, new_size * vec->type_size, vec->size * vec->type_size, vec->arena);
 
@@ -61,7 +61,7 @@ static typevec_t *typevec_create(size_t type_size, size_t len, arena_t *arena)
     CTASSERT(arena != NULL);
     CTASSERT(type_size > 0);
 
-    size_t size = MAX(len, 1);
+    size_t size = CT_MAX(len, 1);
 
     typevec_t *vec = ARENA_MALLOC(sizeof(typevec_t), "typevec", NULL, arena);
     vec->arena = arena;

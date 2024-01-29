@@ -41,7 +41,7 @@ typedef struct cache_map_t cache_map_t;
 typedef struct set_t set_t;
 typedef struct text_cache_t text_cache_t;
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @brief the configuration for a file
 typedef struct file_config_t
@@ -109,4 +109,4 @@ CT_FORMAT_API void text_report_simple(
     text_config_t config,
     IN_NOTNULL const event_t *event);
 
-END_API
+CT_END_API

@@ -8,15 +8,15 @@
 /// @{
 
 #if __cplusplus >= 201703L
-#   define NODISCARD [[nodiscard]]
+#   define CT_NODISCARD [[nodiscard]]
 #endif
 
 #if __has_include(<sal.h>)
 #   include <sal.h>
 #   define CT_FMT_STRING _Printf_format_string_
 #   define USE_DECL _Use_decl_annotations_
-#   ifndef NODISCARD
-#      define NODISCARD _Check_return_
+#   ifndef CT_NODISCARD
+#      define CT_NODISCARD _Check_return_
 #   endif
 #   define IN_READS(expr) _In_reads_(expr)
 #   define OUT_WRITES(expr) _Out_writes_(expr)
@@ -67,77 +67,76 @@
 #  define CT_PRINTF(a, b)
 #endif
 
-
 #if __GNUC__ >= 11
-#   define GNU_ATTRIB(...) __attribute__((__VA_ARGS__))
-#   define CLANG_ATTRIB(...)
-#   define CTU_ATTRIB(...) __attribute__((__VA_ARGS__))
+#   define CT_GNU_ATTRIB(...) __attribute__((__VA_ARGS__))
+#   define CT_CLANG_ATTRIB(...)
+#   define CT_ATTRIB(...) __attribute__((__VA_ARGS__))
 #elif __clang__ >= 10
-#   define GNU_ATTRIB(...)
-#   define CLANG_ATTRIB(...) __attribute__((__VA_ARGS__))
-#   define CTU_ATTRIB(...) __attribute__((__VA_ARGS__))
+#   define CT_GNU_ATTRIB(...)
+#   define CT_CLANG_ATTRIB(...) __attribute__((__VA_ARGS__))
+#   define CT_ATTRIB(...) __attribute__((__VA_ARGS__))
 #else
-#   define CTU_ATTRIB(...)
-#   define GNU_ATTRIB(...)
-#   define CLANG_ATTRIB(...)
+#   define CT_ATTRIB(...)
+#   define CT_GNU_ATTRIB(...)
+#   define CT_CLANG_ATTRIB(...)
 #endif
 
 #if CT_CC_MSVC
-#   define CTU_DECLSPEC(...) __declspec(__VA_ARGS__)
+#   define CT_DECLSPEC(...) __declspec(__VA_ARGS__)
 #else
-#   define CTU_DECLSPEC(...)
+#   define CT_DECLSPEC(...)
 #endif
 
 #ifndef IN_NOTNULL
-#   define IN_NOTNULL CLANG_ATTRIB(nonnull)
+#   define IN_NOTNULL CT_CLANG_ATTRIB(nonnull)
 #endif
 
-/// @def GNU_ATTRIB(...)
+/// @def CT_GNU_ATTRIB(...)
 /// @brief gcc only attributes
-/// @def CLANG_ATTRIB(...)
+/// @def CT_CLANG_ATTRIB(...)
 /// @brief clang only attributes
-/// @def CTU_ATTRIB(...)
+/// @def CT_ATTRIB(...)
 /// @brief any attribute that both gcc and clang support
 
-#ifndef NODISCARD
-#   define NODISCARD CTU_ATTRIB(warn_unused_result)
+#ifndef CT_NODISCARD
+#   define CT_NODISCARD CT_ATTRIB(warn_unused_result)
 #endif
 
-/// @def NOALIAS
+/// @def CT_NOALIAS
 /// @brief mark a function as only modifying pointers passed to it
-/// the same as @a CONSTFN but allowed to modify/inspect pointers passed to it
+/// the same as @a CT_CONSTFN but allowed to modify/inspect pointers passed to it
 ///
-/// @def CONSTFN
+/// @def CT_CONSTFN
 /// @brief mark a function as const, has no side effects and always returns the same value for the same arguments
 /// @warning do not apply this to functions that take pointers as arguments
 ///
-/// @def PUREFN
+/// @def CT_PUREFN
 /// @brief mark a function as pure, always returns the same value for the same arguments
 /// @warning must not depend on mutable global state or have side effects
 /// @note thats a lie actually, gcc says it may have calls to it optimized away via CSE
 
 #if CTU_DISABLE_FN_PURITY
-#   define NOALIAS
-#   define CONSTFN
-#   define PUREFN
+#   define CT_NOALIAS
+#   define CT_CONSTFN
+#   define CT_PUREFN
 #else
-#   define NOALIAS CTU_DECLSPEC(noalias)
-#   define CONSTFN CTU_ATTRIB(const)
-#   define PUREFN CTU_ATTRIB(pure)
+#   define CT_NOALIAS CT_DECLSPEC(noalias)
+#   define CT_CONSTFN CT_ATTRIB(const)
+#   define CT_PUREFN CT_ATTRIB(pure)
 #endif
 
-/// @def CTU_ALLOC
+/// @def CT_ALLOC
 /// @brief mark a function as allocating memory
-/// @def CTU_ALLOC_SIZE
+/// @def CT_ALLOC_SIZE
 /// @brief mark a function as allocating memory with a specific size
 
 #if CT_CC_MSVC
-#   define CTU_ALLOC(...) CTU_DECLSPEC(restrict) CTU_DECLSPEC(allocator)
+#   define CT_ALLOC(...) CT_DECLSPEC(restrict) CT_DECLSPEC(allocator)
 #else
-#   define CTU_ALLOC(...) CTU_ATTRIB(malloc(__VA_ARGS__))
+#   define CT_ALLOC(...) CT_ATTRIB(malloc(__VA_ARGS__))
 #endif
 
-#define CTU_ALLOC_SIZE(...) CTU_ATTRIB(alloc_size(__VA_ARGS__))
+#define CT_ALLOC_SIZE(...) CT_ATTRIB(alloc_size(__VA_ARGS__))
 
 #ifdef __cplusplus
 #   ifdef _MSC_VER
@@ -153,34 +152,34 @@
 #   define CT_RESTRICT restrict
 #endif
 
-/// @def HOTFN
+/// @def CT_HOTFN
 /// @brief mark a function as hot, it is likely to be called often
-/// @def COLDFN
+/// @def CT_COLDFN
 /// @brief mark a function as cold, it is unlikely to be called often
 
-#define HOTFN CTU_ATTRIB(hot)
-#define COLDFN CTU_ATTRIB(cold)
+#define CT_HOTFN CT_ATTRIB(hot)
+#define CT_COLDFN CT_ATTRIB(cold)
 
 #ifndef RET_NOTNULL
-#   define RET_NOTNULL CTU_ATTRIB(returns_nonnull)
+#   define RET_NOTNULL CT_ATTRIB(returns_nonnull)
 #endif
 
 #ifndef FIELD_SIZE
-#   define FIELD_SIZE(of) CLANG_ATTRIB(counted_by(of))
+#   define FIELD_SIZE(of) CT_CLANG_ATTRIB(counted_by(of))
 #endif
 
-#ifndef NODISCARD
-#   define NODISCARD
+#ifndef CT_NODISCARD
+#   define CT_NODISCARD
 #endif
 
 #ifdef WITH_DOXYGEN
-#   define NODISCARD 0
+#   define CT_NODISCARD 0
 #   define RET_NOTNULL 0
 #   define FIELD_SIZE(of) 0
 #   define IN_NOTNULL 0
 #endif
 
-/// @def NODISCARD
+/// @def CT_NODISCARD
 /// @brief mark a function as returning a value that must be used
 
 /// @def CT_FMT_STRING
@@ -217,7 +216,7 @@
 
 /// @def RET_INSPECT
 /// @brief annotate the return value as needing to be inspected
-/// this is the same as NODISCARD but implies that the return value must be checked
+/// this is the same as CT_NODISCARD but implies that the return value must be checked
 /// for errors
 
 /// @def FIELD_SIZE(of)

@@ -9,7 +9,7 @@ const language_t kCppModule = {
         .license = "LGPLv3",
         .desc = "C Preprocessor language driver",
         .author = "Elliot Haisley",
-        .version = NEW_VERSION(0, 0, 1)
+        .version = CT_NEW_VERSION(0, 0, 1)
     },
 };
 

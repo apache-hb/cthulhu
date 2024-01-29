@@ -6,7 +6,7 @@
 
 #include <stddef.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct arena_t arena_t;
 typedef struct node_t node_t;
@@ -49,4 +49,4 @@ CT_TREE_API const tree_t *tree_get_type(IN_NOTNULL const tree_t *tree);
 /// declarations
 ///
 
-END_API
+CT_END_API

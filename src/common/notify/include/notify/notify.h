@@ -10,7 +10,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct node_t node_t;
 typedef struct typevec_t typevec_t;
@@ -85,7 +85,7 @@ typedef struct notify_rules_t
 /// @brief create a new logger
 ///
 /// @return the new logger
-RET_NOTNULL NODISCARD
+RET_NOTNULL CT_NODISCARD
 CT_NOTIFY_API logger_t *logger_new(IN_NOTNULL arena_t *arena);
 
 /// @brief get the events from the logger
@@ -93,7 +93,7 @@ CT_NOTIFY_API logger_t *logger_new(IN_NOTNULL arena_t *arena);
 /// @param logs the logger
 ///
 /// @return the events
-RET_NOTNULL NODISCARD
+RET_NOTNULL CT_NODISCARD
 CT_NOTIFY_API typevec_t *logger_get_events(IN_NOTNULL const logger_t *logs);
 
 /// @brief check if the logger has any fatal errors
@@ -102,7 +102,7 @@ CT_NOTIFY_API typevec_t *logger_get_events(IN_NOTNULL const logger_t *logs);
 /// @param rules the rules to use
 ///
 /// @return true if the logger has fatal errors
-NODISCARD
+CT_NODISCARD
 CT_NOTIFY_API bool logger_has_errors(IN_NOTNULL const logger_t *logs, notify_rules_t rules);
 
 /// @brief reset the loggers messages
@@ -187,4 +187,4 @@ CT_NOTIFY_API void msg_vnote(
 
 /// @}
 
-END_API
+CT_END_API

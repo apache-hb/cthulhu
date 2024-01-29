@@ -6,7 +6,7 @@
 
 #define REFLTYPE where_t
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct logger_t logger_t;
 typedef struct typevec_t typevec_t;
@@ -24,4 +24,4 @@ typevec_t *stringlist_begin(scan_t *scan, where_t where, text_t text);
 
 typevec_t *stringlist_append(typevec_t *list, text_t text);
 
-END_API
+CT_END_API

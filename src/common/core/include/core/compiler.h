@@ -24,39 +24,38 @@
 #endif
 
 #if defined(__linux__)
-#   define OS_LINUX 1
+#   define CT_OS_LINUX 1
 #elif defined(_WIN32)
-#   define OS_WINDOWS 1
+#   define CT_OS_WINDOWS 1
 #elif defined(__APPLE__)
-#   define OS_APPLE 1
+#   define CT_OS_APPLE 1
 #elif defined(__EMSCRIPTEN__)
-#   define OS_WASM 1
+#   define CT_OS_WASM 1
 #else
 #   error "unknown platform"
 #endif
 
 #ifdef __cplusplus
-#   define NORETURN [[noreturn]] void
+#   define CT_NORETURN [[noreturn]] void
 #endif
 
-#ifndef NORETURN
+#ifndef CT_NORETURN
 #   if CT_CC_CLANG || CT_CC_GNU
-#      define NORETURN __attribute__((noreturn)) void
+#      define CT_NORETURN __attribute__((noreturn)) void
 #   elif CT_CC_MSVC
-#      define NORETURN __declspec(noreturn) void
+#      define CT_NORETURN __declspec(noreturn) void
 #   else
-#      define NORETURN void
+#      define CT_NORETURN void
 #   endif
 #endif
 
-#ifdef OS_WINDOWS
-#   define NATIVE_PATH_SEPARATOR "\\"
-#   define PATH_SEPERATORS "\\/"
+#ifdef CT_OS_WINDOWS
+#   define CT_NATIVE_PATH_SEPARATOR "\\"
+#   define CT_PATH_SEPERATORS "\\/"
 #else
-#   define NATIVE_PATH_SEPARATOR "/"
-#   define PATH_SEPERATORS "/"
+#   define CT_NATIVE_PATH_SEPARATOR "/"
+#   define CT_PATH_SEPERATORS "/"
 #endif
-
 
 /// @def CT_ASSUME(expr)
 /// @brief assume that @a expr is true
@@ -80,11 +79,11 @@
 
 // clang-format off
 #ifdef __cplusplus
-#    define BEGIN_API extern "C"  {
-#    define END_API }
+#    define CT_BEGIN_API extern "C"  {
+#    define CT_END_API }
 #else
-#    define BEGIN_API
-#    define END_API
+#    define CT_BEGIN_API
+#    define CT_END_API
 #endif
 // clang-format on
 
@@ -102,13 +101,13 @@
 
 // byteswapping
 #if CT_CC_MSVC
-#   define BYTESWAP_U16(x) _byteswap_ushort(x)
-#   define BYTESWAP_U32(x) _byteswap_ulong(x)
-#   define BYTESWAP_U64(x) _byteswap_uint64(x)
+#   define CT_BSWAP_U16(x) _byteswap_ushort(x)
+#   define CT_BSWAP_U32(x) _byteswap_ulong(x)
+#   define CT_BSWAP_U64(x) _byteswap_uint64(x)
 #else
-#   define BYTESWAP_U16(x) __builtin_bswap16(x)
-#   define BYTESWAP_U32(x) __builtin_bswap32(x)
-#   define BYTESWAP_U64(x) __builtin_bswap64(x)
+#   define CT_BSWAP_U16(x) __builtin_bswap16(x)
+#   define CT_BSWAP_U32(x) __builtin_bswap32(x)
+#   define CT_BSWAP_U64(x) __builtin_bswap64(x)
 #endif
 
 // we use _MSC_VER rather than CT_CC_MSVC because both clang-cl and msvc define it

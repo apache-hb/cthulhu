@@ -239,7 +239,7 @@ static void check_call_args_fixed(check_t *check, const tree_t *expr, vector_t *
         msg_note(id, "expected %zu, got %zu", param_count, arg_count);
     }
 
-    size_t count = MIN(arg_count, param_count);
+    size_t count = CT_MIN(arg_count, param_count);
 
     check_params(check, args, params, count, name);
 }
@@ -260,7 +260,7 @@ static void check_call_args_variadic(check_t *check, const tree_t *expr, vector_
         msg_note(id, "expected at least %zu parameters, only got %zu", param_count, arg_count);
     }
 
-    size_t count = MIN(arg_count, param_count);
+    size_t count = CT_MIN(arg_count, param_count);
 
     check_params(check, args, params, count, name);
 }

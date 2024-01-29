@@ -22,7 +22,7 @@ static view_t *view_data(io_t *self)
 static size_t view_read(io_t *self, void *dst, size_t size)
 {
     view_t *mem = view_data(self);
-    size_t len = MIN(size, mem->size - mem->offset);
+    size_t len = CT_MIN(size, mem->size - mem->offset);
     ctu_memcpy(dst, mem->data + mem->offset, len);
     mem->offset += len;
     return len;
@@ -37,7 +37,7 @@ static size_t view_size(io_t *self)
 static size_t view_seek(io_t *self, size_t offset)
 {
     view_t *mem = view_data(self);
-    mem->offset = MIN(offset, mem->size);
+    mem->offset = CT_MIN(offset, mem->size);
     return mem->offset;
 }
 

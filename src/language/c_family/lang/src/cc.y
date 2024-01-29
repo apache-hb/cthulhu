@@ -110,7 +110,7 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
     GENERIC "_Generic"
     IMAGINARY "_Imaginary"
 
-    NRETURN "_Noreturn"
+    NORETURN "_Noreturn"
 
     STATIC_ASSERT "_Static_assert"
     THREAD_LOCAL "_Thread_local"
@@ -574,7 +574,7 @@ attribute_specifier: LBRACKET LBRACKET attribute_list RBRACKET RBRACKET { $$ = N
     | ATTRIBUTE LPAREN LPAREN attribute_list RPAREN RPAREN { $$ = NULL; }
     | DECLSPEC LPAREN attribute_list RPAREN { $$ = NULL; }
     | ext_attribute_callconv { $$ = c_ast_attribute_callconv(x, @$, $1); }
-    | NRETURN { $$ = c_ast_attribute_noreturn(x, @$); }
+    | NORETURN { $$ = c_ast_attribute_noreturn(x, @$); }
     ;
 
 ext_attribute_callconv: STDCALL { $$ = eCallStdcall; }

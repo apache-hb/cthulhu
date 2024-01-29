@@ -4,7 +4,7 @@
 
 #include "std/typed/info.h"
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct arena_t arena_t;
 
@@ -26,7 +26,7 @@ typedef struct item_t item_t;
 /// @param arena the arena to allocate from
 ///
 /// @return the new set
-NODISCARD
+CT_NODISCARD
 CT_STD_API set_t *set_new(IN_RANGE(>, 0) size_t size, typeinfo_t info, IN_NOTNULL arena_t *arena);
 
 /// @brief add a key to a set
@@ -45,7 +45,7 @@ CT_STD_API const void *set_add(IN_NOTNULL set_t *set, IN_NOTNULL const void *key
 /// @param key the key to check for
 ///
 /// @return true if the set contains the key
-NODISCARD PUREFN
+CT_NODISCARD CT_PUREFN
 CT_STD_API bool set_contains(IN_NOTNULL const set_t *set, IN_NOTNULL const void *key);
 
 /// @brief remove a key from a set
@@ -60,7 +60,7 @@ CT_STD_API void set_delete(IN_NOTNULL set_t *set, IN_NOTNULL const void *key);
 /// @param set the set to check
 ///
 /// @return true if the set is empty
-NODISCARD PUREFN
+CT_NODISCARD CT_PUREFN
 CT_STD_API bool set_empty(IN_NOTNULL set_t *set);
 
 /// @brief clear all keys from a set
@@ -86,7 +86,7 @@ typedef struct set_iter_t
 /// @param set the set to iterate over
 ///
 /// @return the new iterator
-NODISCARD PUREFN
+CT_NODISCARD CT_PUREFN
 CT_STD_API set_iter_t set_iter(IN_NOTNULL set_t *set);
 
 /// @brief get the next item from a set iterator
@@ -95,7 +95,7 @@ CT_STD_API set_iter_t set_iter(IN_NOTNULL set_t *set);
 /// @param iter the iterator to get the next item from
 ///
 /// @return the next item
-NODISCARD
+CT_NODISCARD
 CT_STD_API const void *set_next(IN_NOTNULL set_iter_t *iter);
 
 /// @brief check if a set iterator has more items
@@ -104,9 +104,9 @@ CT_STD_API const void *set_next(IN_NOTNULL set_iter_t *iter);
 ///
 /// @retval true the iterator has more items
 /// @retval false the iterator has no more items
-NODISCARD PUREFN
+CT_NODISCARD CT_PUREFN
 CT_STD_API bool set_has_next(IN_NOTNULL set_iter_t *iter);
 
 /// @}
 
-END_API
+CT_END_API

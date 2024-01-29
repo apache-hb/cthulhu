@@ -46,12 +46,12 @@ static size_t longest_line(const char *str)
 
         if (str[i] == '\n')
         {
-            longest = MAX(longest, current);
+            longest = CT_MAX(longest, current);
             current = 0;
         }
     }
 
-    return MAX(longest, current);
+    return CT_MAX(longest, current);
 }
 
 static size_t get_arg_length(const cfg_info_t *info, size_t long_arg_stride)
@@ -93,11 +93,11 @@ static alignment_info_t get_group_alignment(const cfg_group_t *config, bool win_
         const cfg_field_t *field = vector_get(fields, i);
         const cfg_info_t *info = cfg_get_info(field);
         size_t len = get_arg_length(info, long_arg_stride);
-        largest = MAX(largest, len);
+        largest = CT_MAX(largest, len);
 
         size_t brief_len = longest_line(info->brief);
 
-        longest_brief = MAX(longest_brief, brief_len);
+        longest_brief = CT_MAX(longest_brief, brief_len);
     }
 
     alignment_info_t alignment = {

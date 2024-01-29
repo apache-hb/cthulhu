@@ -6,7 +6,7 @@
 typedef struct node_t node_t;
 typedef struct tree_t tree_t;
 
-BEGIN_API
+CT_BEGIN_API
 
 CT_TREE_API const char *tree_kind_to_string(tree_kind_t kind);
 CT_TREE_API const char *tree_to_string(const tree_t *self);
@@ -62,4 +62,4 @@ CT_TREE_API quals_t tree_ty_get_quals(const tree_t *self);
  */
 CT_TREE_API const tree_t *tree_ty_load_type(const tree_t *self);
 
-END_API
+CT_END_API

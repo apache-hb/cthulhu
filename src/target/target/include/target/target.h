@@ -11,7 +11,7 @@ typedef struct map_t map_t;
 
 typedef struct cfg_group_t cfg_group_t;
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @defgroup target Target output helper library
 /// @brief Target output helper library
@@ -93,4 +93,4 @@ typedef struct target_t
 
 /// @}
 
-END_API
+CT_END_API

@@ -11,7 +11,7 @@ typedef struct logger_t logger_t;
 /// @ingroup runtime
 /// @{
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @brief check the tree form IR
 /// all found errors are reported to the reports object
@@ -21,6 +21,6 @@ BEGIN_API
 /// @param arena the arena to allocate in
 CT_CHECK_API void check_tree(IN_NOTNULL logger_t *reports, IN_NOTNULL map_t *mods, IN_NOTNULL arena_t *arena);
 
-END_API
+CT_END_API
 
 /// @}

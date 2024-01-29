@@ -17,7 +17,7 @@ typedef struct tree_t tree_t;
 typedef struct tree_cookie_t tree_cookie_t;
 typedef struct diagnostic_t diagnostic_t;
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @defgroup tree Tree intermediate form
 /// @ingroup runtime
@@ -566,4 +566,4 @@ CT_TREE_API tree_cookie_t *tree_get_cookie(tree_t *sema);
 
 /// @}
 
-END_API
+CT_END_API

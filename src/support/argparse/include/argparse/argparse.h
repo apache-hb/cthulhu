@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct node_t node_t;
 typedef struct vector_t vector_t;
@@ -116,4 +116,4 @@ CT_ARGPARSE_API size_t ap_count_params(ap_t *self);
 
 /// @} // ArgParse
 
-END_API
+CT_END_API

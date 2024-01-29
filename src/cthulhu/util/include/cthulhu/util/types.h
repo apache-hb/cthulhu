@@ -9,7 +9,7 @@
 
 typedef struct tree_t tree_t;
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @ingroup runtime_util
 /// @{
@@ -56,4 +56,4 @@ CT_UTIL_API const char *util_length_name(size_t length);
 
 /// @}
 
-END_API
+CT_END_API

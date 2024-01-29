@@ -7,7 +7,7 @@
 
 #include <stdbool.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct cfg_group_t cfg_group_t;
 typedef struct cfg_field_t cfg_field_t;
@@ -113,4 +113,4 @@ CT_SETUP_API void setup_global(void);
 
 /// @}
 
-END_API
+CT_END_API

@@ -48,7 +48,7 @@
 //     .license = "GPLv3",
 //     .desc = "Test harness",
 //     .author = "Elliot Haisley",
-//     .version = NEW_VERSION(0, 0, 1),
+//     .version = CT_NEW_VERSION(0, 0, 1),
 // };
 
 static io_t *make_file(const char *path, os_access_t flags, arena_t *arena)
@@ -69,7 +69,7 @@ typedef struct user_ptr_t
     FIELD_SIZE(size) char data[];
 } user_ptr_t;
 
-STATIC_ASSERT(sizeof(user_ptr_t) == 16, "user_ptr_t must be 16 byte aligned");
+CT_STATIC_ASSERT(sizeof(user_ptr_t) == 16, "user_ptr_t must be 16 byte aligned");
 
 typedef struct user_arena_t
 {
@@ -294,8 +294,8 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     os_error_t err = os_dir_current(cwd, 1024);
     CTASSERTF(err == 0, "failed to get cwd %s", os_error_string(err, arena));
 
-    const char *test_dir = str_format(arena, "%s" NATIVE_PATH_SEPARATOR "test-out", cwd);
-    const char *run_dir = str_format(arena, "%s" NATIVE_PATH_SEPARATOR "%s", test_dir, argv[1]);
+    const char *test_dir = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "test-out", cwd);
+    const char *run_dir = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s", test_dir, argv[1]);
 
     fs_t *out = fs_physical(run_dir, arena);
     if (out == NULL)
@@ -318,12 +318,12 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     for (size_t i = 0; i < len; i++)
     {
         const char *part = vector_get(c89_emit_result.sources, i);
-        char *path = str_format(arena, "%s" NATIVE_PATH_SEPARATOR "%s", run_dir, part);
+        char *path = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s", run_dir, part);
         vector_set(sources, i, path);
     }
 
-#if OS_WINDOWS
-    const char *lib_dir = str_format(arena, "%s" NATIVE_PATH_SEPARATOR "lib", run_dir);
+#if CT_OS_WINDOWS
+    const char *lib_dir = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "lib", run_dir);
 
     bool create = false;
     os_error_t cwd_err = os_dir_create(lib_dir, &create);

@@ -74,7 +74,7 @@ CT_DRIVER_API const language_t kCtuModule = {
         .license = "LGPLv3",
         .desc = "Cthulhu language driver",
         .author = "Elliot Haisley",
-        .version = NEW_VERSION(0, 4, 0)
+        .version = CT_NEW_VERSION(0, 4, 0)
     },
 
     .exts = kLangNames,

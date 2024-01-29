@@ -7,7 +7,7 @@
 
 #include <stdarg.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct arena_t arena_t;
 
@@ -99,4 +99,4 @@ CT_FORMAT_API char *colour_vformat(format_context_t context, IN_RANGE(<, eColour
 
 /// @}
 
-END_API
+CT_END_API

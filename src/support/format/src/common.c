@@ -468,12 +468,12 @@ int text_report(typevec_t *events, report_config_t config, const char *title)
         switch (diag->severity)
         {
         case eSeverityFatal:
-            result = MAX(result, CT_EXIT_ERROR);
+            result = CT_MAX(result, CT_EXIT_ERROR);
             error_count += 1;
             break;
         case eSeverityInternal:
         case eSeveritySorry:
-            result = MAX(result, CT_EXIT_INTERNAL);
+            result = CT_MAX(result, CT_EXIT_INTERNAL);
             bug_count += 1;
             break;
         case eSeverityWarn:

@@ -4,7 +4,7 @@
 
 #include "os/os.h"
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct arena_t arena_t;
 typedef struct io_t io_t;
@@ -23,7 +23,7 @@ typedef struct fs_t fs_t;
 /// @param arena the arena to allocate from
 ///
 /// @return a filesystem interface, or NULL if the filesystem failed to mount
-NODISCARD
+CT_NODISCARD
 CT_FS_API fs_t *fs_physical(const char *root, arena_t *arena);
 
 /// @brief create a virtual filesystem interface
@@ -32,7 +32,7 @@ CT_FS_API fs_t *fs_physical(const char *root, arena_t *arena);
 /// @param arena the arena to allocate from
 ///
 /// @return a filesystem interface to an in-memory fs
-NODISCARD
+CT_NODISCARD
 CT_FS_API fs_t *fs_virtual(const char *name, arena_t *arena);
 
 /// @brief create a directory
@@ -59,7 +59,7 @@ CT_FS_API void fs_file_create(fs_t *fs, const char *path);
 /// @param flags the access modifiers to use when opening the file
 ///
 /// @return an io object representing the file on disk, or NULL on failure
-NODISCARD
+CT_NODISCARD
 CT_FS_API io_t *fs_open(fs_t *fs, const char *path, os_access_t flags);
 
 /// @brief query if a directory exists
@@ -68,7 +68,7 @@ CT_FS_API io_t *fs_open(fs_t *fs, const char *path, os_access_t flags);
 /// @param path the path of the directory
 ///
 /// @return true if it exists, false otherwise
-NODISCARD
+CT_NODISCARD
 CT_FS_API bool fs_dir_exists(fs_t *fs, const char *path);
 
 /// @brief query if a file exists
@@ -77,7 +77,7 @@ CT_FS_API bool fs_dir_exists(fs_t *fs, const char *path);
 /// @param path the path of the file
 ///
 /// @return true if it exists, false otherwise
-NODISCARD
+CT_NODISCARD
 CT_FS_API bool fs_file_exists(fs_t *fs, const char *path);
 
 /// @brief delete a directory
@@ -111,4 +111,4 @@ CT_FS_API sync_result_t fs_sync(fs_t *dst, fs_t *src);
 
 /// @}
 
-END_API
+CT_END_API

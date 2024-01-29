@@ -9,7 +9,7 @@
 
 typedef struct arena_t arena_t;
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @defgroup typed_vector Typed vector
 /// @ingroup standard
@@ -26,7 +26,7 @@ typedef struct typevec_t typevec_t;
 /// @param arena the arena to allocate from
 ///
 /// @return the new vector
-NODISCARD
+CT_NODISCARD
 CT_STD_API typevec_t *typevec_new(IN_RANGE(>, 0) size_t type_size, size_t len, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new typed vector with an initial size and length
@@ -38,7 +38,7 @@ CT_STD_API typevec_t *typevec_new(IN_RANGE(>, 0) size_t type_size, size_t len, I
 /// @param arena the arena to allocate from
 ///
 /// @return the new vector
-NODISCARD
+CT_NODISCARD
 CT_STD_API typevec_t *typevec_of(IN_RANGE(>, 0) size_t type_size, size_t len, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new typed vector from an array
@@ -50,7 +50,7 @@ CT_STD_API typevec_t *typevec_of(IN_RANGE(>, 0) size_t type_size, size_t len, IN
 /// @param arena the arena to allocate from
 ///
 /// @return the new vector
-NODISCARD
+CT_NODISCARD
 CT_STD_API typevec_t *typevec_of_array(
     IN_RANGE(>, 0) size_t type_size,
     IN_READS(count * type_size) const void *src,
@@ -65,7 +65,7 @@ CT_STD_API typevec_t *typevec_of_array(
 /// @param end the end index
 ///
 /// @return the new vector
-NODISCARD
+CT_NODISCARD
 CT_STD_API typevec_t *typevec_slice(
     IN_NOTNULL const typevec_t *vec,
     IN_RANGE(<, end) size_t start,
@@ -75,7 +75,7 @@ CT_STD_API typevec_t *typevec_slice(
 ///
 /// @param vec the vector to get the length of
 /// @return the length of the vector
-NODISCARD
+CT_NODISCARD
 CT_STD_API size_t typevec_len(IN_NOTNULL const typevec_t *vec);
 
 /// @brief set an element in the vector
@@ -131,7 +131,7 @@ CT_STD_API void typevec_pop(IN_NOTNULL typevec_t *vec, IN_NOTNULL void *dst);
 /// @param vec the vector to get the value from
 /// @param index the index to get the value from
 /// @return void* a pointer to the value
-NODISCARD
+CT_NODISCARD
 CT_STD_API void *typevec_offset(IN_NOTNULL const typevec_t *vec, size_t index);
 
 /// @brief get a pointer to the underlying data
@@ -140,7 +140,7 @@ CT_STD_API void *typevec_offset(IN_NOTNULL const typevec_t *vec, size_t index);
 ///
 /// @param vec the vector to get the data from
 /// @return void* a pointer to the data
-NODISCARD
+CT_NODISCARD
 CT_STD_API void *typevec_data(IN_NOTNULL const typevec_t *vec);
 
 /// @brief sort a vector
@@ -158,4 +158,4 @@ CT_STD_API void typevec_reset(IN_NOTNULL typevec_t *vec);
 
 /// @}
 
-END_API
+CT_END_API

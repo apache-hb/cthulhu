@@ -9,7 +9,7 @@
 
 #include <stdbool.h>
 
-BEGIN_API
+CT_BEGIN_API
 
 /// @defgroup location Source location tracking
 /// @brief AST source position tracking
@@ -24,7 +24,7 @@ typedef struct node_t node_t;
 /// @param node the node to get the source file of
 ///
 /// @return the source file of @p node
-NODISCARD PUREFN
+CT_NODISCARD CT_PUREFN
 CT_SCAN_API const scan_t *node_get_scan(const node_t *node);
 
 /// @brief get the location of a node inside its source file
@@ -32,7 +32,7 @@ CT_SCAN_API const scan_t *node_get_scan(const node_t *node);
 /// @param node the node to get the location of
 ///
 /// @return the location of @p node
-NODISCARD PUREFN
+CT_NODISCARD CT_PUREFN
 CT_SCAN_API where_t node_get_location(const node_t *node);
 
 /// @brief create a new node in a given file at a given location
@@ -41,14 +41,14 @@ CT_SCAN_API where_t node_get_location(const node_t *node);
 /// @param where the location of this node
 ///
 /// @return the created node
-NODISCARD
+CT_NODISCARD
 CT_SCAN_API node_t *node_new(const scan_t *scan, where_t where);
 
 /// @brief get the builtin node
 /// node used for drivers that declare builtin symbols
 ///
 /// @return the builtin node
-NODISCARD CONSTFN
+CT_NODISCARD CT_CONSTFN
 CT_SCAN_API const node_t *node_builtin(void);
 
 /// @brief check if a node is the builtin node
@@ -56,9 +56,9 @@ CT_SCAN_API const node_t *node_builtin(void);
 /// @param node the node to check
 ///
 /// @return whether or not @p node is the builtin node
-NODISCARD CONSTFN
+CT_NODISCARD CT_CONSTFN
 CT_SCAN_API bool node_is_builtin(const node_t *node);
 
 /// @}
 
-END_API
+CT_END_API

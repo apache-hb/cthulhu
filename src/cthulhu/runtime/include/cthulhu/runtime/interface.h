@@ -2,7 +2,7 @@
 
 #include "cthulhu/runtime/runtime.h"
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct io_t io_t;
 typedef struct vector_t vector_t;
@@ -93,4 +93,4 @@ CT_RUNTIME_API map_t *lifetime_get_modules(IN_NOTNULL lifetime_t *lifetime);
 
 /// @}
 
-END_API
+CT_END_API

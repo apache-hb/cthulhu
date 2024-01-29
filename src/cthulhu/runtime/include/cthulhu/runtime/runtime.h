@@ -8,7 +8,7 @@
 #include "core/version_def.h"
 #include "notify/diagnostic.h"
 
-BEGIN_API
+CT_BEGIN_API
 
 typedef struct mediator_t mediator_t;
 typedef struct lifetime_t lifetime_t;
@@ -138,7 +138,7 @@ typedef struct language_t
 /// @param lifetime the lifetime to get the logger of
 ///
 /// @return the logger
-NODISCARD
+CT_NODISCARD
 CT_RUNTIME_API logger_t *lifetime_get_logger(IN_NOTNULL lifetime_t *lifetime);
 
 /// @brief get the arena for a lifetime
@@ -146,7 +146,7 @@ CT_RUNTIME_API logger_t *lifetime_get_logger(IN_NOTNULL lifetime_t *lifetime);
 /// @param lifetime the lifetime to get the arena of
 ///
 /// @return the arena
-NODISCARD
+CT_NODISCARD
 CT_RUNTIME_API arena_t *lifetime_get_arena(IN_NOTNULL lifetime_t *lifetime);
 
 /// @brief get the recursive resolution cookie for a lifetime
@@ -154,7 +154,7 @@ CT_RUNTIME_API arena_t *lifetime_get_arena(IN_NOTNULL lifetime_t *lifetime);
 /// @param lifetime the lifetime to get the cookie of
 ///
 /// @return the cookie
-NODISCARD
+CT_NODISCARD
 CT_RUNTIME_API tree_cookie_t *lifetime_get_cookie(IN_NOTNULL lifetime_t *lifetime);
 
 /// @brief get the name of a compile stage
@@ -162,9 +162,9 @@ CT_RUNTIME_API tree_cookie_t *lifetime_get_cookie(IN_NOTNULL lifetime_t *lifetim
 /// @param stage the stage to get the name of
 ///
 /// @return the name of @p stage
-NODISCARD
+CT_NODISCARD
 CT_RUNTIME_API const char *stage_to_string(compile_stage_t stage);
 
 /// @}
 
-END_API
+CT_END_API
