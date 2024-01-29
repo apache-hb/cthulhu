@@ -20,18 +20,22 @@
 
 #if CT_OS_WINDOWS
 #   include "core/win32.h" // IWYU pragma: keep
-#   define CTU_BIG_ENDIAN REG_DWORD_BIG_ENDIAN
-#   define CTU_LITTLE_ENDIAN REG_DWORD_LITTLE_ENDIAN
-#   define CTU_BYTE_ORDER REG_DWORD
+#   if CTU_WIN32_TRICKERY
+#       include <windef.h>
+#       include <winnt.h>
+#   endif
+#   define CT_BIG_ENDIAN REG_DWORD_BIG_ENDIAN
+#   define CT_LITTLE_ENDIAN REG_DWORD_LITTLE_ENDIAN
+#   define CT_BYTE_ORDER REG_DWORD
 #else
 #   if CT_OS_LINUX
 #      include <endian.h>
 #   elif CT_OS_APPLE
 #      include <machine/endian.h>
 #   endif
-#   define CTU_BIG_ENDIAN __ORDER_BIG_ENDIAN__
-#   define CTU_LITTLE_ENDIAN __ORDER_LITTLE_ENDIAN__
-#   define CTU_BYTE_ORDER __BYTE_ORDER__
+#   define CT_BIG_ENDIAN __ORDER_BIG_ENDIAN__
+#   define CT_LITTLE_ENDIAN __ORDER_LITTLE_ENDIAN__
+#   define CT_BYTE_ORDER __BYTE_ORDER__
 #endif
 
 CT_BEGIN_API

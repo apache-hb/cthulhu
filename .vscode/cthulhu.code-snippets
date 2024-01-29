@@ -42,7 +42,7 @@
 			")"
 			""
 			"install_headers($1_api, subdir : '$1')"
-			"install_subdir('include', install_dir : 'include')"
+			"install_subdir('include', install_dir : 'include', strip_directory : true)"
 			""
 		]
 	},

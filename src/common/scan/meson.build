@@ -26,4 +26,4 @@ scan = declare_dependency(
 )
 
 install_headers(scan_api)
-install_subdir('include', install_dir : 'include')
+install_subdir('include', install_dir : 'include', strip_directory : true)

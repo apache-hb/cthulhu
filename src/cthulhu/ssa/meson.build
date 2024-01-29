@@ -30,4 +30,4 @@ ssa = declare_dependency(
 )
 
 install_headers(ssa_api)
-install_subdir('include', install_dir : 'include')
+install_subdir('include', install_dir : 'include', strip_directory : true)
