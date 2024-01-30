@@ -65,11 +65,16 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 <COMMENT>.|\n ;
 
 <*>"config" { yy_push_state(CONFIG, yyscanner); return TOK_CONFIG; }
+<CONFIG>"api" { return TOK_API; }
+<CONFIG,ATTRIBUTE>"serialize" { return TOK_SERIALIZE; }
+<CONFIG,ATTRIBUTE>"checksum" { return TOK_CHECKSUM; }
+<CONFIG>"span" { return TOK_SPAN; }
+<CONFIG>"vector" { return TOK_VECTOR; }
+<CONFIG>"array" { return TOK_ARRAY; }
 <CONFIG>";" { yy_pop_state(yyscanner); return TOK_END_CONFIG; }
 
 <*>"module" { return TOK_MODULE; }
 <*>"import" { return TOK_IMPORT; }
-<*>"api" { return TOK_API; }
 <*>"final" { return TOK_SEALED; }
 
 <*>"class" { return TOK_CLASS; }

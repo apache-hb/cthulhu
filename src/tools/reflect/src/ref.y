@@ -79,6 +79,9 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     method_decl
     ctor_decl
     using_decl
+    header_item
+    config config_body
+    config_value opaque
 
 %type<vector>
     path
@@ -91,8 +94,9 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     opt_tparams
     opt_params
     param_list
-    opt_import_seq
-    import_seq
+    module
+    opt_header_seq
+    header_seq
 
 %type<typevec> string_list
 %type<param> passing
@@ -101,9 +105,6 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
 %type<privacy> privacy_spec
 %type<pair> doc_item
 %type<map> doc_body
-
-%type<ident>
-    opt_api
 
 %token<ident> TOK_IDENT "identifier"
 %token<integer> TOK_INTEGER "integer literal"
@@ -177,9 +178,8 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     TOK_BEGIN_ATTRIBUTE "[["
     TOK_END_ATTRIBUTE "]]"
 
+    /* attribute only keywords */
     TOK_TRANSIENT "transient"
-    TOK_CONFIG "config"
-    TOK_END_CONFIG "; (end config)"
     TOK_DOC "doc"
     TOK_ASSERT "assert"
     TOK_DEPRECATED "deprecated"
@@ -196,12 +196,21 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     TOK_OPAQUE "opaque"
     TOK_CBUFFER "cbuffer"
     TOK_FACADE "facade"
-    TOK_API "api"
     TOK_INTERNAL "internal"
     TOK_EXTERNAL "external"
     TOK_ORDERED "ordered"
     TOK_FORMAT "format"
     TOK_INPUT "input"
+
+    /* config only keywords */
+    TOK_CONFIG "config"
+    TOK_END_CONFIG "; (end config)"
+    TOK_API "api"
+    TOK_SERIALIZE "serialize"
+    TOK_CHECKSUM "checksum"
+    TOK_VECTOR "vector"
+    TOK_SPAN "span"
+    TOK_ARRAY "array"
 
     TOK_NULL "null"
     TOK_TRUE "true"
@@ -220,21 +229,38 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %%
 
-program: TOK_MODULE path opt_api TOK_SEMICOLON opt_import_seq decl_seq { scan_set(x, ref_program(x, @$, $2, $3, $5, $6)); };
+program: module opt_header_seq decl_seq { scan_set(x, ref_program(x, @$, $1, $2, $3)); };
 
-opt_api: %empty { $$ = NULL; }
-    | TOK_API TOK_IDENT { $$ = $2; }
+module: TOK_MODULE path TOK_SEMICOLON { $$ = $2; }
     ;
 
-opt_import_seq: %empty { $$ = &kEmptyVector; }
-    | import_seq { $$ = $1; }
+opt_header_seq: %empty { $$ = &kEmptyVector; }
+    | header_seq { $$ = $1; }
     ;
 
-import_seq: import { $$ = vector_init($1, BISON_ARENA(x)); }
-    | import_seq import { vector_push(&$1, $2); $$ = $1; }
+header_seq: header_item { $$ = vector_init($1, BISON_ARENA(x)); }
+    | header_seq header_item { vector_push(&$1, $2); $$ = $1; }
+    ;
+
+header_item: config { $$ = $1; }
+    | import { $$ = $1; }
     ;
 
 import: TOK_IMPORT TOK_STRING TOK_SEMICOLON { $$ = ref_import(x, @$, $2); }
+    ;
+
+config: TOK_CONFIG config_body TOK_END_CONFIG { $$ = $2; }
+    ;
+
+config_body: TOK_API TOK_ASSIGN config_value { $$ = ref_config_tag(x, @$, eRefConfigSerialize, $3); }
+    | TOK_SERIALIZE TOK_ASSIGN config_value { $$ = ref_config_tag(x, @$, eRefConfigApi, $3); }
+    | TOK_VECTOR TOK_ASSIGN config_value { $$ = ref_config_tag(x, @$, eRefConfigVector, $3); }
+    | TOK_SPAN TOK_ASSIGN config_value { $$ = ref_config_tag(x, @$, eRefConfigSpan, $3); }
+    | TOK_ARRAY TOK_ASSIGN config_value { $$ = ref_config_tag(x, @$, eRefConfigArray, $3); }
+    ;
+
+config_value: TOK_IDENT { $$ = ref_ident(x, @$, $1); }
+    | opaque { $$ = $1; }
     ;
 
 decl_seq: decl { $$ = vector_init($1, BISON_ARENA(x)); }
@@ -360,7 +386,11 @@ type: TOK_IDENT { $$ = ref_ident(x, @$, $1); }
     | TOK_MUL type { $$ = ref_pointer(x, @$, $2); }
     | TOK_BITAND type { $$ = ref_reference(x, @$, $2); }
     | TOK_LSQUARE type TOK_RSQUARE { $$ = ref_vector(x, @$, $2); }
-    | TOK_OPAQUE TOK_LPAREN TOK_STRING TOK_RPAREN { $$ = ref_opaque_text(x, @$, $3); }
+    | TOK_CONST type { $$ = ref_const(x, @$, $2); }
+    | opaque { $$ = $1; }
+    ;
+
+opaque: TOK_OPAQUE TOK_LPAREN TOK_STRING TOK_RPAREN { $$ = ref_opaque_text(x, @$, $3); }
     | TOK_OPAQUE TOK_LPAREN TOK_IDENT TOK_RPAREN { $$ = ref_opaque(x, @$, $3); }
     ;
 
@@ -376,13 +406,13 @@ attrib_seq: attrib { $$ = vector_init($1, BISON_ARENA(x)); }
     | attrib_seq TOK_COMMA attrib { vector_push(&$1, $3); $$ = $1; }
     ;
 
-attrib: TOK_DEPRECATED TOK_LPAREN string_list TOK_RPAREN { $$ = ref_attrib_deprecated(x, @$, $3); }
+attrib: TOK_DEPRECATED TOK_LPAREN string_list TOK_RPAREN { $$ = ref_attrib_deprecated(x, @$, ref_make_string($3)); }
     | TOK_TYPEID TOK_LPAREN expr TOK_RPAREN { $$ = ref_attrib_typeid(x, @$, $3); }
     | TOK_LAYOUT TOK_LPAREN layout_attrib TOK_RPAREN { $$ = ref_attrib_tag(x, @$, $3); }
     | TOK_ALIGNAS TOK_LPAREN expr TOK_RPAREN { $$ = ref_attrib_alignas(x, @$, $3); }
-    | TOK_CXXNAME TOK_LPAREN TOK_IDENT TOK_RPAREN { $$ = ref_attrib_cxxname(x, @$, $3); }
+    | TOK_CXXNAME TOK_LPAREN TOK_IDENT TOK_RPAREN { $$ = ref_attrib_string(x, @$, eAttribCxxName, $3); }
     | TOK_REMOTE { $$ = ref_attrib_remote(x, @$); }
-    | TOK_FORMAT TOK_LPAREN string_list TOK_RPAREN { $$ = ref_attrib_format(x, @$, $3); }
+    | TOK_FORMAT TOK_LPAREN string_list TOK_RPAREN { $$ = ref_attrib_string(x, @$, eAttribFormat, ref_make_string($3)); }
     | simple_attrib { $$ = ref_attrib_tag(x, @$, $1); }
     | TOK_DOC TOK_LPAREN doc_body TOK_RPAREN { $$ = ref_attrib_docs(x, @$, $3); }
     ;
@@ -406,6 +436,7 @@ simple_attrib: TOK_TRANSIENT { $$ = eAttribTransient; }
 
 layout_attrib: TOK_SYSTEM { $$ = eAttribLayoutSystem; }
     | TOK_EXPORT { $$ = eAttribLayoutStable; }
+    | TOK_SERIALIZE { $$ = eAttribLayoutStable; }
     | TOK_CBUFFER { $$ = eAttribLayoutCBuffer; }
     | TOK_PACKED { $$ = eAttribLayoutPacked; }
     | TOK_DEFAULT { $$ = eAttribLayoutAny; }

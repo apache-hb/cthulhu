@@ -48,6 +48,7 @@ typedef enum ref_kind_t {
     eAstSpan,
     eAstArray,
     eAstVector,
+    eAstConst,
 
     eAstIdent,
     eAstBinary,
@@ -59,12 +60,13 @@ typedef enum ref_kind_t {
     eAstAttribDeprecated, // warn on use
     eAstAttribTypeId, // type id for serialization
     eAstAttribAlign, // alignment for serialization
-    eAstAttribCxxName, // c++ name for implementation
     eAstAttribRemote, // enable rpc
-    eAstAttribFormat, // string name
     eAstAttribDocs, // documentation
 
     eAstAttribTag, // a tag attribute, one of ref_attrib_tag_t
+    eAstAttribString, // an attribute that has a single string argument
+
+    eAstConfig, // field config
 
     eAstCount
 } ref_kind_t;
@@ -105,7 +107,25 @@ typedef enum ref_attrib_tag_t {
 
     // pick the best internal layout
     eAttribLayoutAny,
+
+    ///
+    /// these have a string arg
+    ///
+
+    eAttribCxxName, // c++ name for implementation
+    eAttribFormat, // string name
 } ref_attrib_tag_t;
+
+typedef enum ref_config_tag_t {
+    eRefConfigSerialize, // type to use for serialization
+    eRefConfigApi, // declspec dllimport/dllexport stuff
+    eRefConfigArray,
+    eRefConfigVector,
+    eRefConfigSpan,
+
+
+    eRefConfigCount
+} ref_config_tag_t;
 
 typedef enum ref_privacy_t {
     ePrivacyDefault,
@@ -143,10 +163,14 @@ typedef struct ref_ast_t {
         /* eAstInteger */
         mpz_t integer;
 
-        /* eAstIdent, eAstAttribCxxName */
-        const char *ident;
+        /* eAstAttribString */
+        struct {
+            /* eAstIdent */
+            const char *ident;
 
-        ref_attrib_tag_t tag;
+            /* eAttribCxxName, eAttribFormat */
+            ref_attrib_tag_t attrib;
+        };
 
         /* eAstBool */
         bool boolean;
@@ -156,15 +180,20 @@ typedef struct ref_ast_t {
 
         /* eAstProgram */
         struct {
-            char *api;
             vector_t *mod;
+            ref_ast_t *config[eRefConfigCount];
             vector_t *imports;
             vector_t *decls;
         };
 
-        /* eAstUnary */
         struct {
-            unary_t unary;
+            union {
+                /* eAstConfig */
+                ref_config_tag_t cfg;
+
+                /* eAstUnary */
+                unary_t unary;
+            };
 
             /* eAstAttribTypeId, eAstAttribAlignas */
             struct ref_ast_t *expr;
@@ -265,16 +294,17 @@ typedef struct ref_ast_t {
 
 typedef struct ref_pair_t {
     char *ident;
-    typevec_t *body;
+    char *body;
 } ref_pair_t;
 
 ref_pair_t ref_pair(char *ident, typevec_t *body);
+char *ref_make_string(typevec_t *text);
 
 ref_ast_t *ref_unary(scan_t *scan, where_t where, unary_t op, ref_ast_t *expr);
 ref_ast_t *ref_binary(scan_t *scan, where_t where, binary_t op, ref_ast_t *lhs, ref_ast_t *rhs);
 ref_ast_t *ref_compare(scan_t *scan, where_t where, compare_t op, ref_ast_t *lhs, ref_ast_t *rhs);
 
-ref_ast_t *ref_program(scan_t *scan, where_t where, vector_t *mod, char *api, vector_t *imports, vector_t *decls);
+ref_ast_t *ref_program(scan_t *scan, where_t where, vector_t *mod, vector_t *leading, vector_t *decls);
 
 ref_ast_t *ref_import(scan_t *scan, where_t where, text_t text);
 
@@ -302,6 +332,8 @@ ref_ast_t *ref_array(scan_t *scan, where_t where, ref_ast_t *type, ref_ast_t *si
 // owning variable size array of values
 ref_ast_t *ref_vector(scan_t *scan, where_t where, ref_ast_t *type);
 
+ref_ast_t *ref_const(scan_t *scan, where_t where, ref_ast_t *type);
+
 ref_ast_t *ref_variant(scan_t *scan, where_t where, char *name, ref_ast_t *underlying, vector_t *cases);
 
 ref_ast_t *ref_case(scan_t *scan, where_t where, char *name, ref_ast_t *value, bool is_default);
@@ -315,17 +347,18 @@ ref_ast_t *ref_string(scan_t *scan, where_t where, typevec_t *text);
 ref_ast_t *ref_bool(scan_t *scan, where_t where, bool value);
 
 ref_ast_t *ref_attrib_transient(scan_t *scan, where_t where);
-ref_ast_t *ref_attrib_deprecated(scan_t *scan, where_t where, typevec_t *message);
+ref_ast_t *ref_attrib_deprecated(scan_t *scan, where_t where, char *message);
 ref_ast_t *ref_attrib_typeid(scan_t *scan, where_t where, ref_ast_t *expr);
 ref_ast_t *ref_attrib_alignas(scan_t *scan, where_t where, ref_ast_t *expr);
-ref_ast_t *ref_attrib_cxxname(scan_t *scan, where_t where, char *ident);
 ref_ast_t *ref_attrib_remote(scan_t *scan, where_t where);
-ref_ast_t *ref_attrib_format(scan_t *scan, where_t where, typevec_t *ident);
 ref_ast_t *ref_attrib_docs(scan_t *scan, where_t where, map_t *docs);
 
 ref_ast_t *ref_attrib_tag(scan_t *scan, where_t where, ref_attrib_tag_t tag);
+ref_ast_t *ref_attrib_string(scan_t *scan, where_t where, ref_attrib_tag_t tag, char *text);
 
 ref_ast_t *ref_attrib_assert(scan_t *scan, where_t where, typevec_t *before, typevec_t *after, typevec_t *always);
+
+ref_ast_t *ref_config_tag(scan_t *scan, where_t where, ref_config_tag_t tag, ref_ast_t *expr);
 
 void ref_set_attribs(ref_ast_t *ast, vector_t *attributes);
 void ref_set_flags(ref_ast_t *ast, ref_flags_t flags);

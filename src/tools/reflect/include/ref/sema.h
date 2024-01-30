@@ -527,6 +527,25 @@ namespace refl {
         void resolve(Sema&) override { finish_resolve(); }
     };
 
+    class ConstType : public Type {
+        Type *m_inner = nullptr;
+    public:
+        ConstType(const node_t *node, Type *inner)
+            : Type(node, eKindTypeAlias, nullptr, inner->get_sizeof(), inner->get_alignof())
+            , m_inner(inner)
+        { }
+
+        void resolve(Sema&) override { finish_resolve(); }
+
+        const char* get_cxx_name(const char *name) const override
+        {
+            if (m_inner->get_kind() == eKindTypeMemory) {
+                return (name == nullptr) ? "const void*" : refl_fmt("const void *%s", name);
+            }
+            return (name == nullptr) ? m_inner->get_cxx_name("const") : refl_fmt("const %s %s", m_inner->get_cxx_name(nullptr), name);
+        }
+    };
+
     class TreeBackedDecl : public Decl {
     protected:
         ref_ast_t *m_ast = nullptr;

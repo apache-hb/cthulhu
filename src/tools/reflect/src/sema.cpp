@@ -114,7 +114,8 @@ Decl *Sema::get_decl(const char *name) const
 
 void Sema::forward_module(ref_ast_t *mod)
 {
-    if (mod->api) m_api = mod->api;
+    // TODO: pick out api
+    // if (mod->api) m_api = mod->api;
 
     vec_foreach<ref_ast_t*>(mod->imports, [&](auto import) {
         imports.push(import->ident);
@@ -223,6 +224,9 @@ Type *Sema::resolve_type(ref_ast_t *ast)
     case eAstOpaque: {
         return new OpaqueType(ast->node, ast->ident);
     }
+    case eAstConst: {
+        return new ConstType(ast->node, resolve_type(ast->type));
+    }
 
     default: {
         report(&kEvent_InvalidType, ast->node, "invalid type");
@@ -323,6 +327,24 @@ static ref_ast_t *get_attrib(vector_t *attribs, ref_kind_t kind)
     return nullptr;
 }
 
+static const char *get_attrib_string(vector_t *attribs, ref_attrib_tag_t tag)
+{
+    CTASSERT(attribs != nullptr);
+
+    size_t len = vector_len(attribs);
+    for (size_t i = 0; i < len; i++)
+    {
+        ref_ast_t *attrib = (ref_ast_t*)vector_get(attribs, i);
+        if (attrib->kind != eAstAttribString)
+            continue;
+
+        if (attrib->attrib == tag)
+            return attrib->ident;
+    }
+
+    return nullptr;
+}
+
 const char *get_doc(vector_t *attribs, const char *key)
 {
     ref_ast_t *docs = get_attrib(attribs, eAstAttribDocs);
@@ -338,16 +360,16 @@ const char *get_doc(vector_t *attribs, const char *key)
 
 const char *TreeBackedDecl::get_repr() const
 {
-    ref_ast_t *repr = get_attrib(m_ast->attributes, eAstAttribFormat);
-    if (repr) return repr->ident;
+    if (const char *repr = get_attrib_string(m_ast->attributes, eAttribFormat))
+        return repr;
 
     return get_name();
 }
 
 const char *Case::get_repr() const
 {
-    ref_ast_t *repr = get_attrib(m_ast->attributes, eAstAttribFormat);
-    if (repr) return repr->ident;
+    if (const char *repr = get_attrib_string(m_ast->attributes, eAttribFormat))
+        return repr;
 
     return refl_fmt("e%s", get_name());
 }
@@ -404,7 +426,7 @@ static bool has_attrib_tag(vector_t *attribs, ref_attrib_tag_t tag)
     ref_ast_t *attrib = get_attrib(attribs, eAstAttribTag);
     if (!attrib) return false;
 
-    return attrib->tag == tag;
+    return attrib->attrib == tag;
 }
 
 void Method::resolve(Sema& sema) {
@@ -426,7 +448,7 @@ void Method::resolve(Sema& sema) {
         });
     }
 
-    ref_ast_t *cxxname = get_attrib(m_ast->attributes, eAstAttribCxxName);
+    const char *cxxname = get_attrib_string(m_ast->attributes, eAttribCxxName);
     ref_ast_t *asserts = get_attrib(m_ast->attributes, eAstAttribAssert);
 
     m_thunk = (cxxname != nullptr) || (asserts != nullptr);
@@ -457,9 +479,9 @@ void Method::emit_impl(out_t& out) const {
         args += param->get_name();
     });
 
-    ref_ast_t *attrib = get_attrib(m_ast->attributes, eAstAttribCxxName);
+    const char *cxxname = get_attrib_string(m_ast->attributes, eAttribCxxName);
 
-    const char* inner = attrib ? attrib->ident : refl_fmt("impl_%s", get_name());
+    const char* inner = cxxname ? cxxname : refl_fmt("impl_%s", get_name());
 
     const char *privacy = ::get_privacy(m_ast->privacy);
 
@@ -493,9 +515,9 @@ void Method::emit_method(out_t& out, const RecordType& parent) const {
         args += param->get_name();
     });
 
-    ref_ast_t *attrib = get_attrib(m_ast->attributes, eAstAttribCxxName);
+    const char *cxxname = get_attrib_string(m_ast->attributes, eAttribCxxName);
 
-    const char* inner = attrib ? attrib->ident : refl_fmt("impl_%s", get_name());
+    const char* inner = cxxname ? cxxname : refl_fmt("impl_%s", get_name());
 
     bool is_const = m_ast->flags & eDeclConst;
     bool is_virtual = m_ast->flags & eDeclVirtual;
@@ -523,8 +545,8 @@ void Method::emit_method(out_t& out, const RecordType& parent) const {
 
 void Method::emit_thunk(out_t& out) const {
     Type *ret = m_return ? m_return->get_type() : new VoidType("void");
-    ref_ast_t *attrib = get_attrib(m_ast->attributes, eAstAttribCxxName);
-    const char* inner = attrib ? attrib->ident : refl_fmt("impl_%s", get_name());
+    const char *cxxname = get_attrib_string(m_ast->attributes, eAttribCxxName);
+    const char* inner = cxxname ? cxxname : refl_fmt("impl_%s", get_name());
     auto it = ret->get_cxx_name(inner);
     String params;
     m_params.foreach([&](auto param) {

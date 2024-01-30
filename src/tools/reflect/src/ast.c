@@ -8,6 +8,7 @@
 #include "scan/scan.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
+#include <string.h>
 
 static ref_ast_t *ref_ast_new(scan_t *scan, where_t where, ref_kind_t kind)
 {
@@ -43,12 +44,17 @@ ref_ast_t *ref_unary(scan_t *scan, where_t where, unary_t op, ref_ast_t *expr)
 
 ref_pair_t ref_pair(char *ident, typevec_t *body)
 {
-    typevec_push(body, "\0");
     ref_pair_t pair = {
         .ident = ident,
-        .body = typevec_data(body),
+        .body = ref_make_string(body),
     };
     return pair;
+}
+
+char *ref_make_string(typevec_t *text)
+{
+    typevec_push(text, "\0");
+    return typevec_data(text);
 }
 
 ref_ast_t *ref_binary(scan_t *scan, where_t where, binary_t op, ref_ast_t *lhs, ref_ast_t *rhs)
@@ -69,11 +75,37 @@ ref_ast_t *ref_compare(scan_t *scan, where_t where, compare_t op, ref_ast_t *lhs
     return ast;
 }
 
-ref_ast_t *ref_program(scan_t *scan, where_t where, vector_t *mod, char *api, vector_t *imports, vector_t *decls)
+ref_ast_t *ref_program(scan_t *scan, where_t where, vector_t *mod, vector_t *leading, vector_t *decls)
 {
+    size_t len = vector_len(leading);
+    arena_t *arena = scan_get_arena(scan);
+    vector_t *imports = vector_new(len / 2, arena);
     ref_ast_t *ast = ref_ast_new(scan, where, eAstProgram);
+
+    memset(ast->config, 0, sizeof(ast->config));
+
+    for (size_t i = 0; i < len; i++)
+    {
+        ref_ast_t *decl = vector_get(leading, i);
+        CTASSERTF(decl != NULL, "%s.leading[%zu] = NULL", decl->name, i);
+        switch (decl->kind)
+        {
+        case eAstImport:
+            vector_push(&imports, decl);
+            break;
+
+        case eAstConfig:
+            CTASSERTF(decl->cfg < eRefConfigCount, "invalid config tag %d", decl->cfg);
+            CTASSERTF(ast->config[decl->cfg] == NULL, "duplicate config tag %d", decl->cfg);
+            CTASSERTF(decl->expr != NULL, "config tag %d has no value", decl->cfg);
+            ast->config[decl->cfg] = decl->expr;
+            break;
+
+        default: NEVER("invalid leading decl %d", decl->kind);
+        }
+    }
+
     ast->mod = mod;
-    ast->api = api;
     ast->imports = imports;
     ast->decls = decls;
     return ast;
@@ -215,6 +247,12 @@ ref_ast_t *ref_vector(scan_t *scan, where_t where, ref_ast_t *type)
     return ast;
 }
 
+ref_ast_t *ref_const(scan_t *scan, where_t where, ref_ast_t *type)
+{
+    ref_ast_t *ast = ref_ast_new(scan, where, eAstConst);
+    ast->type = type;
+    return ast;
+}
 
 ref_ast_t *ref_pointer(scan_t *scan, where_t where, ref_ast_t *type)
 {
@@ -349,11 +387,10 @@ void ref_set_flags(ref_ast_t *ast, ref_flags_t flags)
         ast->privacy = ePrivacyProtected;
 }
 
-ref_ast_t *ref_attrib_deprecated(scan_t *scan, where_t where, typevec_t *message)
+ref_ast_t *ref_attrib_deprecated(scan_t *scan, where_t where, char *message)
 {
     ref_ast_t *ast = ref_ast_new(scan, where, eAstAttribDeprecated);
-    typevec_push(message, "\0");
-    ast->text = text_make(typevec_data(message), typevec_len(message) - 1);
+    ast->ident = message;
     return ast;
 }
 
@@ -368,21 +405,6 @@ ref_ast_t *ref_attrib_alignas(scan_t *scan, where_t where, ref_ast_t *expr)
 {
     ref_ast_t *ast = ref_ast_new(scan, where, eAstAttribAlign);
     ast->expr = expr;
-    return ast;
-}
-
-ref_ast_t *ref_attrib_cxxname(scan_t *scan, where_t where, char *ident)
-{
-    ref_ast_t *ast = ref_ast_new(scan, where, eAstAttribCxxName);
-    ast->ident = ident;
-    return ast;
-}
-
-ref_ast_t *ref_attrib_format(scan_t *scan, where_t where, typevec_t *ident)
-{
-    ref_ast_t *ast = ref_ast_new(scan, where, eAstAttribFormat);
-    typevec_push(ident, "\0");
-    ast->ident = typevec_data(ident);
     return ast;
 }
 
@@ -401,6 +423,22 @@ ref_ast_t *ref_attrib_remote(scan_t *scan, where_t where)
 ref_ast_t *ref_attrib_tag(scan_t *scan, where_t where, ref_attrib_tag_t tag)
 {
     ref_ast_t *ast = ref_ast_new(scan, where, eAstAttribTag);
-    ast->tag = tag;
+    ast->attrib = tag;
+    return ast;
+}
+
+ref_ast_t *ref_attrib_string(scan_t *scan, where_t where, ref_attrib_tag_t tag, char *text)
+{
+    ref_ast_t *ast = ref_ast_new(scan, where, eAstAttribString);
+    ast->attrib = tag;
+    ast->ident = text;
+    return ast;
+}
+
+ref_ast_t *ref_config_tag(scan_t *scan, where_t where, ref_config_tag_t tag, ref_ast_t *expr)
+{
+    ref_ast_t *ast = ref_ast_new(scan, where, eAstConfig);
+    ast->cfg = tag;
+    ast->expr = expr;
     return ast;
 }
