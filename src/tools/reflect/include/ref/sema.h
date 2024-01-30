@@ -542,7 +542,8 @@ namespace refl {
             if (m_inner->get_kind() == eKindTypeMemory) {
                 return (name == nullptr) ? "const void*" : refl_fmt("const void *%s", name);
             }
-            return (name == nullptr) ? m_inner->get_cxx_name("const") : refl_fmt("const %s %s", m_inner->get_cxx_name(nullptr), name);
+            const char *inner = m_inner->get_cxx_name(nullptr);
+            return (name == nullptr) ? refl_fmt("%s const", inner) : refl_fmt("%s const %s", inner, name);
         }
     };
 
