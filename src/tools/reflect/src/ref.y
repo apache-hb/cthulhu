@@ -82,6 +82,7 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     header_item
     config config_body
     config_value opaque
+    union_field union_decl
 
 %type<vector>
     path
@@ -97,6 +98,7 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     module
     opt_header_seq
     header_seq
+    union_field_seq
 
 %type<typevec> string_list
 %type<param> passing
@@ -118,6 +120,7 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     TOK_STRUCT "struct"
     TOK_VIRTUAL "virtual"
     TOK_VARIANT "variant"
+    TOK_UNION "union"
     TOK_ALIAS "alias"
 
     TOK_PUBLIC "public"
@@ -291,6 +294,17 @@ decl_body: class_decl { $$ = $1; }
     | variant_decl { $$ = $1; }
     | struct_decl { $$ = $1; }
     | using_decl { $$ = $1; }
+    | union_decl { $$ = $1; }
+    ;
+
+union_decl: TOK_UNION TOK_IDENT TOK_LPAREN TOK_IDENT TOK_COLON type TOK_RPAREN TOK_LBRACE union_field_seq TOK_RBRACE { $$ = NULL; }
+    ;
+
+union_field_seq: union_field { $$ = vector_init($1, BISON_ARENA(x)); }
+    | union_field_seq union_field { vector_push(&$1, $2); $$ = $1; }
+    ;
+
+union_field: TOK_CASE TOK_IDENT { $$ = NULL; }
     ;
 
 opt_inherit: %empty { $$ = NULL; }

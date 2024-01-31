@@ -81,6 +81,7 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 <*>"virtual" { return TOK_VIRTUAL; }
 <*>"variant" { return TOK_VARIANT; }
 <*>"struct" { return TOK_STRUCT; }
+<*>"union" { return TOK_UNION; }
 <*>"using" { return TOK_ALIAS; }
 
 <*>"public" { return TOK_PUBLIC; }

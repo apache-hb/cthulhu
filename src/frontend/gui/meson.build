@@ -2,9 +2,7 @@
 ### imgui
 ###
 
-cpp = meson.get_compiler('cpp')
-
-gui_args = cpp.get_supported_arguments('/wd4611', '/wd4201', '-D_HAS_EXCEPTIONS=0')
+gui_args = user_args + cpp.get_supported_arguments('/wd4611', '/wd4201', '-D_HAS_EXCEPTIONS=0')
 
 src = [
     'imgui/imgui.cpp',

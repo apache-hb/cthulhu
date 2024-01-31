@@ -21,7 +21,7 @@ args = cpp.get_supported_arguments('/wd4201', '-Wno-format-security')
 ref = library('ref', src,
     dependencies : deps + library_deps,
     c_args : generated_args,
-    cpp_args : user_args + args,
+    cpp_args : user_args,
     include_directories : [ 'src', 'include' ]
 )
 
@@ -31,7 +31,7 @@ reflect_cli = executable('reflect_cli', src,
     dependencies : deps + cli_deps,
     link_with : ref,
     include_directories : [ 'include', ref.private_dir_include() ],
-    cpp_args : user_args + args
+    cpp_args : user_args
 )
 
 reflect = generator(reflect_cli,

@@ -14,6 +14,10 @@
 #include "std/typed/vector.h"
 #include "std/vector.h"
 
+// this is a "feature" of clang that we need to disable
+CT_CLANG_PRAGMA(clang diagnostic push)
+CT_CLANG_PRAGMA(clang diagnostic ignored "-Wformat-security")
+
 typedef struct logger_t logger_t;
 typedef struct vector_t vector_t;
 typedef struct ref_ast_t ref_ast_t;
@@ -781,3 +785,5 @@ namespace refl {
 
     void emit_module(Module *module, io_t *header, io_t *source);
 }
+
+CT_CLANG_PRAGMA(clang diagnostic pop)

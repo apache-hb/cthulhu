@@ -23,6 +23,26 @@
 #   define CT_CC_CLANGCL 1
 #endif
 
+#if CT_CC_CLANG
+#   define CT_CLANG_PRAGMA(x) _Pragma(#x)
+#elif CT_CC_GNU
+#   define CT_GNU_PRAGMA(x) _Pragma(#x)
+#elif CT_CC_MSVC
+#   define CT_MSVC_PRAGMA(x) __pragma(x)
+#endif
+
+#ifndef CT_CLANG_PRAGMA
+#   define CT_CLANG_PRAGMA(x)
+#endif
+
+#ifndef CT_GNU_PRAGMA
+#   define CT_GNU_PRAGMA(x)
+#endif
+
+#ifndef CT_MSVC_PRAGMA
+#   define CT_MSVC_PRAGMA(x)
+#endif
+
 #if defined(__linux__)
 #   define CT_OS_LINUX 1
 #elif defined(_WIN32)
