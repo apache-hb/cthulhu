@@ -75,6 +75,7 @@ tool_reflect = get_option('tool_reflect').disable_auto_if(meson.is_subproject())
 
 needs_cpp = tool_reflect.enabled() or frontend_gui.enabled()
 wants_cpp = tool_reflect.allowed() or frontend_gui.allowed()
+has_cpp = false
 
 if wants_cpp
     has_cpp = add_languages('cpp', native : false, required : needs_cpp)
@@ -256,6 +257,7 @@ if doxygen.found()
         source_dir / 'cthulhu',
         source_dir / 'language',
         source_dir / 'target',
+        source_dir / 'extra',
 
         data_dir / 'docs'
     ]
@@ -320,7 +322,7 @@ pkg_runtime = pkgconfig.generate(
     filebase : 'cthulhu-runtime'
 )
 
-summary = {
+build_summary = {
     'Build': {
         'Debug': is_debug,
         'Memory tracing': trace_memory.allowed(),
@@ -375,8 +377,8 @@ foreach lang_name, lang_config : langs
     endif
 endforeach
 
-summary += { 'Drivers': driver_summary }
+build_summary += { 'Drivers': driver_summary }
 
-foreach section_title, section : summary
-    summary(section, bool_yn : true, section : section_title)
+foreach section_title, content : build_summary
+    summary(content, bool_yn : true, section : section_title)
 endforeach

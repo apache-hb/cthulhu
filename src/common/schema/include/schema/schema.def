@@ -1,0 +1,13 @@
+#ifndef SCHEMA_TYPE
+#   define SCHEMA_TYPE(id, name)
+#endif
+
+SCHEMA_TYPE(eSchemaInt, "int")
+SCHEMA_TYPE(eSchemaBool, "bool")
+SCHEMA_TYPE(eSchemaString, "string")
+SCHEMA_TYPE(eSchemaAny, "any")
+SCHEMA_TYPE(eSchemaList, "list")
+SCHEMA_TYPE(eSchemaTable, "table")
+SCHEMA_TYPE(eSchemaChoice, "choice")
+
+#undef SCHEMA_TYPE

@@ -16,6 +16,9 @@ subdir('language')
 # frontend and tool support libraries
 subdir('support')
 
+# extra libraries that use the framework
+subdir('extra')
+
 # frontend programs
 subdir('frontend')
 
