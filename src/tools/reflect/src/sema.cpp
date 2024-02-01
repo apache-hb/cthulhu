@@ -1150,12 +1150,17 @@ void Variant::emit_impl(out_t& out) const
     out.leave();
     out.writeln("public:");
     out.enter();
+    // underlying is the true integral type of the enum
     out.writeln("using underlying_t = std::underlying_type_t<impl::%s>;", get_name());
+
+    // wrapper is our scoped enum type
     out.writeln("using wrapper_t = impl::%s;", get_name());
     if (is_facade)
     {
         if (const char *opaque = m_parent->get_opaque_name())
         {
+            // facade is the type that the user specified if this is a facade type
+            // this is distinct from underlying for C style enums
             out.writeln("using facade_t = %s;", opaque);
         }
         else
@@ -1199,17 +1204,17 @@ void Variant::emit_impl(out_t& out) const
     if (is_iterator)
     {
         out.nl();
-        out.writeln("static constexpr auto kBegin = (inner_t)((underlying_t)0);");
-        out.writeln("static constexpr auto kEnd = (inner_t)(~(underlying_t)0);");
+        out.writeln("static constexpr auto kBegin = (wrapper_t)((underlying_t)0);");
+        out.writeln("static constexpr auto kEnd = (wrapper_t)(~(underlying_t)0);");
         out.nl();
         out.writeln("class Iterator {");
         out.enter();
-        out.writeln("inner_t m_value;");
+        out.writeln("wrapper_t m_value;");
         out.leave();
         out.writeln("public:");
         out.enter();
-        out.writeln("constexpr Iterator(inner_t value) : m_value(value) { }");
-        out.writeln("constexpr Iterator& operator++() { m_value = (inner_t)((underlying_t)m_value + 1); return *this; }");
+        out.writeln("constexpr Iterator(wrapper_t value) : m_value(value) { }");
+        out.writeln("constexpr Iterator& operator++() { m_value = (wrapper_t)((underlying_t)m_value + 1); return *this; }");
         out.writeln("constexpr const Iterator operator++(int) { Iterator it = *this; ++(*this); return it; }");
         out.writeln("constexpr bool operator==(const Iterator& other) const { return m_value == other.m_value; }");
         out.writeln("constexpr bool operator!=(const Iterator& other) const { return m_value != other.m_value; }");
@@ -1219,22 +1224,22 @@ void Variant::emit_impl(out_t& out) const
         out.nl();
         out.writeln("class Range {");
         out.enter();
-        out.writeln("inner_t m_begin;");
-        out.writeln("inner_t m_end;");
+        out.writeln("wrapper_t m_begin;");
+        out.writeln("wrapper_t m_end;");
         out.leave();
         out.writeln("public:");
         out.enter();
-        out.writeln("constexpr Range(inner_t begin, inner_t end) : m_begin(begin), m_end(end) { }");
+        out.writeln("constexpr Range(wrapper_t begin, wrapper_t end) : m_begin(begin), m_end(end) { }");
         out.writeln("constexpr Iterator begin() const { return Iterator(m_begin); }");
         out.writeln("constexpr Iterator end() const { return Iterator(m_end); }");
         out.leave();
         out.writeln("};");
         out.nl();
 
-        out.writeln("static constexpr Range range(inner_t begin, inner_t end) { return Range(begin, end); }");
+        out.writeln("static constexpr Range range(wrapper_t begin, wrapper_t end) { return Range(begin, end); }");
     }
 
-    out.writeln("constexpr operator inner_t() const { return m_value; }");
+    out.writeln("constexpr operator wrapper_t() const { return m_value; }");
 
     // out.writeln("constexpr %s(const %s& other) = default;", get_name(), get_name());
     // out.writeln("constexpr %s& operator=(const %s& other) = default;", get_name(), get_name());
@@ -1243,7 +1248,7 @@ void Variant::emit_impl(out_t& out) const
     // out.writeln("constexpr %s& operator=(const %s&& other) = default;", get_name(), get_name());
 
     out.writeln("constexpr underlying_t as_integral() const { return (underlying_t)m_value; }");
-    out.writeln("constexpr inner_t as_enum() const { return m_value; }");
+    out.writeln("constexpr wrapper_t as_enum() const { return m_value; }");
     if (is_facade)
     {
         out.writeln("constexpr facade_t as_facade() const { return (facade_t)m_value; }");
@@ -1253,16 +1258,16 @@ void Variant::emit_impl(out_t& out) const
     {
         out.nl();
         // generate min and max values
-        out.writeln("static constexpr auto kMin = (inner_t)((underlying_t)%s);", mpz_get_str(nullptr, 10, lowest));
-        out.writeln("static constexpr auto kMax = (inner_t)((underlying_t)%s);", mpz_get_str(nullptr, 10, highest));
+        out.writeln("static constexpr auto kMin = (wrapper_t)((underlying_t)%s);", mpz_get_str(nullptr, 10, lowest));
+        out.writeln("static constexpr auto kMax = (wrapper_t)((underlying_t)%s);", mpz_get_str(nullptr, 10, highest));
 
         // generate implicit checked conversion to underlying integral type
         out.writeln("constexpr operator underlying_t() const { return as_integral(); }");
     }
 
     out.nl();
-    out.writeln("constexpr bool operator==(inner_t other) const { return m_value == other; }");
-    out.writeln("constexpr bool operator!=(inner_t other) const { return m_value != other; }");
+    out.writeln("constexpr bool operator==(wrapper_t other) const { return m_value == other; }");
+    out.writeln("constexpr bool operator!=(wrapper_t other) const { return m_value != other; }");
 
     if (!is_bitflags && !is_arithmatic && !is_lookup)
     {
@@ -1295,13 +1300,13 @@ void Variant::emit_impl(out_t& out) const
         out.writeln("constexpr %s& operator&=(const %s& other) { m_value = m_value & other.m_value; return *this; }", get_name(), get_name());
         out.writeln("constexpr %s& operator^=(const %s& other) { m_value = m_value ^ other.m_value; return *this; }", get_name(), get_name());
 
-        out.writeln("constexpr bool test(inner_t other) const { return (m_value & other) != none(); }");
-        out.writeln("constexpr bool any(inner_t other) const { return (m_value & other) != none(); }");
-        out.writeln("constexpr bool all(inner_t other) const { return (m_value & other) == other; }");
-        out.writeln("constexpr bool none(inner_t other) const { return (m_value & other) == none(); }");
-        out.writeln("constexpr %s& set(inner_t other) { m_value = m_value | other; return *this; }", get_name());
-        out.writeln("constexpr %s& reset(inner_t other) { m_value = m_value & ~other; return *this; }", get_name());
-        out.writeln("constexpr %s& flip(inner_t other) { m_value = m_value ^ other; return *this; }", get_name());
+        out.writeln("constexpr bool test(wrapper_t other) const { return (m_value & other) != none(); }");
+        out.writeln("constexpr bool any(wrapper_t other) const { return (m_value & other) != none(); }");
+        out.writeln("constexpr bool all(wrapper_t other) const { return (m_value & other) == other; }");
+        out.writeln("constexpr bool none(wrapper_t other) const { return (m_value & other) == none(); }");
+        out.writeln("constexpr %s& set(wrapper_t other) { m_value = m_value | other; return *this; }", get_name());
+        out.writeln("constexpr %s& reset(wrapper_t other) { m_value = m_value & ~other; return *this; }", get_name());
+        out.writeln("constexpr %s& flip(wrapper_t other) { m_value = m_value ^ other; return *this; }", get_name());
 
         // is_valid is defined as no invalid flags set
         out.writeln("constexpr bool is_valid() const { return (m_value & ~mask()) == none(); }");
