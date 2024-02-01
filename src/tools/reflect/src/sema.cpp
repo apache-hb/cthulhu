@@ -8,6 +8,7 @@
 #include "std/map.h"
 #include "std/str.h"
 #include "std/vector.h"
+#include <climits>
 
 using namespace refl;
 
@@ -400,8 +401,9 @@ void Case::resolve(Sema& sema)
     }
 }
 
-const char* Case::get_value() const {
-    CTASSERT(m_ast->value != nullptr);
+const char* Case::get_case_value() const {
+    if (m_ast->value == nullptr)
+        return nullptr;
 
     if (m_ast->value->kind == eAstOpaque)
         return m_ast->value->ident;
@@ -409,6 +411,14 @@ const char* Case::get_value() const {
     CTASSERTF(m_eval == eEvalOk, "could not compute case value for %s", get_name());
 
     return mpz_get_str(nullptr, 10, digit_value);
+}
+
+bool Case::is_opaque_case() const {
+    return m_eval == eEvalOpaque;
+}
+
+bool Case::is_blank_case() const {
+    return m_ast->value == nullptr;
 }
 
 bool Case::get_integer(mpz_t out) const {
@@ -954,7 +964,7 @@ void Struct::emit_impl(out_t& out) const
 
 void Case::emit_impl(out_t& out) const
 {
-    out.writeln("e%s = %s,", get_name(), get_value());
+    out.writeln("e%s = %s,", get_name(), get_case_value());
 }
 
 static uint32_t type_hash(const char *name)
@@ -1043,6 +1053,7 @@ void Variant::emit_impl(out_t& out) const
     bool is_bitflags = has_attrib_tag(m_ast->attributes, eAttribBitflags);
     bool is_arithmatic = has_attrib_tag(m_ast->attributes, eAttribArithmatic);
     bool is_iterator = has_attrib_tag(m_ast->attributes, eAttribIterator);
+    bool is_lookup = has_attrib_tag(m_ast->attributes, eAttribLookupKey);
 
     const char *ty = nullptr;
     bool is_external = type_is_external(m_ast);
@@ -1075,10 +1086,47 @@ void Variant::emit_impl(out_t& out) const
         out.writeln("enum class %s {", get_name());
     }
 
+    mpz_t lowest;
+    mpz_init_set_ui(lowest, INT_MAX);
+    mpz_t highest;
+    mpz_init_set_si(highest, INT_MIN);
+    mpz_t current;
+    mpz_init_set_si(current, -1);
+
+    bool has_opaque_cases = false;
+
     out.enter();
     m_cases.foreach([&](auto c)
     {
-        c->emit_impl(out);
+        if (c->is_opaque_case())
+        {
+            CTASSERTF(!is_lookup, "variant %s cannot have opaque cases and be a lookup key", get_name());
+
+            has_opaque_cases = true;
+            out.writeln("e%s = %s,", c->get_name(), c->get_case_value());
+        }
+        else if (c->is_blank_case())
+        {
+            CTASSERTF(!has_opaque_cases, "cannot generate case values in a variant %s with opaque cases", get_name());
+
+            mpz_add_ui(current, current, 1);
+            out.writeln("e%s = %s,", c->get_name(), mpz_get_str(nullptr, 10, current));
+
+            if (mpz_cmp(current, lowest) < 0)
+                mpz_set(lowest, current);
+            if (mpz_cmp(current, highest) > 0)
+                mpz_set(highest, current);
+        }
+        else if (mpz_t value; c->get_integer(value))
+        {
+            if (mpz_cmp(value, lowest) < 0)
+                mpz_set(lowest, value);
+            if (mpz_cmp(value, highest) > 0)
+                mpz_set(highest, value);
+
+            mpz_set(current, value);
+            out.writeln("e%s = %s,", c->get_name(), c->get_case_value());
+        }
     });
     out.leave();
     out.writeln("};");
@@ -1103,7 +1151,7 @@ void Variant::emit_impl(out_t& out) const
     out.writeln("public:");
     out.enter();
     out.writeln("using underlying_t = std::underlying_type_t<impl::%s>;", get_name());
-    out.writeln("using inner_t = impl::%s;", get_name());
+    out.writeln("using wrapper_t = impl::%s;", get_name());
     if (is_facade)
     {
         if (const char *opaque = m_parent->get_opaque_name())
@@ -1116,7 +1164,7 @@ void Variant::emit_impl(out_t& out) const
         }
     }
     out.writeln("using Underlying = underlying_t;");
-    out.writeln("using Inner = inner_t;");
+    out.writeln("using Inner = wrapper_t;");
     if (is_facade)
     {
         out.writeln("using Facade = facade_t;");
@@ -1125,13 +1173,17 @@ void Variant::emit_impl(out_t& out) const
     out.leave();
     out.writeln("private:");
     out.enter();
-    out.writeln("inner_t m_value;");
+    out.writeln("wrapper_t m_value;");
     out.nl();
     out.leave();
     out.writeln("public:");
     out.enter();
-    out.writeln("constexpr %s(underlying_t value) : m_value((inner_t)value) { }", get_name());
-    out.writeln("constexpr %s(inner_t value) : m_value(value) { }", get_name());
+    out.writeln("constexpr %s(underlying_t value) : m_value((wrapper_t)value) { }", get_name());
+    out.writeln("constexpr %s(wrapper_t value) : m_value(value) { }", get_name());
+    if (is_facade)
+    {
+        out.writeln("constexpr %s(facade_t value) : m_value((wrapper_t)value) { }", get_name());
+    }
     out.writeln("using enum impl::%s;", get_name());
     out.nl();
     if (m_default_case)
@@ -1197,13 +1249,29 @@ void Variant::emit_impl(out_t& out) const
         out.writeln("constexpr facade_t as_facade() const { return (facade_t)m_value; }");
     }
 
+    if (is_lookup)
+    {
+        out.nl();
+        // generate min and max values
+        out.writeln("static constexpr auto kMin = (inner_t)((underlying_t)%s);", mpz_get_str(nullptr, 10, lowest));
+        out.writeln("static constexpr auto kMax = (inner_t)((underlying_t)%s);", mpz_get_str(nullptr, 10, highest));
+
+        // generate implicit checked conversion to underlying integral type
+        out.writeln("constexpr operator underlying_t() const { return as_integral(); }");
+    }
+
     out.nl();
     out.writeln("constexpr bool operator==(inner_t other) const { return m_value == other; }");
     out.writeln("constexpr bool operator!=(inner_t other) const { return m_value != other; }");
 
-    if (!is_bitflags && !is_arithmatic)
+    if (!is_bitflags && !is_arithmatic && !is_lookup)
     {
         emit_default_is_valid(out);
+    }
+    else if (is_lookup)
+    {
+        // check that we are within the range of the enum
+        out.writeln("constexpr bool is_valid() const { return m_value >= kMin && m_value <= kMax; }");
     }
 
     if (is_bitflags)

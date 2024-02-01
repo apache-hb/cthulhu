@@ -640,7 +640,13 @@ namespace refl {
         void emit_value(out_t& out) const;
         void emit_case(out_t& out) const;
 
-        const char* get_value() const;
+        const char* get_case_value() const;
+
+        // was an opaque value used?
+        bool is_opaque_case() const;
+
+        // no value specified, we generate one
+        bool is_blank_case() const;
 
         bool get_integer(mpz_t out) const;
     };

@@ -85,6 +85,10 @@ typedef enum ref_attrib_tag_t {
     // c style enums
     eAttribFacade,
 
+    // this enum is a lookup key into a table
+    // define min and max constants, and implicit (checked) conversion to the key type
+    eAttribLookupKey,
+
     // this wraps an external type, which is defined, but not by us
     eAttribExternal,
 

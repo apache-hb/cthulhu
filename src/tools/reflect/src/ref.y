@@ -82,7 +82,7 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     header_item
     config config_body
     config_value opaque
-    union_field union_decl
+    union_field union_decl opt_case_init
 
 %type<vector>
     path
@@ -204,6 +204,7 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     TOK_ORDERED "ordered"
     TOK_FORMAT "format"
     TOK_INPUT "input"
+    TOK_LOOKUP "lookup"
 
     /* config only keywords */
     TOK_CONFIG "config"
@@ -327,9 +328,13 @@ case_seq: case_item { $$ = vector_init($1, BISON_ARENA(x)); }
 case_item: opt_attrib_seq case_item_inner { ref_set_attribs($2, $1); $$ = $2; }
     ;
 
-case_item_inner: TOK_CASE TOK_IDENT TOK_ASSIGN case_value { $$ = ref_case(x, @$, $2, $4, false); }
-    | TOK_DEFAULT TOK_IDENT TOK_ASSIGN case_value { $$ = ref_case(x, @$, $2, $4, true); }
+case_item_inner: TOK_CASE TOK_IDENT opt_case_init { $$ = ref_case(x, @$, $2, $3, false); }
+    | TOK_DEFAULT TOK_IDENT opt_case_init { $$ = ref_case(x, @$, $2, $3, true); }
     | opt_decl_flags_seq method_decl TOK_SEMICOLON { ref_set_flags($2, $1); $$ = $2; }
+    ;
+
+opt_case_init: %empty { $$ = NULL; }
+    | TOK_ASSIGN case_value { $$ = $2; }
     ;
 
 case_value: expr { $$ = $1; }
@@ -446,6 +451,7 @@ simple_attrib: TOK_TRANSIENT { $$ = eAttribTransient; }
     | TOK_INTERNAL { $$ = eAttribInternal; }
     | TOK_FACADE { $$ = eAttribFacade; }
     | TOK_EXTERNAL { $$ = eAttribExternal; }
+    | TOK_LOOKUP { $$ = eAttribLookupKey; }
     ;
 
 layout_attrib: TOK_SYSTEM { $$ = eAttribLayoutSystem; }

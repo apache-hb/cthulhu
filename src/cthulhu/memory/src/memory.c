@@ -37,13 +37,16 @@ static void *ctu_gmp_malloc(size_t size)
 
 static void *ctu_gmp_realloc(void *ptr, size_t old_size, size_t new_size)
 {
-    return arena_realloc(ptr, new_size, old_size, gGmpArena);
+    // mini-gmp gives us zero in some cases (-1 + 1) causes this
+    size_t old = old_size != 0 ? old_size : CT_ALLOC_SIZE_UNKNOWN;
+    return arena_realloc(ptr, new_size, old, gGmpArena);
 }
 
 static void ctu_gmp_free(void *ptr, size_t size)
 {
     // mini-gmp doesnt handle free size and always gives us zero
-    arena_free(ptr, size != 0 ? size : CT_ALLOC_SIZE_UNKNOWN, gGmpArena);
+    size_t old = size != 0 ? size : CT_ALLOC_SIZE_UNKNOWN;
+    arena_free(ptr, old, gGmpArena);
 }
 
 USE_DECL

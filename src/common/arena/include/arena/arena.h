@@ -13,6 +13,9 @@ CT_BEGIN_API
 
 /// @defgroup memory Arena memory allocation
 /// @brief Global and arena memory management
+/// the arena_xxx functions provide strong garuntees for memory allocation and deallocation
+/// with pre and post checks to catch possibly incorrect usage.
+/// for weaker garuntees, the @ref memory_opt functions can be used.
 /// @ingroup common
 /// @{
 
@@ -27,7 +30,7 @@ CT_BEGIN_API
 /// @def CT_ALLOC_SIZE_UNKNOWN
 /// @brief unknown allocation size constant
 /// when freeing or reallocating memory, this can be used as the size
-/// to indicate that the size is unknown. requires allocator support
+/// to indicate that the size is unknown. requires allocator to support this.
 #define CT_ALLOC_SIZE_UNKNOWN SIZE_MAX
 
 /// @brief a memory allocator
@@ -44,9 +47,6 @@ typedef struct arena_t arena_t;
 typedef void *(*mem_alloc_t)(size_t size, void *user);
 
 /// @brief arena realloc callback
-/// @pre @p old_size must be either @ref CT_ALLOC_SIZE_UNKNOWN or the size of the allocation.
-/// @pre @p new_size must be greater than 0.
-/// @pre @p ptr must not be NULL.
 ///
 /// @param ptr the pointer to reallocate
 /// @param new_size the new size of the allocation
@@ -58,7 +58,6 @@ typedef void *(*mem_alloc_t)(size_t size, void *user);
 typedef void *(*mem_resize_t)(void *ptr, size_t new_size, size_t old_size, void *user);
 
 /// @brief arena free callback
-/// @pre @p size must be either @ref CT_ALLOC_SIZE_UNKNOWN or the size of the allocation.
 ///
 /// @param ptr the pointer to free
 /// @param size the size of the allocation.
@@ -95,11 +94,11 @@ typedef struct arena_t
     mem_release_t fn_free;
 
     /// @brief the rename function
-    /// @note this feature is optional
+    /// @note this function is optional
     mem_rename_t fn_rename;
 
     /// @brief the reparent function
-    /// @note this feature is optional
+    /// @note this function is optional
     mem_reparent_t fn_reparent;
 
     /// @brief user data pointer
@@ -107,7 +106,9 @@ typedef struct arena_t
 } arena_t;
 
 /// @brief release memory from a custom allocator
-/// @note ensure the allocator is consistent with the allocator used to allocate @a ptr
+/// @pre @p ptr must be allocated from @p arena
+/// @pre @p size must be > 0
+/// @pre @p arena must not be NULL
 ///
 /// @param arena the allocator to use
 /// @param ptr the pointer to free
@@ -118,6 +119,10 @@ CT_ARENA_API void arena_free(
     IN_NOTNULL arena_t *arena);
 
 /// @brief allocate memory from a custom allocator
+/// @pre @p ptr must be allocated from @p arena
+/// @pre @p size must be > 0
+/// @pre @p arena must not be NULL
+/// @note is @p name is specified, it must be a valid null terminated string
 ///
 /// @param arena the allocator to use
 /// @param size the size of the allocation, must be greater than 0
@@ -134,7 +139,12 @@ CT_ARENA_API void *arena_malloc(
     IN_NOTNULL arena_t *arena);
 
 /// @brief resize a memory allocation from a custom allocator
-/// @note ensure the allocator is consistent with the allocator used to allocate @a ptr
+/// @pre @p ptr must be allocated from @p arena
+/// @pre @p new_size must be > 0
+/// @pre @p old_size must be the size originally allocated,
+///      note that this may not line up with the actual size of the allocation if
+///      the arena decided to overallocate the memory.
+/// @pre @p arena must not be NULL
 ///
 /// @param arena the allocator to use
 /// @param ptr the pointer to reallocate
@@ -142,7 +152,7 @@ CT_ARENA_API void *arena_malloc(
 /// @param old_size the old size of the allocation
 ///
 /// @return the reallocated pointer
-CT_NODISCARD
+CT_NODISCARD CT_ALLOC(arena_free) CT_ALLOC_SIZE(2)
 RET_NOTNULL
 CT_ARENA_API void *arena_realloc(
     OUT_PTR_INVALID void *ptr,
@@ -151,17 +161,22 @@ CT_ARENA_API void *arena_realloc(
     IN_NOTNULL arena_t *arena);
 
 /// @brief allocate a copy of a string from a custom allocator
+/// @pre @p str must be a valid, null terminated, string
+/// @pre @p arena must not be NULL
 ///
 /// @param str the string to copy
 /// @param arena the allocator to use
 ///
 /// @return the allocated copy of the string
 CT_NODISCARD CT_ALLOC(arena_free)
+RET_NOTNULL
 CT_ARENA_API char *arena_strdup(
     IN_STRING const char *str,
     IN_NOTNULL arena_t *arena);
 
 /// @brief allocate a copy of a string with a maximum length from a custom allocator
+/// @pre @p str must be a valid string of at least @p len characters
+/// @pre @p arena must not be NULL
 ///
 /// @param str the string to copy
 /// @param len the maximum length of the string to copy
@@ -169,6 +184,7 @@ CT_ARENA_API char *arena_strdup(
 ///
 /// @return the allocated copy of the string
 CT_NODISCARD CT_ALLOC(arena_free)
+RET_NOTNULL
 CT_ARENA_API char *arena_strndup(
     IN_READS(len) const char *str,
     IN_RANGE(>, 0) size_t len,
@@ -176,6 +192,9 @@ CT_ARENA_API char *arena_strndup(
 
 /// @brief duplicate a memory region from a custom allocator
 /// duplicate a region of memory and return a pointer to the new memory.
+/// @pre @p ptr must be a valid pointer to @p size bytes of memory
+/// @pre @p size must be > 0
+/// @pre @p arena must not be NULL
 ///
 /// @param ptr the pointer to duplicate
 /// @param size the size of the memory to duplicate
@@ -183,10 +202,107 @@ CT_ARENA_API char *arena_strndup(
 ///
 /// @return the duplicated memory
 CT_NODISCARD CT_ALLOC(arena_free) CT_ALLOC_SIZE(2)
+RET_NOTNULL
 CT_ARENA_API void *arena_memdup(
     IN_READS(size) const void *ptr,
     IN_RANGE(>, 0) size_t size,
     IN_NOTNULL arena_t *arena);
+
+/// @defgroup memory_opt Failable arena allocation
+/// @brief Failable arena allocation
+/// these allocation functions are used when the allocation is not critical and can fail.
+/// they also perform less validation on the input parameters than the @ref memory functions.
+/// @ingroup memory
+/// @{
+
+/// @brief release memory from a custom allocator
+/// @pre @p ptr must be allocated from @p arena
+///
+/// @param arena the allocator to use
+/// @param ptr the pointer to free
+/// @param size the size of the allocation
+CT_ARENA_API void arena_opt_free(
+    OUT_PTR_INVALID void *ptr,
+    IN_RANGE(!=, 0) size_t size,
+    IN_NOTNULL arena_t *arena);
+
+/// @brief allocate memory from a custom allocator
+/// @pre @p ptr must be allocated from @p arena
+///
+/// @param arena the allocator to use
+/// @param size the size of the allocation, must be greater than 0
+/// @param name the name of the allocation
+/// @param parent the parent of the allocation
+///
+/// @return the allocated pointer
+CT_NODISCARD CT_ALLOC(arena_opt_free) CT_ALLOC_SIZE(1)
+CT_ARENA_API void *arena_opt_malloc(
+    IN_RANGE(!=, 0) size_t size,
+    const char *name,
+    const void *parent,
+    IN_NOTNULL arena_t *arena);
+
+/// @brief resize a memory allocation from a custom allocator
+/// @pre @p ptr must be allocated from @p arena
+///
+/// @param arena the allocator to use
+/// @param ptr the pointer to reallocate
+/// @param new_size the new size of the allocation
+/// @param old_size the old size of the allocation
+///
+/// @return the reallocated pointer
+CT_NODISCARD CT_ALLOC(arena_opt_free)
+CT_ARENA_API void *arena_opt_realloc(
+    OUT_PTR_INVALID void *ptr,
+    IN_RANGE(!=, 0) size_t new_size,
+    IN_RANGE(!=, 0) size_t old_size,
+    IN_NOTNULL arena_t *arena);
+
+/// @brief allocate a copy of a string from a custom allocator
+/// @pre @p str must be a valid, null terminated, string
+/// @pre @p arena must not be NULL
+///
+/// @param str the string to copy
+/// @param arena the allocator to use
+///
+/// @return the allocated copy of the string
+CT_NODISCARD CT_ALLOC(arena_free)
+CT_ARENA_API char *arena_opt_strdup(
+    IN_STRING const char *str,
+    IN_NOTNULL arena_t *arena);
+
+/// @brief allocate a copy of a string with a maximum length from a custom allocator
+/// @pre @p str must be a valid string of at least @p len characters
+/// @pre @p arena must not be NULL
+///
+/// @param str the string to copy
+/// @param len the maximum length of the string to copy
+/// @param arena the allocator to use
+///
+/// @return the allocated copy of the string
+CT_NODISCARD CT_ALLOC(arena_free)
+CT_ARENA_API char *arena_opt_strndup(
+    IN_READS(len) const char *str,
+    IN_RANGE(>, 0) size_t len,
+    IN_NOTNULL arena_t *arena);
+
+/// @brief duplicate a memory region from a custom allocator
+/// duplicate a region of memory and return a pointer to the new memory.
+/// @pre @p ptr must be a valid pointer to @p size bytes of memory
+/// @pre @p arena must not be NULL
+///
+/// @param ptr the pointer to duplicate
+/// @param size the size of the memory to duplicate
+/// @param arena the allocator to use
+///
+/// @return the duplicated memory
+CT_NODISCARD CT_ALLOC(arena_free) CT_ALLOC_SIZE(2)
+CT_ARENA_API void *arena_opt_memdup(
+    IN_READS(size) const void *ptr,
+    IN_RANGE(>, 0) size_t size,
+    IN_NOTNULL arena_t *arena);
+
+/// @}
 
 /// @brief get the user data pointer from an arena
 ///
@@ -242,10 +358,12 @@ CT_ARENA_API void arena_reparent(IN_NOTNULL const void *ptr, const void *parent,
 #   define ARENA_RENAME(ptr, name, arena) arena_rename((const void*)(ptr), name, arena)
 #   define ARENA_REPARENT(ptr, parent, arena) arena_reparent((const void*)(ptr), (const void*)(parent), arena)
 #   define ARENA_MALLOC(size, name, parent, arena) arena_malloc(size, name, (const void*)(parent), arena)
+#   define ARENA_OPT_MALLOC(size, name, parent, arena) arena_opt_malloc(size, name, (const void*)(parent), arena)
 #else
 #   define ARENA_RENAME(arena, ptr, name)
 #   define ARENA_REPARENT(arena, ptr, parent)
 #   define ARENA_MALLOC(size, name, parent, arena) arena_malloc(size, NULL, NULL, arena)
+#   define ARENA_OPT_MALLOC(size, name, parent, arena) arena_opt_malloc(size, NULL, NULL, arena)
 #endif
 
 /// @def ARENA_IDENTIFY(arena, ptr, name, parent)

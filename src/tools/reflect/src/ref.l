@@ -48,6 +48,7 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 <ATTRIBUTE>"arithmatic" { return TOK_ARITHMATIC; }
 <ATTRIBUTE>"iterator" { return TOK_ITERATOR; }
 <ATTRIBUTE>"ordered" { return TOK_ORDERED; }
+<ATTRIBUTE>"table" { return TOK_LOOKUP; }
 
     /* type layout control */
 <ATTRIBUTE>"layout" { return TOK_LAYOUT; }
