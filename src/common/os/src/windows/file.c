@@ -204,6 +204,27 @@ os_error_t os_file_tell(os_file_t *file, size_t *actual)
     return ERROR_SUCCESS;
 }
 
+USE_DECL
+os_error_t os_file_expand(os_file_t *file, size_t size)
+{
+    CTASSERT(file != NULL);
+
+    LARGE_INTEGER it = { .QuadPart = (LONGLONG)size };
+    BOOL result = SetFilePointerEx(file->handle, it, NULL, FILE_BEGIN);
+    if (!result)
+    {
+        return GetLastError();
+    }
+
+    result = SetEndOfFile(file->handle);
+    if (!result)
+    {
+        return GetLastError();
+    }
+
+    return ERROR_SUCCESS;
+}
+
 static DWORD get_protect(os_protect_t protect)
 {
     // windows PAGE_ macros dont follow a bit pattern

@@ -310,6 +310,9 @@ CT_OS_API os_error_t os_file_seek(IN_NOTNULL os_file_t *file, size_t offset, siz
 RET_INSPECT
 CT_OS_API os_error_t os_file_tell(IN_NOTNULL os_file_t *file, IN_NOTNULL size_t *actual);
 
+RET_INSPECT
+CT_OS_API os_error_t os_file_expand(IN_NOTNULL os_file_t *file, size_t size);
+
 /// @brief map a file into memory
 ///
 /// @param file the file to map

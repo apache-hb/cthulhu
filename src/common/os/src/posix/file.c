@@ -188,6 +188,28 @@ os_error_t os_file_size(os_file_t *file, size_t *actual)
 }
 
 USE_DECL
+os_error_t os_file_expand(os_file_t *file, size_t size)
+{
+    CTASSERT(file != NULL);
+
+    // save the current position
+    long pos = ftell(file->file);
+    if (pos < 0)
+        return errno;
+
+    int result = ftruncate(fileno(file->file), size);
+    if (result < 0)
+        return errno;
+
+    // restore the position
+    result = fseek(file->file, pos, SEEK_SET);
+    if (result < 0)
+        return errno;
+
+    return errno;
+}
+
+USE_DECL
 os_error_t os_file_seek(os_file_t *file, size_t offset, size_t *actual)
 {
     CTASSERT(file != NULL);
