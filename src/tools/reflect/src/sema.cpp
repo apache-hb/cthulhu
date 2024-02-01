@@ -1164,12 +1164,12 @@ void Variant::emit_impl(out_t& out) const
             // facade is the type that the user specified if this is a facade type
             // this is distinct from underlying for C style enums
             out.writeln("using facade_t = %s;", opaque);
-
-            facade_type_clash = true;
         }
         else
         {
             out.writeln("using facade_t = %s;", m_parent->get_cxx_name(nullptr));
+
+            facade_type_clash = true;
         }
     }
     out.writeln("using Underlying = underlying_t;");
