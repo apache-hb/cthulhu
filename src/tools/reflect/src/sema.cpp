@@ -1265,6 +1265,9 @@ void Variant::emit_impl(out_t& out) const
         out.writeln("static constexpr auto kMin = (wrapper_t)((underlying_t)%s);", mpz_get_str(nullptr, 10, lowest));
         out.writeln("static constexpr auto kMax = (wrapper_t)((underlying_t)%s);", mpz_get_str(nullptr, 10, highest));
 
+        mpz_add_ui(highest, highest, 1);
+        out.writeln("static constexpr auto kCount = (wrapper_t)((underlying_t)%s);", mpz_get_str(nullptr, 10, highest));
+
         // generate implicit checked conversion to underlying integral type
         out.writeln("constexpr operator underlying_t() const { return as_integral(); }");
     }
