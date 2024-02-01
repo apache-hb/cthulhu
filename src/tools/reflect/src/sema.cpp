@@ -1153,6 +1153,8 @@ void Variant::emit_impl(out_t& out) const
     // underlying is the true integral type of the enum
     out.writeln("using underlying_t = std::underlying_type_t<impl::%s>;", get_name());
 
+    bool facade_type_clash = false;
+
     // wrapper is our scoped enum type
     out.writeln("using wrapper_t = impl::%s;", get_name());
     if (is_facade)
@@ -1162,6 +1164,8 @@ void Variant::emit_impl(out_t& out) const
             // facade is the type that the user specified if this is a facade type
             // this is distinct from underlying for C style enums
             out.writeln("using facade_t = %s;", opaque);
+
+            facade_type_clash = true;
         }
         else
         {
@@ -1185,7 +1189,7 @@ void Variant::emit_impl(out_t& out) const
     out.enter();
     out.writeln("constexpr %s(underlying_t value) : m_value((wrapper_t)value) { }", get_name());
     out.writeln("constexpr %s(wrapper_t value) : m_value(value) { }", get_name());
-    if (is_facade)
+    if (is_facade && !facade_type_clash)
     {
         out.writeln("constexpr %s(facade_t value) : m_value((wrapper_t)value) { }", get_name());
     }
@@ -1288,7 +1292,7 @@ void Variant::emit_impl(out_t& out) const
                 flags += " | ";
             flags += refl_fmt("e%s", c->get_name());
         });
-        out.writeln("static constexpr %s none() { return %s((inner_t)0); };", get_name(), get_name());
+        out.writeln("static constexpr %s none() { return %s((wrapper_t)0); };", get_name(), get_name());
         out.writeln("static constexpr %s mask() { return %s(%.*s); };", get_name(), get_name(), (int)flags.size(), flags.c_str());
         // emit bitwise operators
         out.nl();
