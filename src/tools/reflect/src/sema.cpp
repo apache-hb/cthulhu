@@ -1283,7 +1283,7 @@ void Variant::emit_impl(out_t& out) const
     else if (is_lookup)
     {
         // check that we are within the range of the enum
-        out.writeln("constexpr bool is_valid() const { return m_value >= kMin && m_value <= kMax; }");
+        out.writeln("constexpr bool is_valid() const { return as_integral() >= kMin && as_integral() <= kMax; }");
     }
 
     if (is_bitflags)
