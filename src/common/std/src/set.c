@@ -198,7 +198,7 @@ void set_reset(set_t *set)
     }
 }
 
-static item_t *next_in_chain(item_t *entry)
+static item_t *set_next_in_chain(item_t *entry)
 {
     if (entry == NULL || entry->key == NULL)
     {
@@ -228,9 +228,9 @@ static item_t *next_in_chain(item_t *entry)
  * @param previous the previous bucket that was returned
  * @return bucket_t* the next bucket or NULL if there are no more buckets
  */
-static item_t *find_next_item(set_t *set, size_t *index, item_t *previous)
+static item_t *set_find_next_item(set_t *set, size_t *index, item_t *previous)
 {
-    item_t *entry = next_in_chain(previous);
+    item_t *entry = set_next_in_chain(previous);
     if (entry != NULL)
     {
         return entry;
@@ -247,7 +247,7 @@ static item_t *find_next_item(set_t *set, size_t *index, item_t *previous)
             return entry;
         }
 
-        entry = next_in_chain(entry);
+        entry = set_next_in_chain(entry);
         if (entry != NULL)
         {
             *index = i;
@@ -265,8 +265,8 @@ set_iter_t set_iter(set_t *set)
 
     size_t index = 0;
 
-    item_t *current = find_next_item(set, &index, NULL);
-    item_t *next = find_next_item(set, &index, current);
+    item_t *current = set_find_next_item(set, &index, NULL);
+    item_t *next = set_find_next_item(set, &index, current);
 
     set_iter_t iter = {
         .set = set,
@@ -286,7 +286,7 @@ const void *set_next(set_iter_t *iter)
     const void *entry = iter->current->key;
 
     iter->current = iter->next;
-    iter->next = find_next_item(iter->set, &iter->index, iter->current);
+    iter->next = set_find_next_item(iter->set, &iter->index, iter->current);
 
     return entry;
 }

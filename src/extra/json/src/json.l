@@ -32,13 +32,13 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 "false" { yylval->boolean = false; return BOOLEAN; }
 "null" { return NULLVAL; }
 
-[-][0-9]+ { json_parse_integer(yylval->integer, yyextra, *yylloc, yytext, yyleng, 10); return INTEGER; }
-[-]"0"[0-7]* { json_parse_integer(yylval->integer, yyextra, *yylloc, yytext, yyleng, 8); return INTEGER; }
-[-]"0"[bB][01]+ { json_parse_integer(yylval->integer, yyextra, *yylloc, yytext + 2, yyleng - 2, 2); return INTEGER; }
-[-]"0"[xX][0-9a-fA-F]+ { json_parse_integer(yylval->integer, yyextra, *yylloc, yytext + 2, yyleng - 2, 16); return INTEGER; }
+[-]"0"[0-7]* { json_parse_integer(yylval->integer, yyextra, *yylloc, yytext, 8); return INTEGER; }
+[-][0-9]+ { json_parse_integer(yylval->integer, yyextra, *yylloc, yytext, 10); return INTEGER; }
+[-]"0"[bB][01]+ { json_parse_integer(yylval->integer, yyextra, *yylloc, yytext + 2, 2); return INTEGER; }
+[-]"0"[xX][0-9a-fA-F]+ { json_parse_integer(yylval->integer, yyextra, *yylloc, yytext + 2, 16); return INTEGER; }
 
-[-]?[0-9]+[.][0-9]+([eE][-+]?[0-9]+)? { json_parse_float(&yylval->real, yyextra, *yylloc, yytext, yyleng); return REAL; }
-[-]?[0-9]+[eE][-+]?[0-9]+ { json_parse_float(&yylval->real, yyextra, *yylloc, yytext, yyleng); return REAL; }
+[-]?[0-9]+[.][0-9]+([eE][-+]?[0-9]+)? { json_parse_float(&yylval->real, yyextra, *yylloc, yytext); return REAL; }
+[-]?[0-9]+[eE][-+]?[0-9]+ { json_parse_float(&yylval->real, yyextra, *yylloc, yytext); return REAL; }
 
 \"([^"\\\n]|{ESCAPES})*\" { json_parse_string(&yylval->string, yyextra, *yylloc, yytext + 1, yyleng - 2); return STRING; }
 

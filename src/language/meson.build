@@ -1,7 +1,13 @@
 # little driver support library
 subdir('driver')
 
-subdir('c_family')
+if lang_cpp.allowed()
+    subdir('c_family/pre')
+endif
+
+if lang_c.allowed()
+    subdir('c_family/lang')
+endif
 
 if lang_ctu.allowed()
     subdir('ctu')

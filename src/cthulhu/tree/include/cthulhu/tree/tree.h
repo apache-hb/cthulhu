@@ -1,8 +1,9 @@
 #pragma once
 
 #include "core/text.h"
-#include "cthulhu/tree/ops.h"
+
 #include "cthulhu/tree/context.h"
+#include "cthulhu/tree/attrib.h"
 
 #include <stdbool.h>
 #include <gmp.h>
@@ -57,13 +58,6 @@ typedef struct tree_resolve_info_t {
     resolve_t fn_resolve;
     resolve_type_t fn_resolve_type;
 } tree_resolve_info_t;
-
-typedef enum tree_kind_t {
-#define TREE_KIND(ID, NAME, TAGS) ID,
-#include "cthulhu/tree/tree.def"
-
-    eTreeTotal
-} tree_kind_t;
 
 typedef struct tree_t {
     tree_kind_t kind;
@@ -233,7 +227,6 @@ typedef struct tree_t {
 ///
 
 CT_TREE_API tree_t *tree_error(const node_t *node, const diagnostic_t *diagnostic, const char *message, ...);
-CT_TREE_API tree_t *tree_pick_error(const node_t *node, const tree_t *lhs, const tree_t *rhs);
 CT_TREE_API tree_t *tree_raise(const node_t *node, logger_t *reports, const diagnostic_t *diagnostic, const char *message, ...);
 CT_TREE_API void tree_report(logger_t *reports, const tree_t *error);
 
@@ -361,15 +354,6 @@ CT_TREE_API tree_t *tree_expr_cast(const node_t *node, const tree_t *type, tree_
  * @return tree_t* the loaded value
  */
 CT_TREE_API tree_t *tree_expr_load(const node_t *node, tree_t *expr);
-
-/**
- * @brief create a reference to an object
- *
- * @param node the location of the reference
- * @param expr the object to reference
- * @return tree_t*
- */
-CT_TREE_API tree_t *tree_expr_ref(const node_t *node, tree_t *expr);
 
 /**
  * @brief create a reference to an object

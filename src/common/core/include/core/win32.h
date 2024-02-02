@@ -7,6 +7,12 @@
 /// @ingroup core
 /// @{
 
+// undefine stuff first for unity builds
+#undef WIN32_LEAN_AND_MEAN
+#undef NOMINMAX
+#undef STRICT
+#undef VC_EXTRALEAN
+
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #define STRICT

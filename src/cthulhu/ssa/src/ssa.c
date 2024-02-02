@@ -610,7 +610,6 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
         return add_jump(ssa, target, tree->jump);
     }
 
-    case eTreeExprReference:
     case eTreeExprAddress: {
         ssa_operand_t operand = compile_tree(ssa, tree->expr);
         ssa_step_t step = {

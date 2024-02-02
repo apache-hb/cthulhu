@@ -12,8 +12,15 @@ libunit = library('unit', 'unit/ct-test.c',
     dependencies : [ base, std, memory, os, io, setup, format, backtrace, arena ]
 )
 
+unit_args = generated_args
+
+if has_cpp
+    # we use setjmp/longjmp in the unit tests
+    unit_args += cpp.get_supported_arguments('/wd4611')
+endif
+
 unit = declare_dependency(
-    compile_args : generated_args,
+    compile_args : unit_args,
     link_with : libunit,
     include_directories : unit_include,
     dependencies : [ base, std, memory, arena, setup ]

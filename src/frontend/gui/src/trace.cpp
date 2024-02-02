@@ -310,7 +310,7 @@ void TraceArena::draw_tree_node(const void *ptr) const
     }
 }
 
-static const ImGuiTableFlags kTableFlags
+static const ImGuiTableFlags kMemoryTreeTableFlags
     = ImGuiTableFlags_BordersV
     | ImGuiTableFlags_BordersOuterH
     | ImGuiTableFlags_Resizable
@@ -322,7 +322,7 @@ void TraceArena::draw_tree() const
 {
     ImGui::SeparatorText("Memory tree view");
 
-    if (ImGui::BeginTable("Allocations", 3, kTableFlags))
+    if (ImGui::BeginTable("Allocations", 3, kMemoryTreeTableFlags))
     {
         ImGui::TableSetupColumn("Address");
         ImGui::TableSetupColumn("Size");
@@ -360,7 +360,7 @@ void TraceArena::draw_flat() const
 {
     ImGui::SeparatorText("Memory view");
 
-    if (ImGui::BeginTable("Allocations", 4, kTableFlags))
+    if (ImGui::BeginTable("Allocations", 4, kMemoryTreeTableFlags))
     {
         ImGui::TableSetupColumn("Address");
         ImGui::TableSetupColumn("Size");

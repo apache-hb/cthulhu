@@ -9,7 +9,7 @@
 using namespace ctu;
 using namespace ctu::json;
 
-Json Object::get(const char *key) const { return (json_ast_t*)map_get(m_object, key); }
+Json Object::get(const char *key) const { return (json_t*)map_get(m_object, key); }
 Json Object::operator[](const char *key) const { return get(key); }
 
 ObjectIterator Object::begin() const { return map_iter(m_object); }
@@ -17,9 +17,9 @@ ObjectIterator Object::end() const { return {}; }
 
 bool ObjectIterator::operator!=(const ObjectIterator&) const { return map_has_next(&m_iter); }
 ObjectIterator &ObjectIterator::operator++() { m_entry = map_next(&m_iter); return *this; }
-member_t ObjectIterator::operator*() const { return { (const char*)m_entry.key, (json_ast_t*)m_entry.value }; }
+member_t ObjectIterator::operator*() const { return { (const char*)m_entry.key, (json_t*)m_entry.value }; }
 
-Json Array::get(size_t index) const { return (json_ast_t*)vector_get(m_array, index); }
+Json Array::get(size_t index) const { return (json_t*)vector_get(m_array, index); }
 Json Array::operator[](size_t index) const { return get(index); }
 size_t Array::length() const { return vector_len(m_array); }
 
@@ -28,7 +28,7 @@ ArrayIterator Array::end() const { return { m_array, vector_len(m_array) }; }
 
 bool ArrayIterator::operator!=(const ArrayIterator &other) const { return m_index != other.m_index; }
 ArrayIterator &ArrayIterator::operator++() { m_index++; return *this; }
-Json ArrayIterator::operator*() const { return (json_ast_t*)vector_get(m_array, m_index); }
+Json ArrayIterator::operator*() const { return (json_t*)vector_get(m_array, m_index); }
 
 bool Json::is_string() const { return is_kind(eJsonString); }
 bool Json::is_integer() const { return is_kind(eJsonInteger); }
@@ -78,12 +78,12 @@ Object Json::as_object() const {
 
 Json Json::get(const char *key) const {
     CTASSERT(is_object());
-    return (json_ast_t*)map_get(m_ast->object, key);
+    return (json_t*)map_get(m_ast->object, key);
 }
 
 Json Json::get(size_t index) const {
     CTASSERT(is_array());
-    return (json_ast_t*)vector_get(m_ast->array, index);
+    return (json_t*)vector_get(m_ast->array, index);
 }
 
 JsonParser::JsonParser(arena_t *arena)

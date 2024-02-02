@@ -14,7 +14,7 @@ using namespace ed;
 
 /// drawing
 
-static const ImGuiTableFlags kTableFlags
+static const ImGuiTableFlags kConfigTableFlags
     = ImGuiTableFlags_BordersV
     | ImGuiTableFlags_BordersOuterH
     | ImGuiTableFlags_Resizable
@@ -22,12 +22,12 @@ static const ImGuiTableFlags kTableFlags
     | ImGuiTableFlags_NoHostExtendX
     | ImGuiTableFlags_NoBordersInBody;
 
-static const ImGuiTreeNodeFlags kGroupNodeFlags
+static const ImGuiTreeNodeFlags kConfigGroupNodeFlags
     = ImGuiTreeNodeFlags_SpanAllColumns
     | ImGuiTreeNodeFlags_AllowOverlap;
 
-static const ImGuiTreeNodeFlags kValueNodeFlags
-    = kGroupNodeFlags
+static const ImGuiTreeNodeFlags kConfigValueNodeFlags
+    = kConfigGroupNodeFlags
     | ImGuiTreeNodeFlags_Leaf
     | ImGuiTreeNodeFlags_Bullet
     | ImGuiTreeNodeFlags_NoTreePushOnOpen;
@@ -310,7 +310,7 @@ void draw_config_entry(cfg_field_t *field)
 
     ImGui::TableNextColumn();
     ImGui::AlignTextToFramePadding();
-    ImGui::TreeNodeEx(info->name, kValueNodeFlags);
+    ImGui::TreeNodeEx(info->name, kConfigValueNodeFlags);
 
     ImGui::TableNextColumn();
     ImGui::TextUnformatted(cfg_type_name(type));
@@ -358,7 +358,7 @@ void draw_config_group(cfg_group_t *group)
     ImGui::TableNextColumn();
 
     const cfg_info_t *info = cfg_group_info(group);
-    bool is_group_open = ImGui::TreeNodeEx(info->name, kGroupNodeFlags);
+    bool is_group_open = ImGui::TreeNodeEx(info->name, kConfigGroupNodeFlags);
 
     ImGui::TableNextColumn();
     ImGui::TextDisabled("--");
@@ -381,7 +381,7 @@ void draw_config_group(cfg_group_t *group)
 
 void ed::draw_config_panel(cfg_group_t *config)
 {
-    if (ImGui::BeginTable("Config", 5, kTableFlags))
+    if (ImGui::BeginTable("Config", 5, kConfigTableFlags))
     {
         ImGui::TableSetupColumn("Name");
         ImGui::TableSetupColumn("Type");

@@ -7,7 +7,7 @@
 
 CTU_CALLBACKS(kCallbacks, json);
 
-json_ast_t *json_scan(io_t *io, logger_t *logger, arena_t *arena)
+json_t *json_scan(io_t *io, logger_t *logger, arena_t *arena)
 {
     CTASSERT(io != NULL);
     CTASSERT(logger != NULL);

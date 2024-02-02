@@ -15,8 +15,8 @@
 }
 
 %code requires {
-    #include "json/ast.h"
-    #include "json/scan.h"
+    #include "json_ast.h"
+    #include "json_scan.h"
     #define YYSTYPE JSONSTYPE
     #define YYLTYPE JSONLTYPE
 }
@@ -32,7 +32,7 @@ void jsonerror(where_t *where, void *state, scan_t *scan, const char *msg);
     bool boolean;
     text_t string;
 
-    json_ast_t *json;
+    json_t *json;
     vector_t *array;
     typevec_t *members;
     json_member_t member;

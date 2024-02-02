@@ -13,6 +13,7 @@
 #include "std/str.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
+#include "ref/emit.h"
 
 // this is a "feature" of clang that we need to disable
 CT_CLANG_PRAGMA(clang diagnostic push)
@@ -146,49 +147,6 @@ public:
     }
 };
 
-struct out_t
-{
-    refl::Sema *sema;
-
-    typevec_t *m_data = typevec_new(sizeof(char), 0x1000, get_global_arena());
-    size_t m_depth = 0;
-
-    out_t(refl::Sema *i)
-        : sema(i)
-    { }
-
-    void dump(io_t *io)
-    {
-        io_write(io, (void*)typevec_data(m_data), typevec_len(m_data));
-    }
-
-    void enter() { m_depth += 1; }
-    void leave() { CTASSERT(m_depth > 0); m_depth -= 1; }
-
-    void indent()
-    {
-        for (size_t i = 0; i < m_depth; i++) { typevec_append(m_data, "    ", 4); }
-    }
-
-    void writeln(const char *fmt, auto&&... args)
-    {
-        indent();
-        write(fmt, args...);
-        nl();
-    }
-
-    void write(const char *fmt, auto&&... args)
-    {
-        auto it = text_format(get_global_arena(), fmt, args...);
-        typevec_append(m_data, it.text, it.length);
-    }
-
-    void nl()
-    {
-        typevec_push(m_data, "\n");
-    }
-};
-
 namespace refl {
     enum TreeKind {
         eKindProgram,
@@ -250,6 +208,7 @@ namespace refl {
     class Sema {
         Sema *m_parent;
         ResolveStack *m_resolve;
+        arena_t *m_arena;
         logger_t *m_logger;
         declmap_t m_decls;
 
@@ -270,13 +229,15 @@ namespace refl {
         Sema(Sema *parent)
             : m_parent(parent)
             , m_resolve(parent->m_resolve)
+            , m_arena(parent->m_arena)
             , m_logger(parent->m_logger)
             , m_decls(parent->m_decls)
         { }
 
-        Sema(logger_t *logger)
+        Sema(logger_t *logger, arena_t *arena)
             : m_parent(nullptr)
             , m_resolve(new ResolveStack())
+            , m_arena(arena)
             , m_logger(logger)
             , m_decls(get_builtin_types())
         { }
@@ -344,27 +305,42 @@ namespace refl {
         bool m_resolved = false;
         Type *m_type = nullptr;
 
+        ref_attrib_tag_t m_layout = eAttribLayoutAny;
+
+        bool m_checksum = false;
+        bool m_serialize = false;
+        bool m_vbo_layout = false;
+
     protected:
         void set_type(Type *type) { m_type = type; }
         void finish_resolve() { m_resolved = true; }
+
+        void find_layout(const ref_ast_t *ast, logger_t *logger);
 
         Decl(const node_t *node, TreeKind kind, const char *name)
             : Tree(node, kind)
             , m_name(name)
         { }
 
+        void emit_name_info(Sema& sema, cxx_emit_t *out, const char *id, const ref_ast_t *ast) const;
+
     public:
         const char *get_name() const { return m_name; }
         virtual const char *get_repr() const { return m_name; }
         bool is_resolved() const { return m_resolved; }
         Type *get_type() const { return m_type; }
+        ref_attrib_tag_t get_layout() const { return m_layout; }
+
+        bool emit_checksum() const { return m_checksum; }
+        bool emit_serialize() const { return m_serialize; }
+        bool emit_vbo_layout() const { return m_vbo_layout; }
 
         virtual void resolve(Sema& sema) = 0;
         virtual void resolve_type(Sema& sema) { resolve(sema); }
 
-        virtual void emit_proto(out_t&) const { }
-        virtual void emit_impl(out_t&) const { }
-        virtual void emit_reflection(Sema&, out_t&) const { }
+        virtual void emit_proto(cxx_emit_t*) const { }
+        virtual void emit_impl(cxx_emit_t*) const { }
+        virtual void emit_reflection(Sema&, cxx_emit_t*) const { }
 
         virtual void get_deps(DeclDepends&) const { }
 
@@ -571,8 +547,8 @@ namespace refl {
         void resolve(Sema& sema) override;
         void resolve_type(Sema& sema) override;
 
-        void emit_impl(out_t& out) const override;
-        void emit_field(out_t& out) const;
+        void emit_impl(cxx_emit_t *out) const override;
+        void emit_field(cxx_emit_t *out) const;
 
         ref_privacy_t get_privacy() const { return m_ast->privacy; }
         bool is_transient() const;
@@ -610,9 +586,9 @@ namespace refl {
 
         void resolve(Sema& sema) override;
 
-        void emit_impl(out_t& out) const override;
-        void emit_thunk(out_t& out) const;
-        void emit_method(out_t& out, const RecordType& parent) const;
+        void emit_impl(cxx_emit_t *out) const override;
+        void emit_thunk(cxx_emit_t *out) const;
+        void emit_method(cxx_emit_t *out, const RecordType& parent) const;
 
         void resolve_deps(DeclDepends& deps) const {
             if (m_return) deps.add(m_return);
@@ -635,10 +611,10 @@ namespace refl {
 
         void resolve(Sema& sema) override;
 
-        void emit_impl(out_t& out) const override;
+        void emit_impl(cxx_emit_t *out) const override;
 
-        void emit_value(out_t& out) const;
-        void emit_case(out_t& out) const;
+        void emit_value(cxx_emit_t *out) const;
+        void emit_case(cxx_emit_t *out) const;
 
         const char* get_case_value() const;
 
@@ -690,21 +666,21 @@ namespace refl {
             , m_ast(ast)
         { }
 
-        ref_privacy_t emit_methods(out_t& out, ref_privacy_t privacy) const;
+        ref_privacy_t emit_methods(cxx_emit_t *out, ref_privacy_t privacy) const;
 
-        void emit_begin_record(out_t& out, bool write_parent = true) const;
-        void emit_ctors(out_t& out) const;
-        ref_privacy_t emit_dtors(out_t& out, ref_privacy_t privacy) const;
+        void emit_begin_record(cxx_emit_t *out, bool write_parent = true) const;
+        void emit_ctors(cxx_emit_t *out) const;
+        ref_privacy_t emit_dtors(cxx_emit_t *out, ref_privacy_t privacy) const;
 
-        void emit_end_record(out_t& out) const;
-        ref_privacy_t emit_fields(out_t& out, const Vector<Field*>& fields, ref_privacy_t privacy) const;
+        void emit_end_record(cxx_emit_t *out) const;
+        ref_privacy_t emit_fields(cxx_emit_t *out, const Vector<Field*>& fields, ref_privacy_t privacy) const;
 
-        void emit_serialize(out_t& out, const char *id, const Vector<Field*>& fields) const;
+        void emit_serialize(cxx_emit_t *out, const char *id, const Vector<Field*>& fields) const;
 
     public:
         void resolve(Sema& sema) override;
 
-        void emit_proto(out_t& out) const override;
+        void emit_proto(cxx_emit_t *out) const override;
 
         const char* get_cxx_name(const char *name) const override {
             return (name == nullptr) ? get_name() : refl_fmt("%s %s", get_name(), name);
@@ -731,9 +707,9 @@ namespace refl {
 
         void resolve(Sema& sema) override;
 
-        void emit_impl(out_t& out) const override;
+        void emit_impl(cxx_emit_t *out) const override;
 
-        void emit_reflection(Sema& sema, out_t& out) const override;
+        void emit_reflection(Sema& sema, cxx_emit_t *out) const override;
 
         void get_deps(DeclDepends& deps) const override {
             RecordType::get_deps(deps);
@@ -750,9 +726,9 @@ namespace refl {
 
         void resolve(Sema& sema) override;
 
-        void emit_impl(out_t& out) const override;
+        void emit_impl(cxx_emit_t *out) const override;
 
-        void emit_reflection(Sema& sema, out_t& out) const override;
+        void emit_reflection(Sema& sema, cxx_emit_t *out) const override;
 
         void get_deps(DeclDepends& deps) const override {
             RecordType::get_deps(deps);
@@ -771,13 +747,13 @@ namespace refl {
 
         void resolve(Sema& sema) override;
 
-        void emit_impl(out_t& out) const override;
-        void emit_facade(out_t& out) const;
+        void emit_impl(cxx_emit_t *out) const override;
+        void emit_facade(cxx_emit_t *out) const;
 
-        void emit_reflection(Sema& sema, out_t& out) const override;
+        void emit_reflection(Sema& sema, cxx_emit_t *out) const override;
         Case *get_zero_case() const;
 
-        void emit_default_is_valid(out_t& out) const;
+        void emit_default_is_valid(cxx_emit_t *out) const;
 
         size_t max_tostring() const;
 

@@ -1,4 +1,5 @@
-#include "json/scan.h"
+#include "json_scan.h"
+
 #include "core/macros.h"
 
 #include "cthulhu/events/events.h"
@@ -11,7 +12,7 @@ json_scan_t *json_scan_context(scan_t *scan)
     return scan_get_context(scan);
 }
 
-void json_parse_integer(mpz_t integer, scan_t *scan, where_t where, const char *text, size_t length, int base)
+void json_parse_integer(mpz_t integer, scan_t *scan, where_t where, const char *text, int base)
 {
     int result = mpz_init_set_str(integer, text, base);
     if (result != 0)
@@ -21,7 +22,7 @@ void json_parse_integer(mpz_t integer, scan_t *scan, where_t where, const char *
     }
 }
 
-void json_parse_float(float *real, scan_t *scan, where_t where, const char *text, size_t length)
+void json_parse_float(float *real, scan_t *scan, where_t where, const char *text)
 {
     float result = strtof(text, NULL);
     if (result != 1)

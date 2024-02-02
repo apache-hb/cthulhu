@@ -42,6 +42,8 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 <ATTRIBUTE>"format" { return TOK_FORMAT; }
 <ATTRIBUTE>"facade" { return TOK_FACADE; }
 <ATTRIBUTE>"external" { return TOK_EXTERNAL; }
+<ATTRIBUTE>"checksum" { return TOK_CHECKSUM; }
+<ATTRIBUTE>"serialize" { return TOK_SERIALIZE; }
 
     /* enum attributes */
 <ATTRIBUTE>"bitflags" { return TOK_BITFLAGS; }
@@ -66,12 +68,11 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 <COMMENT>.|\n ;
 
 <*>"config" { yy_push_state(CONFIG, yyscanner); return TOK_CONFIG; }
-<CONFIG>"api" { return TOK_API; }
-<CONFIG,ATTRIBUTE>"serialize" { return TOK_SERIALIZE; }
-<CONFIG,ATTRIBUTE>"checksum" { return TOK_CHECKSUM; }
-<CONFIG>"span" { return TOK_SPAN; }
-<CONFIG>"vector" { return TOK_VECTOR; }
-<CONFIG>"array" { return TOK_ARRAY; }
+<CONFIG>"api" { return TOK_CFG_API; }
+<CONFIG>"span" { return TOK_CFG_SPAN; }
+<CONFIG>"vector" { return TOK_CFG_VECTOR; }
+<CONFIG>"array" { return TOK_CFG_ARRAY; }
+<CONFIG>"string" { return TOK_CFG_STRING; }
 <CONFIG>";" { yy_pop_state(yyscanner); return TOK_END_CONFIG; }
 
 <*>"module" { return TOK_MODULE; }

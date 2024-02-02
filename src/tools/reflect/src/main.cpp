@@ -13,7 +13,7 @@
 
 #include "interop/compile.h"
 
-#include "ref/sema.h"
+#include "ref/sema.hpp"
 #include "setup/setup.h"
 
 CT_BEGIN_API
@@ -211,7 +211,7 @@ struct tool_t
     cfg_field_t *m_output_shader = nullptr;
 
     default_options_t m_options = {};
-    refl::Sema m_sema { m_logger };
+    refl::Sema m_sema { m_logger, m_arena };
 };
 
 int main(int argc, const char **argv)

@@ -10,6 +10,14 @@ CT_BEGIN_API
 /// @ingroup tree
 /// @{
 
+/// @brief all tree node types
+typedef enum tree_kind_t
+{
+#define TREE_KIND(ID, NAME, TAGS) ID,
+#include "cthulhu/tree/tree.def"
+    eTreeTotal
+} tree_kind_t;
+
 /// @brief all type qualifiers
 typedef enum quals_t
 {

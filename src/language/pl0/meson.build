@@ -14,7 +14,8 @@ pl0 = library('pl0', src,
         config, memory, driver
     ],
     c_args : generated_args,
-    include_directories : [ 'src', 'include' ]
+    include_directories : [ 'src', 'include' ],
+    override_options : [ 'unity=off' ]
 )
 
 langs += {

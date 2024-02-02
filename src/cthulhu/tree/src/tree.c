@@ -273,15 +273,6 @@ tree_t *tree_expr_load(const node_t *node, tree_t *expr)
     return self;
 }
 
-tree_t *tree_expr_ref(const node_t *node, tree_t *expr)
-{
-    const tree_t *type = tree_get_type(expr);
-    tree_t *inner = tree_type_reference(node, tree_get_name(type), tree_ty_load_type(type));
-    tree_t *self = tree_new(eTreeExprReference, node, inner);
-    self->expr = expr;
-    return self;
-}
-
 static const tree_t *get_ref_inner(const tree_t *ty)
 {
     if (tree_is(ty, eTreeTypeReference) || tree_is(ty, eTreeTypePointer)) { return ty->ptr; }

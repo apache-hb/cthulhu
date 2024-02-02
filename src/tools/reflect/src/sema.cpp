@@ -1,10 +1,9 @@
-#include "ref/sema.h"
+#include "ref/sema.hpp"
 #include "core/macros.h"
 #include "cthulhu/events/events.h"
 #include "memory/memory.h"
 #include "ref/ast.h"
 #include "ref/eval.h"
-#include "ref/events.h"
 #include "std/map.h"
 #include "std/str.h"
 #include "std/vector.h"
@@ -239,36 +238,36 @@ Type *Sema::resolve_type(ref_ast_t *ast)
 void Sema::emit_all(io_t *header, const char *file)
 {
     // header preamble
-    out_t h = this;
-    h.writeln("#pragma once");
-    h.writeln("// Generated from '%s'", file);
-    h.writeln("// Dont edit this file, it will be overwritten on the next build");
-    h.nl();
-    h.writeln("#include \"reflect/reflect.h\"");
-    h.nl();
+    cxx_emit_t *h = cxx_emit_new(m_arena);
+    cxx_writeln(h, "#pragma once");
+    cxx_writeln(h, "// Generated from '%s'", file);
+    cxx_writeln(h, "// Dont edit this file, it will be overwritten on the next build");
+    cxx_nl(h);
+    cxx_writeln(h, "#include \"reflect/reflect.h\"");
+    cxx_nl(h);
 
     imports.foreach([&](auto fd) {
         if (fd[0] == '<')
         {
-            h.writeln("#include %s", fd);
+            cxx_writeln(h, "#include %s", fd);
         }
         else
         {
-            h.writeln("#include \"%s\"", fd);
+            cxx_writeln(h, "#include \"%s\"", fd);
         }
     });
 
-    h.writeln("namespace %s {", m_namespace);
-    h.enter();
+    cxx_writeln(h, "namespace %s {", m_namespace);
+    cxx_enter(h);
 
-    h.writeln("// prototypes");
+    cxx_writeln(h, "// prototypes");
 
     m_decls.foreach([&](auto, auto decl) {
         decl->emit_proto(h);
     });
 
-    h.nl();
-    h.writeln("// implementation");
+    cxx_nl(h);
+    cxx_writeln(h, "// implementation");
 
     DeclDepends depends { { 64, get_global_arena() } };
 
@@ -282,13 +281,13 @@ void Sema::emit_all(io_t *header, const char *file)
         decl->emit_impl(h);
     });
 
-    h.leave();
-    h.writeln("} // namespace %s", m_namespace);
+    cxx_leave(h);
+    cxx_writeln(h, "} // namespace %s", m_namespace);
 
-    h.nl();
-    h.writeln("namespace ctu {");
-    h.enter();
-    h.writeln("// reflection");
+    cxx_nl(h);
+    cxx_writeln(h, "namespace ctu {");
+    cxx_enter(h);
+    cxx_writeln(h, "// reflection");
 
     depends.m_depends.foreach([&](auto decl) {
         CTASSERT(decl != nullptr);
@@ -296,10 +295,10 @@ void Sema::emit_all(io_t *header, const char *file)
     });
 
 
-    h.leave();
-    h.writeln("} // namespace ctu");
+    cxx_leave(h);
+    cxx_writeln(h, "} // namespace ctu");
 
-    h.dump(header);
+    cxx_dump(h, header);
 }
 
 void Field::resolve(Sema& sema)
@@ -346,7 +345,7 @@ static const char *get_attrib_string(vector_t *attribs, ref_attrib_tag_t tag)
     return nullptr;
 }
 
-const char *get_doc(vector_t *attribs, const char *key)
+static const char *get_doc(vector_t *attribs, const char *key)
 {
     ref_ast_t *docs = get_attrib(attribs, eAstAttribDocs);
     if (docs == nullptr)
@@ -357,6 +356,52 @@ const char *get_doc(vector_t *attribs, const char *key)
         return nullptr;
 
     return doc;
+}
+
+void Decl::find_layout(const ref_ast_t *ast, logger_t *logger)
+{
+    vector_t *attribs = ast->attributes;
+    ref_ast_t *layout_ast = NULL;
+    ref_attrib_tag_t layout_tag = get_layout();
+
+    size_t len = vector_len(attribs);
+    for (size_t i = 0; i < len; i++)
+    {
+        ref_ast_t *attrib = (ref_ast_t*)vector_get(attribs, i);
+        CTASSERTF(attrib != NULL, "invalid attribute");
+
+        switch (attrib->attrib)
+        {
+        case eAttribLayoutSystem:
+        case eAttribLayoutStable:
+        case eAttribLayoutPacked:
+        case eAttribLayoutAny:
+        case eAttribLayoutConstBuffer:
+            if (layout_ast != NULL)
+            {
+                msg_notify(logger, &kEvent_DuplicateAttribute, attrib->node, "duplicate layout attribute");
+                return;
+            }
+            layout_ast = attrib;
+            layout_tag = attrib->attrib;
+            break;
+
+        case eAttribSerialize:
+            m_serialize = true;
+            layout_tag = eAttribLayoutStable;
+            break;
+        case eAttribChecksum:
+            m_checksum = true;
+            layout_tag = eAttribLayoutStable;
+            break;
+        case eAttribVertexInput:
+            m_vbo_layout = true;
+            layout_tag = eAttribLayoutStable;
+            break;
+
+        default: break;
+        }
+    }
 }
 
 const char *TreeBackedDecl::get_repr() const
@@ -475,7 +520,7 @@ static const char *get_privacy(ref_privacy_t privacy)
     }
 }
 
-void Method::emit_impl(out_t& out) const {
+void Method::emit_impl(cxx_emit_t *out) const {
     Type *ret = m_return ? m_return->get_type() : new VoidType("void");
     auto it = ret->get_cxx_name(get_name());
     String params;
@@ -499,19 +544,18 @@ void Method::emit_impl(out_t& out) const {
 
     if (m_thunk)
     {
-        out.writeln("%s: %s(%.*s) %s{", privacy, it, (int)params.size(), params.c_str(), is_const ? "const " : "");
-        out.enter();
-        out.writeln("return %s(%.*s);", inner, (int)args.size(), args.c_str());
-        out.leave();
-        out.writeln("}");
+        cxx_writeln(out, "%s: %s(%.*s)%s{", privacy, it, (int)params.size(), params.c_str(), is_const ? " const" : "");
+        cxx_enter(out);
+        cxx_writeln(out, "return %s(%.*s);", inner, (int)args.size(), args.c_str());
+        cxx_close_brace(out);
     }
     else
     {
-        out.writeln("%s: %s(%.*s)%s;", privacy, it, (int)params.size(), params.c_str(), is_const ? " const" : "");
+        cxx_writeln(out, "%s: %s(%.*s)%s;", privacy, it, (int)params.size(), params.c_str(), is_const ? " const" : "");
     }
 }
 
-void Method::emit_method(out_t& out, const RecordType& parent) const {
+void Method::emit_method(cxx_emit_t *out, const RecordType& parent) const {
     Type *ret = m_return ? m_return : new VoidType("void");
     auto it = ret->get_cxx_name(get_name());
     String params;
@@ -541,19 +585,18 @@ void Method::emit_method(out_t& out, const RecordType& parent) const {
 
     if (m_thunk)
     {
-        out.writeln("%s%s(%.*s) %s{", virt_str, it, (int)params.size(), params.c_str(), is_const ? "const " : "");
-        out.enter();
-        out.writeln("return %s(%.*s);", inner, (int)args.size(), args.c_str());
-        out.leave();
-        out.writeln("}");
+        cxx_writeln(out, "%s%s(%.*s)%s", virt_str, it, (int)params.size(), params.c_str(), is_const ? " const" : "");
+        cxx_enter(out);
+        cxx_writeln(out, "return %s(%.*s);", inner, (int)args.size(), args.c_str());
+        cxx_close_brace(out);
     }
     else
     {
-        out.writeln("%s%s(%.*s)%s;", virt_str, it, (int)params.size(), params.c_str(), is_const ? " const" : "");
+        cxx_writeln(out, "%s%s(%.*s)%s;", virt_str, it, (int)params.size(), params.c_str(), is_const ? " const" : "");
     }
 }
 
-void Method::emit_thunk(out_t& out) const {
+void Method::emit_thunk(cxx_emit_t *out) const {
     Type *ret = m_return ? m_return->get_type() : new VoidType("void");
     const char *cxxname = get_attrib_string(m_ast->attributes, eAttribCxxName);
     const char* inner = cxxname ? cxxname : refl_fmt("impl_%s", get_name());
@@ -566,7 +609,7 @@ void Method::emit_thunk(out_t& out) const {
     });
 
 
-    out.writeln("%s(%.*s);", it, (int)params.size(), params.c_str());
+    cxx_writeln(out, "%s(%.*s);", it, (int)params.size(), params.c_str());
 }
 
 void RecordType::resolve(Sema& sema)
@@ -610,30 +653,28 @@ bool RecordType::is_stable_layout() const
     return has_attrib_tag(m_ast->attributes, eAttribLayoutStable);
 }
 
-void RecordType::emit_proto(out_t& out) const
+void RecordType::emit_proto(cxx_emit_t *out) const
 {
     if (type_is_external(m_ast))
         return;
-    out.writeln("%s %s;", m_record, get_name());
+    cxx_writeln(out, "%s %s;", m_record, get_name());
 }
 
-ref_privacy_t RecordType::emit_methods(out_t& out, ref_privacy_t privacy) const
+ref_privacy_t RecordType::emit_methods(cxx_emit_t *out, ref_privacy_t privacy) const
 {
-    out.writeln("// methods");
+    cxx_writeln(out, "// methods");
 
     m_methods.foreach([&](auto method) {
         if (privacy != method->get_privacy() && method->get_privacy() != ePrivacyDefault)
         {
             privacy = method->get_privacy();
-            out.leave();
-            out.writeln("%s:", get_privacy(privacy));
-            out.enter();
+            cxx_privacy(out, get_privacy(privacy));
         }
         method->emit_method(out, *this);
     });
 
 
-    out.writeln("// thunks");
+    cxx_writeln(out, "// thunks");
 
     bool emit_private = false;
 
@@ -646,9 +687,7 @@ ref_privacy_t RecordType::emit_methods(out_t& out, ref_privacy_t privacy) const
         if (!emit_private)
         {
             emit_private = true;
-            out.leave();
-            out.writeln("private:");
-            out.enter();
+            cxx_privacy(out, "private");
         }
 
         method->emit_thunk(out);
@@ -657,61 +696,57 @@ ref_privacy_t RecordType::emit_methods(out_t& out, ref_privacy_t privacy) const
     return ePrivacyPrivate;
 }
 
-void RecordType::emit_begin_record(out_t& out, bool write_parent) const
+void RecordType::emit_begin_record(cxx_emit_t *out, bool write_parent) const
 {
     const char *fin = is_final() ? " final " : " ";
     if (m_parent && write_parent)
     {
-        out.writeln("%s %s%s: public %s {", m_record, get_name(), fin, m_parent->get_name());
+        cxx_writeln(out, "%s %s%s: public %s {", m_record, get_name(), fin, m_parent->get_name());
     }
     else
     {
-        out.writeln("%s %s%s{", m_record, get_name(), fin);
+        cxx_writeln(out, "%s %s%s{", m_record, get_name(), fin);
     }
-    out.enter();
+    cxx_enter(out);
 
-    out.writeln("friend class ctu::TypeInfo<%s>;", get_name());
+    cxx_writeln(out, "friend class ctu::TypeInfo<%s>;", get_name());
 }
 
-void RecordType::emit_ctors(out_t&) const  {
+void RecordType::emit_ctors(cxx_emit_t*) const  {
 
 }
 
-ref_privacy_t RecordType::emit_dtors(out_t& out, ref_privacy_t privacy) const {
+ref_privacy_t RecordType::emit_dtors(cxx_emit_t *out, ref_privacy_t privacy) const {
     if (!is_virtual())
         return privacy;
 
     if (privacy != ePrivacyPublic)
     {
         privacy = ePrivacyPublic;
-        out.leave();
-        out.writeln("%s:", get_privacy(privacy));
-        out.enter();
+        cxx_privacy(out, get_privacy(privacy));
     }
 
-    out.writeln("virtual ~%s() = default;", get_name());
+    cxx_writeln(out, "virtual ~%s() = default;", get_name());
 
     return privacy;
 }
 
 
-void RecordType::emit_end_record(out_t& out) const
+void RecordType::emit_end_record(cxx_emit_t *out) const
 {
-    out.leave();
-    out.writeln("};");
+    cxx_leave(out);
+    cxx_writeln(out, "};");
 }
 
-ref_privacy_t RecordType::emit_fields(out_t& out, const Vector<Field*>& fields, ref_privacy_t privacy) const
+ref_privacy_t RecordType::emit_fields(cxx_emit_t *out, const Vector<Field*>& fields, ref_privacy_t privacy) const
 {
-    out.writeln("// fields");
+    cxx_writeln(out, "// fields");
 
     fields.foreach([&](auto field) {
         if (privacy != field->get_privacy())
         {
             privacy = field->get_privacy();
-            out.leave();
-            out.writeln("%s:", get_privacy(privacy));
-            out.enter();
+            cxx_privacy(out, get_privacy(privacy));
         }
 
         field->emit_field(out);
@@ -920,17 +955,17 @@ const char* IntType::get_cxx_name(const char *name) const
     return (name == nullptr) ? type : refl_fmt("%s %s", type, name);
 }
 
-void Field::emit_impl(out_t& out) const
+void Field::emit_impl(cxx_emit_t *out) const
 {
     const char *privacy = ::get_privacy(m_ast->privacy);
     auto it = get_type()->get_cxx_name(get_name());
-    out.writeln("%s: %s;", privacy, it);
+    cxx_writeln(out, "%s: %s;", privacy, it);
 }
 
-void Field::emit_field(out_t& out) const
+void Field::emit_field(cxx_emit_t *out) const
 {
     auto it = get_type()->get_cxx_name(get_name());
-    out.writeln("%s;", it);
+    cxx_writeln(out, "%s;", it);
 }
 
 bool Field::is_transient() const
@@ -938,7 +973,7 @@ bool Field::is_transient() const
     return has_attrib_tag(m_ast->attributes, eAttribTransient);
 }
 
-void Class::emit_impl(out_t& out) const
+void Class::emit_impl(cxx_emit_t *out) const
 {
     if (type_is_external(m_ast))
         return;
@@ -950,7 +985,7 @@ void Class::emit_impl(out_t& out) const
     emit_end_record(out);
 }
 
-void Struct::emit_impl(out_t& out) const
+void Struct::emit_impl(cxx_emit_t *out) const
 {
     if (type_is_external(m_ast))
         return;
@@ -962,9 +997,9 @@ void Struct::emit_impl(out_t& out) const
     emit_end_record(out);
 }
 
-void Case::emit_impl(out_t& out) const
+void Case::emit_impl(cxx_emit_t *out) const
 {
-    out.writeln("e%s = %s,", get_name(), get_case_value());
+    cxx_writeln(out, "e%s = %s,", get_name(), get_case_value());
 }
 
 static uint32_t type_hash(const char *name)
@@ -980,7 +1015,7 @@ static uint32_t type_hash(const char *name)
     return ~hash;
 }
 
-static void get_type_id(Sema& sema, ref_ast_t *ast, mpz_t out)
+static void get_type_id(Sema& sema, const ref_ast_t *ast, mpz_t out)
 {
     ref_ast_t *attrib = get_attrib(ast->attributes, eAstAttribTypeId);
     if (attrib)
@@ -1002,7 +1037,7 @@ static void get_type_id(Sema& sema, ref_ast_t *ast, mpz_t out)
     }
 }
 
-void Variant::emit_default_is_valid(out_t& out) const
+void Variant::emit_default_is_valid(cxx_emit_t *out) const
 {
     size_t len = m_cases.size();
     typevec_t *found = typevec_new(sizeof(mpz_t), len, get_global_arena());
@@ -1017,10 +1052,10 @@ void Variant::emit_default_is_valid(out_t& out) const
         return false;
     };
 
-    out.nl();
-    out.writeln("constexpr bool is_valid() const {");
-    out.enter();
-    out.writeln("switch (m_value) {");
+    cxx_nl(out);
+    cxx_writeln(out, "constexpr bool is_valid() const {");
+    cxx_enter(out);
+    cxx_writeln(out, "switch (m_value) {");
     m_cases.foreach([&](Case *c)
     {
         mpz_t id;
@@ -1029,25 +1064,25 @@ void Variant::emit_default_is_valid(out_t& out) const
             // if we found a duplicate, dont emit this case
             if (has_value(id))
             {
-                out.writeln("// duplicate case %s", c->get_name());
+                cxx_writeln(out, "// duplicate case %s", c->get_name());
                 return;
             }
 
             typevec_push(found, &id);
         }
 
-        out.writeln("case e%s:", c->get_name());
+        cxx_writeln(out, "case e%s:", c->get_name());
     });
-    out.enter();
-    out.writeln("return true;");
-    out.leave();
-    out.writeln("default: return false;");
-    out.writeln("}");
-    out.leave();
-    out.writeln("};");
+    cxx_enter(out);
+    cxx_writeln(out, "return true;");
+    cxx_leave(out);
+    cxx_writeln(out, "default: return false;");
+    cxx_writeln(out, "}");
+    cxx_leave(out);
+    cxx_writeln(out, "};");
 }
 
-void Variant::emit_impl(out_t& out) const
+void Variant::emit_impl(cxx_emit_t *out) const
 {
     bool is_ordered = has_attrib_tag(m_ast->attributes, eAttribOrdered);
     bool is_bitflags = has_attrib_tag(m_ast->attributes, eAttribBitflags);
@@ -1064,26 +1099,26 @@ void Variant::emit_impl(out_t& out) const
         CTASSERTF(!(is_facade && is_external), "enum %s cannot be both a facade and external", get_name());
     }
 
-    out.writeln("namespace impl {");
-    out.enter();
+    cxx_writeln(out, "namespace impl {");
+    cxx_enter(out);
     if (m_parent)
     {
         if (const char *opaque = m_parent->get_opaque_name())
         {
             ty = refl_fmt("%s_underlying_t", get_name());
-            out.writeln("using %s_underlying_t = std::underlying_type_t<%s>;", get_name(), opaque);
-            out.writeln("enum class %s : %s_underlying_t {", get_name(), get_name());
+            cxx_writeln(out, "using %s_underlying_t = std::underlying_type_t<%s>;", get_name(), opaque);
+            cxx_writeln(out, "enum class %s : %s_underlying_t {", get_name(), get_name());
         }
         else
         {
             const char *underlying = m_parent->get_cxx_name(nullptr);
             ty = underlying;
-            out.writeln("enum class %s : %s {", get_name(), underlying);
+            cxx_writeln(out, "enum class %s : %s {", get_name(), underlying);
         }
     }
     else
     {
-        out.writeln("enum class %s {", get_name());
+        cxx_writeln(out, "enum class %s {", get_name());
     }
 
     mpz_t lowest;
@@ -1095,7 +1130,7 @@ void Variant::emit_impl(out_t& out) const
 
     bool has_opaque_cases = false;
 
-    out.enter();
+    cxx_enter(out);
     m_cases.foreach([&](auto c)
     {
         if (c->is_opaque_case())
@@ -1103,14 +1138,14 @@ void Variant::emit_impl(out_t& out) const
             CTASSERTF(!is_lookup, "variant %s cannot have opaque cases and be a lookup key", get_name());
 
             has_opaque_cases = true;
-            out.writeln("e%s = %s,", c->get_name(), c->get_case_value());
+            cxx_writeln(out, "e%s = %s,", c->get_name(), c->get_case_value());
         }
         else if (c->is_blank_case())
         {
             CTASSERTF(!has_opaque_cases, "cannot generate case values in a variant %s with opaque cases", get_name());
 
             mpz_add_ui(current, current, 1);
-            out.writeln("e%s = %s,", c->get_name(), mpz_get_str(nullptr, 10, current));
+            cxx_writeln(out, "e%s = %s,", c->get_name(), mpz_get_str(nullptr, 10, current));
 
             if (mpz_cmp(current, lowest) < 0)
                 mpz_set(lowest, current);
@@ -1125,156 +1160,140 @@ void Variant::emit_impl(out_t& out) const
                 mpz_set(highest, value);
 
             mpz_set(current, value);
-            out.writeln("e%s = %s,", c->get_name(), c->get_case_value());
+            cxx_writeln(out, "e%s = %s,", c->get_name(), c->get_case_value());
         }
     });
-    out.leave();
-    out.writeln("};");
+    cxx_leave(out);
+    cxx_writeln(out, "};");
     if (!m_parent)
     {
         ty = refl_fmt("%s_underlying_t", get_name());
-        out.writeln("using %s_underlying_t = std::underlying_type_t<%s>;", get_name(), get_name());
+        cxx_writeln(out, "using %s_underlying_t = std::underlying_type_t<%s>;", get_name(), get_name());
     }
-    if (is_arithmatic || is_iterator || is_ordered) out.writeln("REFLECT_ENUM_COMPARE(%s, %s)", get_name(), ty);
-    if (is_bitflags) out.writeln("REFLECT_ENUM_BITFLAGS(%s, %s);", get_name(), ty);
-    if (is_arithmatic) out.writeln("REFLECT_ENUM_ARITHMATIC(%s, %s);", get_name(), ty);
-    if (is_iterator) out.writeln("REFLECT_ENUM_ITERATOR(%s, %s);", get_name(), ty);
+    if (is_arithmatic || is_iterator || is_ordered) cxx_writeln(out, "REFLECT_ENUM_COMPARE(%s, %s)", get_name(), ty);
+    if (is_bitflags) cxx_writeln(out, "REFLECT_ENUM_BITFLAGS(%s, %s);", get_name(), ty);
+    if (is_arithmatic) cxx_writeln(out, "REFLECT_ENUM_ARITHMATIC(%s, %s);", get_name(), ty);
+    if (is_iterator) cxx_writeln(out, "REFLECT_ENUM_ITERATOR(%s, %s);", get_name(), ty);
 
-    out.leave();
-    out.writeln("} // namespace impl");
+    cxx_leave(out);
+    cxx_writeln(out, "} // namespace impl");
 
     if (is_iterator || is_arithmatic)
         CTASSERTF(is_iterator ^ is_arithmatic, "enum %s cannot be both an iterator and arithmatic", get_name());
 
     emit_begin_record(out, false);
-    out.leave();
-    out.writeln("public:");
-    out.enter();
+    cxx_privacy(out, "public");
     // underlying is the true integral type of the enum
-    out.writeln("using underlying_t = std::underlying_type_t<impl::%s>;", get_name());
+    cxx_writeln(out, "using underlying_t = std::underlying_type_t<impl::%s>;", get_name());
 
     bool facade_type_clash = false;
 
     // wrapper is our scoped enum type
-    out.writeln("using wrapper_t = impl::%s;", get_name());
+    cxx_writeln(out, "using wrapper_t = impl::%s;", get_name());
     if (is_facade)
     {
         if (const char *opaque = m_parent->get_opaque_name())
         {
             // facade is the type that the user specified if this is a facade type
             // this is distinct from underlying for C style enums
-            out.writeln("using facade_t = %s;", opaque);
+            cxx_writeln(out, "using facade_t = %s;", opaque);
         }
         else
         {
-            out.writeln("using facade_t = %s;", m_parent->get_cxx_name(nullptr));
+            cxx_writeln(out, "using facade_t = %s;", m_parent->get_cxx_name(nullptr));
 
             facade_type_clash = true;
         }
     }
-    out.writeln("using Underlying = underlying_t;");
-    out.writeln("using Inner = wrapper_t;");
+    cxx_writeln(out, "using Underlying = underlying_t;");
+    cxx_writeln(out, "using Inner = wrapper_t;");
     if (is_facade)
     {
-        out.writeln("using Facade = facade_t;");
+        cxx_writeln(out, "using Facade = facade_t;");
     }
-    out.nl();
-    out.leave();
-    out.writeln("private:");
-    out.enter();
-    out.writeln("wrapper_t m_value;");
-    out.nl();
-    out.leave();
-    out.writeln("public:");
-    out.enter();
-    out.writeln("constexpr %s(underlying_t value) : m_value((wrapper_t)value) { }", get_name());
-    out.writeln("constexpr %s(wrapper_t value) : m_value(value) { }", get_name());
+    cxx_nl(out);
+    cxx_privacy(out, "private");
+    cxx_writeln(out, "wrapper_t m_value;");
+    cxx_nl(out);
+    cxx_privacy(out, "public");
+    cxx_writeln(out, "constexpr %s(underlying_t value) : m_value((wrapper_t)value) { }", get_name());
+    cxx_writeln(out, "constexpr %s(wrapper_t value) : m_value(value) { }", get_name());
     if (is_facade && !facade_type_clash)
     {
-        out.writeln("constexpr %s(facade_t value) : m_value((wrapper_t)value) { }", get_name());
+        cxx_writeln(out, "constexpr %s(facade_t value) : m_value((wrapper_t)value) { }", get_name());
     }
-    out.writeln("using enum impl::%s;", get_name());
-    out.nl();
+    cxx_writeln(out, "using enum impl::%s;", get_name());
+    cxx_nl(out);
     if (m_default_case)
     {
-        out.writeln("static constexpr auto kDefaultCase = e%s;", m_default_case->get_name());
-        out.writeln("constexpr %s() : m_value(kDefaultCase) { }", get_name());
+        cxx_writeln(out, "static constexpr auto kDefaultCase = e%s;", m_default_case->get_name());
+        cxx_writeln(out, "constexpr %s() : m_value(kDefaultCase) { }", get_name());
     }
     else
     {
-        out.writeln("constexpr %s() = delete;", get_name());
+        cxx_writeln(out, "constexpr %s() = delete;", get_name());
     }
 
     if (is_iterator)
     {
-        out.nl();
-        out.writeln("static constexpr auto kBegin = (wrapper_t)((underlying_t)0);");
-        out.writeln("static constexpr auto kEnd = (wrapper_t)(~(underlying_t)0);");
-        out.nl();
-        out.writeln("class Iterator {");
-        out.enter();
-        out.writeln("wrapper_t m_value;");
-        out.leave();
-        out.writeln("public:");
-        out.enter();
-        out.writeln("constexpr Iterator(wrapper_t value) : m_value(value) { }");
-        out.writeln("constexpr Iterator& operator++() { m_value = (wrapper_t)((underlying_t)m_value + 1); return *this; }");
-        out.writeln("constexpr const Iterator operator++(int) { Iterator it = *this; ++(*this); return it; }");
-        out.writeln("constexpr bool operator==(const Iterator& other) const { return m_value == other.m_value; }");
-        out.writeln("constexpr bool operator!=(const Iterator& other) const { return m_value != other.m_value; }");
-        out.writeln("constexpr %s operator*() const { return m_value; }", get_name());
-        out.leave();
-        out.writeln("};");
-        out.nl();
-        out.writeln("class Range {");
-        out.enter();
-        out.writeln("wrapper_t m_begin;");
-        out.writeln("wrapper_t m_end;");
-        out.leave();
-        out.writeln("public:");
-        out.enter();
-        out.writeln("constexpr Range(wrapper_t begin, wrapper_t end) : m_begin(begin), m_end(end) { }");
-        out.writeln("constexpr Iterator begin() const { return Iterator(m_begin); }");
-        out.writeln("constexpr Iterator end() const { return Iterator(m_end); }");
-        out.leave();
-        out.writeln("};");
-        out.nl();
+        cxx_nl(out);
+        cxx_writeln(out, "static constexpr auto kBegin = (wrapper_t)((underlying_t)0);");
+        cxx_writeln(out, "static constexpr auto kEnd = (wrapper_t)(~(underlying_t)0);");
+        cxx_nl(out);
+        cxx_writeln(out, "class Iterator {");
+        cxx_enter(out);
+        cxx_writeln(out, "wrapper_t m_value;");
+        cxx_privacy(out, "public");
+        cxx_writeln(out, "constexpr Iterator(wrapper_t value) : m_value(value) { }");
+        cxx_writeln(out, "constexpr Iterator& operator++() { m_value = (wrapper_t)((underlying_t)m_value + 1); return *this; }");
+        cxx_writeln(out, "constexpr const Iterator operator++(int) { Iterator it = *this; ++(*this); return it; }");
+        cxx_writeln(out, "constexpr bool operator==(const Iterator& other) const { return m_value == other.m_value; }");
+        cxx_writeln(out, "constexpr bool operator!=(const Iterator& other) const { return m_value != other.m_value; }");
+        cxx_writeln(out, "constexpr %s operator*() const { return m_value; }", get_name());
+        cxx_leave(out);
+        cxx_writeln(out, "};");
+        cxx_nl(out);
+        cxx_writeln(out, "class Range {");
+        cxx_enter(out);
+        cxx_writeln(out, "wrapper_t m_begin;");
+        cxx_writeln(out, "wrapper_t m_end;");
+        cxx_privacy(out, "public");
+        cxx_writeln(out, "constexpr Range(wrapper_t begin, wrapper_t end) : m_begin(begin), m_end(end) { }");
+        cxx_writeln(out, "constexpr Iterator begin() const { return Iterator(m_begin); }");
+        cxx_writeln(out, "constexpr Iterator end() const { return Iterator(m_end); }");
+        cxx_leave(out);
+        cxx_writeln(out, "};");
+        cxx_nl(out);
 
-        out.writeln("static constexpr Range range(wrapper_t begin, wrapper_t end) { return Range(begin, end); }");
+        cxx_writeln(out, "static constexpr Range range(wrapper_t begin, wrapper_t end) { return Range(begin, end); }");
     }
 
-    out.writeln("constexpr operator wrapper_t() const { return m_value; }");
+    cxx_writeln(out, "constexpr operator wrapper_t() const { return m_value; }");
 
-    // out.writeln("constexpr %s(const %s& other) = default;", get_name(), get_name());
-    // out.writeln("constexpr %s& operator=(const %s& other) = default;", get_name(), get_name());
-
-    // out.writeln("constexpr %s(const %s&& other) = default;", get_name(), get_name());
-    // out.writeln("constexpr %s& operator=(const %s&& other) = default;", get_name(), get_name());
-
-    out.writeln("constexpr underlying_t as_integral() const { return (underlying_t)m_value; }");
-    out.writeln("constexpr wrapper_t as_enum() const { return m_value; }");
+    cxx_writeln(out, "constexpr underlying_t as_integral() const { return (underlying_t)m_value; }");
+    cxx_writeln(out, "constexpr wrapper_t as_enum() const { return m_value; }");
     if (is_facade)
     {
-        out.writeln("constexpr facade_t as_facade() const { return (facade_t)m_value; }");
+        cxx_writeln(out, "constexpr facade_t as_facade() const { return (facade_t)m_value; }");
     }
 
     if (is_lookup)
     {
-        out.nl();
+        cxx_nl(out);
         // generate min and max values
-        out.writeln("static constexpr auto kMin = ((underlying_t)%s);", mpz_get_str(nullptr, 10, lowest));
-        out.writeln("static constexpr auto kMax = ((underlying_t)%s);", mpz_get_str(nullptr, 10, highest));
+        cxx_writeln(out, "static constexpr auto kMin = ((underlying_t)%s);", mpz_get_str(nullptr, 10, lowest));
+        cxx_writeln(out, "static constexpr auto kMax = ((underlying_t)%s);", mpz_get_str(nullptr, 10, highest));
 
         mpz_add_ui(highest, highest, 1);
-        out.writeln("static constexpr auto kCount = ((underlying_t)%s);", mpz_get_str(nullptr, 10, highest));
+        cxx_writeln(out, "static constexpr auto kCount = ((underlying_t)%s);", mpz_get_str(nullptr, 10, highest));
 
         // generate implicit checked conversion to underlying integral type
-        out.writeln("constexpr operator underlying_t() const { return as_integral(); }");
+        cxx_writeln(out, "constexpr operator underlying_t() const { return as_integral(); }");
     }
 
-    out.nl();
-    out.writeln("constexpr bool operator==(wrapper_t other) const { return m_value == other; }");
-    out.writeln("constexpr bool operator!=(wrapper_t other) const { return m_value != other; }");
+    cxx_nl(out);
+    cxx_writeln(out, "constexpr bool operator==(wrapper_t other) const { return m_value == other; }");
+    cxx_writeln(out, "constexpr bool operator!=(wrapper_t other) const { return m_value != other; }");
 
     if (!is_bitflags && !is_arithmatic && !is_lookup)
     {
@@ -1283,7 +1302,7 @@ void Variant::emit_impl(out_t& out) const
     else if (is_lookup)
     {
         // check that we are within the range of the enum
-        out.writeln("constexpr bool is_valid() const { return as_integral() >= kMin && as_integral() <= kMax; }");
+        cxx_writeln(out, "constexpr bool is_valid() const { return as_integral() >= kMin && as_integral() <= kMax; }");
     }
 
     if (is_bitflags)
@@ -1295,82 +1314,62 @@ void Variant::emit_impl(out_t& out) const
                 flags += " | ";
             flags += refl_fmt("e%s", c->get_name());
         });
-        out.writeln("static constexpr %s none() { return %s((wrapper_t)0); };", get_name(), get_name());
-        out.writeln("static constexpr %s mask() { return %s(%.*s); };", get_name(), get_name(), (int)flags.size(), flags.c_str());
+        cxx_writeln(out, "static constexpr %s none() { return %s((wrapper_t)0); };", get_name(), get_name());
+        cxx_writeln(out, "static constexpr %s mask() { return %s(%.*s); };", get_name(), get_name(), (int)flags.size(), flags.c_str());
         // emit bitwise operators
-        out.nl();
-        out.writeln("constexpr %s operator~() const { return ~m_value; }", get_name());
-        out.writeln("constexpr %s operator|(const %s& other) const { return m_value | other.m_value; }", get_name(), get_name());
-        out.writeln("constexpr %s operator&(const %s& other) const { return m_value & other.m_value; }", get_name(), get_name());
-        out.writeln("constexpr %s operator^(const %s& other) const { return m_value ^ other.m_value; }", get_name(), get_name());
-        out.writeln("constexpr %s& operator|=(const %s& other) { m_value = m_value | other.m_value; return *this; }", get_name(), get_name());
-        out.writeln("constexpr %s& operator&=(const %s& other) { m_value = m_value & other.m_value; return *this; }", get_name(), get_name());
-        out.writeln("constexpr %s& operator^=(const %s& other) { m_value = m_value ^ other.m_value; return *this; }", get_name(), get_name());
+        cxx_nl(out);
+        cxx_writeln(out, "constexpr %s operator~() const { return ~m_value; }", get_name());
+        cxx_writeln(out, "constexpr %s operator|(const %s& other) const { return m_value | other.m_value; }", get_name(), get_name());
+        cxx_writeln(out, "constexpr %s operator&(const %s& other) const { return m_value & other.m_value; }", get_name(), get_name());
+        cxx_writeln(out, "constexpr %s operator^(const %s& other) const { return m_value ^ other.m_value; }", get_name(), get_name());
+        cxx_writeln(out, "constexpr %s& operator|=(const %s& other) { m_value = m_value | other.m_value; return *this; }", get_name(), get_name());
+        cxx_writeln(out, "constexpr %s& operator&=(const %s& other) { m_value = m_value & other.m_value; return *this; }", get_name(), get_name());
+        cxx_writeln(out, "constexpr %s& operator^=(const %s& other) { m_value = m_value ^ other.m_value; return *this; }", get_name(), get_name());
 
-        out.writeln("constexpr bool test(wrapper_t other) const { return (m_value & other) != none(); }");
-        out.writeln("constexpr bool any(wrapper_t other) const { return (m_value & other) != none(); }");
-        out.writeln("constexpr bool all(wrapper_t other) const { return (m_value & other) == other; }");
-        out.writeln("constexpr bool none(wrapper_t other) const { return (m_value & other) == none(); }");
-        out.writeln("constexpr %s& set(wrapper_t other) { m_value = m_value | other; return *this; }", get_name());
-        out.writeln("constexpr %s& reset(wrapper_t other) { m_value = m_value & ~other; return *this; }", get_name());
-        out.writeln("constexpr %s& flip(wrapper_t other) { m_value = m_value ^ other; return *this; }", get_name());
+        cxx_writeln(out, "constexpr bool test(wrapper_t other) const { return (m_value & other) != none(); }");
+        cxx_writeln(out, "constexpr bool any(wrapper_t other) const { return (m_value & other) != none(); }");
+        cxx_writeln(out, "constexpr bool all(wrapper_t other) const { return (m_value & other) == other; }");
+        cxx_writeln(out, "constexpr bool none(wrapper_t other) const { return (m_value & other) == none(); }");
+        cxx_writeln(out, "constexpr %s& set(wrapper_t other) { m_value = m_value | other; return *this; }", get_name());
+        cxx_writeln(out, "constexpr %s& reset(wrapper_t other) { m_value = m_value & ~other; return *this; }", get_name());
+        cxx_writeln(out, "constexpr %s& flip(wrapper_t other) { m_value = m_value ^ other; return *this; }", get_name());
 
         // is_valid is defined as no invalid flags set
-        out.writeln("constexpr bool is_valid() const { return (m_value & ~mask()) == none(); }");
+        cxx_writeln(out, "constexpr bool is_valid() const { return (m_value & ~mask()) == none(); }");
     }
 
     if (is_arithmatic)
     {
         // implement arithmatic operators
-        out.nl();
-        out.writeln("constexpr %s operator+(const %s& other) const { return m_value + other.m_value; }", get_name(), get_name());
-        out.writeln("constexpr %s operator-(const %s& other) const { return m_value - other.m_value; }", get_name(), get_name());
-        out.writeln("constexpr %s operator*(const %s& other) const { return m_value * other.m_value; }", get_name(), get_name());
-        out.writeln("constexpr %s operator/(const %s& other) const { return m_value / other.m_value; }", get_name(), get_name());
-        out.writeln("constexpr %s operator%(const %s& other) const { return m_value %% other.m_value; }", get_name(), get_name());
-        out.writeln("constexpr %s& operator+=(const %s& other) { m_value = m_value + other.m_value; return *this; }", get_name(), get_name());
-        out.writeln("constexpr %s& operator-=(const %s& other) { m_value = m_value - other.m_value; return *this; }", get_name(), get_name());
-        out.writeln("constexpr %s& operator*=(const %s& other) { m_value = m_value * other.m_value; return *this; }", get_name(), get_name());
-        out.writeln("constexpr %s& operator/=(const %s& other) { m_value = m_value / other.m_value; return *this; }", get_name(), get_name());
-        out.writeln("constexpr %s& operator%=(const %s& other) { m_value = m_value %% other.m_value; return *this; }", get_name(), get_name());
+        cxx_nl(out);
+        cxx_writeln(out, "constexpr %s operator+(const %s& other) const { return m_value + other.m_value; }", get_name(), get_name());
+        cxx_writeln(out, "constexpr %s operator-(const %s& other) const { return m_value - other.m_value; }", get_name(), get_name());
+        cxx_writeln(out, "constexpr %s operator*(const %s& other) const { return m_value * other.m_value; }", get_name(), get_name());
+        cxx_writeln(out, "constexpr %s operator/(const %s& other) const { return m_value / other.m_value; }", get_name(), get_name());
+        cxx_writeln(out, "constexpr %s operator%(const %s& other) const { return m_value %% other.m_value; }", get_name(), get_name());
+        cxx_writeln(out, "constexpr %s& operator+=(const %s& other) { m_value = m_value + other.m_value; return *this; }", get_name(), get_name());
+        cxx_writeln(out, "constexpr %s& operator-=(const %s& other) { m_value = m_value - other.m_value; return *this; }", get_name(), get_name());
+        cxx_writeln(out, "constexpr %s& operator*=(const %s& other) { m_value = m_value * other.m_value; return *this; }", get_name(), get_name());
+        cxx_writeln(out, "constexpr %s& operator/=(const %s& other) { m_value = m_value / other.m_value; return *this; }", get_name(), get_name());
+        cxx_writeln(out, "constexpr %s& operator%=(const %s& other) { m_value = m_value %% other.m_value; return *this; }", get_name(), get_name());
 
         // is_valid is not defined for arithmatic types
     }
 
     if (is_ordered)
     {
-        out.nl();
-        out.writeln("constexpr bool operator<(const %s& other) const { return m_value < other.m_value; }", get_name());
-        out.writeln("constexpr bool operator<=(const %s& other) const { return m_value <= other.m_value; }", get_name());
-        out.writeln("constexpr bool operator>(const %s& other) const { return m_value > other.m_value; }", get_name());
-        out.writeln("constexpr bool operator>=(const %s& other) const { return m_value >= other.m_value; }", get_name());
+        cxx_nl(out);
+        cxx_writeln(out, "constexpr bool operator<(const %s& other) const { return m_value < other.m_value; }", get_name());
+        cxx_writeln(out, "constexpr bool operator<=(const %s& other) const { return m_value <= other.m_value; }", get_name());
+        cxx_writeln(out, "constexpr bool operator>(const %s& other) const { return m_value > other.m_value; }", get_name());
+        cxx_writeln(out, "constexpr bool operator>=(const %s& other) const { return m_value >= other.m_value; }", get_name());
     }
 
     emit_methods(out, ePrivacyPublic);
 
     emit_end_record(out);
-    out.nl();
-    out.writeln("static_assert(sizeof(%s) == sizeof(%s::underlying_t), \"%s size mismatch\");", get_name(), get_name(), get_name());
-}
-
-static ref_attrib_tag_t get_type_layout(ref_ast_t *ast)
-{
-    bool is_stable = has_attrib_tag(ast->attributes, eAttribLayoutStable);
-    bool is_packed = has_attrib_tag(ast->attributes, eAttribLayoutPacked);
-    bool is_system = has_attrib_tag(ast->attributes, eAttribLayoutSystem);
-    bool is_cbuffer = has_attrib_tag(ast->attributes, eAttribLayoutCBuffer);
-
-    if (is_stable || is_packed || is_system || is_cbuffer)
-    {
-        CTASSERTF(!(is_stable && is_packed && is_system && is_cbuffer), "type %s has multiple layouts", ast->name);
-
-        if (is_stable) return eAttribLayoutStable;
-        if (is_packed) return eAttribLayoutPacked;
-        if (is_system) return eAttribLayoutSystem;
-        if (is_cbuffer) return eAttribLayoutCBuffer;
-    }
-
-    return eAttribLayoutAny;
+    cxx_nl(out);
+    cxx_writeln(out, "static_assert(sizeof(%s) == sizeof(%s::underlying_t), \"%s size mismatch\");", get_name(), get_name(), get_name());
 }
 
 static const char *layout_enum_name(ref_attrib_tag_t tag)
@@ -1378,29 +1377,29 @@ static const char *layout_enum_name(ref_attrib_tag_t tag)
     switch (tag)
     {
     case eAttribLayoutStable: return "eLayoutStable";
-    case eAttribLayoutSystem: return "eLayoutSystem";
     case eAttribLayoutPacked: return "eLayoutPacked";
-    case eAttribLayoutCBuffer: return "eLayoutCBuffer";
+    case eAttribLayoutSystem: return "eLayoutSystem";
     case eAttribLayoutAny: return "eLayoutAny";
+    case eAttribLayoutConstBuffer: return "eLayoutConstBuffer";
 
     default: NEVER("invalid layout %d", tag);
     }
 }
 
-static void emit_name_info(Sema& sema, out_t& out, const char* id, ref_ast_t *ast)
+void Decl::emit_name_info(Sema& sema, cxx_emit_t *out, const char *id, const ref_ast_t *ast) const
 {
     mpz_t typeid_value;
     get_type_id(sema, ast, typeid_value);
 
-    out.writeln("static constexpr ObjectName kFullName = impl::objname(\"%s\");", id);
-    out.writeln("static constexpr ObjectName kName = impl::objname(\"%s\");", ast->name);
-    out.writeln("static constexpr ObjectId kTypeId = %s;", mpz_get_str(nullptr, 10, typeid_value));
-    out.nl();
+    cxx_writeln(out, "static constexpr ObjectName kFullName = impl::objname(\"%s\");", id);
+    cxx_writeln(out, "static constexpr ObjectName kName = impl::objname(\"%s\");", get_name());
+    cxx_writeln(out, "static constexpr ObjectId kTypeId = %s;", mpz_get_str(nullptr, 10, typeid_value));
+    cxx_nl(out);
 
-    auto layout = get_type_layout(ast);
+    auto layout = get_layout();
     const char *layout_name = layout_enum_name(layout);
 
-    out.writeln("static constexpr TypeLayout kTypeLayout = %s;", layout_name);
+    cxx_writeln(out, "static constexpr TypeLayout kTypeLayout = %s;", layout_name);
 }
 
 static const char *access_name(ref_privacy_t privacy)
@@ -1422,70 +1421,70 @@ static const char* attribs_name(ref_ast_t *ast)
     return "eAttribNone";
 }
 
-static void emit_record_fields(out_t& out, const Vector<Field*>& fields)
+static void emit_record_fields(cxx_emit_t *out, const Vector<Field*>& fields)
 {
-    out.writeln("static constexpr field_t kFields[%zu] = {", fields.size());
-        out.enter();
+    cxx_writeln(out, "static constexpr field_t kFields[%zu] = {", fields.size());
+        cxx_enter(out);
         for (size_t i = 0; i < fields.size(); ++i)
         {
             auto f = fields.get(i);
-            out.writeln("field_t {");
-            out.enter();
-            out.writeln(".name    = impl::objname(\"%s\"),", f->get_name());
-            out.writeln(".index   = %zu,", i);
-            out.writeln(".access  = %s,", access_name(f->get_privacy()));
-            out.writeln(".attribs = %s", attribs_name(f->get_ast()));
-            out.leave();
-            out.writeln("},");
+            cxx_writeln(out, "field_t {");
+            cxx_enter(out);
+            cxx_writeln(out, ".name    = impl::objname(\"%s\"),", f->get_name());
+            cxx_writeln(out, ".index   = %zu,", i);
+            cxx_writeln(out, ".access  = %s,", access_name(f->get_privacy()));
+            cxx_writeln(out, ".attribs = %s", attribs_name(f->get_ast()));
+            cxx_leave(out);
+            cxx_writeln(out, "},");
         }
-        out.leave();
-    out.writeln("};");
+        cxx_leave(out);
+    cxx_writeln(out, "};");
 }
 
-static void emit_record_visit(out_t& out, const char* id, const Vector<Field*>& fields)
+static void emit_record_visit(cxx_emit_t *out, const char* id, const Vector<Field*>& fields)
 {
-    out.writeln("constexpr auto visit_field(%s& object, const field_t& field, auto&& fn) const {", id);
-    out.enter();
-        out.writeln("switch (field.index) {");
+    cxx_writeln(out, "constexpr auto visit_field(%s& object, const field_t& field, auto&& fn) const {", id);
+    cxx_enter(out);
+        cxx_writeln(out, "switch (field.index) {");
         for (size_t i = 0; i < fields.size(); ++i)
         {
             auto f = fields.get(i);
-            out.writeln("case %zu: return fn(object.%s);", i, f->get_name());
+            cxx_writeln(out, "case %zu: return fn(object.%s);", i, f->get_name());
         }
-        out.writeln("default: return fn(ctu::OutOfBounds{field.index});");
-        out.writeln("}");
-    out.leave();
-    out.writeln("};");
-    out.nl();
-    out.writeln("constexpr void foreach(%s& object, auto&& fn) const {", id);
-    out.enter();
+        cxx_writeln(out, "default: return fn(ctu::OutOfBounds{field.index});");
+        cxx_writeln(out, "}");
+    cxx_leave(out);
+    cxx_writeln(out, "};");
+    cxx_nl(out);
+    cxx_writeln(out, "constexpr void foreach(%s& object, auto&& fn) const {", id);
+    cxx_enter(out);
         for (size_t i = 0; i < fields.size(); ++i)
         {
             auto f = fields.get(i);
-            out.writeln("fn(kFields[%zu], object.%s);", i, f->get_name());
+            cxx_writeln(out, "fn(kFields[%zu], object.%s);", i, f->get_name());
         }
-    out.leave();
-    out.writeln("};");
+    cxx_leave(out);
+    cxx_writeln(out, "};");
 }
 
-static void emit_ctor(out_t& out)
+static void emit_ctor(cxx_emit_t *out)
 {
-    out.writeln("consteval TypeInfo() : TypeInfoBase(kName, sizeof(type_t), alignof(type_t), kTypeId) { }");
+    cxx_writeln(out, "consteval TypeInfo() : TypeInfoBase(kName, sizeof(type_t), alignof(type_t), kTypeId) { }");
 }
 
-static void emit_reflect_hook(out_t& out, const char* id)
+static void emit_reflect_hook(cxx_emit_t *out, const char* id)
 {
-    out.writeln("template<> consteval auto reflect<%s>() {", id);
-    out.enter();
-    out.writeln("return TypeInfo<%s>{};", id);
-    out.leave();
-    out.writeln("}");
+    cxx_writeln(out, "template<> consteval auto reflect<%s>() {", id);
+    cxx_enter(out);
+    cxx_writeln(out, "return TypeInfo<%s>{};", id);
+    cxx_leave(out);
+    cxx_writeln(out, "}");
 }
 
-static void emit_info_header(out_t& out, const char* id)
+static void emit_info_header(cxx_emit_t *out, const char* id)
 {
-    out.writeln("template<> class TypeInfo<%s> : public TypeInfoBase {", id);
-    out.writeln("public:");
+    cxx_writeln(out, "template<> class TypeInfo<%s> : public TypeInfoBase {", id);
+    cxx_writeln(out, "public:");
 }
 
 static const char* get_decl_name(ref_ast_t *ast, Sema& sema, const char *name)
@@ -1501,14 +1500,14 @@ static const char* get_decl_name(ref_ast_t *ast, Sema& sema, const char *name)
     }
 }
 
-void RecordType::emit_serialize(out_t& out, const char *id, const Vector<Field*>& fields) const
+void RecordType::emit_serialize(cxx_emit_t *out, const char *id, const Vector<Field*>& fields) const
 {
     CT_UNUSED(out);
     CT_UNUSED(id);
     CT_UNUSED(fields);
 }
 
-void Struct::emit_reflection(Sema& sema, out_t& out) const
+void Struct::emit_reflection(Sema& sema, cxx_emit_t *out) const
 {
     if (type_is_internal(m_ast))
         return;
@@ -1519,28 +1518,28 @@ void Struct::emit_reflection(Sema& sema, out_t& out) const
     get_type_id(sema, m_ast, typeid_value);
 
     emit_info_header(out, id);
-        out.enter();
-        out.writeln("using type_t = %s;", id);
-        out.writeln("using field_t = ctu::ObjectField;");
-        out.writeln("using Type = type_t;");
-        out.writeln("using Field = field_t;");
-        out.nl();
+        cxx_enter(out);
+        cxx_writeln(out, "using type_t = %s;", id);
+        cxx_writeln(out, "using field_t = ctu::ObjectField;");
+        cxx_writeln(out, "using Type = type_t;");
+        cxx_writeln(out, "using Field = field_t;");
+        cxx_nl(out);
         emit_name_info(sema, out, id, m_ast);
-        out.nl();
+        cxx_nl(out);
         emit_record_fields(out, m_fields);
-        out.nl();
+        cxx_nl(out);
         emit_ctor(out);
-        out.nl();
+        cxx_nl(out);
         emit_record_visit(out, id, m_fields);
         emit_serialize(out, id, m_fields);
-        out.leave();
-    out.writeln("};");
-    out.nl();
+        cxx_leave(out);
+    cxx_writeln(out, "};");
+    cxx_nl(out);
     emit_reflect_hook(out, id);
-    out.nl();
+    cxx_nl(out);
 }
 
-void Class::emit_reflection(Sema& sema, out_t& out) const
+void Class::emit_reflection(Sema& sema, cxx_emit_t *out) const
 {
     if (type_is_internal(m_ast))
         return;
@@ -1552,41 +1551,41 @@ void Class::emit_reflection(Sema& sema, out_t& out) const
     get_type_id(sema, m_ast, typeid_value);
 
     emit_info_header(out, id);
-        out.enter();
-        out.writeln("using type_t = %s;", id);
-        out.writeln("using super_t = %s;", parent);
-        out.writeln("using field_t = ctu::ObjectField;");
-        out.writeln("using method_t = ctu::ObjectMethod;");
-        out.writeln("using Type = type_t;");
-        out.writeln("using Super = super_t;");
-        out.writeln("using Field = field_t;");
-        out.writeln("using Method = method_t;");
-        out.nl();
+        cxx_enter(out);
+        cxx_writeln(out, "using type_t = %s;", id);
+        cxx_writeln(out, "using super_t = %s;", parent);
+        cxx_writeln(out, "using field_t = ctu::ObjectField;");
+        cxx_writeln(out, "using method_t = ctu::ObjectMethod;");
+        cxx_writeln(out, "using Type = type_t;");
+        cxx_writeln(out, "using Super = super_t;");
+        cxx_writeln(out, "using Field = field_t;");
+        cxx_writeln(out, "using Method = method_t;");
+        cxx_nl(out);
         emit_name_info(sema, out, id, m_ast);
-        out.writeln("static constexpr bool kHasSuper = %s;", m_parent != nullptr ? "true" : "false");
-        out.writeln("static constexpr TypeInfo<%s> kSuper{};", parent);
-        out.nl();
+        cxx_writeln(out, "static constexpr bool kHasSuper = %s;", m_parent != nullptr ? "true" : "false");
+        cxx_writeln(out, "static constexpr TypeInfo<%s> kSuper{};", parent);
+        cxx_nl(out);
         emit_record_fields(out, m_fields);
-        out.nl();
-        out.writeln("// methods");
-        out.writeln("static constexpr method_t kMethods[%zu] = {", m_methods.size());
-            out.enter();
+        cxx_nl(out);
+        cxx_writeln(out, "// methods");
+        cxx_writeln(out, "static constexpr method_t kMethods[%zu] = {", m_methods.size());
+            cxx_enter(out);
             for (size_t i = 0; i < m_methods.size(); ++i)
             {
                 auto m = m_methods.get(i);
-                out.writeln("method_t { .name = impl::objname(\"%s\"), .index = %zu },", m->get_repr(), i);
+                cxx_writeln(out, "method_t { .name = impl::objname(\"%s\"), .index = %zu },", m->get_repr(), i);
             }
-            out.leave();
-        out.writeln("};");
+            cxx_leave(out);
+        cxx_writeln(out, "};");
         emit_ctor(out);
-        out.nl();
+        cxx_nl(out);
         emit_record_visit(out, id, m_fields);
         emit_serialize(out, id, m_fields);
-        out.leave();
-    out.writeln("};");
-    out.nl();
+        cxx_leave(out);
+    cxx_writeln(out, "};");
+    cxx_nl(out);
     emit_reflect_hook(out, id);
-    out.nl();
+    cxx_nl(out);
 }
 
 size_t Variant::max_tostring() const {
@@ -1637,7 +1636,7 @@ Case *Variant::get_zero_case() const
     return nullptr;
 }
 
-void Variant::emit_reflection(Sema& sema, out_t& out) const
+void Variant::emit_reflection(Sema& sema, cxx_emit_t *out) const
 {
     if (type_is_internal(m_ast))
         return;
@@ -1651,88 +1650,88 @@ void Variant::emit_reflection(Sema& sema, out_t& out) const
     size_t max_tostring_length = max_tostring();
 
     emit_info_header(out, id);
-        out.enter();
-        out.writeln("using type_t = %s;", id);
-        out.writeln("using underlying_t = %s::underlying_t;", id);
-        out.writeln("using case_t = ctu::EnumCase<%s>;", id);
-        out.nl();
-        out.writeln("static constexpr size_t kMaxLength = %zu;", max_tostring_length);
-        out.writeln("using string_t = SmallString<kMaxLength>;");
-        out.nl();
-        out.writeln("using Type = type_t;");
-        out.writeln("using Underlying = underlying_t;");
-        out.writeln("using Case = case_t;");
-        out.writeln("using String = string_t;");
-        out.nl();
+        cxx_enter(out);
+        cxx_writeln(out, "using type_t = %s;", id);
+        cxx_writeln(out, "using underlying_t = %s::underlying_t;", id);
+        cxx_writeln(out, "using case_t = ctu::EnumCase<%s>;", id);
+        cxx_nl(out);
+        cxx_writeln(out, "static constexpr size_t kMaxLength = %zu;", max_tostring_length);
+        cxx_writeln(out, "using string_t = SmallString<kMaxLength>;");
+        cxx_nl(out);
+        cxx_writeln(out, "using Type = type_t;");
+        cxx_writeln(out, "using Underlying = underlying_t;");
+        cxx_writeln(out, "using Case = case_t;");
+        cxx_writeln(out, "using String = string_t;");
+        cxx_nl(out);
         emit_name_info(sema, out, id, m_ast);
         if (m_parent)
-            out.writeln("static constexpr TypeInfo<underlying_t> kUnderlying{};");
+            cxx_writeln(out, "static constexpr TypeInfo<underlying_t> kUnderlying{};");
         else
-            out.writeln("static constexpr TypeInfo<void> kUnderlying{};");
+            cxx_writeln(out, "static constexpr TypeInfo<void> kUnderlying{};");
 
-        out.writeln("static constexpr bool kHasDefault = %s;", m_default_case != nullptr ? "true" : "false");
+        cxx_writeln(out, "static constexpr bool kHasDefault = %s;", m_default_case != nullptr ? "true" : "false");
         if (m_default_case)
-            out.writeln("static constexpr %s kDefaultCase = %s::e%s;", id, id, m_default_case->get_name());
+            cxx_writeln(out, "static constexpr %s kDefaultCase = %s::e%s;", id, id, m_default_case->get_name());
 
-        out.nl();
-        out.writeln("static constexpr case_t kCases[%zu] = {", m_cases.size());
-            out.enter();
+        cxx_nl(out);
+        cxx_writeln(out, "static constexpr case_t kCases[%zu] = {", m_cases.size());
+            cxx_enter(out);
             m_cases.foreach([&](auto c) {
-                out.writeln("case_t { impl::objname(\"%s\"), %s::e%s },", c->get_repr(), id, c->get_name());
+                cxx_writeln(out, "case_t { impl::objname(\"%s\"), %s::e%s },", c->get_repr(), id, c->get_name());
             });
-            out.leave();
-        out.writeln("};");
-        out.nl();
+            cxx_leave(out);
+        cxx_writeln(out, "};");
+        cxx_nl(out);
         emit_ctor(out);
-        out.nl();
+        cxx_nl(out);
 
-        out.nl();
-        out.writeln("constexpr string_t to_string(type_t value, [[maybe_unused]] int base = 10) const {");
-        out.enter();
+        cxx_nl(out);
+        cxx_writeln(out, "constexpr string_t to_string(type_t value, [[maybe_unused]] int base = 10) const {");
+        cxx_enter(out);
         if (is_bitflags)
         {
             Case *zero = get_zero_case();
-            out.writeln("string_t result;");
+            cxx_writeln(out, "string_t result;");
             if (zero != nullptr)
             {
-                out.writeln("if (value == %s::e%s) return impl::objname(\"%s\");", id, zero->get_name(), zero->get_repr());
+                cxx_writeln(out, "if (value == %s::e%s) return impl::objname(\"%s\");", id, zero->get_name(), zero->get_repr());
             }
-            out.writeln("bool first = true;");
-            out.writeln("for (auto option : kCases) {");
-            out.enter();
+            cxx_writeln(out, "bool first = true;");
+            cxx_writeln(out, "for (auto option : kCases) {");
+            cxx_enter(out);
             if (zero != nullptr)
             {
-                out.writeln("if ((option.value != %s::e%s) && (value & option.value) == option.value) {", id, zero->get_name());
+                cxx_writeln(out, "if ((option.value != %s::e%s) && (value & option.value) == option.value) {", id, zero->get_name());
             }
             else
             {
-                out.writeln("if ((value & option.value) == option.value) {");
+                cxx_writeln(out, "if ((value & option.value) == option.value) {");
             }
-            out.enter();
-            out.writeln("if (!first) result += \", \";");
-            out.writeln("result += option.name;");
-            out.writeln("first = false;");
-            out.leave();
-            out.writeln("}");
-            out.leave();
-            out.writeln("}");
-            out.writeln("return result;");
+            cxx_enter(out);
+            cxx_writeln(out, "if (!first) result += \", \";");
+            cxx_writeln(out, "result += option.name;");
+            cxx_writeln(out, "first = false;");
+            cxx_leave(out);
+            cxx_writeln(out, "}");
+            cxx_leave(out);
+            cxx_writeln(out, "}");
+            cxx_writeln(out, "return result;");
         }
         else
         {
-            out.writeln("for (auto option : kCases) {");
-            out.enter();
-            out.writeln("if (option.value == value) return option.name;");
-            out.leave();
-            out.writeln("}");
-            out.writeln("return string_t(value.as_integral(), base);");
+            cxx_writeln(out, "for (auto option : kCases) {");
+            cxx_enter(out);
+            cxx_writeln(out, "if (option.value == value) return option.name;");
+            cxx_leave(out);
+            cxx_writeln(out, "}");
+            cxx_writeln(out, "return string_t(value.as_integral(), base);");
         }
-        out.leave();
-        out.writeln("};");
-    out.leave();
-    out.writeln("};");
+        cxx_leave(out);
+        cxx_writeln(out, "};");
+    cxx_leave(out);
+    cxx_writeln(out, "};");
 
-    out.nl();
+    cxx_nl(out);
     emit_reflect_hook(out, id);
-    out.nl();
+    cxx_nl(out);
 }

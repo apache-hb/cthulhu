@@ -1,6 +1,6 @@
 #pragma once
 
-#include "json/ast.h"
+#include "json/json.h"
 
 #include "base/panic.h"
 #include "std/map.h"
@@ -64,9 +64,9 @@ namespace ctu::json {
         friend class ObjectIterator;
         friend class ArrayIterator;
 
-        json_ast_t *m_ast;
+        json_t *m_ast;
 
-        Json(json_ast_t *ast)
+        Json(json_t *ast)
             : m_ast(ast)
         { }
 

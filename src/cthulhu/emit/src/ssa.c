@@ -25,7 +25,7 @@ typedef struct ssa_emit_t
     map_t *deps;
 } ssa_emit_t;
 
-static char *params_to_string(typevec_t *params, arena_t *arena)
+static char *fn_params_to_string(typevec_t *params, arena_t *arena)
 {
     size_t len = typevec_len(params);
     vector_t *vec = vector_of(len, arena);
@@ -347,7 +347,7 @@ static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
 
         write_string(io, "fn %s(%s) -> %s [variadic: %s]\n",
             fn->name,
-            params_to_string(closure.params, base->arena), type_to_string(closure.result, base->arena),
+            fn_params_to_string(closure.params, base->arena), type_to_string(closure.result, base->arena),
             closure.variadic ? "true" : "false"
         );
         emit_ssa_attribs(io, fn, base->arena);

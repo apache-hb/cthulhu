@@ -97,25 +97,30 @@ typedef enum ref_attrib_tag_t
     // this wraps an external type, which is defined, but not by us
     eAttribExternal,
 
-    // match system abi
+    // match system abi, for interop with other languages
     eAttribLayoutSystem,
 
     // stable abi for persistent serialization
     // TODO: what should we match, protobuf, flatbuffers, capnproto, etc?
     eAttribLayoutStable,
 
-    // optimize for d3d cbuffer transfer
-    // TODO: need math types for this
-    eAttribLayoutCBuffer,
-
     // pack fields
     eAttribLayoutPacked,
 
-    // d3d12 input elements
-    eAttribLayoutInput,
-
-    // pick the best internal layout
+    // pick the best internal layout, will only be used in c++
     eAttribLayoutAny,
+
+    // generate serialize and deserialize functions
+    eAttribSerialize,
+
+    // generate checksum functions
+    eAttribChecksum,
+
+    // optimize for d3d cbuffer transfer
+    eAttribLayoutConstBuffer,
+
+    // generate d3d12 input element description
+    eAttribVertexInput,
 
     ///
     /// these have a string arg
@@ -132,6 +137,7 @@ typedef enum ref_config_tag_t
     eRefConfigArray,
     eRefConfigVector,
     eRefConfigSpan,
+    eRefConfigString,
 
     eRefConfigCount
 } ref_config_tag_t;

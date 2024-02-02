@@ -5,6 +5,7 @@ json_api = configure_file(
 )
 
 json_include = include_directories('.', 'include')
+json_impl_include = include_directories('src')
 
 src = [
     'src/json.c',
@@ -22,7 +23,8 @@ libjson = library('json', src,
     build_by_default : false,
     c_args : [ '-DCT_JSON_BUILD=1', generated_args ],
     dependencies : [ core, scan, interop, gmp, std, notify, events, util ],
-    include_directories : json_include
+    include_directories : [ json_include, json_impl_include ],
+    override_options : [ 'unity=off' ]
 )
 
 json = declare_dependency(

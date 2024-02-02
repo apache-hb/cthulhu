@@ -206,16 +206,17 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     TOK_FORMAT "format"
     TOK_INPUT "input"
     TOK_LOOKUP "lookup"
+    TOK_SERIALIZE "serialize"
+    TOK_CHECKSUM "checksum"
 
     /* config only keywords */
     TOK_CONFIG "config"
     TOK_END_CONFIG "; (end config)"
-    TOK_API "api"
-    TOK_SERIALIZE "serialize"
-    TOK_CHECKSUM "checksum"
-    TOK_VECTOR "vector"
-    TOK_SPAN "span"
-    TOK_ARRAY "array"
+    TOK_CFG_API "api (config option)"
+    TOK_CFG_VECTOR "vector (config option)"
+    TOK_CFG_SPAN "span (config option)"
+    TOK_CFG_ARRAY "array (config option)"
+    TOK_CFG_STRING "string (config option)"
 
     TOK_NULL "null"
     TOK_TRUE "true"
@@ -257,11 +258,11 @@ import: TOK_IMPORT TOK_STRING TOK_SEMICOLON { $$ = ref_import(x, @$, $2); }
 config: TOK_CONFIG config_body TOK_END_CONFIG { $$ = $2; }
     ;
 
-config_body: TOK_API TOK_ASSIGN config_value { $$ = ref_config_tag(x, @$, eRefConfigSerialize, $3); }
-    | TOK_SERIALIZE TOK_ASSIGN config_value { $$ = ref_config_tag(x, @$, eRefConfigApi, $3); }
-    | TOK_VECTOR TOK_ASSIGN config_value { $$ = ref_config_tag(x, @$, eRefConfigVector, $3); }
-    | TOK_SPAN TOK_ASSIGN config_value { $$ = ref_config_tag(x, @$, eRefConfigSpan, $3); }
-    | TOK_ARRAY TOK_ASSIGN config_value { $$ = ref_config_tag(x, @$, eRefConfigArray, $3); }
+config_body: TOK_CFG_API TOK_ASSIGN config_value { $$ = ref_config_tag(x, @$, eRefConfigSerialize, $3); }
+    | TOK_CFG_VECTOR TOK_ASSIGN config_value { $$ = ref_config_tag(x, @$, eRefConfigVector, $3); }
+    | TOK_CFG_SPAN TOK_ASSIGN config_value { $$ = ref_config_tag(x, @$, eRefConfigSpan, $3); }
+    | TOK_CFG_ARRAY TOK_ASSIGN config_value { $$ = ref_config_tag(x, @$, eRefConfigArray, $3); }
+    | TOK_CFG_STRING TOK_ASSIGN config_value { $$ = ref_config_tag(x, @$, eRefConfigString, $3); }
     ;
 
 config_value: TOK_IDENT { $$ = ref_ident(x, @$, $1); }
@@ -448,6 +449,8 @@ attrib: TOK_DEPRECATED TOK_LPAREN string_list TOK_RPAREN { $$ = ref_attrib_depre
     | TOK_FORMAT TOK_LPAREN string_list TOK_RPAREN { $$ = ref_attrib_string(x, @$, eAttribFormat, ref_make_string($3)); }
     | simple_attrib { $$ = ref_attrib_tag(x, @$, $1); }
     | TOK_DOC TOK_LPAREN doc_body TOK_RPAREN { $$ = ref_attrib_docs(x, @$, $3); }
+    | TOK_SERIALIZE { $$ = ref_attrib_tag(x, @$, eAttribSerialize); }
+    | TOK_CHECKSUM { $$ = ref_attrib_tag(x, @$, eAttribChecksum); }
     ;
 
 doc_body: doc_item { $$ = map_new(32, kTypeInfoString, BISON_ARENA(x)); map_set($$, $1.ident, $1.body); }
@@ -471,10 +474,9 @@ simple_attrib: TOK_TRANSIENT { $$ = eAttribTransient; }
 layout_attrib: TOK_SYSTEM { $$ = eAttribLayoutSystem; }
     | TOK_EXPORT { $$ = eAttribLayoutStable; }
     | TOK_SERIALIZE { $$ = eAttribLayoutStable; }
-    | TOK_CBUFFER { $$ = eAttribLayoutCBuffer; }
+    | TOK_CBUFFER { $$ = eAttribLayoutConstBuffer; }
     | TOK_PACKED { $$ = eAttribLayoutPacked; }
     | TOK_DEFAULT { $$ = eAttribLayoutAny; }
-    | TOK_INPUT { $$ = eAttribLayoutInput; }
     ;
 
 string_list: TOK_STRING { $$ = stringlist_begin(x, @$, $1); }

@@ -362,7 +362,7 @@ void map_reset(map_t *map)
 // iteration
 
 CT_PUREFN
-static bucket_t *next_in_chain(bucket_t *entry)
+static bucket_t *map_next_in_chain(bucket_t *entry)
 {
     if (entry == NULL || entry->key == NULL)
     {
@@ -391,9 +391,9 @@ static bucket_t *next_in_chain(bucket_t *entry)
  * @return bucket_t* the next bucket or NULL if there are no more buckets
  */
 CT_PUREFN
-static bucket_t *find_next_bucket(map_t *map, size_t *index, bucket_t *previous)
+static bucket_t *set_find_next_bucket(map_t *map, size_t *index, bucket_t *previous)
 {
-    bucket_t *entry = next_in_chain(previous);
+    bucket_t *entry = map_next_in_chain(previous);
     if (entry != NULL)
     {
         return entry;
@@ -410,7 +410,7 @@ static bucket_t *find_next_bucket(map_t *map, size_t *index, bucket_t *previous)
             return entry;
         }
 
-        entry = next_in_chain(entry);
+        entry = map_next_in_chain(entry);
         if (entry != NULL)
         {
             *index = i;
@@ -428,8 +428,8 @@ map_iter_t map_iter(map_t *map)
 
     size_t index = 0;
 
-    bucket_t *bucket = find_next_bucket(map, &index, NULL);
-    bucket_t *next = find_next_bucket(map, &index, bucket);
+    bucket_t *bucket = set_find_next_bucket(map, &index, NULL);
+    bucket_t *next = set_find_next_bucket(map, &index, bucket);
 
     map_iter_t iter = {
         .map = map,
@@ -452,7 +452,7 @@ map_entry_t map_next(map_iter_t *iter)
     };
 
     iter->bucket = iter->next;
-    iter->next = find_next_bucket(iter->map, &iter->index, iter->bucket);
+    iter->next = set_find_next_bucket(iter->map, &iter->index, iter->bucket);
 
     return entry;
 }
