@@ -156,6 +156,7 @@ generated_args = cc.get_supported_arguments(
     '-Wno-unused-but-set-variable',
     '-Wno-unused-function',
     '-Wno-unused-parameter',
+    '-Wno-unused-function',
 
     # may need to update bison soon
     '-Wno-deprecated-non-prototype',

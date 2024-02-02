@@ -25,6 +25,12 @@ typedef struct test_suite_t
     typevec_t *results;
 } test_suite_t;
 
+typedef struct test_group_t
+{
+    test_suite_t *suite;
+    const char *name;
+} test_group_t;
+
 /// @brief initialize the test suite
 ///
 /// @param suite the name of the test suite
@@ -80,12 +86,6 @@ CT_UNIT_API test_group_t test_group(test_suite_t *suite, const char *name);
 ///
 /// @return the exit code of the test suite
 CT_UNIT_API int test_suite_finish(test_suite_t *suite);
-
-typedef struct test_group_t
-{
-    test_suite_t *suite;
-    const char *name;
-} test_group_t;
 
 #define GROUP_EXPECT_PASS2(GROUP, ID, ...)                                                                              \
     do                                                                                                                 \

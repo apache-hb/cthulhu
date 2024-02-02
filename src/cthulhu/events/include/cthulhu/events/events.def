@@ -520,4 +520,12 @@ CTU_EVENT(IntegerOverflow, {
         "An integer overflow was encountered.",
 })
 
+CTU_EVENT(InvalidFloatLiteral, {
+    .severity = eSeverityFatal,
+    .id = "M0072",
+    .brief = "Invalid float literal",
+    .description =
+        "Invalid floating point literal value.",
+})
+
 #undef CTU_EVENT

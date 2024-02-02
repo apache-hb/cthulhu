@@ -2,9 +2,11 @@
 
 #include <ctu_interop_api.h>
 
-#include "scan/node.h"
+#include "core/where.h"
 
 #include "base/panic.h"
+
+typedef struct scan_t scan_t;
 
 CT_BEGIN_API
 

@@ -13,10 +13,10 @@ libunit = library('unit', 'unit/ct-test.c',
 )
 
 unit = declare_dependency(
-    compile_args : cc.get_supported_arguments('-Wno-unused-result', '-Wno-unused-value'),
+    compile_args : generated_args,
     link_with : libunit,
     include_directories : unit_include,
-    dependencies : [ base, std ]
+    dependencies : [ base, std, memory, arena, setup ]
 )
 
 cases = [
@@ -41,7 +41,7 @@ endforeach
 
 vfs_exe = executable('vfs', 'cases/io/vfs.c',
     include_directories : '.',
-    dependencies : [ unit, base, scan, memory, fs, setup, arena ]
+    dependencies : [ unit, base, scan, fs, setup, arena ]
 )
 
 test('vfs', vfs_exe, suite : 'unit')
@@ -50,7 +50,7 @@ test('vfs', vfs_exe, suite : 'unit')
 
 fs_exe = executable('fs', 'cases/io/fs.c',
     include_directories : '.',
-    dependencies : [ unit, base, std, scan, memory, fs, setup, arena ]
+    dependencies : [ unit, base, std, scan, fs, setup, arena ]
 )
 
 test('fs', fs_exe,
@@ -62,7 +62,9 @@ test('fs', fs_exe,
 
 argparse_exe = executable('argparse.argparse', 'cases/argparse/argparse.c',
     include_directories : '.',
-    dependencies : [ unit, memory, base, std, memory, config, argparse, setup, arena ]
+    dependencies : [ unit, memory, base, std, config, argparse, setup, arena ]
 )
 
 test('argparse', argparse_exe, suite : 'unit')
+
+subdir('json')

@@ -1,5 +1,7 @@
 #include "base/panic.h"
 
+#include "scan/scan.h"
+
 #include "interop/flex.h"
 
 #include <limits.h>

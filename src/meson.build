@@ -7,6 +7,9 @@ gmp = dependency('gmp', fallback : [ 'mini_gmp', 'gmp' ])
 # compiler libraries
 subdir('cthulhu')
 
+# miscellaneous libraries
+subdir('extra')
+
 # codegen drivers
 subdir('target')
 
