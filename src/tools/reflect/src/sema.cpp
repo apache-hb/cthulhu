@@ -82,6 +82,9 @@ declmap_t refl::get_builtin_types()
     decls.set("isize", new IntType("isize", eDigitSize, eSignSigned));
     decls.set("float", new FloatType("float"));
 
+    // TODO: maybe configurable
+    decls.set("typeid", new IntType("typeid", eDigit32, eSignUnsigned));
+
     return decls;
 }
 
@@ -148,6 +151,11 @@ Decl *Sema::forward_decl(const char *name, ref_ast_t *ast)
         TypeAlias *alias = new TypeAlias(ast);
         add_decl(name, alias);
         return alias;
+    }
+    case eAstUnion: {
+        Union *uni = new Union(ast);
+        add_decl(name, uni);
+        return uni;
     }
     default: return nullptr;
     }
@@ -854,6 +862,10 @@ void Variant::resolve(Sema& sema)
     m_default_case = m_ast->default_case ? cases.get(m_ast->default_case->name) : nullptr;
 }
 
+Union::Union(ref_ast_t *ast)
+    : RecordType(ast, eKindUnion, "union")
+{ }
+
 static const char *digit_cxx_name(digit_t digit, sign_t sign)
 {
     switch (digit)
@@ -1441,32 +1453,6 @@ static void emit_record_fields(cxx_emit_t *out, const Vector<Field*>& fields)
     cxx_writeln(out, "};");
 }
 
-static void emit_record_visit(cxx_emit_t *out, const char* id, const Vector<Field*>& fields)
-{
-    cxx_writeln(out, "constexpr auto visit_field(%s& object, const field_t& field, auto&& fn) const {", id);
-    cxx_enter(out);
-        cxx_writeln(out, "switch (field.index) {");
-        for (size_t i = 0; i < fields.size(); ++i)
-        {
-            auto f = fields.get(i);
-            cxx_writeln(out, "case %zu: return fn(object.%s);", i, f->get_name());
-        }
-        cxx_writeln(out, "default: return fn(ctu::OutOfBounds{field.index});");
-        cxx_writeln(out, "}");
-    cxx_leave(out);
-    cxx_writeln(out, "};");
-    cxx_nl(out);
-    cxx_writeln(out, "constexpr void foreach(%s& object, auto&& fn) const {", id);
-    cxx_enter(out);
-        for (size_t i = 0; i < fields.size(); ++i)
-        {
-            auto f = fields.get(i);
-            cxx_writeln(out, "fn(kFields[%zu], object.%s);", i, f->get_name());
-        }
-    cxx_leave(out);
-    cxx_writeln(out, "};");
-}
-
 static void emit_ctor(cxx_emit_t *out)
 {
     cxx_writeln(out, "consteval TypeInfo() : TypeInfoBase(kName, sizeof(type_t), alignof(type_t), kTypeId) { }");
@@ -1500,11 +1486,12 @@ static const char* get_decl_name(ref_ast_t *ast, Sema& sema, const char *name)
     }
 }
 
-void RecordType::emit_serialize(cxx_emit_t *out, const char *id, const Vector<Field*>& fields) const
+void RecordType::emit_serialize_body(cxx_emit_t *out, const char *id, const Vector<Field*>& fields) const
 {
-    CT_UNUSED(out);
-    CT_UNUSED(id);
-    CT_UNUSED(fields);
+    if (!Decl::emit_serialize())
+        return;
+
+    // TODO: implement serialization
 }
 
 void Struct::emit_reflection(Sema& sema, cxx_emit_t *out) const
@@ -1530,8 +1517,7 @@ void Struct::emit_reflection(Sema& sema, cxx_emit_t *out) const
         cxx_nl(out);
         emit_ctor(out);
         cxx_nl(out);
-        emit_record_visit(out, id, m_fields);
-        emit_serialize(out, id, m_fields);
+        emit_serialize_body(out, id, m_fields);
         cxx_leave(out);
     cxx_writeln(out, "};");
     cxx_nl(out);
@@ -1563,6 +1549,7 @@ void Class::emit_reflection(Sema& sema, cxx_emit_t *out) const
         cxx_nl(out);
         emit_name_info(sema, out, id, m_ast);
         cxx_writeln(out, "static constexpr bool kHasSuper = %s;", m_parent != nullptr ? "true" : "false");
+        cxx_writeln(out, "using ReflectSuper = TypeInfo<Super>;");
         cxx_writeln(out, "static constexpr TypeInfo<%s> kSuper{};", parent);
         cxx_nl(out);
         emit_record_fields(out, m_fields);
@@ -1579,8 +1566,7 @@ void Class::emit_reflection(Sema& sema, cxx_emit_t *out) const
         cxx_writeln(out, "};");
         emit_ctor(out);
         cxx_nl(out);
-        emit_record_visit(out, id, m_fields);
-        emit_serialize(out, id, m_fields);
+        emit_serialize_body(out, id, m_fields);
         cxx_leave(out);
     cxx_writeln(out, "};");
     cxx_nl(out);

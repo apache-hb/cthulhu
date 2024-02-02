@@ -313,8 +313,8 @@ union_field: opt_attrib_seq TOK_CASE TOK_LPAREN ident_list TOK_RPAREN union_fiel
 union_field_body: TOK_LBRACE var_decl_seq TOK_RBRACE { $$ = $2; }
     ;
 
-var_decl_seq: var_name_decl { $$ = vector_init($1, BISON_ARENA(x)); }
-    | var_decl_seq var_name_decl { vector_push(&$1, $2); $$ = $1; }
+var_decl_seq: var_name_decl TOK_SEMICOLON { $$ = vector_init($1, BISON_ARENA(x)); }
+    | var_decl_seq var_name_decl TOK_SEMICOLON { vector_push(&$1, $2); $$ = $1; }
     ;
 
 opt_inherit: %empty { $$ = NULL; }

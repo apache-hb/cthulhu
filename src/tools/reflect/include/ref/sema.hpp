@@ -154,11 +154,13 @@ namespace refl {
         eKindClass,
         eKindVariant,
         eKindAlias,
+        eKindUnion,
 
         eKindField,
         eKindParam,
         eKindCase,
         eKindMethod,
+        eKindChoice,
 
         eKindTypeTemplate,
         eKindTypeInstance,
@@ -675,7 +677,7 @@ namespace refl {
         void emit_end_record(cxx_emit_t *out) const;
         ref_privacy_t emit_fields(cxx_emit_t *out, const Vector<Field*>& fields, ref_privacy_t privacy) const;
 
-        void emit_serialize(cxx_emit_t *out, const char *id, const Vector<Field*>& fields) const;
+        void emit_serialize_body(cxx_emit_t *out, const char *id, const Vector<Field*>& fields) const;
 
     public:
         void resolve(Sema& sema) override;
@@ -758,6 +760,31 @@ namespace refl {
         size_t max_tostring() const;
 
         size_t max_tostring_bitflags() const;
+    };
+
+    class Option : public RecordType {
+        Vector<Field*> m_fields { 32, get_global_arena() };
+        Vector<Case*> m_cases { 32, get_global_arena() };
+
+    public:
+        Option(ref_ast_t *ast);
+
+        void resolve(Sema& sema) override;
+
+        void emit_impl(cxx_emit_t *out) const override;
+        void emit_reflection(Sema& sema, cxx_emit_t *out) const override;
+    };
+
+    class Union : public RecordType {
+        Vector<Option*> m_options { 32, get_global_arena() };
+
+    public:
+        Union(ref_ast_t *ast);
+
+        void resolve(Sema& sema) override;
+
+        void emit_impl(cxx_emit_t *out) const override;
+        void emit_reflection(Sema& sema, cxx_emit_t *out) const override;
     };
 
     class Expr : public Tree {
