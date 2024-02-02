@@ -25,7 +25,7 @@ typedef struct simple_t
     format_context_t fmt;
 } simple_t;
 
-static void print_notes(simple_t *simple, const vector_t *notes)
+static void print_simple_notes(simple_t *simple, const vector_t *notes)
 {
     if (notes == NULL)
         return;
@@ -197,5 +197,5 @@ void text_report_simple(text_config_t config, const event_t *event)
 
     print_segments(&simple, event);
 
-    print_notes(&simple, event->notes);
+    print_simple_notes(&simple, event->notes);
 }

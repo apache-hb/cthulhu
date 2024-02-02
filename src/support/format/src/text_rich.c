@@ -20,7 +20,7 @@
 #define COLOUR_PATH eColourBlue
 #define COLOUR_UNDERLINE eColourMagenta
 #define COLOUR_SEGMENT eColourGreen
-#define COLOUR_NOTE eColourYellow
+#define COLOUR_NOTE_STAR eColourYellow
 #define COLOUR_MESSAGE eColourRed
 
 typedef struct rich_t
@@ -496,7 +496,7 @@ static void print_extra_files(rich_t *rich)
     }
 }
 
-static void print_notes(rich_t *rich)
+static void print_rich_notes(rich_t *rich)
 {
     CTASSERT(rich != NULL);
 
@@ -506,7 +506,7 @@ static void print_notes(rich_t *rich)
 
     text_config_t config = rich->config;
 
-    char *coloured = colour_text(rich->fmt, COLOUR_NOTE, "*");
+    char *coloured = colour_text(rich->fmt, COLOUR_NOTE_STAR, "*");
     size_t len = vector_len(event->notes);
     for (size_t i = 0; i < len; i++)
     {
@@ -552,7 +552,7 @@ void text_report_rich(text_config_t config, const event_t *event)
 
     print_extra_files(&ctx);
 
-    print_notes(&ctx);
+    print_rich_notes(&ctx);
 
     if (config.cache == NULL)
         cache_map_delete(ctx.file_cache);
