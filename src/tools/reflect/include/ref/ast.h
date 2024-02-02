@@ -21,7 +21,8 @@ CT_BEGIN_API
 
 typedef struct ref_ast_t ref_ast_t;
 
-typedef enum ref_kind_t {
+typedef enum ref_kind_t
+{
     eAstProgram,
     eAstImport,
 
@@ -29,6 +30,8 @@ typedef enum ref_kind_t {
     eAstVariant,
     eAstStruct,
     eAstAlias,
+    eAstUnion,
+    eAstUnionField,
 
     eAstPrivacy,
     eAstField,
@@ -41,8 +44,8 @@ typedef enum ref_kind_t {
     eAstInteger,
     eAstBool,
 
-    eAstPointer, // a pointer
-    eAstOpaque, // an opaque type, for stuff external to the reflection system
+    eAstPointer,   // a pointer
+    eAstOpaque,    // an opaque type, for stuff external to the reflection system
     eAstReference, // a reference, c++ semantics
 
     eAstSpan,
@@ -55,15 +58,15 @@ typedef enum ref_kind_t {
     eAstCompare,
     eAstUnary,
 
-    eAstAttribConfig, // load from textual config
-    eAstAttribAssert, // pre/post conditions on method
+    eAstAttribConfig,     // load from textual config
+    eAstAttribAssert,     // pre/post conditions on method
     eAstAttribDeprecated, // warn on use
-    eAstAttribTypeId, // type id for serialization
-    eAstAttribAlign, // alignment for serialization
-    eAstAttribRemote, // enable rpc
-    eAstAttribDocs, // documentation
+    eAstAttribTypeId,     // type id for serialization
+    eAstAttribAlign,      // alignment for serialization
+    eAstAttribRemote,     // enable rpc
+    eAstAttribDocs,       // documentation
 
-    eAstAttribTag, // a tag attribute, one of ref_attrib_tag_t
+    eAstAttribTag,    // a tag attribute, one of ref_attrib_tag_t
     eAstAttribString, // an attribute that has a single string argument
 
     eAstConfig, // field config
@@ -71,12 +74,14 @@ typedef enum ref_kind_t {
     eAstCount
 } ref_kind_t;
 
-typedef enum ref_attrib_tag_t {
-    eAttribTransient, // this field should not be serialized
-    eAttribBitflags, // this enum is a bitflag type, define bitwise operators
+typedef enum ref_attrib_tag_t
+{
+    eAttribTransient,  // this field should not be serialized
+    eAttribBitflags,   // this enum is a bitflag type, define bitwise operators
     eAttribArithmatic, // this enum is an arithmatic type, define arithmatic operators
-    eAttribIterator, // this enum is an iterator, define increment/decrement operators and generate begin/end functions
-    eAttribOrdered, // allow order comparison of enums
+    eAttribIterator, // this enum is an iterator, define increment/decrement operators and generate
+                     // begin/end functions
+    eAttribOrdered,  // allow order comparison of enums
     eAttribInternal, // dont generate reflection data for this type
 
     // this is a synthetic type, it pretends a type exists when it does not
@@ -117,21 +122,22 @@ typedef enum ref_attrib_tag_t {
     ///
 
     eAttribCxxName, // c++ name for implementation
-    eAttribFormat, // string name
+    eAttribFormat,  // string name
 } ref_attrib_tag_t;
 
-typedef enum ref_config_tag_t {
+typedef enum ref_config_tag_t
+{
     eRefConfigSerialize, // type to use for serialization
-    eRefConfigApi, // declspec dllimport/dllexport stuff
+    eRefConfigApi,       // declspec dllimport/dllexport stuff
     eRefConfigArray,
     eRefConfigVector,
     eRefConfigSpan,
 
-
     eRefConfigCount
 } ref_config_tag_t;
 
-typedef enum ref_privacy_t {
+typedef enum ref_privacy_t
+{
     ePrivacyDefault,
     ePrivacyPublic,
     ePrivacyPrivate,
@@ -141,7 +147,8 @@ typedef enum ref_privacy_t {
     ePrivacyCount
 } ref_privacy_t;
 
-typedef enum ref_flags_t {
+typedef enum ref_flags_t
+{
     eDeclNone = 0,
     eDeclSealed = 1 << 1,
     eDeclVirtual = 1 << 2,
@@ -151,15 +158,17 @@ typedef enum ref_flags_t {
     eDeclPublic = 1 << 6,
 } ref_flags_t;
 
-typedef enum ref_param_t {
-    eParamIn, // passed by value in whatever way is most efficient
-    eParamOut, // passed by reference
+typedef enum ref_param_t
+{
+    eParamIn,    // passed by value in whatever way is most efficient
+    eParamOut,   // passed by reference
     eParamInOut, // passed by reference, but may be modified
 
     eParamCount
 } ref_param_t;
 
-typedef struct ref_ast_t {
+typedef struct ref_ast_t
+{
     ref_kind_t kind;
     const node_t *node;
 
@@ -168,7 +177,8 @@ typedef struct ref_ast_t {
         mpz_t integer;
 
         /* eAstAttribString */
-        struct {
+        struct
+        {
             /* eAstIdent */
             const char *ident;
 
@@ -183,14 +193,16 @@ typedef struct ref_ast_t {
         text_t text;
 
         /* eAstProgram */
-        struct {
+        struct
+        {
             vector_t *mod;
             ref_ast_t *config[eRefConfigCount];
             vector_t *imports;
             vector_t *decls;
         };
 
-        struct {
+        struct
+        {
             union {
                 /* eAstConfig */
                 ref_config_tag_t cfg;
@@ -203,7 +215,8 @@ typedef struct ref_ast_t {
             struct ref_ast_t *expr;
         };
 
-        struct {
+        struct
+        {
             union {
                 binary_t binary;
                 compare_t compare;
@@ -216,13 +229,15 @@ typedef struct ref_ast_t {
         vector_t *path;
 
         /* eAstInstance */
-        struct {
+        struct
+        {
             ref_ast_t *generic;
             vector_t *params;
         };
 
         /* eAstSpan, eAstVector, eAstArray */
-        struct {
+        struct
+        {
             struct ref_ast_t *ptr;
 
             /* only used in eAstArray for now */
@@ -230,7 +245,8 @@ typedef struct ref_ast_t {
             struct ref_ast_t *size;
         };
 
-        struct {
+        struct
+        {
             /* eAstPrivacy, eDeclField, eDeclMethod */
             ref_privacy_t privacy;
 
@@ -241,24 +257,24 @@ typedef struct ref_ast_t {
             char *name;
 
             union {
-                /* eAstClass, eAstStruct */
-                struct {
+                /* eAstClass, eAstStruct. eAstUnion, eAstUnionField */
+                struct
+                {
                     ref_ast_t *parent;
                     vector_t *methods;
 
-                    union {
+                    /* eAstVariant */
+                    struct
+                    {
+                        ref_ast_t *default_case;
+                        vector_t *cases;
                         vector_t *fields;
-
-                        /* eAstVariant */
-                        struct {
-                            ref_ast_t *default_case;
-                            vector_t *cases;
-                        };
                     };
                 };
 
                 /* eAstField, eAstConst, eAstParam */
-                struct {
+                struct
+                {
                     ref_param_t param;
 
                     /* eAstTypeAlias */
@@ -267,14 +283,16 @@ typedef struct ref_ast_t {
                 };
 
                 /* eAstMethod */
-                struct {
+                struct
+                {
                     ref_ast_t *return_type;
                     vector_t *method_params;
                     ref_ast_t *body;
                 };
 
                 /* eAstCase */
-                struct {
+                struct
+                {
                     bool is_default;
                     ref_ast_t *value;
                 };
@@ -288,7 +306,8 @@ typedef struct ref_ast_t {
         map_t *docs;
 
         /* eAstAttribAssert */
-        struct {
+        struct
+        {
             vector_t *before;
             vector_t *after;
             vector_t *always;
@@ -296,7 +315,8 @@ typedef struct ref_ast_t {
     };
 } ref_ast_t;
 
-typedef struct ref_pair_t {
+typedef struct ref_pair_t
+{
     char *ident;
     char *body;
 } ref_pair_t;
@@ -308,19 +328,25 @@ ref_ast_t *ref_unary(scan_t *scan, where_t where, unary_t op, ref_ast_t *expr);
 ref_ast_t *ref_binary(scan_t *scan, where_t where, binary_t op, ref_ast_t *lhs, ref_ast_t *rhs);
 ref_ast_t *ref_compare(scan_t *scan, where_t where, compare_t op, ref_ast_t *lhs, ref_ast_t *rhs);
 
-ref_ast_t *ref_program(scan_t *scan, where_t where, vector_t *mod, vector_t *leading, vector_t *decls);
+ref_ast_t *ref_program(scan_t *scan, where_t where, vector_t *mod, vector_t *leading,
+                       vector_t *decls);
 
 ref_ast_t *ref_import(scan_t *scan, where_t where, text_t text);
 
-ref_ast_t *ref_class(scan_t *scan, where_t where, char *name, vector_t *params, ref_ast_t *parent, vector_t *body);
+ref_ast_t *ref_class(scan_t *scan, where_t where, char *name, vector_t *params, ref_ast_t *parent,
+                     vector_t *body);
+ref_ast_t *ref_union(scan_t *scan, where_t where, char *name, ref_ast_t *key, vector_t *body);
+ref_ast_t *ref_union_field(scan_t *scan, where_t where, vector_t *cases, vector_t *fields);
 
-ref_ast_t *ref_struct(scan_t *scan, where_t where, char *name, vector_t *params, ref_ast_t *parent, vector_t *body);
+ref_ast_t *ref_struct(scan_t *scan, where_t where, char *name, vector_t *params, ref_ast_t *parent,
+                      vector_t *body);
 
 ref_ast_t *ref_privacy(scan_t *scan, where_t where, ref_privacy_t privacy);
 ref_ast_t *ref_using(scan_t *scan, where_t where, char *name, ref_ast_t *type);
 
 ref_ast_t *ref_field(scan_t *scan, where_t where, char *name, ref_ast_t *type, ref_ast_t *value);
-ref_ast_t *ref_method(scan_t *scan, where_t where, ref_flags_t flags, char *name, vector_t *params, ref_ast_t *type, ref_ast_t *body);
+ref_ast_t *ref_method(scan_t *scan, where_t where, ref_flags_t flags, char *name, vector_t *params,
+                      ref_ast_t *type, ref_ast_t *body);
 ref_ast_t *ref_param(scan_t *scan, where_t where, char *name, ref_param_t param, ref_ast_t *type);
 ref_ast_t *ref_ctor(scan_t *scan, where_t where, vector_t *params, ref_ast_t *body);
 
@@ -338,7 +364,8 @@ ref_ast_t *ref_vector(scan_t *scan, where_t where, ref_ast_t *type);
 
 ref_ast_t *ref_const(scan_t *scan, where_t where, ref_ast_t *type);
 
-ref_ast_t *ref_variant(scan_t *scan, where_t where, char *name, ref_ast_t *underlying, vector_t *cases);
+ref_ast_t *ref_variant(scan_t *scan, where_t where, char *name, ref_ast_t *underlying,
+                       vector_t *cases);
 
 ref_ast_t *ref_case(scan_t *scan, where_t where, char *name, ref_ast_t *value, bool is_default);
 
@@ -360,7 +387,8 @@ ref_ast_t *ref_attrib_docs(scan_t *scan, where_t where, map_t *docs);
 ref_ast_t *ref_attrib_tag(scan_t *scan, where_t where, ref_attrib_tag_t tag);
 ref_ast_t *ref_attrib_string(scan_t *scan, where_t where, ref_attrib_tag_t tag, char *text);
 
-ref_ast_t *ref_attrib_assert(scan_t *scan, where_t where, typevec_t *before, typevec_t *after, typevec_t *always);
+ref_ast_t *ref_attrib_assert(scan_t *scan, where_t where, typevec_t *before, typevec_t *after,
+                             typevec_t *always);
 
 ref_ast_t *ref_config_tag(scan_t *scan, where_t where, ref_config_tag_t tag, ref_ast_t *expr);
 

@@ -164,6 +164,22 @@ ref_ast_t *ref_class(scan_t *scan, where_t where, char *name, vector_t *params, 
     return ast;
 }
 
+ref_ast_t *ref_union(scan_t *scan, where_t where, char *name, ref_ast_t *key, vector_t *body)
+{
+    ref_ast_t *ast = ref_ast_decl(scan, where, eAstUnion, name);
+    ast->parent = key;
+    ast->fields = body;
+    return ast;
+}
+
+ref_ast_t *ref_union_field(scan_t *scan, where_t where, vector_t *cases, vector_t *fields)
+{
+    ref_ast_t *ast = ref_ast_new(scan, where, eAstUnionField);
+    ast->cases = cases;
+    ast->fields = fields;
+    return ast;
+}
+
 ref_ast_t *ref_struct(scan_t *scan, where_t where, char *name, vector_t *params, ref_ast_t *parent, vector_t *body)
 {
     ref_ast_t *ast = ref_ast_decl(scan, where, eAstStruct, name);

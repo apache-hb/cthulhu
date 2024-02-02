@@ -83,6 +83,7 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     config config_body
     config_value opaque
     union_field union_decl opt_case_init
+    class_var_decl var_name_decl
 
 %type<vector>
     path
@@ -98,7 +99,7 @@ void referror(where_t *where, void *state, scan_t *scan, const char *msg);
     module
     opt_header_seq
     header_seq
-    union_field_seq
+    union_field_seq var_decl_seq union_field_body
 
 %type<typevec> string_list
 %type<param> passing
@@ -298,14 +299,21 @@ decl_body: class_decl { $$ = $1; }
     | union_decl { $$ = $1; }
     ;
 
-union_decl: TOK_UNION TOK_IDENT TOK_LPAREN TOK_IDENT TOK_COLON type TOK_RPAREN TOK_LBRACE union_field_seq TOK_RBRACE { $$ = NULL; }
+union_decl: TOK_UNION TOK_IDENT TOK_LPAREN var_name_decl TOK_RPAREN TOK_LBRACE union_field_seq TOK_RBRACE { $$ = ref_union(x, @$, $2, $4, $7); }
     ;
 
 union_field_seq: union_field { $$ = vector_init($1, BISON_ARENA(x)); }
     | union_field_seq union_field { vector_push(&$1, $2); $$ = $1; }
     ;
 
-union_field: TOK_CASE TOK_IDENT { $$ = NULL; }
+union_field: opt_attrib_seq TOK_CASE TOK_LPAREN ident_list TOK_RPAREN union_field_body { $$ = ref_union_field(x, @$, $4, $6); ref_set_attribs($$, $1); }
+    ;
+
+union_field_body: TOK_LBRACE var_decl_seq TOK_RBRACE { $$ = $2; }
+    ;
+
+var_decl_seq: var_name_decl { $$ = vector_init($1, BISON_ARENA(x)); }
+    | var_decl_seq var_name_decl { vector_push(&$1, $2); $$ = $1; }
     ;
 
 opt_inherit: %empty { $$ = NULL; }
@@ -360,7 +368,13 @@ class_body_item: privacy_spec TOK_COLON { $$ = ref_privacy(x, @$, $1); }
     | opt_attrib_seq class_body_inner TOK_SEMICOLON { ref_set_attribs($2, $1); $$ = $2; }
     ;
 
-class_body_inner: TOK_IDENT TOK_COLON type opt_assign { $$ = ref_field(x, @$, $1, $3, $4); }
+var_name_decl: TOK_IDENT TOK_COLON type { $$ = ref_field(x, @$, $1, $3, NULL); }
+    ;
+
+class_var_decl: TOK_IDENT TOK_COLON type opt_assign { $$ = ref_field(x, @$, $1, $3, $4); }
+    ;
+
+class_body_inner: class_var_decl { $$ = $1; }
     | opt_decl_flags_seq method_decl { ref_set_flags($2, $1); $$ = $2; }
     | ctor_decl { $$ = $1; }
     ;
