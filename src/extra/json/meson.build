@@ -19,6 +19,7 @@ if has_cpp
 endif
 
 libjson = library('json', src,
+    build_by_default : false,
     c_args : [ '-DCT_JSON_BUILD=1', generated_args ],
     dependencies : [ core, scan, interop, gmp, std, notify, events, util ],
     include_directories : json_include
