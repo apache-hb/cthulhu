@@ -122,5 +122,5 @@ void cxx_dump(cxx_emit_t *emit, io_t *io)
     typevec_append(emit->buffer, "\0", 1);
     const char *data = typevec_data(emit->buffer);
     size_t length = typevec_len(emit->buffer);
-    io_write(io, data, length);
+    io_write(io, data, length - 1);
 }
