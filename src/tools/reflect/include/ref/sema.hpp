@@ -775,17 +775,17 @@ namespace refl {
         void emit_reflection(Sema& sema, cxx_emit_t *out) const override;
     };
 
-    class Union : public RecordType {
-        Vector<Option*> m_options { 32, get_global_arena() };
+    // class Union : public RecordType {
+    //     Vector<Option*> m_options { 32, get_global_arena() };
 
-    public:
-        Union(ref_ast_t *ast);
+    // public:
+    //     Union(ref_ast_t *ast);
 
-        void resolve(Sema& sema) override;
+    //     void resolve(Sema& sema) override;
 
-        void emit_impl(cxx_emit_t *out) const override;
-        void emit_reflection(Sema& sema, cxx_emit_t *out) const override;
-    };
+    //     void emit_impl(cxx_emit_t *out) const override;
+    //     void emit_reflection(Sema& sema, cxx_emit_t *out) const override;
+    // };
 
     class Expr : public Tree {
     public:

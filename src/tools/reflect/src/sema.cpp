@@ -152,11 +152,11 @@ Decl *Sema::forward_decl(const char *name, ref_ast_t *ast)
         add_decl(name, alias);
         return alias;
     }
-    case eAstUnion: {
-        Union *uni = new Union(ast);
-        add_decl(name, uni);
-        return uni;
-    }
+    // case eAstUnion: {
+    //     Union *uni = new Union(ast);
+    //     add_decl(name, uni);
+    //     return uni;
+    // }
     default: return nullptr;
     }
 }
