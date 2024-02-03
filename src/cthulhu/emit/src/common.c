@@ -1,6 +1,5 @@
 #include "common.h"
 
-#include "io/io.h"
 #include "std/str.h"
 #include "std/map.h"
 #include "std/vector.h"
@@ -91,15 +90,6 @@ char *get_step_from_block(emit_t *emit, const ssa_block_t *block, size_t index)
 {
     ssa_step_t *step = typevec_offset(block->steps, index);
     return get_step_name(emit, step);
-}
-
-USE_DECL
-void write_string(io_t *io, const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    io_vprintf(io, fmt, args);
-    va_end(args);
 }
 
 static char *digit_to_string(ssa_type_digit_t digit, arena_t *arena)

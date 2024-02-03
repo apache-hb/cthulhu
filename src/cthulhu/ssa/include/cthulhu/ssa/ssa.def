@@ -37,12 +37,14 @@ SSA_OPKIND(eOperandFunction, "function")
 #   define SSA_OPCODE(ID, NAME)
 #endif
 
-SSA_OPCODE(eOpStore, "store")
-SSA_OPCODE(eOpLoad, "load")
+SSA_OPCODE(eOpValue,   "value")
+SSA_OPCODE(eOpNop,     "nop")
+SSA_OPCODE(eOpStore,   "store")
+SSA_OPCODE(eOpLoad,    "load")
 SSA_OPCODE(eOpAddress, "address")
 
-SSA_OPCODE(eOpUnary, "unary")
-SSA_OPCODE(eOpBinary, "binary")
+SSA_OPCODE(eOpUnary,   "unary")
+SSA_OPCODE(eOpBinary,  "binary")
 SSA_OPCODE(eOpCompare, "compare")
 
 SSA_OPCODE(eOpCast, "cast")
@@ -53,6 +55,6 @@ SSA_OPCODE(eOpMember, "member") ///< get the address of a member in a struct
 
 SSA_OPCODE(eOpReturn, "return")
 SSA_OPCODE(eOpBranch, "branch")
-SSA_OPCODE(eOpJump, "jump")
+SSA_OPCODE(eOpJump,   "jump")
 
 #undef SSA_OPCODE

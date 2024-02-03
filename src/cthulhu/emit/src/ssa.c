@@ -13,6 +13,7 @@
 
 #include "core/macros.h"
 
+#include "io/io.h"
 #include "fs/fs.h"
 
 #include <string.h>
@@ -56,7 +57,7 @@ static vector_t *join_attribs(const ssa_symbol_t *symbol, arena_t *arena)
 
 static void emit_ssa_attribs(io_t *io, const ssa_symbol_t *symbol, arena_t *arena)
 {
-    write_string(io, "\t[%s]\n", str_join(", ", join_attribs(symbol, arena), arena));
+    io_printf(io, "\t[%s]\n", str_join(", ", join_attribs(symbol, arena), arena));
 }
 
 static const char *value_to_string(const ssa_value_t *value, arena_t *arena);
@@ -132,15 +133,24 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
 {
     emit_t *base = &emit->emit;
     size_t len = typevec_len(bb->steps);
-    write_string(io, ".%s: [len=%zu]\n", get_block_name(&emit->emit, bb), len);
+    io_printf(io, ".%s: [len=%zu]\n", get_block_name(&emit->emit, bb), len);
     for (size_t i = 0; i < len; i++)
     {
         const ssa_step_t *step = typevec_offset(bb->steps, i);
         switch (step->opcode)
         {
+        case eOpValue:
+            io_printf(io, "\t%%%s = const %s\n",
+                get_step_name(&emit->emit, step),
+                value_to_string(step->value, base->arena)
+            );
+            break;
+        case eOpNop:
+            io_printf(io, "\tnop\n");
+            break;
         case eOpUnary: {
             ssa_unary_t unary = step->unary;
-            write_string(io, "\t%%%s = unary %s %s\n",
+            io_printf(io, "\t%%%s = unary %s %s\n",
                 get_step_name(&emit->emit, step),
                 unary_name(unary.unary),
                 operand_to_string(emit, unary.operand)
@@ -149,7 +159,7 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
         }
         case eOpBinary: {
             ssa_binary_t binary = step->binary;
-            write_string(io, "\t%%%s = binary %s %s %s\n",
+            io_printf(io, "\t%%%s = binary %s %s %s\n",
                 get_step_name(&emit->emit, step),
                 binary_name(binary.binary),
                 operand_to_string(emit, binary.lhs),
@@ -159,7 +169,7 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
         }
         case eOpCast: {
             ssa_cast_t cast = step->cast;
-            write_string(io, "\t%%%s = cast %s %s\n",
+            io_printf(io, "\t%%%s = cast %s %s\n",
                 get_step_name(&emit->emit, step),
                 type_to_string(cast.type, base->arena),
                 operand_to_string(emit, cast.operand)
@@ -168,7 +178,7 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
         }
         case eOpLoad: {
             ssa_load_t load = step->load;
-            write_string(io, "\t%%%s = load %s\n",
+            io_printf(io, "\t%%%s = load %s\n",
                 get_step_name(&emit->emit, step),
                 operand_to_string(emit, load.src)
             );
@@ -176,7 +186,7 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
         }
         case eOpOffset: {
             ssa_offset_t offset = step->offset;
-            write_string(io, "\t%%%s = offset %s %s\n",
+            io_printf(io, "\t%%%s = offset %s %s\n",
                 get_step_name(&emit->emit, step),
                 operand_to_string(emit, offset.array),
                 operand_to_string(emit, offset.offset)
@@ -185,7 +195,7 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
         }
         case eOpMember: {
             ssa_member_t member = step->member;
-            write_string(io, "\t%%%s = member %s.%zu\n",
+            io_printf(io, "\t%%%s = member %s.%zu\n",
                 get_step_name(&emit->emit, step),
                 operand_to_string(emit, member.object),
                 member.index
@@ -194,7 +204,7 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
         }
         case eOpAddress: {
             ssa_addr_t addr = step->addr;
-            write_string(io, "\t%%%s = addr %s\n",
+            io_printf(io, "\t%%%s = addr %s\n",
                 get_step_name(&emit->emit, step),
                 operand_to_string(emit, addr.symbol)
             );
@@ -202,17 +212,17 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
         }
         case eOpReturn: {
             ssa_return_t ret = step->ret;
-            write_string(io, "\tret %s\n", operand_to_string(emit, ret.value));
+            io_printf(io, "\tret %s\n", operand_to_string(emit, ret.value));
             break;
         }
         case eOpJump: {
             ssa_jump_t jmp = step->jump;
-            write_string(io, "\tjump %s\n", operand_to_string(emit, jmp.target));
+            io_printf(io, "\tjump %s\n", operand_to_string(emit, jmp.target));
             break;
         }
         case eOpStore: {
             ssa_store_t store = step->store;
-            write_string(io, "\tstore %s %s\n",
+            io_printf(io, "\tstore %s %s\n",
                 operand_to_string(emit, store.dst),
                 operand_to_string(emit, store.src)
             );
@@ -227,7 +237,7 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
                 const ssa_operand_t *arg = typevec_offset(call.args, arg_idx);
                 vector_set(args, arg_idx, (char*)operand_to_string(emit, *arg));
             }
-            write_string(io, "\t%%%s = call %s (%s)\n",
+            io_printf(io, "\t%%%s = call %s (%s)\n",
                 get_step_name(&emit->emit, step),
                 operand_to_string(emit, call.function),
                 str_join(", ", args, base->arena)
@@ -236,7 +246,7 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
         }
         case eOpBranch: {
             ssa_branch_t branch = step->branch;
-            write_string(io, "\tbranch %s %s %s\n",
+            io_printf(io, "\tbranch %s %s %s\n",
                 operand_to_string(emit, branch.cond),
                 operand_to_string(emit, branch.then),
                 operand_to_string(emit, branch.other)
@@ -245,7 +255,7 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
         }
         case eOpCompare: {
             ssa_compare_t compare = step->compare;
-            write_string(io, "\t%%%s = compare %s %s %s\n",
+            io_printf(io, "\t%%%s = compare %s %s %s\n",
                 get_step_name(&emit->emit, step),
                 compare_name(compare.compare),
                 operand_to_string(emit, compare.lhs),
@@ -283,7 +293,7 @@ static void emit_ssa_locals(ssa_emit_t *emit, io_t *io, typevec_t *locals)
     for (size_t i = 0; i < len; i++)
     {
         const ssa_local_t *local = typevec_offset(locals, i);
-        write_string(io, "\tlocal[%zu] %s %s\n", i, type_to_string(local->type, base->arena), storage_to_string(local->storage, base->arena));
+        io_printf(io, "\tlocal[%zu] %s %s\n", i, type_to_string(local->type, base->arena), storage_to_string(local->storage, base->arena));
     }
 }
 
@@ -292,16 +302,16 @@ static void emit_symbol_deps(io_t *io, const ssa_symbol_t *symbol, map_t *deps)
     set_t *all = map_get(deps, symbol);
     if (all != NULL)
     {
-        write_string(io, "deps: (");
+        io_printf(io, "deps: (");
         set_iter_t iter = set_iter(all);
         while (set_has_next(&iter))
         {
             const ssa_symbol_t *dep = set_next(&iter);
-            write_string(io, "%s", dep->name);
+            io_printf(io, "%s", dep->name);
 
-            if (set_has_next(&iter)) { write_string(io, ", "); }
+            if (set_has_next(&iter)) { io_printf(io, ", "); }
         }
-        write_string(io, ")\n");
+        io_printf(io, ")\n");
     }
 }
 
@@ -315,11 +325,11 @@ static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
     fs_file_create(fs, file);
 
     io_t *io = fs_open(fs, file, eAccessWrite);
-    write_string(io, "module {name=%s", mod->name);
-    if (ctu_strlen(path) > 0) { write_string(io, ", path=%s", path); }
-    write_string(io, "}\n");
+    io_printf(io, "module {name=%s", mod->name);
+    if (ctu_strlen(path) > 0) { io_printf(io, ", path=%s", path); }
+    io_printf(io, "}\n");
 
-    write_string(io, "\n");
+    io_printf(io, "\n");
 
     size_t len = vector_len(mod->globals);
     for (size_t i = 0; i < len; i++)
@@ -327,12 +337,12 @@ static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
         const ssa_symbol_t *global = vector_get(mod->globals, i);
         emit_symbol_deps(io, global, emit->deps);
 
-        write_string(io, "global %s: %s\n", global->name, type_to_string(global->type, base->arena));
+        io_printf(io, "global %s: %s\n", global->name, type_to_string(global->type, base->arena));
         emit_ssa_attribs(io, global, base->arena);
 
         emit_ssa_blocks(emit, io, global->blocks);
 
-        if (len >= i) { write_string(io, "\n"); }
+        if (len >= i) { io_printf(io, "\n"); }
     }
 
     size_t fns = vector_len(mod->functions);
@@ -345,7 +355,7 @@ static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
         CTASSERTF(type->kind == eTypeClosure, "fn %s is not a closure", fn->name);
         ssa_type_closure_t closure = type->closure;
 
-        write_string(io, "fn %s(%s) -> %s [variadic: %s]\n",
+        io_printf(io, "fn %s(%s) -> %s [variadic: %s]\n",
             fn->name,
             fn_params_to_string(closure.params, base->arena), type_to_string(closure.result, base->arena),
             closure.variadic ? "true" : "false"
@@ -358,7 +368,7 @@ static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
             emit_ssa_blocks(emit, io, fn->blocks);
         }
 
-        if (len >= i) { write_string(io, "\n"); }
+        if (len >= i) { io_printf(io, "\n"); }
     }
 }
 

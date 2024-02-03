@@ -862,9 +862,9 @@ void Variant::resolve(Sema& sema)
     m_default_case = m_ast->default_case ? cases.get(m_ast->default_case->name) : nullptr;
 }
 
-Union::Union(ref_ast_t *ast)
-    : RecordType(ast, eKindUnion, "union")
-{ }
+// Union::Union(ref_ast_t *ast)
+//     : RecordType(ast, eKindUnion, "union")
+// { }
 
 static const char *digit_cxx_name(digit_t digit, sign_t sign)
 {

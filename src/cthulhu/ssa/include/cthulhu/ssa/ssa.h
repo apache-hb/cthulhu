@@ -60,9 +60,19 @@ typedef enum ssa_opcode_t {
 /// intermediate types
 ///
 
+/// @brief ssa underlying storage type
+///
+/// a storage of (type=int, size=4) would be equivalent to `int x[4]` in C
+/// a storage of (type=*int, size=4) would be equivalent to `int *x[4]` in C
+/// the underlying storage type should match the type of external accessors with a pointer type
 typedef struct ssa_storage_t {
+    /// @brief the internal storage type
     const ssa_type_t *type;
+
+    /// @brief the number of elements in the storage
     size_t size;
+
+    /// @brief the qualifiers of the storage
     quals_t quals;
 } ssa_storage_t;
 
@@ -250,6 +260,7 @@ typedef struct ssa_step_t {
     ssa_opcode_t opcode;
 
     union {
+        const ssa_value_t *value;
         ssa_store_t store;
         ssa_load_t load;
         ssa_addr_t addr;

@@ -124,11 +124,11 @@ static void c89_begin_module(c89_emit_t *emit, const ssa_module_t *mod)
     c89_source_t *src = source_for(emit, mod, src_file);
     c89_source_t *hdr = header_for(emit, mod, hdr_file);
 
-    write_string(hdr->io, "#pragma once\n");
-    write_string(hdr->io, "#include <stdbool.h>\n");
-    write_string(hdr->io, "#include <stdint.h>\n");
+    io_printf(hdr->io, "#pragma once\n");
+    io_printf(hdr->io, "#include <stdbool.h>\n");
+    io_printf(hdr->io, "#include <stdint.h>\n");
 
-    write_string(src->io, "#include \"%s.h\"\n", hdr_file);
+    io_printf(src->io, "#include \"%s.h\"\n", hdr_file);
 }
 
 // emit api
@@ -188,7 +188,7 @@ static void emit_required_headers(c89_emit_t *emit, const ssa_module_t *mod)
     {
         const ssa_module_t *item = set_next(&iter);
         c89_source_t *dep = c89_get_header(emit, item);
-        write_string(hdr, "#include \"%s\"\n", dep->path);
+        io_printf(hdr, "#include \"%s\"\n", dep->path);
     }
 }
 
@@ -229,34 +229,34 @@ static void define_enum(io_t *io, const ssa_type_t *type, c89_emit_t *emit)
     io_printf(io, "#if defined(CTU_CINTERFACE) || !defined(__cplusplus)\n");
     char *under = str_format(emit->arena, "%s_underlying_t", type->name);
     const char *tydef = c89_format_type(emit, underlying, under, false);
-    write_string(io, "typedef %s;\n", tydef);
+    io_printf(io, "typedef %s;\n", tydef);
 
-    write_string(io, "enum %s_cases_t { /* %zu cases */\n", type->name, len);
+    io_printf(io, "enum %s_cases_t { /* %zu cases */\n", type->name, len);
     for (size_t i = 0; i < len; i++)
     {
         const ssa_case_t *field = typevec_offset(it.cases, i);
 
         // TODO: formalize the name mangling for enum fields
-        write_string(io, "\te%s%s = %s,\n", type->name, field->name, mpz_get_str(NULL, 10, field->value));
+        io_printf(io, "\te%s%s = %s,\n", type->name, field->name, mpz_get_str(NULL, 10, field->value));
     }
-    write_string(io, "};\n");
+    io_printf(io, "};\n");
     io_printf(io, "#endif /* CTU_CINTERFACE */\n");
 
     ssa_module_t *mod = map_get(emit->modmap, type);
     char *ns = get_namespace(mod, emit->arena);
 
-    write_string(io, "#ifdef __cplusplus\n");
+    io_printf(io, "#ifdef __cplusplus\n");
     io_printf(io, "namespace %s {\n", ns);
     const char *under_cxx = c89_format_type(emit, underlying, NULL, false);
-    write_string(io, "\tenum class %s : %s {\n", type->name, under_cxx);
+    io_printf(io, "\tenum class %s : %s {\n", type->name, under_cxx);
     for (size_t i = 0; i < len; i++)
     {
         const ssa_case_t *field = typevec_offset(it.cases, i);
-        write_string(io, "\t\te%s = %s,\n", field->name, mpz_get_str(NULL, 10, field->value));
+        io_printf(io, "\t\te%s = %s,\n", field->name, mpz_get_str(NULL, 10, field->value));
     }
-    write_string(io, "\t};\n");
+    io_printf(io, "\t};\n");
     io_printf(io, "} /* %s */\n", ns);
-    write_string(io, "#endif /* __cplusplus */ \n");
+    io_printf(io, "#endif /* __cplusplus */ \n");
 }
 
 static void c89_proto_aggregate(c89_emit_t *emit, io_t *io, const char *ty, const char *name, const ssa_module_t *mod)
@@ -264,13 +264,13 @@ static void c89_proto_aggregate(c89_emit_t *emit, io_t *io, const char *ty, cons
     char *ns = get_namespace(mod, emit->arena);
     io_printf(io, "#ifdef __cplusplus\n");
     io_printf(io, "namespace %s {\n", ns);
-    write_string(io, "\t%s %s;\n", ty, name);
+    io_printf(io, "\t%s %s;\n", ty, name);
     io_printf(io, "} /* %s */\n", ns);
     io_printf(io, "#endif /* __cplusplus */ \n");
 
-    write_string(io, "#if defined(CTU_CINTERFACE) || !defined(__cplusplus)\n");
-    write_string(io, "%s %s;\n", ty, name);
-    write_string(io, "#endif /* CTU_CINTERFACE */\n");
+    io_printf(io, "#if defined(CTU_CINTERFACE) || !defined(__cplusplus)\n");
+    io_printf(io, "%s %s;\n", ty, name);
+    io_printf(io, "#endif /* CTU_CINTERFACE */\n");
 }
 
 void c89_proto_type(c89_emit_t *emit, io_t *io, const ssa_type_t *type)
@@ -299,7 +299,7 @@ static void write_global(c89_emit_t *emit, io_t *io, const ssa_symbol_t *global)
     const char *it = c89_format_storage(emit, global->storage, mangle_symbol_name(global));
     const char *link = format_c89_link(global->linkage);
 
-    write_string(io, "%s%s", link, it);
+    io_printf(io, "%s%s", link, it);
 }
 
 void c89_proto_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *global)
@@ -310,13 +310,13 @@ void c89_proto_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbo
 
         io_t *io = c89_get_header_io(emit, mod);
         write_global(emit, io, global);
-        write_string(io, ";\n");
+        io_printf(io, ";\n");
     }
     else
     {
         io_t *io = c89_get_source_io(emit, mod);
         write_global(emit, io, global);
-        write_string(io, ";\n");
+        io_printf(io, ";\n");
     }
 }
 
@@ -338,7 +338,7 @@ void c89_proto_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_sym
     const char *link = format_c89_link(func->linkage);
 
     io_t *dst = func->visibility == eVisiblePublic ? hdr : src;
-    write_string(dst, "%s%s(%s);\n", link, result, params);
+    io_printf(dst, "%s%s(%s);\n", link, result, params);
 }
 
 static void proto_symbols(c89_emit_t *emit, const ssa_module_t *mod, vector_t *vec, void (*fn)(c89_emit_t*, const ssa_module_t*, const ssa_symbol_t*))
@@ -692,7 +692,7 @@ static void c89_write_address(c89_emit_t *emit, io_t *io, const ssa_step_t *step
     const ssa_type_t *ptr = ssa_type_pointer(type->name, eQualNone, (ssa_type_t*)type, 0);
     const char *step_name = c89_name_vreg(emit, step, ptr);
 
-    write_string(io, "\t%s = &(%s); /* %s */\n",
+    io_printf(io, "\t%s = &(%s); /* %s */\n",
         step_name,
         c89_format_operand(emit, addr.symbol),
         type_to_string(ptr, emit->arena)
@@ -702,7 +702,7 @@ static void c89_write_address(c89_emit_t *emit, io_t *io, const ssa_step_t *step
 static void c89_write_offset(c89_emit_t *emit, io_t *io, const ssa_step_t *step)
 {
     ssa_offset_t offset = step->offset;
-    write_string(io, "\t%s = &%s[%s]; /* (array = %s, offset = %s) */\n",
+    io_printf(io, "\t%s = &%s[%s]; /* (array = %s, offset = %s) */\n",
         c89_name_vreg_by_operand(emit, step, offset.array),
         c89_format_operand(emit, offset.array),
         c89_format_operand(emit, offset.offset),
@@ -726,7 +726,7 @@ static void c89_write_member(c89_emit_t *emit, io_t *io, const ssa_step_t *step)
     ssa_type_record_t record_type = record->record;
     const ssa_field_t *field = typevec_offset(record_type.fields, member.index);
 
-    write_string(io, "\t%s = &%s->%s;\n",
+    io_printf(io, "\t%s = &%s->%s;\n",
         c89_name_vreg(emit, step, ssa_type_pointer(field->name, eQualNone, (ssa_type_t*)field->type, 1)),
         c89_format_operand(emit, member.object),
         field->name
@@ -736,15 +736,24 @@ static void c89_write_member(c89_emit_t *emit, io_t *io, const ssa_step_t *step)
 static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
 {
     size_t len = typevec_len(bb->steps);
-    write_string(io, "bb%s: { /* len = %zu */\n", get_block_name(&emit->emit, bb), len);
+    io_printf(io, "bb%s: { /* len = %zu */\n", get_block_name(&emit->emit, bb), len);
     for (size_t i = 0; i < len; i++)
     {
         const ssa_step_t *step = typevec_offset(bb->steps, i);
         switch (step->opcode)
         {
+        case eOpNop:
+            io_printf(io, "\t/* nop */\n");
+            break;
+        case eOpValue: {
+            const ssa_value_t *value = step->value;
+            const char *name = c89_name_vreg(emit, step, value->type);
+            io_printf(io, "\t%s = %s;\n", name, c89_format_value(emit, value));
+            break;
+        }
         case eOpStore: {
             ssa_store_t store = step->store;
-            write_string(io, "\t*(%s) = %s;\n",
+            io_printf(io, "\t*(%s) = %s;\n",
                 c89_format_operand(emit, store.dst),
                 c89_format_operand(emit, store.src)
             );
@@ -752,7 +761,7 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
         }
         case eOpCast: {
             ssa_cast_t cast = step->cast;
-            write_string(io, "\t%s = (%s)(%s);\n",
+            io_printf(io, "\t%s = (%s)(%s);\n",
                 c89_name_vreg(emit, step, cast.type),
                 format_symbol(emit, cast.type, NULL),
                 c89_format_operand(emit, cast.operand)
@@ -761,7 +770,7 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
         }
         case eOpLoad: {
             ssa_load_t load = step->load;
-            write_string(io, "\t%s = *(%s);\n",
+            io_printf(io, "\t%s = *(%s);\n",
                 c89_name_load_vreg_by_operand(emit, step, load.src),
                 c89_format_operand(emit, load.src)
             );
@@ -780,7 +789,7 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
 
         case eOpUnary: {
             ssa_unary_t unary = step->unary;
-            write_string(io, "\t%s = (%s %s);\n",
+            io_printf(io, "\t%s = (%s %s);\n",
                 c89_name_vreg_by_operand(emit, step, unary.operand),
                 unary_symbol(unary.unary),
                 c89_format_operand(emit, unary.operand)
@@ -789,7 +798,7 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
         }
         case eOpBinary: {
             ssa_binary_t bin = step->binary;
-            write_string(io, "\t%s = (%s %s %s);\n",
+            io_printf(io, "\t%s = (%s %s %s);\n",
                 c89_name_vreg_by_operand(emit, step, bin.lhs),
                 c89_format_operand(emit, bin.lhs),
                 binary_symbol(bin.binary),
@@ -799,7 +808,7 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
         }
         case eOpCompare: {
             ssa_compare_t cmp = step->compare;
-            write_string(io, "\t%s = (%s %s %s);\n",
+            io_printf(io, "\t%s = (%s %s %s);\n",
                 c89_name_vreg(emit, step, ssa_type_bool("bool", eQualConst)),
                 c89_format_operand(emit, cmp.lhs),
                 compare_symbol(cmp.compare),
@@ -823,14 +832,14 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
                 vector_set(args, arg_idx, (char*)c89_format_operand(emit, *operand));
             }
 
-            write_string(io, "\t");
+            io_printf(io, "\t");
 
             if (result->kind != eTypeEmpty && result->kind != eTypeUnit)
             {
-                write_string(io, "%s = ", c89_name_vreg(emit, step, result));
+                io_printf(io, "%s = ", c89_name_vreg(emit, step, result));
             }
 
-            write_string(io, "%s(%s);\n",
+            io_printf(io, "%s(%s);\n",
                 c89_format_operand(emit, call.function),
                 str_join(", ", args, emit->arena)
             );
@@ -839,28 +848,28 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
 
         case eOpJump: {
             ssa_jump_t jmp = step->jump;
-            write_string(io, "\tgoto %s;\n", c89_format_operand(emit, jmp.target));
+            io_printf(io, "\tgoto %s;\n", c89_format_operand(emit, jmp.target));
             break;
         }
         case eOpBranch: {
             ssa_branch_t br = step->branch;
-            write_string(io, "\tif (%s) { goto %s; }", c89_format_operand(emit, br.cond), c89_format_operand(emit, br.then));
+            io_printf(io, "\tif (%s) { goto %s; }", c89_format_operand(emit, br.cond), c89_format_operand(emit, br.then));
             if (!operand_is_empty(br.other))
             {
-                write_string(io, " else { goto %s; }", c89_format_operand(emit, br.other));
+                io_printf(io, " else { goto %s; }", c89_format_operand(emit, br.other));
             }
-            write_string(io, "\n");
+            io_printf(io, "\n");
             break;
         }
         case eOpReturn: {
             ssa_return_t ret = step->ret;
             if (!operand_cant_return(ret.value))
             {
-                write_string(io, "\treturn %s;\n", c89_format_operand(emit, ret.value));
+                io_printf(io, "\treturn %s;\n", c89_format_operand(emit, ret.value));
             }
             else
             {
-                write_string(io, "\treturn;\n");
+                io_printf(io, "\treturn;\n");
             }
             break;
         }
@@ -868,7 +877,7 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
         default: NEVER("unknown opcode %d", step->opcode);
         }
     }
-    write_string(io, "} /* end %s */\n", get_block_name(&emit->emit, bb));
+    io_printf(io, "} /* end %s */\n", get_block_name(&emit->emit, bb));
 }
 
 /// defines
@@ -928,11 +937,11 @@ static void write_init(c89_emit_t *emit, io_t *io, const ssa_value_t *value)
 
     if (type->kind == eTypePointer)
     {
-        write_string(io, " = %s", init);
+        io_printf(io, " = %s", init);
     }
     else
     {
-       write_string(io, " = { %s }", init);
+       io_printf(io, " = { %s }", init);
     }
 }
 
@@ -949,7 +958,7 @@ void c89_define_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symb
             write_init(emit, src, value);
         }
 
-        write_string(src, ";\n");
+        io_printf(src, ";\n");
     }
 }
 
@@ -959,7 +968,7 @@ static void write_locals(c89_emit_t *emit, io_t *io, typevec_t *locals)
     for (size_t i = 0; i < len; i++)
     {
         const ssa_local_t *local = typevec_offset(locals, i);
-        write_string(io, "\t%s;\n",
+        io_printf(io, "\t%s;\n",
             c89_format_storage(emit, local->storage, str_format(emit->arena, "l_%s", local->name))
         );
     }
@@ -980,16 +989,16 @@ void c89_define_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_sy
 
     if (func->linkage != eLinkImport)
     {
-        write_string(src, "%s%s(%s) {\n", link, result, params);
+        io_printf(src, "%s%s(%s) {\n", link, result, params);
         write_locals(emit, src, func->locals);
-        write_string(src, "\tgoto bb%s;\n", get_block_name(&emit->emit, func->entry));
+        io_printf(src, "\tgoto bb%s;\n", get_block_name(&emit->emit, func->entry));
         size_t len = vector_len(func->blocks);
         for (size_t i = 0; i < len; i++)
         {
             const ssa_block_t *bb = vector_get(func->blocks, i);
             c89_write_block(emit, src, bb);
         }
-        write_string(src, "}\n");
+        io_printf(src, "}\n");
 
         map_reset(emit->stepmap);
         counter_reset(&emit->emit);
