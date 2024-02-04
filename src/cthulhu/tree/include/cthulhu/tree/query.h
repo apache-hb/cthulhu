@@ -41,7 +41,7 @@ CT_TREE_API vector_t *tree_enum_get_cases(const tree_t *self);
 ///
 
 CT_TREE_API const tree_t *tree_fn_get_return(const tree_t *self);
-CT_TREE_API vector_t *tree_fn_get_params(const tree_t *self);
+CT_TREE_API const vector_t *tree_fn_get_params(const tree_t *self);
 CT_TREE_API arity_t tree_fn_get_arity(const tree_t *self);
 
 ///

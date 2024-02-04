@@ -47,29 +47,9 @@ typedef struct emit_t
 } emit_t;
 
 /// @brief a target builder
-typedef void (*target_build_t)(emit_t *emit, vector_t *modules, map_t *deps);
+typedef void (*target_build_ssa_t)(emit_t *emit, vector_t *modules, map_t *deps);
 
-// TODO: currently the config is mutated so we need to make a new one
-//       every invocation. thats not ideal, we should return something immutable
-//       and pass in a copy with modifications.
-
-/// @brief get the config for this target
-typedef cfg_group_t *(*target_config_t)(cfg_group_t *root);
-
-// return a map_t<const char*, attrib_t>
-typedef map_t *(*target_attribs_t)(arena_t *arena);
-
-typedef struct attrib_map_t
-{
-    /// map_t<const char*, map_t<attrib_t>>
-    map_t *namespaces;
-} attrib_map_t;
-
-// TODO: work on attributes
-typedef struct attrib_t
-{
-    const char *name;
-} attrib_t;
+typedef void (*target_build_tree_t)(emit_t *emit, vector_t *modules);
 
 /// @brief a codegen target
 typedef struct target_t
@@ -78,11 +58,7 @@ typedef struct target_t
     const char *name;
 
     /// @brief the target builder function
-    target_build_t fn_build;
-
-    target_config_t fn_get_config;
-
-    target_attribs_t fn_get_attribs;
+    target_build_ssa_t fn_ssa_build;
 } target_t;
 
 #if CTU_BUILD_SHARED

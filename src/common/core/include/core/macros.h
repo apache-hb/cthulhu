@@ -65,7 +65,7 @@
 
 /// @}
 
-/// @defgroup ErrorCodes Exit codes
+/// @defgroup error_codes Exit codes
 /// @brief Exit codes that match with GNU standard codes
 /// @ingroup Core
 ///

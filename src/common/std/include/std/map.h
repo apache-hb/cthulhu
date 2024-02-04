@@ -137,7 +137,7 @@ typedef struct map_entry_t
 /// @warning these are internal to the iterator and should not be used directly
 typedef struct map_iter_t
 {
-    map_t *map;   ///< the map being iterated over
+    const map_t *map;   ///< the map being iterated over
     size_t index; ///< current top level bucket index
 
     bucket_t *bucket; ///< the current bucket
@@ -152,7 +152,7 @@ typedef struct map_iter_t
 ///
 /// @return the new iterator
 CT_NODISCARD CT_PUREFN
-CT_STD_API map_iter_t map_iter(IN_NOTNULL map_t *map);
+CT_STD_API map_iter_t map_iter(IN_NOTNULL const map_t *map);
 
 /// @brief get the next key-value pair from a map iterator
 /// @warning this functions behaviour is undefined if called on an iterator that has no more elements

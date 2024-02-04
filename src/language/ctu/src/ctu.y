@@ -30,6 +30,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     bool boolean;
 
     vector_t *vector;
+    const vector_t *cvector;
 
     ctu_t *ast;
 
@@ -124,8 +125,8 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     RBRACE "`}`"
 
 %type<vector>
-    path modspec
-    imports import_seq
+    path
+    import_seq
     decls decl_seq
     record_fields
     stmt_list
@@ -136,6 +137,9 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     variant_field_list opt_variant_field_list
     initList
     attribs attrib attrib_body attrib_list
+
+%type<cvector>
+    modspec imports
 
 /**
  * order of operations, tightest first

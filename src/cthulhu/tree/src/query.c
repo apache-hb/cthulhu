@@ -193,7 +193,7 @@ const tree_t *tree_fn_get_return(const tree_t *self)
     }
 }
 
-vector_t *tree_fn_get_params(const tree_t *self)
+const vector_t *tree_fn_get_params(const tree_t *self)
 {
     switch (tree_get_kind(self))
     {

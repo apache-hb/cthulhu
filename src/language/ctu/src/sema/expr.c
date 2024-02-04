@@ -270,7 +270,7 @@ static tree_t *sema_unary(ctu_sema_t *sema, const ctu_t *expr, const tree_t *imp
     return tree_expr_unary(expr->node, expr->unary, inner);
 }
 
-static const tree_t *get_param_checked(vector_t *params, size_t i)
+static const tree_t *get_param_checked(const vector_t *params, size_t i)
 {
     if (i >= vector_len(params))
     {
@@ -295,7 +295,7 @@ static tree_t *sema_call(ctu_sema_t *sema, const ctu_t *expr)
         callee = tree_expr_load(expr->node, callee);
     }
 
-    vector_t *params = tree_fn_get_params(type);
+    const vector_t *params = tree_fn_get_params(type);
 
     arena_t *arena = get_global_arena();
     size_t len = vector_len(expr->args);

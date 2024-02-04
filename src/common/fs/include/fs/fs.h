@@ -2,7 +2,9 @@
 
 #include <ctu_fs_api.h>
 
-#include "os/os.h"
+#include "os/core.h"
+
+#include <stdbool.h>
 
 CT_BEGIN_API
 

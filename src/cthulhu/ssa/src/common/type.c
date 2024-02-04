@@ -135,7 +135,7 @@ static typevec_t *collect_cases(const tree_t *type, arena_t *arena)
 
 static typevec_t *collect_params(map_t *cache, const tree_t *type, arena_t *arena)
 {
-    vector_t *vec = tree_fn_get_params(type);
+    const vector_t *vec = tree_fn_get_params(type);
 
     size_t len = vector_len(vec);
     typevec_t *result = typevec_of(sizeof(ssa_param_t), len, arena);

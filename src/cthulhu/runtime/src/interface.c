@@ -18,7 +18,7 @@
 #include "std/vector.h"
 #include "std/str.h"
 
-#include "os/os.h"
+#include "os/core.h"
 
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"

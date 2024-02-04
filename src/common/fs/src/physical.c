@@ -4,6 +4,7 @@
 #include "std/str.h"
 #include "std/map.h"
 
+#include "os/os.h"
 #include "io/io.h"
 
 #include "base/panic.h"

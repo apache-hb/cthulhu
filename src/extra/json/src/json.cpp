@@ -86,6 +86,19 @@ Json Json::get(size_t index) const {
     return (json_t*)vector_get(m_ast->array, index);
 }
 
+size_t Json::length() const {
+    CTASSERT(is_array());
+    return vector_len(m_ast->array);
+}
+
+Json Json::operator[](const char *key) const {
+    return get(key);
+}
+
+Json Json::operator[](size_t index) const {
+    return get(index);
+}
+
 JsonParser::JsonParser(arena_t *arena)
     : m_arena(arena)
     , m_logger(logger_new(arena))

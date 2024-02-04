@@ -67,7 +67,7 @@ json_t *json_ast_boolean(scan_t *scan, where_t where, bool boolean)
     return ast;
 }
 
-json_t *json_ast_array(scan_t *scan, where_t where, vector_t *array)
+json_t *json_ast_array(scan_t *scan, where_t where, const vector_t *array)
 {
     CTASSERT(array != NULL);
 
@@ -76,7 +76,7 @@ json_t *json_ast_array(scan_t *scan, where_t where, vector_t *array)
     return ast;
 }
 
-json_t *json_ast_object(scan_t *scan, where_t where, typevec_t *members)
+json_t *json_ast_object(scan_t *scan, where_t where, const typevec_t *members)
 {
     json_scan_t *context = json_scan_context(scan);
     logger_t *logger = context->reports;

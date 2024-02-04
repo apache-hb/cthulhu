@@ -94,7 +94,7 @@ static tree_t *sema_name_rvalue(tree_t *sema, obr_t *expr)
     return name;
 }
 
-static const tree_t *get_param_checked(vector_t *params, size_t i)
+static const tree_t *get_param_checked(const vector_t *params, size_t i)
 {
     if (i >= vector_len(params))
     {
@@ -110,7 +110,7 @@ static tree_t *sema_call(tree_t *sema, obr_t *expr)
     tree_t *callee = obr_sema_lvalue(sema, expr->expr);
     if (tree_is(callee, eTreeError)) { return callee; }
 
-    vector_t *params = tree_fn_get_params(callee);
+    const vector_t *params = tree_fn_get_params(callee);
 
     arena_t *arena = get_global_arena();
     size_t len = vector_len(expr->args);

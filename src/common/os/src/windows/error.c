@@ -1,10 +1,11 @@
-#include "os/os.h"
+#include "os/core.h"
 
 #include "std/str.h"
 
 #include "core/win32.h" // IWYU pragma: keep
 
 #if CTU_WIN32_TRICKERY
+#   include <windef.h>
 #   include <winbase.h>
 #endif
 

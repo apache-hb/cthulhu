@@ -216,7 +216,7 @@ bool str_endswith(const char *str, const char *suffix)
 }
 
 USE_DECL
-char *str_join(const char *sep, vector_t *parts, arena_t *arena)
+char *str_join(const char *sep, const vector_t *parts, arena_t *arena)
 {
     CTASSERT(sep != NULL);
     CTASSERT(parts != NULL);
@@ -639,7 +639,7 @@ bool str_equal(const char *lhs, const char *rhs)
  * expects a list of file paths
  */
 USE_DECL
-const char *str_common_prefix(vector_t *args, arena_t *arena)
+const char *str_common_prefix(const vector_t *args, arena_t *arena)
 {
     CTASSERT(args != NULL);
     CTASSERT(arena != NULL);

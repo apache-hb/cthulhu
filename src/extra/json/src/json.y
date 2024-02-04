@@ -36,6 +36,8 @@ void jsonerror(where_t *where, void *state, scan_t *scan, const char *msg);
     vector_t *array;
     typevec_t *members;
     json_member_t member;
+
+    const vector_t *carray;
 }
 
 %start json
@@ -61,8 +63,11 @@ void jsonerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %token<real>
     REAL
 
+%type<carray>
+    array
+
 %type<array>
-    array elements
+    elements
 
 %type<members>
     members

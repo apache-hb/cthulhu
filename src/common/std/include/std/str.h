@@ -99,7 +99,7 @@ CT_STD_API bool str_endswith(IN_STRING const char *str, IN_STRING const char *su
 ///
 /// @return the joined string
 CT_NODISCARD
-CT_STD_API char *str_join(IN_STRING const char *sep, IN_NOTNULL vector_t *parts, IN_NOTNULL arena_t *arena);
+CT_STD_API char *str_join(IN_STRING const char *sep, IN_NOTNULL const vector_t *parts, IN_NOTNULL arena_t *arena);
 
 /// @brief repeat a string
 ///
@@ -158,7 +158,7 @@ CT_STD_API vector_t *str_split(IN_STRING const char *str, IN_STRING const char *
 ///
 /// @return the common prefix
 CT_NODISCARD RET_NOTNULL
-CT_STD_API const char *str_common_prefix(IN_NOTNULL vector_t *args, IN_NOTNULL arena_t *arena);
+CT_STD_API const char *str_common_prefix(IN_NOTNULL const vector_t *args, IN_NOTNULL arena_t *arena);
 
 /// @brief find the last instance of a substring in a string
 ///

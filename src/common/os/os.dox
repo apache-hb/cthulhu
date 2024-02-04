@@ -1,0 +1,18 @@
+/**
+
+@defgroup os Platform abstraction layer
+@brief Intermediary layer for OS specific calls
+@ingroup common
+
+Always use this layer rather than directly calling posix/win32/bsd functionality or headers.
+If possible provide sane fallback functionality for functions that have no equivilent on other platfroms.
+
+Os is split into 2 headers, core.h and os.h.
+This is because os.h pulls in OS specific headers which can bloat compile times,
+often using core.h is enough in a header
+
+@TODO an os file path abstraction would be nice to have
+      currently if we want to support long paths on windows we would need to do sneaky allocations
+      which we dont advertise in the api.
+
+*/

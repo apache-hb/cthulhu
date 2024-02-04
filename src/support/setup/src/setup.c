@@ -14,7 +14,7 @@
 #include "memory/memory.h"
 #include "notify/notify.h"
 #include "format/notify.h"
-#include "os/os.h"
+#include "os/core.h"
 #include "backtrace/backtrace.h"
 
 #include "config/config.h"

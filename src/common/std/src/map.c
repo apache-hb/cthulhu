@@ -391,7 +391,7 @@ static bucket_t *map_next_in_chain(bucket_t *entry)
  * @return bucket_t* the next bucket or NULL if there are no more buckets
  */
 CT_PUREFN
-static bucket_t *set_find_next_bucket(map_t *map, size_t *index, bucket_t *previous)
+static bucket_t *set_find_next_bucket(const map_t *map, size_t *index, bucket_t *previous)
 {
     bucket_t *entry = map_next_in_chain(previous);
     if (entry != NULL)
@@ -422,7 +422,7 @@ static bucket_t *set_find_next_bucket(map_t *map, size_t *index, bucket_t *previ
 }
 
 USE_DECL
-map_iter_t map_iter(map_t *map)
+map_iter_t map_iter(const map_t *map)
 {
     CTASSERT(map != NULL);
 

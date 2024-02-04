@@ -32,6 +32,9 @@
     - `tree` - common typed ast. @ref tree
     - `util` - common utilities. @ref runtime_util
 
+  - `extra` - extra utility libraries that do not fall into a runtime category
+    - `json` - json parsing library, does not current support writing
+
   - `frontend` - user facing components used to interact with drivers and the collection
     - `cli` - command line user interface
     - `example` - example usage of the runtime
@@ -57,6 +60,9 @@
   - `target` - codegen target libraries
     - `cfamily` - C and C++ codegen
     - `debug` - debug output
+    - `hlsl` - hlsl shader target
+
+
 
   - `tools` - supporting tools and test utilities
     - `diagnostic` - diagnostic listing and querying tool

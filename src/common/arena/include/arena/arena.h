@@ -13,8 +13,8 @@ CT_BEGIN_API
 
 /// @defgroup memory Arena memory allocation
 /// @brief Global and arena memory management
-/// the arena_xxx functions provide strong garuntees for memory allocation and deallocation
-/// with pre and post checks to catch possibly incorrect usage.
+/// the arena_* functions provide strong garuntees for memory allocation and deallocation
+/// with pre and post checks to catch possible incorrect usage.
 /// for weaker garuntees, the @ref memory_opt functions can be used.
 /// @ingroup common
 /// @{

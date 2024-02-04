@@ -62,7 +62,7 @@ static obr_t *obr_decl_symbol_location(const obr_symbol_t *symbol, obr_kind_t ki
     return obr_decl(symbol->scan, symbol->where, kind, symbol->name, symbol->visibility);
 }
 
-obr_t *obr_module(scan_t *scan, where_t where, char *name, char *end, vector_t *imports,
+obr_t *obr_module(scan_t *scan, where_t where, char *name, char *end, const vector_t *imports,
                   vector_t *decls, vector_t *init)
 {
     obr_t *self = obr_decl(scan, where, eObrModule, name, eObrVisPublic);
@@ -106,7 +106,7 @@ obr_t *obr_decl_const(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *
 }
 
 obr_t *obr_decl_procedure(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *receiver,
-                          vector_t *params, obr_t *result, vector_t *locals, vector_t *body,
+                          const vector_t *params, obr_t *result, vector_t *locals, vector_t *body,
                           char *end)
 {
     obr_t *self = obr_decl_from_symbol(scan, where, eObrDeclProcedure, symbol);
@@ -150,7 +150,7 @@ obr_t *obr_expr_cast(scan_t *scan, where_t where, obr_t *expr, obr_t *cast)
     return self;
 }
 
-obr_t *obr_expr_call(scan_t *scan, where_t where, obr_t *expr, vector_t *args)
+obr_t *obr_expr_call(scan_t *scan, where_t where, obr_t *expr, const vector_t *args)
 {
     obr_t *self = obr_new(scan, where, eObrExprCall);
     self->expr = expr;
@@ -300,7 +300,7 @@ obr_t *obr_type_pointer(scan_t *scan, where_t where, obr_t *type)
     return self;
 }
 
-obr_t *obr_type_array(scan_t *scan, where_t where, vector_t *sizes, obr_t *type)
+obr_t *obr_type_array(scan_t *scan, where_t where, const vector_t *sizes, obr_t *type)
 {
     obr_t *self = obr_new(scan, where, eObrTypeArray);
     self->sizes = sizes;

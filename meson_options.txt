@@ -55,18 +55,23 @@ option('frontend_gui', type : 'feature',
 # targets
 
 option('target_cfamily', type : 'feature',
-    description : 'build c family target',
+    description : 'Generates C89 code from the ssa form',
     value : 'auto'
 )
 
 option('target_debug', type : 'feature',
-    description : 'build debug target',
+    description : 'Debug output for both tree and ssa forms',
+    value : 'auto'
+)
+
+option('target_hlsl', type : 'feature',
+    description : 'Emits HLSL code from the tree form',
     value : 'auto'
 )
 
 option('default_target', type : 'combo',
-    description : 'default target',
-    choices : ['cfamily', 'debug'],
+    description : 'Control the default target of the compiler',
+    choices : ['cfamily', 'debug', 'hlsl'],
     value : 'cfamily'
 )
 
@@ -79,6 +84,11 @@ option('trace_memory', type : 'feature',
 
 option('paranoid', type : 'feature',
     description : 'enable paranoid assertions',
+    value : 'auto'
+)
+
+option('trace_time', type : 'feature',
+    description : 'profile the build process using clang time trace, also requires ninjatracing to generate the report',
     value : 'auto'
 )
 

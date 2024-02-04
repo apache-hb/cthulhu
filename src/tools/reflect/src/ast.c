@@ -288,7 +288,6 @@ ref_ast_t *ref_variant(scan_t *scan, where_t where, char *name, ref_ast_t *under
 {
     ref_ast_t *ast = ref_ast_decl(scan, where, eAstVariant, name);
     ast->parent = underlying;
-    ast->methods = &kEmptyVector;
     ast->default_case = NULL;
     size_t len = vector_len(cases);
     vector_t *case_list = vector_new(len, scan_get_arena(scan));

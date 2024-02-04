@@ -29,6 +29,7 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
     obr_symbol_t *symbol;
 
     vector_t *vector;
+    const vector_t *cvector;
 
     char *ident;
     mpz_t number;
@@ -36,8 +37,11 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
     text_t string;
 }
 
+%type<cvector>
+    import_list opt_params opt_expr_list
+
 %type<vector>
-    import_list import_body_list module_seq
+    import_body_list module_seq
     decl_seq decl
     ident_list
     value_seq value_decl value_decl_seq
@@ -45,10 +49,10 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
     type_seq type_decl_seq
     field_list field_decl
 
-    opt_params params
+    params
     param_list param_decl
     stmt_seq opt_init
-    expr_list opt_expr_list
+    expr_list
 
 %type<ast>
     import_body module

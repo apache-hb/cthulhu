@@ -1,4 +1,4 @@
-#include "os/os.h"
+#include "os/core.h"
 
 void os_init(void)
 {

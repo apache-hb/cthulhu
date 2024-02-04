@@ -42,7 +42,7 @@ void ctu_forward_decls(context_t *context)
     ctu_t *ast = context_get_ast(context);
     const char *name = context_get_name(context);
 
-    vector_t *decls = ast->decls;
+    const vector_t *decls = ast->decls;
     size_t len = vector_len(decls);
 
     size_t sizes[eCtuTagTotal] = {

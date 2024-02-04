@@ -3,6 +3,8 @@
 #include "io/io.h"
 #include "arena/arena.h"
 
+#include "os/os.h"
+
 #include <stdint.h>
 
 typedef struct io_file_t

@@ -130,7 +130,7 @@ CT_NODISCARD CT_PUREFN
 CT_STD_API size_t vector_len(IN_NOTNULL const vector_t *vector);
 
 /// @brief append the contents of one vector to another
-/// this copies the contents of @a other into @a vector
+/// this copies the contents of @p other into @p vector
 ///
 /// @param vector the vector to append to
 /// @param other the vector to append
@@ -158,6 +158,7 @@ CT_STD_API void vector_reset(IN_NOTNULL vector_t *vec);
 /// @param vec the vector to get the data of
 ///
 /// @return the data of @p vec
+RET_NOTNULL
 CT_STD_API void **vector_data(IN_NOTNULL vector_t *vec);
 
 /// @}

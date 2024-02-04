@@ -2,7 +2,7 @@
 
 #include <ctu_io_api.h>
 
-#include "os/os.h"
+#include "os/core.h"
 
 #include "core/analyze.h"
 

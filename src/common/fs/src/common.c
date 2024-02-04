@@ -4,6 +4,8 @@
 #include "base/util.h"
 #include "std/str.h"
 
+#include "os/os.h"
+
 #include "base/panic.h"
 
 // inode api

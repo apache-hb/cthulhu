@@ -13,7 +13,7 @@
 #include "std/str.h"
 #include "std/vector.h"
 
-static char *path_to_string(vector_t *path, arena_t *arena)
+static char *path_to_string(const vector_t *path, arena_t *arena)
 {
     CTASSERT(path != NULL);
     CTASSERT(vector_len(path) > 0);
@@ -51,7 +51,7 @@ context_t *context_new(driver_t *handle, const char *name, void *ast, tree_t *ro
 }
 
 USE_DECL
-context_t *add_context(lifetime_t *lifetime, vector_t *path, context_t *mod)
+context_t *add_context(lifetime_t *lifetime, const vector_t *path, context_t *mod)
 {
     CTASSERT(lifetime != NULL);
     CTASSERT(mod != NULL);
@@ -69,7 +69,7 @@ context_t *add_context(lifetime_t *lifetime, vector_t *path, context_t *mod)
 }
 
 USE_DECL
-context_t *get_context(lifetime_t *lifetime, vector_t *path)
+context_t *get_context(lifetime_t *lifetime, const vector_t *path)
 {
     CTASSERT(lifetime != NULL);
 

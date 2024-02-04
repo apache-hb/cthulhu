@@ -22,7 +22,7 @@ static vector_t *mod_basename(const char *fp, arena_t *arena)
     return vector_init(str_basename(fp, arena), arena);
 }
 
-static vector_t *find_mod_path(ctu_t *ast, const char *fp, arena_t *arena)
+static const vector_t *find_mod_path(ctu_t *ast, const char *fp, arena_t *arena)
 {
     if (ast == NULL) { return mod_basename(fp, arena); }
 
@@ -52,7 +52,7 @@ static void ctu_postparse(driver_t *driver, scan_t *scan, void *tree)
     CTASSERT(ast->kind == eCtuModule);
     arena_t *arena = scan_get_arena(scan);
 
-    vector_t *path = find_mod_path(ast, scan_path(scan), arena);
+    const vector_t *path = find_mod_path(ast, scan_path(scan), arena);
 
     lifetime_t *lifetime = handle_get_lifetime(driver);
     context_t *ctx = context_new(driver, vector_tail(path), ast, NULL);

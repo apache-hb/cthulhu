@@ -3,6 +3,7 @@
 
 #include "setup/memory.h"
 
+#include "os/os.h"
 #include "fs/fs.h"
 
 #include "std/str.h"

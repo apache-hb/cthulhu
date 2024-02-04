@@ -2,7 +2,7 @@
 
 #include "io/io.h"
 
-#include "os/os.h"
+#include "os/core.h"
 
 #include <stddef.h>
 #include <stdarg.h>

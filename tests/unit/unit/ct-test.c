@@ -12,7 +12,7 @@
 #include "arena/arena.h"
 
 #include "std/str.h"
-#include "os/os.h"
+#include "os/core.h"
 
 #include <stdlib.h>
 

@@ -36,7 +36,7 @@ CT_RUNTIME_API context_t *context_new(IN_NOTNULL driver_t *handle, const char *n
 /// @param mod the context to add
 ///
 /// @return the new context
-CT_RUNTIME_API context_t *add_context(IN_NOTNULL lifetime_t *lifetime, IN_NOTNULL vector_t *path, IN_NOTNULL context_t *mod);
+CT_RUNTIME_API context_t *add_context(IN_NOTNULL lifetime_t *lifetime, IN_NOTNULL const vector_t *path, IN_NOTNULL context_t *mod);
 
 /// @brief get a context from the lifetime
 ///
@@ -44,7 +44,7 @@ CT_RUNTIME_API context_t *add_context(IN_NOTNULL lifetime_t *lifetime, IN_NOTNUL
 /// @param path the path to the context
 ///
 /// @return the new context
-CT_RUNTIME_API context_t *get_context(IN_NOTNULL lifetime_t *lifetime, IN_NOTNULL vector_t *path);
+CT_RUNTIME_API context_t *get_context(IN_NOTNULL lifetime_t *lifetime, IN_NOTNULL const vector_t *path);
 
 /// @brief get the lifetime of a driver
 ///

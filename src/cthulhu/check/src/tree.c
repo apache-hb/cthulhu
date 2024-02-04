@@ -198,7 +198,7 @@ static const char *get_fn_name(const tree_t *fn)
     return tree_to_string(tree_get_type(fn));
 }
 
-static void check_params(check_t *check, vector_t *args, vector_t *params, size_t count, const char *name)
+static void check_params(check_t *check, const vector_t *args, const vector_t *params, size_t count, const char *name)
 {
     for (size_t i = 0; i < count; i++)
     {
@@ -223,7 +223,7 @@ static void check_params(check_t *check, vector_t *args, vector_t *params, size_
     }
 }
 
-static void check_call_args_fixed(check_t *check, const tree_t *expr, vector_t *args, vector_t *params)
+static void check_call_args_fixed(check_t *check, const tree_t *expr, const vector_t *args, const vector_t *params)
 {
     size_t arg_count = vector_len(args);
     size_t param_count = vector_len(params);
@@ -244,7 +244,7 @@ static void check_call_args_fixed(check_t *check, const tree_t *expr, vector_t *
     check_params(check, args, params, count, name);
 }
 
-static void check_call_args_variadic(check_t *check, const tree_t *expr, vector_t *args, vector_t *params)
+static void check_call_args_variadic(check_t *check, const tree_t *expr, const vector_t *args, const vector_t *params)
 {
     size_t arg_count = vector_len(args);
     size_t param_count = vector_len(params);
@@ -269,7 +269,7 @@ static void check_call_arguments(check_t *check, const tree_t *expr)
 {
     const tree_t *fn = expr->callee;
     vector_t *fn_args = expr->args;
-    vector_t *fn_params = tree_fn_get_params(fn);
+    const vector_t *fn_params = tree_fn_get_params(fn);
     arity_t arity = tree_fn_get_arity(fn);
 
     switch (arity)
@@ -553,7 +553,7 @@ static void check_inner_type_recursion(check_t *check, const tree_t *type)
 
     case eTreeTypeClosure:
         check_type_recursion(check, tree_fn_get_return(type));
-        vector_t *params = tree_fn_get_params(type);
+        const vector_t *params = tree_fn_get_params(type);
         size_t len = vector_len(params);
         for (size_t i = 0; i < len; i++)
         {

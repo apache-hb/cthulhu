@@ -46,7 +46,7 @@ void ctu_resolve_function(tree_t *sema, tree_t *self, void *user)
     if (tree_is(fn, eTreeError)) { return; }
 
     const node_t *node = tree_get_node(fn);
-    vector_t *params = tree_fn_get_params(fn);
+    const vector_t *params = tree_fn_get_params(fn);
     const tree_t *return_type = tree_fn_get_return(fn);
 
     size_t len = vector_len(params);

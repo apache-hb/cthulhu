@@ -109,7 +109,7 @@ static void resolve_proc(tree_t *sema, tree_t *self, void *user)
 {
     obr_t *decl = begin_resolve(sema, self, user, eObrDeclProcedure);
 
-    vector_t *params = tree_fn_get_params(self);
+    const vector_t *params = tree_fn_get_params(self);
     size_t param_count = vector_len(params);
 
     size_t locals = vector_len(decl->locals);

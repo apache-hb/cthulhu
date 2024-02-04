@@ -27,6 +27,7 @@
 
 #include "fs/fs.h"
 #include "io/io.h"
+#include "os/os.h"
 
 #include "argparse/argparse.h"
 

@@ -103,7 +103,7 @@ typedef struct obr_t
                 obr_t *cast;
 
                 /* eObrExprCall */
-                vector_t *args;
+                const vector_t *args;
             };
 
             /* eObrStmtReturn */
@@ -157,7 +157,7 @@ typedef struct obr_t
 
         /* eObrTypeArray */
         struct {
-            vector_t *sizes;
+            const vector_t *sizes;
             obr_t *array_element;
         };
 
@@ -183,7 +183,7 @@ typedef struct obr_t
             union {
                 /* eObrModule */
                 struct {
-                    vector_t *imports;
+                    const vector_t *imports;
                     vector_t *decls;
                     vector_t *init;
                 };
@@ -200,7 +200,7 @@ typedef struct obr_t
                 /* eObrDeclProcedure|eObrTypeSignature */
                 struct {
                     obr_t *receiver;
-                    vector_t *params;
+                    const vector_t *params;
                     obr_t *result;
 
                     vector_t *locals;
@@ -216,7 +216,7 @@ typedef struct obr_t
 
 /* modules */
 
-obr_t *obr_module(scan_t *scan, where_t where, char *name, char *end, vector_t *imports,
+obr_t *obr_module(scan_t *scan, where_t where, char *name, char *end, const vector_t *imports,
                   vector_t *decls, vector_t *init);
 obr_t *obr_import(scan_t *scan, where_t where, char *name, char *symbol);
 
@@ -227,7 +227,7 @@ obr_t *obr_decl_var(obr_symbol_t *symbol, obr_t *type);
 obr_t *obr_decl_const(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *value);
 
 obr_t *obr_decl_procedure(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *receiver,
-                          vector_t *params, obr_t *result, vector_t *locals, vector_t *body,
+                          const vector_t *params, obr_t *result, vector_t *locals, vector_t *body,
                           char *end);
 
 /* exprs */
@@ -235,7 +235,7 @@ obr_t *obr_decl_procedure(scan_t *scan, where_t where, obr_symbol_t *symbol, obr
 obr_t *obr_expr_name(scan_t *scan, where_t where, char *name);
 obr_t *obr_expr_field(scan_t *scan, where_t where, obr_t *expr, char *field);
 
-obr_t *obr_expr_call(scan_t *scan, where_t where, obr_t *expr, vector_t *args);
+obr_t *obr_expr_call(scan_t *scan, where_t where, obr_t *expr, const vector_t *args);
 
 obr_t *obr_expr_cast(scan_t *scan, where_t where, obr_t *expr, obr_t *cast);
 obr_t *obr_expr_is(scan_t *scan, where_t where, obr_t *lhs, obr_t *rhs);
@@ -266,7 +266,7 @@ obr_t *obr_stmt_break(scan_t *scan, where_t where);
 obr_t *obr_type_name(scan_t *scan, where_t where, char *symbol);
 obr_t *obr_type_qual(scan_t *scan, where_t where, char *name, char *symbol);
 obr_t *obr_type_pointer(scan_t *scan, where_t where, obr_t *type);
-obr_t *obr_type_array(scan_t *scan, where_t where, vector_t *sizes, obr_t *type);
+obr_t *obr_type_array(scan_t *scan, where_t where, const vector_t *sizes, obr_t *type);
 obr_t *obr_type_record(scan_t *scan, where_t where, vector_t *fields);
 
 /* extras */

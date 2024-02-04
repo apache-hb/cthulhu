@@ -76,7 +76,7 @@ typedef struct ctu_t {
         struct {
             char *name;
             bool exported;
-            vector_t *attribs;
+            const vector_t *attribs;
 
             union {
                 /* eCtuImport */
@@ -217,15 +217,15 @@ typedef struct ctu_t {
 
         /* eCtuAttrib */
         struct {
-            vector_t *attrib_path;
-            vector_t *attrib_args;
+            const vector_t *attrib_path;
+            const vector_t *attrib_args;
         };
 
         /* eCtuModule */
         struct {
-            vector_t *modspec;
-            vector_t *imports;
-            vector_t *decls;
+            const vector_t *modspec;
+            const vector_t *imports;
+            const vector_t *decls;
         };
     };
 } ctu_t;
@@ -234,15 +234,15 @@ typedef struct ctu_t {
 /// modules
 ///
 
-ctu_t *ctu_module(scan_t *scan, where_t where, vector_t *modspec, vector_t *imports, vector_t *decls);
+ctu_t *ctu_module(scan_t *scan, where_t where, const vector_t *modspec, const vector_t *imports, const vector_t *decls);
 ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, char *name);
 
 ///
 /// decorators
 ///
 
-ctu_t *ctu_attrib(scan_t *scan, where_t where, vector_t *path, vector_t *args);
-ctu_t *ctu_apply(ctu_t *decl, vector_t *attribs);
+ctu_t *ctu_attrib(scan_t *scan, where_t where, const vector_t *path, const vector_t *args);
+ctu_t *ctu_apply(ctu_t *decl, const vector_t *attribs);
 
 ///
 /// statements

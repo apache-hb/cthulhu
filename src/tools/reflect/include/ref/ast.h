@@ -267,7 +267,7 @@ typedef struct ref_ast_t
                 struct
                 {
                     ref_ast_t *parent;
-                    vector_t *methods;
+                    const vector_t *methods;
 
                     /* eAstVariant */
                     struct

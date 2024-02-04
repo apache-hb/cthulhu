@@ -33,7 +33,7 @@ void ResolveStack::leave_decl()
 }
 
 template<typename T>
-static void vec_foreach(vector_t *vec, auto&& fn)
+static void vec_foreach(const vector_t *vec, auto&& fn)
 {
     for (size_t i = 0; i < vector_len(vec); ++i)
         fn((T)vector_get(vec, i));
@@ -1582,7 +1582,7 @@ size_t Variant::max_tostring() const {
 
     m_cases.foreach([&](auto c)
     {
-        size_t len = strlen(c->get_name());
+        size_t len = ctu_strlen(c->get_name());
         if (len > max)
             max = len;
     });
@@ -1596,7 +1596,7 @@ size_t Variant::max_tostring_bitflags() const {
 
     m_cases.foreach([&](auto c)
     {
-        size_t len = strlen(c->get_name());
+        size_t len = ctu_strlen(c->get_name());
         max += len + 2;
     });
 

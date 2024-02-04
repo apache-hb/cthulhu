@@ -16,13 +16,13 @@
 #include "memory/memory.h"
 #include "base/panic.h"
 
-static const char *attrib_name(vector_t *path)
+static const char *attrib_name(const vector_t *path)
 {
     arena_t *arena = get_global_arena();
     return str_join("::", path, arena);
 }
 
-static ctu_attrib_t *get_attrib(tree_t *sema, vector_t *path)
+static ctu_attrib_t *get_attrib(tree_t *sema, const vector_t *path)
 {
     CTASSERTF(vector_len(path) == 1, "expected 1 path element but got `%s`", attrib_name(path));
     const char *name = vector_tail(path);
@@ -41,7 +41,7 @@ static ctu_attrib_t *attrib_create(const char *name, ctu_attrib_apply_t fn_apply
     return it;
 }
 
-static const char *get_first_string(tree_t *sema, tree_t *decl, vector_t *args)
+static const char *get_first_string(tree_t *sema, tree_t *decl, const vector_t *args)
 {
     if (vector_len(args) != 1)
     {
@@ -90,7 +90,7 @@ static tree_link_t choose_linkage(tree_t *sema, const ctu_t *expr)
     return eLinkEntryCli;
 }
 
-static tree_link_t get_linkage(tree_t *sema, tree_t *decl, vector_t *args)
+static tree_link_t get_linkage(tree_t *sema, tree_t *decl, const vector_t *args)
 {
     switch (vector_len(args))
     {
@@ -113,7 +113,7 @@ static tree_attribs_t *dup_tree_attribs(const tree_attribs_t *attribs)
     return arena_memdup(attribs, sizeof(tree_attribs_t), arena);
 }
 
-static void apply_entry(tree_t *sema, tree_t *decl, vector_t *args)
+static void apply_entry(tree_t *sema, tree_t *decl, const vector_t *args)
 {
     if (!tree_is(decl, eTreeDeclFunction))
     {
@@ -133,7 +133,7 @@ static void apply_entry(tree_t *sema, tree_t *decl, vector_t *args)
     tree_set_attrib(decl, copy);
 }
 
-static void apply_deprecated(tree_t *sema, tree_t *decl, vector_t *args)
+static void apply_deprecated(tree_t *sema, tree_t *decl, const vector_t *args)
 {
     if (!tree_is(decl, eTreeDeclFunction))
     {
@@ -156,7 +156,7 @@ static void apply_deprecated(tree_t *sema, tree_t *decl, vector_t *args)
     tree_set_attrib(decl, copy);
 }
 
-static void apply_section(tree_t *sema, tree_t *decl, vector_t *args)
+static void apply_section(tree_t *sema, tree_t *decl, const vector_t *args)
 {
     if (!tree_is(decl, eTreeDeclFunction))
     {
@@ -179,7 +179,7 @@ static void apply_section(tree_t *sema, tree_t *decl, vector_t *args)
     tree_set_attrib(decl, copy);
 }
 
-static void apply_extern(tree_t *sema, tree_t *decl, vector_t *args)
+static void apply_extern(tree_t *sema, tree_t *decl, const vector_t *args)
 {
     if (!tree_is(decl, eTreeDeclFunction))
     {
@@ -209,7 +209,7 @@ static void apply_extern(tree_t *sema, tree_t *decl, vector_t *args)
     tree_set_attrib(decl, copy);
 }
 
-static void apply_layout(tree_t *sema, tree_t *decl, vector_t *args)
+static void apply_layout(tree_t *sema, tree_t *decl, const vector_t *args)
 {
     CT_UNUSED(args);
 
@@ -240,7 +240,7 @@ void ctu_init_attribs(tree_t *sema, arena_t *arena)
     tree_module_set(sema, eCtuTagAttribs, layout->name, layout);
 }
 
-void ctu_apply_attribs(tree_t *sema, tree_t *decl, vector_t *attribs)
+void ctu_apply_attribs(tree_t *sema, tree_t *decl, const vector_t *attribs)
 {
     size_t len = vector_len(attribs);
     for (size_t i = 0; i < len; i++)

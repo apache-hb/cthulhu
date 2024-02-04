@@ -24,7 +24,7 @@ static ctu_t *ctu_decl(scan_t *scan, where_t where, ctu_kind_t kind, char *name,
     return self;
 }
 
-ctu_t *ctu_module(scan_t *scan, where_t where, vector_t *modspec, vector_t *imports, vector_t *decls)
+ctu_t *ctu_module(scan_t *scan, where_t where, const vector_t *modspec, const vector_t *imports, const vector_t *decls)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuModule);
     ast->modspec = modspec;
@@ -42,7 +42,7 @@ ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, char *name)
 
 /* attribs */
 
-ctu_t *ctu_attrib(scan_t *scan, where_t where, vector_t *path, vector_t *args)
+ctu_t *ctu_attrib(scan_t *scan, where_t where, const vector_t *path, const vector_t *args)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuAttrib);
     ast->attrib_path = path;
@@ -50,7 +50,7 @@ ctu_t *ctu_attrib(scan_t *scan, where_t where, vector_t *path, vector_t *args)
     return ast;
 }
 
-ctu_t *ctu_apply(ctu_t *decl, vector_t *attribs)
+ctu_t *ctu_apply(ctu_t *decl, const vector_t *attribs)
 {
     decl->attribs = attribs;
     return decl;

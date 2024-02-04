@@ -1,0 +1,3 @@
+[submodule "data/scripts/ninjatracing"]
+	path = data/scripts/ninjatracing
+	url = https://github.com/nico/ninjatracing.git
