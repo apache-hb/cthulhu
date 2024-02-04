@@ -19,6 +19,9 @@ typedef struct ssa_vm_t
     arena_t *arena;
     map_t *deps;
 
+    // TODO: dont use this node, preserve locations from frontend
+    node_t *node;
+
     // all globals
     set_t *globals;
 } ssa_vm_t;
@@ -114,7 +117,7 @@ static bool check_init(ssa_scope_t *vm, const ssa_value_t *value)
 
     if (!value->init)
     {
-        msg_notify(vm->vm->reports, &kEvent_UninitializedValueUsed, node_builtin(), "use of uninitialized value inside `%s`", vm->symbol->name);
+        msg_notify(vm->vm->reports, &kEvent_UninitializedValueUsed, vm->vm->node, "use of uninitialized value inside `%s`", vm->symbol->name);
         return false;
     }
 
@@ -187,7 +190,7 @@ static const ssa_value_t *ssa_opt_binary(ssa_scope_t *vm, ssa_binary_t step)
     case eBinaryDiv:
         if (mpz_cmp_ui(rhs->digit_value, 0) == 0)
         {
-            msg_notify(vm->vm->reports, &kEvent_UninitializedValueUsed, node_builtin(), "division by zero inside `%s`", vm->symbol->name);
+            msg_notify(vm->vm->reports, &kEvent_UninitializedValueUsed, vm->vm->node, "division by zero inside `%s`", vm->symbol->name);
             return lhs;
         }
         mpz_divexact(result, lhs->digit_value, rhs->digit_value);
@@ -195,7 +198,7 @@ static const ssa_value_t *ssa_opt_binary(ssa_scope_t *vm, ssa_binary_t step)
     case eBinaryRem:
         if (mpz_cmp_ui(rhs->digit_value, 0) == 0)
         {
-            msg_notify(vm->vm->reports, &kEvent_ModuloByZero, node_builtin(), "modulo by zero inside `%s`", vm->symbol->name);
+            msg_notify(vm->vm->reports, &kEvent_ModuloByZero, vm->vm->node, "modulo by zero inside `%s`", vm->symbol->name);
             return lhs;
         }
         mpz_mod(result, lhs->digit_value, rhs->digit_value);
@@ -323,6 +326,7 @@ void ssa_opt(logger_t *reports, ssa_result_t result, arena_t *arena)
         .reports = reports,
         .arena = arena,
         .deps = result.deps,
+        .node = node_builtin("ssa", arena),
 
         .globals = set_new(64, kTypeInfoPtr, arena),
     };

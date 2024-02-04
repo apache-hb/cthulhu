@@ -311,6 +311,7 @@ CT_NODISCARD
 CT_STD_API char *str_upper(IN_STRING const char *str, IN_NOTNULL arena_t *arena);
 
 /// @brief lowercase an ascii string
+/// this allocates a new string in the provided arena
 ///
 /// @param str the string
 /// @param arena the arena to allocate the lowercase string in

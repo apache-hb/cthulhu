@@ -221,13 +221,13 @@ static const diagnostic_t kReservedName = {
         "Reserved names are keywords and builtin names.\n"
 };
 
-void event_simple(logger_t *logs)
+void event_simple(logger_t *logs, const node_t *builtin)
 {
-    event_builder_t event = msg_notify(logs, &kInfoDiagnostic, node_builtin(), "test");
-    msg_append(event, node_builtin(), "hello %s", "world");
+    event_builder_t event = msg_notify(logs, &kInfoDiagnostic, builtin, "test");
+    msg_append(event, builtin, "hello %s", "world");
 }
 
-void event_missing_call(logger_t *logs, scan_t *scan_main, scan_t *scan_lhs)
+void event_missing_call(logger_t *logs, scan_t *scan_main, scan_t *scan_lhs, const node_t *builtin)
 {
     where_t where = {
         .first_line = 11,
@@ -263,7 +263,7 @@ void event_missing_call(logger_t *logs, scan_t *scan_main, scan_t *scan_lhs)
     msg_append(event, node2, "function defined here");
     msg_append(event, node3, "foo bar");
 
-    msg_append(event, node_builtin(), "builtin node");
+    msg_append(event, builtin, "builtin node");
 }
 
 void event_invalid_import(logger_t *logs, scan_t *scan, scan_t *scan_rhs)
@@ -440,6 +440,7 @@ int main(int argc, const char **argv)
     arena_t *arena = get_global_arena();
     io_t *con = io_stdout();
     tool_t tool = make_config(arena);
+    node_t *node = node_builtin("notify", arena);
 
     tool_config_t config = {
         .arena = arena,
@@ -471,8 +472,8 @@ int main(int argc, const char **argv)
     scan_t *scan_lhs = scan_string("lhs.mod", "Oberon-2", kSampleSourceLeft, arena);
     scan_t *scan_rhs = scan_string("rhs.ctu", "Cthulhu", kSampleSourceRight, arena);
 
-    event_simple(logs);
-    event_missing_call(logs, scan_main, scan_lhs);
+    event_simple(logs, node);
+    event_missing_call(logs, scan_main, scan_lhs, node);
     event_invalid_import(logs, scan_main, scan_rhs);
     event_invalid_function(logs, scan_main);
 

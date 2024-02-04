@@ -51,7 +51,15 @@ CT_RUNTIME_API context_t *get_context(IN_NOTNULL lifetime_t *lifetime, IN_NOTNUL
 /// @param handle the driver to get the lifetime of
 ///
 /// @return the lifetime of @p handle
-CT_RUNTIME_API lifetime_t *handle_get_lifetime(IN_NOTNULL driver_t *handle);
+CT_RUNTIME_API lifetime_t *handle_get_lifetime(IN_NOTNULL const driver_t *handle);
+
+
+/// @brief get the builtin node of a driver
+///
+/// @param handle the driver to get the builtin node of
+///
+/// @return the builtin node of @p handle
+CT_RUNTIME_API const node_t *handle_get_builtin(IN_NOTNULL const driver_t *handle);
 
 /// @brief get the ast of a context
 ///
@@ -88,13 +96,13 @@ CT_RUNTIME_API void context_update(IN_NOTNULL context_t *ctx, void *ast, tree_t 
 
 /// @brief create a new sema context from a lifetime
 ///
-/// @param lifetime the lifetime object
+/// @param driver the language driver this context is for
 /// @param name the name of the context
 /// @param len the length of the name
 /// @param sizes the sizes of the sema objects
 ///
 /// @return the new sema context
-CT_RUNTIME_API tree_t *lifetime_sema_new(IN_NOTNULL lifetime_t *lifetime, IN_STRING const char *name, IN_RANGE(>, 0) size_t len, IN_READS(len) const size_t *sizes);
+CT_RUNTIME_API tree_t *driver_sema_new(IN_NOTNULL driver_t *driver, IN_STRING const char *name, IN_RANGE(>, 0) size_t len, IN_READS(len) const size_t *sizes);
 
 /// @}
 

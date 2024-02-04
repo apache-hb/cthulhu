@@ -1,6 +1,7 @@
 subdir('memory')
 subdir('events')
 subdir('tree')
+subdir('builtins')
 subdir('eval')
 subdir('ssa')
 subdir('util')

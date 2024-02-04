@@ -197,6 +197,14 @@ tree_t *tree_decl_function(
     return self;
 }
 
+tree_t *tree_decl_attrib(const node_t *node, const char *name, vector_t *params, bitset_t mask)
+{
+    tree_t *self = tree_decl(eTreeDeclAttrib, node, NULL, name, eQualNone);
+    self->params = params;
+    self->mask = mask;
+    return self;
+}
+
 void tree_add_param(tree_t *self, tree_t *decl)
 {
     CTASSERTF(tree_is(self, eTreeDeclFunction), "cannot add params to a declaration %s", tree_to_string(self));

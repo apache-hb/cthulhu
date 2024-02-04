@@ -14,10 +14,9 @@
 
 static tree_t *gRuntime = NULL;
 
-void obr_create(driver_t *handle)
+void obr_create(driver_t *driver)
 {
-    lifetime_t *lifetime = handle_get_lifetime(handle);
-    gRuntime = obr_rt_mod(lifetime);
+    gRuntime = obr_rt_mod(driver);
 }
 
 void obr_forward_decls(context_t *context)

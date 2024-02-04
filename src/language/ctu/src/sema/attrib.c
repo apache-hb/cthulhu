@@ -16,15 +16,14 @@
 #include "memory/memory.h"
 #include "base/panic.h"
 
-static const char *attrib_name(const vector_t *path)
+static const char *attrib_name(const vector_t *path, arena_t *arena)
 {
-    arena_t *arena = get_global_arena();
     return str_join("::", path, arena);
 }
 
-static ctu_attrib_t *get_attrib(tree_t *sema, const vector_t *path)
+static ctu_attrib_t *get_attrib(tree_t *sema, const vector_t *path, arena_t *arena)
 {
-    CTASSERTF(vector_len(path) == 1, "expected 1 path element but got `%s`", attrib_name(path));
+    CTASSERTF(vector_len(path) == 1, "expected 1 path element but got `%s`", attrib_name(path, arena));
     const char *name = vector_tail(path);
 
     return ctu_get_attrib(sema, name);
@@ -242,16 +241,17 @@ void ctu_init_attribs(tree_t *sema, arena_t *arena)
 
 void ctu_apply_attribs(tree_t *sema, tree_t *decl, const vector_t *attribs)
 {
+    arena_t *arena = get_global_arena();
     size_t len = vector_len(attribs);
     for (size_t i = 0; i < len; i++)
     {
         ctu_t *attrib = vector_get(attribs, i);
         CTASSERTF(attrib->kind == eCtuAttrib, "expected attrib but got %d", attrib->kind);
 
-        ctu_attrib_t *it = get_attrib(sema, attrib->attrib_path);
+        ctu_attrib_t *it = get_attrib(sema, attrib->attrib_path, arena);
         if (it == NULL)
         {
-            msg_notify(sema->reports, &kEvent_AttribNotFound, attrib->node, "attrib '%s' not found", attrib_name(attrib->attrib_path));
+            msg_notify(sema->reports, &kEvent_AttribNotFound, attrib->node, "attrib '%s' not found", attrib_name(attrib->attrib_path, arena));
             continue;
         }
 

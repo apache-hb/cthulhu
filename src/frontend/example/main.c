@@ -80,6 +80,7 @@ int main(int argc, const char **argv)
 
     ctu_log_update(true);
     arena_t *arena = ctu_default_alloc();
+    node_t *node = node_builtin("example-frontend", arena);
     mediator_t *mediator = mediator_new(arena);
     lifetime_t *lifetime = lifetime_new(mediator, arena);
     logger_t *logger = lifetime_get_logger(lifetime);
@@ -181,14 +182,14 @@ int main(int argc, const char **argv)
     fs_t *out = fs_physical("out", arena);
     if (out == NULL)
     {
-        msg_notify(logger, &kEvent_FailedToCreateOutputDirectory, node_builtin(), "failed to create output directory");
+        msg_notify(logger, &kEvent_FailedToCreateOutputDirectory, node, "failed to create output directory");
     }
     CHECK_LOG(logger, "creating output directory");
 
     sync_result_t result = fs_sync(out, fs);
     if (result.path != NULL)
     {
-        msg_notify(logger, &kEvent_FailedToWriteOutputFile, node_builtin(), "failed to sync %s", result.path);
+        msg_notify(logger, &kEvent_FailedToWriteOutputFile, node, "failed to sync %s", result.path);
     }
     CHECK_LOG(logger, "syncing output directory");
 }

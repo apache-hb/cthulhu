@@ -18,13 +18,11 @@ CT_BEGIN_API
 /// @ingroup location
 /// @{
 
-#define SCAN_BUILTIN_LANG "builtin"
-/// @def SCAN_BUILTIN_LANG
-/// @brief the language of the builtin scanner
-
-#define SCAN_BUILTIN_NAME "<builtin>"
-/// @def SCAN_BUILTIN_NAME
-/// @brief the name of the builtin scanner
+#define CT_SCAN_BUILTIN_NAME "<builtin>"
+/// @def CT_SCAN_BUILTIN_NAME
+/// @brief the name of all builtin scanners
+/// builtin scanners are distinguished by their source language
+/// which maps to the source driver/plugin/target
 
 /// @brief get the source language of a scanner
 ///
@@ -107,8 +105,14 @@ CT_SCAN_API scan_t *scan_io(IN_STRING const char *language,
                 IN_NOTNULL io_t *io,
                 IN_NOTNULL arena_t *arena);
 
-/// @brief the builtin scanner
-CT_SCAN_API extern const scan_t kScanBuiltin;
+/// @brief create a builtin scanner
+///
+/// @param language the language of the scanner
+/// @param arena the allocator to use
+///
+/// @return the builtin scanner
+CT_NODISCARD CT_CONSTFN
+CT_SCAN_API scan_t *scan_builtin(IN_STRING const char *language, IN_NOTNULL arena_t *arena);
 
 /// @brief check if a scanner is the builtin scanner
 ///
@@ -116,7 +120,7 @@ CT_SCAN_API extern const scan_t kScanBuiltin;
 ///
 /// @return true if @p scan is the builtin scanner
 CT_NODISCARD CT_CONSTFN
-CT_SCAN_API bool scan_is_builtin(const scan_t *scan);
+CT_SCAN_API bool scan_is_builtin(IN_NOTNULL const scan_t *scan);
 
 /// @}
 

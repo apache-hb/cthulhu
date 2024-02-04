@@ -46,8 +46,11 @@ static driver_t *handle_new(lifetime_t *lifetime, const language_t *lang)
 
     driver_t *self = ARENA_MALLOC(sizeof(driver_t), lang->id, lifetime, lifetime->arena);
 
+    char *builtin = str_lower(lang->name, lifetime->arena);
+
     self->parent = lifetime;
     self->lang = lang;
+    self->builtin = node_builtin(builtin, lifetime->arena);
 
     return self;
 }
@@ -57,7 +60,7 @@ static bool ctx_requires_compile(const context_t *ctx)
     return ctx->ast != NULL;
 }
 
-lifetime_t *handle_get_lifetime(driver_t *handle)
+lifetime_t *handle_get_lifetime(const driver_t *handle)
 {
     CTASSERT(handle != NULL);
 
@@ -88,6 +91,9 @@ lifetime_t *lifetime_new(mediator_t *mediator, arena_t *arena)
 
     self->logger = logger;
     self->arena = arena;
+
+    // TODO: get some info from the frontend to name this better
+    self->builtin = node_builtin("lifetime", arena);
 
     self->extensions = map_optimal(16, kTypeInfoString, arena);
     self->modules = map_optimal(64, kTypeInfoString, arena);
@@ -132,7 +138,7 @@ void lifetime_add_language(lifetime_t *lifetime, const language_t *lang)
             continue;
         }
 
-        msg_notify(lifetime->logger, &kEvent_ExtensionConflict, node_builtin(), "language `%s` registered under extension `%s` clashes with previously registered language `%s`", lang->id, lang->exts[i], old->id); // TODO: handle this
+        msg_notify(lifetime->logger, &kEvent_ExtensionConflict, lifetime->builtin, "language `%s` registered under extension `%s` clashes with previously registered language `%s`", lang->id, lang->exts[i], old->id); // TODO: handle this
     }
 
     driver_t *handle = handle_new(lifetime, lang);
@@ -154,17 +160,17 @@ const language_t *lifetime_get_language(lifetime_t *lifetime, const char *ext)
     return map_get(lifetime->extensions, ext);
 }
 
-static bool parse_failed(logger_t *reports, const char *path, parse_result_t result)
+static bool parse_failed(logger_t *reports, const char *path, parse_result_t result, scan_t *scan)
 {
     typevec_t *events = logger_get_events(reports);
 
     switch (result.result)
     {
     case eParseInitFailed:
-        msg_notify(reports, &kEvent_ParseInitFailed, node_builtin(), "failed to init parser %s: %d", path, result.error);
+        msg_notify(reports, &kEvent_ParseInitFailed, node_new(scan, kNowhere), "failed to init parser %s: %d", path, result.error);
         return true;
     case eParseScanFailed:
-        msg_notify(reports, &kEvent_ScanFailed, node_builtin(), "failed to scan %s: %d", path, result.error);
+        msg_notify(reports, &kEvent_ScanFailed, node_new(scan, kNowhere), "failed to scan %s: %d", path, result.error);
         return true;
 
     // the driver will reject the file with errors, no need to clutter the output
@@ -204,7 +210,7 @@ void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io)
 
         parse_result_t result = scan_buffer(scan, lang->parse_callbacks);
         const char *path = scan_path(scan);
-        if (parse_failed(lifetime->logger, path, result))
+        if (parse_failed(lifetime->logger, path, result, scan))
         {
             ctu_log("parse failed for %s", path);
             return;

@@ -115,7 +115,7 @@ static void set_var(tree_t *sema, pl0_tag_t tag, const char *name, tree_t *tree)
     set_decl(sema, tag, name, tree);
 }
 
-static tree_t *make_runtime_mod(lifetime_t *lifetime)
+static tree_t *make_runtime_mod(driver_t *handle)
 {
     size_t decls[ePl0TagTotal] = {
         [ePl0TagValues] = 1,
@@ -124,7 +124,7 @@ static tree_t *make_runtime_mod(lifetime_t *lifetime)
         [ePl0TagModules] = 1
     };
 
-    tree_t *mod = lifetime_sema_new(lifetime, "runtime", ePl0TagTotal, decls);
+    tree_t *mod = driver_sema_new(handle, "runtime", ePl0TagTotal, decls);
     set_proc(mod, ePl0TagProcs, "pl0_print", gPrint);
     set_proc(mod, ePl0TagProcs, "printf", gRuntimePrint);
     return mod;
@@ -169,7 +169,7 @@ static tree_storage_t get_mutable_storage(const tree_t *type)
 
 void pl0_init(driver_t *handle)
 {
-    const node_t *node = node_builtin();
+    const node_t *node = handle_get_builtin(handle);
     lifetime_t *lifetime = handle_get_lifetime(handle);
     arena_t *arena = lifetime_get_arena(lifetime);
 
@@ -202,7 +202,7 @@ void pl0_init(driver_t *handle)
     gPrint = tree_decl_function(node, "pl0_print", putd_signature, rt_print_params, &kEmptyVector, call);
     tree_set_attrib(gPrint, &kExportAttrib);
 
-    tree_t *runtime = make_runtime_mod(lifetime);
+    tree_t *runtime = make_runtime_mod(handle);
     vector_t *path = make_runtime_path(arena);
 
     context_t *ctx = compiled_new(handle, runtime);

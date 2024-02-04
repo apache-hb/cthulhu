@@ -9,21 +9,25 @@ typedef struct node_t
     where_t where; ///< the location of this node in the source file
 } node_t;
 
-static const node_t kNodeBuiltin = {
-    .scan = &kScanBuiltin,
-    .where = { 0, 0, 0, 0 }
-};
+const where_t kNowhere = { 0, 0, 0, 0 };
 
 USE_DECL
-const node_t *node_builtin(void)
+node_t *node_builtin(const char *name, arena_t *arena)
 {
-    return &kNodeBuiltin;
+    CTASSERT(name != NULL);
+    CTASSERT(arena != NULL);
+
+    scan_t *scan = scan_builtin(name, arena);
+    node_t *node = node_new(scan, kNowhere);
+
+    return node;
 }
 
 USE_DECL
 bool node_is_builtin(const node_t *node)
 {
-    return node == node_builtin();
+    CTASSERTF(node != NULL, "node cannot be NULL");
+    return scan_is_builtin(node->scan);
 }
 
 USE_DECL

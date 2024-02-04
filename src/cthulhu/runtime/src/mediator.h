@@ -19,6 +19,7 @@ typedef struct mediator_t
 typedef struct lifetime_t
 {
     mediator_t *parent;
+    node_t *builtin;
 
     logger_t *logger;
     arena_t *arena;
@@ -34,6 +35,7 @@ typedef struct lifetime_t
 typedef struct driver_t
 {
     lifetime_t *parent;
+    node_t *builtin;
     const language_t *lang;
 } driver_t;
 

@@ -149,6 +149,7 @@ TREE_KIND(eTreeStmtJump,    "stmt_jump",   eTagNone) ///< loop related jumps
 /// declarations
 ///
 
+TREE_KIND(eTreeDeclAttrib,   "decl_attrib",   eTagName)
 TREE_KIND(eTreeDeclGlobal,   "decl_global",   eTagName | eTagStorage | eTagEval | eTagHasType)
 TREE_KIND(eTreeDeclLocal,    "decl_local",    eTagName | eTagStorage | eTagEval | eTagHasType)
 TREE_KIND(eTreeDeclParam,    "decl_param",    eTagName | eTagHasType)

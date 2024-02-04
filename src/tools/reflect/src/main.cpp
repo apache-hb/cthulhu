@@ -8,7 +8,6 @@
 #include "io/io.h"
 #include "memory/memory.h"
 #include "notify/notify.h"
-#include "os/os.h"
 #include "ref/scan.h"
 
 #include "interop/compile.h"
@@ -122,7 +121,7 @@ struct tool_t
         io_t *io = io_file(path, access, m_arena);
         if (io_error_t err = io_error(io); err != 0)
         {
-            msg_notify(m_logger, diag, node_builtin(), "failed to open '%s': %s", path,
+            msg_notify(m_logger, diag, m_node, "failed to open '%s': %s", path,
                        os_error_string(err, m_arena));
             return nullptr;
         }
@@ -203,6 +202,7 @@ struct tool_t
 
     logger_t *m_logger = nullptr;
     arena_t *m_arena = nullptr;
+    node_t *m_node = node_builtin("reflect-tool", m_arena);
 
     cfg_group_t *m_config = nullptr;
 
@@ -255,7 +255,7 @@ int main(int argc, const char **argv)
     size_t source_count = vector_len(paths);
     if (source_count != 1)
     {
-        msg_notify(logger, &kEvent_ExactlyOneSourceFile, node_builtin(), "expected exactly one source file");
+        msg_notify(logger, &kEvent_ExactlyOneSourceFile, tool.m_node, "expected exactly one source file");
     }
 
     CHECK_LOG(logger, "initializing");

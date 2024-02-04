@@ -30,7 +30,7 @@ void ctu_init(driver_t *handle)
 {
     lifetime_t *lifetime = handle_get_lifetime(handle);
 
-    gRootModule = ctu_rt_mod(lifetime);
+    gRootModule = ctu_rt_mod(handle);
     vector_t *path = ctu_rt_path();
 
     context_t *ctx = compiled_new(handle, gRootModule);

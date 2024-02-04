@@ -166,31 +166,30 @@ static tree_t *gLetter = NULL;
 
 #define DIGIT_TYPE(DIGIT, SIGN) gIntTypes[(DIGIT) * eSignTotal + (SIGN)]
 
-static tree_t *make_int_type(const char *name, digit_t digit, sign_t sign)
+static tree_t *make_int_type(const node_t *node, const char *name, digit_t digit, sign_t sign)
 {
-    return (DIGIT_TYPE(digit, sign) = tree_type_digit(node_builtin(), name, digit, sign));
+    return (DIGIT_TYPE(digit, sign) = tree_type_digit(node, name, digit, sign));
 }
 
-static tree_t *make_bool_type(const char *name)
+static tree_t *make_bool_type(const node_t *node, const char *name)
 {
-    return (gBoolType = tree_type_bool(node_builtin(), name));
+    return (gBoolType = tree_type_bool(node, name));
 }
 
-static tree_t *make_str_type(const char *name)
+static tree_t *make_str_type(const node_t *node, const char *name)
 {
-    return (gStringType = tree_type_pointer(node_builtin(), name, gLetter, SIZE_MAX));
+    return (gStringType = tree_type_pointer(node, name, gLetter, SIZE_MAX));
 }
 
-static tree_t *make_void_type(const char *name)
+static tree_t *make_void_type(const node_t *node, const char *name)
 {
-    return (gVoidType = tree_type_unit(node_builtin(), name));
+    return (gVoidType = tree_type_unit(node, name));
 }
 
-static tree_t *make_opaque_type(const char *name)
+static tree_t *make_opaque_type(const node_t *node, const char *name)
 {
-    return (gOpaqueType = tree_type_opaque(node_builtin(), name));
+    return (gOpaqueType = tree_type_opaque(node, name));
 }
-
 tree_t *ctu_get_int_type(digit_t digit, sign_t sign)
 {
     return DIGIT_TYPE(digit, sign);
@@ -213,8 +212,10 @@ vector_t *ctu_rt_path(void)
     return path;
 }
 
-tree_t *ctu_rt_mod(lifetime_t *lifetime)
+tree_t *ctu_rt_mod(driver_t *driver)
 {
+    const node_t *node = handle_get_builtin(driver);
+    lifetime_t *lifetime = handle_get_lifetime(driver);
     arena_t *arena = lifetime_get_arena(lifetime);
 
     size_t sizes[eCtuTagTotal] = {
@@ -227,71 +228,71 @@ tree_t *ctu_rt_mod(lifetime_t *lifetime)
         [eCtuTagSuffixes] = 1,
     };
 
-    gLetter = tree_type_digit(node_builtin(), "letter", eDigitChar, eSignSigned);
+    gLetter = tree_type_digit(node, "letter", eDigitChar, eSignSigned);
     tree_set_qualifiers(gLetter, eQualConst);
 
-    tree_t *root = lifetime_sema_new(lifetime, "runtime", eCtuTagTotal, sizes);
+    tree_t *root = driver_sema_new(driver, "runtime", eCtuTagTotal, sizes);
 
-    ctu_add_decl(root, eCtuTagTypes, "char", make_int_type("char", eDigitChar, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uchar", make_int_type("uchar", eDigitChar, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "char", make_int_type(node, "char", eDigitChar, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uchar", make_int_type(node, "uchar", eDigitChar, eSignUnsigned));
 
-    ctu_add_decl(root, eCtuTagTypes, "short", make_int_type("short", eDigitShort, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "ushort", make_int_type("ushort", eDigitShort, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "short", make_int_type(node, "short", eDigitShort, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "ushort", make_int_type(node, "ushort", eDigitShort, eSignUnsigned));
 
-    ctu_add_decl(root, eCtuTagTypes, "int", make_int_type("int", eDigitInt, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uint", make_int_type("uint", eDigitInt, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "int", make_int_type(node, "int", eDigitInt, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uint", make_int_type(node, "uint", eDigitInt, eSignUnsigned));
 
-    ctu_add_decl(root, eCtuTagTypes, "long", make_int_type("long", eDigitLong, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "ulong", make_int_type("ulong", eDigitLong, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "long", make_int_type(node, "long", eDigitLong, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "ulong", make_int_type(node, "ulong", eDigitLong, eSignUnsigned));
 
-    ctu_add_decl(root, eCtuTagTypes, "isize", make_int_type("isize", eDigitSize, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "usize", make_int_type("usize", eDigitSize, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "isize", make_int_type(node, "isize", eDigitSize, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "usize", make_int_type(node, "usize", eDigitSize, eSignUnsigned));
 
     // simcoe: these should be made into a library
 
-    ctu_add_decl(root, eCtuTagTypes, "int8", make_int_type("int8", eDigit8, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uint8", make_int_type("uint8", eDigit8, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "int8", make_int_type(node, "int8", eDigit8, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uint8", make_int_type(node, "uint8", eDigit8, eSignUnsigned));
 
-    ctu_add_decl(root, eCtuTagTypes, "int16", make_int_type("int16", eDigit16, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uint16", make_int_type("uint16", eDigit16, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "int16", make_int_type(node, "int16", eDigit16, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uint16", make_int_type(node, "uint16", eDigit16, eSignUnsigned));
 
-    ctu_add_decl(root, eCtuTagTypes, "int32", make_int_type("int32", eDigit32, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uint32", make_int_type("uint32", eDigit32, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "int32", make_int_type(node, "int32", eDigit32, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uint32", make_int_type(node, "uint32", eDigit32, eSignUnsigned));
 
-    ctu_add_decl(root, eCtuTagTypes, "int64", make_int_type("int64", eDigit64, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uint64", make_int_type("uint64", eDigit64, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "int64", make_int_type(node, "int64", eDigit64, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uint64", make_int_type(node, "uint64", eDigit64, eSignUnsigned));
 
-    ctu_add_decl(root, eCtuTagTypes, "intfast8", make_int_type("intfast8", eDigitFast8, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uintfast8", make_int_type("uintfast8", eDigitFast8, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "intfast8", make_int_type(node, "intfast8", eDigitFast8, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uintfast8", make_int_type(node, "uintfast8", eDigitFast8, eSignUnsigned));
 
-    ctu_add_decl(root, eCtuTagTypes, "intfast16", make_int_type("intfast16", eDigitFast16, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uintfast16", make_int_type("uintfast16", eDigitFast16, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "intfast16", make_int_type(node, "intfast16", eDigitFast16, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uintfast16", make_int_type(node, "uintfast16", eDigitFast16, eSignUnsigned));
 
-    ctu_add_decl(root, eCtuTagTypes, "intfast32", make_int_type("intfast32", eDigitFast32, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uintfast32", make_int_type("uintfast32", eDigitFast32, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "intfast32", make_int_type(node, "intfast32", eDigitFast32, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uintfast32", make_int_type(node, "uintfast32", eDigitFast32, eSignUnsigned));
 
-    ctu_add_decl(root, eCtuTagTypes, "intfast64", make_int_type("intfast64", eDigitFast64, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uintfast64", make_int_type("uintfast64", eDigitFast64, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "intfast64", make_int_type(node, "intfast64", eDigitFast64, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uintfast64", make_int_type(node, "uintfast64", eDigitFast64, eSignUnsigned));
 
-    ctu_add_decl(root, eCtuTagTypes, "intleast8", make_int_type("intleast8", eDigitLeast8, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uintleast8", make_int_type("uintleast8", eDigitLeast8, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "intleast8", make_int_type(node, "intleast8", eDigitLeast8, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uintleast8", make_int_type(node, "uintleast8", eDigitLeast8, eSignUnsigned));
 
-    ctu_add_decl(root, eCtuTagTypes, "intleast16", make_int_type("intleast16", eDigitLeast16, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uintleast16", make_int_type("uintleast16", eDigitLeast16, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "intleast16", make_int_type(node, "intleast16", eDigitLeast16, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uintleast16", make_int_type(node, "uintleast16", eDigitLeast16, eSignUnsigned));
 
-    ctu_add_decl(root, eCtuTagTypes, "intleast32", make_int_type("intleast32", eDigitLeast32, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uintleast32", make_int_type("uintleast32", eDigitLeast32, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "intleast32", make_int_type(node, "intleast32", eDigitLeast32, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uintleast32", make_int_type(node, "uintleast32", eDigitLeast32, eSignUnsigned));
 
-    ctu_add_decl(root, eCtuTagTypes, "intleast64", make_int_type("intleast64", eDigitLeast64, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uintleast64", make_int_type("uintleast64", eDigitLeast64, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "intleast64", make_int_type(node, "intleast64", eDigitLeast64, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uintleast64", make_int_type(node, "uintleast64", eDigitLeast64, eSignUnsigned));
 
-    ctu_add_decl(root, eCtuTagTypes, "float", make_int_type("float", eDigitFloat, eSignDefault));
-    ctu_add_decl(root, eCtuTagTypes, "double", make_int_type("double", eDigitDouble, eSignDefault));
+    ctu_add_decl(root, eCtuTagTypes, "float", make_int_type(node, "float", eDigitFloat, eSignDefault));
+    ctu_add_decl(root, eCtuTagTypes, "double", make_int_type(node, "double", eDigitDouble, eSignDefault));
 
-    ctu_add_decl(root, eCtuTagTypes, "bool", make_bool_type("bool"));
-    ctu_add_decl(root, eCtuTagTypes, "str", make_str_type("str"));
-    ctu_add_decl(root, eCtuTagTypes, "void", make_void_type("void"));
-    ctu_add_decl(root, eCtuTagTypes, "opaque", make_opaque_type("opaque"));
+    ctu_add_decl(root, eCtuTagTypes, "bool", make_bool_type(node, "bool"));
+    ctu_add_decl(root, eCtuTagTypes, "str", make_str_type(node, "str"));
+    ctu_add_decl(root, eCtuTagTypes, "void", make_void_type(node, "void"));
+    ctu_add_decl(root, eCtuTagTypes, "opaque", make_opaque_type(node, "opaque"));
 
     ctu_init_attribs(root, arena);
 

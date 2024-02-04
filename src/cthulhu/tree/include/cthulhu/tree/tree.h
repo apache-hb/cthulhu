@@ -5,6 +5,8 @@
 #include "cthulhu/tree/context.h"
 #include "cthulhu/tree/attrib.h"
 
+#include "std/bitset.h"
+
 #include <stdbool.h>
 #include <gmp.h>
 
@@ -29,10 +31,20 @@ typedef void (*resolve_t)(tree_t *sema, tree_t *self, void *user);
 typedef void (*resolve_type_t)(tree_t *sema, tree_t *self, void *user);
 
 typedef enum sema_tags_t {
+    // all the values in this scope
     eSemaValues,
+
+    // all the types in this scope
     eSemaTypes,
+
+    // all the procedures in this scope
     eSemaProcs,
+
+    // all the modules in this scope
     eSemaModules,
+
+    // all the attributes in this scope
+    eSemaAttribs,
 
     eSemaTotal
 } sema_tags_t;
@@ -199,6 +211,9 @@ typedef struct tree_t {
                             const tree_t *return_type;
                             arity_t arity;
                         };
+
+                        /* eTreeDeclAttrib */
+                        bitset_t mask;
                     };
                 };
 

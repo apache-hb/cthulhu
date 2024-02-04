@@ -11,22 +11,22 @@
 
 #include "driver/driver.h"
 
-static vector_t *example_lang_path(void)
+static vector_t *example_lang_path(arena_t *arena)
 {
-    arena_t *arena = get_global_arena();
     vector_t *path = vector_new(2, arena);
     vector_push(&path, "example");
     vector_push(&path, "lang");
     return path;
 }
 
-static tree_t *example_lang_module(lifetime_t *lifetime)
+static tree_t *example_lang_module(driver_t *driver)
 {
+    lifetime_t *lifetime = handle_get_lifetime(driver);
     logger_t *reports = lifetime_get_logger(lifetime);
     tree_cookie_t *cookie = lifetime_get_cookie(lifetime);
     arena_t *arena = lifetime_get_arena(lifetime);
 
-    const node_t *node = node_builtin();
+    const node_t *node = handle_get_builtin(driver);
     size_t sizes[eSemaTotal] = {
         [eSemaValues] = 1,
         [eSemaTypes] = 1,
@@ -40,9 +40,10 @@ static tree_t *example_lang_module(lifetime_t *lifetime)
 static void ex_create(driver_t *handle)
 {
     lifetime_t *lifetime = handle_get_lifetime(handle);
+    arena_t *arena = lifetime_get_arena(lifetime);
 
-    vector_t *path = example_lang_path();
-    tree_t *mod = example_lang_module(lifetime);
+    vector_t *path = example_lang_path(arena);
+    tree_t *mod = example_lang_module(handle);
     context_t *ctx = compiled_new(handle, mod);
 
     add_context(lifetime, path, ctx);

@@ -151,6 +151,7 @@ option('tool_error', type : 'feature',
 )
 
 option('tool_reflect', type : 'feature',
-    description : 'build reflection language',
-    value : 'auto'
+    description : 'build reflection language, deprecated due to moving out of tree',
+    value : 'disabled',
+    deprecated : true
 )

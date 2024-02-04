@@ -204,6 +204,8 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     mediator_t *mediator = mediator_new(arena);
     lifetime_t *lifetime = lifetime_new(mediator, arena);
 
+    node_t *node = node_builtin("test-harness", arena);
+
     langs_t langs = get_langs();
 
     logger_t *reports = lifetime_get_logger(lifetime);
@@ -301,7 +303,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     fs_t *out = fs_physical(run_dir, arena);
     if (out == NULL)
     {
-        msg_notify(reports, &kEvent_FailedToCreateOutputDirectory, node_builtin(),
+        msg_notify(reports, &kEvent_FailedToCreateOutputDirectory, node,
                    "failed to create output directory");
     }
     CHECK_LOG(reports, "creating output directory");
@@ -309,7 +311,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     sync_result_t result = fs_sync(out, fs);
     if (result.path != NULL)
     {
-        msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(), "failed to sync %s",
+        msg_notify(reports, &kEvent_FailedToWriteOutputFile, node, "failed to sync %s",
                    result.path);
     }
     CHECK_LOG(reports, "syncing output directory");
@@ -334,7 +336,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     int status = system(cmd); // NOLINT
     if (status != 0)
     {
-        msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(),
+        msg_notify(reports, &kEvent_FailedToWriteOutputFile, node,
                    "compilation failed `%d`", status);
     }
 #else
@@ -342,7 +344,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     int status = system(cmd); // NOLINT
     if (WEXITSTATUS(status) != CT_EXIT_OK)
     {
-        msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(),
+        msg_notify(reports, &kEvent_FailedToWriteOutputFile, node,
                    "compilation failed %d", WEXITSTATUS(status));
     }
 #endif

@@ -116,8 +116,9 @@ tree_t *obr_get_void_type(void)
     return gTypeVoid;
 }
 
-tree_t *obr_rt_mod(lifetime_t *lifetime)
+tree_t *obr_rt_mod(driver_t *driver)
 {
+    const node_t *node = handle_get_builtin(driver);
     size_t tags[eObrTagTotal] = {
         [eObrTagValues] = 32,
         [eObrTagTypes] = 32,
@@ -125,14 +126,14 @@ tree_t *obr_rt_mod(lifetime_t *lifetime)
         [eObrTagModules] = 32,
     };
 
-    gTypeBoolean = tree_type_bool(node_builtin(), "BOOLEAN");
-    gTypeChar = tree_type_digit(node_builtin(), "CHAR", eDigitChar, eSignSigned);
-    gTypeShort = tree_type_digit(node_builtin(), "SHORTINT", eDigitShort, eSignSigned);
-    gTypeInteger = tree_type_digit(node_builtin(), "INTEGER", eDigitInt, eSignSigned);
-    gTypeLong = tree_type_digit(node_builtin(), "LONGINT", eDigitLong, eSignSigned);
-    gTypeVoid = tree_type_unit(node_builtin(), "VOID");
+    gTypeBoolean = tree_type_bool(node, "BOOLEAN");
+    gTypeChar = tree_type_digit(node, "CHAR", eDigitChar, eSignSigned);
+    gTypeShort = tree_type_digit(node, "SHORTINT", eDigitShort, eSignSigned);
+    gTypeInteger = tree_type_digit(node, "INTEGER", eDigitInt, eSignSigned);
+    gTypeLong = tree_type_digit(node, "LONGINT", eDigitLong, eSignSigned);
+    gTypeVoid = tree_type_unit(node, "VOID");
 
-    tree_t *rt = lifetime_sema_new(lifetime, "oberon", eObrTagTotal, tags);
+    tree_t *rt = driver_sema_new(driver, "oberon", eObrTagTotal, tags);
     obr_add_decl(rt, eObrTagTypes, "BOOLEAN", gTypeBoolean);
     obr_add_decl(rt, eObrTagTypes, "CHAR", gTypeChar);
     obr_add_decl(rt, eObrTagTypes, "SHORTINT", gTypeShort);

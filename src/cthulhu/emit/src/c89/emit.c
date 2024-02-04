@@ -1180,11 +1180,7 @@ c89_emit_result_t emit_c89(const c89_emit_options_t *options)
     const char *header_out = options->output_header;
     const char *source_out = options->output_source;
 
-    if ((header_out != NULL) ^ (source_out != NULL))
-    {
-        msg_notify(opts.reports, &kEvent_SourceAndHeaderOutput, node_builtin(), "both or neither source and header must be specified");
-        goto cleanup;
-    }
+    CTASSERTF(!((header_out != NULL) ^ (source_out != NULL)), "either source and header must be specified, or neither must be specified");
 
     for (size_t i = 0; i < len; i++)
     {
@@ -1251,7 +1247,6 @@ c89_emit_result_t emit_c89(const c89_emit_options_t *options)
         c89_define_module(&emit, mod);
     }
 
-cleanup:
     result.sources = emit.sources;
     return result;
 }

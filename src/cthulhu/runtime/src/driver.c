@@ -127,6 +127,14 @@ lifetime_t *context_get_lifetime(const context_t *context)
 }
 
 USE_DECL
+const node_t *handle_get_builtin(const driver_t *handle)
+{
+    CTASSERT(handle != NULL);
+
+    return handle->builtin;
+}
+
+USE_DECL
 const char *context_get_name(const context_t *context)
 {
     CTASSERT(context != NULL);
@@ -148,17 +156,20 @@ void context_update(context_t *ctx, void *ast, tree_t *root)
 ///
 
 USE_DECL
-tree_t *lifetime_sema_new(lifetime_t *lifetime, const char *name, size_t len, const size_t *sizes)
+tree_t *driver_sema_new(driver_t *driver, const char *name, size_t len, const size_t *sizes)
 {
-    CTASSERT(lifetime != NULL);
+    CTASSERT(driver != NULL);
     CTASSERT(name != NULL);
     CTASSERT(sizes != NULL);
     CTASSERT(len > 0);
 
+    lifetime_t *lifetime = handle_get_lifetime(driver);
+    const node_t *builtin = handle_get_builtin(driver);
+
     logger_t *reports = lifetime_get_logger(lifetime);
     tree_cookie_t *cookie = lifetime_get_cookie(lifetime);
     arena_t *arena = lifetime_get_arena(lifetime);
-    tree_t *root = tree_module_root(reports, cookie, node_builtin(), name, len, sizes, arena);
+    tree_t *root = tree_module_root(reports, cookie, builtin, name, len, sizes, arena);
 
     return root;
 }
