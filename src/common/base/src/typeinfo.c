@@ -1,6 +1,5 @@
-#include "std/typed/info.h"
+#include "base/typeinfo.h"
 #include "base/util.h"
-#include "std/str.h"
 
 static size_t info_ptr_hash(const void *key) { return ptrhash(key); }
 static bool info_ptr_equal(const void *lhs, const void *rhs) { return lhs == rhs; }

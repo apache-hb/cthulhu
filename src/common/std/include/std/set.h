@@ -1,8 +1,10 @@
 #pragma once
 
+#include <ctu_std_api.h>
+
 #include "core/analyze.h"
 
-#include "std/typed/info.h"
+#include "base/typeinfo.h"
 
 CT_BEGIN_API
 

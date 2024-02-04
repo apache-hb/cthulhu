@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ctu_builtins_api.h>
+#include <ctu_attrib_api.h>
 
 #include "cthulhu/tree/tree.h"
 
@@ -9,7 +9,7 @@ CT_BEGIN_API
 typedef enum attrib_link_t
 {
 #define ATTRIB_LINK(id, str) id,
-#include "builtins/builtins.def"
+#include "attrib/attrib.def"
 
     eLinkAttribCount
 } attrib_link_t;

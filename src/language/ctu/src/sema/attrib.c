@@ -1,6 +1,7 @@
 #include "ctu/sema/attrib.h"
 
 #include "arena/arena.h"
+#include "base/util.h"
 #include "cthulhu/events/events.h"
 #include "ctu/ast.h"
 

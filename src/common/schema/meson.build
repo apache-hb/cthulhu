@@ -9,7 +9,7 @@ schema_include = include_directories('.', 'include')
 src = [ 'src/schema.c' ]
 
 libschema = library('schema', src,
-    build_by_default : false,
+    build_by_default : not meson.is_subproject(),
     c_args : [ '-DCT_SCHEMA_BUILD=1' ],
     dependencies : [ core ],
     include_directories : schema_include

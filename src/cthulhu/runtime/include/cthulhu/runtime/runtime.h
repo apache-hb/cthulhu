@@ -16,6 +16,7 @@ typedef struct driver_t driver_t;
 typedef struct plugin_t plugin_t;
 typedef struct context_t context_t;
 typedef struct arena_t arena_t;
+typedef struct map_t map_t;
 
 typedef struct diagnostic_t diagnostic_t;
 typedef struct vector_t vector_t;
@@ -25,7 +26,7 @@ typedef struct tree_cookie_t tree_cookie_t;
 typedef struct scan_t scan_t;
 typedef struct logger_t logger_t;
 typedef struct cfg_group_t cfg_group_t;
-typedef struct callbacks_t callbacks_t;
+typedef struct scan_callbacks_t scan_callbacks_t;
 
 ///
 /// drivers
@@ -88,24 +89,31 @@ typedef enum compile_stage_t
 /// @param context the context that is being compiled
 typedef void (*driver_pass_t)(context_t *context);
 
-/// @brief a language drivers provided configuration
-typedef struct language_t
+/// @brief common information about anything the mediator supports
+typedef struct module_info_t
 {
-    /// @brief the unique id for the language
+    /// @brief unique id for the module
     const char *id;
 
-    /// @brief the human readable name for the language
+    /// @brief the human readable name for the module
     const char *name;
 
-    /// @brief the version of the language
+    /// @brief the version of the module
     version_info_t version;
+
+    /// @brief all diagnostics associated with this module
+    diagnostic_list_t diagnostics;
+} module_info_t;
+
+/// @brief a language driver support capabilities
+typedef struct language_t
+{
+    /// @brief common information about the language
+    module_info_t info;
 
     /// @brief the file extensions this language can parse
     /// @note this is a null terminated array
     const char * const *exts;
-
-    /// @brief all diagnostics this language can produce
-    diagnostic_list_t diagnostics;
 
     /// @brief get the schema for the driver
     driver_config_t fn_config;
@@ -127,11 +135,39 @@ typedef struct language_t
     driver_postpass_t fn_postparse;
 
     /// @brief callbacks for the parser
-    const callbacks_t *parse_callbacks;
+    const scan_callbacks_t *parse_callbacks;
 
     /// @brief an array of passes to run on each translation unit
     driver_pass_t fn_compile_passes[eStageTotal];
 } language_t;
+
+/// @brief plugin support capabilities
+typedef struct plugin_t
+{
+    module_info_t info;
+} plugin_t;
+
+/// @brief compile a tree
+typedef void (*target_tree_t)(tree_t *tree);
+
+/// @brief compile ssa modules
+typedef void (*target_module_t)(map_t *modules);
+
+/// @brief a codegen target backend
+typedef struct target_t
+{
+    module_info_t info;
+
+    target_tree_t fn_tree;
+    target_module_t fn_ssa;
+} target_t;
+
+/// @brief the frontend running the mediator
+typedef struct frontend_t
+{
+    /// @brief information about the frontend
+    module_info_t info;
+} frontend_t;
 
 /// @brief get the logger for a lifetime
 ///

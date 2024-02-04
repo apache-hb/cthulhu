@@ -293,11 +293,11 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     c89_emit_result_t c89_emit_result = emit_c89(&c89_emit_options);
     CHECK_LOG(reports, "emitting c89");
 
-    char cwd[1024];
-    os_error_t err = os_dir_current(cwd, 1024);
+    text_t cwd = {0};
+    os_error_t err = os_getcwd(&cwd, arena);
     CTASSERTF(err == 0, "failed to get cwd %s", os_error_string(err, arena));
 
-    const char *test_dir = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "test-out", cwd);
+    const char *test_dir = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "test-out", cwd.text);
     const char *run_dir = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s", test_dir, argv[1]);
 
     fs_t *out = fs_physical(run_dir, arena);

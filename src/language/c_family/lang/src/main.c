@@ -48,21 +48,23 @@ static const diagnostic_t * const kDiagnosticTable[] = {
 static const char *const kLangNames[] = { "c", "h", NULL };
 
 CT_DRIVER_API const language_t kCModule = {
-    .id = "c",
-    .name = "C",
-    .version = {
-        .license = "LGPLv3",
-        .desc = "C language driver",
-        .author = "Elliot Haisley",
-        .version = CT_NEW_VERSION(0, 0, 1),
+    .info = {
+        .id = "c",
+        .name = "C",
+        .version = {
+            .license = "LGPLv3",
+            .desc = "C language driver",
+            .author = "Elliot Haisley",
+            .version = CT_NEW_VERSION(0, 0, 1),
+        },
+
+        .diagnostics = {
+            .diagnostics = kDiagnosticTable,
+            .count = sizeof(kDiagnosticTable) / sizeof(diagnostic_t*),
+        },
     },
 
     .exts = kLangNames,
-
-    .diagnostics = {
-        .diagnostics = kDiagnosticTable,
-        .count = sizeof(kDiagnosticTable) / sizeof(diagnostic_t*),
-    },
 
     .fn_create = cc_create,
     .fn_destroy = cc_destroy,

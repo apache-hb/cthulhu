@@ -18,6 +18,7 @@ src = [
 deps = [ cpp.find_library('d3d12'), cpp.find_library('dxgi') ]
 
 libimgui = static_library('imgui', src,
+    build_by_default : not meson.is_subproject(),
     cpp_args : gui_args,
     include_directories : [ 'imgui', 'imgui/backends' ],
     dependencies : [ deps, base ]
@@ -47,6 +48,7 @@ src = [
 
 executable('gui', src,
     cpp_args : gui_args,
+    build_by_default : not meson.is_subproject(),
     include_directories : 'include',
     dependencies : [
         imgui, core, os, scan,

@@ -29,7 +29,7 @@ src = [
 ]
 
 libargparse = library('argparse', src,
-    build_by_default : false,
+    build_by_default : not meson.is_subproject(),
     c_args : generated_args + [ '-DCT_ARGPARSE_BUILD=1' ],
     dependencies : [ gmp, memory, std, scan, interop, io, config ],
     include_directories : [ argparse_impl_include, argparse_include ],

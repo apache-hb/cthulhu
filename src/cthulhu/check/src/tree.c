@@ -1,3 +1,4 @@
+#include "base/util.h"
 #include "cthulhu/check/check.h"
 
 #include "cthulhu/events/events.h"

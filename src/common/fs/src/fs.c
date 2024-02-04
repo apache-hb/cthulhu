@@ -179,7 +179,7 @@ io_t *fs_open(fs_t *fs, const char *path, os_access_t flags)
         {
         case eNodeDir: current = node; break;
         case eNodeInvalid: current = create_dir(fs, current, part); break;
-        default: return NULL;
+        default: return NULL; // TODO: return an invalid file, rather than NULL
         }
     }
 
@@ -191,7 +191,7 @@ io_t *fs_open(fs_t *fs, const char *path, os_access_t flags)
     case eNodeInvalid:
         file = create_file(fs, current, vector_tail(parts));
         return query_file(fs, file, flags);
-    default: return NULL;
+    default: return NULL; // TODO: same as above
     }
 }
 

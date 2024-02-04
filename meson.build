@@ -318,7 +318,7 @@ common_deps = [
 ]
 
 runtime_deps = [
-    memory, events, tree, eval, ssa,
+    memory, events, tree, ssa,
     util, emit, runtime, check
 ]
 

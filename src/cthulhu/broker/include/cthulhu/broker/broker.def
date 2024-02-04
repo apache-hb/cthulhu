@@ -1,0 +1,19 @@
+#ifndef BROKER_STAGE
+#   define BROKER_STAGE(ID, STR)
+#endif
+
+BROKER_STAGE(eStageAddAttributes, "add_attributes")
+BROKER_STAGE(eStageForwardSymbols, "forward_symbols")
+BROKER_STAGE(eStageCompileImports, "compile_imports")
+BROKER_STAGE(eStageCompileTypes, "compile_types")
+BROKER_STAGE(eStageCompileSymbols, "compile_symbols")
+
+#undef BROKER_STAGE
+
+#ifndef BROKER_EVENT
+#   define BROKER_EVENT(ID, STR)
+#endif
+
+BROKER_EVENT(eEventMatchAttrib, "match_attribute")
+
+#undef BROKER_EVENT

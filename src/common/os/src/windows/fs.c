@@ -1,5 +1,7 @@
+#include "arena/arena.h"
 #include "base/panic.h"
 
+#include "base/util.h"
 #include "core/win32.h" // IWYU pragma: keep
 
 #include "os/os.h"
@@ -124,19 +126,26 @@ os_dirent_t os_dirent_type(const char *path)
 }
 
 USE_DECL
-os_error_t os_dir_current(char *cwd, size_t size)
+os_error_t os_getcwd(text_t *cwd, arena_t *arena)
 {
     CTASSERT(cwd != NULL);
-    CTASSERT(size > 0);
+    CTASSERT(arena != NULL);
 
-    DWORD ret = GetCurrentDirectoryA((DWORD)size, cwd);
+    DWORD len = GetCurrentDirectoryA(0, NULL);
+    if (len == 0)
+    {
+        return GetLastError();
+    }
+
+    char *path = ARENA_MALLOC(len, "cwd", NULL, arena);
+
+    DWORD ret = GetCurrentDirectoryA(len, path);
 
     if (ret == 0)
     {
         return GetLastError();
     }
 
-    // add null terminator
-    cwd[ret] = '\0';
+    *cwd = text_make(path, len - 1);
     return ERROR_SUCCESS;
 }

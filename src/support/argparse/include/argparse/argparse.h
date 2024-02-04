@@ -43,8 +43,8 @@ typedef enum ap_event_result_t
 ///
 /// @param ap the parser instance
 /// @param param the parameter that triggered the event, may be NULL for positional args
-/// @param value the value of the parameter, may be NULL for positional args
-///              is mpz_t for int, const char * for string, and bool* for bool
+/// @param value the value of the parameter, NULL for positional args,
+///              mpz_t for int, const char * for string, and bool* for bool
 /// @param data the data passed to @a ap_event
 ///
 /// @return continuation code

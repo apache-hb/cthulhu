@@ -18,7 +18,7 @@ src = [
 # TODO: make src/console.c optional to allow for platforms without stdio.h
 
 libio = library('io', src,
-    build_by_default : false,
+    build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_IO_BUILD=1' ],
     dependencies : [ std, os, arena ],

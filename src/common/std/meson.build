@@ -14,12 +14,11 @@ src = [
     'src/vector.c',
     'src/bitset.c',
 
-    'src/typed/vector.c',
-    'src/typed/info.c'
+    'src/typed/vector.c'
 ]
 
 libstd = library('std', src,
-    build_by_default : false,
+    build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_STD_BUILD=1' ],
     dependencies : [ arena, base ],

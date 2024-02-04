@@ -1,5 +1,6 @@
 #include "common.h"
 
+#include "base/util.h"
 #include "std/str.h"
 #include "std/map.h"
 #include "std/vector.h"

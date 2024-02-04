@@ -502,35 +502,6 @@ vector_t *str_split(IN_STRING const char *str, IN_STRING const char *sep, arena_
 }
 
 USE_DECL
-size_t str_hash(const char *str)
-{
-    CTASSERT(str != NULL);
-
-    size_t hash = 0;
-
-    while (*str)
-    {
-        hash = (hash << 5) - hash + *str++;
-    }
-
-    return hash;
-}
-
-USE_DECL
-size_t text_hash(text_view_t text)
-{
-    CTASSERT(text.text != NULL);
-
-    size_t hash = 0;
-    for (size_t i = 0; i < text.length; i++)
-    {
-        hash = (hash << 5) - hash + text.text[i];
-    }
-
-    return hash;
-}
-
-USE_DECL
 bool str_contains(const char *str, const char *search)
 {
     CTASSERT(str != NULL);
@@ -620,17 +591,6 @@ char *str_replace_many(const char *str, const map_t *repl, arena_t *arena)
     out[len] = '\0';
 
     return out;
-}
-
-USE_DECL
-bool str_equal(const char *lhs, const char *rhs)
-{
-    CTASSERT(lhs != NULL);
-    CTASSERT(rhs != NULL);
-
-    /* compare pointers as well for better perf
-       with interned strings */
-    return lhs == rhs || strcmp(lhs, rhs) == 0;
 }
 
 /**

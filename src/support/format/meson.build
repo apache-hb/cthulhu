@@ -17,7 +17,7 @@ src = [
 format_args = user_args + [ '-DCT_FORMAT_BUILD=1' ]
 
 libformat_core = library('format_core', src,
-    build_by_default : false,
+    build_by_default : not meson.is_subproject(),
     c_args : format_args,
     include_directories : format_include,
     dependencies : [ std, core, base, io, arena, backtrace ]
@@ -39,7 +39,7 @@ src = [
 ]
 
 libformat = library('format', src,
-    build_by_default : false,
+    build_by_default : not meson.is_subproject(),
     c_args : format_args,
     dependencies : [ std, base, io, scan, notify, config, backtrace, memory, arena, format_core ],
     include_directories : format_include

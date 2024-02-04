@@ -229,33 +229,6 @@ CT_STD_API char *str_replace_many(IN_STRING const char *str, IN_NOTNULL const ma
 CT_NODISCARD CT_NOALIAS
 CT_STD_API char *str_erase(IN_READS(len) char *str, size_t len, IN_STRING const char *letters);
 
-/// @brief hash a string
-///
-/// @param str the string to hash
-///
-/// @return the hash
-CT_NODISCARD CT_PUREFN
-CT_STD_API size_t str_hash(IN_STRING const char *str);
-
-/// @brief hash a string with a provided length
-///
-/// @param text the string to hash
-///
-/// @return the hash
-CT_NODISCARD CT_PUREFN
-CT_STD_API size_t text_hash(text_view_t text);
-
-/// @brief compare strings equality
-///
-/// check if 2 strings are equal
-///
-/// @param lhs the left hand side of the comparison
-/// @param rhs the right hand side of the comparison
-///
-/// @return if the strings are equal
-CT_NODISCARD CT_PUREFN
-CT_STD_API bool str_equal(IN_STRING const char *lhs, IN_STRING const char *rhs);
-
 /// @brief get the filename from a path
 ///
 /// @param path the path to get the filename from

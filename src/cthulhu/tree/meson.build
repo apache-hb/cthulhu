@@ -16,7 +16,7 @@ src = [
 ]
 
 libtree = library('tree', src,
-    build_by_default : false,
+    build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_TREE_BUILD=1' ],
     include_directories : tree_include,
@@ -26,7 +26,7 @@ libtree = library('tree', src,
 tree = declare_dependency(
     link_with : libtree,
     include_directories : tree_include,
-    dependencies : [ gmp ]
+    dependencies : [ gmp, std ] # export std due to bitset
 )
 
 install_headers(tree_api)

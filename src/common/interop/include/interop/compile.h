@@ -20,14 +20,14 @@ CT_BEGIN_API
 
 /// @brief scanner function callbacks for flex and bison
 /// @note this should be created via the @a CTU_CALLBACKS macro
-typedef struct callbacks_t
+typedef struct scan_callbacks_t
 {
     int (*init)(scan_t *extra, void *scanner);                   ///< yylex_init_extra
     int (*parse)(void *scanner, scan_t *extra);                  ///< yyparse
     void *(*scan)(const char *text, size_t size, void *scanner); ///< yy_scan_bytes
     void (*destroy_buffer)(void *buffer, void *scanner);         ///< yy_delete_buffer
     void (*destroy)(void *scanner);                              ///< yylex_destroy
-} callbacks_t;
+} scan_callbacks_t;
 
 /// @def CTU_CALLBACKS(id, prefix)
 /// @brief callback boilerplate macro
@@ -60,7 +60,7 @@ typedef struct callbacks_t
     {                                                                                           \
         prefix##lex_destroy(scanner);                                                           \
     }                                                                                           \
-    static const callbacks_t id = {                                                             \
+    static const scan_callbacks_t id = {                                                             \
         .init = prefix##_##id##_##init,                                                         \
         .parse = prefix##_##id##_parse,                                                         \
         .scan = prefix##_##id##_scan,                                                           \
@@ -95,7 +95,7 @@ typedef struct parse_result_t
 /// @param callbacks the flex/bison callbacks
 ///
 /// @return the parse result
-CT_INTEROP_API parse_result_t scan_buffer(IN_NOTNULL scan_t *extra, IN_NOTNULL const callbacks_t *callbacks);
+CT_INTEROP_API parse_result_t scan_buffer(IN_NOTNULL scan_t *extra, IN_NOTNULL const scan_callbacks_t *callbacks);
 
 /// @}
 

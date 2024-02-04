@@ -9,7 +9,7 @@ arena_include = include_directories('.', 'include')
 src = [ 'src/arena.c' ]
 
 libarena = library('arena', src,
-    build_by_default : false,
+    build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_ARENA_BUILD=1' ],
     dependencies : [ base ],

@@ -44,9 +44,10 @@ static driver_t *handle_new(lifetime_t *lifetime, const language_t *lang)
     CTASSERT(lifetime != NULL);
     CTASSERT(lang != NULL);
 
-    driver_t *self = ARENA_MALLOC(sizeof(driver_t), lang->id, lifetime, lifetime->arena);
+    module_info_t info = lang->info;
+    driver_t *self = ARENA_MALLOC(sizeof(driver_t), info.id, lifetime, lifetime->arena);
 
-    char *builtin = str_lower(lang->name, lifetime->arena);
+    char *builtin = str_lower(info.name, lifetime->arena);
 
     self->parent = lifetime;
     self->lang = lang;
@@ -126,7 +127,8 @@ void lifetime_add_language(lifetime_t *lifetime, const language_t *lang)
     CTASSERT(lifetime != NULL);
     CTASSERT(lang != NULL);
 
-    CTASSERTF(lang->fn_create != NULL, "language `%s` has no create function", lang->id);
+    module_info_t info = lang->info;
+    CTASSERTF(lang->fn_create != NULL, "language `%s` has no create function", info.id);
 
     CTASSERT(lang->exts != NULL);
 
@@ -138,7 +140,8 @@ void lifetime_add_language(lifetime_t *lifetime, const language_t *lang)
             continue;
         }
 
-        msg_notify(lifetime->logger, &kEvent_ExtensionConflict, lifetime->builtin, "language `%s` registered under extension `%s` clashes with previously registered language `%s`", lang->id, lang->exts[i], old->id); // TODO: handle this
+        module_info_t old_info = old->info;
+        msg_notify(lifetime->logger, &kEvent_ExtensionConflict, lifetime->builtin, "language `%s` registered under extension `%s` clashes with previously registered language `%s`", info.id, lang->exts[i], old_info.id); // TODO: handle this
     }
 
     driver_t *handle = handle_new(lifetime, lang);
@@ -195,7 +198,8 @@ void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io)
     CTASSERT(lang != NULL);
     CTASSERT(io != NULL);
 
-    scan_t *scan = scan_io(lang->id, io, lifetime->arena);
+    module_info_t info = lang->info;
+    scan_t *scan = scan_io(info.id, io, lifetime->arena);
     scan_set_context(scan, lifetime->logger);
 
     driver_t *handle = handle_new(lifetime, lang);
@@ -216,7 +220,7 @@ void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io)
             return;
         }
 
-        CTASSERTF(lang->fn_postparse != NULL, "language `%s` has no postpass function", lang->id);
+        CTASSERTF(lang->fn_postparse != NULL, "language `%s` has no postpass function", info.id);
         if (result.result == eParseOk)
         {
             lang->fn_postparse(handle, scan, result.tree);
@@ -224,7 +228,7 @@ void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io)
     }
     else
     {
-        CTASSERTF(lang->fn_parse != NULL, "language `%s` has no parse function", lang->id);
+        CTASSERTF(lang->fn_parse != NULL, "language `%s` has no parse function", info.id);
         lang->fn_parse(handle, scan);
     }
 }

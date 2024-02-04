@@ -11,7 +11,7 @@ src = [
 ]
 
 libevents = library('events', src,
-    build_by_default : false,
+    build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_EVENTS_BUILD=1' ],
     dependencies : [ memory, std, scan, notify ],

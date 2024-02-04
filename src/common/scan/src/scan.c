@@ -155,7 +155,7 @@ scan_t *scan_io(const char *language, io_t *io, arena_t *arena)
     const void *region = io_map(io, eProtectRead);
     size_t size = io_size(io);
 
-    CTASSERTF(region != NULL, "failed to map %s of size %zu", path, size);
+    CTASSERTF(region != NULL, "failed to map %s of size %zu (%s)", path, size, os_error_string(io_error(io), arena));
 
     scan_t *self = scan_new(language, path, io, arena);
 

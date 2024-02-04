@@ -18,6 +18,46 @@ size_t ptrhash(const void *ptr)
 }
 
 USE_DECL
+size_t str_hash(const char *str)
+{
+    CTASSERT(str != NULL);
+
+    size_t hash = 0;
+
+    while (*str)
+    {
+        hash = (hash << 5) - hash + *str++;
+    }
+
+    return hash;
+}
+
+USE_DECL
+size_t text_hash(text_view_t text)
+{
+    CTASSERT(text.text != NULL);
+
+    size_t hash = 0;
+    for (size_t i = 0; i < text.length; i++)
+    {
+        hash = (hash << 5) - hash + text.text[i];
+    }
+
+    return hash;
+}
+
+USE_DECL
+bool str_equal(const char *lhs, const char *rhs)
+{
+    CTASSERT(lhs != NULL);
+    CTASSERT(rhs != NULL);
+
+    /* compare pointers as well for better perf
+       with interned strings */
+    return lhs == rhs || strcmp(lhs, rhs) == 0;
+}
+
+USE_DECL
 size_t ctu_strlen(const char *text)
 {
     CTASSERT(text != NULL);

@@ -1,5 +1,6 @@
 #include "config/config.h"
 #include "core/macros.h"
+#include "base/util.h"
 #include "arena/arena.h"
 #include "unit/ct-test.h"
 #include "setup/memory.h"

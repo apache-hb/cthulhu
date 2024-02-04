@@ -84,13 +84,15 @@ static void ex_compile_symbols(context_t *context)
 static const char * const kLangNames[] = { "e", "example", NULL };
 
 CT_DRIVER_API const language_t kExampleModule = {
-    .id = "example",
-    .name = "Example",
-    .version = {
-        .license = "GPLv3",
-        .desc = "Example language driver",
-        .author = "Elliot Haisley",
-        .version = CT_NEW_VERSION(1, 0, 2)
+    .info = {
+        .id = "example",
+        .name = "Example",
+        .version = {
+            .license = "GPLv3",
+            .desc = "Example language driver",
+            .author = "Elliot Haisley",
+            .version = CT_NEW_VERSION(1, 0, 2)
+        },
     },
 
     .exts = kLangNames,

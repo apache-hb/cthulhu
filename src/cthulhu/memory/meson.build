@@ -11,7 +11,7 @@ src = [
 ]
 
 libmemory = library('memory', src,
-    build_by_default : false,
+    build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_MEMORY_BUILD=1' ],
     dependencies : [ gmp, arena, base ],

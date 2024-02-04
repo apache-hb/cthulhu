@@ -1,3 +1,4 @@
+#include "arena/arena.h"
 #include "base/util.h"
 #include "os/os.h"
 
@@ -116,11 +117,23 @@ os_dirent_t os_dirent_type(const char *path)
 }
 
 USE_DECL
-os_error_t os_dir_current(char *cwd, size_t size)
+os_error_t os_getcwd(text_t *cwd, arena_t *arena)
 {
     CTASSERT(cwd != NULL);
-    CTASSERT(size > 0);
+    CTASSERT(arena != NULL);
 
-    getcwd(cwd, size);
-    return errno;
+    long size = pathconf(".", _PC_PATH_MAX);
+    if (size == -1)
+    {
+        return errno;
+    }
+
+    char *buf = ARENA_MALLOC(size + 1, "os_getcwd", NULL, arena);
+    if (getcwd(buf, size) == NULL)
+    {
+        return errno;
+    }
+
+    *cwd = text_make(buf, size);
+    return 0;
 }

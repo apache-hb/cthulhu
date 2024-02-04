@@ -68,21 +68,23 @@ static const diagnostic_t * const kDiagnosticTable[] = {
 static const char *const kLangNames[] = { "ct", "ctu", "cthulhu", NULL };
 
 CT_DRIVER_API const language_t kCtuModule = {
-    .id = "ctu",
-    .name = "Cthulhu",
-    .version = {
-        .license = "LGPLv3",
-        .desc = "Cthulhu language driver",
-        .author = "Elliot Haisley",
-        .version = CT_NEW_VERSION(0, 4, 0)
+    .info = {
+        .id = "ctu",
+        .name = "Cthulhu",
+        .version = {
+            .license = "LGPLv3",
+            .desc = "Cthulhu language driver",
+            .author = "Elliot Haisley",
+            .version = CT_NEW_VERSION(0, 4, 0)
+        },
+
+        .diagnostics = {
+            .diagnostics = kDiagnosticTable,
+            .count = sizeof(kDiagnosticTable) / sizeof(diagnostic_t*),
+        },
     },
 
     .exts = kLangNames,
-
-    .diagnostics = {
-        .diagnostics = kDiagnosticTable,
-        .count = sizeof(kDiagnosticTable) / sizeof(diagnostic_t*),
-    },
 
     .fn_create = ctu_init,
 

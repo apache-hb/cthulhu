@@ -23,7 +23,7 @@ namespace ed
         void draw();
 
         std::string path = "";
-        char *basename = nullptr;
+        const char *basename = nullptr;
 
         io_t *io = nullptr;
         const char *error_string = nullptr;

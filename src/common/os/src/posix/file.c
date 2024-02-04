@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <stdio.h>
 #include <errno.h>
+#include <unistd.h>
 
 #include <sys/mman.h>
 
@@ -184,7 +185,7 @@ os_error_t os_file_size(os_file_t *file, size_t *actual)
     if (fseek(file->file, pos, SEEK_SET) < 0) { return errno; }
 
     *actual = size;
-    return errno;
+    return 0;
 }
 
 USE_DECL

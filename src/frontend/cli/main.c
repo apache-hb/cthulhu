@@ -35,14 +35,14 @@ static const version_info_t kToolVersion = {
     .version = CT_NEW_VERSION(0, 0, 3),
 };
 
-static void parse_source(lifetime_t *lifetime, const char *path)
+static void parse_source(lifetime_t *lifetime, const char *path, const node_t *node)
 {
     logger_t *reports = lifetime_get_logger(lifetime);
     arena_t *arena = lifetime_get_arena(lifetime);
     const char *ext = str_ext(path, arena);
     if (ext == NULL)
     {
-        msg_notify(reports, &kEvent_NoFileExtension, node_builtin(),
+        msg_notify(reports, &kEvent_NoFileExtension, node,
                    "could not identify compiler for `%s` (no extension)", path);
         return;
     }
@@ -51,7 +51,7 @@ static void parse_source(lifetime_t *lifetime, const char *path)
     if (lang == NULL)
     {
         const char *basepath = str_filename(path, arena);
-        event_builder_t id = msg_notify(reports, &kEvent_FailedToIdentifyLanguage, node_builtin(),
+        event_builder_t id = msg_notify(reports, &kEvent_FailedToIdentifyLanguage, node,
                                  "could not identify compiler for `%s` by extension `%s`", basepath,
                                  ext);
         msg_note(id, "extra extensions can be provided with -ext=id:ext");
@@ -62,7 +62,7 @@ static void parse_source(lifetime_t *lifetime, const char *path)
     os_error_t err = io_error(io);
     if (err != 0)
     {
-        event_builder_t id = msg_notify(reports, &kEvent_FailedToOpenSourceFile, node_builtin(),
+        event_builder_t id = msg_notify(reports, &kEvent_FailedToOpenSourceFile, node,
                                  "failed to open source `%s`", path);
         msg_note(id, "error: %s", os_error_string(err, arena));
         return;
@@ -102,6 +102,7 @@ int main(int argc, const char **argv)
     mediator_t *mediator = mediator_new(arena);
     lifetime_t *lifetime = lifetime_new(mediator, arena);
     logger_t *reports = lifetime_get_logger(lifetime);
+    node_t *node = node_builtin("cli", arena);
 
     langs_t langs = get_langs();
     for (size_t i = 0; i < langs.size; i++)
@@ -154,7 +155,7 @@ int main(int argc, const char **argv)
     size_t total_sources = vector_len(paths);
     if (total_sources == 0)
     {
-        msg_notify(reports, &kEvent_NoSourceFiles, node_builtin(), "no source files provided");
+        msg_notify(reports, &kEvent_NoSourceFiles, node, "no source files provided");
     }
 
     CHECK_LOG(reports, "opening sources");
@@ -162,7 +163,7 @@ int main(int argc, const char **argv)
     for (size_t i = 0; i < total_sources; i++)
     {
         const char *path = vector_get(paths, i);
-        parse_source(lifetime, path);
+        parse_source(lifetime, path, node);
     }
 
     CHECK_LOG(reports, "parsing sources");
@@ -227,7 +228,7 @@ int main(int argc, const char **argv)
     fs_t *out = fs_physical(outpath, arena);
     if (out == NULL)
     {
-        msg_notify(reports, &kEvent_FailedToCreateOutputDirectory, node_builtin(),
+        msg_notify(reports, &kEvent_FailedToCreateOutputDirectory, node,
                    "failed to create output directory `%s`", outpath);
     }
 
@@ -236,7 +237,7 @@ int main(int argc, const char **argv)
     sync_result_t result = fs_sync(out, fs);
     if (result.path != NULL)
     {
-        msg_notify(reports, &kEvent_FailedToWriteOutputFile, node_builtin(), "failed to sync %s",
+        msg_notify(reports, &kEvent_FailedToWriteOutputFile, node, "failed to sync %s",
                    result.path);
     }
 

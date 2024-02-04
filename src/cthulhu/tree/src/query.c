@@ -1,4 +1,5 @@
 #include "arena/arena.h"
+#include "base/util.h"
 #include "common.h"
 
 #include "cthulhu/tree/query.h"

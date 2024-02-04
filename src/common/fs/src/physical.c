@@ -7,6 +7,7 @@
 #include "os/os.h"
 #include "io/io.h"
 
+#include "base/util.h"
 #include "base/panic.h"
 
 typedef struct physical_t

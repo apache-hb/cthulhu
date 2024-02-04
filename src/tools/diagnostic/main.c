@@ -88,8 +88,9 @@ static tool_t make_config(arena_t *arena, langs_t langs)
     for (size_t i = 0; i < langs.size; i++)
     {
         const language_t *lang = langs.langs[i];
+        module_info_t info = lang->info;
         cfg_choice_t choice = {
-            .text = lang->id,
+            .text = info.id,
             .value = i + 1
         };
 
@@ -157,7 +158,8 @@ static size_t count_diagnostics(const langs_t *langs)
     for (size_t i = 0; i < langs->size; i++)
     {
         const language_t *lang = langs->langs[i];
-        count += lang->diagnostics.count;
+        module_info_t info = lang->info;
+        count += info.diagnostics.count;
     }
 
     return count;
@@ -167,15 +169,16 @@ static size_t count_diagnostics(const langs_t *langs)
 
 static void print_lang_info(io_t *io, const language_t *lang)
 {
-    diagnostic_list_t diagnostics = lang->diagnostics;
-    version_info_t version = lang->version;
+    module_info_t info = lang->info;
+    diagnostic_list_t diagnostics = info.diagnostics;
+    version_info_t version = info.version;
 
     int major = CT_VERSION_MAJOR(version.version);
     int minor = CT_VERSION_MINOR(version.version);
     int patch = CT_VERSION_PATCH(version.version);
 
-    io_printf(io, "%s:\n", lang->name);
-    io_printf(io, "  id: %s\n", lang->id);
+    io_printf(io, "%s:\n", info.name);
+    io_printf(io, "  id: %s\n", info.id);
     io_printf(io, "  desc: %s\n", version.desc);
     io_printf(io, "  author: %s\n", version.author);
     io_printf(io, "  license: %s\n", version.license);
@@ -291,7 +294,8 @@ int main(int argc, const char **argv)
     for (size_t i = 0; i < langs.size; i++)
     {
         const language_t *lang = langs.langs[i];
-        add_diagnostics(&ctx, lang->diagnostics);
+        module_info_t info = lang->info;
+        add_diagnostics(&ctx, info.diagnostics);
     }
 
     ///
@@ -325,12 +329,13 @@ int main(int argc, const char **argv)
     {
         const language_t *lang = langs.langs[lang_diag_index - 1];
 
-        size_t diag_count = lang->diagnostics.count;
-        io_printf(io, "%zu diagnostics for %s:\n", diag_count, lang->name);
+        module_info_t info = lang->info;
+        size_t diag_count = info.diagnostics.count;
+        io_printf(io, "%zu diagnostics for %s:\n", diag_count, info.name);
 
         for (size_t i = 0; i < diag_count; i++)
         {
-            const diagnostic_t *diag = lang->diagnostics.diagnostics[i];
+            const diagnostic_t *diag = info.diagnostics.diagnostics[i];
             print_diagnostic(io, diag);
 
             if (i + 1 < diag_count)

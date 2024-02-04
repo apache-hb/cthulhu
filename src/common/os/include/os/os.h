@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/text.h"
 #include "os/core.h"
 
 #if CT_OS_WINDOWS
@@ -114,10 +115,12 @@ CT_OS_API os_dirent_t os_dirent_type(IN_STRING const char *path);
 
 /// @brief get the current working directory
 ///
-/// @return the current working directory
+/// @param[out] cwd the current working directory
+/// @param arena the arena to allocate from
+///
 /// @return an error if the current working directory could not be retrieved
 RET_INSPECT
-CT_OS_API os_error_t os_dir_current(OUT_WRITES(size) char *cwd, size_t size);
+CT_OS_API os_error_t os_getcwd(text_t *cwd, IN_NOTNULL arena_t *arena);
 
 /// directory iteration
 

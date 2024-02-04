@@ -528,4 +528,12 @@ CTU_EVENT(InvalidFloatLiteral, {
         "Invalid floating point literal value.",
 })
 
+CTU_EVENT(InvalidFilePath, {
+    .severity = eSeverityFatal,
+    .id = "M0073",
+    .brief = "Invalid file path",
+    .description =
+        "The file path was invalid.",
+})
+
 #undef CTU_EVENT

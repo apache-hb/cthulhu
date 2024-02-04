@@ -60,22 +60,24 @@ static const diagnostic_t *const kDiagnosticTable[] = {
 static const char *const kLangNames[] = { "m", "mod", "obr", "oberon", NULL };
 
 CT_DRIVER_API const language_t kOberonModule = {
-    .id = "obr",
-    .name = "Oberon-2",
-    .version = {
-        .license = "LGPLv3",
-        .desc = "Oberon-2 language frontend",
-        .author = "Elliot Haisley",
-        .version = CT_NEW_VERSION(1, 0, 0)
+    .info = {
+        .id = "obr",
+        .name = "Oberon-2",
+        .version = {
+            .license = "LGPLv3",
+            .desc = "Oberon-2 language frontend",
+            .author = "Elliot Haisley",
+            .version = CT_NEW_VERSION(1, 0, 0)
+        },
+
+
+        .diagnostics = {
+            .diagnostics = kDiagnosticTable,
+            .count = sizeof(kDiagnosticTable) / sizeof(const diagnostic_t *)
+        },
     },
 
     .exts = kLangNames,
-
-    .diagnostics = {
-        .diagnostics = kDiagnosticTable,
-        .count = sizeof(kDiagnosticTable) / sizeof(const diagnostic_t *)
-    },
-
     .fn_create = obr_create,
     .fn_destroy = obr_destroy,
 

@@ -1,6 +1,6 @@
 #include "os_common.h"
 
-#include "std/str.h"
+#include "base/util.h"
 
 bool is_special(const char *path)
 {

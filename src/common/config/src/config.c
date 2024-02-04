@@ -1,3 +1,4 @@
+#include "base/util.h"
 #include "common.h"
 
 #include "arena/arena.h"

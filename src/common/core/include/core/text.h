@@ -17,3 +17,5 @@ typedef struct text_view_t
     const char *text; ///< the text itself
     size_t length;      ///< the number of characters in the text
 } text_view_t;
+
+#define CT_TEXT_VIEW(text) { text, sizeof(text) - 1 }

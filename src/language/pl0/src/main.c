@@ -54,13 +54,15 @@ static void pl0_postparse(driver_t *handle, scan_t *scan, void *tree)
 static const char *const kLangNames[] = { "pl", "pl0", NULL };
 
 CT_DRIVER_API const language_t kPl0Module = {
-    .id = "pl0",
-    .name = "PL/0",
-    .version = {
-        .license = "LGPLv3",
-        .desc = "PL/0 language driver",
-        .author = "Elliot Haisley",
-        .version = CT_NEW_VERSION(2, 3, 2)
+    .info = {
+        .id = "pl0",
+        .name = "PL/0",
+        .version = {
+            .license = "LGPLv3",
+            .author = "Elliot Haisley",
+            .desc = "PL/0 language driver",
+            .version = CT_NEW_VERSION(2, 3, 2)
+        },
     },
 
     .exts = kLangNames,

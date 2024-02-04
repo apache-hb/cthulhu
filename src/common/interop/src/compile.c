@@ -20,7 +20,7 @@ static parse_result_t parse_value(void *tree)
     return res;
 }
 
-parse_result_t scan_buffer(scan_t *extra, const callbacks_t *callbacks)
+parse_result_t scan_buffer(scan_t *extra, const scan_callbacks_t *callbacks)
 {
     int err = 0;
     void *scanner = NULL;

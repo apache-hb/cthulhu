@@ -11,7 +11,7 @@ src = [
 ]
 
 libcheck = library('check', src,
-    build_by_default : false,
+    build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_CHECK_BUILD=1' ],
     include_directories : check_include,
