@@ -5,13 +5,15 @@
 #include "core/macros.h"
 
 #include "arena/arena.h"
-#include "scan/node.h"
 
+#include "scan/scan.h"
 #include "std/map.h"
 #include "std/vector.h"
 #include "std/str.h"
 
 #include <string.h>
+
+typedef struct where_t where_t;
 
 // internals
 
@@ -160,7 +162,7 @@ void ap_on_invalid(scan_t *scan, char *value)
 {
     ap_t *self = scan_get_context(scan);
 
-    ap_add_error(self, "yuck! dont feed me anything that isnt ascii please: `%s`", value);
+    ap_add_error(self, "invalid ascii character: `%s`", value);
 }
 
 void aperror(where_t *where, void *state, scan_t *scan, const char *msg)

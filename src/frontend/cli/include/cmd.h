@@ -2,8 +2,6 @@
 
 #include <stdbool.h>
 
-#include "cthulhu/runtime/interface.h"
-
 #include "setup/setup.h"
 
 typedef struct logger_t logger_t;

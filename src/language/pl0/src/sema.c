@@ -1,11 +1,10 @@
 #include "pl0/sema.h"
+#include "cthulhu/broker/broker.h"
 #include "cthulhu/events/events.h"
 #include "memory/memory.h"
 #include "pl0/ast.h"
 
 #include "cthulhu/util/util.h"
-
-#include "cthulhu/runtime/driver.h"
 
 #include "base/panic.h"
 
@@ -115,21 +114,6 @@ static void set_var(tree_t *sema, pl0_tag_t tag, const char *name, tree_t *tree)
     set_decl(sema, tag, name, tree);
 }
 
-static tree_t *make_runtime_mod(driver_t *handle)
-{
-    size_t decls[ePl0TagTotal] = {
-        [ePl0TagValues] = 1,
-        [ePl0TagTypes] = 1,
-        [ePl0TagProcs] = 1,
-        [ePl0TagModules] = 1
-    };
-
-    tree_t *mod = driver_sema_new(handle, "runtime", ePl0TagTotal, decls);
-    set_proc(mod, ePl0TagProcs, "pl0_print", gPrint);
-    set_proc(mod, ePl0TagProcs, "printf", gRuntimePrint);
-    return mod;
-}
-
 static vector_t *make_runtime_path(arena_t *arena)
 {
     return str_split("pl0.lang", ".", arena);
@@ -167,11 +151,10 @@ static tree_storage_t get_mutable_storage(const tree_t *type)
     return storage;
 }
 
-void pl0_init(driver_t *handle)
+void pl0_init(language_runtime_t *runtime, tree_t *root)
 {
-    const node_t *node = handle_get_builtin(handle);
-    lifetime_t *lifetime = handle_get_lifetime(handle);
-    arena_t *arena = lifetime_get_arena(lifetime);
+    const node_t *node = lang_get_node(runtime);
+    arena_t *arena = lang_get_arena(runtime);
 
     gIntType = tree_type_digit(node, "integer", eDigitInt, eSignSigned);
     gCharType = tree_type_digit(node, "char", eDigitChar, eSignSigned);
@@ -202,11 +185,9 @@ void pl0_init(driver_t *handle)
     gPrint = tree_decl_function(node, "pl0_print", putd_signature, rt_print_params, &kEmptyVector, call);
     tree_set_attrib(gPrint, &kExportAttrib);
 
-    tree_t *runtime = make_runtime_mod(handle);
-    vector_t *path = make_runtime_path(arena);
-
-    context_t *ctx = compiled_new(handle, runtime);
-    add_context(handle_get_lifetime(handle), path, ctx);
+    // populate builtins
+    set_proc(root, ePl0TagProcs, "pl0_print", gPrint);
+    set_proc(root, ePl0TagProcs, "printf", gRuntimePrint);
 }
 
 static void report_pl0_unresolved(logger_t *reports, const node_t *node, const char *name)
@@ -487,22 +468,20 @@ typedef struct {
     vector_t *procs;
 } sema_data_t;
 
-void pl0_forward_decls(context_t *context)
+void pl0_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
 {
-    lifetime_t *lifetime = context_get_lifetime(context);
+    logger_t *reports = lang_get_logger(runtime);
+    tree_cookie_t *cookie = lang_get_cookie(runtime);
+    arena_t *arena = lang_get_arena(runtime);
 
-    pl0_t *root = context_get_ast(context);
-    logger_t *reports = lifetime_get_logger(lifetime);
-    tree_cookie_t *cookie = lifetime_get_cookie(lifetime);
-    arena_t *arena = lifetime_get_arena(lifetime);
-
+    pl0_t *root = unit_get_ast(unit);
     size_t const_count = vector_len(root->consts);
     size_t global_count = vector_len(root->globals);
     size_t proc_count = vector_len(root->procs);
 
     const char *id = vector_len(root->mod) > 0
         ? vector_tail(root->mod)
-        : context_get_name(context);
+        : unit_get_name(unit);
 
     size_t sizes[ePl0TagTotal] = {
         [ePl0TagValues] = const_count + global_count,
@@ -567,15 +546,14 @@ void pl0_forward_decls(context_t *context)
         set_proc(sema, ePl0TagProcs, it->name, tree);
     }
 
-    context_update(context, root, sema);
+    unit_update(unit, root, sema);
 }
 
-void pl0_process_imports(context_t *context)
+void pl0_process_imports(language_runtime_t *runtime, compile_unit_t *unit)
 {
-    lifetime_t *lifetime = context_get_lifetime(context);
-    arena_t *arena = lifetime_get_arena(lifetime);
-    pl0_t *root = context_get_ast(context);
-    tree_t *sema = context_get_module(context);
+    arena_t *arena = lang_get_arena(runtime);
+    pl0_t *root = unit_get_ast(unit);
+    tree_t *sema = unit_get_tree(unit);
 
     size_t import_count = vector_len(root->imports);
     for (size_t i = 0; i < import_count; i++)
@@ -583,7 +561,7 @@ void pl0_process_imports(context_t *context)
         pl0_t *import_decl = vector_get(root->imports, i);
         CTASSERT(import_decl->type == ePl0Import);
 
-        context_t *ctx = get_context(lifetime, import_decl->path);
+        compile_unit_t *ctx = lang_get_unit(runtime, import_decl->path);
 
         if (ctx == NULL)
         {
@@ -591,7 +569,7 @@ void pl0_process_imports(context_t *context)
             continue;
         }
 
-        tree_t *lib = context_get_module(ctx);
+        tree_t *lib = unit_get_tree(ctx);
 
         if (lib == sema)
         {
@@ -603,10 +581,10 @@ void pl0_process_imports(context_t *context)
     }
 }
 
-void pl0_compile_module(context_t *context)
+void pl0_compile_module(language_runtime_t *runtime, compile_unit_t *unit)
 {
-    pl0_t *root = context_get_ast(context);
-    tree_t *mod = context_get_module(context);
+    pl0_t *root = unit_get_ast(unit);
+    tree_t *mod = unit_get_tree(unit);
 
     if (root->entry != NULL)
     {

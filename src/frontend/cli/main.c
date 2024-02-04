@@ -3,6 +3,7 @@
 #include "format/colour.h"
 #include "cmd.h"
 
+#include "cthulhu/runtime/interface.h"
 #include "cthulhu/events/events.h"
 #include "cthulhu/check/check.h"
 #include "io/console.h"

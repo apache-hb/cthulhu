@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctu_target_api.h>
+
 #include "core/compiler.h"
 
 typedef struct arena_t arena_t;
@@ -45,21 +47,6 @@ typedef struct emit_t
     /// @brief output layout
     file_layout_t layout;
 } emit_t;
-
-/// @brief a target builder
-typedef void (*target_build_ssa_t)(emit_t *emit, vector_t *modules, map_t *deps);
-
-typedef void (*target_build_tree_t)(emit_t *emit, vector_t *modules);
-
-/// @brief a codegen target
-typedef struct target_t
-{
-    /// @brief the name of the target
-    const char *name;
-
-    /// @brief the target builder function
-    target_build_ssa_t fn_ssa_build;
-} target_t;
 
 #if CTU_BUILD_SHARED
 #   define CTU_TARGET_ENTRY(mod) CT_TARGET_API const target_t *target_main(void) { return &mod; }

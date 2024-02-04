@@ -53,7 +53,6 @@ CT_RUNTIME_API context_t *get_context(IN_NOTNULL lifetime_t *lifetime, IN_NOTNUL
 /// @return the lifetime of @p handle
 CT_RUNTIME_API lifetime_t *handle_get_lifetime(IN_NOTNULL const driver_t *handle);
 
-
 /// @brief get the builtin node of a driver
 ///
 /// @param handle the driver to get the builtin node of

@@ -21,7 +21,7 @@ src = [
 ctu = library('ctu', src,
     build_by_default : not meson.is_subproject(),
     dependencies : [
-        base, memory, std, runtime,
+        base, memory, std, broker,
         interop, scan, notify, tree,
         util, events, driver
     ],

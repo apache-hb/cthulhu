@@ -24,7 +24,7 @@ static void ensure_block_names_match(scan_t *scan, const node_t *node, const cha
 
     if (!str_equal(name, end))
     {
-        event_builder_t id = msg_notify(ctx->reports, &kEvent_BlockMismatchEnds, node,
+        event_builder_t id = msg_notify(ctx->logger, &kEvent_BlockMismatchEnds, node,
                                         "mismatching %s block BEGIN and END names", type);
         msg_note(id, "BEGIN name `%s` does not match END name `%s`", name, end);
     }

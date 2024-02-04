@@ -1,4 +1,4 @@
-#include "cthulhu/runtime/driver.h"
+#include "cthulhu/broker/broker.h"
 
 #include "arena/arena.h"
 #include "oberon/driver.h"
@@ -9,45 +9,40 @@
 
 #include "driver/driver.h"
 
+#include "oberon/sema/sema.h"
 #include "obr_bison.h" // IWYU pragma: keep
 #include "obr_flex.h" // IWYU pragma: keep
 
 CTU_CALLBACKS(kCallbacks, obr);
 
-static void *obr_preparse(driver_t *handle, scan_t *scan)
+static void *obr_preparse(language_runtime_t *runtime)
 {
-    CT_UNUSED(scan);
-
-    lifetime_t *lifetime = handle_get_lifetime(handle);
-    arena_t *arena = lifetime_get_arena(lifetime);
-    logger_t *reports = lifetime_get_logger(lifetime);
+    arena_t *arena = lang_get_arena(runtime);
+    logger_t *logger = lang_get_logger(runtime);
 
     obr_scan_t info = {
-        .reports = reports,
+        .logger = logger,
     };
 
     return arena_memdup(&info, sizeof(obr_scan_t), arena);
 }
 
-static void obr_postparse(driver_t *handle, scan_t *scan, void *tree)
+static void obr_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
 {
-    CT_UNUSED(scan);
-
     vector_t *modules = tree;
 
-    lifetime_t *lifetime = handle_get_lifetime(handle);
-    arena_t *arena = lifetime_get_arena(lifetime);
+    arena_t *arena = lang_get_arena(runtime);
 
     size_t len = vector_len(modules);
     for (size_t i = 0; i < len; i++)
     {
         obr_t *mod = vector_get(modules, i);
-        context_t *ctx = context_new(handle, mod->name, mod, NULL);
-        add_context(lifetime, vector_init(mod->name, arena), ctx);
+        compile_unit_t *unit = lang_new_unit(runtime, mod->name, mod, NULL);
+        lang_add_unit(runtime, vector_init(mod->name, arena), unit);
     }
 }
 
-static void obr_destroy(driver_t *handle) { CT_UNUSED(handle); }
+static void obr_destroy(language_runtime_t *handle) { CT_UNUSED(handle); }
 
 #define NEW_EVENT(id, ...) const diagnostic_t kEvent_##id = __VA_ARGS__;
 #include "oberon/events.def"
@@ -58,6 +53,13 @@ static const diagnostic_t *const kDiagnosticTable[] = {
 };
 
 static const char *const kLangNames[] = { "m", "mod", "obr", "oberon", NULL };
+
+static const size_t kDeclSizes[eObrTagTotal] = {
+    [eObrTagValues] = 32,
+    [eObrTagTypes] = 32,
+    [eObrTagProcs] = 32,
+    [eObrTagModules] = 32,
+};
 
 CT_DRIVER_API const language_t kOberonModule = {
     .info = {
@@ -70,11 +72,16 @@ CT_DRIVER_API const language_t kOberonModule = {
             .version = CT_NEW_VERSION(1, 0, 0)
         },
 
-
         .diagnostics = {
             .diagnostics = kDiagnosticTable,
             .count = sizeof(kDiagnosticTable) / sizeof(const diagnostic_t *)
         },
+    },
+
+    .builtin = {
+        .name = CT_TEXT_VIEW("obr\0lang"),
+        .decls = kDeclSizes,
+        .length = eObrTagTotal,
     },
 
     .exts = kLangNames,
@@ -83,9 +90,9 @@ CT_DRIVER_API const language_t kOberonModule = {
 
     .fn_preparse = obr_preparse,
     .fn_postparse = obr_postparse,
-    .parse_callbacks = &kCallbacks,
+    .scanner = &kCallbacks,
 
-    .fn_compile_passes = {
+    .fn_passes = {
         [eStageForwardSymbols] = obr_forward_decls,
         [eStageCompileImports] = obr_process_imports,
         [eStageCompileSymbols] = obr_compile_module

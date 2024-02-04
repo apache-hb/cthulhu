@@ -1,8 +1,8 @@
-#include "core/macros.h"
 #include "ctu/driver.h"
 
-#include "cthulhu/runtime/driver.h"
+#include "cthulhu/broker/broker.h"
 
+#include "ctu/sema/sema.h"
 #include "interop/compile.h"
 
 #include "std/vector.h"
@@ -31,22 +31,20 @@ static const vector_t *find_mod_path(ctu_t *ast, const char *fp, arena_t *arena)
         : mod_basename(fp, arena);
 }
 
-static void *ctu_preparse(driver_t *driver, scan_t *scan)
+static void *ctu_preparse(language_runtime_t *runtime)
 {
-    CT_UNUSED(scan);
-
-    lifetime_t *lifetime = handle_get_lifetime(driver);
-    arena_t *arena = lifetime_get_arena(lifetime);
+    arena_t *arena = lang_get_arena(runtime);
+    logger_t *logger = lang_get_logger(runtime);
 
     ctu_scan_t info = {
-        .reports = lifetime_get_logger(lifetime),
+        .logger = logger,
         .attribs = vector_new(4, arena)
     };
 
     return arena_memdup(&info, sizeof(ctu_scan_t), arena);
 }
 
-static void ctu_postparse(driver_t *driver, scan_t *scan, void *tree)
+static void ctu_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
 {
     ctu_t *ast = tree;
     CTASSERT(ast->kind == eCtuModule);
@@ -54,10 +52,9 @@ static void ctu_postparse(driver_t *driver, scan_t *scan, void *tree)
 
     const vector_t *path = find_mod_path(ast, scan_path(scan), arena);
 
-    lifetime_t *lifetime = handle_get_lifetime(driver);
-    context_t *ctx = context_new(driver, vector_tail(path), ast, NULL);
+    compile_unit_t *ctx = lang_new_unit(runtime, vector_tail(path), ast, NULL);
 
-    add_context(lifetime, path, ctx);
+    lang_add_unit(runtime, path, ctx);
 }
 
 static const diagnostic_t * const kDiagnosticTable[] = {
@@ -66,6 +63,16 @@ static const diagnostic_t * const kDiagnosticTable[] = {
 };
 
 static const char *const kLangNames[] = { "ct", "ctu", "cthulhu", NULL };
+
+static const size_t kDeclSizes[eCtuTagTotal] = {
+    [eCtuTagValues] = 1,
+    [eCtuTagTypes] = 1,
+    [eCtuTagFunctions] = 1,
+    [eCtuTagModules] = 1,
+    [eCtuTagImports] = 1,
+    [eCtuTagAttribs] = 1,
+    [eCtuTagSuffixes] = 1,
+};
 
 CT_DRIVER_API const language_t kCtuModule = {
     .info = {
@@ -84,15 +91,21 @@ CT_DRIVER_API const language_t kCtuModule = {
         },
     },
 
+    .builtin = {
+        .name = CT_TEXT_VIEW("ctulhu\0lang"),
+        .decls = kDeclSizes,
+        .length = eCtuTagTotal,
+    },
+
     .exts = kLangNames,
 
     .fn_create = ctu_init,
 
     .fn_preparse = ctu_preparse,
     .fn_postparse = ctu_postparse,
-    .parse_callbacks = &kCallbacks,
+    .scanner = &kCallbacks,
 
-    .fn_compile_passes = {
+    .fn_passes = {
         [eStageForwardSymbols] = ctu_forward_decls,
         [eStageCompileImports] = ctu_process_imports,
         [eStageCompileSymbols] = ctu_compile_module

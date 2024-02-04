@@ -2,7 +2,7 @@
 
 #include <gmp.h>
 
-#include "scan/node.h"
+#include "core/where.h"
 #include "scan/scan.h"
 
 #include "std/vector.h"
@@ -11,7 +11,7 @@ typedef struct logger_t logger_t;
 
 typedef struct ctu_scan_t
 {
-    logger_t *reports;
+    logger_t *logger;
     vector_t *attribs;
 } ctu_scan_t;
 

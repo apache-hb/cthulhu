@@ -77,7 +77,7 @@ WS [ \t\r\v\n\f]
 
 . {
     pl0_scan_t *scan = pl0_scan_context(yyextra);
-    evt_scan_unknown(scan->reports, node_new(yyextra, *yylloc), yytext);
+    evt_scan_unknown(scan->logger, node_new(yyextra, *yylloc), yytext);
 }
 
 %%

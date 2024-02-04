@@ -6,7 +6,7 @@
 
 #include "cthulhu/tree/tree.h"
 
-typedef struct driver_t driver_t;
+typedef struct language_runtime_t language_runtime_t;
 
 typedef enum ctu_tag_t {
     eCtuTagValues = eSemaValues,
@@ -74,4 +74,4 @@ tree_t *ctu_get_void_type(void);
 ///
 
 vector_t *ctu_rt_path(void);
-tree_t *ctu_rt_mod(driver_t *driver);
+void ctu_rt_mod(language_runtime_t *runtime, tree_t *root);

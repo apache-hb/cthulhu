@@ -8,7 +8,7 @@ typedef struct logger_t logger_t;
 
 typedef struct pl0_scan_t
 {
-    logger_t *reports;
+    logger_t *logger;
 } pl0_scan_t;
 
 pl0_scan_t *pl0_scan_context(scan_t *scan);

@@ -20,6 +20,9 @@ typedef struct tree_attrib_t tree_attrib_t;
 /// @brief an application of an attribute
 typedef struct tree_attrib_t
 {
+    /// @brief unique id for this attribute
+    size_t id;
+
     /// @brief the schema this attribute is applied to
     const tree_t *schema;
 

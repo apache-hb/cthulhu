@@ -2,7 +2,7 @@
 
 #include "cthulhu/tree/query.h"
 
-typedef struct driver_t driver_t;
+typedef struct language_runtime_t language_runtime_t;
 
 typedef enum obr_tag_t {
     eObrTagValues = eSemaValues,
@@ -43,5 +43,4 @@ tree_t *obr_get_void_type(void); // VOID
 
 /// runtime module
 
-tree_t *obr_rt_mod(driver_t *driver);
-vector_t *obr_rt_path(void);
+void obr_create(language_runtime_t *runtime, tree_t *root);

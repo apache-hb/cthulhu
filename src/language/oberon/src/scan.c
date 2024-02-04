@@ -15,5 +15,5 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg)
 
     obr_scan_t *ctx = obr_scan_context(scan);
 
-    evt_scan_error(ctx->reports, node_new(scan, *where), msg);
+    evt_scan_error(ctx->logger, node_new(scan, *where), msg);
 }

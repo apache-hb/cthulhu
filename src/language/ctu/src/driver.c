@@ -1,11 +1,10 @@
 #include "ctu/driver.h"
+#include "cthulhu/broker/broker.h"
 #include "cthulhu/events/events.h"
 #include "ctu/ast.h"
 
 #include "ctu/sema/sema.h"
 #include "ctu/sema/decl.h"
-
-#include "cthulhu/runtime/driver.h"
 
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"
@@ -26,21 +25,15 @@
 
 static tree_t *gRootModule = NULL;
 
-void ctu_init(driver_t *handle)
+void ctu_init(language_runtime_t *runtime, tree_t *root)
 {
-    lifetime_t *lifetime = handle_get_lifetime(handle);
-
-    gRootModule = ctu_rt_mod(handle);
-    vector_t *path = ctu_rt_path();
-
-    context_t *ctx = compiled_new(handle, gRootModule);
-    add_context(lifetime, path, ctx);
+    ctu_rt_mod(runtime, root);
 }
 
-void ctu_forward_decls(context_t *context)
+void ctu_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
 {
-    ctu_t *ast = context_get_ast(context);
-    const char *name = context_get_name(context);
+    ctu_t *ast = unit_get_ast(unit);
+    const char *name = unit_get_name(unit);
 
     const vector_t *decls = ast->decls;
     size_t len = vector_len(decls);
@@ -65,14 +58,14 @@ void ctu_forward_decls(context_t *context)
         ctu_add_decl(mod, fwd.tag, decl->name, fwd.decl);
     }
 
-    context_update(context, ast, mod);
+    unit_update(unit, ast, mod);
 }
 
-static void import_module(lifetime_t *lifetime, tree_t *sema, ctu_t *include)
+static void import_module(language_runtime_t *lifetime, tree_t *sema, ctu_t *include)
 {
     CTASSERT(include->kind == eCtuImport);
-    context_t *ctx = get_context(lifetime, include->import_path);
-    arena_t *arena = lifetime_get_arena(lifetime);
+    arena_t *arena = lang_get_arena(lifetime);
+    compile_unit_t *ctx = lang_get_unit(lifetime, include->import_path);
 
     if (ctx == NULL)
     {
@@ -80,7 +73,7 @@ static void import_module(lifetime_t *lifetime, tree_t *sema, ctu_t *include)
         return;
     }
 
-    tree_t *lib = context_get_module(ctx);
+    tree_t *lib = unit_get_tree(ctx);
     if (lib == sema)
     {
         msg_notify(sema->reports, &kEvent_CirclularImport, include->node, "module cannot import itself");
@@ -102,22 +95,21 @@ static void import_module(lifetime_t *lifetime, tree_t *sema, ctu_t *include)
     }
 }
 
-void ctu_process_imports(context_t *context)
+void ctu_process_imports(language_runtime_t *runtime, compile_unit_t *unit)
 {
-    lifetime_t *lifetime = context_get_lifetime(context);
-
-    ctu_t *ast = context_get_ast(context);
-    tree_t *sema = context_get_module(context);
+    ctu_t *ast = unit_get_ast(unit);
+    tree_t *sema = unit_get_tree(unit);
 
     size_t len = vector_len(ast->imports);
     for (size_t i = 0; i < len; i++)
     {
         ctu_t *it = vector_get(ast->imports, i);
-        import_module(lifetime, sema, it);
+        import_module(runtime, sema, it);
     }
 }
 
-void ctu_compile_module(context_t *context)
+void ctu_compile_module(language_runtime_t *runtime, compile_unit_t *unit)
 {
-    CT_UNUSED(context);
+    CT_UNUSED(runtime);
+    CT_UNUSED(unit);
 }

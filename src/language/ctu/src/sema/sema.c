@@ -1,10 +1,9 @@
 #include "ctu/sema/sema.h"
 
+#include "cthulhu/broker/broker.h"
 #include "cthulhu/events/events.h"
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"
-
-#include "cthulhu/runtime/driver.h"
 
 #include "cthulhu/util/util.h"
 
@@ -203,35 +202,13 @@ tree_t *ctu_get_void_type(void) { return gVoidType; }
 /// runtime and builtin modules
 ///
 
-vector_t *ctu_rt_path(void)
+void ctu_rt_mod(language_runtime_t *runtime, tree_t *root)
 {
-    arena_t *arena = get_global_arena();
-    vector_t *path = vector_new(2, arena);
-    vector_push(&path, "cthulhu");
-    vector_push(&path, "lang");
-    return path;
-}
-
-tree_t *ctu_rt_mod(driver_t *driver)
-{
-    const node_t *node = handle_get_builtin(driver);
-    lifetime_t *lifetime = handle_get_lifetime(driver);
-    arena_t *arena = lifetime_get_arena(lifetime);
-
-    size_t sizes[eCtuTagTotal] = {
-        [eCtuTagValues] = 1,
-        [eCtuTagTypes] = 1,
-        [eCtuTagFunctions] = 1,
-        [eCtuTagModules] = 1,
-        [eCtuTagImports] = 1,
-        [eCtuTagAttribs] = 1,
-        [eCtuTagSuffixes] = 1,
-    };
+    const node_t *node = lang_get_node(runtime);
+    arena_t *arena = lang_get_arena(runtime);
 
     gLetter = tree_type_digit(node, "letter", eDigitChar, eSignSigned);
     tree_set_qualifiers(gLetter, eQualConst);
-
-    tree_t *root = driver_sema_new(driver, "runtime", eCtuTagTotal, sizes);
 
     ctu_add_decl(root, eCtuTagTypes, "char", make_int_type(node, "char", eDigitChar, eSignSigned));
     ctu_add_decl(root, eCtuTagTypes, "uchar", make_int_type(node, "uchar", eDigitChar, eSignUnsigned));
@@ -295,6 +272,4 @@ tree_t *ctu_rt_mod(driver_t *driver)
     ctu_add_decl(root, eCtuTagTypes, "opaque", make_opaque_type(node, "opaque"));
 
     ctu_init_attribs(root, arena);
-
-    return root;
 }

@@ -23,7 +23,7 @@ ctu_digit_t ctu_parse_digit(scan_t *scan, where_t where, const char *str, size_t
     if (ret == -1)
     {
         const node_t *node = node_new(scan, where);
-        msg_notify(ctx->reports, &kEvent_InvalidIntegerLiteral, node, "failed to parse base %zu digit '%s'", base, str);
+        msg_notify(ctx->logger, &kEvent_InvalidIntegerLiteral, node, "failed to parse base %zu digit '%s'", base, str);
     }
 
     return result;
@@ -35,5 +35,5 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg)
 
     ctu_scan_t *ctx = ctu_scan_context(scan);
 
-    evt_scan_error(ctx->reports, node_new(scan, *where), msg);
+    evt_scan_error(ctx->logger, node_new(scan, *where), msg);
 }

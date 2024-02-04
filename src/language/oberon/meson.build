@@ -16,7 +16,7 @@ src = [
 
 obr = library('obr', src,
     dependencies : [
-        base, runtime, interop,
+        base, broker, interop,
         scan, tree, util, notify,
         events, memory, driver
     ],

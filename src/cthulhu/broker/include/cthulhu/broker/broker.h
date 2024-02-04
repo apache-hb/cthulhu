@@ -3,13 +3,17 @@
 #include <ctu_broker_api.h>
 
 #include "core/compiler.h"
+#include "core/text.h"
 #include "core/version_def.h"
 
 #include "notify/diagnostic.h"
 
 typedef struct scan_callbacks_t scan_callbacks_t;
+typedef struct scan_t scan_t;
 typedef struct arena_t arena_t;
 typedef struct tree_t tree_t;
+typedef struct vector_t vector_t;
+typedef struct tree_cookie_t tree_cookie_t;
 typedef struct io_t io_t;
 typedef struct node_t node_t;
 typedef struct logger_t logger_t;
@@ -71,15 +75,38 @@ typedef struct module_info_t
 /// @brief a language compilation pass
 typedef void (*language_pass_t)(language_runtime_t *runtime, compile_unit_t *unit);
 
+/// @brief initialize the root module
+typedef void (*language_create_t)(language_runtime_t *runtime, tree_t *root);
+typedef void (*language_destroy_t)(language_runtime_t *runtime);
+
+typedef void *(*language_preparse_t)(language_runtime_t *runtime);
+typedef void (*language_postparse_t)(language_runtime_t *runtime, scan_t *scan, void *ast);
+
+typedef struct language_builtins_t
+{
+    text_view_t name;
+    const size_t *decls;
+    size_t length;
+} language_builtins_t;
+
 /// @brief a language driver support capabilities
 typedef struct language_t
 {
     /// @brief common information about the language
     module_info_t info;
 
+    /// @brief builtin module configuration
+    language_builtins_t builtin;
+
     /// @brief the file extensions this language can parse
     /// @note this is a null terminated array
     const char * const *exts;
+
+    language_create_t fn_create;
+    language_destroy_t fn_destroy;
+
+    language_preparse_t fn_preparse;
+    language_postparse_t fn_postparse;
 
     /// @brief callbacks for the parser
     const scan_callbacks_t *scanner;
@@ -137,6 +164,9 @@ typedef struct frontend_t
     module_info_t info;
 } frontend_t;
 
+/// broker api
+/// should only really be called by the frontend
+
 RET_NOTNULL
 CT_BROKER_API broker_t *broker_new(IN_NOTNULL const frontend_t *frontend, IN_NOTNULL arena_t *arena);
 
@@ -144,9 +174,42 @@ CT_BROKER_API void broker_add_languages(IN_NOTNULL broker_t *broker, IN_NOTNULL 
 CT_BROKER_API void broker_add_plugins(IN_NOTNULL broker_t *broker, IN_NOTNULL const plugin_t *plugin, size_t count);
 CT_BROKER_API void broker_add_targets(IN_NOTNULL broker_t *broker, IN_NOTNULL const target_t *target, size_t count);
 
+CT_BROKER_API void broker_create_modules(IN_NOTNULL broker_t *broker);
+CT_BROKER_API void broker_destroy_modules(IN_NOTNULL broker_t *broker);
+
 CT_BROKER_API void broker_parse(IN_NOTNULL broker_t *broker, IN_NOTNULL const char *ext, IN_NOTNULL io_t *io);
 
-CT_BROKER_API tree_t *broker_get_tree(IN_NOTNULL broker_t *broker);
+CT_BROKER_API void broker_run_pass(IN_NOTNULL broker_t *broker, broker_stage_t stage);
+
+CT_BROKER_API void broker_resolve(IN_NOTNULL broker_t *broker);
+
+/// all runtime apis
+
+CT_BROKER_API logger_t *lang_get_logger(IN_NOTNULL language_runtime_t *runtime);
+CT_BROKER_API arena_t *lang_get_arena(IN_NOTNULL language_runtime_t *runtime);
+CT_BROKER_API tree_t *lang_get_root(IN_NOTNULL language_runtime_t *runtime);
+CT_BROKER_API const node_t *lang_get_node(IN_NOTNULL language_runtime_t *runtime);
+CT_BROKER_API tree_cookie_t *lang_get_cookie(IN_NOTNULL language_runtime_t *runtime);
+
+CT_BROKER_API compile_unit_t *lang_new_unit(IN_NOTNULL language_runtime_t *runtime, const char *name, void *ast, tree_t *tree);
+CT_BROKER_API compile_unit_t *lang_new_compiled(IN_NOTNULL language_runtime_t *runtime, tree_t *tree);
+CT_BROKER_API void lang_add_unit(IN_NOTNULL language_runtime_t *runtime, const vector_t *path, IN_NOTNULL compile_unit_t *unit);
+CT_BROKER_API compile_unit_t *lang_get_unit(IN_NOTNULL language_runtime_t *runtime, IN_NOTNULL const vector_t *path);
+
+CT_BROKER_API void unit_update(IN_NOTNULL compile_unit_t *unit, void *ast, tree_t *tree);
+CT_BROKER_API void *unit_get_ast(IN_NOTNULL compile_unit_t *unit);
+CT_BROKER_API tree_t *unit_get_tree(IN_NOTNULL compile_unit_t *unit);
+CT_BROKER_API const char *unit_get_name(IN_NOTNULL compile_unit_t *unit);
+
+/// all plugin apis
+
+CT_BROKER_API logger_t *plugin_get_logger(IN_NOTNULL plugin_runtime_t *runtime);
+CT_BROKER_API arena_t *plugin_get_arena(IN_NOTNULL plugin_runtime_t *runtime);
+
+/// all target apis
+
+CT_BROKER_API logger_t *target_get_logger(IN_NOTNULL target_runtime_t *runtime);
+CT_BROKER_API arena_t *target_get_arena(IN_NOTNULL target_runtime_t *runtime);
 
 /// @}
 

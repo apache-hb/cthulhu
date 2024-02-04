@@ -287,7 +287,6 @@ if doxygen.found()
     doxy_includes = [
         source_dir / 'common',
         source_dir / 'cthulhu/events/include',
-        source_dir / 'cthulhu/runtime/include',
         source_dir / 'cthulhu/ssa/include',
         source_dir / 'cthulhu/tree/include'
     ]

@@ -1,10 +1,8 @@
 #include "base/util.h"
 #include "c89.h"
 
-#include "cthulhu/events/events.h"
 #include "io/io.h"
 #include "notify/notify.h"
-#include "scan/node.h"
 #include "std/str.h"
 #include "std/map.h"
 #include "std/set.h"

@@ -1,7 +1,7 @@
 #include "oberon/sema/sema.h"
 
+#include "cthulhu/broker/broker.h"
 #include "cthulhu/events/events.h"
-#include "cthulhu/runtime/driver.h"
 
 #include "cthulhu/util/util.h"
 
@@ -116,16 +116,9 @@ tree_t *obr_get_void_type(void)
     return gTypeVoid;
 }
 
-tree_t *obr_rt_mod(driver_t *driver)
+void obr_create(language_runtime_t *runtime, tree_t *root)
 {
-    const node_t *node = handle_get_builtin(driver);
-    size_t tags[eObrTagTotal] = {
-        [eObrTagValues] = 32,
-        [eObrTagTypes] = 32,
-        [eObrTagProcs] = 32,
-        [eObrTagModules] = 32,
-    };
-
+    const node_t *node = lang_get_node(runtime);
     gTypeBoolean = tree_type_bool(node, "BOOLEAN");
     gTypeChar = tree_type_digit(node, "CHAR", eDigitChar, eSignSigned);
     gTypeShort = tree_type_digit(node, "SHORTINT", eDigitShort, eSignSigned);
@@ -133,15 +126,12 @@ tree_t *obr_rt_mod(driver_t *driver)
     gTypeLong = tree_type_digit(node, "LONGINT", eDigitLong, eSignSigned);
     gTypeVoid = tree_type_unit(node, "VOID");
 
-    tree_t *rt = driver_sema_new(driver, "oberon", eObrTagTotal, tags);
-    obr_add_decl(rt, eObrTagTypes, "BOOLEAN", gTypeBoolean);
-    obr_add_decl(rt, eObrTagTypes, "CHAR", gTypeChar);
-    obr_add_decl(rt, eObrTagTypes, "SHORTINT", gTypeShort);
-    obr_add_decl(rt, eObrTagTypes, "INTEGER", gTypeInteger);
-    obr_add_decl(rt, eObrTagTypes, "LONGINT", gTypeLong);
-    obr_add_decl(rt, eObrTagTypes, "VOID", gTypeVoid);
-
-    return rt;
+    obr_add_decl(root, eObrTagTypes, "BOOLEAN", gTypeBoolean);
+    obr_add_decl(root, eObrTagTypes, "CHAR", gTypeChar);
+    obr_add_decl(root, eObrTagTypes, "SHORTINT", gTypeShort);
+    obr_add_decl(root, eObrTagTypes, "INTEGER", gTypeInteger);
+    obr_add_decl(root, eObrTagTypes, "LONGINT", gTypeLong);
+    obr_add_decl(root, eObrTagTypes, "VOID", gTypeVoid);
 }
 
 vector_t *obr_rt_path(void)

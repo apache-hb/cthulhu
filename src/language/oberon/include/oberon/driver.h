@@ -2,15 +2,15 @@
 
 #include "notify/diagnostic.h" // IWYU pragma: export
 
+typedef struct language_runtime_t language_runtime_t;
+typedef struct compile_unit_t compile_unit_t;
+typedef struct tree_t tree_t;
+
 #define NEW_EVENT(id, ...) extern const diagnostic_t kEvent_##id;
 #include "events.def"
 
-typedef struct driver_t driver_t;
-typedef struct context_t context_t;
-typedef struct tree_context_t tree_context_t;
+void obr_create(language_runtime_t *runtime, tree_t *root);
 
-void obr_create(driver_t *driver);
-
-void obr_forward_decls(context_t *context);
-void obr_process_imports(context_t *context);
-void obr_compile_module(context_t *context);
+void obr_forward_decls(language_runtime_t *runtime, compile_unit_t *unit);
+void obr_process_imports(language_runtime_t *runtime, compile_unit_t *unit);
+void obr_compile_module(language_runtime_t *runtime, compile_unit_t *unit);

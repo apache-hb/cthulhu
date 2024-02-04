@@ -2,8 +2,6 @@
 
 #include <ctu_attrib_api.h>
 
-#include "cthulhu/tree/tree.h"
-
 CT_BEGIN_API
 
 typedef enum attrib_link_t

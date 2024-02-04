@@ -141,34 +141,6 @@ typedef struct language_t
     driver_pass_t fn_compile_passes[eStageTotal];
 } language_t;
 
-/// @brief plugin support capabilities
-typedef struct plugin_t
-{
-    module_info_t info;
-} plugin_t;
-
-/// @brief compile a tree
-typedef void (*target_tree_t)(tree_t *tree);
-
-/// @brief compile ssa modules
-typedef void (*target_module_t)(map_t *modules);
-
-/// @brief a codegen target backend
-typedef struct target_t
-{
-    module_info_t info;
-
-    target_tree_t fn_tree;
-    target_module_t fn_ssa;
-} target_t;
-
-/// @brief the frontend running the mediator
-typedef struct frontend_t
-{
-    /// @brief information about the frontend
-    module_info_t info;
-} frontend_t;
-
 /// @brief get the logger for a lifetime
 ///
 /// @param lifetime the lifetime to get the logger of

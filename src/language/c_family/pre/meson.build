@@ -8,7 +8,7 @@ src = [
 
 libcpp = library('pre', src,
     dependencies : [
-        runtime, interop,
+        broker, interop,
         scan, notify, util,
         events, driver
     ],

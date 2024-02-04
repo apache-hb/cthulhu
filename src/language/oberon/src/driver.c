@@ -1,10 +1,9 @@
 #include "oberon/driver.h"
+#include "cthulhu/broker/broker.h"
 #include "cthulhu/events/events.h"
 #include "oberon/ast.h"
 
 #include "oberon/sema/decl.h"
-
-#include "cthulhu/runtime/driver.h"
 
 #include "cthulhu/tree/query.h"
 
@@ -12,17 +11,11 @@
 
 #include "core/macros.h"
 
-static tree_t *gRuntime = NULL;
-
-void obr_create(driver_t *driver)
+void obr_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
 {
-    gRuntime = obr_rt_mod(driver);
-}
-
-void obr_forward_decls(context_t *context)
-{
-    obr_t *root = context_get_ast(context);
-    size_t decl_count = vector_len(root->decls);
+    tree_t *root = lang_get_root(runtime);
+    obr_t *ast = unit_get_ast(unit);
+    size_t decl_count = vector_len(ast->decls);
 
     size_t sizes[eObrTagTotal] = {
         [eObrTagValues] = decl_count,
@@ -31,31 +24,31 @@ void obr_forward_decls(context_t *context)
         [eObrTagModules] = 32,
     };
 
-    tree_t *sema = tree_module(gRuntime, root->node, root->name, eObrTagTotal, sizes);
+    tree_t *sema = tree_module(root, root->node, root->name, eObrTagTotal, sizes);
 
     for (size_t i = 0; i < decl_count; i++)
     {
-        obr_t *decl = vector_get(root->decls, i);
+        obr_t *decl = vector_get(ast->decls, i);
         obr_forward_t fwd = obr_forward_decl(sema, decl);
         tree_t *it = fwd.decl;
 
         obr_add_decl(sema, fwd.tag, it->name, it);
     }
 
-    tree_t *init = obr_add_init(sema, root);
+    tree_t *init = obr_add_init(sema, ast);
     if (init != NULL)
     {
         obr_add_decl(sema, eObrTagProcs, init->name, init); // TODO: pick a better name
     }
 
-    context_update(context, root, sema);
+    unit_update(unit, ast, sema);
 }
 
-static void import_module(lifetime_t *lifetime, tree_t *sema, obr_t *include)
+static void import_module(language_runtime_t *runtime, tree_t *sema, obr_t *include)
 {
     CTASSERT(include->kind == eObrImport);
-    arena_t *arena = lifetime_get_arena(lifetime);
-    context_t *ctx = get_context(lifetime, vector_init(include->symbol, arena));
+    arena_t *arena = lang_get_arena(runtime);
+    compile_unit_t *ctx = lang_get_unit(runtime, vector_init(include->symbol, arena));
 
     if (ctx == NULL)
     {
@@ -63,7 +56,7 @@ static void import_module(lifetime_t *lifetime, tree_t *sema, obr_t *include)
         return;
     }
 
-    tree_t *lib = context_get_module(ctx);
+    tree_t *lib = unit_get_tree(ctx);
     if (lib == sema)
     {
         msg_notify(sema->reports, &kEvent_CirclularImport, include->node, "module cannot import itself");
@@ -82,21 +75,21 @@ static void import_module(lifetime_t *lifetime, tree_t *sema, obr_t *include)
     }
 }
 
-void obr_process_imports(context_t *context)
+void obr_process_imports(language_runtime_t *runtime, compile_unit_t *unit)
 {
-    lifetime_t *lifetime = context_get_lifetime(context);
-    obr_t *root = context_get_ast(context);
-    tree_t *sema = context_get_module(context);
+    obr_t *root = unit_get_ast(unit);
+    tree_t *sema = unit_get_tree(unit);
 
     size_t len = vector_len(root->imports);
     for (size_t i = 0; i < len; i++)
     {
         obr_t *import = vector_get(root->imports, i);
-        import_module(lifetime, sema, import);
+        import_module(runtime, sema, import);
     }
 }
 
-void obr_compile_module(context_t *context)
+void obr_compile_module(language_runtime_t *runtime, compile_unit_t *unit)
 {
-    CT_UNUSED(context);
+    CT_UNUSED(runtime);
+    CT_UNUSED(unit);
 }
