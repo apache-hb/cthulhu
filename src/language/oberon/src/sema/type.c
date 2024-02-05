@@ -10,16 +10,12 @@
 
 #include "base/panic.h"
 
-static const size_t kLocalModuleTags[] = { eObrTagModules };
-static const size_t kGlobalModuleTags[] = { eObrTagImports };
+static const size_t kModuleTags[] = { eObrTagModules, eObrTagImports };
 static const size_t kDeclTags[] = { eObrTagTypes };
 
 static const decl_search_t kSearchDecl = {
-    .local_tags = kLocalModuleTags,
-    .local_count = sizeof(kLocalModuleTags) / sizeof(size_t),
-
-    .global_tags = kGlobalModuleTags,
-    .global_count = sizeof(kGlobalModuleTags) / sizeof(size_t),
+    .module_tags = kModuleTags,
+    .module_count = sizeof(kModuleTags) / sizeof(size_t),
 
     .decl_tags = kDeclTags,
     .decl_count = sizeof(kDeclTags) / sizeof(size_t)

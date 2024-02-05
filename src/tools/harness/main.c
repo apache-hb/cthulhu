@@ -96,7 +96,7 @@ static user_ptr_t *get_memory(user_arena_t *arena, size_t size)
     size_t space = aligned + sizeof(user_ptr_t); // required space
 
     CTASSERTF(arena->memory_cursor + space < arena->memory_end,
-              "out of memory");
+              "out of memory (size: %zu)", size);
 
     user_ptr_t *ptr = (user_ptr_t *)arena->memory_cursor;
 

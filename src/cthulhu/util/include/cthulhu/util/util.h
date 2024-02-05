@@ -34,11 +34,8 @@ CT_BEGIN_API
 CT_UTIL_API void *util_select_decl(tree_t *sema, const size_t *tags, size_t len, const char *name);
 
 typedef struct decl_search_t {
-    const size_t *local_tags;
-    size_t local_count;
-
-    const size_t *global_tags;
-    size_t global_count;
+    const size_t *module_tags;
+    size_t module_count;
 
     const size_t *decl_tags;
     size_t decl_count;

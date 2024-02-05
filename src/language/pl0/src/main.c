@@ -35,9 +35,18 @@ static void pl0_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
         ? ast->mod
         : vector_init(str_basename(fp, arena), arena);
 
-    compile_unit_t *unit = lang_new_unit(runtime, vector_tail(path), ast);
+    size_t const_count = vector_len(ast->consts);
+    size_t global_count = vector_len(ast->globals);
+    size_t proc_count = vector_len(ast->procs);
 
-    lang_add_unit(runtime, build_unit_id(path, arena), unit);
+    size_t sizes[ePl0TagTotal] = {
+        [ePl0TagValues] = const_count + global_count,
+        [ePl0TagProcs] = proc_count,
+        [ePl0TagImportedValues] = 64,
+        [ePl0TagImportedProcs] = 64
+    };
+
+    lang_add_unit(runtime, build_unit_id(path, arena), ast->node, ast, sizes, ePl0TagTotal);
 }
 
 static const char *const kLangNames[] = { "pl", "pl0", NULL };

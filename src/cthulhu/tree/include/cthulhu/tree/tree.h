@@ -532,6 +532,18 @@ CT_TREE_API tree_t *tree_module(tree_t *parent, const node_t *node, const char *
  */
 CT_TREE_API void *tree_module_get(tree_t *self, size_t tag, const char *name);
 
+
+/// @brief search for a declaration in a module
+/// also returns the module that the declaration was found in
+///
+/// @param sema the module
+/// @param tag the declaration category
+/// @param name the name of the declaration
+/// @param[out] module the module that the declaration was found in
+///
+/// @return the declaration or NULL if it does not exist
+CT_TREE_API void *tree_module_find(tree_t *sema, size_t tag, const char *name, tree_t **module);
+
 /**
  * @brief set a declaration in the current module
  *

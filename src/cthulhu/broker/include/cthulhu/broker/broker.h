@@ -242,9 +242,6 @@ typedef struct compile_unit_t
     /// @brief the language that this originated from
     language_runtime_t *lang;
 
-    /// @brief the name of the unit
-    const char *name;
-
     /// @brief the ast for this unit
     /// is NULL if this is a builtin/precompiled unit
     void *ast;
@@ -295,8 +292,7 @@ CT_BROKER_API vector_t *broker_get_modules(IN_NOTNULL broker_t *broker);
 
 /// all runtime apis
 
-CT_BROKER_API compile_unit_t *lang_new_unit(IN_NOTNULL language_runtime_t *runtime, IN_STRING const char *name, void *ast);
-CT_BROKER_API void lang_add_unit(IN_NOTNULL language_runtime_t *runtime, unit_id_t id, IN_NOTNULL compile_unit_t *unit);
+CT_BROKER_API void lang_add_unit(IN_NOTNULL language_runtime_t *runtime, unit_id_t id, const node_t *node, void *ast, const size_t *sizes, size_t count);
 CT_BROKER_API compile_unit_t *lang_get_unit(IN_NOTNULL language_runtime_t *runtime, unit_id_t id);
 
 CT_BROKER_API void unit_update(IN_NOTNULL compile_unit_t *unit, IN_NOTNULL void *ast, IN_NOTNULL tree_t *tree);

@@ -77,6 +77,35 @@ void *tree_module_get(tree_t *self, size_t tag, const char *name)
     return NULL;
 }
 
+void *tree_module_find(tree_t *sema, size_t tag, const char *name, tree_t **module)
+{
+    CTASSERT(sema != NULL);
+    CTASSERT(name != NULL);
+    CTASSERT(module != NULL);
+
+    map_t *map = tree_module_tag(sema, tag);
+    if (map == NULL)
+    {
+        *module = NULL;
+        return NULL;
+    }
+
+    tree_t *decl = map_get(map, name);
+    if (decl != NULL)
+    {
+        *module = sema;
+        return decl;
+    }
+
+    if (sema->parent != NULL)
+    {
+        return tree_module_find(sema->parent, tag, name, module);
+    }
+
+    *module = NULL;
+    return NULL;
+}
+
 void *tree_module_set(tree_t *self, size_t tag, const char *name, void *value)
 {
     void *old = tree_module_get(self, tag, name);

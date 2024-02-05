@@ -23,8 +23,6 @@
 /// init
 ///
 
-static tree_t *gRootModule = NULL;
-
 void ctu_init(language_runtime_t *runtime, tree_t *root)
 {
     ctu_rt_mod(runtime, root);
@@ -36,18 +34,7 @@ void ctu_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
 
     const vector_t *decls = ast->decls;
     size_t len = vector_len(decls);
-
-    size_t sizes[eCtuTagTotal] = {
-        [eCtuTagValues] = len,
-        [eCtuTagTypes] = len,
-        [eCtuTagFunctions] = len,
-        [eCtuTagModules] = len,
-        [eCtuTagImports] = vector_len(ast->imports),
-        [eCtuTagAttribs] = len,
-        [eCtuTagSuffixes] = len,
-    };
-
-    tree_t *mod = tree_module(gRootModule, ast->node, unit->name, eCtuTagTotal, sizes);
+    tree_t *mod = unit->tree;
 
     for (size_t i = 0; i < len; i++)
     {
@@ -58,6 +45,17 @@ void ctu_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
     }
 
     unit_update(unit, ast, mod);
+}
+
+static tree_t *get_import(tree_t *sema, const char *name)
+{
+    map_t *imports = tree_module_tag(sema, eCtuTagImports);
+    tree_t *it = map_get(imports, name);
+    if (it != NULL)
+        return it;
+
+    map_t *mods = tree_module_tag(sema, eCtuTagModules);
+    return map_get(mods, name);
 }
 
 static void import_module(language_runtime_t *runtime, tree_t *sema, ctu_t *include)
@@ -79,7 +77,10 @@ static void import_module(language_runtime_t *runtime, tree_t *sema, ctu_t *incl
         return;
     }
 
-    tree_t *old = ctu_get_namespace(sema, include->name, NULL);
+    // only search the current module for the import
+    // if we did this recursively we would reach the root module
+    // which always has the imported module
+    tree_t *old = get_import(sema, include->name);
     if (old != NULL)
     {
         event_builder_t id = evt_symbol_shadowed(sema->reports, include->name, tree_get_node(old), include->node);

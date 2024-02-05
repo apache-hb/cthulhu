@@ -29,8 +29,16 @@ static void obr_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
     for (size_t i = 0; i < len; i++)
     {
         obr_t *mod = vector_get(modules, i);
-        compile_unit_t *unit = lang_new_unit(runtime, mod->name, mod);
-        lang_add_unit(runtime, text_view_from(mod->name), unit);
+
+        size_t decl_count = vector_len(mod->decls);
+        size_t sizes[eObrTagTotal] = {
+            [eObrTagValues] = decl_count,
+            [eObrTagTypes] = decl_count,
+            [eObrTagProcs] = decl_count,
+            [eObrTagModules] = 32,
+        };
+
+        lang_add_unit(runtime, text_view_from(mod->name), mod->node, mod, sizes, eObrTagTotal);
     }
 }
 

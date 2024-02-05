@@ -46,9 +46,18 @@ static void ctu_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
 
     const vector_t *path = find_mod_path(ast, scan_path(scan), arena);
 
-    compile_unit_t *ctx = lang_new_unit(runtime, vector_tail(path), ast);
+    size_t len = vector_len(ast->decls);
+    size_t sizes[eCtuTagTotal] = {
+        [eCtuTagValues] = len,
+        [eCtuTagTypes] = len,
+        [eCtuTagFunctions] = len,
+        [eCtuTagModules] = len,
+        [eCtuTagImports] = vector_len(ast->imports),
+        [eCtuTagAttribs] = len,
+        [eCtuTagSuffixes] = len,
+    };
 
-    lang_add_unit(runtime, build_unit_id(path, arena), ctx);
+    lang_add_unit(runtime, build_unit_id(path, arena), ast->node, ast, sizes, eCtuTagTotal);
 }
 
 static const diagnostic_t * const kDiagnosticTable[] = {

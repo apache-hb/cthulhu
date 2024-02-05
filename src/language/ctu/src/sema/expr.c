@@ -23,16 +23,12 @@
 /// get decls
 ///
 
-static const size_t kLocalModuleTags[] = {eCtuTagModules};
-static const size_t kGlobalModuleTags[] = {eCtuTagImports, eCtuTagTypes};
+static const size_t kModuleTags[] = {eCtuTagModules, eCtuTagImports, eCtuTagTypes};
 static const size_t kDeclTags[] = {eCtuTagValues, eCtuTagFunctions};
 
 static const decl_search_t kSearchName = {
-    .local_tags = kLocalModuleTags,
-    .local_count = sizeof(kLocalModuleTags) / sizeof(size_t),
-
-    .global_tags = kGlobalModuleTags,
-    .global_count = sizeof(kGlobalModuleTags) / sizeof(size_t),
+    .module_tags = kModuleTags,
+    .module_count = sizeof(kModuleTags) / sizeof(size_t),
 
     .decl_tags = kDeclTags,
     .decl_count = sizeof(kDeclTags) / sizeof(size_t),

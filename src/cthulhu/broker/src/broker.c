@@ -11,6 +11,7 @@
 #include "scan/node.h"
 #include "std/map.h"
 #include "std/vector.h"
+#include <stdio.h>
 
 typedef struct broker_t
 {
@@ -100,13 +101,21 @@ static void resolve_module(tree_t *mod)
     }
 }
 
-static compile_unit_t *compile_unit_new(const char *name, language_runtime_t *lang, arena_t *arena, void *ast, tree_t *tree)
+static compile_unit_t *compile_unit_new(language_runtime_t *lang, arena_t *arena, void *ast, tree_t *tree)
 {
-    compile_unit_t *unit = ARENA_MALLOC(sizeof(compile_unit_t), name, lang, arena);
+    CTASSERT(lang != NULL);
+    CTASSERT(arena != NULL);
+    CTASSERT(tree != NULL);
+
+    compile_unit_t *unit = ARENA_MALLOC(sizeof(compile_unit_t), NULL, lang, arena);
     unit->lang = lang;
-    unit->name = name;
     unit->ast = ast;
     unit->tree = tree;
+
+    broker_t *broker = lang->broker;
+
+    tree_module_set(broker->root, eSemaModules, tree_get_name(tree), tree);
+
     return unit;
 }
 
@@ -178,7 +187,7 @@ language_runtime_t *broker_add_language(broker_t *broker, const language_t *lang
     runtime->root = tree;
     vector_push(&broker->langs, runtime);
 
-    compile_unit_t *unit = compile_unit_new(info.id, runtime, arena, NULL, tree);
+    compile_unit_t *unit = compile_unit_new(runtime, arena, NULL, tree);
     map_set(broker->builtins, &builtin.name, unit);
 
     tree_module_set(broker->root, eSemaModules, info.id, tree);
@@ -385,7 +394,7 @@ void broker_run_pass(broker_t *broker, broker_pass_t pass)
             continue;
 
         language_runtime_t *lang = unit->lang;
-        CTASSERTF(lang != NULL, "unit '%s' has no language", unit->name);
+        CTASSERTF(lang != NULL, "unit '%s' has no language", tree_get_name(unit->tree));
 
         language_pass_t fn = lang->info->fn_passes[pass];
         if (fn == NULL)
@@ -407,32 +416,35 @@ void broker_resolve(broker_t *broker)
 /// translation unit api
 ///
 
-compile_unit_t *lang_new_unit(language_runtime_t *runtime, const char *name, void *ast)
-{
-    CTASSERT(runtime != NULL);
-    CTASSERT(name != NULL);
-    CTASSERTF(ast != NULL, "unit '%s' has no ast", name);
-
-    return compile_unit_new(name, runtime, runtime->arena, ast, NULL);
-}
-
-void lang_add_unit(language_runtime_t *runtime, unit_id_t id, compile_unit_t *unit)
+USE_DECL
+void lang_add_unit(language_runtime_t *runtime, unit_id_t id, const node_t *node, void *ast, const size_t *decls, size_t length)
 {
     CTASSERT(runtime != NULL);
     CTASSERT(id.text != NULL);
     CTASSERT(id.length > 0);
-    CTASSERT(unit != NULL);
+    CTASSERT(ast != NULL);
+    CTASSERT(decls != NULL);
+    CTASSERT(length >= eSemaTotal);
 
     compile_unit_t *old = map_get(runtime->broker->units, &id);
     if (old != NULL)
     {
-        msg_notify(runtime->logger, &kEvent_ModuleConflict, NULL, "module '%s' already exists", id.text);
+        msg_notify(runtime->logger, &kEvent_ModuleConflict, tree_get_node(old->tree), "module '%s' already exists", id.text);
         return;
     }
-
     arena_t *arena = runtime->arena;
-    text_view_t *key = arena_memdup(&id, sizeof(unit_id_t), arena);
 
+    char *copy = arena_memdup(id.text, id.length, arena);
+    for (size_t i = 0; i < id.length; i++)
+        if (copy[i] == '\0')
+            copy[i] = '/';
+    copy[id.length] = '\0';
+
+    tree_t *tree = tree_module(runtime->root, node, copy, length, decls);
+
+    compile_unit_t *unit = compile_unit_new(runtime, arena, ast, tree);
+
+    text_view_t *key = arena_memdup(&id, sizeof(unit_id_t), arena);
     map_set(runtime->broker->units, key, unit);
 }
 
@@ -467,7 +479,7 @@ void unit_update(compile_unit_t *unit, void *ast, tree_t *tree)
     CTASSERT(ast != NULL);
     CTASSERT(tree != NULL);
 
-    CTASSERTF(unit->ast != NULL, "attempting to modify builtin module '%s'", unit->name);
+    CTASSERTF(unit->ast != NULL, "attempting to modify builtin module '%s'", tree_get_name(unit->tree));
 
     unit->ast = ast;
     unit->tree = tree;
@@ -503,6 +515,7 @@ text_view_t build_unit_id(const vector_t *parts, arena_t *arena)
         }
     }
 
+    buf[size] = '\0';
     return text_view_make(buf, size);
 }
 

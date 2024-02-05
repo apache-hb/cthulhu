@@ -7,9 +7,6 @@
 
 #include "base/panic.h"
 
-#include "memory/memory.h"
-#include "std/vector.h"
-
 #include "scan/node.h"
 
 tree_t *obr_get_type(tree_t *sema, const char *name)

@@ -14,18 +14,10 @@
 
 void obr_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
 {
-    tree_t *root = runtime->root;
     obr_t *ast = unit_get_ast(unit);
     size_t decl_count = vector_len(ast->decls);
 
-    size_t sizes[eObrTagTotal] = {
-        [eObrTagValues] = decl_count,
-        [eObrTagTypes] = decl_count,
-        [eObrTagProcs] = decl_count,
-        [eObrTagModules] = 32,
-    };
-
-    tree_t *sema = tree_module(root, root->node, root->name, eObrTagTotal, sizes);
+    tree_t *sema = unit->tree;
 
     for (size_t i = 0; i < decl_count; i++)
     {
@@ -63,6 +55,8 @@ static void import_module(language_runtime_t *runtime, tree_t *sema, obr_t *incl
         msg_notify(sema->reports, &kEvent_CirclularImport, include->node, "module cannot import itself");
         return;
     }
+
+    // only search current module for the import
 
     tree_t *old = obr_get_namespace(sema, include->name);
     if (old != NULL)

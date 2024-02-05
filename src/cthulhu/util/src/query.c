@@ -7,22 +7,34 @@
 #include "std/vector.h"
 
 #include "base/panic.h"
+#include <stdio.h>
+
+static tree_t *select_decl_imported(tree_t *sema, const size_t *tags, size_t len, const char *name, tree_t **mod)
+{
+    CTASSERT(tags != NULL);
+    CTASSERT(len > 0);
+
+    for (size_t i = 0; i < len; i++)
+    {
+        tree_t *decl = tree_module_find(sema, tags[i], name, mod);
+        if (decl != NULL)
+        {
+            return decl;
+        }
+    }
+
+    return NULL;
+}
 
 static tree_t *select_module(tree_t *sema, const decl_search_t *search, const char *name, bool *imported)
 {
     CTASSERT(imported != NULL);
 
-    tree_t *inner = util_select_decl(sema, search->local_tags, search->local_count, name);
-    if (inner != NULL) { return inner; }
+    tree_t *context = NULL;
 
-    tree_t *global = util_select_decl(sema, search->global_tags, search->global_count, name);
-    if (global != NULL)
-    {
-        *imported = true;
-        return global;
-    }
-
-    return NULL;
+    tree_t *inner = select_decl_imported(sema, search->module_tags, search->module_count, name, &context);
+    *imported = (inner != context);
+    return inner;
 }
 
 static bool is_public(const tree_t *decl)

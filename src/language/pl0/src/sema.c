@@ -471,22 +471,10 @@ typedef struct {
 void pl0_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
 {
     pl0_t *ast = unit_get_ast(unit);
+    tree_t *root = unit->tree;
     size_t const_count = vector_len(ast->consts);
     size_t global_count = vector_len(ast->globals);
     size_t proc_count = vector_len(ast->procs);
-
-    const char *id = vector_len(ast->mod) > 0
-        ? vector_tail(ast->mod)
-        : unit->name;
-
-    size_t sizes[ePl0TagTotal] = {
-        [ePl0TagValues] = const_count + global_count,
-        [ePl0TagProcs] = proc_count,
-        [ePl0TagImportedValues] = 64,
-        [ePl0TagImportedProcs] = 64
-    };
-
-    tree_t *root = tree_module(runtime->root, ast->node, id, ePl0TagTotal, sizes);
 
     const tree_storage_t const_storage = get_const_storage(gIntType);
 
@@ -583,7 +571,7 @@ void pl0_compile_module(language_runtime_t *runtime, compile_unit_t *unit)
     if (ast->entry != NULL)
     {
         tree_t *mod = unit->tree;
-        const char *name = unit->name;
+        const char *name = tree_get_name(mod);
 
         tree_t *body = sema_stmt(mod, ast->entry);
         vector_push(&body->stmts, tree_stmt_return(ast->node, tree_expr_unit(ast->node, gVoidType)));
