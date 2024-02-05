@@ -6,7 +6,7 @@
 
 #include "scan/node.h"
 
-#include "cthulhu/runtime/driver.h"
+#include "cthulhu/broker/broker.h"
 
 #include "core/macros.h"
 
@@ -29,24 +29,10 @@ static void add_digit(const node_t *node, tree_t *mod, const char *name, digit_t
     tree_module_set(mod, eCTagTypes, name, it);
 }
 
-static tree_t *cc_lang_module(driver_t *handle)
+static void cc_lang_module(tree_t *root)
 {
-    lifetime_t *lifetime = handle_get_lifetime(handle);
-    logger_t *reports = lifetime_get_logger(lifetime);
-    tree_cookie_t *cookie = lifetime_get_cookie(lifetime);
-    arena_t *arena = lifetime_get_arena(lifetime);
-
-    const node_t *node = handle_get_builtin(handle);
-    size_t sizes[eSemaTotal] = {
-        [eCTagValues] = 1,
-        [eCTagTypes] = 1,
-        [eCTagProcs] = 1,
-        [eCTagModules] = 1
-    };
-
-    tree_t *root = tree_module_root(reports, cookie, node, "runtime", eSemaTotal, sizes, arena);
-
     // TODO: this is a stopgap until C is properly implemented
+    const node_t *node = tree_get_node(root);
 
     add_digit(node, root, "char", eDigitChar, eSignDefault);
     add_digit(node, root, "charSigned", eDigitChar, eSignSigned);
@@ -75,23 +61,16 @@ static tree_t *cc_lang_module(driver_t *handle)
 
     add_digit(node, root, "int64", eDigit64, eSignSigned);
     add_digit(node, root, "uint64", eDigit64, eSignUnsigned);
-
-    return root;
 }
 
-void cc_create(driver_t *handle)
+void cc_create(language_runtime_t *runtime, tree_t *root)
 {
-    lifetime_t *lifetime = handle_get_lifetime(handle);
-    arena_t *arena = lifetime_get_arena(lifetime);
+    CT_UNUSED(runtime);
 
-    vector_t *path = cc_lang_path(arena);
-    tree_t *root = cc_lang_module(handle);
-
-    context_t *ctx = compiled_new(handle, root);
-    add_context(lifetime, path, ctx);
+    cc_lang_module(root);
 }
 
-void cc_destroy(driver_t *handle)
+void cc_destroy(language_runtime_t *runtime)
 {
-    CT_UNUSED(handle);
+    CT_UNUSED(runtime);
 }

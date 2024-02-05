@@ -3,7 +3,7 @@
 #include "format/colour.h"
 #include "base/log.h"
 #include "cthulhu/events/events.h"
-#include "cthulhu/runtime/interface.h"
+#include "cthulhu/broker/broker.h"
 
 #include "arena/arena.h"
 #include "io/console.h"
@@ -11,7 +11,7 @@
 #include "notify/notify.h"
 #include "format/notify.h"
 #include "scan/node.h"
-#include "support/langs.h"
+#include "support/loader.h"
 
 #include "cthulhu/check/check.h"
 
@@ -30,6 +30,7 @@
 #include "os/os.h"
 
 #include "argparse/argparse.h"
+#include "support/support.h"
 
 #include <stdalign.h>
 #include <stddef.h>
@@ -45,12 +46,18 @@
         }                                                   \
     } while (0)
 
-// static const version_info_t kVersion = {
-//     .license = "GPLv3",
-//     .desc = "Test harness",
-//     .author = "Elliot Haisley",
-//     .version = CT_NEW_VERSION(0, 0, 1),
-// };
+static const frontend_t kFrontendHarness = {
+    .info = {
+        .id = "frontend-harness",
+        .name = "Test Harness",
+        .version = {
+            .license = "GPLv3",
+            .desc = "End to end test harness",
+            .author = "Elliot Haisley",
+            .version = CT_NEW_VERSION(0, 0, 2),
+        },
+    }
+};
 
 static io_t *make_file(const char *path, os_access_t flags, arena_t *arena)
 {
@@ -201,19 +208,13 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
 
 int run_test_harness(int argc, const char **argv, arena_t *arena)
 {
-    mediator_t *mediator = mediator_new(arena);
-    lifetime_t *lifetime = lifetime_new(mediator, arena);
+    broker_t *broker = broker_new(&kFrontendHarness, arena);
+    loader_t *loader = loader_new(arena);
+    support_t *support = support_new(broker, loader, arena);
+    support_load_default_modules(support);
 
-    node_t *node = node_builtin("test-harness", arena);
-
-    langs_t langs = get_langs();
-
-    logger_t *reports = lifetime_get_logger(lifetime);
-    for (size_t i = 0; i < langs.size; i++)
-    {
-        const language_t *lang = langs.langs[i];
-        lifetime_add_language(lifetime, lang);
-    }
+    logger_t *logger = broker_get_logger(broker);
+    const node_t *node = broker_get_node(broker);
 
     io_t *msg_buffer = io_stdout();
 
@@ -231,51 +232,53 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
         .text_config = text_config,
     };
 
-    CHECK_LOG(reports, "adding languages");
+    CHECK_LOG(logger, "adding languages");
 
     // harness.exe <name> [files...]
     CTASSERT(argc > 2);
+
+    broker_init(broker);
 
     for (int i = 2; i < argc; i++)
     {
         const char *path = argv[i];
         const char *ext = str_ext(path, arena);
-        const language_t *lang = lifetime_get_language(lifetime, ext);
+        language_runtime_t *lang = support_get_lang(support, ext);
 
         io_t *io = make_file(path, eAccessRead, arena);
 
-        lifetime_parse(lifetime, lang, io);
+        broker_parse(lang, io);
 
-        CHECK_LOG(reports, "parsing source");
+        CHECK_LOG(logger, "parsing source");
     }
 
-    for (size_t stage = 0; stage < eStageTotal; stage++)
+    for (size_t stage = 0; stage < ePassCount; stage++)
     {
-        lifetime_run_stage(lifetime, stage);
+        broker_run_pass(broker, stage);
 
-        char *msg = str_format(arena, "running stage %s", stage_to_string(stage));
-        CHECK_LOG(reports, msg);
+        char *msg = str_format(arena, "running stage %s", broker_pass_name(stage));
+        CHECK_LOG(logger, msg);
     }
 
-    lifetime_resolve(lifetime);
-    CHECK_LOG(reports, "resolving symbols");
+    broker_resolve(broker);
+    CHECK_LOG(logger, "resolving symbols");
 
-    map_t *modmap = lifetime_get_modules(lifetime);
+    vector_t *mods = broker_get_modules(broker);
 
-    check_tree(reports, modmap, arena);
-    CHECK_LOG(reports, "validations failed");
+    check_tree(logger, mods, arena);
+    CHECK_LOG(logger, "validations failed");
 
-    ssa_result_t ssa = ssa_compile(modmap, arena);
-    CHECK_LOG(reports, "generating ssa");
+    ssa_result_t ssa = ssa_compile(mods, arena);
+    CHECK_LOG(logger, "generating ssa");
 
-    ssa_opt(reports, ssa, arena);
-    CHECK_LOG(reports, "optimizing ssa");
+    ssa_opt(logger, ssa, arena);
+    CHECK_LOG(logger, "optimizing ssa");
 
     fs_t *fs = fs_virtual("out", arena);
 
     emit_options_t base_options = {
         .arena = arena,
-        .reports = reports,
+        .reports = logger,
         .fs = fs,
 
         .modules = ssa.modules,
@@ -285,13 +288,13 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     ssa_emit_options_t emit_options = {.opts = base_options};
 
     ssa_emit_result_t ssa_emit_result = emit_ssa(&emit_options);
-    CHECK_LOG(reports, "emitting ssa");
+    CHECK_LOG(logger, "emitting ssa");
     CT_UNUSED(ssa_emit_result); // TODO: check for errors
 
     c89_emit_options_t c89_emit_options = {.opts = base_options};
 
     c89_emit_result_t c89_emit_result = emit_c89(&c89_emit_options);
-    CHECK_LOG(reports, "emitting c89");
+    CHECK_LOG(logger, "emitting c89");
 
     text_t cwd = {0};
     os_error_t err = os_getcwd(&cwd, arena);
@@ -303,18 +306,18 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     fs_t *out = fs_physical(run_dir, arena);
     if (out == NULL)
     {
-        msg_notify(reports, &kEvent_FailedToCreateOutputDirectory, node,
+        msg_notify(logger, &kEvent_FailedToCreateOutputDirectory, node,
                    "failed to create output directory");
     }
-    CHECK_LOG(reports, "creating output directory");
+    CHECK_LOG(logger, "creating output directory");
 
     sync_result_t result = fs_sync(out, fs);
     if (result.path != NULL)
     {
-        msg_notify(reports, &kEvent_FailedToWriteOutputFile, node, "failed to sync %s",
+        msg_notify(logger, &kEvent_FailedToWriteOutputFile, node, "failed to sync %s",
                    result.path);
     }
-    CHECK_LOG(reports, "syncing output directory");
+    CHECK_LOG(logger, "syncing output directory");
 
     size_t len = vector_len(c89_emit_result.sources);
     vector_t *sources = vector_of(len, arena);
@@ -336,7 +339,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     int status = system(cmd); // NOLINT
     if (status != 0)
     {
-        msg_notify(reports, &kEvent_FailedToWriteOutputFile, node,
+        msg_notify(logger, &kEvent_FailedToWriteOutputFile, node,
                    "compilation failed `%d`", status);
     }
 #else
@@ -344,12 +347,14 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     int status = system(cmd); // NOLINT
     if (WEXITSTATUS(status) != CT_EXIT_OK)
     {
-        msg_notify(reports, &kEvent_FailedToWriteOutputFile, node,
+        msg_notify(logger, &kEvent_FailedToWriteOutputFile, node,
                    "compilation failed %d", WEXITSTATUS(status));
     }
 #endif
 
-    CHECK_LOG(reports, "compiling");
+    broker_deinit(broker);
+
+    CHECK_LOG(logger, "compiling");
 
     return 0;
 }

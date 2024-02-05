@@ -16,7 +16,7 @@ libtarget = library('target', src,
 )
 
 target = declare_dependency(
-    dependencies : [ core, broker ],
+    dependencies : [ core, driver ],
     link_with : libtarget,
     include_directories : target_include
 )

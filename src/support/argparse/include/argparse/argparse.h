@@ -27,19 +27,9 @@ typedef struct cfg_field_t cfg_field_t;
 /// @brief argument parser
 typedef struct ap_t ap_t;
 
-/// @brief the continuation code of a user event
-typedef enum ap_event_result_t
-{
-    /// @brief the event was handled, dont find the next handler
-    eEventHandled,
-
-    /// @brief the event was not handled, find the next handler
-    eEventContinue,
-
-    eEventCount
-} ap_event_result_t;
-
 /// @brief callback for a parameter event
+/// called when a parameter is parsed
+/// return true to indicate the event was handled, false to continue to the next handler
 ///
 /// @param ap the parser instance
 /// @param param the parameter that triggered the event, may be NULL for positional args
@@ -47,8 +37,9 @@ typedef enum ap_event_result_t
 ///              mpz_t for int, const char * for string, and bool* for bool
 /// @param data the data passed to @a ap_event
 ///
-/// @return continuation code
-typedef ap_event_result_t (*ap_event_t)(ap_t *ap, const cfg_field_t *param, const void *value, void *data);
+/// @retval true if the event was handled
+/// @retval false if the event was not handled
+typedef bool (*ap_event_t)(ap_t *ap, const cfg_field_t *param, const void *value, void *data);
 
 // initialization + config api
 

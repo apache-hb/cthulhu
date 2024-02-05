@@ -25,12 +25,12 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg)
 
     cc_scan_t *ctx = cc_scan_context(scan);
 
-    evt_scan_error(ctx->reports, node_new(scan, *where), msg);
+    evt_scan_error(ctx->logger, node_new(scan, *where), msg);
 }
 
 void cc_on_error(scan_t *scan, const char *msg, where_t where)
 {
     cc_scan_t *ctx = cc_scan_context(scan);
 
-    msg_notify(ctx->reports, &kEvent_SyntaxError, node_new(scan, where), "%s", msg);
+    msg_notify(ctx->logger, &kEvent_SyntaxError, node_new(scan, where), "%s", msg);
 }

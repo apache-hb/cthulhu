@@ -4,7 +4,7 @@ src = [
 ]
 
 jvm = library('jvm', src,
-    dependencies : [ gmp, runtime, interop, scan, notify ],
+    dependencies : [ gmp, broker, interop, scan, notify ],
     c_args : user_args,
     include_directories : [ 'include' ]
 )

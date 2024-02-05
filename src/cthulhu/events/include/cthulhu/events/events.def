@@ -536,4 +536,36 @@ CTU_EVENT(InvalidFilePath, {
         "The file path was invalid.",
 })
 
+CTU_EVENT(ModuleConflict, {
+    .severity = eSeverityFatal,
+    .id = "M0074",
+    .brief = "Module conflict",
+    .description =
+        "A module with the same name already exists.",
+})
+
+CTU_EVENT(LanguageDriverConflict, {
+    .severity = eSeverityFatal,
+    .id = "M0075",
+    .brief = "Language driver conflict",
+    .description =
+        "A language driver with the same name already exists.",
+})
+
+CTU_EVENT(PluginConflict, {
+    .severity = eSeverityFatal,
+    .id = "M0076",
+    .brief = "Plugin conflict",
+    .description =
+        "A plugin with the same name already exists.",
+})
+
+CTU_EVENT(TargetConflict, {
+    .severity = eSeverityFatal,
+    .id = "M0077",
+    .brief = "Target conflict",
+    .description =
+        "A target with the same name already exists.",
+})
+
 #undef CTU_EVENT

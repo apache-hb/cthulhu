@@ -3,29 +3,27 @@
 #include "editor/trace.hpp"
 #include "editor/sources.hpp"
 
-typedef struct mediator_t mediator_t;
-typedef struct lifetime_t lifetime_t;
+#include "cthulhu/broker/broker.h"
+
 typedef struct logger_t logger_t;
+typedef struct support_t support_t;
+typedef struct loader_t loader_t;
 
 namespace ed
 {
     class CompileInfo
     {
     public:
-        CompileInfo(mediator_t *mediator, const char *name)
-            : name(name)
-            , mediator(mediator)
-            , sources(&global)
-        { }
+        CompileInfo(loader_t *loader, const char *name);
 
         // run state
         std::string name;
 
         // api objects
         bool setup = false;
-        mediator_t *mediator = nullptr;
-        lifetime_t *lifetime = nullptr;
-        logger_t *reports = nullptr;
+        broker_t *broker = nullptr;
+        loader_t *loader = nullptr;
+        support_t *support = nullptr;
 
         // editor objects
         ed::TraceArena global{"global", ed::TraceArena::eDrawTree};
@@ -50,7 +48,6 @@ namespace ed
 
     private:
         void init_alloc();
-        void init_lifetime();
-        void init_reports();
+        void init_support();
     };
 }

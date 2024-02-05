@@ -1,6 +1,6 @@
+#include "base/util.h"
 #include "cthulhu/broker/broker.h"
 
-#include "arena/arena.h"
 #include "oberon/driver.h"
 
 #include "interop/compile.h"
@@ -15,30 +15,22 @@
 
 CTU_CALLBACKS(kCallbacks, obr);
 
-static void *obr_preparse(language_runtime_t *runtime)
+static void obr_preparse(language_runtime_t *runtime, void *context)
 {
-    arena_t *arena = lang_get_arena(runtime);
-    logger_t *logger = lang_get_logger(runtime);
-
-    obr_scan_t info = {
-        .logger = logger,
-    };
-
-    return arena_memdup(&info, sizeof(obr_scan_t), arena);
+    obr_scan_t *ctx = context;
+    ctx->logger = runtime->logger;
 }
 
 static void obr_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
 {
     vector_t *modules = tree;
 
-    arena_t *arena = lang_get_arena(runtime);
-
     size_t len = vector_len(modules);
     for (size_t i = 0; i < len; i++)
     {
         obr_t *mod = vector_get(modules, i);
-        compile_unit_t *unit = lang_new_unit(runtime, mod->name, mod, NULL);
-        lang_add_unit(runtime, vector_init(mod->name, arena), unit);
+        compile_unit_t *unit = lang_new_unit(runtime, mod->name, mod);
+        lang_add_unit(runtime, text_view_from(mod->name), unit);
     }
 }
 
@@ -85,18 +77,22 @@ CT_DRIVER_API const language_t kOberonModule = {
     },
 
     .exts = kLangNames,
+
+    .context_size = sizeof(obr_scan_t),
+
     .fn_create = obr_create,
     .fn_destroy = obr_destroy,
 
     .fn_preparse = obr_preparse,
     .fn_postparse = obr_postparse,
+
     .scanner = &kCallbacks,
 
     .fn_passes = {
-        [eStageForwardSymbols] = obr_forward_decls,
-        [eStageCompileImports] = obr_process_imports,
-        [eStageCompileSymbols] = obr_compile_module
+        [ePassForwardDecls] = obr_forward_decls,
+        [ePassImportModules] = obr_process_imports,
+        [ePassCompileDecls] = obr_compile_module
     }
 };
 
-CTU_DRIVER_ENTRY(kOberonModule)
+CT_LANG_EXPORT(kOberonModule)

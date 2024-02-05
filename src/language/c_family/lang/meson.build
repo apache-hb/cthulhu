@@ -11,7 +11,7 @@ src = [
 
 libcc = library('cc', src,
     dependencies : [
-        runtime, interop, scan,
+        broker, interop, scan,
         notify, tree, util, events,
         memory, driver
     ],

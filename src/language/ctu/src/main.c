@@ -31,17 +31,11 @@ static const vector_t *find_mod_path(ctu_t *ast, const char *fp, arena_t *arena)
         : mod_basename(fp, arena);
 }
 
-static void *ctu_preparse(language_runtime_t *runtime)
+static void ctu_preparse(language_runtime_t *runtime, void *context)
 {
-    arena_t *arena = lang_get_arena(runtime);
-    logger_t *logger = lang_get_logger(runtime);
-
-    ctu_scan_t info = {
-        .logger = logger,
-        .attribs = vector_new(4, arena)
-    };
-
-    return arena_memdup(&info, sizeof(ctu_scan_t), arena);
+    ctu_scan_t *ctx = context;
+    ctx->logger = runtime->logger;
+    ctx->attribs = vector_new(4, runtime->arena);
 }
 
 static void ctu_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
@@ -52,9 +46,9 @@ static void ctu_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
 
     const vector_t *path = find_mod_path(ast, scan_path(scan), arena);
 
-    compile_unit_t *ctx = lang_new_unit(runtime, vector_tail(path), ast, NULL);
+    compile_unit_t *ctx = lang_new_unit(runtime, vector_tail(path), ast);
 
-    lang_add_unit(runtime, path, ctx);
+    lang_add_unit(runtime, build_unit_id(path, arena), ctx);
 }
 
 static const diagnostic_t * const kDiagnosticTable[] = {
@@ -99,6 +93,8 @@ CT_DRIVER_API const language_t kCtuModule = {
 
     .exts = kLangNames,
 
+    .context_size = sizeof(ctu_scan_t),
+
     .fn_create = ctu_init,
 
     .fn_preparse = ctu_preparse,
@@ -106,10 +102,10 @@ CT_DRIVER_API const language_t kCtuModule = {
     .scanner = &kCallbacks,
 
     .fn_passes = {
-        [eStageForwardSymbols] = ctu_forward_decls,
-        [eStageCompileImports] = ctu_process_imports,
-        [eStageCompileSymbols] = ctu_compile_module
+        [ePassForwardDecls] = ctu_forward_decls,
+        [ePassImportModules] = ctu_process_imports,
+        [ePassCompileDecls] = ctu_compile_module
     }
 };
 
-CTU_DRIVER_ENTRY(kCtuModule)
+CT_LANG_EXPORT(kCtuModule)

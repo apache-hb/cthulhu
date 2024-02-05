@@ -15,4 +15,4 @@ const language_t kCppModule = {
     },
 };
 
-CTU_DRIVER_ENTRY(kCppModule)
+CT_LANG_EXPORT(kCppModule)

@@ -1,7 +1,7 @@
 #include "base/panic.h"
 #include "config/config.h"
 #include "core/macros.h"
-#include "cthulhu/runtime/interface.h"
+#include "cthulhu/broker/broker.h"
 #include "cthulhu/events/events.h"
 #include "setup/setup.h"
 #include "io/console.h"
@@ -10,12 +10,13 @@
 #include "std/str.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
-#include "support/langs.h"
+#include "support/loader.h"
 #include "argparse/argparse.h"
 #include "arena/arena.h"
 
 #include "memory/memory.h"
 
+#if 0
 static const version_info_t kToolVersion = {
     .license = "GPLv3",
     .author = "Elliot Haisley",
@@ -73,7 +74,7 @@ typedef struct tool_t
     default_options_t m_options;
 } tool_t;
 
-static tool_t make_config(arena_t *arena, langs_t langs)
+static tool_t make_config(loader_t *loader, arena_t *arena)
 {
     cfg_group_t *root = config_root(&kGroupInfo, arena);
 
@@ -232,8 +233,9 @@ int main(int argc, const char **argv)
     arena_t *arena = get_global_arena();
     io_t *io = io_stdout();
 
-    langs_t langs = get_langs();
-    tool_t tool = make_config(arena, langs);
+
+    loader_t *loader = loader_new(arena);
+    tool_t tool = make_config(loader, arena);
 
     tool_config_t config = {
         .arena = arena,
@@ -371,4 +373,12 @@ int main(int argc, const char **argv)
     }
 
     io_close(io);
+}
+#endif
+
+int main(void)
+{
+    setup_global();
+
+    NEVER("unimplemented diagnostic tool");
 }

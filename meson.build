@@ -35,6 +35,7 @@ target = target_machine.system()
 opt_paranoid = get_option('paranoid').disable_auto_if(is_release)
 opt_analyze = get_option('analyze').disable_auto_if(meson.is_subproject())
 win32_trickery = get_option('win32_trickery')
+module_loader = get_option('module_loader')
 trace_time = get_option('trace_time').disable_auto_if(meson.is_subproject())
 
 # disable unit tests if we are a subproject or release build
@@ -245,9 +246,9 @@ parse = generator(bison,
 
 driver_summary = {}
 langs = {}
-interfaces = {}
 plugins = {}
 targets = {}
+frontends = {}
 
 setargv = []
 if cc.get_id() == 'msvc'
@@ -318,7 +319,7 @@ common_deps = [
 
 runtime_deps = [
     memory, events, tree, ssa,
-    util, emit, runtime, check
+    util, emit, broker, check
 ]
 
 pkg_common = pkgconfig.generate(
@@ -348,6 +349,10 @@ build_summary = {
         'Bison': bison,
         'Win32 trickery': win32_trickery.allowed(),
         'Compile time tracing': trace_time.enabled(),
+        'Module loaders': module_loader,
+        'Unit tests': unit_tests,
+        'Driver tests': driver_tests,
+        'Doxygen': doxygen
     },
     'Targets': {
         'C Family': target_cfamily.allowed(),
@@ -369,23 +374,12 @@ build_summary = {
         'JVM bytecode': lang_jvm.allowed(),
         'Example': lang_example.allowed()
     },
-    'GUI Frontend': {
-        'Enabled': frontend_gui.allowed(),
-        'Backend': 'd3d12+win32'
-    },
-    'Testing': {
-        'Unit tests': unit_tests,
-        'Driver tests': driver_tests
-    },
     'Tools': {
         'Notify': tool_notify.allowed(),
         'Diagnostics': tool_diagnostic.allowed(),
         'Display': tool_display.allowed(),
         'Error': tool_error.allowed(),
         'Reflect': tool_reflect.allowed()
-    },
-    'Documentation': {
-        'Doxygen': doxygen
     }
 }
 

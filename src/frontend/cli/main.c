@@ -1,9 +1,10 @@
+#include "base/panic.h"
 #include "config/config.h"
 #include "setup/memory.h"
 #include "format/colour.h"
 #include "cmd.h"
 
-#include "cthulhu/runtime/interface.h"
+#include "cthulhu/broker/broker.h"
 #include "cthulhu/events/events.h"
 #include "cthulhu/check/check.h"
 #include "io/console.h"
@@ -27,8 +28,9 @@
 #include "cthulhu/emit/emit.h"
 
 #include "core/macros.h"
-#include "support/langs.h"
+#include "support/loader.h"
 
+#if 0
 static const version_info_t kToolVersion = {
     .license = "GPLv3",
     .desc = "Cthulhu Compiler Collection CLI",
@@ -36,10 +38,23 @@ static const version_info_t kToolVersion = {
     .version = CT_NEW_VERSION(0, 0, 3),
 };
 
-static void parse_source(lifetime_t *lifetime, const char *path, const node_t *node)
+static const frontend_t kFrontendInfo = {
+    .info = {
+        .id = "frontend-cli",
+        .name = "Cthulhu CLI",
+        .version = {
+            .license = "GPLv3",
+            .desc = "Cthulhu Compiler Collection CLI",
+            .author = "Elliot Haisley",
+            .version = CT_NEW_VERSION(0, 0, 3),
+        },
+    }
+};
+
+static void parse_source(broker_t *broker, const char *path, const node_t *node)
 {
-    logger_t *reports = lifetime_get_logger(lifetime);
-    arena_t *arena = lifetime_get_arena(lifetime);
+    logger_t *reports = broker_get_logger(broker);
+    arena_t *arena = broker_get_arena(broker);
     const char *ext = str_ext(path, arena);
     if (ext == NULL)
     {
@@ -48,7 +63,7 @@ static void parse_source(lifetime_t *lifetime, const char *path, const node_t *n
         return;
     }
 
-    const language_t *lang = lifetime_get_language(lifetime, ext);
+    const language_t *lang = lifetime_get_language(runtime, ext);
     if (lang == NULL)
     {
         const char *basepath = str_filename(path, arena);
@@ -69,7 +84,7 @@ static void parse_source(lifetime_t *lifetime, const char *path, const node_t *n
         return;
     }
 
-    lifetime_parse(lifetime, lang, io);
+    broker_parse(broker, runtime, lang, io);
 }
 
 static int check_reports(logger_t *logger, report_config_t config, const char *title)
@@ -100,15 +115,14 @@ int main(int argc, const char **argv)
     setup_global();
 
     arena_t *arena = ctu_default_alloc();
-    mediator_t *mediator = mediator_new(arena);
-    lifetime_t *lifetime = lifetime_new(mediator, arena);
-    logger_t *reports = lifetime_get_logger(lifetime);
-    node_t *node = node_builtin("cli", arena);
+    broker_t *broker = broker_new(&kFrontendInfo, arena);
+    logger_t *reports = broker_get_logger(broker);
+    const node_t *node = broker_get_node(broker);
 
     langs_t langs = get_langs();
     for (size_t i = 0; i < langs.size; i++)
     {
-        lifetime_add_language(lifetime, langs.langs[i]);
+        broker_add_language(broker, langs.langs[i]);
     }
 
     io_t *con = io_stdout();
@@ -164,7 +178,7 @@ int main(int argc, const char **argv)
     for (size_t i = 0; i < total_sources; i++)
     {
         const char *path = vector_get(paths, i);
-        parse_source(lifetime, path, node);
+        parse_source(broker, path, node);
     }
 
     CHECK_LOG(reports, "parsing sources");
@@ -243,4 +257,12 @@ int main(int argc, const char **argv)
     }
 
     CHECK_LOG(reports, "writing output files");
+}
+#endif
+
+int main(void)
+{
+    setup_global();
+
+    NEVER("unimplemented");
 }

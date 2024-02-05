@@ -29,12 +29,8 @@ static void apply_callbacks(scan_t *scan, const cfg_field_t *param, const void *
     for (size_t i = 0; i < len; i++)
     {
         ap_callback_t *cb = vector_get(all, i);
-        ap_event_result_t result = cb->callback(self, param, value, cb->data);
-
-        if (result == eEventHandled)
-        {
+        if (cb->callback(self, param, value, cb->data))
             return;
-        }
     }
 }
 

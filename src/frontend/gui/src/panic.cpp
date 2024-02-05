@@ -2,7 +2,7 @@
 
 #include "backtrace/backtrace.h"
 
-#include "cthulhu/runtime/interface.h"
+#include "cthulhu/broker/broker.h"
 #include "memory/memory.h"
 #include "std/str.h"
 
@@ -67,9 +67,9 @@ CompileError ed::run_compile(CompileInfo& info)
         return error;
     }
 
-    for (size_t stage = 0; stage < eStageTotal; stage++)
+    for (size_t stage = 0; stage < ePassCount; stage++)
     {
-        lifetime_run_stage(info.lifetime, compile_stage_t(stage));
+        broker_run_pass(info.broker, broker_pass_t(stage));
         if (!info.check_reports())
         {
             CompileError error = {
@@ -79,7 +79,7 @@ CompileError ed::run_compile(CompileInfo& info)
         }
     }
 
-    lifetime_resolve(info.lifetime);
+    broker_resolve(info.broker);
     if (!info.check_reports())
     {
         CompileError error = {

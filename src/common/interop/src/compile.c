@@ -29,20 +29,20 @@ parse_result_t scan_buffer(scan_t *extra, const scan_callbacks_t *callbacks)
     err = callbacks->init(extra, &scanner);
     if (err != 0)
     {
-        return parse_error(eParseInitFailed, err);
+        return parse_error(eParseInitError, err);
     }
 
     text_view_t text = scan_source(extra);
     state = callbacks->scan(text.text, text.length, scanner);
     if (state == NULL)
     {
-        return parse_error(eParseScanFailed, err);
+        return parse_error(eParseScanError, err);
     }
 
     err = callbacks->parse(scanner, extra);
     if (err != 0)
     {
-        return parse_error(eParseFailed, err);
+        return parse_error(eParseReject, err);
     }
 
     callbacks->destroy_buffer(state, scanner);

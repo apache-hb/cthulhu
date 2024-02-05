@@ -118,7 +118,7 @@ tree_t *obr_get_void_type(void)
 
 void obr_create(language_runtime_t *runtime, tree_t *root)
 {
-    const node_t *node = lang_get_node(runtime);
+    const node_t *node = tree_get_node(root);
     gTypeBoolean = tree_type_bool(node, "BOOLEAN");
     gTypeChar = tree_type_digit(node, "CHAR", eDigitChar, eSignSigned);
     gTypeShort = tree_type_digit(node, "SHORTINT", eDigitShort, eSignSigned);
@@ -132,13 +132,4 @@ void obr_create(language_runtime_t *runtime, tree_t *root)
     obr_add_decl(root, eObrTagTypes, "INTEGER", gTypeInteger);
     obr_add_decl(root, eObrTagTypes, "LONGINT", gTypeLong);
     obr_add_decl(root, eObrTagTypes, "VOID", gTypeVoid);
-}
-
-vector_t *obr_rt_path(void)
-{
-    arena_t *arena = get_global_arena();
-    vector_t *path = vector_new(2, arena);
-    vector_push(&path, "oberon");
-    vector_push(&path, "lang");
-    return path;
 }

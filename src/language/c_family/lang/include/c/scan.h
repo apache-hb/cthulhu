@@ -9,7 +9,7 @@ typedef struct logger_t logger_t;
 
 typedef struct cc_scan_t
 {
-    logger_t *reports;
+    logger_t *logger;
 } cc_scan_t;
 
 cc_scan_t *cc_scan_context(scan_t *scan);

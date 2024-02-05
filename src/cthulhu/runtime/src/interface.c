@@ -169,15 +169,15 @@ static bool parse_failed(logger_t *reports, const char *path, parse_result_t res
 
     switch (result.result)
     {
-    case eParseInitFailed:
+    case eParseInitError:
         msg_notify(reports, &kEvent_ParseInitFailed, node_new(scan, kNowhere), "failed to init parser %s: %d", path, result.error);
         return true;
-    case eParseScanFailed:
+    case eParseScanError:
         msg_notify(reports, &kEvent_ScanFailed, node_new(scan, kNowhere), "failed to scan %s: %d", path, result.error);
         return true;
 
     // the driver will reject the file with errors, no need to clutter the output
-    case eParseFailed:
+    case eParseReject:
         return true;
 
     default:

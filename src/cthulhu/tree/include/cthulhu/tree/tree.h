@@ -42,9 +42,6 @@ typedef enum sema_tags_t {
     // all the modules in this scope
     eSemaModules,
 
-    // all the attributes in this scope
-    eSemaAttribs,
-
     eSemaTotal
 } sema_tags_t;
 

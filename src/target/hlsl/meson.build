@@ -9,5 +9,6 @@ libtarget_hlsl = library('target_hlsl', src,
 targets += {
     'hlsl': {
         'dep': declare_dependency(link_with : libtarget_hlsl),
+        'mod': 'kTargetHlsl'
     }
 }

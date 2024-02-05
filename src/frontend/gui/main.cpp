@@ -8,13 +8,12 @@
 
 #include "core/macros.h"
 
-#include "cthulhu/runtime/interface.h"
-
 #include "editor/panic.hpp"
 
 #include "config/config.h"
 
 #include "imgui.h"
+#include "support/loader.h"
 
 static const version_info_t kVersionInfo = {
     .license = "GPLv3",
@@ -69,8 +68,8 @@ public:
 class CompileRun : public ed::CompileInfo
 {
 public:
-    CompileRun(mediator_t *mediator, const char *name)
-        : CompileInfo(mediator, name)
+    CompileRun(loader_t *loader, const char *name)
+        : CompileInfo(loader, name)
     {
         init_config();
     }
@@ -300,8 +299,10 @@ class EditorUi
 public:
     EditorUi()
     {
-        mediator = mediator_new(&global);
+        loader = loader_new(&global);
     }
+
+    loader_t *loader = nullptr;
 
     bool show_demo_window = false;
     std::vector<CompileRun> compile_runs;
@@ -309,8 +310,6 @@ public:
     VersionInfo version_info{ kVersionInfo };
 
     ed::TraceArena global{ "global", ed::TraceArena::eDrawTree };
-
-    mediator_t *mediator = nullptr;
 
     void draw_windows()
     {
@@ -449,7 +448,7 @@ private:
                 }
                 else
                 {
-                    compile_runs.emplace_back(mediator, compile_name);
+                    compile_runs.emplace_back(loader, compile_name);
                 }
             }
 

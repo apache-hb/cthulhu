@@ -70,10 +70,17 @@ typedef struct scan_callbacks_t
 
 typedef enum parse_error_t
 {
+    /// @brief parse was successful
     eParseOk,
-    eParseInitFailed,
-    eParseScanFailed,
-    eParseFailed,
+
+    /// @brief error initializing the scanner internals (our fault)
+    eParseInitError,
+
+    /// @brief entered invalid state during scanning (our fault)
+    eParseScanError,
+
+    /// @brief failed due to invalid input (users fault)
+    eParseReject,
 
     eParseCount
 } parse_error_t;

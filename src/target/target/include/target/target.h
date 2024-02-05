@@ -48,12 +48,6 @@ typedef struct emit_t
     file_layout_t layout;
 } emit_t;
 
-#if CTU_BUILD_SHARED
-#   define CTU_TARGET_ENTRY(mod) CT_TARGET_API const target_t *target_main(void) { return &mod; }
-#else
-#   define CTU_TARGET_ENTRY(mod)
-#endif
-
 /// @}
 
 CT_END_API

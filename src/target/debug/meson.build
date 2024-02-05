@@ -9,5 +9,6 @@ libtarget_debug = library('target_debug', src,
 targets += {
     'debug': {
         'dep': declare_dependency(link_with : libtarget_debug),
+        'mod': 'kTargetDebug'
     }
 }

@@ -1,0 +1,16 @@
+#include "enum_modules.h"
+
+#include <string.h>
+
+@EXTERNS@
+
+static_modules_t get_static_modules(void)
+{
+    static_modules_t langs = {
+        .langs = { @LANGS@ },
+        .plugins = { @PLUGINS@ },
+        .targets = { @TARGETS@ },
+    };
+
+    return langs;
+}

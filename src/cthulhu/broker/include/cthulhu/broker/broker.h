@@ -38,6 +38,18 @@ typedef struct compile_unit_t compile_unit_t;
 typedef struct plugin_runtime_t plugin_runtime_t;
 typedef struct target_runtime_t target_runtime_t;
 
+/// @brief the name of a module
+/// to represent the name `java.lang` use `CT_TEXT_VIEW("java\0lang")
+typedef text_view_t unit_id_t;
+
+typedef enum broker_pass_t
+{
+#define BROKER_PASS(ID, STR) ID,
+#include "broker.def"
+
+    ePassCount
+} broker_pass_t;
+
 /// @brief stages of compilation
 typedef enum broker_stage_t
 {
@@ -55,6 +67,14 @@ typedef enum broker_event_t
 
     eEventCount
 } broker_event_t;
+
+typedef enum broker_arena_t
+{
+#define BROKER_ARENA(ID, STR) ID,
+#include "broker.def"
+
+    eArenaCount
+} broker_arena_t;
 
 /// @brief common information about anything the broker supports
 typedef struct module_info_t
@@ -79,15 +99,20 @@ typedef void (*language_pass_t)(language_runtime_t *runtime, compile_unit_t *uni
 typedef void (*language_create_t)(language_runtime_t *runtime, tree_t *root);
 typedef void (*language_destroy_t)(language_runtime_t *runtime);
 
-typedef void *(*language_preparse_t)(language_runtime_t *runtime);
+typedef void (*language_preparse_t)(language_runtime_t *runtime, void *context);
 typedef void (*language_postparse_t)(language_runtime_t *runtime, scan_t *scan, void *ast);
 
 typedef struct language_builtins_t
 {
-    text_view_t name;
-    const size_t *decls;
-    size_t length;
-} language_builtins_t;
+    /// @brief the name of the builtin module
+    unit_id_t name;
+
+    /// @brief passthrough decl sizes for the builtin module
+    FIELD_SIZE(length) const size_t *decls;
+
+    /// @brief size of decls
+    FIELD_RANGE(>=, eSemaTotal) size_t length;
+} language_info_t;
 
 /// @brief a language driver support capabilities
 typedef struct language_t
@@ -96,16 +121,27 @@ typedef struct language_t
     module_info_t info;
 
     /// @brief builtin module configuration
-    language_builtins_t builtin;
+    language_info_t builtin;
 
     /// @brief the file extensions this language can parse
     /// @note this is a null terminated array
     const char * const *exts;
 
+    /// @brief the size of the scan context for this language
+    size_t context_size;
+
+    /// @brief called once at startup
     language_create_t fn_create;
+
+    /// @brief called at shutdown
     language_destroy_t fn_destroy;
 
+    /// @brief called before a file is parsed
+    /// should return a pointer to a context that will be put into the scanner
     language_preparse_t fn_preparse;
+
+    /// @brief called after a file is parsed
+    /// should produce translation units from a scanned ast
     language_postparse_t fn_postparse;
 
     /// @brief callbacks for the parser
@@ -128,15 +164,27 @@ typedef struct event_list_t
     size_t count;
 } event_list_t;
 
+typedef void (*plugin_create_t)(plugin_runtime_t *runtime);
+typedef void (*plugin_destroy_t)(plugin_runtime_t *runtime);
+
 /// @brief plugin support capabilities
 typedef struct plugin_t
 {
     /// @brief information about the plugin
     module_info_t info;
 
+    /// @brief called once at startup
+    plugin_create_t fn_create;
+
+    /// @brief called at shutdown
+    plugin_destroy_t fn_destroy;
+
     /// @brief the events this plugin is interested in
     event_list_t events;
 } plugin_t;
+
+typedef void (*target_create_t)(target_runtime_t *runtime);
+typedef void (*target_destroy_t)(target_runtime_t *runtime);
 
 /// @brief tree output generation
 typedef void (*target_tree_t)(target_runtime_t *runtime, tree_t *tree);
@@ -149,6 +197,12 @@ typedef struct target_t
 {
     /// @brief information about the target
     module_info_t info;
+
+    /// @brief called once at startup
+    target_create_t fn_create;
+
+    /// @brief called at shutdown
+    target_destroy_t fn_destroy;
 
     /// @brief generate from the tree form
     target_tree_t fn_tree;
@@ -164,42 +218,91 @@ typedef struct frontend_t
     module_info_t info;
 } frontend_t;
 
+///
+/// runtimes
+///
+
+typedef struct language_runtime_t
+{
+    const language_t *info;
+    broker_t *broker;
+
+    /// @brief memory arena
+    arena_t *arena;
+
+    /// @brief logger
+    logger_t *logger;
+
+    /// @brief the builtins module for this language
+    tree_t *root;
+} language_runtime_t;
+
+typedef struct compile_unit_t
+{
+    /// @brief the language that this originated from
+    language_runtime_t *lang;
+
+    /// @brief the name of the unit
+    const char *name;
+
+    /// @brief the ast for this unit
+    /// is NULL if this is a builtin/precompiled unit
+    void *ast;
+
+    /// @brief the tree for this unit
+    /// is NULL if the unit has not been forward declared yet
+    tree_t *tree;
+} compile_unit_t;
+
+typedef struct plugin_runtime_t
+{
+    const plugin_t *info;
+} plugin_runtime_t;
+
+typedef struct target_runtime_t
+{
+    const target_t *info;
+} target_runtime_t;
+
 /// broker api
 /// should only really be called by the frontend
 
 RET_NOTNULL
 CT_BROKER_API broker_t *broker_new(IN_NOTNULL const frontend_t *frontend, IN_NOTNULL arena_t *arena);
 
-CT_BROKER_API void broker_add_languages(IN_NOTNULL broker_t *broker, IN_NOTNULL const language_t *lang, size_t count);
-CT_BROKER_API void broker_add_plugins(IN_NOTNULL broker_t *broker, IN_NOTNULL const plugin_t *plugin, size_t count);
-CT_BROKER_API void broker_add_targets(IN_NOTNULL broker_t *broker, IN_NOTNULL const target_t *target, size_t count);
+CT_BROKER_API language_runtime_t *broker_add_language(IN_NOTNULL broker_t *broker, IN_NOTNULL const language_t *lang);
+CT_BROKER_API plugin_runtime_t *broker_add_plugin(IN_NOTNULL broker_t *broker, IN_NOTNULL const plugin_t *plugin);
+CT_BROKER_API target_runtime_t *broker_add_target(IN_NOTNULL broker_t *broker, IN_NOTNULL const target_t *target);
 
-CT_BROKER_API void broker_create_modules(IN_NOTNULL broker_t *broker);
-CT_BROKER_API void broker_destroy_modules(IN_NOTNULL broker_t *broker);
+CT_BROKER_API void broker_init(IN_NOTNULL broker_t *broker);
+CT_BROKER_API void broker_deinit(IN_NOTNULL broker_t *broker);
 
-CT_BROKER_API void broker_parse(IN_NOTNULL broker_t *broker, IN_NOTNULL const char *ext, IN_NOTNULL io_t *io);
+CT_BROKER_API compile_unit_t *broker_get_unit(IN_NOTNULL broker_t *broker, unit_id_t id);
 
-CT_BROKER_API void broker_run_pass(IN_NOTNULL broker_t *broker, broker_stage_t stage);
+CT_BROKER_API void broker_parse(IN_NOTNULL language_runtime_t *runtime, IN_NOTNULL io_t *io);
+
+CT_BROKER_API void broker_run_pass(IN_NOTNULL broker_t *broker, broker_pass_t pass);
 
 CT_BROKER_API void broker_resolve(IN_NOTNULL broker_t *broker);
 
+CT_BROKER_API logger_t *broker_get_logger(IN_NOTNULL broker_t *broker);
+CT_BROKER_API const node_t *broker_get_node(IN_NOTNULL broker_t *broker);
+CT_BROKER_API arena_t *broker_get_arena(IN_NOTNULL broker_t *broker);
+
+/// @brief get all the modules in the broker
+/// this does not include the root module
+CT_BROKER_API vector_t *broker_get_modules(IN_NOTNULL broker_t *broker);
+
 /// all runtime apis
 
-CT_BROKER_API logger_t *lang_get_logger(IN_NOTNULL language_runtime_t *runtime);
-CT_BROKER_API arena_t *lang_get_arena(IN_NOTNULL language_runtime_t *runtime);
-CT_BROKER_API tree_t *lang_get_root(IN_NOTNULL language_runtime_t *runtime);
-CT_BROKER_API const node_t *lang_get_node(IN_NOTNULL language_runtime_t *runtime);
-CT_BROKER_API tree_cookie_t *lang_get_cookie(IN_NOTNULL language_runtime_t *runtime);
+CT_BROKER_API compile_unit_t *lang_new_unit(IN_NOTNULL language_runtime_t *runtime, IN_STRING const char *name, void *ast);
+CT_BROKER_API void lang_add_unit(IN_NOTNULL language_runtime_t *runtime, unit_id_t id, IN_NOTNULL compile_unit_t *unit);
+CT_BROKER_API compile_unit_t *lang_get_unit(IN_NOTNULL language_runtime_t *runtime, unit_id_t id);
 
-CT_BROKER_API compile_unit_t *lang_new_unit(IN_NOTNULL language_runtime_t *runtime, const char *name, void *ast, tree_t *tree);
-CT_BROKER_API compile_unit_t *lang_new_compiled(IN_NOTNULL language_runtime_t *runtime, tree_t *tree);
-CT_BROKER_API void lang_add_unit(IN_NOTNULL language_runtime_t *runtime, const vector_t *path, IN_NOTNULL compile_unit_t *unit);
-CT_BROKER_API compile_unit_t *lang_get_unit(IN_NOTNULL language_runtime_t *runtime, IN_NOTNULL const vector_t *path);
-
-CT_BROKER_API void unit_update(IN_NOTNULL compile_unit_t *unit, void *ast, tree_t *tree);
+CT_BROKER_API void unit_update(IN_NOTNULL compile_unit_t *unit, IN_NOTNULL void *ast, IN_NOTNULL tree_t *tree);
 CT_BROKER_API void *unit_get_ast(IN_NOTNULL compile_unit_t *unit);
-CT_BROKER_API tree_t *unit_get_tree(IN_NOTNULL compile_unit_t *unit);
-CT_BROKER_API const char *unit_get_name(IN_NOTNULL compile_unit_t *unit);
+
+CT_BROKER_API text_view_t build_unit_id(IN_NOTNULL const vector_t *parts, IN_NOTNULL arena_t *arena);
 
 /// all plugin apis
 
@@ -210,6 +313,11 @@ CT_BROKER_API arena_t *plugin_get_arena(IN_NOTNULL plugin_runtime_t *runtime);
 
 CT_BROKER_API logger_t *target_get_logger(IN_NOTNULL target_runtime_t *runtime);
 CT_BROKER_API arena_t *target_get_arena(IN_NOTNULL target_runtime_t *runtime);
+
+/// extra stuff
+
+RET_NOTNULL
+CT_BROKER_API const char *broker_pass_name(IN_RANGE(<, ePassCount) broker_pass_t pass);
 
 /// @}
 

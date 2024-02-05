@@ -167,10 +167,11 @@ TREE_KIND(eTreeError,   "error",        eTagName | eTagHasType) ///< an error me
 #   define DIGIT_KIND(ID, STR)
 #endif
 
-DIGIT_KIND(eDigitChar,  "char")
-DIGIT_KIND(eDigitShort, "short")
-DIGIT_KIND(eDigitInt,   "int")
-DIGIT_KIND(eDigitLong,  "long")
+DIGIT_KIND(eDigitChar,     "char")
+DIGIT_KIND(eDigitShort,    "short")
+DIGIT_KIND(eDigitInt,      "int")
+DIGIT_KIND(eDigitLong,     "long")
+DIGIT_KIND(eDigitLongLong, "longlong")
 
 DIGIT_KIND(eDigitPtr,  "intptr")
 DIGIT_KIND(eDigitSize, "intsize")

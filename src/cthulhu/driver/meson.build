@@ -8,5 +8,6 @@ driver_include = include_directories('.', 'include')
 
 driver = declare_dependency(
     compile_args : [ '-DCT_DRIVER_BUILD=1' ],
-    include_directories : [ driver_include ]
+    include_directories : [ driver_include ],
+    dependencies : [ core, broker ]
 )

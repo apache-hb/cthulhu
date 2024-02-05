@@ -153,8 +153,8 @@ static tree_storage_t get_mutable_storage(const tree_t *type)
 
 void pl0_init(language_runtime_t *runtime, tree_t *root)
 {
-    const node_t *node = lang_get_node(runtime);
-    arena_t *arena = lang_get_arena(runtime);
+    const node_t *node = tree_get_node(root);
+    arena_t *arena = runtime->arena;
 
     gIntType = tree_type_digit(node, "integer", eDigitInt, eSignSigned);
     gCharType = tree_type_digit(node, "char", eDigitChar, eSignSigned);
@@ -470,18 +470,14 @@ typedef struct {
 
 void pl0_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
 {
-    logger_t *reports = lang_get_logger(runtime);
-    tree_cookie_t *cookie = lang_get_cookie(runtime);
-    arena_t *arena = lang_get_arena(runtime);
+    pl0_t *ast = unit_get_ast(unit);
+    size_t const_count = vector_len(ast->consts);
+    size_t global_count = vector_len(ast->globals);
+    size_t proc_count = vector_len(ast->procs);
 
-    pl0_t *root = unit_get_ast(unit);
-    size_t const_count = vector_len(root->consts);
-    size_t global_count = vector_len(root->globals);
-    size_t proc_count = vector_len(root->procs);
-
-    const char *id = vector_len(root->mod) > 0
-        ? vector_tail(root->mod)
-        : unit_get_name(unit);
+    const char *id = vector_len(ast->mod) > 0
+        ? vector_tail(ast->mod)
+        : unit->name;
 
     size_t sizes[ePl0TagTotal] = {
         [ePl0TagValues] = const_count + global_count,
@@ -490,17 +486,17 @@ void pl0_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
         [ePl0TagImportedProcs] = 64
     };
 
-    tree_t *sema = tree_module_root(reports, cookie, root->node, id, ePl0TagTotal, sizes, arena);
+    tree_t *root = tree_module(runtime->root, ast->node, id, ePl0TagTotal, sizes);
 
     const tree_storage_t const_storage = get_const_storage(gIntType);
 
     // forward declare everything
     for (size_t i = 0; i < const_count; i++)
     {
-        pl0_t *it = vector_get(root->consts, i);
+        pl0_t *it = vector_get(ast->consts, i);
 
         tree_resolve_info_t resolve = {
-            .sema = sema,
+            .sema = root,
             .user = it,
             .fn_resolve = resolve_global
         };
@@ -509,15 +505,15 @@ void pl0_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
         tree_set_storage(tree, const_storage);
         tree_set_attrib(tree, &kExportAttrib);
 
-        set_var(sema, ePl0TagValues, it->name, tree);
+        set_var(root, ePl0TagValues, it->name, tree);
     }
 
     for (size_t i = 0; i < global_count; i++)
     {
-        pl0_t *it = vector_get(root->globals, i);
+        pl0_t *it = vector_get(ast->globals, i);
 
         tree_resolve_info_t resolve = {
-            .sema = sema,
+            .sema = root,
             .user = it,
             .fn_resolve = resolve_global
         };
@@ -526,16 +522,16 @@ void pl0_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
         tree_set_storage(tree, const_storage);
         tree_set_attrib(tree, &kExportAttrib);
 
-        set_var(sema, ePl0TagValues, it->name, tree);
+        set_var(root, ePl0TagValues, it->name, tree);
     }
 
     for (size_t i = 0; i < proc_count; i++)
     {
-        pl0_t *it = vector_get(root->procs, i);
+        pl0_t *it = vector_get(ast->procs, i);
 
         tree_t *signature = tree_type_closure(it->node, it->name, gVoidType, &kEmptyVector, eArityFixed);
         tree_resolve_info_t resolve = {
-            .sema = sema,
+            .sema = root,
             .user = it,
             .fn_resolve = resolve_proc
         };
@@ -543,59 +539,61 @@ void pl0_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
         tree_t *tree = tree_open_function(it->node, it->name, signature, resolve);
         tree_set_attrib(tree, &kExportAttrib);
 
-        set_proc(sema, ePl0TagProcs, it->name, tree);
+        set_proc(root, ePl0TagProcs, it->name, tree);
     }
 
-    unit_update(unit, root, sema);
+    unit_update(unit, ast, root);
 }
 
 void pl0_process_imports(language_runtime_t *runtime, compile_unit_t *unit)
 {
-    arena_t *arena = lang_get_arena(runtime);
-    pl0_t *root = unit_get_ast(unit);
-    tree_t *sema = unit_get_tree(unit);
+    pl0_t *ast = unit_get_ast(unit);
+    arena_t *arena = runtime->arena;
+    tree_t *root = unit->tree;
 
-    size_t import_count = vector_len(root->imports);
+    size_t import_count = vector_len(ast->imports);
     for (size_t i = 0; i < import_count; i++)
     {
-        pl0_t *import_decl = vector_get(root->imports, i);
+        pl0_t *import_decl = vector_get(ast->imports, i);
         CTASSERT(import_decl->type == ePl0Import);
 
-        compile_unit_t *ctx = lang_get_unit(runtime, import_decl->path);
+        unit_id_t id = build_unit_id(import_decl->path, arena);
+        compile_unit_t *imported = lang_get_unit(runtime, id);
 
-        if (ctx == NULL)
+        if (imported == NULL)
         {
-            msg_notify(sema->reports, &kEvent_ImportNotFound, import_decl->node, "cannot import `%s`, failed to find module", str_join(".", import_decl->path, arena));
+            msg_notify(root->reports, &kEvent_ImportNotFound, import_decl->node, "cannot import `%s`, failed to find module", str_join(".", import_decl->path, arena));
             continue;
         }
 
-        tree_t *lib = unit_get_tree(ctx);
-
-        if (lib == sema)
+        if (imported->tree == root)
         {
-            msg_notify(sema->reports, &kEvent_CirclularImport, import_decl->node, "module cannot import itself");
+            msg_notify(root->reports, &kEvent_CirclularImport, import_decl->node, "module cannot import itself");
             continue;
         }
 
-        insert_module(sema, lib);
+        insert_module(root, imported->tree);
     }
 }
 
 void pl0_compile_module(language_runtime_t *runtime, compile_unit_t *unit)
 {
-    pl0_t *root = unit_get_ast(unit);
-    tree_t *mod = unit_get_tree(unit);
+    pl0_t *ast = unit_get_ast(unit);
 
-    if (root->entry != NULL)
+    if (ast->entry != NULL)
     {
-        tree_t *body = sema_stmt(mod, root->entry);
-        vector_push(&body->stmts, tree_stmt_return(root->node, tree_expr_unit(root->node, gVoidType)));
+        tree_t *mod = unit->tree;
+        const char *name = unit->name;
+
+        tree_t *body = sema_stmt(mod, ast->entry);
+        vector_push(&body->stmts, tree_stmt_return(ast->node, tree_expr_unit(ast->node, gVoidType)));
 
         // this is the entry point, we only support cli entry points in pl/0 for now
-        tree_t *signature = tree_type_closure(root->node, tree_get_name(mod), gVoidType, &kEmptyVector, eArityFixed);
-        tree_t *tree = tree_decl_function(root->node, tree_get_name(mod), signature, &kEmptyVector, &kEmptyVector, body);
-        tree_set_attrib(tree, &kEntryAttrib);
+        tree_t *signature = tree_type_closure(ast->node, name, gVoidType, &kEmptyVector, eArityFixed);
+        tree_t *entry = tree_decl_function(ast->node, name, signature, &kEmptyVector, &kEmptyVector, body);
+        tree_set_attrib(entry, &kEntryAttrib);
 
-        set_decl(mod, ePl0TagProcs, tree_get_name(mod), tree); // TODO: this is a hack
+        // TODO: this is a hack until we support anonymous declarations
+        set_decl(mod, ePl0TagProcs, name, entry);
     }
 }

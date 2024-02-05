@@ -1,6 +1,6 @@
 #include "editor/compile.hpp"
 
-#include "cthulhu/runtime/interface.h"
+#include "cthulhu/broker/broker.h"
 
 #include "notify/notify.h"
 
@@ -8,9 +8,29 @@
 
 #include "std/typed/vector.h"
 
-#include "support/langs.h"
+#include "support/support.h"
 
 using namespace ed;
+
+static constexpr frontend_t kEditorInfo = {
+    .info = {
+        .id = "frontend-editor",
+        .name = "Editor GUI",
+        .version = {
+            .license = "GPLv3",
+            .desc = "ImGui based frontend for the Cthulhu Compiler Collection",
+            .author = "Elliot Haisley",
+            .version = CT_NEW_VERSION(1, 0, 2),
+        }
+    }
+};
+
+CompileInfo::CompileInfo(loader_t *loader, const char *name)
+    : name(name)
+    , broker(broker_new(&kEditorInfo, &global))
+    , loader(loader)
+    , sources(&global)
+{ }
 
 /// @brief parse a source file
 ///
@@ -27,7 +47,7 @@ char *CompileInfo::parse_source(size_t index)
         return str_format(&global, "could not determine file extension for '%s'", path);
     }
 
-    const language_t *lang = lifetime_get_language(lifetime, ext);
+    language_runtime_t *lang = support_get_lang(support, ext);
     if (lang == nullptr)
     {
         const char *basepath = str_filename(path, &global);
@@ -36,7 +56,7 @@ char *CompileInfo::parse_source(size_t index)
 
     io_t *io = sources.get_io(index);
 
-    lifetime_parse(lifetime, lang, io);
+    broker_parse(lang, io);
     return nullptr;
 }
 
@@ -46,20 +66,9 @@ void CompileInfo::init_alloc()
     gmp.install_gmp();
 }
 
-void CompileInfo::init_lifetime()
+void CompileInfo::init_support()
 {
-    lifetime = lifetime_new(mediator, &global);
-
-    langs_t langs = get_langs();
-    for (size_t i = 0; i < langs.size; i++)
-    {
-        lifetime_add_language(lifetime, langs.langs[i]);
-    }
-}
-
-void CompileInfo::init_reports()
-{
-    reports = lifetime_get_logger(lifetime);
+    support = support_new(broker, loader, &global);
 }
 
 void CompileInfo::init()
@@ -68,8 +77,7 @@ void CompileInfo::init()
     setup = true;
 
     init_alloc();
-    init_lifetime();
-    init_reports();
+    init_support();
 }
 
 /// @brief check if there are any reports
@@ -78,6 +86,7 @@ void CompileInfo::init()
 /// @retval false if there are reports
 bool CompileInfo::check_reports() const
 {
-    typevec_t *events = logger_get_events(reports);
+    logger_t *logger = broker_get_logger(broker);
+    typevec_t *events = logger_get_events(logger);
     return typevec_len(events) == 0;
 }

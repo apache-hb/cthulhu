@@ -69,11 +69,11 @@ CT_DRIVER_API const language_t kExampleModule = {
     .fn_destroy = ex_destroy,
 
     .fn_passes = {
-        [eStageForwardSymbols] = ex_forward_symbols,
-        [eStageCompileImports] = ex_compile_imports,
-        [eStageCompileTypes] = ex_compile_types,
-        [eStageCompileSymbols] = ex_compile_symbols
+        [ePassForwardDecls] = ex_forward_symbols,
+        [ePassImportModules] = ex_compile_imports,
+        [ePassCompileTypes] = ex_compile_types,
+        [ePassCompileDecls] = ex_compile_symbols
     }
 };
 
-CTU_DRIVER_ENTRY(kExampleModule)
+CT_LANG_EXPORT(kExampleModule)

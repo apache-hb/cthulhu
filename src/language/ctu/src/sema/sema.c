@@ -204,8 +204,8 @@ tree_t *ctu_get_void_type(void) { return gVoidType; }
 
 void ctu_rt_mod(language_runtime_t *runtime, tree_t *root)
 {
-    const node_t *node = lang_get_node(runtime);
-    arena_t *arena = lang_get_arena(runtime);
+    arena_t *arena = runtime->arena;
+    const node_t *node = tree_get_node(root);
 
     gLetter = tree_type_digit(node, "letter", eDigitChar, eSignSigned);
     tree_set_qualifiers(gLetter, eQualConst);

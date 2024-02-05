@@ -310,7 +310,6 @@ typedef struct ssa_symbol_t
 
 typedef struct ssa_module_t {
     const char *name;
-    vector_t *path; ///< vector<string> the path to this module
 
     vector_t *types; ///< vector<ssa_type_t> all types used by this module
     vector_t *globals; ///< vector<ssa_symbol_t> all globals declared/imported/exported by this module
@@ -328,7 +327,7 @@ typedef struct ssa_result_t {
 /// @param arena the arena to allocate in
 ///
 /// @return the compiled modules
-CT_SSA_API ssa_result_t ssa_compile(map_t *mods, arena_t *arena);
+CT_SSA_API ssa_result_t ssa_compile(vector_t *mods, arena_t *arena);
 
 ///
 /// optimization api

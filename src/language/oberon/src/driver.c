@@ -1,4 +1,5 @@
 #include "oberon/driver.h"
+#include "base/util.h"
 #include "cthulhu/broker/broker.h"
 #include "cthulhu/events/events.h"
 #include "oberon/ast.h"
@@ -13,7 +14,7 @@
 
 void obr_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
 {
-    tree_t *root = lang_get_root(runtime);
+    tree_t *root = runtime->root;
     obr_t *ast = unit_get_ast(unit);
     size_t decl_count = vector_len(ast->decls);
 
@@ -38,7 +39,8 @@ void obr_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
     tree_t *init = obr_add_init(sema, ast);
     if (init != NULL)
     {
-        obr_add_decl(sema, eObrTagProcs, init->name, init); // TODO: pick a better name
+        // TODO: pick a better name
+        obr_add_decl(sema, eObrTagProcs, init->name, init);
     }
 
     unit_update(unit, ast, sema);
@@ -47,8 +49,8 @@ void obr_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
 static void import_module(language_runtime_t *runtime, tree_t *sema, obr_t *include)
 {
     CTASSERT(include->kind == eObrImport);
-    arena_t *arena = lang_get_arena(runtime);
-    compile_unit_t *ctx = lang_get_unit(runtime, vector_init(include->symbol, arena));
+    unit_id_t id = text_view_from(include->symbol);
+    compile_unit_t *ctx = lang_get_unit(runtime, id);
 
     if (ctx == NULL)
     {
@@ -56,8 +58,7 @@ static void import_module(language_runtime_t *runtime, tree_t *sema, obr_t *incl
         return;
     }
 
-    tree_t *lib = unit_get_tree(ctx);
-    if (lib == sema)
+    if (ctx->tree == sema)
     {
         msg_notify(sema->reports, &kEvent_CirclularImport, include->node, "module cannot import itself");
         return;
@@ -66,25 +67,24 @@ static void import_module(language_runtime_t *runtime, tree_t *sema, obr_t *incl
     tree_t *old = obr_get_namespace(sema, include->name);
     if (old != NULL)
     {
-        event_builder_t id = evt_symbol_shadowed(sema->reports, include->name, tree_get_node(old), tree_get_node(lib));
+        event_builder_t id = evt_symbol_shadowed(sema->reports, include->name, tree_get_node(old), include->node);
         msg_note(id, "consider using import aliases; eg. `IMPORT my_%s := %s;", include->name, include->symbol);
     }
     else
     {
-        obr_add_decl(sema, eObrTagImports, include->name, lib);
+        obr_add_decl(sema, eObrTagImports, include->name, ctx->tree);
     }
 }
 
 void obr_process_imports(language_runtime_t *runtime, compile_unit_t *unit)
 {
     obr_t *root = unit_get_ast(unit);
-    tree_t *sema = unit_get_tree(unit);
 
     size_t len = vector_len(root->imports);
     for (size_t i = 0; i < len; i++)
     {
         obr_t *import = vector_get(root->imports, i);
-        import_module(runtime, sema, import);
+        import_module(runtime, unit->tree, import);
     }
 }
 

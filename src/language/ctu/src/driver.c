@@ -33,7 +33,6 @@ void ctu_init(language_runtime_t *runtime, tree_t *root)
 void ctu_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
 {
     ctu_t *ast = unit_get_ast(unit);
-    const char *name = unit_get_name(unit);
 
     const vector_t *decls = ast->decls;
     size_t len = vector_len(decls);
@@ -48,7 +47,7 @@ void ctu_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
         [eCtuTagSuffixes] = len,
     };
 
-    tree_t *mod = tree_module(gRootModule, ast->node, name, eCtuTagTotal, sizes);
+    tree_t *mod = tree_module(gRootModule, ast->node, unit->name, eCtuTagTotal, sizes);
 
     for (size_t i = 0; i < len; i++)
     {
@@ -61,11 +60,12 @@ void ctu_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
     unit_update(unit, ast, mod);
 }
 
-static void import_module(language_runtime_t *lifetime, tree_t *sema, ctu_t *include)
+static void import_module(language_runtime_t *runtime, tree_t *sema, ctu_t *include)
 {
     CTASSERT(include->kind == eCtuImport);
-    arena_t *arena = lang_get_arena(lifetime);
-    compile_unit_t *ctx = lang_get_unit(lifetime, include->import_path);
+    arena_t *arena = runtime->arena;
+    unit_id_t id = build_unit_id(include->import_path, arena);
+    compile_unit_t *ctx = lang_get_unit(runtime, id);
 
     if (ctx == NULL)
     {
@@ -73,8 +73,7 @@ static void import_module(language_runtime_t *lifetime, tree_t *sema, ctu_t *inc
         return;
     }
 
-    tree_t *lib = unit_get_tree(ctx);
-    if (lib == sema)
+    if (ctx->tree == sema)
     {
         msg_notify(sema->reports, &kEvent_CirclularImport, include->node, "module cannot import itself");
         return;
@@ -83,7 +82,7 @@ static void import_module(language_runtime_t *lifetime, tree_t *sema, ctu_t *inc
     tree_t *old = ctu_get_namespace(sema, include->name, NULL);
     if (old != NULL)
     {
-        event_builder_t id = evt_symbol_shadowed(sema->reports, include->name, tree_get_node(old), tree_get_node(lib));
+        event_builder_t id = evt_symbol_shadowed(sema->reports, include->name, tree_get_node(old), include->node);
         msg_note(id, "consider using import aliases; eg. `import %s as my_%s`",
             str_join("::", include->import_path, arena),
             include->name
@@ -91,20 +90,19 @@ static void import_module(language_runtime_t *lifetime, tree_t *sema, ctu_t *inc
     }
     else
     {
-        ctu_add_decl(sema, eCtuTagImports, include->name, lib);
+        ctu_add_decl(sema, eCtuTagImports, include->name, ctx->tree);
     }
 }
 
 void ctu_process_imports(language_runtime_t *runtime, compile_unit_t *unit)
 {
     ctu_t *ast = unit_get_ast(unit);
-    tree_t *sema = unit_get_tree(unit);
 
     size_t len = vector_len(ast->imports);
     for (size_t i = 0; i < len; i++)
     {
         ctu_t *it = vector_get(ast->imports, i);
-        import_module(runtime, sema, it);
+        import_module(runtime, unit->tree, it);
     }
 }
 

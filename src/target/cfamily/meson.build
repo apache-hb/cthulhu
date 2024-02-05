@@ -9,5 +9,6 @@ libtarget_cfamily = library('target_cfamily', src,
 targets += {
     'cfamily': {
         'dep': declare_dependency(link_with : libtarget_cfamily),
+        'mod': 'kTargetC'
     }
 }

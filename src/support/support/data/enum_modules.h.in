@@ -1,0 +1,20 @@
+#pragma once
+
+#include "driver/driver.h"
+
+#define CT_LANG_COUNT @LANG_COUNT@
+#define CT_PLUGIN_COUNT @PLUGIN_COUNT@
+#define CT_TARGET_COUNT @TARGET_COUNT@
+
+typedef struct language_t language_t;
+typedef struct plugin_t plugin_t;
+typedef struct target_t target_t;
+
+typedef struct static_modules_t
+{
+    const language_t *langs[CT_LANG_COUNT + 1];
+    const plugin_t *plugins[CT_PLUGIN_COUNT + 1];
+    const target_t *targets[CT_TARGET_COUNT + 1];
+} static_modules_t;
+
+static_modules_t get_static_modules(void);

@@ -70,7 +70,7 @@ to be detected by interfaces each build file must add itself to `langs`
 src = [ 'src/main.c' ]
 
 libexample = library('example', src,
-    dependencies : [ runtime, interop, tree ],
+    dependencies : [ broker, interop, tree ],
     c_args : user_args,
     include_directories : [ 'src' ]
 )

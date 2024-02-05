@@ -17,23 +17,17 @@
 
 CTU_CALLBACKS(kCallbacks, pl0);
 
-static void *pl0_preparse(language_runtime_t *runtime)
+static void pl0_preparse(language_runtime_t *runtime, void *context)
 {
-    arena_t *arena = lang_get_arena(runtime);
-    logger_t *logger = lang_get_logger(runtime);
-
-    pl0_scan_t info = {
-        .logger = logger
-    };
-
-    return arena_memdup(&info, sizeof(pl0_scan_t), arena);
+    pl0_scan_t *info = context;
+    info->logger = runtime->logger;
 }
 
 static void pl0_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
 {
     pl0_t *ast = tree;
     CTASSERT(ast->type == ePl0Module);
-    arena_t *arena = lang_get_arena(runtime);
+    arena_t *arena = runtime->arena;
 
     // TODO: dedup this with pl0_forward_decls
     const char *fp = scan_path(scan);
@@ -41,9 +35,9 @@ static void pl0_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
         ? ast->mod
         : vector_init(str_basename(fp, arena), arena);
 
-    compile_unit_t *unit = lang_new_unit(runtime, vector_tail(path), ast, NULL);
+    compile_unit_t *unit = lang_new_unit(runtime, vector_tail(path), ast);
 
-    lang_add_unit(runtime, path, unit);
+    lang_add_unit(runtime, build_unit_id(path, arena), unit);
 }
 
 static const char *const kLangNames[] = { "pl", "pl0", NULL };
@@ -73,6 +67,8 @@ CT_DRIVER_API const language_t kPl0Module = {
         .length = ePl0TagTotal,
     },
 
+    .context_size = sizeof(pl0_scan_t),
+
     .exts = kLangNames,
 
     .fn_create = pl0_init,
@@ -82,10 +78,10 @@ CT_DRIVER_API const language_t kPl0Module = {
     .scanner = &kCallbacks,
 
     .fn_passes = {
-        [eStageForwardSymbols] = pl0_forward_decls,
-        [eStageCompileImports] = pl0_process_imports,
-        [eStageCompileSymbols] = pl0_compile_module
+        [ePassForwardDecls] = pl0_forward_decls,
+        [ePassImportModules] = pl0_process_imports,
+        [ePassCompileDecls] = pl0_compile_module
     }
 };
 
-CTU_DRIVER_ENTRY(kPl0Module)
+CT_LANG_EXPORT(kPl0Module)

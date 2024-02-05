@@ -668,7 +668,7 @@ static void check_module_valid(check_t *check, const tree_t *mod)
 }
 
 USE_DECL
-void check_tree(logger_t *reports, map_t *mods, arena_t *arena)
+void check_tree(logger_t *reports, vector_t *mods, arena_t *arena)
 {
     CTASSERT(arena != NULL);
     CTASSERT(reports != NULL);
@@ -684,22 +684,10 @@ void check_tree(logger_t *reports, map_t *mods, arena_t *arena)
         .checked_types = set_new(64, kTypeInfoPtr, arena),
     };
 
-    map_iter_t iter = map_iter(mods);
-    const char *name = NULL;
-    tree_t *mod = NULL;
-    while (CTU_MAP_NEXT(&iter, &name, &mod))
+    size_t len = vector_len(mods);
+    for (size_t i = 0; i < len; i++)
     {
-        // TODO: required checks
-        // 0. no nodes are of the wrong type
-        // 1. no identifiers are invalid
-        // 1. only one 1 entry point of each type is present
-        // 2. no types can have infinite size
-        // 3. no global types may have circlic dependencies
-        // 4. make sure all return statements match the return type of a global or function
-        // 5. make sure all operands to nodes are the correct type
-
-        check_module_valid(&check, mod);
-
-        //tree_check(lifetime_get_reports(lifetime), ctx->root);
+        const tree_t *tree = vector_get(mods, i);
+        check_module_valid(&check, tree);
     }
 }

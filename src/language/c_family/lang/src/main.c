@@ -1,43 +1,30 @@
-#include "base/log.h"
-#include "cthulhu/runtime/driver.h"
-#include "interop/compile.h"
+#include "driver/driver.h"
 
+#include "c/sema/sema.h"
 #include "c/driver.h"
 
-#include "core/macros.h"
-#include "arena/arena.h"
-#include "notify/notify.h"
+#include "cthulhu/broker/broker.h"
 
-#include "driver/driver.h"
+#include "interop/compile.h"
+
+#include "core/macros.h"
 
 #include "cc_bison.h" // IWYU pragma: keep
 #include "cc_flex.h" // IWYU pragma: keep
 
 CTU_CALLBACKS(kCallbacks, cc);
 
-static void *cc_preparse(driver_t *handle, scan_t *scan)
+static void cc_preparse(language_runtime_t *runtime, void *context)
 {
-    CT_UNUSED(scan);
-
-    lifetime_t *lifetime = handle_get_lifetime(handle);
-    logger_t *reports = lifetime_get_logger(lifetime);
-    arena_t *arena = lifetime_get_arena(lifetime);
-
-    cc_scan_t it = {
-        .reports = reports,
-    };
-
-    cc_scan_t *ptr = arena_memdup(&it, sizeof(cc_scan_t), arena);
-    return ptr;
+    cc_scan_t *ctx = context;
+    ctx->logger = runtime->logger;
 }
 
-static void cc_postparse(driver_t *handle, scan_t *scan, void *tree)
+static void cc_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
 {
-    CT_UNUSED(handle);
+    CT_UNUSED(runtime);
     CT_UNUSED(scan);
     CT_UNUSED(tree);
-
-    ctu_log("cc_postparse");
 }
 
 static const diagnostic_t * const kDiagnosticTable[] = {
@@ -46,6 +33,13 @@ static const diagnostic_t * const kDiagnosticTable[] = {
 };
 
 static const char *const kLangNames[] = { "c", "h", NULL };
+
+static const size_t kDeclSizes[eCTagTotal] = {
+    [eCTagValues] = 1,
+    [eCTagTypes] = 1,
+    [eCTagProcs] = 1,
+    [eCTagModules] = 1,
+};
 
 CT_DRIVER_API const language_t kCModule = {
     .info = {
@@ -64,14 +58,22 @@ CT_DRIVER_API const language_t kCModule = {
         },
     },
 
+    .builtin = {
+        .name = CT_TEXT_VIEW("cc\0lang"),
+        .decls = kDeclSizes,
+        .length = eCTagTotal,
+    },
+
     .exts = kLangNames,
+
+    .context_size = sizeof(cc_scan_t),
 
     .fn_create = cc_create,
     .fn_destroy = cc_destroy,
 
     .fn_preparse = cc_preparse,
     .fn_postparse = cc_postparse,
-    .parse_callbacks = &kCallbacks,
+    .scanner = &kCallbacks,
 };
 
-CTU_DRIVER_ENTRY(kCModule)
+CT_LANG_EXPORT(kCModule)

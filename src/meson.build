@@ -16,6 +16,8 @@ subdir('target')
 # language drivers
 subdir('language')
 
+subdir('plugins')
+
 # frontend and tool support libraries
 subdir('support')
 

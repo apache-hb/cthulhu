@@ -51,6 +51,9 @@ CT_BASE_API extern const typeinfo_t kTypeInfoString;
 /// this operates on the pointer itself and not the data it points to
 CT_BASE_API extern const typeinfo_t kTypeInfoPtr;
 
+/// @brief type information for a text_view_t
+CT_BASE_API extern const typeinfo_t kTypeInfoText;
+
 /// @}
 
 CT_END_API

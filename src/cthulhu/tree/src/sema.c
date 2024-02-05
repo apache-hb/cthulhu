@@ -58,7 +58,11 @@ void *tree_module_get(tree_t *self, size_t tag, const char *name)
 {
     CTASSERT(name != NULL);
 
+    // its ok to do an early return here and skip checking the parent module
+    // because parent modules will always have <= the tags of the child module
     map_t *map = tree_module_tag(self, tag);
+    if (map == NULL) return NULL;
+
     tree_t *old = map_get(map, name);
     if (old != NULL)
     {
@@ -90,6 +94,10 @@ void *tree_module_set(tree_t *self, size_t tag, const char *name, void *value)
 map_t *tree_module_tag(const tree_t *self, size_t tag)
 {
     TREE_EXPECT(self, eTreeDeclModule);
+
+    size_t len = vector_len(self->tags);
+    if (tag >= len)
+        return NULL;
 
     return vector_get(self->tags, tag);
 }

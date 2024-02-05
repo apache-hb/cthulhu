@@ -1,6 +1,3 @@
-# little driver support library
-subdir('driver')
-
 if lang_cpp.allowed()
     subdir('c_family/pre')
 endif

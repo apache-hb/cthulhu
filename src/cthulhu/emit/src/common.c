@@ -1,6 +1,5 @@
 #include "common.h"
 
-#include "base/util.h"
 #include "std/str.h"
 #include "std/map.h"
 #include "std/vector.h"
@@ -14,24 +13,15 @@
 #include <string.h>
 #include <stdint.h>
 
-static bool check_root_mod(vector_t *path, const char *id)
-{
-    const char *tail = vector_tail(path);
-    return str_equal(tail, id);
-}
-
 char *begin_module(emit_t *emit, fs_t *fs, const ssa_module_t *mod)
 {
     // if the last element of the path and the module name are the same then remove the last element
     // this isnt required to be semanticly correct but it makes the output look nicer
 
-    bool is_root = check_root_mod(mod->path, mod->name);
-    vector_t *vec = vector_clone(mod->path);
+    char *path = str_replace(mod->name, ".", "/", emit->arena);
 
-    if (is_root) { vector_drop(vec); }
-
-    char *path = str_join("/", vec, emit->arena);
-    if (vector_len(vec) > 0)
+    // create a folder if we need one for this module
+    if (str_contains(mod->name, "."))
     {
         fs_dir_create(fs, path);
     }

@@ -1,4 +1,3 @@
-#include "base/util.h"
 #include "common/common.h"
 
 #include "cthulhu/tree/query.h"
@@ -15,24 +14,6 @@
 #include "base/panic.h"
 
 #include <string.h>
-
-static size_t info_text_hash(const void *it)
-{
-    text_view_t *view = (text_view_t*)it;
-    return text_hash(*view);
-}
-
-static bool info_text_equals(const void *lhs, const void *rhs)
-{
-    text_view_t *lhs_view = (text_view_t*)lhs;
-    text_view_t *rhs_view = (text_view_t*)rhs;
-    return text_equal(*lhs_view, *rhs_view);
-}
-
-static const typeinfo_t kTypeInfoText = {
-    .hash = info_text_hash,
-    .equals = info_text_equals,
-};
 
 /// @brief the ssa compilation context
 typedef struct ssa_compile_t
@@ -91,10 +72,6 @@ typedef struct ssa_compile_t
     /// map<ssa_symbol, ssa_module>
     /// TODO: this is stupid
     map_t *module_lookup;
-
-    /// @brief the path to the current module
-    /// used for name mangling. vector<const char *>
-    vector_t *path;
 } ssa_compile_t;
 
 /// @brief loop jump context
@@ -251,11 +228,8 @@ static ssa_symbol_t *intern_string(ssa_compile_t *ssa, const tree_t *tree)
 
 static ssa_module_t *module_create(ssa_compile_t *ssa, const char *name)
 {
-    vector_t *path = vector_clone(ssa->path);
-
     ssa_module_t *mod = ARENA_MALLOC(sizeof(ssa_module_t), name, ssa, ssa->arena);
     mod->name = name;
-    mod->path = path;
 
     mod->globals    = vector_new(32, ssa->arena);
     mod->functions  = vector_new(32, ssa->arena);
@@ -799,7 +773,6 @@ static void forward_module(ssa_compile_t *ssa, const tree_t *tree)
     add_module_types(ssa, mod, tree_module_tag(tree, eSemaTypes));
 
     vector_push(&ssa->modules, mod);
-    vector_push(&ssa->path, (char*)id);
 
     map_t *children = tree_module_tag(tree, eSemaModules);
     map_iter_t iter = map_iter(children);
@@ -809,8 +782,6 @@ static void forward_module(ssa_compile_t *ssa, const tree_t *tree)
 
         forward_module(ssa, entry.value);
     }
-
-    vector_drop(ssa->path);
 }
 
 static void begin_compile(ssa_compile_t *ssa, ssa_symbol_t *symbol)
@@ -867,7 +838,7 @@ void count_modules(ssa_map_sizes_t *sizes, const tree_t *tree)
     }
 }
 
-ssa_map_sizes_t predict_maps(map_t *mods)
+ssa_map_sizes_t predict_maps(vector_t *mods)
 {
     // initialize will small sizes just in case something
     // returns 0
@@ -880,11 +851,11 @@ ssa_map_sizes_t predict_maps(map_t *mods)
         .types = 32,
     };
 
-    map_iter_t iter = map_iter(mods);
-    while (map_has_next(&iter))
+    size_t len = vector_len(mods);
+    for (size_t i = 0; i < len; i++)
     {
-        map_entry_t entry = map_next(&iter);
-        count_modules(&sizes, entry.value);
+        const tree_t *mod = vector_get(mods, i);
+        count_modules(&sizes, mod);
     }
 
     sizes.deps = sizes.functions + sizes.globals;
@@ -892,7 +863,7 @@ ssa_map_sizes_t predict_maps(map_t *mods)
     return sizes;
 }
 
-ssa_result_t ssa_compile(map_t *mods, arena_t *arena)
+ssa_result_t ssa_compile(vector_t *mods, arena_t *arena)
 {
     ssa_map_sizes_t sizes = predict_maps(mods);
 
@@ -915,13 +886,11 @@ ssa_result_t ssa_compile(map_t *mods, arena_t *arena)
         .module_lookup = map_optimal(sizes.deps, kTypeInfoPtr, arena),
     };
 
-    map_iter_t iter = map_iter(mods);
-    while (map_has_next(&iter))
+    size_t len = vector_len(mods);
+    for (size_t i = 0; i < len; i++)
     {
-        map_entry_t entry = map_next(&iter);
-
-        ssa.path = str_split(entry.key, ".", arena);
-        forward_module(&ssa, entry.value);
+        const tree_t *mod = vector_get(mods, i);
+        forward_module(&ssa, mod);
     }
 
     map_iter_t globals = map_iter(ssa.globals);

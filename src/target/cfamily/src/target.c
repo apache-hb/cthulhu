@@ -1,9 +1,8 @@
 #include "cfamily/target.h"
 
-#include "cthulhu/broker/broker.h"
-#include "target/target.h"
+#include "driver/driver.h"
 
-CT_TARGET_API const target_t kTargetC = {
+CT_DRIVER_API const target_t kTargetC = {
     .info = {
         .id = "target-c",
         .name = "C",
@@ -16,4 +15,4 @@ CT_TARGET_API const target_t kTargetC = {
     }
 };
 
-CTU_TARGET_ENTRY(kTargetC)
+CT_TARGET_EXPORT(kTargetC)

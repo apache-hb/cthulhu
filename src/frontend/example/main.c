@@ -4,7 +4,7 @@
 #include "format/notify.h"
 #include "base/log.h"
 #include "cthulhu/events/events.h"
-#include "cthulhu/runtime/interface.h"
+#include "cthulhu/broker/broker.h"
 
 #include "cthulhu/emit/emit.h"
 #include "cthulhu/ssa/ssa.h"
@@ -13,7 +13,7 @@
 #include "io/console.h"
 #include "notify/notify.h"
 #include "scan/node.h"
-#include "support/langs.h"
+#include "support/loader.h"
 
 #include "arena/arena.h"
 
@@ -27,15 +27,22 @@
 #include "io/io.h"
 
 #include "argparse/argparse.h"
-
+#include "base/panic.h"
 #include <stdio.h>
 
-// static const version_info_t kVersion = {
-//     .license = "GPLv3",
-//     .desc = "Example compiler interface",
-//     .author = "Elliot Haisley",
-//     .version = CT_NEW_VERSION(0, 0, 1),
-// };
+#if 0
+static const frontend_t kFrontendInfo = {
+    .info = {
+        .id = "frontend-example",
+        .name = "Example Frontend",
+        .version = {
+            .license = "GPLv3",
+            .desc = "Example compiler frontend",
+            .author = "Elliot Haisley",
+            .version = CT_NEW_VERSION(0, 0, 1),
+        }
+    }
+};
 
 static int check_reports(logger_t *logger, report_config_t config, const char *title)
 {
@@ -81,9 +88,8 @@ int main(int argc, const char **argv)
     ctu_log_update(true);
     arena_t *arena = ctu_default_alloc();
     node_t *node = node_builtin("example-frontend", arena);
-    mediator_t *mediator = mediator_new(arena);
-    lifetime_t *lifetime = lifetime_new(mediator, arena);
-    logger_t *logger = lifetime_get_logger(lifetime);
+    broker_t *broker = broker_new(&kFrontendInfo, arena);
+    loader_t *loader = loader_new(arena);
 
     langs_t langs = get_langs();
     for (size_t i = 0; i < langs.size; i++)
@@ -192,4 +198,12 @@ int main(int argc, const char **argv)
         msg_notify(logger, &kEvent_FailedToWriteOutputFile, node, "failed to sync %s", result.path);
     }
     CHECK_LOG(logger, "syncing output directory");
+}
+#endif
+
+int main(void)
+{
+    setup_global();
+
+    NEVER("unimplemented");
 }

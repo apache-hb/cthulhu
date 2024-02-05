@@ -1,12 +1,47 @@
+#ifndef BROKER_PASS
+#   define BROKER_PASS(ID, STR)
+#endif
+
+BROKER_PASS(ePassForwardDecls, "forward_decls")
+BROKER_PASS(ePassImportModules, "import_modules")
+BROKER_PASS(ePassCompileTypes, "compile_types")
+BROKER_PASS(ePassCompileDecls, "compile_decls")
+
+#undef BROKER_PASS
+
 #ifndef BROKER_STAGE
 #   define BROKER_STAGE(ID, STR)
 #endif
 
-BROKER_STAGE(eStageAddAttributes, "add_attributes")
-BROKER_STAGE(eStageForwardSymbols, "forward_symbols")
-BROKER_STAGE(eStageCompileImports, "compile_imports")
-BROKER_STAGE(eStageCompileTypes, "compile_types")
-BROKER_STAGE(eStageCompileSymbols, "compile_symbols")
+// before language initialization
+BROKER_STAGE(eStageInit, "init")
+
+// before parsing files
+BROKER_STAGE(eStageParse, "parse")
+
+// before semantic analysis
+BROKER_STAGE(eStageSema, "sema")
+
+// before final resolve
+BROKER_STAGE(eStageResolve, "resolve")
+
+// before tree validation
+BROKER_STAGE(eStageCheck, "check")
+
+// before emitting tree IR (may not happen depending on targets)
+BROKER_STAGE(eStageEmitTree, "emit_tree")
+
+// before lowering to SSA
+BROKER_STAGE(eStageLower, "lower")
+
+// before ssa optimization
+BROKER_STAGE(eStageOptimize, "optimize")
+
+// before emitting ssa IR (may not happen depending on targets)
+BROKER_STAGE(eStageEmitSsa, "emit_ssa")
+
+// before deinitialization
+BROKER_STAGE(eStageDeinit, "deinit")
 
 #undef BROKER_STAGE
 
@@ -14,6 +49,23 @@ BROKER_STAGE(eStageCompileSymbols, "compile_symbols")
 #   define BROKER_EVENT(ID, STR)
 #endif
 
+// an attribute has been matched
 BROKER_EVENT(eEventMatchAttrib, "match_attribute")
 
 #undef BROKER_EVENT
+
+#ifndef BROKER_ARENA
+#   define BROKER_ARENA(ID, STR)
+#endif
+
+// arena for language specific asts
+BROKER_ARENA(eBrokerArenaAst, "ast")
+
+// arena for the tree IR produced by a language
+BROKER_ARENA(eBrokerArenaTree, "tree")
+
+// arena for transient allocations that
+// do not need to be persisted
+BROKER_ARENA(eBrokerArenaTransient, "transient")
+
+#undef BROKER_ARENA
