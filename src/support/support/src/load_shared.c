@@ -12,17 +12,15 @@ loaded_module_t load_shared_module(loader_t *loader, module_type_t mask, const c
     CTASSERT(loader != NULL);
     CTASSERT(name != NULL);
 
-    CT_UNUSED(mask);
-
     os_library_t library = { 0 };
     os_error_t error = os_library_open(name, &library);
 
     if (error)
     {
-        return load_error(eLoadLibrary, error);
+        return load_error(eLoadErrorLibrary, error);
     }
 
-    loaded_module_t mod = { .type = eModNone };
+    loaded_module_t mod = { .type = eModNone, .error = eLoadErrorNoEntry };
 
     if (mask & eModLanguage)
     {
@@ -31,6 +29,7 @@ loaded_module_t load_shared_module(loader_t *loader, module_type_t mask, const c
         {
             mod.type |= eModLanguage;
             mod.lang = lang();
+            mod.error = eLoadErrorNone;
         }
     }
 
@@ -41,6 +40,7 @@ loaded_module_t load_shared_module(loader_t *loader, module_type_t mask, const c
         {
             mod.type |= eModTarget;
             mod.target = target();
+            mod.error = eLoadErrorNone;
         }
     }
 
@@ -51,6 +51,7 @@ loaded_module_t load_shared_module(loader_t *loader, module_type_t mask, const c
         {
             mod.type |= eModPlugin;
             mod.plugin = plugin();
+            mod.error = eLoadErrorNone;
         }
     }
 
@@ -65,7 +66,7 @@ loaded_module_t load_shared_module(loader_t *loader, module_type_t mask, const c
     CT_UNUSED(mask);
     CT_UNUSED(name);
 
-    return load_error(eLoadDisabled, 0);
+    return load_error(eLoadErrorDisabled, 0);
 }
 
 #endif

@@ -34,7 +34,7 @@ endif
 if module_loader.contains('shared')
     pl0so = shared_module('pl0', src,
         dependencies : deps,
-        c_args : generated_args,
+        c_args : generated_args + [ '-DCTU_DRIVER_SHARED=1' ],
         include_directories : [ 'src', 'include' ],
         override_options : [ 'unity=off' ]
     )

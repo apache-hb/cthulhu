@@ -44,8 +44,8 @@ endif
 
 if module_loader.contains('shared')
     ctuso = shared_module('ctu', src,
-        c_args : generated_args,
         dependencies : deps,
+        c_args : generated_args + [ '-DCTU_DRIVER_SHARED=1' ],
         include_directories : [ 'src', 'include' ],
         override_options : [ 'unity=off' ]
     )

@@ -17,20 +17,20 @@ typedef const target_t*(*target_main_t)(void);
 #define CT_PLUGIN_ENTRY "plugin_main"
 #define CT_TARGET_ENTRY "target_main"
 
-#if CTU_BUILD_SHARED
-#   define CT_LANG_EXPORT(mod) CT_DRIVER_API const language_t *lang_main(void) { return &mod; }
+#if CTU_DRIVER_SHARED
+#   define CT_LANG_EXPORT(mod) CT_EXPORT const language_t *lang_main(void) { return &mod; }
 #else
 #   define CT_LANG_EXPORT(mod)
 #endif
 
-#if CTU_BUILD_SHARED
-#   define CT_PLUGIN_EXPORT(mod) CT_DRIVER_API const plugin_t *plugin_main(void) { return &mod; }
+#if CTU_DRIVER_SHARED
+#   define CT_PLUGIN_EXPORT(mod) CT_EXPORT const plugin_t *plugin_main(void) { return &mod; }
 #else
 #   define CT_PLUGIN_EXPORT(mod)
 #endif
 
-#if CTU_BUILD_SHARED
-#   define CT_TARGET_EXPORT(mod) CT_DRIVER_API const target_t *target_main(void) { return &mod; }
+#if CTU_DRIVER_SHARED
+#   define CT_TARGET_EXPORT(mod) CT_EXPORT const target_t *target_main(void) { return &mod; }
 #else
 #   define CT_TARGET_EXPORT(mod)
 #endif

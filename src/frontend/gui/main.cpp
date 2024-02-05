@@ -508,8 +508,6 @@ class EditorUi
 
     void draw_module_info()
     {
-        if (!default_modules_loaded) return;
-
         if (!show_module_info) return;
 
         if (ImGui::Begin("Modules", &show_module_info))
@@ -644,6 +642,12 @@ private:
     static constexpr ImGuiWindowFlags kMainFlags = ImGuiWindowFlags_NoDecoration
                                                  | ImGuiWindowFlags_NoMove;
 
+    char module_path[256] = { 0 };
+    int mask = eModNone;
+
+    std::string error;
+    std::string os_error;
+
     void draw_setup_window()
     {
         const ImGuiViewport *viewport = ImGui::GetMainViewport();
@@ -660,6 +664,36 @@ private:
                 {
                     load_default_modules();
                 }
+            }
+
+            ImGui::InputText("Load shared module", module_path, std::size(module_path));
+            ImGui::CheckboxFlags("Language", &mask, eModLanguage);
+            ImGui::SameLine(); ImGui::CheckboxFlags("Plugin", &mask, eModPlugin);
+            ImGui::SameLine(); ImGui::CheckboxFlags("Target", &mask, eModTarget);
+            ImGui::BeginDisabled(mask == eModNone || module_path[0] == '\0');
+            if (ImGui::Button("Load"))
+            {
+                loaded_module_t mod = {};
+                if (support_load_module(support, module_type_t(mask), module_path, &mod))
+                {
+                    add_module(mod);
+                }
+                else
+                {
+                    error = load_error_string(mod.error);
+                    os_error = os_error_string(mod.os, &global);
+                }
+            }
+            ImGui::EndDisabled();
+
+            if (error.length() > 0)
+            {
+                ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "Error: %s", error.c_str());
+            }
+
+            if (os_error.length() > 0)
+            {
+                ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "Error: %s", os_error.c_str());
             }
         }
         ImGui::End();

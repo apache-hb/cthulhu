@@ -15,9 +15,10 @@ LOADER_MODULE(eModPlugin, "plugin", (1 << 2))
 #   define LOADER_ERROR(ID, STR)
 #endif
 
-LOADER_ERROR(eLoadLibrary, "issue loading the library")
-LOADER_ERROR(eLoadNoEntry, "no entry point found")
-LOADER_ERROR(eLoadDisabled, "loader type disabled")
+LOADER_ERROR(eLoadErrorNone, "no error")
+LOADER_ERROR(eLoadErrorLibrary, "issue loading the library")
+LOADER_ERROR(eLoadErrorNoEntry, "no entry point found")
+LOADER_ERROR(eLoadErrorDisabled, "loader type disabled")
 
 #undef LOADER_ERROR
 

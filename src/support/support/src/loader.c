@@ -97,10 +97,14 @@ loaded_module_t load_module(loader_t *loader, module_type_t mask, const char *na
     CTASSERT(loader != NULL);
     CTASSERT(name != NULL);
 
-    loaded_module_t static_mod = load_static_module(loader, mask, name);
     loaded_module_t shared_mod = load_shared_module(loader, mask, name);
+    loaded_module_t static_mod = load_static_module(loader, mask, name);
 
-    loaded_module_t result = { .type = static_mod.type | shared_mod.type };
+    loaded_module_t result = {
+        .type = static_mod.type | shared_mod.type,
+        .error = static_mod.error | shared_mod.error,
+        .os = static_mod.os | shared_mod.os,
+    };
 
     // select the shared modules if they are available
     result.lang = shared_mod.lang ? shared_mod.lang : static_mod.lang;
@@ -108,4 +112,15 @@ loaded_module_t load_module(loader_t *loader, module_type_t mask, const char *na
     result.target = shared_mod.target ? shared_mod.target : static_mod.target;
 
     return result;
+}
+
+static const char *const kErrorStrings[eErrorCount] = {
+#define LOADER_ERROR(ID, STR) [ID] = (STR),
+#include "support/loader.def"
+};
+
+const char *load_error_string(load_error_t error)
+{
+    CTASSERTF(error < eErrorCount, "invalid error code: %d", error);
+    return kErrorStrings[error];
 }

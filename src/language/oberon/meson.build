@@ -39,7 +39,7 @@ endif
 if module_loader.contains('shared')
     obrso = shared_library('obr', src,
         dependencies : deps,
-        c_args : generated_args,
+        c_args : generated_args + [ '-DCTU_DRIVER_SHARED=1' ],
         include_directories : [ 'src', 'include' ],
         override_options : [ 'unity=off' ]
     )

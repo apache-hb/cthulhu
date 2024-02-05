@@ -93,13 +93,16 @@ void support_load_default_modules(support_t *support)
 }
 
 USE_DECL
-bool support_load_module(support_t *support, module_type_t mask, const char *name)
+bool support_load_module(support_t *support, module_type_t mask, const char *name, loaded_module_t *out)
 {
     CTASSERT(support != NULL);
     CTASSERT(name != NULL);
+    CTASSERT(out != NULL);
 
     loaded_module_t mod = load_module(support->loader, mask, name);
     add_loaded_module(support, mod);
+
+    *out = mod;
 
     return mod.type != eModNone;
 }

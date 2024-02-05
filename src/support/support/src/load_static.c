@@ -93,7 +93,7 @@ loaded_module_t load_static_module(loader_t *loader, module_type_t mask, const c
     CT_UNUSED(mask);
     CT_UNUSED(name);
 
-    return load_error(eLoadDisabled, 0);
+    return load_error(eLoadErrorDisabled, 0);
 }
 
 #endif
