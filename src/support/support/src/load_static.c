@@ -1,4 +1,4 @@
-#include "common.h"
+#include "common.h" // IWYU pragma: export
 
 #include "base/util.h"
 #include "base/panic.h"

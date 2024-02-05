@@ -1,6 +1,5 @@
 #include "common.h"
 
-#include "core/macros.h"
 #include "os/os.h"
 
 #include "base/panic.h"
