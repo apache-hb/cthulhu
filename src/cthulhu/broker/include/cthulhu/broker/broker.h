@@ -148,7 +148,7 @@ typedef struct language_t
     const scan_callbacks_t *scanner;
 
     /// @brief an array of passes to run on each translation unit
-    language_pass_t fn_passes[eStageCount];
+    language_pass_t fn_passes[ePassCount];
 } language_t;
 
 /// @brief a plugin event callback description

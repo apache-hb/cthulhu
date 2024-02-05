@@ -17,6 +17,8 @@ typedef struct support_t
     broker_t *broker;
     loader_t *loader;
 
+    typevec_t *modules;
+
     set_t *langs;
 
     // map of extensions to the associated language runtime
@@ -26,6 +28,8 @@ typedef struct support_t
 
 static void add_loaded_module(support_t *support, loaded_module_t mod)
 {
+    typevec_push(support->modules, &mod);
+
     logger_t *logger = broker_get_logger(support->broker);
     const node_t *node = broker_get_node(support->broker);
     if (mod.type & eModLanguage)
@@ -56,6 +60,7 @@ static void add_loaded_module(support_t *support, loaded_module_t mod)
     }
 }
 
+USE_DECL
 support_t *support_new(broker_t *broker, loader_t *loader, arena_t *arena)
 {
     CTASSERT(broker != NULL);
@@ -66,12 +71,14 @@ support_t *support_new(broker_t *broker, loader_t *loader, arena_t *arena)
     support->broker = broker;
     support->loader = loader;
 
+    support->modules = typevec_new(sizeof(loaded_module_t), 16, arena);
     support->langs = set_new(16, kTypeInfoString, arena);
     support->extmap = map_new(16, kTypeInfoString, arena);
 
     return support;
 }
 
+USE_DECL
 void support_load_default_modules(support_t *support)
 {
     CTASSERT(support != NULL);
@@ -85,6 +92,7 @@ void support_load_default_modules(support_t *support)
     }
 }
 
+USE_DECL
 bool support_load_module(support_t *support, module_type_t mask, const char *name)
 {
     CTASSERT(support != NULL);
@@ -96,6 +104,15 @@ bool support_load_module(support_t *support, module_type_t mask, const char *nam
     return mod.type != eModNone;
 }
 
+USE_DECL
+typevec_t *support_get_modules(support_t *support)
+{
+    CTASSERT(support != NULL);
+
+    return support->modules;
+}
+
+USE_DECL
 language_runtime_t *support_get_lang(support_t *support, const char *ext)
 {
     CTASSERT(support != NULL);

@@ -1,4 +1,3 @@
-#include "base/util.h"
 #include "setup/setup.h"
 #include "editor/compile.hpp"
 #include "editor/config.hpp"
@@ -13,63 +12,28 @@
 #include "config/config.h"
 
 #include "imgui.h"
+#include "std/typed/vector.h"
 #include "support/loader.h"
+#include "support/support.h"
 
-static const version_info_t kVersionInfo = {
-    .license = "GPLv3",
-    .desc = "Cthulhu Compiler Collection GUI",
-    .author = "Elliot Haisley",
-    .version = CT_NEW_VERSION(0, 0, 1)
+static const frontend_t kFrontendGui = {
+    .info = {
+        .id = "frontend-gui",
+        .name = "Cthulhu GUI",
+        .version = {
+            .license = "GPLv3",
+            .desc = "Cthulhu Compiler Collection GUI",
+            .author = "Elliot Haisley",
+            .version = CT_NEW_VERSION(0, 0, 1),
+        },
+    },
 };
 
-class VersionInfo
-{
-public:
-    VersionInfo(version_info_t info)
-        : info(info)
-    { }
-
-    void draw()
-    {
-        if (!show) return;
-
-        if (ImGui::Begin("Version info", &show))
-        {
-            ImGui::Text("Debug: %s", CTU_DEBUG ? "true" : "false");
-
-            ImGui::Text("Framework version: %d.%d.%d", CTU_MAJOR, CTU_MINOR, CTU_PATCH);
-
-            int major = CT_VERSION_MAJOR(info.version);
-            int minor = CT_VERSION_MINOR(info.version);
-            int patch = CT_VERSION_PATCH(info.version);
-            ImGui::Text("Frontend version: %d.%d.%d", major, minor, patch);
-
-            ImGui::Text("Author: %s", info.author);
-            ImGui::Text("License: %s", info.license);
-            ImGui::Text("Description: %s", info.desc);
-        }
-        ImGui::End();
-    }
-
-public:
-    static void draw_version(const char *id, version_t version)
-    {
-        int major = CT_VERSION_MAJOR(version);
-        int minor = CT_VERSION_MINOR(version);
-        int patch = CT_VERSION_PATCH(version);
-
-        ImGui::Text("%s: %d.%d.%d", id, major, minor, patch);
-    }
-
-    bool show = false;
-    const version_info_t info;
-};
-
-class CompileRun : public ed::CompileInfo
+class CompileRun : public ed::Broker
 {
 public:
     CompileRun(loader_t *loader, const char *name)
-        : CompileInfo(loader, name)
+        : Broker(loader, name)
     {
         init_config();
     }
@@ -294,34 +258,302 @@ public:
     }
 };
 
-class EditorUi
+class ModuleInfo
 {
-public:
-    EditorUi()
+    const module_info_t& info;
+
+    static void draw_version(const char *id, version_t version)
     {
-        loader = loader_new(&global);
+        int major = CT_VERSION_MAJOR(version);
+        int minor = CT_VERSION_MINOR(version);
+        int patch = CT_VERSION_PATCH(version);
+
+        ImGui::Text("%s: %d.%d.%d", id, major, minor, patch);
     }
 
-    loader_t *loader = nullptr;
+public:
+    ModuleInfo(const module_info_t& info)
+        : info(info)
+    { }
 
-    bool show_demo_window = false;
-    std::vector<CompileRun> compile_runs;
+    void draw_info() const
+    {
+        ImGui::Text("ID: %s", info.id);
 
-    VersionInfo version_info{ kVersionInfo };
+        version_info_t version = info.version;
+        ImGui::Text("License: %s", version.license);
+        ImGui::Text("Description: %s", version.desc);
+        ImGui::Text("Author: %s", version.author);
+        draw_version("Version", version.version);
+    }
 
+    void draw_body() const
+    {
+        ImGui::Text("Name: %s", info.name);
+        draw_info();
+    }
+
+    void draw_window()
+    {
+        if (!show) return;
+
+        if (ImGui::Begin(info.name, &show))
+        {
+            draw_body();
+        }
+        ImGui::End();
+    }
+
+    bool show = true;
+};
+
+class LanguageModule : ModuleInfo
+{
+    const language_t *lang;
+
+    std::string builtin_name;
+
+public:
+    LanguageModule(const language_t *lang)
+        : ModuleInfo(lang->info)
+        , lang(lang)
+    {
+        language_info_t info = lang->builtin;
+        builtin_name.resize(info.name.length);
+        for (size_t i = 0; i < info.name.length; i++)
+        {
+            char c = info.name.text[i];
+            if (c == '\0')
+            {
+                builtin_name[i] = '/';
+            }
+            else
+            {
+                builtin_name[i] = c;
+            }
+        }
+    }
+
+    void draw_body()
+    {
+        module_info_t info = lang->info;
+        char label[128] = {};
+        (void)snprintf(label, std::size(label), "Language: %s", info.name);
+        ImGui::SeparatorText(label);
+
+        ModuleInfo::draw_info();
+        ImGui::Text("Create %p", lang->fn_create);
+        ImGui::Text("Destroy %p", lang->fn_destroy);
+        ImGui::Text("Default extensions: ");
+        for (size_t i = 0; lang->exts[i]; i++)
+        {
+            ImGui::SameLine();
+            if (i > 0)
+            {
+                ImGui::Text(", ");
+                ImGui::SameLine();
+            }
+            ImGui::Text("%s", lang->exts[i]);
+        }
+
+        ImGui::Text("Context size: %zu", lang->context_size);
+
+        ImGui::SeparatorText("Builtin");
+        ImGui::Text("Name: %s", builtin_name.c_str());
+        for (size_t i = 0; i < lang->builtin.length; i++)
+        {
+            ImGui::BulletText("Initial map size %zu: %zu", i, lang->builtin.decls[i]);
+        }
+
+        ImGui::Text("Create %p", lang->fn_create);
+        ImGui::Text("Destroy %p", lang->fn_destroy);
+
+        ImGui::Text("Preparse %p", lang->fn_preparse);
+        ImGui::Text("Postparse %p", lang->fn_postparse);
+        ImGui::Text("Scanner %p", lang->scanner);
+
+        ImGui::SeparatorText("Passes");
+        for (size_t i = 0; i < ePassCount; i++)
+        {
+            broker_pass_t pass = static_cast<broker_pass_t>(i);
+            ImGui::BulletText("Pass %s: %p", broker_pass_name(pass), lang->fn_passes[i]);
+        }
+    }
+};
+
+class PluginModule : ModuleInfo
+{
+    const plugin_t *plugin;
+
+public:
+    PluginModule(const plugin_t *plugin)
+        : ModuleInfo(plugin->info)
+        , plugin(plugin)
+    { }
+
+    void draw_body()
+    {
+        module_info_t info = plugin->info;
+        char label[128] = {};
+        (void)snprintf(label, std::size(label), "Plugin: %s", info.name);
+        ImGui::SeparatorText(label);
+
+        ModuleInfo::draw_info();
+        ImGui::Text("Create %p", plugin->fn_create);
+        ImGui::Text("Destroy %p", plugin->fn_destroy);
+
+        ImGui::SeparatorText("Events");
+        event_list_t events = plugin->events;
+        for (size_t i = 0; i < events.count; i++)
+        {
+            ImGui::BulletText("Event %zu: %d", i, events.events[i].event);
+        }
+    }
+};
+
+class TargetModule : ModuleInfo
+{
+    const target_t *target;
+
+public:
+    TargetModule(const target_t *target)
+        : ModuleInfo(target->info)
+        , target(target)
+    { }
+
+    void draw_body()
+    {
+        module_info_t info = target->info;
+        char label[128] = {};
+        (void)snprintf(label, std::size(label), "Target: %s", info.name);
+        ImGui::SeparatorText(label);
+
+        ModuleInfo::draw_info();
+        ImGui::Text("Create %p", target->fn_create);
+        ImGui::Text("Destroy %p", target->fn_destroy);
+        ImGui::Text("Tree output %s", target->fn_tree ? "supported" : "unsupported");
+        ImGui::Text("SSA output %s", target->fn_ssa ? "supported" : "unsupported");
+    }
+};
+
+class EditorUi
+{
     ed::TraceArena global{ "global", ed::TraceArena::eDrawTree };
+    bool show_demo_window = false;
+    bool show_version_window = false;
+    bool default_modules_loaded = false;
+    bool show_module_info = false;
+
+    loader_t *loader;
+    broker_t *broker;
+    support_t *support;
+
+    std::vector<LanguageModule> languages;
+    std::vector<PluginModule> plugins;
+    std::vector<TargetModule> targets;
+
+    void add_module(const loaded_module_t &mod)
+    {
+        if (mod.type & eModLanguage)
+        {
+            languages.emplace_back(mod.lang);
+        }
+
+        if (mod.type & eModPlugin)
+        {
+            plugins.emplace_back(mod.plugin);
+        }
+
+        if (mod.type & eModTarget)
+        {
+            targets.emplace_back(mod.target);
+        }
+    }
+
+    ModuleInfo version_info{ kFrontendGui.info };
+
+    static void draw_runtime_version()
+    {
+        ImGui::Text("Debug: %s", CTU_DEBUG ? "true" : "false");
+        ImGui::Text("Runtime version: %d.%d.%d", CTU_MAJOR, CTU_MINOR, CTU_PATCH);
+    }
+
+    void draw_version_info()
+    {
+        if (!show_version_window) return;
+
+        if (ImGui::Begin("Version", &show_version_window))
+        {
+            version_info.draw_body();
+            draw_runtime_version();
+        }
+        ImGui::End();
+    }
+
+    void load_default_modules()
+    {
+        support_load_default_modules(support);
+        default_modules_loaded = true;
+
+        typevec_t *mods = support_get_modules(support);
+        size_t len = typevec_len(mods);
+
+        for (size_t i = 0; i < len; i++)
+        {
+            loaded_module_t mod = {};
+            typevec_get(mods, i, &mod);
+            add_module(mod);
+        }
+    }
+
+    void draw_module_info()
+    {
+        if (!default_modules_loaded) return;
+
+        if (!show_module_info) return;
+
+        if (ImGui::Begin("Modules", &show_module_info))
+        {
+            if (ImGui::CollapsingHeader("Languages", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                for (auto &lang : languages)
+                {
+                    lang.draw_body();
+                }
+            }
+
+            if (ImGui::CollapsingHeader("Plugins", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                for (auto &plugin : plugins)
+                {
+                    plugin.draw_body();
+                }
+            }
+
+            if (ImGui::CollapsingHeader("Targets", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                for (auto &target : targets)
+                {
+                    target.draw_body();
+                }
+            }
+        }
+        ImGui::End();
+    }
+
+public:
+    EditorUi()
+        : loader(loader_new(&global))
+        , broker(broker_new(&kFrontendGui, &global))
+        , support(support_new(broker, loader, &global))
+    { }
 
     void draw_windows()
     {
         draw_demo_window();
         draw_setup_window();
-
-        version_info.draw();
-
-        for (CompileRun& run : compile_runs)
-        {
-            run.draw();
-        }
+        draw_version_info();
+        draw_module_info();
     }
 
     static const ImGuiDockNodeFlags kDockFlags
@@ -355,7 +587,7 @@ public:
         ImGuiID id = ImGui::GetID("EditorDock");
         ImGui::DockSpace(id, ImVec2(0.f, 0.f), kDockFlags);
 
-        if (ImGui::BeginMenuBar())
+        if (ImGui::BeginMainMenuBar())
         {
             ImGui::Text("Cthulhu");
             ImGui::Separator();
@@ -388,16 +620,13 @@ public:
                 ImGui::SeparatorText("Info");
                 ImGui::MenuItem("Version", nullptr, &version_info.show);
 
-                ImGui::SeparatorText("Compiles");
-                for (CompileRun& run : compile_runs)
-                {
-                    ImGui::MenuItem(run.name.c_str(), nullptr, &run.show);
-                }
+                ImGui::SeparatorText("Modules");
+                ImGui::MenuItem("Module Info", nullptr, &show_module_info);
 
                 ImGui::EndMenu();
             }
 
-            ImGui::EndMenuBar();
+            ImGui::EndMainMenuBar();
         }
 
         ImGui::End();
@@ -412,76 +641,26 @@ private:
         }
     }
 
-    char compile_name[256] = { 0 };
-
-    bool compile_run_exists(const char *id) const
-    {
-        for (const CompileRun& run : compile_runs)
-        {
-            if (run.name == id)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    const char *duplicate_compile_name_popup = "Duplicate Name";
-    const char *empty_compile_name_popup = "Empty Name";
+    static constexpr ImGuiWindowFlags kMainFlags = ImGuiWindowFlags_NoDecoration
+                                                 | ImGuiWindowFlags_NoMove;
 
     void draw_setup_window()
     {
-        if (ImGui::Begin("Setup"))
+        const ImGuiViewport *viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
+
+        if (ImGui::Begin("Compiler", nullptr, kMainFlags))
         {
-            ImGui::InputText("Name", compile_name, std::size(compile_name));
+            ImGui::Text("Cthulhu Compiler Collection GUI");
 
-            if (ImGui::Button("Add"))
+            if (!default_modules_loaded)
             {
-                if (ctu_strlen(compile_name) == 0)
+                if (ImGui::Button("Load default modules"))
                 {
-                    ImGui::OpenPopup(empty_compile_name_popup);
-                }
-                else if (compile_run_exists(compile_name))
-                {
-                    ImGui::OpenPopup(duplicate_compile_name_popup);
-                }
-                else
-                {
-                    compile_runs.emplace_back(loader, compile_name);
+                    load_default_modules();
                 }
             }
-
-            if (ImGui::BeginPopupModal(duplicate_compile_name_popup, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-            {
-                ImGui::Text("Compile run with name '%s' already exists", compile_name);
-
-                if (ImGui::Button("OK", ImVec2(120, 0)))
-                {
-                    ImGui::CloseCurrentPopup();
-                }
-
-                ImGui::EndPopup();
-            }
-
-            if (ImGui::BeginPopupModal(empty_compile_name_popup, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-            {
-                ImGui::Text("Compile run name cannot be empty");
-
-                if (ImGui::Button("OK", ImVec2(120, 0)))
-                {
-                    ImGui::CloseCurrentPopup();
-                }
-
-                ImGui::EndPopup();
-            }
-        }
-
-        ImGui::End();
-
-        if (ImGui::Begin("Memory"))
-        {
-            global.draw_info();
         }
         ImGui::End();
     }

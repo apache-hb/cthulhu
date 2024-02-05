@@ -11,10 +11,10 @@ typedef struct loader_t loader_t;
 
 namespace ed
 {
-    class CompileInfo
+    class Broker
     {
     public:
-        CompileInfo(loader_t *loader, const char *name);
+        Broker(loader_t *loader, const char *name);
 
         // editor objects
         ed::TraceArena global{"global", ed::TraceArena::eDrawTree};

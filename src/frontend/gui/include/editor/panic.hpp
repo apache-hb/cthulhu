@@ -59,5 +59,5 @@ namespace ed
         std::string error;
     };
 
-    CompileError run_compile(CompileInfo& info);
+    CompileError run_compile(Broker& info);
 }

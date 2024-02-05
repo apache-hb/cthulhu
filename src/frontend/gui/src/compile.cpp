@@ -25,7 +25,7 @@ static constexpr frontend_t kEditorInfo = {
     }
 };
 
-CompileInfo::CompileInfo(loader_t *loader, const char *name)
+Broker::Broker(loader_t *loader, const char *name)
     : name(name)
     , broker(broker_new(&kEditorInfo, &global))
     , loader(loader)
@@ -37,7 +37,7 @@ CompileInfo::CompileInfo(loader_t *loader, const char *name)
 /// @param index the index of the source file to parse
 ///
 /// @return nullptr on success, otherwise an error message
-char *CompileInfo::parse_source(size_t index)
+char *Broker::parse_source(size_t index)
 {
     const char *path = sources.get_path(index);
 
@@ -60,19 +60,19 @@ char *CompileInfo::parse_source(size_t index)
     return nullptr;
 }
 
-void CompileInfo::init_alloc()
+void Broker::init_alloc()
 {
     global.install_global();
     gmp.install_gmp();
 }
 
-void CompileInfo::init_support()
+void Broker::init_support()
 {
     support = support_new(broker, loader, &global);
     support_load_default_modules(support);
 }
 
-void CompileInfo::init()
+void Broker::init()
 {
     if (setup) return;
     setup = true;
@@ -85,7 +85,7 @@ void CompileInfo::init()
 ///
 /// @retval true if there are no reports
 /// @retval false if there are reports
-bool CompileInfo::check_reports() const
+bool Broker::check_reports() const
 {
     logger_t *logger = broker_get_logger(broker);
     typevec_t *events = logger_get_events(logger);

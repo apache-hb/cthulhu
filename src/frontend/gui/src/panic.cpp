@@ -23,7 +23,7 @@ void ed::install_panic_handler()
     };
 }
 
-CompileError ed::run_compile(CompileInfo& info)
+CompileError ed::run_compile(Broker& info)
 {
     if (std::setjmp(gPanicEnv)) // NOLINT
     {
