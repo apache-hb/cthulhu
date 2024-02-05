@@ -49,6 +49,7 @@ src = [
 executable('gui', src,
     cpp_args : gui_args,
     build_by_default : not meson.is_subproject(),
+    export_dynamic : module_loader.contains('dynamic'),
     include_directories : 'include',
     dependencies : [
         imgui, core, os, scan,

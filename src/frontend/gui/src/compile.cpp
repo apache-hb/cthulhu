@@ -69,6 +69,7 @@ void CompileInfo::init_alloc()
 void CompileInfo::init_support()
 {
     support = support_new(broker, loader, &global);
+    support_load_default_modules(support);
 }
 
 void CompileInfo::init()

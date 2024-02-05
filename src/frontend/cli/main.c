@@ -1,4 +1,3 @@
-#include "base/panic.h"
 #include "config/config.h"
 #include "setup/memory.h"
 #include "format/colour.h"
@@ -29,8 +28,8 @@
 
 #include "core/macros.h"
 #include "support/loader.h"
+#include "support/support.h"
 
-#if 0
 static const version_info_t kToolVersion = {
     .license = "GPLv3",
     .desc = "Cthulhu Compiler Collection CLI",
@@ -51,8 +50,9 @@ static const frontend_t kFrontendInfo = {
     }
 };
 
-static void parse_source(broker_t *broker, const char *path, const node_t *node)
+static void parse_source(broker_t *broker, support_t *support, const char *path)
 {
+    const node_t *node = broker_get_node(broker);
     logger_t *reports = broker_get_logger(broker);
     arena_t *arena = broker_get_arena(broker);
     const char *ext = str_ext(path, arena);
@@ -63,7 +63,7 @@ static void parse_source(broker_t *broker, const char *path, const node_t *node)
         return;
     }
 
-    const language_t *lang = lifetime_get_language(runtime, ext);
+    language_runtime_t *lang = support_get_lang(support, ext);
     if (lang == NULL)
     {
         const char *basepath = str_filename(path, arena);
@@ -84,7 +84,7 @@ static void parse_source(broker_t *broker, const char *path, const node_t *node)
         return;
     }
 
-    broker_parse(broker, runtime, lang, io);
+    broker_parse(lang, io);
 }
 
 static int check_reports(logger_t *logger, report_config_t config, const char *title)
@@ -116,15 +116,12 @@ int main(int argc, const char **argv)
 
     arena_t *arena = ctu_default_alloc();
     broker_t *broker = broker_new(&kFrontendInfo, arena);
+    loader_t *loader = loader_new(arena);
+    support_t *support = support_new(broker, loader, arena);
+    support_load_default_modules(support);
+
     logger_t *reports = broker_get_logger(broker);
     const node_t *node = broker_get_node(broker);
-
-    langs_t langs = get_langs();
-    for (size_t i = 0; i < langs.size; i++)
-    {
-        broker_add_language(broker, langs.langs[i]);
-    }
-
     io_t *con = io_stdout();
 
     tool_t tool = make_tool(arena);
@@ -178,27 +175,27 @@ int main(int argc, const char **argv)
     for (size_t i = 0; i < total_sources; i++)
     {
         const char *path = vector_get(paths, i);
-        parse_source(broker, path, node);
+        parse_source(broker, support, path);
     }
 
     CHECK_LOG(reports, "parsing sources");
 
-    for (size_t stage = 0; stage < eStageTotal; stage++)
+    for (size_t stage = 0; stage < ePassCount; stage++)
     {
-        lifetime_run_stage(lifetime, stage);
+        broker_run_pass(broker, stage);
 
-        char *msg = str_format(arena, "running stage %s", stage_to_string(stage));
+        char *msg = str_format(arena, "running stage %s", broker_pass_name(stage));
         CHECK_LOG(reports, msg);
     }
 
-    lifetime_resolve(lifetime);
+    broker_resolve(broker);
     CHECK_LOG(reports, "compiling sources");
 
-    map_t *modmap = lifetime_get_modules(lifetime);
-    check_tree(reports, modmap, arena);
+    vector_t *mods = broker_get_modules(broker);
+    check_tree(reports, mods, arena);
     CHECK_LOG(reports, "checking tree");
 
-    ssa_result_t ssa = ssa_compile(modmap, arena);
+    ssa_result_t ssa = ssa_compile(mods, arena);
     CHECK_LOG(reports, "compiling ssa");
 
     ssa_opt(reports, ssa, arena);
@@ -223,22 +220,14 @@ int main(int argc, const char **argv)
         CHECK_LOG(reports, "emitting ssa");
     }
 
-    const char *output_header = cfg_string_value(tool.output_header);
-    const char *output_source = cfg_string_value(tool.output_source);
-
     c89_emit_options_t c89_emit_options = {
         .opts = base_emit_options,
-        .emit_reflect_info = cfg_bool_value(tool.output_reflect),
-        .output_header = output_header,
-        .output_source = output_source,
     };
     c89_emit_result_t c89_emit_result = emit_c89(&c89_emit_options);
     CT_UNUSED(c89_emit_result); // TODO: check for errors
     CHECK_LOG(reports, "emitting c89");
 
     const char *outpath = "out";
-    if (output_header != NULL && output_source != NULL)
-        outpath = ".";
 
     fs_t *out = fs_physical(outpath, arena);
     if (out == NULL)
@@ -257,12 +246,4 @@ int main(int argc, const char **argv)
     }
 
     CHECK_LOG(reports, "writing output files");
-}
-#endif
-
-int main(void)
-{
-    setup_global();
-
-    NEVER("unimplemented");
 }

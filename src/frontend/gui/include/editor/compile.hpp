@@ -16,6 +16,10 @@ namespace ed
     public:
         CompileInfo(loader_t *loader, const char *name);
 
+        // editor objects
+        ed::TraceArena global{"global", ed::TraceArena::eDrawTree};
+        ed::TraceArena gmp{"gmp", ed::TraceArena::eDrawFlat};
+
         // run state
         std::string name;
 
@@ -24,10 +28,6 @@ namespace ed
         broker_t *broker = nullptr;
         loader_t *loader = nullptr;
         support_t *support = nullptr;
-
-        // editor objects
-        ed::TraceArena global{"global", ed::TraceArena::eDrawTree};
-        ed::TraceArena gmp{"gmp", ed::TraceArena::eDrawFlat};
 
         ed::SourceList sources;
 

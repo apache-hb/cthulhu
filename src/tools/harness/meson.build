@@ -1,11 +1,11 @@
 src = [ 'main.c' ]
 
 harness = executable('harness', src,
+    export_dynamic : module_loader.contains('dynamic'),
     dependencies : [
         broker, argparse, support,
         ssa, emit, check, io, fs, setup,
         scan, notify, memory, events, format,
         arena
-    ],
-    export_dynamic : true
+    ]
 )
