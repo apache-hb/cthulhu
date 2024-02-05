@@ -14,20 +14,37 @@ src = [
     parse.process('src/obr.y')
 ]
 
-obr = library('obr', src,
-    dependencies : [
-        base, broker, interop,
-        scan, tree, util, notify,
-        events, memory, driver
-    ],
-    c_args : generated_args,
-    include_directories : [ 'src', 'include' ],
-    override_options : [ 'unity=off' ]
-)
+deps = [
+    base, broker, interop,
+    scan, tree, util, notify,
+    events, memory, driver
+]
 
-langs += {
-    'obr': {
-        'dep': declare_dependency(link_with : obr),
+obr = {}
+
+if module_loader.contains('static')
+    libobr = library('obr', src,
+        dependencies : deps,
+        c_args : generated_args,
+        include_directories : [ 'src', 'include' ],
+        override_options : [ 'unity=off' ]
+    )
+
+    obr += {
+        'dep': declare_dependency(link_with : libobr),
         'mod': 'kOberonModule'
     }
-}
+endif
+
+if module_loader.contains('shared')
+    obrso = shared_library('obr', src,
+        dependencies : deps,
+        c_args : generated_args,
+        include_directories : [ 'src', 'include' ],
+        override_options : [ 'unity=off' ]
+    )
+
+    obr += { 'shared': obrso }
+endif
+
+langs += { 'obr': obr }

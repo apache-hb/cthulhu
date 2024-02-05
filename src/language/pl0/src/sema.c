@@ -1,4 +1,5 @@
 #include "pl0/sema.h"
+#include "core/macros.h"
 #include "cthulhu/broker/broker.h"
 #include "cthulhu/events/events.h"
 #include "memory/memory.h"
@@ -470,12 +471,14 @@ typedef struct {
 
 void pl0_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
 {
+    CT_UNUSED(runtime);
+
     pl0_t *ast = unit_get_ast(unit);
-    tree_t *root = unit->tree;
     size_t const_count = vector_len(ast->consts);
     size_t global_count = vector_len(ast->globals);
     size_t proc_count = vector_len(ast->procs);
 
+    tree_t *root = unit->tree;
     const tree_storage_t const_storage = get_const_storage(gIntType);
 
     // forward declare everything
@@ -566,6 +569,8 @@ void pl0_process_imports(language_runtime_t *runtime, compile_unit_t *unit)
 
 void pl0_compile_module(language_runtime_t *runtime, compile_unit_t *unit)
 {
+    CT_UNUSED(runtime);
+
     pl0_t *ast = unit_get_ast(unit);
 
     if (ast->entry != NULL)

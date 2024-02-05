@@ -77,14 +77,14 @@ if module_loader.contains('static')
     endif
 endif
 
-if module_loader.contains('dynamic')
+if module_loader.contains('shared')
     impl_deps += [ os ]
     src += [ 'src/load_shared.c' ]
 endif
 
 loader_cdata = configuration_data()
 loader_cdata.set10('CTU_LOADER_STATIC', module_loader.contains('static'))
-loader_cdata.set10('CTU_LOADER_DYNAMIC', module_loader.contains('dynamic'))
+loader_cdata.set10('CTU_LOADER_DYNAMIC', module_loader.contains('shared'))
 
 loader_config = configure_file(
     output : 'loader_config.h',

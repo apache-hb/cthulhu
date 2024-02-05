@@ -75,6 +75,13 @@ option('default_target', type : 'combo',
     value : 'cfamily'
 )
 
+# plugins
+
+option('plugin_timer', type : 'feature',
+    description : 'enable timer plugin',
+    value : 'auto'
+)
+
 # trace options
 
 option('trace_memory', type : 'feature',
@@ -120,8 +127,8 @@ option('analyze', type : 'feature',
 
 option('module_loader', type : 'array',
     description : 'Which module loaders to build',
-    choices : [ 'static', 'dynamic' ],
-    value : [ 'static', 'dynamic' ]
+    choices : [ 'static', 'shared' ],
+    value : [ 'static', 'shared' ]
 )
 
 option('win32_trickery', type : 'feature',

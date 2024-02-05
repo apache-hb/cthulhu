@@ -7,21 +7,39 @@ src = [
     parse.process('src/pl0.y')
 ]
 
-pl0 = library('pl0', src,
-    dependencies : [
-        broker, interop, scan,
-        notify, tree, util, events,
-        config, memory, driver
-    ],
-    c_args : generated_args,
-    include_directories : [ 'src', 'include' ],
-    override_options : [ 'unity=off' ]
-)
+deps = [
+    broker, interop, scan,
+    notify, tree, util, events,
+    config, memory, driver
+]
 
-langs += {
-    'pl0': {
-        'dep': declare_dependency(link_with : pl0),
-        'mod': 'kPl0Module',
-        'fuzz_corpus': meson.current_source_dir() / 'fuzz_corpus'
-    }
+pl0 = {
+    'fuzz_corpus': meson.current_source_dir() / 'fuzz_corpus'
 }
+
+if module_loader.contains('static')
+    libpl0 = library('pl0', src,
+        dependencies : deps,
+        c_args : generated_args,
+        include_directories : [ 'src', 'include' ],
+        override_options : [ 'unity=off' ]
+    )
+
+    pl0 += {
+        'dep': declare_dependency(link_with : libpl0),
+        'mod': 'kPl0Module'
+    }
+endif
+
+if module_loader.contains('shared')
+    pl0so = shared_module('pl0', src,
+        dependencies : deps,
+        c_args : generated_args,
+        include_directories : [ 'src', 'include' ],
+        override_options : [ 'unity=off' ]
+    )
+
+    pl0 += { 'shared': pl0so }
+endif
+
+langs += { 'pl0': pl0 }

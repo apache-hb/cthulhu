@@ -39,7 +39,7 @@ module_loader = get_option('module_loader')
 trace_time = get_option('trace_time').disable_auto_if(meson.is_subproject())
 
 # disable unit tests if we are a subproject or release build
-# this is because they require some different flags that slow down the compiler.
+# this is because they require some different flags that slow down the final binary.
 # but only on gcc
 unit_tests = get_option('unit_tests').disable_auto_if(is_release or meson.is_subproject())
 driver_tests = get_option('driver_tests').disable_auto_if(meson.is_subproject())
@@ -71,6 +71,9 @@ target_cfamily = get_option('target_cfamily').disable_auto_if(meson.is_subprojec
 target_debug = get_option('target_debug').disable_auto_if(meson.is_subproject())
 target_hlsl = get_option('target_hlsl').disable_auto_if(meson.is_subproject())
 default_target = get_option('default_target')
+
+# all compiler plugins
+plugin_timer = get_option('plugin_timer').disable_auto_if(meson.is_subproject())
 
 # tools like this are user facing, so dont disable them in release mode
 tool_diagnostic = get_option('tool_diagnostic').disable_auto_if(meson.is_subproject())
