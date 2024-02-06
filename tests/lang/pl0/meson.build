@@ -90,6 +90,8 @@ foreach case, tests : tests
     foreach name : passes
         path = dir/where/'pass'/name + '.pl0'
         id = 'pass-' + case + '-' + name
+        # [ '--shared', langs['pl0']['shared'] ]
+        # these are broken until i can remove *all* global state
         test(id, harness,
             args : [ id, path ],
             suite : 'pl0'

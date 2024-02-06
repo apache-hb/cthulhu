@@ -208,10 +208,32 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
 
 int run_test_harness(int argc, const char **argv, arena_t *arena)
 {
+    // harness.exe <name> [files...]
+    CTASSERT(argc > 2);
+
     broker_t *broker = broker_new(&kFrontendHarness, arena);
     loader_t *loader = loader_new(arena);
     support_t *support = support_new(broker, loader, arena);
-    support_load_default_modules(support);
+
+    text_t cwd = {0};
+    os_error_t err = os_getcwd(&cwd, arena);
+    CTASSERTF(err == 0, "failed to get cwd %s", os_error_string(err, arena));
+
+    // test name
+    const char *name = argv[1];
+    int start = 2;
+
+    if (str_equal(argv[2], "--shared"))
+    {
+        loaded_module_t mod = {};
+        char *fullpath = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s", cwd.text, argv[3]);
+        CTASSERTF(support_load_module(support, eModLanguage, fullpath, &mod), "failed to load module `%s` (%s: %s)", fullpath, load_error_string(mod.error), os_error_string(mod.os, arena));
+        start = 4;
+    }
+    else
+    {
+        support_load_default_modules(support);
+    }
 
     logger_t *logger = broker_get_logger(broker);
     const node_t *node = broker_get_node(broker);
@@ -234,12 +256,11 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
 
     CHECK_LOG(logger, "adding languages");
 
-    // harness.exe <name> [files...]
-    CTASSERT(argc > 2);
-
     broker_init(broker);
 
-    for (int i = 2; i < argc; i++)
+    CTASSERTF(start < argc, "no files to parse");
+
+    for (int i = start; i < argc; i++)
     {
         const char *path = argv[i];
         const char *ext = str_ext(path, arena);
@@ -296,12 +317,8 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     c89_emit_result_t c89_emit_result = emit_c89(&c89_emit_options);
     CHECK_LOG(logger, "emitting c89");
 
-    text_t cwd = {0};
-    os_error_t err = os_getcwd(&cwd, arena);
-    CTASSERTF(err == 0, "failed to get cwd %s", os_error_string(err, arena));
-
     const char *test_dir = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "test-out", cwd.text);
-    const char *run_dir = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s", test_dir, argv[1]);
+    const char *run_dir = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s", test_dir, name);
 
     fs_t *out = fs_physical(run_dir, arena);
     if (out == NULL)
