@@ -1,18 +1,24 @@
-#include "base/util.h"
-#include "core/macros.h"
-#include "io/io.h"
-#include "arena/arena.h"
+#include "common_extra.h"
+
 #include "format/notify.h"
 
-#include "base/panic.h"
 #include "memory/memory.h"
+
 #include "scan/node.h"
-#include "common.h"
+
+#include "io/io.h"
 
 #include "std/set.h"
 #include "std/str.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
+
+#include "arena/arena.h"
+
+#include "base/util.h"
+#include "base/panic.h"
+
+#include "core/macros.h"
 
 #include <ctype.h>
 #include <string.h>

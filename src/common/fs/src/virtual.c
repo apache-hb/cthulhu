@@ -1,14 +1,14 @@
-#include "base/util.h"
 #include "common.h"
 
-#include "core/macros.h"
-
-#include "base/panic.h"
 #include "arena/arena.h"
 
+#include "io/impl.h"
 #include "std/map.h"
 
-#include "io/impl.h"
+#include "base/util.h"
+#include "base/panic.h"
+
+#include "core/macros.h"
 
 typedef struct virtual_t
 {

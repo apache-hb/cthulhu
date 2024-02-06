@@ -1,10 +1,14 @@
 #pragma once
 
+#include "core/where.h"
+
 #include "cthulhu/tree/ops.h"
-#include "scan/node.h"
-#include "std/vector.h"
 
 #include <gmp.h>
+
+typedef struct node_t node_t;
+typedef struct scan_t scan_t;
+typedef struct vector_t vector_t;
 
 typedef enum pl0_type_t
 {

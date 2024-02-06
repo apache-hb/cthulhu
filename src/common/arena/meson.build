@@ -21,7 +21,7 @@ libarena = library('arena', src,
 
 arena = declare_dependency(
     link_with : libarena,
-    dependencies : [ core ],
+    dependencies : [ base ],
     include_directories : arena_include
 )
 

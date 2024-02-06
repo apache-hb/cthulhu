@@ -1,13 +1,14 @@
 #include "oberon/sema/type.h"
-#include "cthulhu/events/events.h"
-#include "cthulhu/util/types.h"
-#include "memory/memory.h"
-#include "oberon/driver.h"
+
+#include "oberon/oberon.h"
 #include "oberon/sema/expr.h"
 #include "oberon/sema/sema.h"
 
+#include "cthulhu/events/events.h"
+#include "cthulhu/util/types.h"
 #include "cthulhu/util/util.h"
 
+#include "memory/memory.h"
 #include "base/panic.h"
 
 static const size_t kModuleTags[] = { eObrTagModules, eObrTagImports };

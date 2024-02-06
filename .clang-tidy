@@ -21,3 +21,4 @@ CheckOptions:
   - { key: readability-identifier-naming.GlobalConstantPrefix, value: k }
   - { key: readability-identifier-naming.GlobalVariableCase, value: CamelCase }
   - { key: readability-identifier-naming.GlobalVariablePrefix, value: g }
+HeaderFilterRegex: ''

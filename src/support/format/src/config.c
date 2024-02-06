@@ -1,19 +1,18 @@
 #include "format/config.h"
-#include "base/panic.h"
+#include "common.h"
 
-#include "base/util.h"
-#include "io/io.h"
-
-#include "format/colour.h"
-#include "base/panic.h"
-#include "core/macros.h"
-#include "io/io.h"
 #include "config/config.h"
 
-#include "common_simple.h"
+#include "io/io.h"
+
 #include "std/str.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
+
+#include "base/panic.h"
+#include "base/util.h"
+
+#include "core/macros.h"
 
 #include <limits.h>
 #include <string.h>

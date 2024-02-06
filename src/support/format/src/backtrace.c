@@ -1,20 +1,19 @@
 #include "format/backtrace.h"
-#include "common_simple.h"
+#include "common.h"
 
-#include "core/macros.h"
+#include "backtrace/backtrace.h"
+
+#include "io/io.h"
+
+#include "arena/arena.h"
+
+#include "std/str.h"
+#include "std/typed/vector.h"
 
 #include "base/panic.h"
 #include "base/util.h"
 
-#include "arena/arena.h"
-
-#include "backtrace/backtrace.h"
-
-#include "std/map.h"
-#include "std/str.h"
-#include "std/typed/vector.h"
-
-#include "io/io.h"
+#include "core/macros.h"
 
 #include <string.h>
 

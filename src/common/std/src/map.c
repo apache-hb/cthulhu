@@ -441,7 +441,7 @@ map_iter_t map_iter(const map_t *map)
     return iter;
 }
 
-USE_DECL
+USE_DECL CT_NOALIAS
 map_entry_t map_next(map_iter_t *iter)
 {
     CTASSERT(iter != NULL);

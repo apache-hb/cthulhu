@@ -6,6 +6,8 @@
 #include "core/compiler.h"
 #include "core/text.h"
 
+#include "arena/bitmap.h"
+
 #include <stddef.h>
 #include <stdbool.h>
 
@@ -29,6 +31,8 @@ typedef struct scan_t
 
     /// @brief arena to use when allocating nodes
     arena_t *nodes;
+
+    bitmap_t node_bitmap;
 
     /// @brief the name of the language this file contains
     const char *language;

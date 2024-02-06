@@ -9,6 +9,7 @@
 %code top {
     #include "interop/flex.h"
     #include "interop/bison.h"
+    #include "std/vector.h"
 }
 
 %code requires {

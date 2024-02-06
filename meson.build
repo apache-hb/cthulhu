@@ -126,7 +126,7 @@ config_cdata.set10('CTU_HAS_PRETTY_FUNCTION', warning_level < 3)
 config_cdata.set10('CTU_TRACE_MEMORY', trace_memory.allowed())
 
 # args for all code
-shared_args = cc.get_supported_arguments(
+all_args = cc.get_supported_arguments(
     # we use flexible array members
     '/wd4200',
 
@@ -141,7 +141,7 @@ shared_args = cc.get_supported_arguments(
 
 if trace_time.enabled()
     has_time_trace = cc.has_argument('-ftime-trace')
-    shared_args += cc.get_supported_arguments('-ftime-trace')
+    all_args += cc.get_supported_arguments('-ftime-trace')
     ninjatracing = find_program('data/scripts/ninjatracing/ninjatracing')
 
     trace_args = has_time_trace ? [ '--embed-time-trace' ] : [ ]
@@ -211,10 +211,10 @@ if has_cpp
         '-Wno-missing-field-initializers'
     )
 
-    add_project_arguments(extra_cpp_args + shared_args, language : 'cpp')
+    add_project_arguments(extra_cpp_args + all_args, language : 'cpp')
 endif
 
-add_project_arguments(shared_args, language : [ 'c' ])
+add_project_arguments(all_args, language : [ 'c' ])
 
 lexargs = []
 parseargs = []

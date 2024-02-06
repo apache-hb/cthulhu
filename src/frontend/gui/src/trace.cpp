@@ -50,9 +50,9 @@ void TraceArena::set_name(const void *ptr, const char *new_name)
     update_name(ptr, new_name);
 }
 
-void TraceArena::set_parent(const void *ptr, const void *parent)
+void TraceArena::set_parent(const void *ptr, const void *new_parent)
 {
-    update_parent(ptr, parent);
+    update_parent(ptr, new_parent);
 }
 
 void TraceArena::reset()
@@ -120,17 +120,17 @@ void TraceArena::delete_alloc(void *ptr)
     live_allocs.erase(ptr);
 }
 
-void TraceArena::update_parent(const void *ptr, const void *parent)
+void TraceArena::update_parent(const void *ptr, const void *new_parent)
 {
     remove_parents(ptr);
-    allocs[ptr].parent = parent;
+    allocs[ptr].parent = new_parent;
 
     // try and figure out if this points into an existing allocation
-    auto it = allocs.lower_bound(parent);
+    auto it = allocs.lower_bound(new_parent);
     if (it == allocs.end() || it == allocs.begin())
     {
         // this is a new parent
-        tree[parent].push_back(ptr);
+        tree[new_parent].push_back(ptr);
     }
     else
     {
@@ -138,7 +138,7 @@ void TraceArena::update_parent(const void *ptr, const void *parent)
         // this may be a child
         const uint8_t *possible_parent = reinterpret_cast<const uint8_t*>(it->first);
         alloc_info_t parent_info = it->second;
-        if (possible_parent <= parent && possible_parent + parent_info.size >= parent)
+        if (possible_parent <= new_parent && possible_parent + parent_info.size >= new_parent)
         {
             // this is a child
             tree[possible_parent].push_back(ptr);
@@ -146,7 +146,7 @@ void TraceArena::update_parent(const void *ptr, const void *parent)
         else
         {
             // this is a new parent
-            tree[parent].push_back(ptr);
+            tree[new_parent].push_back(ptr);
         }
     }
 }
@@ -161,7 +161,7 @@ void TraceArena::remove_parents(const void *ptr)
     auto iter = allocs.find(ptr);
     if (iter == allocs.end()) return;
 
-    for (auto& [parent, children] : tree)
+    for (auto& [_, children] : tree)
     {
         auto it = std::find(children.begin(), children.end(), iter->first);
         if (it != children.end())

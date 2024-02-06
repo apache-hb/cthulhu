@@ -11,6 +11,7 @@
 
 #include "std/str.h"
 #include "std/map.h"
+#include "std/vector.h"
 
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"

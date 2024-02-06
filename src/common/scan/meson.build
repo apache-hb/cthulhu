@@ -15,13 +15,13 @@ libscan = library('scan', src,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_SCAN_BUILD=1' ],
-    dependencies : [ arena, std, io, os ],
+    dependencies : [ arena, io ],
     include_directories : scan_include
 )
 
 scan = declare_dependency(
     link_with : libscan,
-    dependencies : [ core, base, os ],
+    dependencies : [ arena ],
     include_directories : scan_include
 )
 

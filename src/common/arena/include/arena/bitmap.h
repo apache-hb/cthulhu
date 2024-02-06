@@ -2,9 +2,6 @@
 
 #include <ctu_arena_api.h>
 
-#include <ctu_config.h>
-
-#include "core/analyze.h"
 #include "base/bitset.h"
 
 #include <limits.h>

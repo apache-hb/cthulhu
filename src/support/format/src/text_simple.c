@@ -1,15 +1,18 @@
-#include "common.h"
+#include "common_extra.h"
 
 #include "memory/memory.h"
 #include "format/notify.h"
 
-#include "base/panic.h"
 #include "io/io.h"
 #include "scan/node.h"
+
 #include "std/map.h"
 #include "std/str.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
+
+#include "base/panic.h"
+
 #include <string.h>
 
 #define COLOUR_NOTE eColourGreen

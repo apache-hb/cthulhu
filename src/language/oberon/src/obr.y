@@ -229,7 +229,7 @@ param_list: param_decl { $$ = $1; }
     | param_list SEMI param_decl { vector_append(&$1, $3); $$ = $1; }
     ;
 
-param_decl: mut ident_list COLON type { $$ = obr_expand_params($2, $4, $1); }
+param_decl: mut ident_list COLON type { $$ = obr_expand_params(x, $2, $4, $1); }
     ;
 
 mut: %empty { $$ = false; }
@@ -257,7 +257,7 @@ value_seq: value_decl { $$ = $1; }
     | value_seq value_decl { vector_append(&$1, $2); $$ = $1; }
     ;
 
-value_decl: ident_list COLON type SEMI { $$ = obr_expand_vars($1, $3); }
+value_decl: ident_list COLON type SEMI { $$ = obr_expand_vars(x, $1, $3); }
     ;
 
 /* types */
@@ -288,7 +288,7 @@ field_list: field_decl { $$ = $1; }
     | field_list SEMI field_decl { vector_append(&$1, $3); $$ = $1; }
     ;
 
-field_decl: ident_list COLON type { $$ = obr_expand_fields($1, $3); }
+field_decl: ident_list COLON type { $$ = obr_expand_fields(x, $1, $3); }
     ;
 
 /* statements */
@@ -382,7 +382,7 @@ ident_list: ident_def { $$ = vector_init($1, BISON_ARENA(x)); }
 
 ident_def: IDENT { $$ = obr_symbol(x, @$, $1, eObrVisPrivate); }
     | IDENT STAR { $$ = obr_symbol(x, @$, $1, eObrVisPublic); }
-    | IDENT MINUS { $$ = obr_symbol(x, @$, $1, eObrVisPublicReadOnly); }
+    | IDENT MINUS { $$ = obr_symbol(x, @$, $1, eObrVisReadOnly); }
     ;
 
 end: END { $$ = NULL; }

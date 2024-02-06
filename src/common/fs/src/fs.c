@@ -9,8 +9,6 @@
 
 #include "base/panic.h"
 
-#include <string.h>
-
 static vector_t *path_split(const char *path, arena_t *arena)
 {
     return str_split(path, "/", arena);

@@ -222,10 +222,12 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     // test name
     const char *name = argv[1];
     int start = 2;
+    bool is_shared = false;
 
     if (str_equal(argv[2], "--shared"))
     {
-        loaded_module_t mod = {};
+        is_shared = true;
+        loaded_module_t mod = { 0 };
         char *fullpath = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s", cwd.text, argv[3]);
         CTASSERTF(support_load_module(support, eModLanguage, fullpath, &mod), "failed to load module `%s` (%s: %s)", fullpath, load_error_string(mod.error), os_error_string(mod.os, arena));
         start = 4;
@@ -317,7 +319,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     c89_emit_result_t c89_emit_result = emit_c89(&c89_emit_options);
     CHECK_LOG(logger, "emitting c89");
 
-    const char *test_dir = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "test-out", cwd.text);
+    const char *test_dir = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "test-out%s", cwd.text, is_shared ? "-shared" : "-static");
     const char *run_dir = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s", test_dir, name);
 
     fs_t *out = fs_physical(run_dir, arena);

@@ -16,7 +16,7 @@ static visibility_t remap_visibility(obr_visibility_t vis)
     {
     case eObrVisPrivate: return eVisiblePrivate;
     case eObrVisPublic:
-    case eObrVisPublicReadOnly: return eVisiblePublic;
+    case eObrVisReadOnly: return eVisiblePublic;
     default: NEVER("remap-visibility %d", vis);
     }
 }
@@ -26,7 +26,7 @@ static tree_link_t remap_linkage(obr_visibility_t vis)
     switch (vis)
     {
     case eObrVisPublic:
-    case eObrVisPublicReadOnly:
+    case eObrVisReadOnly:
         return eLinkExport;
     default: return eLinkModule;
     }

@@ -1,11 +1,13 @@
+#include "common_extra.h"
+
 #include "format/notify2.h"
-#include "common.h"
 
 #include "io/io.h"
 
-#include "base/panic.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
+
+#include "base/panic.h"
 
 typedef struct notify_config_t
 {

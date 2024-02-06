@@ -1,11 +1,11 @@
 #include "common.h"
 
 #include "arena/arena.h"
-#include "base/util.h"
-#include "std/str.h"
-
 #include "os/os.h"
 
+#include "std/str.h"
+
+#include "base/util.h"
 #include "base/panic.h"
 
 // inode api

@@ -14,7 +14,7 @@ libendian = library('endian', src,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_ENDIAN_BUILD=1' ],
-    dependencies : [ core, base ],
+    dependencies : [ base ],
     include_directories : endian_include
 )
 

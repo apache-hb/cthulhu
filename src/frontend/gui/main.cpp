@@ -340,11 +340,11 @@ public:
         : ModuleInfo(lang->info)
         , lang(lang)
     {
-        language_info_t info = lang->builtin;
-        builtin_name.resize(info.name.length);
-        for (size_t i = 0; i < info.name.length; i++)
+        language_info_t builtins = lang->builtin;
+        builtin_name.resize(builtins.name.length);
+        for (size_t i = 0; i < builtins.name.length; i++)
         {
-            char c = info.name.text[i];
+            char c = builtins.name.text[i];
             if (c == '\0')
             {
                 builtin_name[i] = '/';
@@ -365,8 +365,8 @@ public:
 
     void draw_body()
     {
-        module_info_t info = lang->info;
-        if (ImGui::CollapsingHeader(info.name))
+        module_info_t mod = lang->info;
+        if (ImGui::CollapsingHeader(mod.name))
         {
             ModuleInfo::draw_info();
             ImGui::Text("Default extensions: %s", exts.c_str());
@@ -439,9 +439,9 @@ public:
 
     void draw_body()
     {
-        module_info_t info = plugin->info;
+        module_info_t mod = plugin->info;
         char label[128] = {};
-        (void)snprintf(label, std::size(label), "Plugin: %s", info.name);
+        (void)snprintf(label, std::size(label), "Plugin: %s", mod.name);
         ImGui::SeparatorText(label);
 
         ModuleInfo::draw_info();
@@ -469,9 +469,9 @@ public:
 
     void draw_body()
     {
-        module_info_t info = target->info;
+        module_info_t mod = target->info;
         char label[128] = {};
-        (void)snprintf(label, std::size(label), "Target: %s", info.name);
+        (void)snprintf(label, std::size(label), "Target: %s", mod.name);
         ImGui::SeparatorText(label);
 
         ModuleInfo::draw_info();

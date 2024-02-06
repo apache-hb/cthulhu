@@ -24,7 +24,7 @@ cc_lang = library('cc_lang', src,
 c = {}
 
 if module_loader.contains('static')
-    cc_static = library('cc', 'src/main.c',
+    cc_static = library('cc_static', 'src/main.c',
         link_with : cc_lang,
         dependencies : deps,
         c_args : user_args,
@@ -38,7 +38,7 @@ if module_loader.contains('static')
 endif
 
 if module_loader.contains('shared')
-    cc_shared = shared_module('cc', 'src/main.c',
+    cc_shared = shared_module('cc_shared', 'src/main.c',
         link_with : cc_lang,
         dependencies : deps,
         c_args : user_args + [ '-DCTU_DRIVER_SHARED=1' ],

@@ -1,11 +1,10 @@
 #include "common.h"
 
-#include "arena/arena.h"
 #include "std/str.h"
 #include "std/map.h"
 
 #include "os/os.h"
-#include "io/io.h"
+#include "io/impl.h"
 
 #include "base/util.h"
 #include "base/panic.h"

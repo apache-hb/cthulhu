@@ -22,10 +22,10 @@ namespace ed
             CT_UNUSED(new_name);
         }
 
-        virtual void set_parent(const void *ptr, const void *parent)
+        virtual void set_parent(const void *ptr, const void *new_parent)
         {
             CT_UNUSED(ptr);
-            CT_UNUSED(parent);
+            CT_UNUSED(new_parent);
         }
 
         void install_global();
