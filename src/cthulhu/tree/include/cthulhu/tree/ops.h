@@ -19,11 +19,11 @@ typedef enum tree_kind_t
 } tree_kind_t;
 
 /// @brief all type qualifiers
-typedef enum quals_t
+typedef enum tree_quals_t
 {
 #define TYPE_QUALIFIER(ID, NAME, FLAG) ID = (FLAG),
 #include "tree.def"
-} quals_t;
+} tree_quals_t;
 
 /// @brief all binary operators
 typedef enum binary_t
@@ -190,7 +190,7 @@ CT_TREE_API const char *digit_name(IN_RANGE(<, eDigitTotal) digit_t digit);
 ///
 /// @return the name of @p quals
 RET_NOTNULL
-CT_TREE_API const char *quals_name(quals_t quals);
+CT_TREE_API const char *quals_name(tree_quals_t quals);
 
 /// @brief get the name of a linkage
 ///

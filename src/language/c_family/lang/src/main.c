@@ -67,6 +67,7 @@ CT_DRIVER_API const language_t kCModule = {
     .exts = kLangNames,
 
     .context_size = sizeof(cc_scan_t),
+    .ast_size = sizeof(c_ast_t),
 
     .fn_create = cc_create,
     .fn_destroy = cc_destroy,

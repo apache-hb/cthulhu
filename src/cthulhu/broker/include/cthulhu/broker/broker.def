@@ -59,13 +59,16 @@ BROKER_EVENT(eEventMatchAttrib, "match_attribute")
 #endif
 
 // arena for language specific asts
-BROKER_ARENA(eBrokerArenaAst, "ast")
+BROKER_ARENA(eArenaAst, "ast")
 
 // arena for the tree IR produced by a language
-BROKER_ARENA(eBrokerArenaTree, "tree")
+BROKER_ARENA(eArenaTree, "tree")
+
+// arena for string allocations
+BROKER_ARENA(eArenaString, "string")
 
 // arena for transient allocations that
-// do not need to be persisted
-BROKER_ARENA(eBrokerArenaTransient, "transient")
+// do not need to be persisted between passes
+BROKER_ARENA(eArenaTransient, "transient")
 
 #undef BROKER_ARENA

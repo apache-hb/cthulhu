@@ -6,7 +6,10 @@ arena_api = configure_file(
 
 arena_include = include_directories('.', 'include')
 
-src = [ 'src/arena.c' ]
+src = [
+    'src/arena.c',
+    'src/bitmap.c'
+]
 
 libarena = library('arena', src,
     build_by_default : not meson.is_subproject(),

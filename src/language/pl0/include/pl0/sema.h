@@ -5,24 +5,12 @@
 typedef struct language_runtime_t language_runtime_t;
 typedef struct compile_unit_t compile_unit_t;
 
-typedef enum pl0_tag_t {
-    ePl0TagValues = eSemaValues,
-    ePl0TagTypes = eSemaTypes,
-    ePl0TagProcs = eSemaProcs,
-    ePl0TagModules = eSemaModules,
-
-    ePl0TagImportedValues,
-    ePl0TagImportedProcs,
-
+typedef enum pl0_tag_t
+{
+#define DECL_TAG(ID, INIT, STR) ID INIT,
+#include "pl0/pl0.def"
     ePl0TagTotal
 } pl0_tag_t;
-
-typedef struct pl0_sema_t
-{
-    tree_t *sema;
-    arena_t *arena;
-    logger_t *reports;
-} pl0_sema_t;
 
 void pl0_init(language_runtime_t *handle, tree_t *root);
 

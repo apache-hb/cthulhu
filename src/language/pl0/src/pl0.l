@@ -43,8 +43,8 @@ WS [ \t\r\v\n\f]
 (?i:odd) { return ODD; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
-    arena_t *arena = scan_get_arena(yyextra);
-    yylval->ident = arena_strdup(yytext, arena);
+    pl0_scan_t *ctx = pl0_scan_context(yyextra);
+    yylval->ident = arena_strndup(yytext, yyleng, ctx->string_arena);
     return IDENT;
 }
 
@@ -76,8 +76,8 @@ WS [ \t\r\v\n\f]
 "!" { return PRINT; }
 
 . {
-    pl0_scan_t *scan = pl0_scan_context(yyextra);
-    evt_scan_unknown(scan->logger, node_new(yyextra, *yylloc), yytext);
+    pl0_scan_t *ctx = pl0_scan_context(yyextra);
+    evt_scan_unknown(ctx->logger, node_new(yyextra, *yylloc), yytext);
 }
 
 %%

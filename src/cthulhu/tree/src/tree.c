@@ -30,11 +30,12 @@ tree_t *tree_new(tree_kind_t kind, const node_t *node, const tree_t *type)
     return self;
 }
 
-tree_t *tree_decl(tree_kind_t kind, const node_t *node, const tree_t *type, const char *name, quals_t quals)
+tree_t *tree_decl(tree_kind_t kind, const node_t *node, const tree_t *type, const char *name, tree_quals_t quals)
 {
     CTASSERT(name != NULL);
 
     tree_t *self = tree_new(kind, node, type);
+    ARENA_RENAME(self, name, get_global_arena());
 
     self->name = name;
     self->attrib = &kDefaultAttrib;

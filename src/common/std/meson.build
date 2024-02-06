@@ -12,7 +12,6 @@ src = [
     'src/set.c',
     'src/str.c',
     'src/vector.c',
-    'src/bitset.c',
 
     'src/typed/vector.c'
 ]

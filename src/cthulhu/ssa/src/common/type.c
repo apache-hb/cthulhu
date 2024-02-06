@@ -13,7 +13,7 @@
 
 #include <string.h>
 
-ssa_type_t *ssa_type_new(ssa_kind_t kind, const char *name, quals_t quals)
+ssa_type_t *ssa_type_new(ssa_kind_t kind, const char *name, tree_quals_t quals)
 {
     arena_t *arena = get_global_arena();
     ssa_type_t *type = ARENA_MALLOC(sizeof(ssa_type_t), name, NULL, arena);
@@ -23,22 +23,22 @@ ssa_type_t *ssa_type_new(ssa_kind_t kind, const char *name, quals_t quals)
     return type;
 }
 
-ssa_type_t *ssa_type_empty(const char *name, quals_t quals)
+ssa_type_t *ssa_type_empty(const char *name, tree_quals_t quals)
 {
     return ssa_type_new(eTypeEmpty, name, quals);
 }
 
-ssa_type_t *ssa_type_unit(const char *name, quals_t quals)
+ssa_type_t *ssa_type_unit(const char *name, tree_quals_t quals)
 {
     return ssa_type_new(eTypeUnit, name, quals);
 }
 
-ssa_type_t *ssa_type_bool(const char *name, quals_t quals)
+ssa_type_t *ssa_type_bool(const char *name, tree_quals_t quals)
 {
     return ssa_type_new(eTypeBool, name, quals);
 }
 
-ssa_type_t *ssa_type_digit(const char *name, quals_t quals, sign_t sign, digit_t digit)
+ssa_type_t *ssa_type_digit(const char *name, tree_quals_t quals, sign_t sign, digit_t digit)
 {
     ssa_type_digit_t it = { .sign = sign, .digit = digit };
     ssa_type_t *type = ssa_type_new(eTypeDigit, name, quals);
@@ -46,7 +46,7 @@ ssa_type_t *ssa_type_digit(const char *name, quals_t quals, sign_t sign, digit_t
     return type;
 }
 
-ssa_type_t *ssa_type_closure(const char *name, quals_t quals, ssa_type_t *result, typevec_t *params, bool variadic)
+ssa_type_t *ssa_type_closure(const char *name, tree_quals_t quals, ssa_type_t *result, typevec_t *params, bool variadic)
 {
     ssa_type_closure_t it = {
         .result = result,
@@ -59,7 +59,7 @@ ssa_type_t *ssa_type_closure(const char *name, quals_t quals, ssa_type_t *result
     return closure;
 }
 
-ssa_type_t *ssa_type_pointer(const char *name, quals_t quals, ssa_type_t *pointer, size_t length)
+ssa_type_t *ssa_type_pointer(const char *name, tree_quals_t quals, ssa_type_t *pointer, size_t length)
 {
     ssa_type_pointer_t it = {
         .pointer = pointer,
@@ -71,12 +71,12 @@ ssa_type_t *ssa_type_pointer(const char *name, quals_t quals, ssa_type_t *pointe
     return ptr;
 }
 
-ssa_type_t *ssa_type_opaque_pointer(const char *name, quals_t quals)
+ssa_type_t *ssa_type_opaque_pointer(const char *name, tree_quals_t quals)
 {
     return ssa_type_new(eTypeOpaque, name, quals);
 }
 
-ssa_type_t *ssa_type_struct(const char *name, quals_t quals, typevec_t *fields)
+ssa_type_t *ssa_type_struct(const char *name, tree_quals_t quals, typevec_t *fields)
 {
     ssa_type_record_t it = { .fields = fields };
     ssa_type_t *type = ssa_type_new(eTypeStruct, name, quals);
@@ -84,7 +84,7 @@ ssa_type_t *ssa_type_struct(const char *name, quals_t quals, typevec_t *fields)
     return type;
 }
 
-ssa_type_t *ssa_type_union(const char *name, quals_t quals, typevec_t *fields)
+ssa_type_t *ssa_type_union(const char *name, tree_quals_t quals, typevec_t *fields)
 {
     ssa_type_record_t it = { .fields = fields };
     ssa_type_t *type = ssa_type_new(eTypeUnion, name, quals);
@@ -92,7 +92,7 @@ ssa_type_t *ssa_type_union(const char *name, quals_t quals, typevec_t *fields)
     return type;
 }
 
-ssa_type_t *ssa_type_enum(const char *name, quals_t quals, ssa_type_t *underlying, typevec_t *cases)
+ssa_type_t *ssa_type_enum(const char *name, tree_quals_t quals, ssa_type_t *underlying, typevec_t *cases)
 {
     CTASSERTF(underlying->kind == eTypeDigit, "expected digit, got %d", underlying->kind);
 
@@ -186,7 +186,7 @@ static ssa_type_t *ssa_type_create(map_t *cache, const tree_t *type, arena_t *ar
 {
     tree_kind_t kind = tree_get_kind(type);
     const char *name = tree_get_name(type);
-    quals_t quals = tree_ty_get_quals(type);
+    tree_quals_t quals = tree_ty_get_quals(type);
 
     switch (kind)
     {

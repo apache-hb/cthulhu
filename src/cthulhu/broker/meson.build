@@ -16,7 +16,7 @@ libbroker = library('broker', src,
 )
 
 broker = declare_dependency(
-    dependencies : [ core, notify ],
+    dependencies : [ core, notify, arena ],
     link_with : libbroker,
     include_directories : broker_include
 )

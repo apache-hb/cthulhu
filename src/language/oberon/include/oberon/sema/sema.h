@@ -5,12 +5,8 @@
 typedef struct language_runtime_t language_runtime_t;
 
 typedef enum obr_tag_t {
-    eObrTagValues = eSemaValues,
-    eObrTagTypes = eSemaTypes,
-    eObrTagProcs = eSemaProcs,
-    eObrTagModules = eSemaModules,
-
-    eObrTagImports,
+#define DECL_TAG(ID, VAL, STR) ID VAL,
+#include "oberon/oberon.def"
 
     eObrTagTotal
 } obr_tag_t;

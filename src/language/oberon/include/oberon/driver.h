@@ -7,7 +7,7 @@ typedef struct compile_unit_t compile_unit_t;
 typedef struct tree_t tree_t;
 
 #define NEW_EVENT(id, ...) extern const diagnostic_t kEvent_##id;
-#include "events.def"
+#include "oberon.def"
 
 void obr_create(language_runtime_t *runtime, tree_t *root);
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ctu_std_api.h>
+#include <ctu_base_api.h>
 
 #include "core/analyze.h"
 
@@ -10,10 +10,8 @@
 
 CT_BEGIN_API
 
-typedef struct arena_t arena_t;
-
 /// @defgroup bitset Simple bitset
-/// @ingroup standard
+/// @ingroup base
 /// @brief Simple bitset
 /// @{
 
@@ -30,17 +28,6 @@ typedef struct bitset_t
 
 #define CT_BITSET_ARRAY(arr) { sizeof(arr), arr }
 
-/// @brief create a new bitset
-/// @pre @p bits > 0
-/// @pre @p arena is not NULL
-///
-/// @param bits the number of bits in the bitset
-/// @param arena the arena to allocate from
-///
-/// @return the new bitset
-CT_NODISCARD
-CT_STD_API bitset_t bitset_new(IN_RANGE(>, 0) size_t bits, IN_NOTNULL arena_t *arena);
-
 /// @brief create a bitset from a buffer
 /// @pre @p data is not NULL
 /// @pre @p words > 0
@@ -50,7 +37,16 @@ CT_STD_API bitset_t bitset_new(IN_RANGE(>, 0) size_t bits, IN_NOTNULL arena_t *a
 ///
 /// @return the new bitset
 CT_NODISCARD
-CT_STD_API bitset_t bitset_of(IN_READS(words) void *data, size_t words);
+CT_BASE_API bitset_t bitset_of(IN_READS(words) void *data, size_t words);
+
+/// @brief scan for the next free bit and set it
+///
+/// @param set the bitset to scan
+/// @param start the index to start scanning from
+///
+/// @return the index of the next free bit, or SIZE_MAX if none are free
+CT_NODISCARD
+CT_BASE_API size_t bitset_set_first(IN_NOTNULL bitset_t set, size_t start);
 
 /// @brief test if any bits in a given mask are set
 ///
@@ -58,7 +54,7 @@ CT_STD_API bitset_t bitset_of(IN_READS(words) void *data, size_t words);
 /// @param mask the mask to test
 ///
 /// @return true if any bits in the mask are set
-CT_STD_API bool bitset_any(IN_NOTNULL const bitset_t set, IN_NOTNULL const bitset_t mask);
+CT_BASE_API bool bitset_any(IN_NOTNULL const bitset_t set, IN_NOTNULL const bitset_t mask);
 
 /// @brief test if all bits in a given mask are set
 ///
@@ -66,7 +62,7 @@ CT_STD_API bool bitset_any(IN_NOTNULL const bitset_t set, IN_NOTNULL const bitse
 /// @param mask the mask to test
 ///
 /// @return true if all bits in the mask are set
-CT_STD_API bool bitset_all(IN_NOTNULL const bitset_t set, IN_NOTNULL const bitset_t mask);
+CT_BASE_API bool bitset_all(IN_NOTNULL const bitset_t set, IN_NOTNULL const bitset_t mask);
 
 /// @brief test if a bit is set
 ///
@@ -74,31 +70,31 @@ CT_STD_API bool bitset_all(IN_NOTNULL const bitset_t set, IN_NOTNULL const bitse
 /// @param index the index of the bit to test
 ///
 /// @return true if the bit is set
-CT_STD_API bool bitset_test(IN_NOTNULL const bitset_t set, size_t index);
+CT_BASE_API bool bitset_test(IN_NOTNULL const bitset_t set, size_t index);
 
 /// @brief set a bit
 ///
 /// @param set the bitset to modify
 /// @param index the index of the bit to set
-CT_STD_API void bitset_set(IN_NOTNULL bitset_t set, size_t index);
+CT_BASE_API void bitset_set(IN_NOTNULL bitset_t set, size_t index);
 
 /// @brief clear a bit
 ///
 /// @param set the bitset to modify
 /// @param index the index of the bit to clear
-CT_STD_API void bitset_clear(IN_NOTNULL bitset_t set, size_t index);
+CT_BASE_API void bitset_clear(IN_NOTNULL bitset_t set, size_t index);
 
 /// @brief reset all bits in a bitset
 ///
 /// @param set the bitset to reset
-CT_STD_API void bitset_reset(IN_NOTNULL bitset_t set);
+CT_BASE_API void bitset_reset(IN_NOTNULL bitset_t set);
 
 /// @brief get the number of bits in a bitset
 ///
 /// @param set the bitset to get the length of
 ///
 /// @return the number of bits in the bitset
-CT_STD_API size_t bitset_len(IN_NOTNULL const bitset_t set);
+CT_BASE_API size_t bitset_len(IN_NOTNULL const bitset_t set);
 
 /// @}
 

@@ -1,5 +1,5 @@
-#include "std/bitset.h"
-#include "arena/arena.h"
+#include "base/bitset.h"
+
 #include "base/panic.h"
 #include "core/macros.h"
 
@@ -8,12 +8,8 @@
 
 typedef unsigned char bitset_word_t;
 
+#define BITSET_WORD_MAX (UCHAR_MAX)
 #define WORD_SIZE (sizeof(bitset_word_t) * CHAR_BIT)
-
-static size_t word_count_from_bits(size_t bits)
-{
-    return (bits + (WORD_SIZE - 1)) / (WORD_SIZE);
-}
 
 // index of the word containing the bit
 static size_t word_index(size_t bit)
@@ -40,18 +36,6 @@ static bitset_word_t *word_at(const bitset_t set, size_t index)
 }
 
 USE_DECL
-bitset_t bitset_new(size_t bits, arena_t *arena)
-{
-    CTASSERT(bits > 0);
-    CTASSERT(arena != NULL);
-
-    size_t words = word_count_from_bits(bits);
-    void *data = ARENA_MALLOC(words, "bitset", NULL, arena);
-
-    return bitset_of(data, words);
-}
-
-USE_DECL
 bitset_t bitset_of(void *data, size_t words)
 {
     CTASSERT(data != NULL);
@@ -63,6 +47,34 @@ bitset_t bitset_of(void *data, size_t words)
     };
 
     return bitset;
+}
+
+USE_DECL
+size_t bitset_set_first(bitset_t set, size_t start)
+{
+    bitset_word_t *data = bitset_start(set);
+
+    for (size_t i = word_index(start); i < set.words; i++)
+    {
+        bitset_word_t word = data[i];
+
+        if (word == BITSET_WORD_MAX)
+            continue;
+
+        size_t offset = word_offset(start);
+        for (size_t j = offset; j < WORD_SIZE; j++)
+        {
+            if ((word & (1 << j)) == 0)
+            {
+                // set bit
+                data[i] |= (1 << j);
+
+                return i * WORD_SIZE + j;
+            }
+        }
+    }
+
+    return SIZE_MAX;
 }
 
 USE_DECL

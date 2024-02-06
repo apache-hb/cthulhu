@@ -2,6 +2,8 @@
 
 #include <ctu_broker_api.h>
 
+#include "arena/arena.h"
+#include "arena/bitmap.h"
 #include "core/compiler.h"
 #include "core/text.h"
 #include "core/version_def.h"
@@ -110,9 +112,15 @@ typedef struct language_builtins_t
     /// @brief passthrough decl sizes for the builtin module
     FIELD_SIZE(length) const size_t *decls;
 
+    /// @brief name of each decl tag
+    FIELD_SIZE(length) const char * const *names;
+
     /// @brief size of decls
     FIELD_RANGE(>=, eSemaTotal) size_t length;
 } language_info_t;
+
+/// @brief convert a tree node to a string
+typedef char *(*lang_repr_tree_t)(tree_t *tree, arena_t *arena);
 
 /// @brief a language driver support capabilities
 typedef struct language_t
@@ -123,12 +131,18 @@ typedef struct language_t
     /// @brief builtin module configuration
     language_info_t builtin;
 
+    /// @brief convert a tree node to a string
+    lang_repr_tree_t repr_tree;
+
     /// @brief the file extensions this language can parse
     /// @note this is a null terminated array
     const char * const *exts;
 
     /// @brief the size of the scan context for this language
     size_t context_size;
+
+    /// @brief the size of an ast node for this language
+    size_t ast_size;
 
     /// @brief called once at startup
     language_create_t fn_create;
@@ -227,8 +241,12 @@ typedef struct language_runtime_t
     const language_t *info;
     broker_t *broker;
 
-    /// @brief memory arena
+    /// @brief default memory arena
     arena_t *arena;
+
+    /// @brief arena for the language ast
+    arena_t ast_arena;
+    bitmap_t *ast_bitmap;
 
     /// @brief logger
     logger_t *logger;

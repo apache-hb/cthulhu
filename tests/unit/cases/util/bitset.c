@@ -2,7 +2,7 @@
 
 #include "setup/memory.h"
 
-#include "std/bitset.h"
+#include "base/bitset.h"
 
 int main(void)
 {
@@ -14,13 +14,15 @@ int main(void)
 
     {
         test_group_t group = test_group(&suite, "construction");
-        bitset_t a = bitset_new(3, arena);
+        char data[8];
+        bitset_t a = CT_BITSET_ARRAY(data);
         GROUP_EXPECT_PASS(group, "length >= 3", bitset_len(a) >= 3);
     }
 
     {
         test_group_t group = test_group(&suite, "set");
-        bitset_t a = bitset_new(3, arena);
+        char data[8];
+        bitset_t a = CT_BITSET_ARRAY(data);
         bitset_set(a, 0);
         GROUP_EXPECT_PASS(group, "set bit 0", bitset_test(a, 0));
         bitset_set(a, 1);
@@ -31,7 +33,8 @@ int main(void)
 
     {
         test_group_t group = test_group(&suite, "clear");
-        bitset_t a = bitset_new(3, arena);
+        char data[8];
+        bitset_t a = CT_BITSET_ARRAY(data);
         bitset_set(a, 0);
         bitset_set(a, 1);
         bitset_set(a, 2);

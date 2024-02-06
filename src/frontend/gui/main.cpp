@@ -1,3 +1,5 @@
+#include "interop/compile.h"
+#include "io/io.h"
 #include "setup/setup.h"
 #include "editor/compile.hpp"
 #include "editor/config.hpp"
@@ -271,7 +273,25 @@ class ModuleInfo
         ImGui::Text("%s: %d.%d.%d", id, major, minor, patch);
     }
 
+    void draw_diagnostics(diagnostic_list_t list) const
+    {
+        if (ImGui::TreeNode((void*)this, "Diagnostics: %zu", list.count))
+        {
+            for (size_t i = 0; i < list.count; i++)
+            {
+                const diagnostic_t *diag = list.diagnostics[i];
+                char label[128];
+                (void)std::snprintf(label, std::size(label), "Diagnostic %s | %s", diag->id, severity_name(diag->severity));
+                ImGui::SeparatorText(label);
+                ImGui::TextWrapped("%s", diag->brief ? diag->brief : "no brief");
+                ImGui::TextWrapped("%s", diag->description ? diag->description : "no description");
+            }
+            ImGui::TreePop();
+        }
+    }
+
 public:
+    const char *get_name() const { return info.name; }
     ModuleInfo(const module_info_t& info)
         : info(info)
     { }
@@ -285,6 +305,7 @@ public:
         ImGui::Text("Description: %s", version.desc);
         ImGui::Text("Author: %s", version.author);
         draw_version("Version", version.version);
+        draw_diagnostics(info.diagnostics);
     }
 
     void draw_body() const
@@ -307,11 +328,12 @@ public:
     bool show = true;
 };
 
-class LanguageModule : ModuleInfo
+class LanguageModule : public ModuleInfo
 {
     const language_t *lang;
 
     std::string builtin_name;
+    std::string exts;
 
 public:
     LanguageModule(const language_t *lang)
@@ -332,56 +354,80 @@ public:
                 builtin_name[i] = c;
             }
         }
+
+        for (size_t i = 0; lang->exts[i]; i++)
+        {
+            if (i > 0)
+                exts += ", ";
+            exts += lang->exts[i];
+        }
     }
 
     void draw_body()
     {
         module_info_t info = lang->info;
-        char label[128] = {};
-        (void)snprintf(label, std::size(label), "Language: %s", info.name);
-        ImGui::SeparatorText(label);
-
-        ModuleInfo::draw_info();
-        ImGui::Text("Create %p", lang->fn_create);
-        ImGui::Text("Destroy %p", lang->fn_destroy);
-        ImGui::Text("Default extensions: ");
-        for (size_t i = 0; lang->exts[i]; i++)
+        if (ImGui::CollapsingHeader(info.name))
         {
-            ImGui::SameLine();
-            if (i > 0)
+            ModuleInfo::draw_info();
+            ImGui::Text("Default extensions: %s", exts.c_str());
+            ImGui::Text("Context size: %zu", lang->context_size);
+            ImGui::Text("AST size: %zu", lang->ast_size);
+
+            if (ImGui::TreeNode((void*)&lang->builtin, "Builtin"))
             {
-                ImGui::Text(", ");
-                ImGui::SameLine();
+                ImGui::BulletText("Builtin module: %s", builtin_name.c_str());
+                language_info_t builtin = lang->builtin;
+                for (size_t i = 0; i < builtin.length; i++)
+                {
+                    const char *name = builtin.names ? builtin.names[i] : "unknown";
+                    ImGui::BulletText("Initial size %s: %zu", name, builtin.decls[i]);
+                }
+                ImGui::TreePop();
             }
-            ImGui::Text("%s", lang->exts[i]);
-        }
 
-        ImGui::Text("Context size: %zu", lang->context_size);
+            if (ImGui::TreeNode((void*)lang, "Callbacks"))
+            {
+                ImGui::BulletText("Create %p", lang->fn_create);
+                ImGui::BulletText("Destroy %p", lang->fn_destroy);
 
-        ImGui::SeparatorText("Builtin");
-        ImGui::Text("Name: %s", builtin_name.c_str());
-        for (size_t i = 0; i < lang->builtin.length; i++)
-        {
-            ImGui::BulletText("Initial map size %zu: %zu", i, lang->builtin.decls[i]);
-        }
+                ImGui::BulletText("Preparse %p", lang->fn_preparse);
+                ImGui::BulletText("Postparse %p", lang->fn_postparse);
+                ImGui::TreePop();
+            }
 
-        ImGui::Text("Create %p", lang->fn_create);
-        ImGui::Text("Destroy %p", lang->fn_destroy);
+            const scan_callbacks_t *scan = lang->scanner;
+            if (ImGui::TreeNode((void*)&lang->scanner, "Scanner %p", scan))
+            {
+                if (scan != nullptr)
+                {
+                    ImGui::BulletText("Init %p", scan->init);
+                    ImGui::BulletText("Parse %p", scan->parse);
+                    ImGui::BulletText("Scan %p", scan->scan);
+                    ImGui::BulletText("Destroy buffer %p", scan->destroy_buffer);
+                    ImGui::BulletText("Destroy %p", scan->destroy);
+                }
+                else
+                {
+                    ImGui::Text("No scanner");
+                }
 
-        ImGui::Text("Preparse %p", lang->fn_preparse);
-        ImGui::Text("Postparse %p", lang->fn_postparse);
-        ImGui::Text("Scanner %p", lang->scanner);
+                ImGui::TreePop();
+            }
 
-        ImGui::SeparatorText("Passes");
-        for (size_t i = 0; i < ePassCount; i++)
-        {
-            broker_pass_t pass = static_cast<broker_pass_t>(i);
-            ImGui::BulletText("Pass %s: %p", broker_pass_name(pass), lang->fn_passes[i]);
+            if (ImGui::TreeNode((void*)&lang->fn_passes, "Passes"))
+            {
+                for (size_t i = 0; i < ePassCount; i++)
+                {
+                    broker_pass_t pass = static_cast<broker_pass_t>(i);
+                    ImGui::BulletText("Pass %s: %p", broker_pass_name(pass), lang->fn_passes[i]);
+                }
+                ImGui::TreePop();
+            }
         }
     }
 };
 
-class PluginModule : ModuleInfo
+class PluginModule : public ModuleInfo
 {
     const plugin_t *plugin;
 
@@ -411,7 +457,7 @@ public:
     }
 };
 
-class TargetModule : ModuleInfo
+class TargetModule : public ModuleInfo
 {
     const target_t *target;
 
@@ -436,6 +482,64 @@ public:
     }
 };
 
+template<typename T>
+void draw_module(const T& mod)
+{
+    if (ImGui::CollapsingHeader(mod.get_name()))
+    {
+        mod.draw_info();
+    }
+}
+
+class SourceCode
+{
+    io_t *io = nullptr;
+    const char *path = nullptr;
+    const char *text = nullptr;
+    size_t size = 0;
+
+    io_error_t error = 0;
+    char *str = nullptr;
+    bool open = true;
+
+    void init(arena_t *arena)
+    {
+        path = io_name(io);
+
+        size = io_size(io);
+        text = (char*)io_map(io, eProtectRead);
+
+        error = io_error(io);
+        if (error)
+        {
+            str = os_error_string(error, arena);
+        }
+    }
+public:
+    SourceCode(io_t *io, arena_t *arena)
+        : io(io)
+    {
+        init(arena);
+    }
+
+    void draw_body()
+    {
+        if (ImGui::BeginTabItem(path, &open, ImGuiTabItemFlags_None))
+        {
+            if (error)
+            {
+                ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "Error: %s", str);
+            }
+            else
+            {
+                ImGui::TextWrapped("%s", text);
+            }
+
+            ImGui::EndTabItem();
+        }
+    }
+};
+
 class EditorUi
 {
     ed::TraceArena global{ "global", ed::TraceArena::eDrawTree };
@@ -451,6 +555,16 @@ class EditorUi
     std::vector<LanguageModule> languages;
     std::vector<PluginModule> plugins;
     std::vector<TargetModule> targets;
+
+    std::vector<SourceCode> sources;
+
+    void draw_source_files()
+    {
+        for (auto &source : sources)
+        {
+            source.draw_body();
+        }
+    }
 
     void add_module(const loaded_module_t &mod)
     {
@@ -512,29 +626,39 @@ class EditorUi
 
         if (ImGui::Begin("Modules", &show_module_info))
         {
-            if (ImGui::CollapsingHeader("Languages", ImGuiTreeNodeFlags_DefaultOpen))
+            if (ImGui::BeginTabBar("ModuleTabs"))
             {
-                for (auto &lang : languages)
+                if (ImGui::BeginTabItem("Languages"))
                 {
-                    lang.draw_body();
-                }
-            }
+                    for (auto &lang : languages)
+                    {
+                        draw_module(lang);
+                    }
 
-            if (ImGui::CollapsingHeader("Plugins", ImGuiTreeNodeFlags_DefaultOpen))
-            {
-                for (auto &plugin : plugins)
-                {
-                    plugin.draw_body();
+                    ImGui::EndTabItem();
                 }
-            }
 
-            if (ImGui::CollapsingHeader("Targets", ImGuiTreeNodeFlags_DefaultOpen))
-            {
-                for (auto &target : targets)
+                if (ImGui::BeginTabItem("Plugins"))
                 {
-                    target.draw_body();
+                    for (auto &plugin : plugins)
+                    {
+                        draw_module(plugin);
+                    }
+
+                    ImGui::EndTabItem();
+                }
+
+                if (ImGui::BeginTabItem("Targets"))
+                {
+                    for (auto &target : targets)
+                    {
+                        draw_module(target);
+                    }
+
+                    ImGui::EndTabItem();
                 }
             }
+            ImGui::EndTabBar();
         }
         ImGui::End();
     }
@@ -639,6 +763,49 @@ private:
         }
     }
 
+    bool show_loader = true;
+
+    void draw_module_loader()
+    {
+        if (!default_modules_loaded)
+        {
+            if (ImGui::Button("Load default modules"))
+            {
+                load_default_modules();
+            }
+        }
+
+        ImGui::InputText("Load shared module", module_path, std::size(module_path));
+        ImGui::CheckboxFlags("Language", &mask, eModLanguage);
+        ImGui::SameLine(); ImGui::CheckboxFlags("Plugin", &mask, eModPlugin);
+        ImGui::SameLine(); ImGui::CheckboxFlags("Target", &mask, eModTarget);
+        ImGui::BeginDisabled(mask == eModNone || module_path[0] == '\0');
+        if (ImGui::Button("Load"))
+        {
+            loaded_module_t mod = {};
+            if (support_load_module(support, module_type_t(mask), module_path, &mod))
+            {
+                add_module(mod);
+            }
+            else
+            {
+                error = load_error_string(mod.error);
+                os_error = os_error_string(mod.os, &global);
+            }
+        }
+        ImGui::EndDisabled();
+
+        if (error.length() > 0)
+        {
+            ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "Error: %s", error.c_str());
+        }
+
+        if (os_error.length() > 0)
+        {
+            ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "Error: %s", os_error.c_str());
+        }
+    }
+
     static constexpr ImGuiWindowFlags kMainFlags = ImGuiWindowFlags_NoDecoration
                                                  | ImGuiWindowFlags_NoMove;
 
@@ -648,6 +815,8 @@ private:
     std::string error;
     std::string os_error;
 
+    char source_path[512] = { 0 };
+
     void draw_setup_window()
     {
         const ImGuiViewport *viewport = ImGui::GetMainViewport();
@@ -656,45 +825,35 @@ private:
 
         if (ImGui::Begin("Compiler", nullptr, kMainFlags))
         {
-            ImGui::Text("Cthulhu Compiler Collection GUI");
-
-            if (!default_modules_loaded)
+            if (ImGui::BeginTabBar("CompilerTabs"))
             {
-                if (ImGui::Button("Load default modules"))
+                if (ImGui::TabItemButton("+", ImGuiTabItemFlags_NoTooltip | ImGuiTabItemFlags_Trailing))
+                    ImGui::OpenPopup("AddSource");
+
+                if (ImGui::BeginPopup("AddSource"))
                 {
-                    load_default_modules();
+                    ImGui::InputText("Path", source_path, std::size(source_path));
+                    if (ImGui::Button("Add"))
+                    {
+                        io_t *io = io_file(source_path, eAccessRead, &global);
+                        sources.emplace_back(io, &global);
+                        ImGui::CloseCurrentPopup();
+                    }
+
+                    ImGui::EndPopup();
+                }
+
+                draw_source_files();
+
+                bool *p_show_loader = (sources.empty() && !default_modules_loaded) ? nullptr : &show_loader;
+
+                if (ImGui::BeginTabItem("Loader", p_show_loader, ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip))
+                {
+                    draw_module_loader();
+                    ImGui::EndTabItem();
                 }
             }
-
-            ImGui::InputText("Load shared module", module_path, std::size(module_path));
-            ImGui::CheckboxFlags("Language", &mask, eModLanguage);
-            ImGui::SameLine(); ImGui::CheckboxFlags("Plugin", &mask, eModPlugin);
-            ImGui::SameLine(); ImGui::CheckboxFlags("Target", &mask, eModTarget);
-            ImGui::BeginDisabled(mask == eModNone || module_path[0] == '\0');
-            if (ImGui::Button("Load"))
-            {
-                loaded_module_t mod = {};
-                if (support_load_module(support, module_type_t(mask), module_path, &mod))
-                {
-                    add_module(mod);
-                }
-                else
-                {
-                    error = load_error_string(mod.error);
-                    os_error = os_error_string(mod.os, &global);
-                }
-            }
-            ImGui::EndDisabled();
-
-            if (error.length() > 0)
-            {
-                ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "Error: %s", error.c_str());
-            }
-
-            if (os_error.length() > 0)
-            {
-                ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "Error: %s", os_error.c_str());
-            }
+            ImGui::EndTabBar();
         }
         ImGui::End();
     }

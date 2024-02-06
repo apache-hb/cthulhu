@@ -157,7 +157,7 @@ typedef struct tree_t {
             const char *name; ///< the name of the declaration
             const tree_attribs_t *attrib; ///< the attributes of the declaration
             const tree_resolve_info_t *resolve; ///< the resolve configuration of the declaration, NULL if resolved
-            quals_t quals;
+            tree_quals_t quals;
             eval_model_t eval_model;
 
             union {

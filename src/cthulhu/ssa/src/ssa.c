@@ -127,7 +127,7 @@ static ssa_symbol_t *symbol_create_decl(ssa_compile_t *ssa, const tree_t *tree, 
     return symbol_new(ssa, name, tree_get_type(tree), *attrib, storage);
 }
 
-static ssa_storage_t create_new_storage(map_t *types, const tree_t *type, size_t size, quals_t quals)
+static ssa_storage_t create_new_storage(map_t *types, const tree_t *type, size_t size, tree_quals_t quals)
 {
     ssa_storage_t storage = {
         .type = ssa_type_create_cached(types, type),
@@ -142,7 +142,7 @@ static ssa_storage_t create_storage_for_decl(map_t *types, const tree_t *decl)
 {
     const tree_t *type = tree_get_storage_type(decl);
     size_t size = tree_get_storage_size(decl);
-    quals_t quals = tree_get_storage_quals(decl);
+    tree_quals_t quals = tree_get_storage_quals(decl);
     return create_new_storage(types, type, size, quals);
 }
 

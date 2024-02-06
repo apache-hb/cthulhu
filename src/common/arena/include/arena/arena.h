@@ -103,6 +103,9 @@ typedef struct arena_t
 
     /// @brief user data pointer
     void *user;
+
+    /// @brief parent arena
+    struct arena_t *parent;
 } arena_t;
 
 /// @brief release memory from a custom allocator
@@ -133,6 +136,24 @@ CT_ARENA_API void arena_free(
 CT_NODISCARD CT_ALLOC(arena_free) CT_ALLOC_SIZE(1)
 RET_NOTNULL
 CT_ARENA_API void *arena_malloc(
+    IN_RANGE(!=, 0) size_t size,
+    IN_NOTNULL arena_t *arena);
+
+/// @brief allocate memory from a custom allocator
+/// @pre @p ptr must be allocated from @p arena
+/// @pre @p size must be > 0
+/// @pre @p arena must not be NULL
+/// @note is @p name is specified, it must be a valid null terminated string
+///
+/// @param arena the allocator to use
+/// @param size the size of the allocation, must be greater than 0
+/// @param name the name of the allocation
+/// @param parent the parent of the allocation
+///
+/// @return the allocated pointer
+CT_NODISCARD CT_ALLOC(arena_free) CT_ALLOC_SIZE(1)
+RET_NOTNULL
+CT_ARENA_API void *arena_malloc_info(
     IN_RANGE(!=, 0) size_t size,
     const char *name,
     const void *parent,
@@ -237,6 +258,20 @@ CT_ARENA_API void arena_opt_free(
 /// @return the allocated pointer
 CT_NODISCARD CT_ALLOC(arena_opt_free) CT_ALLOC_SIZE(1)
 CT_ARENA_API void *arena_opt_malloc(
+    IN_RANGE(!=, 0) size_t size,
+    IN_NOTNULL arena_t *arena);
+
+/// @brief allocate memory from a custom allocator
+/// @pre @p ptr must be allocated from @p arena
+///
+/// @param arena the allocator to use
+/// @param size the size of the allocation, must be greater than 0
+/// @param name the name of the allocation
+/// @param parent the parent of the allocation
+///
+/// @return the allocated pointer
+CT_NODISCARD CT_ALLOC(arena_opt_free) CT_ALLOC_SIZE(1)
+CT_ARENA_API void *arena_opt_malloc_info(
     IN_RANGE(!=, 0) size_t size,
     const char *name,
     const void *parent,
@@ -357,13 +392,13 @@ CT_ARENA_API void arena_reparent(IN_NOTNULL const void *ptr, const void *parent,
 #if CTU_TRACE_MEMORY
 #   define ARENA_RENAME(ptr, name, arena) arena_rename((const void*)(ptr), name, arena)
 #   define ARENA_REPARENT(ptr, parent, arena) arena_reparent((const void*)(ptr), (const void*)(parent), arena)
-#   define ARENA_MALLOC(size, name, parent, arena) arena_malloc(size, name, (const void*)(parent), arena)
-#   define ARENA_OPT_MALLOC(size, name, parent, arena) arena_opt_malloc(size, name, (const void*)(parent), arena)
+#   define ARENA_MALLOC(size, name, parent, arena) arena_malloc_info(size, name, (const void*)(parent), arena)
+#   define ARENA_OPT_MALLOC(size, name, parent, arena) arena_opt_malloc_info(size, name, (const void*)(parent), arena)
 #else
 #   define ARENA_RENAME(arena, ptr, name)
 #   define ARENA_REPARENT(arena, ptr, parent)
-#   define ARENA_MALLOC(size, name, parent, arena) arena_malloc(size, NULL, NULL, arena)
-#   define ARENA_OPT_MALLOC(size, name, parent, arena) arena_opt_malloc(size, NULL, NULL, arena)
+#   define ARENA_MALLOC(size, name, parent, arena) arena_malloc(size, arena)
+#   define ARENA_OPT_MALLOC(size, name, parent, arena) arena_opt_malloc(size, arena)
 #endif
 
 /// @def ARENA_IDENTIFY(arena, ptr, name, parent)

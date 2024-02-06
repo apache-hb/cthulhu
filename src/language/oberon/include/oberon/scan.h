@@ -9,6 +9,10 @@ typedef struct logger_t logger_t;
 typedef struct obr_scan_t
 {
     logger_t *logger;
+
+    arena_t *arena;
+    arena_t *ast_arena;
+    arena_t *string_arena;
 } obr_scan_t;
 
 obr_scan_t *obr_scan_context(scan_t *scan);

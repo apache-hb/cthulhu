@@ -36,14 +36,17 @@ static void ctu_preparse(language_runtime_t *runtime, void *context)
     ctu_scan_t *ctx = context;
     ctx->logger = runtime->logger;
     ctx->attribs = vector_new(4, runtime->arena);
+    ctx->arena = runtime->arena;
+    ctx->ast_arena = &runtime->ast_arena;
+    ctx->string_arena = runtime->arena;
 }
 
 static void ctu_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
 {
     ctu_t *ast = tree;
     CTASSERT(ast->kind == eCtuModule);
-    arena_t *arena = scan_get_arena(scan);
 
+    arena_t *arena = runtime->arena;
     const vector_t *path = find_mod_path(ast, scan_path(scan), arena);
 
     size_t len = vector_len(ast->decls);
@@ -60,9 +63,12 @@ static void ctu_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
     lang_add_unit(runtime, build_unit_id(path, arena), ast->node, ast, sizes, eCtuTagTotal);
 }
 
+#define NEW_EVENT(name, ...) const diagnostic_t kEvent_##name = __VA_ARGS__;
+#include "ctu/ctu.def"
+
 static const diagnostic_t * const kDiagnosticTable[] = {
 #define NEW_EVENT(name, ...) &kEvent_##name,
-#include "ctu/events.def"
+#include "ctu/ctu.def"
 };
 
 static const char *const kLangNames[] = { "ct", "ctu", "cthulhu", NULL };
@@ -77,15 +83,20 @@ static const size_t kDeclSizes[eCtuTagTotal] = {
     [eCtuTagSuffixes] = 1,
 };
 
+static const char *const kDeclNames[eCtuTagTotal] = {
+#define DECL_TAG(id, val, name) [id] = (name),
+#include "ctu/ctu.def"
+};
+
 CT_DRIVER_API const language_t kCtuModule = {
     .info = {
-        .id = "ctu",
+        .id = "lang-cthulhu",
         .name = "Cthulhu",
         .version = {
             .license = "LGPLv3",
             .desc = "Cthulhu language driver",
             .author = "Elliot Haisley",
-            .version = CT_NEW_VERSION(0, 4, 0)
+            .version = CT_NEW_VERSION(0, 4, 0),
         },
 
         .diagnostics = {
@@ -95,14 +106,16 @@ CT_DRIVER_API const language_t kCtuModule = {
     },
 
     .builtin = {
-        .name = CT_TEXT_VIEW("ctulhu\0lang"),
+        .name = CT_TEXT_VIEW("ctu\0lang"),
         .decls = kDeclSizes,
+        .names = kDeclNames,
         .length = eCtuTagTotal,
     },
 
     .exts = kLangNames,
 
     .context_size = sizeof(ctu_scan_t),
+    .ast_size = sizeof(ctu_t),
 
     .fn_create = ctu_init,
 

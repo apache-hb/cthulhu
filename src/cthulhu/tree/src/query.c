@@ -141,11 +141,11 @@ tree_storage_t get_storage(const tree_t *self)
     return self->storage;
 }
 
-quals_t tree_get_storage_quals(const tree_t *self)
+tree_quals_t tree_get_storage_quals(const tree_t *self)
 {
     tree_storage_t storage = get_storage(self);
 
-    quals_t quals = storage.quals;
+    tree_quals_t quals = storage.quals;
     CTASSERTF((quals & (eQualConst | eQualMutable)) != (eQualConst | eQualMutable), "global %s has both const and mutable quals", tree_to_string(self));
     CTASSERTF(quals != eQualNone, "global %s has no quals", tree_to_string(self));
     return quals;
@@ -266,15 +266,15 @@ bool tree_ty_is_address(const tree_t *type)
     }
 }
 
-static quals_t get_quals(const tree_t *self)
+static tree_quals_t get_quals(const tree_t *self)
 {
     CTASSERT(self != NULL);
     return self->quals;
 }
 
-quals_t tree_ty_get_quals(const tree_t *self)
+tree_quals_t tree_ty_get_quals(const tree_t *self)
 {
-    quals_t quals = get_quals(self);
+    tree_quals_t quals = get_quals(self);
 
     // make sure we dont have both eQualConst and eQualMutable bits set
     CTASSERTF((quals & (eQualConst | eQualMutable)) != (eQualConst | eQualMutable), "type %s has both const and mutable quals", tree_to_string(self));

@@ -32,13 +32,13 @@ static void ensure_block_names_match(scan_t *scan, const node_t *node, const cha
 
 static obr_t *obr_new(scan_t *scan, where_t where, obr_kind_t kind)
 {
-    arena_t *arena = scan_get_arena(scan);
+    obr_scan_t *ctx = obr_scan_context(scan);
 
-    obr_t *self = ARENA_MALLOC(sizeof(obr_t), "obr", scan, arena);
+    obr_t *self = ARENA_MALLOC(sizeof(obr_t), "obr", scan, ctx->ast_arena);
     self->kind = kind;
     self->node = node_new(scan, where);
 
-    ARENA_IDENTIFY(self->node, "node", self, arena);
+    ARENA_IDENTIFY(self->node, "node", self, ctx->ast_arena);
 
     return self;
 }

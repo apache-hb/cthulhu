@@ -5,7 +5,7 @@
 #include "core/analyze.h"
 #include "core/compiler.h"
 
-#include "std/bitset.h"
+#include "base/bitset.h"
 
 #include <stdint.h>
 

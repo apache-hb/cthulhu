@@ -15,7 +15,7 @@
 # dont ignore flex and bison files
 !*.y
 !*.l
-!*.gen
+!*.lang
 
 # dont ignore test files
 !*.pl0
@@ -36,6 +36,8 @@
 !.clang-format
 !.github/workflows/*.yml
 !*.xml
+!*.json
+!*.toml
 
 # dont ignore licenses
 !LICENSE.txt

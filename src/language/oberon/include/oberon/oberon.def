@@ -51,3 +51,15 @@ NEW_EVENT(ArrayLengthNegative, {
 })
 
 #undef NEW_EVENT
+
+#ifndef DECL_TAG
+#   define DECL_TAG(id, val, name)
+#endif
+
+DECL_TAG(eObrTagValues, = eSemaValues, "values")
+DECL_TAG(eObrTagTypes, = eSemaTypes, "types")
+DECL_TAG(eObrTagProcs, = eSemaProcs, "procs")
+DECL_TAG(eObrTagModules, = eSemaModules, "modules")
+DECL_TAG(eObrTagImports, /* empty */ , "imports")
+
+#undef DECL_TAG

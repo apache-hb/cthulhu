@@ -8,17 +8,10 @@
 
 typedef struct language_runtime_t language_runtime_t;
 
-typedef enum ctu_tag_t {
-    eCtuTagValues = eSemaValues,
-    eCtuTagTypes = eSemaTypes,
-    eCtuTagFunctions = eSemaProcs,
-    eCtuTagModules = eSemaModules,
-
-    eCtuTagImports,
-    eCtuTagAttribs,
-    eCtuTagSuffixes,
-    eCtuTagLabels,
-
+typedef enum ctu_tag_t
+{
+#define DECL_TAG(ID, INIT, STR) ID INIT,
+#include "ctu/ctu.def"
     eCtuTagTotal
 } ctu_tag_t;
 
@@ -73,5 +66,4 @@ tree_t *ctu_get_void_type(void);
 /// runtime module
 ///
 
-vector_t *ctu_rt_path(void);
 void ctu_rt_mod(language_runtime_t *runtime, tree_t *root);

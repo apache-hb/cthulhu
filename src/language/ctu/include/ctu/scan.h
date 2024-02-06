@@ -13,6 +13,10 @@ typedef struct ctu_scan_t
 {
     logger_t *logger;
     vector_t *attribs;
+
+    arena_t *arena;
+    arena_t *ast_arena;
+    arena_t *string_arena;
 } ctu_scan_t;
 
 typedef struct ctu_digit_t

@@ -55,6 +55,6 @@ executable('gui', src,
         imgui, core, os, scan,
         memory, notify, config, setup,
         io, broker, support, ssa, tree, backtrace,
-        arena
+        arena, interop
     ]
 )

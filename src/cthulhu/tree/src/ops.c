@@ -115,7 +115,7 @@ const char *digit_name(digit_t digit)
 // );
 
 USE_DECL
-const char *quals_name(quals_t quals)
+const char *quals_name(tree_quals_t quals)
 {
     arena_t *arena = get_global_arena();
 #define TYPE_QUALIFIER(ID, STR, BIT) if (quals & (BIT)) { vector_push(&names, (char*)(STR)); }

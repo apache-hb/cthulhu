@@ -12,6 +12,7 @@
 #include "std/map.h"
 #include "std/vector.h"
 #include <stdio.h>
+#include <string.h>
 
 typedef struct broker_t
 {
@@ -106,15 +107,15 @@ static compile_unit_t *compile_unit_new(language_runtime_t *lang, arena_t *arena
     CTASSERT(lang != NULL);
     CTASSERT(arena != NULL);
     CTASSERT(tree != NULL);
+    broker_t *broker = lang->broker;
 
-    compile_unit_t *unit = ARENA_MALLOC(sizeof(compile_unit_t), NULL, lang, arena);
+    compile_unit_t *unit = ARENA_MALLOC(sizeof(compile_unit_t), "compilation unit", lang, arena);
     unit->lang = lang;
     unit->ast = ast;
     unit->tree = tree;
-
-    broker_t *broker = lang->broker;
-
     tree_module_set(broker->root, eSemaModules, tree_get_name(tree), tree);
+
+    ARENA_REPARENT(tree, unit, arena);
 
     return unit;
 }
@@ -137,10 +138,15 @@ broker_t *broker_new(const frontend_t *frontend, arena_t *arena)
     broker->builtin = node_builtin(info.name, arena);
     broker->logger = logger_new(arena);
 
+    ARENA_REPARENT(broker->builtin, broker, arena);
+    ARENA_REPARENT(broker->logger, broker, arena);
+
     tree_cookie_t cookie = {
         .reports = broker->logger,
         .stack = vector_new(16, arena)
     };
+
+    ARENA_REPARENT(cookie.stack, broker, arena);
 
     broker->cookie = cookie;
     broker->root = tree_module_root(broker->logger, &broker->cookie, broker->builtin, info.name, eSemaTotal, kDeclSizes, arena);
@@ -151,6 +157,13 @@ broker_t *broker_new(const frontend_t *frontend, arena_t *arena)
 
     broker->units = map_new(64, kTypeInfoText, arena);
     broker->builtins = map_new(64, kTypeInfoText, arena);
+
+    ARENA_REPARENT(broker->root, broker, arena);
+    ARENA_REPARENT(broker->langs, broker, arena);
+    ARENA_REPARENT(broker->targets, broker, arena);
+    ARENA_REPARENT(broker->plugins, broker, arena);
+    ARENA_REPARENT(broker->units, broker, arena);
+    ARENA_REPARENT(broker->builtins, broker, arena);
 
     return broker;
 }
@@ -180,14 +193,37 @@ language_runtime_t *broker_add_language(broker_t *broker, const language_t *lang
     runtime->arena = arena;
     runtime->logger = broker->logger;
 
+    if (lang->ast_size != 0)
+    {
+        runtime->ast_bitmap = bitmap_new(0x1000, lang->ast_size, arena);
+        ARENA_IDENTIFY(runtime->ast_bitmap, "ast bitmap arena", runtime, arena);
+
+        arena_t ast_arena = {
+            .name = "ast",
+            .parent = arena,
+        };
+
+        bitmap_arena_init(&ast_arena, runtime->ast_bitmap);
+        runtime->ast_arena = ast_arena;
+    }
+    else
+    {
+        runtime->ast_bitmap = NULL;
+        memset(&runtime->ast_arena, 0, sizeof(arena_t));
+    }
+
     node_t *node = node_builtin(info.id, arena);
+    ARENA_REPARENT(node, runtime, arena);
 
     // all builtins for the language go into this module
     tree_t *tree = tree_module(broker->root, node, info.id, builtin.length, builtin.decls);
+    ARENA_REPARENT(tree, runtime, arena);
+
     runtime->root = tree;
     vector_push(&broker->langs, runtime);
 
     compile_unit_t *unit = compile_unit_new(runtime, arena, NULL, tree);
+
     map_set(broker->builtins, &builtin.name, unit);
 
     tree_module_set(broker->root, eSemaModules, info.id, tree);
@@ -343,6 +379,8 @@ vector_t *broker_get_modules(broker_t *broker)
     collect_units(&modules, broker->builtins);
     collect_units(&modules, broker->units);
 
+    ARENA_IDENTIFY(modules, "modules", broker, broker->arena);
+
     return modules;
 }
 
@@ -363,6 +401,8 @@ void broker_parse(language_runtime_t *runtime, io_t *io)
     CTASSERTF(lang->scanner != NULL, "language '%s' did not specify a scanner", info->name);
 
     scan_t *scan = scan_io(info->name, io, broker->arena);
+    ARENA_REPARENT(scan, runtime, broker->arena);
+
     void *context = ARENA_MALLOC(lang->context_size, "context", runtime, broker->arena);
 
     lang->fn_preparse(runtime, context);
@@ -441,6 +481,7 @@ void lang_add_unit(language_runtime_t *runtime, unit_id_t id, const node_t *node
     copy[id.length] = '\0';
 
     tree_t *tree = tree_module(runtime->root, node, copy, length, decls);
+    ARENA_REPARENT(copy, tree, arena);
 
     compile_unit_t *unit = compile_unit_new(runtime, arena, ast, tree);
 

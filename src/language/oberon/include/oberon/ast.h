@@ -88,7 +88,7 @@ typedef enum obr_kind_t
 typedef struct obr_t
 {
     obr_kind_t kind;
-    node_t *node;
+    const node_t *node;
 
     union {
         struct {

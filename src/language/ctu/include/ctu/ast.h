@@ -70,7 +70,7 @@ typedef enum ctu_kind_t {
 
 typedef struct ctu_t {
     ctu_kind_t kind;
-    node_t *node;
+    const node_t *node;
 
     union {
         struct {

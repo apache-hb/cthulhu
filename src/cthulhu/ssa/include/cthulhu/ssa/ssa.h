@@ -73,7 +73,7 @@ typedef struct ssa_storage_t {
     size_t size;
 
     /// @brief the qualifiers of the storage
-    quals_t quals;
+    tree_quals_t quals;
 } ssa_storage_t;
 
 typedef struct ssa_param_t {
@@ -134,7 +134,7 @@ typedef struct ssa_type_record_t {
 
 typedef struct ssa_type_t {
     ssa_kind_t kind;
-    quals_t quals;
+    tree_quals_t quals;
     const char *name;
 
     union {
@@ -344,9 +344,9 @@ CT_SSA_API void ssa_opt(logger_t *reports, ssa_result_t mod, arena_t *arena);
 /// rewriting
 ///
 
-CT_SSA_API ssa_type_t *ssa_type_bool(const char *name, quals_t quals);
-CT_SSA_API ssa_type_t *ssa_type_digit(const char *name, quals_t quals, sign_t sign, digit_t digit);
-CT_SSA_API ssa_type_t *ssa_type_pointer(const char *name, quals_t quals, ssa_type_t *pointer, size_t length);
+CT_SSA_API ssa_type_t *ssa_type_bool(const char *name, tree_quals_t quals);
+CT_SSA_API ssa_type_t *ssa_type_digit(const char *name, tree_quals_t quals, sign_t sign, digit_t digit);
+CT_SSA_API ssa_type_t *ssa_type_pointer(const char *name, tree_quals_t quals, ssa_type_t *pointer, size_t length);
 
 ///
 /// names

@@ -6,7 +6,7 @@
 
 #include <gmp.h>
 
-typedef enum
+typedef enum pl0_type_t
 {
     ePl0Digit,
     ePl0Ident,
@@ -33,7 +33,7 @@ typedef enum
 typedef struct pl0_t
 {
     pl0_type_t type;
-    node_t *node;
+    const node_t *node;
 
     union {
         /* integer literal */

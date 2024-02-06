@@ -42,7 +42,7 @@ static const char *get_c89_digit(ssa_type_digit_t ty)
     }
 }
 
-static const char *get_quals(quals_t quals, bool emit_const, arena_t *arena)
+static const char *get_quals(tree_quals_t quals, bool emit_const, arena_t *arena)
 {
     if (quals & eQualConst) { return emit_const ? "const " : ""; }
 

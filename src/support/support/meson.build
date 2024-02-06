@@ -8,11 +8,12 @@ support_api = configure_file(
 impl_deps = [ broker, arena, std, os, events ]
 src = [ 'src/loader.c', 'src/support.c' ]
 
+lang_count = langs.keys().length()
+plugin_count = plugins.keys().length()
+target_count = targets.keys().length()
+
 if module_loader.contains('static')
-    lang_count = langs.keys().length()
-    plugin_count = plugins.keys().length()
-    target_count = targets.keys().length()
-    if lang_count > 0
+    if lang_count > 0 or plugin_count > 0 or target_count > 0
         loader_header = configure_file(
             input : 'data/enum_modules.h.in',
             output : 'enum_modules.h',
@@ -28,6 +29,7 @@ if module_loader.contains('static')
         plugin_mods = []
         target_mods = []
 
+        # TODO: this is pretty ugly, but it works for now
         foreach id, lang : langs
             impl_deps += lang['dep']
 
@@ -72,8 +74,6 @@ if module_loader.contains('static')
         summary(loader_summary, section : 'Static module loader')
 
         src += [ static_loader, 'src/load_static.c' ]
-    else
-        warning('No language modules found, static loader will not be built')
     endif
 endif
 

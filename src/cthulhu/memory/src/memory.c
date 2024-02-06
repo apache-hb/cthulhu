@@ -32,7 +32,7 @@ static arena_t *gGmpArena = NULL;
 
 static void *ctu_gmp_malloc(size_t size)
 {
-    return arena_malloc(size, "gmp", gGmpArena, gGmpArena);
+    return ARENA_MALLOC(size, "gmp", gGmpArena, gGmpArena);
 }
 
 static void *ctu_gmp_realloc(void *ptr, size_t old_size, size_t new_size)

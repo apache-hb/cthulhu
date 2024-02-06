@@ -42,7 +42,7 @@ static const char *tree_kind_string(const tree_t *tree)
 #endif
 
 USE_DECL
-void tree_set_qualifiers(tree_t *tree, quals_t qualifiers)
+void tree_set_qualifiers(tree_t *tree, tree_quals_t qualifiers)
 {
     CTASSERTF(tree_has_tag(tree, eTagQual), "tree type %s does not have qualifiers", tree_kind_string(tree));
 
@@ -50,7 +50,7 @@ void tree_set_qualifiers(tree_t *tree, quals_t qualifiers)
 }
 
 USE_DECL
-quals_t tree_get_qualifiers(const tree_t *tree)
+tree_quals_t tree_get_qualifiers(const tree_t *tree)
 {
     CTASSERTF(tree_has_tag(tree, eTagQual), "tree type %s does not have qualifiers", tree_kind_string(tree));
 

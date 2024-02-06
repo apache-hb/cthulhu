@@ -117,8 +117,8 @@ WS [ \t\r\v\n\f]
 }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
-    arena_t *arena = scan_get_arena(yyextra);
-    yylval->ident = arena_strndup(yytext, yyleng, arena);
+    ctu_scan_t *ctx = ctu_scan_context(yyextra);
+    yylval->ident = arena_strndup(yytext, yyleng, ctx->string_arena);
     return IDENT;
 }
 
@@ -138,15 +138,14 @@ WS [ \t\r\v\n\f]
 }
 
 \"([^"\\\n]|{ESCAPES})*\" {
-    ctu_scan_t *scan = ctu_scan_context(yyextra);
-    arena_t *arena = scan_get_arena(yyextra);
-	yylval->string = util_text_escape(scan->logger, node_new(yyextra, *yylloc), yytext + 1, yyleng - 2, arena);
+    ctu_scan_t *ctx = ctu_scan_context(yyextra);
+	yylval->string = util_text_escape(ctx->logger, node_new(yyextra, *yylloc), yytext + 1, yyleng - 2, ctx->string_arena);
     return STRING;
 }
 
 . {
-    ctu_scan_t *scan = ctu_scan_context(yyextra);
-    evt_scan_unknown(scan->logger, node_new(yyextra, *yylloc), yytext);
+    ctu_scan_t *ctx = ctu_scan_context(yyextra);
+    evt_scan_unknown(ctx->logger, node_new(yyextra, *yylloc), yytext);
 }
 
 %%

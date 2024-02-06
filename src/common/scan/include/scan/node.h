@@ -17,7 +17,14 @@ CT_BEGIN_API
 /// @{
 
 /// @brief a position in a source file
-typedef struct node_t node_t;
+typedef struct node_t
+{
+    /// @brief the scanner that this node is in
+    const scan_t *scan;
+
+    /// @brief the location of this node
+    where_t where;
+} node_t;
 
 /// @brief nowhere in a source file
 CT_SCAN_API extern const where_t kNowhere;

@@ -21,6 +21,9 @@ static void pl0_preparse(language_runtime_t *runtime, void *context)
 {
     pl0_scan_t *info = context;
     info->logger = runtime->logger;
+    info->arena = runtime->arena;
+    info->string_arena = runtime->arena;
+    info->ast_arena = &runtime->ast_arena;
 }
 
 static void pl0_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
@@ -58,9 +61,14 @@ static const size_t kRootSizes[ePl0TagTotal] = {
     [ePl0TagModules] = 1
 };
 
+static const char *const kDeclNames[ePl0TagTotal] = {
+#define DECL_TAG(id, init, str) [id] = (str),
+#include "pl0/pl0.def"
+};
+
 CT_DRIVER_API const language_t kPl0Module = {
     .info = {
-        .id = "pl0",
+        .id = "lang-pl0",
         .name = "PL/0",
         .version = {
             .license = "LGPLv3",
@@ -73,10 +81,12 @@ CT_DRIVER_API const language_t kPl0Module = {
     .builtin = {
         .name = CT_TEXT_VIEW("pl0\0lang"),
         .decls = kRootSizes,
+        .names = kDeclNames,
         .length = ePl0TagTotal,
     },
 
     .context_size = sizeof(pl0_scan_t),
+    .ast_size = sizeof(pl0_t),
 
     .exts = kLangNames,
 

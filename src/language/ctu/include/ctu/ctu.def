@@ -21,3 +21,18 @@ NEW_EVENT(InvalidDereference, {
 })
 
 #undef NEW_EVENT
+
+#ifndef DECL_TAG
+#   define DECL_TAG(id, val, name)
+#endif
+
+DECL_TAG(eCtuTagValues, = eSemaValues, "values")
+DECL_TAG(eCtuTagTypes, = eSemaTypes, "types")
+DECL_TAG(eCtuTagFunctions, = eSemaProcs, "functions")
+DECL_TAG(eCtuTagModules, = eSemaModules, "modules")
+DECL_TAG(eCtuTagImports, /* empty */, "imports")
+DECL_TAG(eCtuTagAttribs, /* empty */, "attributes")
+DECL_TAG(eCtuTagSuffixes, /* empty */, "suffixes")
+DECL_TAG(eCtuTagLabels, /* empty */, "labels")
+
+#undef DECL_TAG

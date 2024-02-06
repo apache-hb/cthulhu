@@ -8,13 +8,13 @@ pl0_t *pl0_new(scan_t *scan, where_t where, pl0_type_t type)
 {
     CTASSERT(scan != NULL);
 
-    arena_t *arena = scan_get_arena(scan);
+    pl0_scan_t *ctx = pl0_scan_context(scan);
 
-    pl0_t *node = ARENA_MALLOC(sizeof(pl0_t), "pl0", scan, arena);
+    pl0_t *node = ARENA_MALLOC(sizeof(pl0_t), "pl0", scan, ctx->ast_arena);
     node->node = node_new(scan, where);
     node->type = type;
 
-    ARENA_IDENTIFY(node->node, "node", node, arena);
+    ARENA_IDENTIFY(node->node, "node", node, ctx->ast_arena);
 
     return node;
 }

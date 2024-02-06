@@ -26,7 +26,7 @@ CT_TREE_API bool tree_has_vis(const tree_t *self, visibility_t visibility);
 /// storage decl queries
 ///
 
-CT_TREE_API quals_t tree_get_storage_quals(const tree_t *self);
+CT_TREE_API tree_quals_t tree_get_storage_quals(const tree_t *self);
 CT_TREE_API const tree_t *tree_get_storage_type(const tree_t *self);
 CT_TREE_API size_t tree_get_storage_size(const tree_t *self);
 
@@ -51,7 +51,7 @@ CT_TREE_API arity_t tree_fn_get_arity(const tree_t *self);
 CT_TREE_API tree_t *tree_ty_get_field(const tree_t *self, const char *name);
 CT_TREE_API tree_t *tree_ty_get_case(const tree_t *self, const char *name);
 CT_TREE_API bool tree_ty_is_address(const tree_t *type);
-CT_TREE_API quals_t tree_ty_get_quals(const tree_t *self);
+CT_TREE_API tree_quals_t tree_ty_get_quals(const tree_t *self);
 
 /**
  * @brief get the type of a type after it has been loaded

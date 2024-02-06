@@ -25,15 +25,15 @@ typedef struct tree_storage_t
     size_t length;
 
     /// @brief the qualifiers for the storage
-    quals_t quals;
+    tree_quals_t quals;
 } tree_storage_t;
 
 ///
 /// queries
 ///
 
-CT_TREE_API void tree_set_qualifiers(IN_NOTNULL tree_t *tree, quals_t qualifiers);
-CT_TREE_API quals_t tree_get_qualifiers(IN_NOTNULL const tree_t *tree);
+CT_TREE_API void tree_set_qualifiers(IN_NOTNULL tree_t *tree, tree_quals_t qualifiers);
+CT_TREE_API tree_quals_t tree_get_qualifiers(IN_NOTNULL const tree_t *tree);
 
 CT_TREE_API void tree_set_storage(IN_NOTNULL tree_t *tree, tree_storage_t storage);
 CT_TREE_API tree_storage_t tree_get_storage(IN_NOTNULL const tree_t *tree);

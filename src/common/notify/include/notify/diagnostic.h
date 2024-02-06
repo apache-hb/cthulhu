@@ -51,6 +51,14 @@ typedef struct diagnostic_list_t
     size_t count;
 } diagnostic_list_t;
 
+/// @brief get the name of a severity
+///
+/// @param severity the severity to get the name of
+///
+/// @return the name of @p severity
+RET_STRING
+const char *severity_name(IN_RANGE(<, eSeverityTotal) severity_t severity);
+
 /// @}
 
 CT_END_API

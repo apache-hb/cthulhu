@@ -196,3 +196,16 @@ void msg_vnote(event_builder_t builder, const char *fmt, va_list args)
 
     vector_push(&event->notes, msg);
 }
+
+static const char *const kSeverityNames[eSeverityTotal] = {
+#define SEVERITY(id, name) [id] = (name),
+#include "notify/notify.def"
+};
+
+USE_DECL
+const char *severity_name(severity_t severity)
+{
+    CTASSERTF(severity < eSeverityTotal && severity >= 0, "severity %d is out of range", severity);
+
+    return kSeverityNames[severity];
+}

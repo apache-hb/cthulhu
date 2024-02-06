@@ -66,14 +66,14 @@ static tree_t *get_decl(tree_t *sema, const char *name, const pl0_tag_t *tags, s
     return NULL;
 }
 
-const pl0_tag_t kVarTags[] = { ePl0TagValues, ePl0TagImportedValues };
+static const pl0_tag_t kVarTags[] = { ePl0TagValues, ePl0TagImportedValues };
 
 static tree_t *get_var(tree_t *sema, const char *name)
 {
     return get_decl(sema, name, kVarTags, sizeof(kVarTags) / sizeof(pl0_tag_t));
 }
 
-const pl0_tag_t kProcTags[] = { ePl0TagProcs, ePl0TagImportedProcs };
+static const pl0_tag_t kProcTags[] = { ePl0TagProcs, ePl0TagImportedProcs };
 
 static tree_t *get_proc(tree_t *sema, const char *name)
 {
@@ -113,11 +113,6 @@ static void set_var(tree_t *sema, pl0_tag_t tag, const char *name, tree_t *tree)
     }
 
     set_decl(sema, tag, name, tree);
-}
-
-static vector_t *make_runtime_path(arena_t *arena)
-{
-    return str_split("pl0.lang", ".", arena);
 }
 
 static tree_t *get_string_type(const node_t *node, size_t size)
@@ -252,7 +247,7 @@ static tree_t *sema_expr(tree_t *sema, pl0_t *node)
     }
 }
 
-static tree_t *sema_vector(tree_t *sema, node_t *node, vector_t *body)
+static tree_t *sema_vector(tree_t *sema, const node_t *node, vector_t *body)
 {
     size_t len = vector_len(body);
     arena_t *arena = get_global_arena();
@@ -305,7 +300,7 @@ static tree_t *sema_assign(tree_t *sema, pl0_t *node)
     }
 
     const tree_t *dst_type = tree_get_type(dst);
-    quals_t quals = tree_ty_get_quals(dst_type);
+    tree_quals_t quals = tree_ty_get_quals(dst_type);
 
     if (quals & eQualConst)
     {
@@ -462,12 +457,6 @@ static void insert_module(tree_t *sema, tree_t *other)
         set_proc(sema, ePl0TagImportedProcs, tree_get_name(decl), decl);
     }
 }
-
-typedef struct {
-    vector_t *consts;
-    vector_t *globals;
-    vector_t *procs;
-} sema_data_t;
 
 void pl0_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
 {

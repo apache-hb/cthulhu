@@ -1,16 +1,17 @@
 #include "ctu/ast.h"
+#include "ctu/scan.h"
 
 #include "arena/arena.h"
 
 static ctu_t *ctu_new(scan_t *scan, where_t where, ctu_kind_t kind)
 {
-    arena_t *arena = scan_get_arena(scan);
+    ctu_scan_t *ctx = scan_get_context(scan);
 
-    ctu_t *self = ARENA_MALLOC(sizeof(ctu_t), "ctu", scan, arena);
+    ctu_t *self = ARENA_MALLOC(sizeof(ctu_t), "ctu", scan, ctx->ast_arena);
     self->kind = kind;
     self->node = node_new(scan, where);
 
-    ARENA_IDENTIFY(self->node, "node", self, arena);
+    ARENA_IDENTIFY(self->node, "node", self, ctx->ast_arena);
 
     return self;
 }

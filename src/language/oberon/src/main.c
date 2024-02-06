@@ -19,6 +19,9 @@ static void obr_preparse(language_runtime_t *runtime, void *context)
 {
     obr_scan_t *ctx = context;
     ctx->logger = runtime->logger;
+    ctx->arena = runtime->arena;
+    ctx->ast_arena = &runtime->ast_arena;
+    ctx->string_arena = runtime->arena;
 }
 
 static void obr_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
@@ -45,11 +48,11 @@ static void obr_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
 static void obr_destroy(language_runtime_t *handle) { CT_UNUSED(handle); }
 
 #define NEW_EVENT(id, ...) const diagnostic_t kEvent_##id = __VA_ARGS__;
-#include "oberon/events.def"
+#include "oberon/oberon.def"
 
 static const diagnostic_t *const kDiagnosticTable[] = {
 #define NEW_EVENT(id, ...) &kEvent_##id,
-#include "oberon/events.def"
+#include "oberon/oberon.def"
 };
 
 static const char *const kLangNames[] = { "m", "mod", "obr", "oberon", NULL };
@@ -61,9 +64,14 @@ static const size_t kDeclSizes[eObrTagTotal] = {
     [eObrTagModules] = 32,
 };
 
+static const char *const kDeclNames[eObrTagTotal] = {
+#define DECL_TAG(id, val, name) [id] = (name),
+#include "oberon/oberon.def"
+};
+
 CT_DRIVER_API const language_t kOberonModule = {
     .info = {
-        .id = "obr",
+        .id = "lang-oberon2",
         .name = "Oberon-2",
         .version = {
             .license = "LGPLv3",
@@ -81,12 +89,14 @@ CT_DRIVER_API const language_t kOberonModule = {
     .builtin = {
         .name = CT_TEXT_VIEW("obr\0lang"),
         .decls = kDeclSizes,
+        .names = kDeclNames,
         .length = eObrTagTotal,
     },
 
     .exts = kLangNames,
 
     .context_size = sizeof(obr_scan_t),
+    .ast_size = sizeof(obr_t),
 
     .fn_create = obr_create,
     .fn_destroy = obr_destroy,
