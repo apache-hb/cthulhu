@@ -1,6 +1,4 @@
 src = [
-    'src/main.c',
-
     'src/driver.c',
 
     'src/sema/sema.c',
@@ -22,29 +20,36 @@ deps = [
 
 obr = {}
 
+obr_lang = library('obr_lang', src,
+    dependencies : deps,
+    c_args : generated_args,
+    include_directories : [ 'src', 'include' ],
+    override_options : [ 'unity=off' ]
+)
+
 if module_loader.contains('static')
-    libobr = library('obr', src,
+    obr_static = library('obr', 'src/main.c',
+        link_with : obr_lang,
         dependencies : deps,
-        c_args : generated_args,
-        include_directories : [ 'src', 'include' ],
-        override_options : [ 'unity=off' ]
+        c_args : user_args,
+        include_directories : [ 'src', 'include', obr_lang.private_dir_include() ]
     )
 
     obr += {
-        'dep': declare_dependency(link_with : libobr),
+        'dep': declare_dependency(link_with : obr_static),
         'mod': 'kOberonModule'
     }
 endif
 
 if module_loader.contains('shared')
-    obrso = shared_library('obr', src,
+    obr_shared = shared_module('obr', 'src/main.c',
+        link_with : obr_lang,
         dependencies : deps,
-        c_args : generated_args + [ '-DCTU_DRIVER_SHARED=1' ],
-        include_directories : [ 'src', 'include' ],
-        override_options : [ 'unity=off' ]
+        c_args : user_args + [ '-DCTU_DRIVER_SHARED=1' ],
+        include_directories : [ 'src', 'include', obr_lang.private_dir_include() ]
     )
 
-    obr += { 'shared': obrso }
+    obr += { 'shared': obr_shared }
 endif
 
 langs += { 'obr': obr }

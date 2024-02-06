@@ -26,6 +26,8 @@ static void obr_preparse(language_runtime_t *runtime, void *context)
 
 static void obr_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
 {
+    CT_UNUSED(scan);
+
     vector_t *modules = tree;
 
     size_t len = vector_len(modules);
