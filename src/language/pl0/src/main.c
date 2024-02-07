@@ -1,16 +1,11 @@
-#include "config/config.h"
-
-#include "arena/arena.h"
 #include "pl0/sema.h"
 #include "pl0/ast.h"
 
-#include "cthulhu/broker/broker.h"
-
 #include "interop/compile.h"
+#include "driver/driver.h"
 
 #include "std/str.h"
-
-#include "driver/driver.h"
+#include "std/vector.h"
 
 #include "pl0_bison.h" // IWYU pragma: keep
 #include "pl0_flex.h" // IWYU pragma: keep
@@ -32,17 +27,15 @@ static void pl0_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
     CTASSERT(ast->type == ePl0Module);
     arena_t *arena = runtime->arena;
 
-    // TODO: dedup this with pl0_forward_decls
-    const char *fp = scan_path(scan);
     vector_t *path = vector_len(ast->mod) > 0
         ? ast->mod
-        : vector_init(str_basename(fp, arena), arena);
+        : vector_init(str_basename(scan_path(scan), arena), arena);
 
     size_t const_count = vector_len(ast->consts);
     size_t global_count = vector_len(ast->globals);
     size_t proc_count = vector_len(ast->procs);
 
-    size_t sizes[ePl0TagTotal] = {
+    const size_t sizes[ePl0TagTotal] = {
         [ePl0TagValues] = const_count + global_count,
         [ePl0TagProcs] = proc_count,
         [ePl0TagImportedValues] = 64,

@@ -26,7 +26,7 @@ ctu = {
     'fuzz_corpus': meson.current_source_dir() / 'fuzz_corpus'
 }
 
-ctu_lang = library('ctu_lang', src,
+ctu_lang = static_library('ctu_lang', src,
     dependencies : deps,
     c_args : generated_args,
     include_directories : [ 'src', 'include' ],
@@ -34,26 +34,28 @@ ctu_lang = library('ctu_lang', src,
 )
 
 if module_loader.contains('static')
-    ctu_static = library('ctu', 'src/main.c',
+    ctu_static = library('ctu_static', 'src/main.c',
         link_with : ctu_lang,
-        c_args : generated_args,
+        c_args : user_args,
         dependencies : deps,
         include_directories : [ 'src', 'include', ctu_lang.private_dir_include() ]
     )
 
     ctu += {
         'dep': declare_dependency(link_with : ctu_static),
-        'mod': 'kCtuModule'
+        'mod': 'kCtuModule',
+
+        'static': ctu_static,
+        'module': 'kCtuModule'
     }
 endif
 
 if module_loader.contains('shared')
-    ctu_shared = shared_module('ctu', 'src/main.c',
+    ctu_shared = shared_module('ctu_shared', 'src/main.c',
         link_with : ctu_lang,
         dependencies : deps,
-        c_args : generated_args + [ '-DCTU_DRIVER_SHARED=1' ],
-        include_directories : [ 'src', 'include', ctu_lang.private_dir_include() ],
-        override_options : [ 'unity=off' ]
+        c_args : user_args + [ '-DCTU_DRIVER_SHARED=1' ],
+        include_directories : [ 'src', 'include', ctu_lang.private_dir_include() ]
     )
 
     ctu += {

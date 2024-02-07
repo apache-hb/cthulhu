@@ -16,9 +16,8 @@ typedef struct obr_t obr_t;
 
 typedef enum obr_visibility_t
 {
-    eObrVisPrivate,       ///< default (no suffix)
-    eObrVisPublic,        ///< `*` suffix
-    eObrVisPublicReadOnly ///< `-` suffix
+#define OBR_VIS(ID, STR, SYMBOL) ID,
+#include "oberon/oberon.def"
 } obr_visibility_t;
 
 typedef struct obr_symbol_t
@@ -279,6 +278,6 @@ obr_t *obr_receiver(scan_t *scan, where_t where, bool mut, char *name, char *typ
 
 obr_symbol_t *obr_symbol(scan_t *scan, where_t where, char *name, obr_visibility_t visibility);
 
-vector_t *obr_expand_vars(vector_t *symbols, obr_t *type);
-vector_t *obr_expand_fields(vector_t *symbols, obr_t *type);
-vector_t *obr_expand_params(vector_t *symbols, obr_t *type, bool mut);
+vector_t *obr_expand_vars(scan_t *scan, vector_t *symbols, obr_t *type);
+vector_t *obr_expand_fields(scan_t *scan, vector_t *symbols, obr_t *type);
+vector_t *obr_expand_params(scan_t *scan, vector_t *symbols, obr_t *type, bool mut);

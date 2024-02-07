@@ -1,6 +1,7 @@
 #pragma once
 
-#include "core/compiler.h"
+#include <ctu_notify_api.h>
+
 #include "core/analyze.h"
 
 #include <stddef.h>
@@ -57,7 +58,7 @@ typedef struct diagnostic_list_t
 ///
 /// @return the name of @p severity
 RET_STRING
-const char *severity_name(IN_RANGE(<, eSeverityTotal) severity_t severity);
+CT_NOTIFY_API const char *severity_name(IN_RANGE(<, eSeverityTotal) severity_t severity);
 
 /// @}
 

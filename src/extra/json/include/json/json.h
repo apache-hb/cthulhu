@@ -5,8 +5,9 @@
 #include "core/analyze.h"
 #include "core/text.h"
 
-#include <stdbool.h>
 #include <gmp.h>
+
+#include <stdbool.h>
 
 typedef struct io_t io_t;
 typedef struct logger_t logger_t;

@@ -20,7 +20,7 @@ deps = [
 
 obr = {}
 
-obr_lang = library('obr_lang', src,
+obr_lang = static_library('obr_lang', src,
     dependencies : deps,
     c_args : generated_args,
     include_directories : [ 'src', 'include' ],
@@ -28,7 +28,7 @@ obr_lang = library('obr_lang', src,
 )
 
 if module_loader.contains('static')
-    obr_static = library('obr', 'src/main.c',
+    obr_static = library('obr_static', 'src/main.c',
         link_with : obr_lang,
         dependencies : deps,
         c_args : user_args,
@@ -37,12 +37,15 @@ if module_loader.contains('static')
 
     obr += {
         'dep': declare_dependency(link_with : obr_static),
-        'mod': 'kOberonModule'
+        'mod': 'kOberonModule',
+
+        'static': obr_static,
+        'module': 'kOberonModule'
     }
 endif
 
 if module_loader.contains('shared')
-    obr_shared = shared_module('obr', 'src/main.c',
+    obr_shared = shared_module('obr_shared', 'src/main.c',
         link_with : obr_lang,
         dependencies : deps,
         c_args : user_args + [ '-DCTU_DRIVER_SHARED=1' ],

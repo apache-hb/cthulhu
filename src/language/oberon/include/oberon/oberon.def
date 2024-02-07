@@ -63,3 +63,13 @@ DECL_TAG(eObrTagModules, = eSemaModules, "modules")
 DECL_TAG(eObrTagImports, /* empty */ , "imports")
 
 #undef DECL_TAG
+
+#ifndef OBR_VIS
+#   define OBR_VIS(ID, NAME, STR)
+#endif
+
+OBR_VIS(eObrVisPrivate, "private", "")
+OBR_VIS(eObrVisPublic, "public", "*")
+OBR_VIS(eObrVisReadOnly, "read_only", "-")
+
+#undef OBR_VIS

@@ -2,8 +2,9 @@
 
 #include "json/json.h"
 
-#include "base/panic.h"
 #include "std/map.h"
+
+#include "base/panic.h"
 
 typedef struct logger_t logger_t;
 typedef struct io_t io_t;
@@ -17,7 +18,7 @@ namespace ctu::json {
     class ArrayIterator;
 
     /// @brief a json object value
-    class Object {
+    class CT_JSON_API Object {
         friend class Json;
 
         const map_t *m_object;
@@ -58,7 +59,7 @@ namespace ctu::json {
     };
 
     /// @brief a json array value
-    class Array {
+    class CT_JSON_API Array {
         friend class Json;
 
         const vector_t *m_array;
@@ -107,7 +108,7 @@ namespace ctu::json {
     /// @warning this class may be in an invalid state in certain cases
     ///          always check the validity of the value with @ref is_valid
     ///          before using it
-    class Json {
+    class CT_JSON_API Json {
         friend class JsonParser;
         friend class Object;
         friend class Array;
@@ -283,7 +284,7 @@ namespace ctu::json {
     };
 
     /// @brief a member of a json object
-    struct member_t {
+    struct CT_JSON_API member_t {
         /// @brief the key of the member
         const char *key;
 
@@ -292,7 +293,7 @@ namespace ctu::json {
     };
 
     /// @brief an iterator over the members of a json object
-    class ObjectIterator {
+    class CT_JSON_API ObjectIterator {
         friend class Object;
 
         map_iter_t m_iter;
@@ -313,7 +314,7 @@ namespace ctu::json {
     };
 
     /// @brief an iterator over the values of a json array
-    class ArrayIterator {
+    class CT_JSON_API ArrayIterator {
         friend class Array;
 
         const vector_t *m_array;
@@ -331,7 +332,7 @@ namespace ctu::json {
     };
 
     /// @brief a json parser
-    class JsonParser {
+    class CT_JSON_API JsonParser {
         arena_t *m_arena;
         logger_t *m_logger;
 

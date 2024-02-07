@@ -6,6 +6,7 @@ json_api = configure_file(
 
 json_include = include_directories('.', 'include')
 json_impl_include = include_directories('src')
+json_args = [ '-DCT_JSON_BUILD=1', generated_args ]
 
 src = [
     'src/json.c',
@@ -21,7 +22,8 @@ endif
 
 libjson = library('json', src,
     build_by_default : not meson.is_subproject(),
-    c_args : [ '-DCT_JSON_BUILD=1', generated_args ],
+    c_args : json_args,
+    cpp_args : json_args,
     dependencies : [ core, base, scan, interop, gmp, std, notify, events, util ],
     include_directories : [ json_include, json_impl_include ],
     override_options : [ 'unity=off' ]
@@ -30,7 +32,7 @@ libjson = library('json', src,
 json = declare_dependency(
     link_with : libjson,
     include_directories : json_include,
-    dependencies : [ core, gmp ]
+    dependencies : [ core, std, gmp ]
 )
 
 install_headers(json_api, subdir : 'json')

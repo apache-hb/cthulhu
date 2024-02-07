@@ -354,10 +354,10 @@ obr_symbol_t *obr_symbol(scan_t *scan, where_t where, char *name, obr_visibility
     return self;
 }
 
-#define EXPAND_INNER(fn, ...)                              \
+#define EXPAND_INNER(fn, scan, ...)                              \
     do                                                     \
     {                                                      \
-        arena_t *arena = get_global_arena();               \
+        arena_t *arena = scan_get_arena(scan);               \
         size_t len = vector_len(symbols);                  \
         vector_t *result = vector_of(len, arena);    \
         for (size_t i = 0; i < len; i++)                   \
@@ -369,17 +369,17 @@ obr_symbol_t *obr_symbol(scan_t *scan, where_t where, char *name, obr_visibility
         return result;                                     \
     } while (0)
 
-vector_t *obr_expand_vars(vector_t *symbols, obr_t *type)
+vector_t *obr_expand_vars(scan_t *scan, vector_t *symbols, obr_t *type)
 {
-    EXPAND_INNER(obr_decl_var, type);
+    EXPAND_INNER(obr_decl_var, scan, type);
 }
 
-vector_t *obr_expand_fields(vector_t *symbols, obr_t *type)
+vector_t *obr_expand_fields(scan_t *scan, vector_t *symbols, obr_t *type)
 {
-    EXPAND_INNER(obr_field, type);
+    EXPAND_INNER(obr_field, scan, type);
 }
 
-vector_t *obr_expand_params(vector_t *symbols, obr_t *type, bool mut)
+vector_t *obr_expand_params(scan_t *scan, vector_t *symbols, obr_t *type, bool mut)
 {
-    EXPAND_INNER(obr_param, type, mut);
+    EXPAND_INNER(obr_param, scan, type, mut);
 }

@@ -9,14 +9,14 @@ src = [
 deps = [
     broker, interop, scan,
     notify, tree, util, events,
-    config, memory, driver
+    config, memory, driver, std
 ]
 
 pl0 = {
     'fuzz_corpus': meson.current_source_dir() / 'fuzz_corpus'
 }
 
-pl0_lang = library('pl0_lang', src,
+pl0_lang = static_library('pl0_lang', src,
     dependencies : deps,
     c_args : generated_args,
     include_directories : [ 'src', 'include' ],
@@ -24,7 +24,7 @@ pl0_lang = library('pl0_lang', src,
 )
 
 if module_loader.contains('static')
-    pl0_static = library('pl0', 'src/main.c',
+    pl0_static = library('pl0_static', 'src/main.c',
         link_with : pl0_lang,
         dependencies : deps,
         c_args : user_args,
@@ -33,12 +33,15 @@ if module_loader.contains('static')
 
     pl0 += {
         'dep': declare_dependency(link_with : pl0_static),
-        'mod': 'kPl0Module'
+        'mod': 'kPl0Module',
+
+        'static': pl0_static,
+        'module': 'kPl0Module'
     }
 endif
 
 if module_loader.contains('shared')
-    pl0_shared = shared_module('pl0', 'src/main.c',
+    pl0_shared = shared_module('pl0_shared', 'src/main.c',
         link_with : pl0_lang,
         dependencies : deps,
         c_args : user_args + [ '-DCTU_DRIVER_SHARED=1' ],

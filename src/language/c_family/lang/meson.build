@@ -14,7 +14,7 @@ deps = [
     memory, driver
 ]
 
-cc_lang = library('cc_lang', src,
+cc_lang = static_library('cc_lang', src,
     dependencies : deps,
     c_args : generated_args,
     include_directories : [ 'src', 'include' ],
@@ -33,7 +33,10 @@ if module_loader.contains('static')
 
     c += {
         'dep': declare_dependency(link_with : cc_static),
-        'mod': 'kCModule'
+        'mod': 'kCModule',
+
+        'static': cc_static,
+        'module': 'kCModule'
     }
 endif
 

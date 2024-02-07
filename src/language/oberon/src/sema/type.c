@@ -1,6 +1,6 @@
 #include "oberon/sema/type.h"
 
-#include "oberon/oberon.h"
+#include "oberon/driver.h"
 #include "oberon/sema/expr.h"
 #include "oberon/sema/sema.h"
 
