@@ -141,10 +141,10 @@ all_args = cc.get_supported_arguments(
 
 if trace_time.enabled()
     has_time_trace = cc.has_argument('-ftime-trace')
-    all_args += cc.get_supported_arguments('-ftime-trace')
     ninjatracing = find_program('data/scripts/ninjatracing/ninjatracing')
 
     trace_args = has_time_trace ? [ '--embed-time-trace' ] : [ ]
+    all_args += has_time_trace ? [ '-ftime-trace' ] : [ ]
 
     custom_target('gather_time_trace',
         output : 'trace.json',

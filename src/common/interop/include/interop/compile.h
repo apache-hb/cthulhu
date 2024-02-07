@@ -19,7 +19,7 @@ CT_BEGIN_API
 /// @{
 
 /// @brief scanner function callbacks for flex and bison
-/// @note this should be created via the @a CTU_CALLBACKS macro
+/// @note this should be created via the @a CT_CALLBACKS macro
 typedef struct scan_callbacks_t
 {
     int (*init)(scan_t *extra, void *scanner);                   ///< yylex_init_extra
@@ -29,7 +29,7 @@ typedef struct scan_callbacks_t
     void (*destroy)(void *scanner);                              ///< yylex_destroy
 } scan_callbacks_t;
 
-/// @def CTU_CALLBACKS(id, prefix)
+/// @def CT_CALLBACKS(id, prefix)
 /// @brief callback boilerplate macro
 ///
 /// generate callback boilerplate for @a scan_buffer
@@ -37,30 +37,30 @@ typedef struct scan_callbacks_t
 /// @param id the name of the generated callback object
 /// @param prefix the prefix assigned to flex and bison functions
 
-#define CTU_CALLBACKS(id, prefix)                                                               \
+#define CT_CALLBACKS(id, prefix)                                                                \
     static int prefix##_##id##_##init(scan_t *extra, void *scanner)                             \
     {                                                                                           \
-        return prefix##lex_init_extra(extra, (yyscan_t*)scanner);                                          \
+        return prefix##lex_init_extra(extra, (yyscan_t *)scanner);                              \
     }                                                                                           \
     static int prefix##_##id##_parse(void *scanner, scan_t *extra)                              \
     {                                                                                           \
-        return prefix##parse(scanner, (scan_t*)extra);                                                   \
+        return prefix##parse(scanner, (scan_t *)extra);                                         \
     }                                                                                           \
     static void *prefix##_##id##_scan(const char *text, size_t size, void *scanner)             \
     {                                                                                           \
         CTASSERTF(size <= INT_MAX, #prefix "_scan (size = %zu > %d, name = %s)", size, INT_MAX, \
-                  scan_path((scan_t*)scanner));                                                          \
+                  scan_path((scan_t *)scanner));                                                \
         return prefix##_scan_bytes(text, (int)size, scanner);                                   \
     }                                                                                           \
     static void prefix##_##id##_destroy_buffer(void *buffer, void *scanner)                     \
     {                                                                                           \
-        prefix##_delete_buffer((YY_BUFFER_STATE)buffer, scanner);                                                \
+        prefix##_delete_buffer((YY_BUFFER_STATE)buffer, scanner);                               \
     }                                                                                           \
     static void prefix##_##id##_destroy(void *scanner)                                          \
     {                                                                                           \
         prefix##lex_destroy(scanner);                                                           \
     }                                                                                           \
-    static const scan_callbacks_t id = {                                                             \
+    static const scan_callbacks_t id = {                                                        \
         .init = prefix##_##id##_##init,                                                         \
         .parse = prefix##_##id##_parse,                                                         \
         .scan = prefix##_##id##_scan,                                                           \
@@ -96,13 +96,14 @@ typedef struct parse_result_t
 } parse_result_t;
 
 /// @brief parse the contents of a scanner into a language specific ast
-/// @note callbacks should be generated via @a CTU_CALLBACKS
+/// @note callbacks should be generated via @a CT_CALLBACKS
 ///
 /// @param extra the sanner being used
 /// @param callbacks the flex/bison callbacks
 ///
 /// @return the parse result
-CT_INTEROP_API parse_result_t scan_buffer(IN_NOTNULL scan_t *extra, IN_NOTNULL const scan_callbacks_t *callbacks);
+CT_INTEROP_API parse_result_t scan_buffer(IN_NOTNULL scan_t *extra,
+                                          IN_NOTNULL const scan_callbacks_t *callbacks);
 
 /// @}
 

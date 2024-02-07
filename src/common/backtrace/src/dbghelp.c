@@ -8,8 +8,6 @@
 #if CTU_WIN32_TRICKERY
 #   include <windef.h>
 #   include <winbase.h>
-#   include <winapifamily.h>
-#   include <winnt.h>
 #   include <verrsrc.h>
 #endif
 

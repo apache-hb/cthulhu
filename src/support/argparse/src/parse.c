@@ -16,7 +16,7 @@
 #include "ap_bison.h" // IWYU pragma: keep
 #include "ap_flex.h" // IWYU pragma: keep
 
-CTU_CALLBACKS(kCallbacks, ap);
+CT_CALLBACKS(kCallbacks, ap);
 
 static void push_single_arg(typevec_t *vec, const char *arg)
 {

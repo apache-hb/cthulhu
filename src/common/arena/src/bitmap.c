@@ -92,7 +92,9 @@ static void *bitmap_alloc_next(bitmap_t *self, size_t size)
 
 void *bitmap_alloc(bitmap_t *bitmap, size_t size)
 {
+#if CTU_DEBUG
     CTASSERTF(size == bitmap->stride, "bitmap arena: size mismatch (expected %zu, got %zu)", bitmap->stride, size);
+#endif
 
     // find a free slot
     size_t slot = bitmap_alloc_bit(bitmap);
@@ -124,8 +126,10 @@ static bool bitmap_free_next(char *ptr, size_t size, bitmap_t *arena)
 
 void bitmap_free(bitmap_t *bitmap, void *ptr, size_t size)
 {
+#if CTU_DEBUG
     CTASSERTF(size == bitmap->stride, "bitmap arena: size mismatch (expected %zu, got %zu)", bitmap->stride, size);
     CTASSERTF(((uintptr_t)ptr) % bitmap->stride == 0, "bitmap arena: misaligned pointer %p (not aligned to %zu)", ptr, bitmap->stride);
+#endif
 
     if (bitmap_free_next(ptr, size, bitmap))
         return;

@@ -13,7 +13,7 @@
 #include "obr_bison.h" // IWYU pragma: keep
 #include "obr_flex.h" // IWYU pragma: keep
 
-CTU_CALLBACKS(kCallbacks, obr);
+CT_CALLBACKS(kCallbacks, obr);
 
 static void obr_preparse(language_runtime_t *runtime, void *context)
 {

@@ -10,7 +10,7 @@
 #include "pl0_bison.h" // IWYU pragma: keep
 #include "pl0_flex.h" // IWYU pragma: keep
 
-CTU_CALLBACKS(kCallbacks, pl0);
+CT_CALLBACKS(kCallbacks, pl0);
 
 static void pl0_preparse(language_runtime_t *runtime, void *context)
 {

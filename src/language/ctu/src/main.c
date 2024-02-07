@@ -15,7 +15,7 @@
 #include "ctu_bison.h" // IWYU pragma: keep
 #include "ctu_flex.h" // IWYU pragma: keep
 
-CTU_CALLBACKS(kCallbacks, ctu);
+CT_CALLBACKS(kCallbacks, ctu);
 
 static vector_t *mod_basename(const char *fp, arena_t *arena)
 {

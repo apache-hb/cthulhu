@@ -12,7 +12,7 @@
 #include "cc_bison.h" // IWYU pragma: keep
 #include "cc_flex.h" // IWYU pragma: keep
 
-CTU_CALLBACKS(kCallbacks, cc);
+CT_CALLBACKS(kCallbacks, cc);
 
 static void cc_preparse(language_runtime_t *runtime, void *context)
 {

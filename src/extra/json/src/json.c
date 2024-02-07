@@ -5,7 +5,7 @@
 #include "json_bison.h" // IWYU pragma: keep
 #include "json_flex.h" // IWYU pragma: keep
 
-CTU_CALLBACKS(kCallbacks, json);
+CT_CALLBACKS(kCallbacks, json);
 
 json_t *json_scan(io_t *io, logger_t *logger, arena_t *arena)
 {
