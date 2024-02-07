@@ -1,2 +1,5 @@
 subdir('json')
-#subdir('meta')
+subdir('argparse')
+subdir('format')
+subdir('setup')
+subdir('meta')

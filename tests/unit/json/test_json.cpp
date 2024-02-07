@@ -1,8 +1,9 @@
 #include "base/util.h"
 #include "io/io.h"
+#include "notify/notify.h"
+#include "std/set.h"
 #include "std/str.h"
 #include "unit/ct-test.h"
-
 #include "setup/memory.h"
 
 #include "json/json.hpp"
@@ -29,6 +30,11 @@ int main(void)
     arena_t *arena = ctu_default_alloc();
     test_suite_t suite = test_suite_new("json", arena);
 
+    notify_rules_t rules = {
+        .warnings_as_errors = set_new(1, kTypeInfoPtr, arena),
+        .ignored_warnings = set_new(1, kTypeInfoPtr, arena),
+    };
+
     {
         test_group_t group = test_group(&suite, "parse");
         json::JsonParser parser{arena};
@@ -36,6 +42,9 @@ int main(void)
         io_t *io = io_string("test.json", kTestJson, arena);
 
         json::Json json = parser.parse(io);
+
+        logger_t *logger = parser.get_logger();
+        GROUP_EXPECT_PASS(group, "no_errors", !logger_has_errors(logger, rules));
 
         GROUP_EXPECT_PASS(group, "is_valid", json.is_valid());
         GROUP_EXPECT_PASS(group, "is_object", json.is_object());

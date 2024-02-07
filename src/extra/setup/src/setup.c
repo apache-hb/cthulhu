@@ -279,7 +279,7 @@ static void pretty_panic_handler(source_info_t location, const char *fmt, va_lis
 {
     arena_t *arena = get_global_arena();
     bt_report_t *report = bt_report_collect(arena);
-    io_t *io = io_stdout();
+    io_t *io = io_stderr();
 
     print_options_t print_options = {
         .arena = arena,
@@ -303,8 +303,7 @@ static void pretty_panic_handler(source_info_t location, const char *fmt, va_lis
 
 static void default_error_begin(size_t error, void *user)
 {
-    io_t *io = user;
-    io_printf(io, "a fatal error has occured 0x%zX\n", error);
+    io_printf(user, "a fatal error has occured 0x%zX\n", error);
 }
 
 static void default_error_next(const bt_frame_t *frame, void *user)
@@ -336,8 +335,7 @@ static void default_error_next(const bt_frame_t *frame, void *user)
 
 static void default_error_end(void *user)
 {
-    io_t *io = user;
-    io_printf(io, "exiting\n");
+    io_printf(user, "exiting\n");
     exit(CT_EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
 }
 
