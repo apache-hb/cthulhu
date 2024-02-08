@@ -6,7 +6,7 @@ src = [
 metatool = executable('metatool', src,
     build_by_default : not meson.is_subproject(),
     include_directories : [ 'include' ],
-    dependencies : [ json, setup, config, memory, io ]
+    dependencies : [ json, setup, config, memory, io, notify, arena ]
 )
 
 buildast = generator(metatool,

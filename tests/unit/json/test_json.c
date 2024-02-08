@@ -1,6 +1,8 @@
+#include "base/util.h"
 #include "io/io.h"
 #include "notify/notify.h"
 #include "std/map.h"
+#include "std/vector.h"
 #include "unit/ct-test.h"
 
 #include "setup/memory.h"
@@ -36,24 +38,25 @@ int main(void)
         GROUP_EXPECT_PASS(group, "json", json != NULL);
 
         GROUP_EXPECT_PASS(group, "is_object", json->kind == eJsonObject);
-        GROUP_EXPECT_PASS(group, "is_name_string", map_get(json->object, "name")->kind == eJsonString);
-        GROUP_EXPECT_PASS(group, "is_version_float", json["version"].is_float());
-        GROUP_EXPECT_PASS(group, "is_dependencies_array", json["dependencies"].is_array());
+        GROUP_EXPECT_PASS(group, "is_name_string", json_map_get(json, "name")->kind == eJsonString);
+        GROUP_EXPECT_PASS(group, "is_version_float", json_map_get(json, "version")->kind == eJsonFloat);
+        GROUP_EXPECT_PASS(group, "is_dependencies_array", json_map_get(json, "dependencies")->kind == eJsonArray);
 
-        text_view_t name = json["name"].as_string();
+        text_t name = json_map_get(json, "name")->string;
         GROUP_EXPECT_PASS(group, "name", name.length == 4);
 
         GROUP_EXPECT_PASS(group, "name", ctu_strncmp(name.text, "ctu", name.length) == 0);
 
-        float version = json["version"].as_float();
+        float version = json_map_get(json, "version")->real;
         GROUP_EXPECT_PASS(group, "version", version == 1.0f);
 
-        json::Array dependencies = json["dependencies"].as_array();
-        GROUP_EXPECT_PASS(group, "dependencies", dependencies.length() == 3);
+        json_t *dependencies = json_map_get(json, "dependencies");
+        GROUP_EXPECT_PASS(group, "dependencies", vector_len(dependencies->array) == 3);
 
-        GROUP_EXPECT_PASS(group, "dependency_0", dependencies[0].is_string());
-        GROUP_EXPECT_PASS(group, "dependency_1", dependencies[1].is_string());
-        GROUP_EXPECT_PASS(group, "dependency_2", dependencies[2].is_string());
+        GROUP_EXPECT_PASS(group, "dependency_0", json_array_get(dependencies, 0)->kind == eJsonString);
+        GROUP_EXPECT_PASS(group, "dependency_1", json_array_get(dependencies, 1)->kind == eJsonString);
+        GROUP_EXPECT_PASS(group, "dependency_2", json_array_get(dependencies, 2)->kind == eJsonString);
     }
 
+    return test_suite_finish(&suite);
 }

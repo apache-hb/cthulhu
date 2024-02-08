@@ -68,10 +68,10 @@ typedef struct json_t
 } json_t;
 
 RET_INSPECT
-CT_JSON_API json_t *json_map_get(IN_NOTNULL const map_t *map, IN_NOTNULL const char *key);
+CT_JSON_API json_t *json_map_get(IN_NOTNULL const json_t *json, IN_NOTNULL const char *key);
 
 RET_INSPECT
-CT_JSON_API json_t *json_array_get(IN_NOTNULL const vector_t *array, IN_RANGE(0, 0) size_t index);
+CT_JSON_API json_t *json_array_get(IN_NOTNULL const json_t *json, size_t index);
 
 /// @brief scan an io into a json value
 /// scan the contents of an io object into a json value

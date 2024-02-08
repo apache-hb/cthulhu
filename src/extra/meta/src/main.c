@@ -1,11 +1,17 @@
-#include "core/macros.h"
+#include "meta/ast.h"
+
 #include "io/console.h"
 #include "io/io.h"
-#include "memory/memory.h"
-#include "setup/setup.h"
-#include "config/config.h"
 
+#include "memory/memory.h"
+#include "config/config.h"
+#include "setup/setup.h"
 #include "json/json.h"
+
+#include "core/macros.h"
+
+#define NEW_EVENT(name, ...) const diagnostic_t kEvent_##name = __VA_ARGS__;
+#include "meta/meta.def"
 
 static const version_info_t kToolVersion = {
     .license = "GPLv3",
