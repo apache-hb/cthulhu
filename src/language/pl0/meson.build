@@ -3,7 +3,8 @@ src = [
     'src/ast.c',
     'src/sema.c',
     lex.process('src/pl0.l'),
-    parse.process('src/pl0.y')
+    parse.process('src/pl0.y'),
+    meta.process('src/pl0.lang')
 ]
 
 deps = [

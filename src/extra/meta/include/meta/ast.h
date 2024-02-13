@@ -1,66 +1,87 @@
 #pragma once
 
 #include "core/compiler.h"
+#include "core/where.h"
 
 #include "notify/diagnostic.h" // IWYU pragma: export
 
 typedef struct typevec_t typevec_t;
-typedef struct json_t json_t;
+typedef struct vector_t vector_t;
+typedef struct node_t node_t;
 typedef struct logger_t logger_t;
+typedef struct map_t map_t;
 typedef struct arena_t arena_t;
+typedef struct scan_t scan_t;
 
 CT_BEGIN_API
 
 #define NEW_EVENT(id, ...) extern const diagnostic_t kEvent_##id;
 #include "meta.def"
 
-typedef enum ast_kind_t
+typedef struct meta_ast_t meta_ast_t;
+
+typedef enum meta_kind_t
 {
-    eAstNode,
+    eMetaModule,
+    eMetaAstNode,
 
-    // const char *
-    eAstString,
+    eMetaVector,
+    eMetaString,
+    eMetaNode,
+    eMetaOpaque,
+    eMetaDigit,
 
-    // text_t
-    eAstText,
+    eMetaCount
+} meta_kind_t;
 
-    // bool
-    eAstBool,
-
-    // vector_t*
-    eAstVector,
-
-    // map_t*
-    eAstMap,
-
-    // typevec_t*
-    eAstTypevec,
-
-    // mpz_t
-    eAstMpz,
-
-    eAstInvalid,
-
-    eAstCount
-} ast_kind_t;
-
-typedef struct ast_field_t
+typedef struct meta_config_t
 {
     const char *name;
-    ast_kind_t kind;
-} ast_field_t;
+    const char *value;
+} meta_config_t;
 
-typedef struct ast_node_t
+typedef struct meta_field_t
 {
     const char *name;
-    typevec_t *fields;
-} ast_node_t;
+    meta_ast_t *type;
+} meta_field_t;
 
-typedef struct ast_decls_t
+typedef struct meta_ast_t
 {
-    typevec_t *decls;
-} ast_decls_t;
+    meta_kind_t kind;
+    const node_t *node;
 
-ast_decls_t meta_build_decls(const json_t *json, logger_t *logger, arena_t *arena);
+    union {
+        /* eMetaModule */
+        struct {
+            map_t *config;
+            vector_t *nodes;
+        };
+
+        /* eMetaAstNode */
+        struct {
+            const char *name;
+            typevec_t *fields;
+        };
+
+        /* eAstOpaque */
+        const char *opaque;
+
+        /* eAstVector */
+        const meta_ast_t *element;
+    };
+} meta_ast_t;
+
+meta_field_t meta_field_new(const char *name, meta_ast_t *type);
+meta_config_t meta_config_new(const char *name, const char *value);
+
+meta_ast_t *meta_module(scan_t *scan, where_t where, map_t *config, vector_t *nodes);
+meta_ast_t *meta_node(scan_t *scan, where_t where, const char *name, typevec_t *fields);
+meta_ast_t *meta_opaque(scan_t *scan, where_t where, const char *opaque);
+meta_ast_t *meta_vector(scan_t *scan, where_t where, const meta_ast_t *element);
+
+meta_ast_t *meta_string(scan_t *scan, where_t where);
+meta_ast_t *meta_ast(scan_t *scan, where_t where);
+meta_ast_t *meta_digit(scan_t *scan, where_t where);
 
 CT_END_API

@@ -67,9 +67,21 @@ typedef struct json_t
     };
 } json_t;
 
+/// @brief get a json value from an object by key
+///
+/// @param json the object to get the value from
+/// @param key the key to get the value of
+///
+/// @return the value of the key
 RET_INSPECT
 CT_JSON_API json_t *json_map_get(IN_NOTNULL const json_t *json, IN_NOTNULL const char *key);
 
+/// @brief get an array element by index
+///
+/// @param json the array to get the element from
+/// @param index the index of the element to get
+///
+/// @return the element at the index
 RET_INSPECT
 CT_JSON_API json_t *json_array_get(IN_NOTNULL const json_t *json, size_t index);
 

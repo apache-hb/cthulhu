@@ -1,0 +1,61 @@
+config prefix = pl0x
+config include = "cthulhu/tree/ops.h"
+
+ast ident { ident: cstring }
+ast digit { digit: mpz }
+ast odd { expr: ast }
+
+ast unary {
+    op: opaque(unary_t)
+    expr: ast
+}
+
+ast binary {
+    op: opaque(binary_t)
+    lhs: ast
+    rhs: ast
+}
+
+ast compare {
+    op: opaque(compare_t)
+    lhs: ast
+    rhs: ast
+}
+
+ast assign {
+    dst: cstring
+    src: ast
+}
+
+ast branch {
+    cond: ast
+    then: ast
+}
+
+ast stmts {
+    body: vector[ast]
+}
+
+ast procedure {
+    name: cstring
+    locals: vector[ast]
+    body: vector[ast]
+}
+
+ast value {
+    name: cstring
+    value: ast
+}
+
+ast import {
+    path: vector[cstring]
+}
+
+ast module {
+    consts: vector[ast]
+    globals: vector[ast]
+    procedures: vector[ast]
+    entry: ast
+    modspec: vector[cstring]
+    imports: vector[ast]
+}

@@ -57,7 +57,7 @@ typedef struct default_options_t
     // print help with usage and quit
     cfg_field_t *enable_usage;
 
-    // print help with windows style options and quit
+    // print help with windows style options
     cfg_field_t *enable_windows_style;
 
     // enable colour output
