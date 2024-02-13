@@ -3,19 +3,35 @@
 #include <stddef.h>
 
 /// @ingroup core
+/// @{
+
 /// @brief a range of text
 typedef struct text_t
 {
-    char *text;  ///< the text itself
-    size_t length; ///< the number of characters in the text
+    /// @brief text data
+    char *text;
+    /// @brief the number of characters in the text
+    /// @note this does not include the null terminator
+    size_t length;
 } text_t;
 
-/// @ingroup core
 /// @brief a non-owning view of text
 typedef struct text_view_t
 {
-    const char *text; ///< the text itself
-    size_t length;      ///< the number of characters in the text
+    /// @brief the text itself
+    const char *text;
+
+    /// @brief the number of characters in the text
+    /// @note this does not include the null terminator
+    size_t length;
 } text_view_t;
 
+/// @def CT_TEXT_VIEW
+/// @brief create a text view from a string literal
+///
+/// @param text the string literal to create a view of
+/// @note this does not include the null terminator
+/// @warning this does not work with string variables
 #define CT_TEXT_VIEW(text) { text, sizeof(text) - 1 }
+
+/// @}

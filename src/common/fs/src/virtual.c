@@ -136,7 +136,7 @@ static inode_t *vfs_query_node(fs_t *fs, inode_t *self, const char *name)
     CT_UNUSED(fs);
 
     virtual_dir_t *dir = inode_data(self);
-    return map_get_default(dir->dirents, name, &gInvalidINode);
+    return map_get_default(dir->dirents, name, &gInvalidFileNode);
 }
 
 static map_t *vfs_query_dirents(fs_t *fs, inode_t *self)

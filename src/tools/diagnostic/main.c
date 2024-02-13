@@ -17,17 +17,16 @@
 #include "memory/memory.h"
 #include "support/support.h"
 
-static const version_info_t kToolVersion = {
-    .license = "GPLv3",
-    .author = "Elliot Haisley",
-    .desc = "Cthulhu diagnostic lookup and query tool",
-    .version = CT_NEW_VERSION(0, 0, 1),
-};
 static const frontend_t kFrontendInfo = {
     .info = {
         .id = "frontend-diag",
         .name = "Diagnostic query tool",
-        .version = kToolVersion,
+        .version = {
+            .license = "GPLv3",
+            .author = "Elliot Haisley",
+            .desc = "Cthulhu diagnostic lookup and query tool",
+            .version = CT_NEW_VERSION(0, 0, 1),
+        },
     },
 };
 
@@ -268,7 +267,7 @@ int main(int argc, const char **argv)
         .io = io,
 
         .group = tool.root,
-        .version = kToolVersion,
+        .version = kFrontendInfo.info.version,
 
         .argc = argc,
         .argv = argv,

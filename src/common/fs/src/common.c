@@ -10,7 +10,7 @@
 
 // inode api
 
-inode_t gInvalidINode = {
+inode_t gInvalidFileNode = {
     .type = eNodeInvalid
 };
 

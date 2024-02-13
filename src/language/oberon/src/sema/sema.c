@@ -6,6 +6,7 @@
 #include "cthulhu/util/util.h"
 
 #include "base/panic.h"
+#include "core/macros.h"
 
 #include "scan/node.h"
 
@@ -115,6 +116,8 @@ tree_t *obr_get_void_type(void)
 
 void obr_create(language_runtime_t *runtime, tree_t *root)
 {
+    CT_UNUSED(runtime);
+
     const node_t *node = tree_get_node(root);
     gTypeBoolean = tree_type_bool(node, "BOOLEAN");
     gTypeChar = tree_type_digit(node, "CHAR", eDigitChar, eSignSigned);

@@ -15,7 +15,7 @@
 
 #if __cplusplus >= 201402L
 #   define CT_DEPRECATED(msg) [[deprecated(msg)]]
-#elif CT_CC_MSVC
+#elif CT_CC_MSVC || CT_CC_CLANGCL
 #   define CT_DEPRECATED(msg) __declspec(deprecated(msg))
 #elif CT_CC_CLANG || CT_CC_GNU
 #   define CT_DEPRECATED(msg) __attribute__((deprecated(msg)))

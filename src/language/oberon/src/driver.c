@@ -14,6 +14,8 @@
 
 void obr_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
 {
+    CT_UNUSED(runtime);
+
     obr_t *ast = unit_get_ast(unit);
     size_t decl_count = vector_len(ast->decls);
 
@@ -61,8 +63,8 @@ static void import_module(language_runtime_t *runtime, tree_t *sema, obr_t *incl
     tree_t *old = obr_get_namespace(sema, include->name);
     if (old != NULL)
     {
-        event_builder_t id = evt_symbol_shadowed(sema->reports, include->name, tree_get_node(old), include->node);
-        msg_note(id, "consider using import aliases; eg. `IMPORT my_%s := %s;", include->name, include->symbol);
+        event_builder_t evt = evt_symbol_shadowed(sema->reports, include->name, tree_get_node(old), include->node);
+        msg_note(evt, "consider using import aliases; eg. `IMPORT my_%s := %s;", include->name, include->symbol);
     }
     else
     {

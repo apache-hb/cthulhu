@@ -117,7 +117,8 @@ int main(int argc, const char **argv)
     //     return CT_EXIT_ERROR;
     // }
 
-    if ((error = io_error(ast)))
+    error = io_error(ast);
+    if (error)
     {
         io_printf(con, "Error opening ast file: %s\n", os_error_string(error, arena));
         return CT_EXIT_ERROR;

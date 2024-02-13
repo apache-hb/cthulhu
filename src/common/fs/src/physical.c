@@ -110,7 +110,7 @@ static inode_t *pfs_query_node(fs_t *fs, inode_t *self, const char *name)
     case eOsNodeDir:
         return physical_dir(relative, fs->arena);
     default:
-        return &gInvalidINode;
+        return &gInvalidFileNode;
     }
 }
 

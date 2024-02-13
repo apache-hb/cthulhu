@@ -3,7 +3,6 @@
 #include "fs/fs.h"
 
 #include <stddef.h>
-#include <stdalign.h>
 
 typedef struct map_t map_t;
 typedef struct arena_t arena_t;
@@ -21,9 +20,8 @@ typedef struct inode_t
 {
     inode_type_t type;
 
-    // use size_t as msvc doesnt have max_align_t
-    // TODO: is that correct?
-    alignas(size_t) char data[];
+    // TODO: cant use alignas here because of an msvc bug
+    char data[];
 } inode_t;
 
 typedef inode_t *(*fs_query_node_t)(fs_t *fs, inode_t *node, const char *name);
@@ -59,15 +57,15 @@ typedef struct fs_callbacks_t
 typedef struct fs_t
 {
     const fs_callbacks_t *cb; ///< callbacks
-    inode_t *root; ///< root inode
     arena_t *arena;
+    inode_t *root; ///< root inode
 
     char data[];
 } fs_t;
 
 // inode api
 
-CT_LOCAL extern inode_t gInvalidINode;
+CT_LOCAL extern inode_t gInvalidFileNode;
 
 CT_LOCAL inode_t *inode_file(const void *data, size_t size, arena_t *arena);
 CT_LOCAL inode_t *inode_dir(const void *data, size_t size, arena_t *arena);

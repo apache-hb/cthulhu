@@ -30,6 +30,8 @@ void ctu_init(language_runtime_t *runtime, tree_t *root)
 
 void ctu_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
 {
+    CT_UNUSED(runtime);
+
     ctu_t *ast = unit_get_ast(unit);
 
     const vector_t *decls = ast->decls;
@@ -83,8 +85,8 @@ static void import_module(language_runtime_t *runtime, tree_t *sema, ctu_t *incl
     tree_t *old = get_import(sema, include->name);
     if (old != NULL)
     {
-        event_builder_t id = evt_symbol_shadowed(sema->reports, include->name, tree_get_node(old), include->node);
-        msg_note(id, "consider using import aliases; eg. `import %s as my_%s`",
+        event_builder_t evt = evt_symbol_shadowed(sema->reports, include->name, tree_get_node(old), include->node);
+        msg_note(evt, "consider using import aliases; eg. `import %s as my_%s`",
             str_join("::", include->import_path, arena),
             include->name
         );
