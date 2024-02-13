@@ -26,7 +26,7 @@ typedef struct os_dir_t os_dir_t;
 typedef struct os_iter_t os_iter_t;
 
 /// @brief file access mode
-typedef enum os_mode_t
+typedef enum os_access_t
 {
     eAccessRead = (1 << 0),  ///< file is readable
     eAccessWrite = (1 << 1), ///< file is writeable, does not imply readable
