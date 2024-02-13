@@ -4,9 +4,9 @@
 #include "os/core.h"
 
 #if CT_OS_WINDOWS
-#   include "impl/win32.h"
+#   include "impl/win32.h" // IWYU pragma: export
 #elif CT_OS_LINUX || CT_OS_APPLE
-#   include "impl/posix.h"
+#   include "impl/posix.h" // IWYU pragma: export
 #else
 #   error "unsupported platform"
 #endif
