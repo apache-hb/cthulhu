@@ -244,6 +244,12 @@ CT_OS_API os_error_t os_file_seek(IN_NOTNULL os_file_t *file, size_t offset, siz
 RET_INSPECT
 CT_OS_API os_error_t os_file_tell(IN_NOTNULL os_file_t *file, IN_NOTNULL size_t *actual);
 
+/// @brief truncate/expand a file to a specific size
+///
+/// @param file the file to truncate/expand
+/// @param size the size to truncate/expand the file to
+///
+/// @return an error if the operation could not be performed
 RET_INSPECT
 CT_OS_API os_error_t os_file_expand(IN_NOTNULL os_file_t *file, size_t size);
 

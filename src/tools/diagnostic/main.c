@@ -15,13 +15,20 @@
 #include "arena/arena.h"
 
 #include "memory/memory.h"
+#include "support/support.h"
 
-#if 0
 static const version_info_t kToolVersion = {
     .license = "GPLv3",
     .author = "Elliot Haisley",
     .desc = "Cthulhu diagnostic lookup and query tool",
     .version = CT_NEW_VERSION(0, 0, 1),
+};
+static const frontend_t kFrontendInfo = {
+    .info = {
+        .id = "frontend-diag",
+        .name = "Diagnostic query tool",
+        .version = kToolVersion,
+    },
 };
 
 static const cfg_info_t kGroupInfo = {
@@ -74,11 +81,12 @@ typedef struct tool_t
     default_options_t m_options;
 } tool_t;
 
-static tool_t make_config(loader_t *loader, arena_t *arena)
+static tool_t make_config(typevec_t *langs, arena_t *arena)
 {
     cfg_group_t *root = config_root(&kGroupInfo, arena);
+    size_t len = typevec_len(langs);
 
-    cfg_choice_t *lang_choices = ARENA_MALLOC(sizeof(cfg_choice_t) * (langs.size + 1), "lang_choices", root, arena);
+    cfg_choice_t *lang_choices = ARENA_MALLOC(sizeof(cfg_choice_t) * (len + 1), "lang_choices", root, arena);
     cfg_choice_t none_choice = {
         .text = "none",
         .value = 0
@@ -86,9 +94,9 @@ static tool_t make_config(loader_t *loader, arena_t *arena)
 
     lang_choices[0] = none_choice;
 
-    for (size_t i = 0; i < langs.size; i++)
+    for (size_t i = 0; i < len; i++)
     {
-        const language_t *lang = langs.langs[i];
+        const language_t *lang = typevec_offset(langs, i);
         module_info_t info = lang->info;
         cfg_choice_t choice = {
             .text = info.id,
@@ -100,7 +108,7 @@ static tool_t make_config(loader_t *loader, arena_t *arena)
 
     cfg_enum_t lang_options = {
         .options = lang_choices,
-        .count = langs.size + 1,
+        .count = len + 1,
         .initial = 0
     };
 
@@ -152,13 +160,14 @@ static void add_diagnostics(diag_search_t *ctx, diagnostic_list_t diagnostics)
     }
 }
 
-static size_t count_diagnostics(const langs_t *langs)
+static size_t count_diagnostics(const typevec_t *langs)
 {
     size_t count = 0;
 
-    for (size_t i = 0; i < langs->size; i++)
+    size_t len = typevec_len(langs);
+    for (size_t i = 0; i < len; i++)
     {
-        const language_t *lang = langs->langs[i];
+        const language_t *lang = typevec_offset(langs, i);
         module_info_t info = lang->info;
         count += info.diagnostics.count;
     }
@@ -188,12 +197,13 @@ static void print_lang_info(io_t *io, const language_t *lang)
     io_printf(io, "  %zu diagnostics\n", diagnostics.count);
 }
 
-static void print_all_langs(io_t *io, langs_t langs)
+static void print_all_langs(io_t *io, typevec_t *langs)
 {
-    io_printf(io, "%zu available languages:\n", langs.size);
-    for (size_t i = 0; i < langs.size; i++)
+    size_t len = typevec_len(langs);
+    io_printf(io, "%zu available languages:\n", len);
+    for (size_t i = 0; i < len; i++)
     {
-        const language_t *lang = langs.langs[i];
+        const language_t *lang = typevec_offset(langs, i);
         print_lang_info(io, lang);
     }
 }
@@ -233,9 +243,25 @@ int main(int argc, const char **argv)
     arena_t *arena = get_global_arena();
     io_t *io = io_stdout();
 
-
+    broker_t *broker = broker_new(&kFrontendInfo, arena);
     loader_t *loader = loader_new(arena);
-    tool_t tool = make_config(loader, arena);
+    support_t *support = support_new(broker, loader, arena);
+    support_load_default_modules(support);
+
+    typevec_t *mods = support_get_modules(support);
+
+    size_t len = typevec_len(mods);
+    typevec_t *langs = typevec_new(sizeof(language_t), len, arena);
+    for (size_t i = 0; i < len; i++)
+    {
+        const loaded_module_t *mod = typevec_offset(mods, i);
+        if (mod->type & eModLanguage)
+        {
+            typevec_push(langs, mod->lang);
+        }
+    }
+
+    tool_t tool = make_config(langs, arena);
 
     tool_config_t config = {
         .arena = arena,
@@ -273,7 +299,7 @@ int main(int argc, const char **argv)
     size_t lang_index = cfg_enum_value(tool.print_one_lang);
     if (lang_index != 0)
     {
-        const language_t *lang = langs.langs[lang_index - 1];
+        const language_t *lang = typevec_offset(langs, lang_index - 1);
         print_lang_info(io, lang);
         return CT_EXIT_OK;
     }
@@ -284,7 +310,7 @@ int main(int argc, const char **argv)
 
     diagnostic_list_t common = get_common_diagnostics();
 
-    size_t count = count_diagnostics(&langs) + common.count;
+    size_t count = count_diagnostics(langs) + common.count;
 
     diag_search_t ctx = {
         .ids = map_optimal(count, kTypeInfoString, arena),
@@ -293,9 +319,10 @@ int main(int argc, const char **argv)
 
     add_diagnostics(&ctx, common);
 
-    for (size_t i = 0; i < langs.size; i++)
+    size_t lang_count = typevec_len(langs);
+    for (size_t i = 0; i < lang_count; i++)
     {
-        const language_t *lang = langs.langs[i];
+        const language_t *lang = typevec_offset(langs, i);
         module_info_t info = lang->info;
         add_diagnostics(&ctx, info.diagnostics);
     }
@@ -329,7 +356,7 @@ int main(int argc, const char **argv)
     size_t lang_diag_index = cfg_enum_value(tool.print_one_diag);
     if (lang_diag_index != 0)
     {
-        const language_t *lang = langs.langs[lang_diag_index - 1];
+        const language_t *lang = typevec_offset(langs, lang_diag_index - 1);
 
         module_info_t info = lang->info;
         size_t diag_count = info.diagnostics.count;
@@ -373,12 +400,4 @@ int main(int argc, const char **argv)
     }
 
     io_close(io);
-}
-#endif
-
-int main(void)
-{
-    setup_global();
-
-    NEVER("unimplemented diagnostic tool");
 }
