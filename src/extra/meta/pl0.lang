@@ -6,8 +6,8 @@ ast digit { digit: mpz }
 ast odd { expr: ast }
 
 ast unary {
-    op: opaque(unary_t)
-    expr: ast
+    unary: opaque(unary_t)
+    operand: ast
 }
 
 abstract ast two {
@@ -34,17 +34,19 @@ ast branch {
 }
 
 ast stmts {
-    body: vector[ast]
+    stmts: vector[ast]
 }
 
-ast procedure {
+abstract ast decl {
     name: cstring
+}
+
+ast procedure extends decl {
     locals: vector[ast]
     body: vector[ast]
 }
 
-ast value {
-    name: cstring
+ast value extends decl {
     value: ast
 }
 

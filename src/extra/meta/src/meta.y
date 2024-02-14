@@ -28,6 +28,7 @@ void metaerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %union {
     char *ident;
+    bool boolean;
     meta_ast_t *ast;
     meta_field_t field;
     meta_config_t config;
@@ -43,6 +44,8 @@ void metaerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %token
     TOK_CONFIG "config"
     TOK_AST "ast"
+    TOK_EXTENDS "extends"
+    TOK_ABSTRACT "abstract"
     TOK_OPAQUE "opaque"
     TOK_VECTOR "vector"
     TOK_CSTRING "cstring"
@@ -59,7 +62,10 @@ void metaerror(where_t *where, void *state, scan_t *scan, const char *msg);
     TOK_RBRACKET "]"
 
 %type<ident>
-    value
+    value extends
+
+%type<boolean>
+    abstract
 
 %type<ast>
     type node
@@ -102,7 +108,15 @@ nodes: node { $$ = vector_init($1, scan_get_arena(x)); }
     | nodes node { vector_push(&$1, $2); $$ = $1;}
     ;
 
-node: TOK_AST TOK_IDENT TOK_LBRACE fields TOK_RBRACE { $$ = meta_node(x, @$, $2, $4); }
+node: abstract TOK_AST TOK_IDENT extends TOK_LBRACE fields TOK_RBRACE { $$ = meta_node(x, @$, $3, $6, $4, $1); }
+    ;
+
+extends: %empty { $$ = NULL; }
+    | TOK_EXTENDS TOK_IDENT { $$ = $2; }
+    ;
+
+abstract: %empty { $$ = false; }
+    | TOK_ABSTRACT { $$ = true; }
     ;
 
 fields: field { $$ = typevec_new(sizeof(meta_field_t), 4, scan_get_arena(x)); typevec_push($$, &$1); }

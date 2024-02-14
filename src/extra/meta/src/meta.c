@@ -1,19 +1,26 @@
 #include "meta/meta.h"
 
 #include "arena/arena.h"
+#include "base/bitset.h"
 #include "base/panic.h"
+
 #include "io/io.h"
 #include "meta/ast.h"
 #include "std/map.h"
 #include "std/str.h"
 #include "std/typed/vector.h"
 #include "std/vector.h"
+#include <string.h>
 
 typedef struct emit_t
 {
     arena_t *arena;
     const char *prefix;
     const char *ast_name;
+
+    vector_t *nodes;
+
+    bitset_t visited;
 
     io_t *header;
     io_t *source;
@@ -134,6 +141,7 @@ static void emit_enum(emit_t *emit, vector_t *nodes)
     {
         meta_ast_t *node = vector_get(nodes, i);
         CTASSERTF(node->kind == eMetaAstNode, "node is not an ast decl");
+        if (node->is_abstract) continue;
 
         char *name = arena_strdup(node->name, emit->arena);
         name[0] = str_toupper(name[0]);
@@ -155,6 +163,7 @@ static void emit_nodes(emit_t *emit, vector_t *nodes, const char *dup)
     for (size_t i = 0; i < len; i++)
     {
         meta_ast_t *node = vector_get(nodes, i);
+        if (node->is_abstract) continue;
 
         io_printf(emit->header, "typedef struct %s_%s_t {\n", emit->prefix, node->name);
         size_t field_len = typevec_len(node->fields);
@@ -177,6 +186,8 @@ static void emit_constructors(emit_t *emit, vector_t *nodes)
     for (size_t i = 0; i < len; i++)
     {
         meta_ast_t *node = vector_get(nodes, i);
+        if (node->is_abstract) continue;
+
         io_printf(emit->header, "%s_ast_t *%s_%s(scan_t *scan, where_t where", emit->prefix, emit->prefix, node->name);
         size_t field_len = typevec_len(node->fields);
         for (size_t j = 0; j < field_len; j++)
@@ -220,6 +231,8 @@ static void emit_source_constructors(emit_t *emit, vector_t *nodes)
     for (size_t i = 0; i < len; i++)
     {
         meta_ast_t *node = vector_get(nodes, i);
+        if (node->is_abstract) continue;
+
         io_printf(emit->source, "%s_ast_t *%s_%s(scan_t *scan, where_t where", emit->prefix, emit->prefix, node->name);
         size_t field_len = typevec_len(node->fields);
         for (size_t j = 0; j < field_len; j++)
@@ -309,6 +322,15 @@ static void emit_node_hash(emit_t *emit, vector_t *nodes)
     io_printf(emit->source, "}\n");
 }
 
+static void emit_body(emit_t *emit, size_t index, meta_ast_t *ast)
+{
+    if (bitset_test(emit->visited, index)) return;
+
+    bitset_set(emit->visited, index);
+
+    size_t field_len = typevec_len(ast->fields);
+}
+
 void meta_emit(meta_ast_t *ast, io_t *header, io_t *source, arena_t *arena)
 {
     CTASSERTF(ast != NULL, "ast is NULL");
@@ -355,10 +377,18 @@ void meta_emit(meta_ast_t *ast, io_t *header, io_t *source, arena_t *arena)
     const char *prefix = map_get(ast->config, "prefix");
     CTASSERTF(prefix != NULL, "prefix not provided in config");
 
+    size_t words = (vector_len(nodes) / 8) + 1;
+    unsigned char *visited = ARENA_MALLOC(words, NULL, "visited", arena);
+    memset(visited, 0, words);
+
     emit_t emit = {
         .arena = arena,
         .prefix = prefix,
         .ast_name = str_format(arena, "%s_ast_t", prefix),
+
+        .nodes = nodes,
+
+        .visited = bitset_of(visited, words),
 
         .header = header,
         .source = source,
@@ -382,6 +412,10 @@ void meta_emit(meta_ast_t *ast, io_t *header, io_t *source, arena_t *arena)
     for (size_t i = 0; i < len; i++)
     {
         meta_ast_t *node = vector_get(nodes, i);
+        if (node->is_abstract) continue;
+
+        emit_body(&emit, node);
+
         char *name = arena_strdup(node->name, arena);
         name[0] = str_toupper(name[0]);
         io_printf(header, "\t\t/* e%s%s */\n", dup, name);

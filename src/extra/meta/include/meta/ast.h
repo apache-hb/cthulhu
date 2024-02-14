@@ -3,6 +3,8 @@
 #include "core/compiler.h"
 #include "core/where.h"
 
+#include <stdbool.h>
+
 #include "notify/diagnostic.h" // IWYU pragma: export
 
 typedef struct typevec_t typevec_t;
@@ -60,7 +62,9 @@ typedef struct meta_ast_t
 
         /* eMetaAstNode */
         struct {
+            bool is_abstract;
             const char *name;
+            const char *extends;
             typevec_t *fields;
         };
 
@@ -76,7 +80,7 @@ meta_field_t meta_field_new(const char *name, meta_ast_t *type);
 meta_config_t meta_config_new(const char *name, const char *value);
 
 meta_ast_t *meta_module(scan_t *scan, where_t where, map_t *config, vector_t *nodes);
-meta_ast_t *meta_node(scan_t *scan, where_t where, const char *name, typevec_t *fields);
+meta_ast_t *meta_node(scan_t *scan, where_t where, const char *name, typevec_t *fields, const char *extends, bool is_abstract);
 meta_ast_t *meta_opaque(scan_t *scan, where_t where, const char *opaque);
 meta_ast_t *meta_vector(scan_t *scan, where_t where, const meta_ast_t *element);
 

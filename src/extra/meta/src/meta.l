@@ -22,6 +22,8 @@ WS [ \t\r\v\n\f]
 
 "config" { return TOK_CONFIG; }
 "ast" { return TOK_AST; }
+"extends" { return TOK_EXTENDS; }
+"abstract" { return TOK_ABSTRACT; }
 
 "opaque" { return TOK_OPAQUE; }
 "vector" { return TOK_VECTOR; }

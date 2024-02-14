@@ -46,11 +46,13 @@ meta_ast_t *meta_module(scan_t *scan, where_t where, map_t *config, vector_t *no
     return ast;
 }
 
-meta_ast_t *meta_node(scan_t *scan, where_t where, const char *name, typevec_t *fields)
+meta_ast_t *meta_node(scan_t *scan, where_t where, const char *name, typevec_t *fields, const char *extends, bool is_abstract)
 {
     meta_ast_t *ast = meta_ast_new(scan, where, eMetaAstNode);
     ast->name = name;
     ast->fields = fields;
+    ast->extends = extends;
+    ast->is_abstract = is_abstract;
     return ast;
 }
 
