@@ -30,6 +30,7 @@ typedef enum os_access_t
 {
     eAccessRead = (1 << 0),  ///< file is readable
     eAccessWrite = (1 << 1), ///< file is writeable, does not imply readable
+    eAccessTruncate = (1 << 2), ///< file is truncated if it exists
 } os_access_t;
 
 /// @brief file mapping memory protection

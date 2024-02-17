@@ -6,7 +6,10 @@ broker_api = configure_file(
 
 broker_include = include_directories('.', 'include')
 
-src = [ 'src/broker.c' ]
+src = [
+    'src/broker.c',
+    'src/context.c'
+]
 
 libbroker = library('broker', src,
     build_by_default : not meson.is_subproject(),

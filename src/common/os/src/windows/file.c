@@ -62,17 +62,23 @@ os_error_t os_file_exists(const char *path, bool *exists)
     return ERROR_SUCCESS;
 }
 
+static DWORD get_disp(os_access_t access)
+{
+    return (access & eAccessTruncate)
+        ? CREATE_ALWAYS
+        : OPEN_EXISTING;
+}
+
 USE_DECL
 os_error_t os_file_open(const char *path, os_access_t access, os_file_t *file)
 {
     CTASSERT(path != NULL);
-    CTASSERT(access & (eAccessRead | eAccessWrite));
     CTASSERT(file != NULL);
+    CTASSERTF(access & (eAccessRead | eAccessWrite), "%s: invalid access flags 0x%x", path, access);
+    CTASSERTF(access != (eAccessRead | eAccessTruncate), "%s: cannot truncate read only file", path);
 
     DWORD dw_access = get_access(access);
-    DWORD dw_disp = (access & eAccessWrite)
-        ? CREATE_ALWAYS
-        : OPEN_EXISTING;
+    DWORD dw_disp = get_disp(access);
 
     HANDLE handle = CreateFile(
         /* lpFileName = */ path,

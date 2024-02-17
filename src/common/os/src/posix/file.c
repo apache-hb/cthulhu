@@ -61,7 +61,7 @@ static const char *get_access(os_access_t access)
 {
     if (access & eAccessWrite)
     {
-        return "wb";
+        return (access & eAccessTruncate) ? "wb" : "r+b";
     }
 
     if (access & eAccessRead)
@@ -97,8 +97,9 @@ USE_DECL
 os_error_t os_file_open(const char *path, os_access_t access, os_file_t *file)
 {
     CTASSERT(path != NULL);
-    CTASSERT(access & (eAccessRead | eAccessWrite));
     CTASSERT(file != NULL);
+    CTASSERTF(access & (eAccessRead | eAccessWrite), "%s: invalid access flags 0x%x", path, access);
+    CTASSERTF(access != (eAccessRead | eAccessTruncate), "%s: cannot truncate read only file", path);
 
     FILE *fd = fopen(path, get_access(access));
 
