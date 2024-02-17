@@ -108,9 +108,3 @@ void ctu_process_imports(language_runtime_t *runtime, compile_unit_t *unit)
         import_module(runtime, unit->tree, it);
     }
 }
-
-void ctu_compile_module(language_runtime_t *runtime, compile_unit_t *unit)
-{
-    CT_UNUSED(runtime);
-    CT_UNUSED(unit);
-}

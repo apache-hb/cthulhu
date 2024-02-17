@@ -69,7 +69,7 @@ static tree_link_t choose_linkage(tree_t *sema, const ctu_t *expr)
         return eLinkEntryCli;
     }
 
-    vector_t *path = expr->path;
+    const vector_t *path = expr->path;
     if (vector_len(path) > 1)
     {
         MALFORMED_ENTRY(sema->reports, expr->node);

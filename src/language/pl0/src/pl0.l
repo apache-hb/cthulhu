@@ -8,10 +8,11 @@
 
 %{
 #include "pl0_bison.h"
-#include "pl0/scan.h"
+#include "scan/node.h"
 #include "interop/flex.h"
 #include "interop/memory.h"
 #include "cthulhu/events/events.h"
+#include "cthulhu/broker/scan.h"
 %}
 
 %x COMMENT
@@ -43,8 +44,8 @@ WS [ \t\r\v\n\f]
 (?i:odd) { return ODD; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
-    pl0_scan_t *ctx = pl0_scan_context(yyextra);
-    yylval->ident = arena_strndup(yytext, yyleng, ctx->string_arena);
+    arena_t *arena = ctx_get_string_arena(yyextra);
+    yylval->ident = arena_strndup(yytext, yyleng, arena);
     return IDENT;
 }
 
@@ -76,8 +77,8 @@ WS [ \t\r\v\n\f]
 "!" { return PRINT; }
 
 . {
-    pl0_scan_t *ctx = pl0_scan_context(yyextra);
-    evt_scan_unknown(ctx->logger, node_new(yyextra, *yylloc), yytext);
+    logger_t *logger = ctx_get_logger(yyextra);
+    evt_scan_unknown(logger, node_new(yyextra, *yylloc), yytext);
 }
 
 %%

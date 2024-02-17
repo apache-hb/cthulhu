@@ -97,3 +97,6 @@ CT_OS_API char *os_path_string(IN_NOTNULL const text_t *path, IN_NOTNULL arena_t
 /// @}
 
 CT_END_API
+
+CT_ENUM_FLAGS(os_access_t)
+CT_ENUM_FLAGS(os_protect_t)

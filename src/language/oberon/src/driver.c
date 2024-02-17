@@ -83,9 +83,3 @@ void obr_process_imports(language_runtime_t *runtime, compile_unit_t *unit)
         import_module(runtime, unit->tree, import);
     }
 }
-
-void obr_compile_module(language_runtime_t *runtime, compile_unit_t *unit)
-{
-    CT_UNUSED(runtime);
-    CT_UNUSED(unit);
-}

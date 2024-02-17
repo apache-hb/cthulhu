@@ -62,12 +62,30 @@ os_error_t os_file_exists(const char *path, bool *exists)
     return ERROR_SUCCESS;
 }
 
+CT_CLANG_PRAGMA(clang diagnostic push)
+CT_CLANG_PRAGMA(clang diagnostic ignored "-Wswitch")
+
 static DWORD get_disp(os_access_t access)
 {
-    return (access & eAccessTruncate)
-        ? CREATE_ALWAYS
-        : OPEN_EXISTING;
+    switch (access)
+    {
+    case eAccessRead:
+        return OPEN_EXISTING;
+
+    case eAccessWrite:
+    case (eAccessWrite | eAccessRead):
+        return CREATE_NEW;
+
+    case (eAccessWrite | eAccessTruncate):
+    case (eAccessWrite | eAccessRead | eAccessTruncate):
+        return CREATE_ALWAYS;
+
+    default:
+        NEVER("invalid access flags 0x%x", access);
+    }
 }
+
+CT_CLANG_PRAGMA(clang diagnostic pop)
 
 USE_DECL
 os_error_t os_file_open(const char *path, os_access_t access, os_file_t *file)
@@ -231,6 +249,9 @@ os_error_t os_file_expand(os_file_t *file, size_t size)
     return ERROR_SUCCESS;
 }
 
+CT_CLANG_PRAGMA(clang diagnostic push)
+CT_CLANG_PRAGMA(clang diagnostic ignored "-Wswitch")
+
 static DWORD get_protect(os_protect_t protect)
 {
     // windows PAGE_ macros dont follow a bit pattern
@@ -261,6 +282,8 @@ static DWORD get_protect(os_protect_t protect)
     default: NEVER("unknown protect %x", protect);
     }
 }
+
+CT_CLANG_PRAGMA(clang diagnostic pop)
 
 static DWORD get_map_access(os_protect_t protect)
 {

@@ -14,12 +14,6 @@
 
 CT_CALLBACKS(kCallbacks, cc);
 
-static void cc_preparse(language_runtime_t *runtime, void *context)
-{
-    cc_scan_t *ctx = context;
-    ctx->logger = runtime->logger;
-}
-
 static void cc_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
 {
     CT_UNUSED(runtime);
@@ -66,13 +60,11 @@ CT_DRIVER_API const language_t kCModule = {
 
     .exts = kLangNames,
 
-    .context_size = sizeof(cc_scan_t),
     .ast_size = sizeof(c_ast_t),
 
     .fn_create = cc_create,
     .fn_destroy = cc_destroy,
 
-    .fn_preparse = cc_preparse,
     .fn_postparse = cc_postparse,
     .scanner = &kCallbacks,
 };

@@ -15,15 +15,6 @@
 
 CT_CALLBACKS(kCallbacks, obr);
 
-static void obr_preparse(language_runtime_t *runtime, void *context)
-{
-    obr_scan_t *ctx = context;
-    ctx->logger = runtime->logger;
-    ctx->arena = runtime->arena;
-    ctx->ast_arena = &runtime->ast_arena;
-    ctx->string_arena = runtime->arena;
-}
-
 static void obr_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
 {
     CT_UNUSED(scan);
@@ -97,21 +88,18 @@ CT_DRIVER_API const language_t kOberonModule = {
 
     .exts = kLangNames,
 
-    .context_size = sizeof(obr_scan_t),
     .ast_size = sizeof(obr_t),
 
     .fn_create = obr_create,
     .fn_destroy = obr_destroy,
 
-    .fn_preparse = obr_preparse,
     .fn_postparse = obr_postparse,
 
     .scanner = &kCallbacks,
 
     .fn_passes = {
         [ePassForwardDecls] = obr_forward_decls,
-        [ePassImportModules] = obr_process_imports,
-        [ePassCompileDecls] = obr_compile_module
+        [ePassImportModules] = obr_process_imports
     }
 };
 

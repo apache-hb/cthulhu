@@ -4,16 +4,17 @@
 %parse-param { void *scan } { scan_t *x }
 %locations
 %expect 0
+%define api.location.type {where_t}
 %define api.prefix {pl0}
 
 %code top {
     #include "interop/flex.h"
     #include "interop/bison.h"
     #include "std/vector.h"
+    #include "scan/scan.h"
 }
 
 %code requires {
-    #include "pl0/scan.h"
     #include "pl0/ast.h"
 
     #define YYSTYPE PL0STYPE
@@ -28,6 +29,7 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
 %union {
     pl0_t *pl0;
     vector_t *vector;
+    const vector_t *cvector;
 
     char *ident;
     mpz_t number;
@@ -55,6 +57,8 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
     imports
     paths
     path
+
+%type<cvector>
     module
 
 %token

@@ -1,20 +1,21 @@
 #include "pl0/ast.h"
 
+#include "cthulhu/broker/scan.h"
+
 #include "base/panic.h"
 #include "arena/arena.h"
-#include "pl0/scan.h"
+#include "scan/node.h"
 
 pl0_t *pl0_new(scan_t *scan, where_t where, pl0_type_t type)
 {
     CTASSERT(scan != NULL);
+    arena_t *arena = ctx_get_ast_arena(scan);
 
-    pl0_scan_t *ctx = pl0_scan_context(scan);
-
-    pl0_t *node = ARENA_MALLOC(sizeof(pl0_t), "pl0", scan, ctx->ast_arena);
+    pl0_t *node = ARENA_MALLOC(sizeof(pl0_t), "pl0", scan, arena);
     node->node = node_new(scan, where);
     node->type = type;
 
-    ARENA_IDENTIFY(node->node, "node", node, ctx->ast_arena);
+    ARENA_IDENTIFY(node->node, "node", node, arena);
 
     return node;
 }
@@ -135,8 +136,8 @@ pl0_t *pl0_import(scan_t *scan, where_t where, vector_t *parts)
     return node;
 }
 
-pl0_t *pl0_module(scan_t *scan, where_t where, vector_t *mod, vector_t *imports, vector_t *consts, vector_t *globals,
-                  vector_t *procs, pl0_t *entry)
+pl0_t *pl0_module(scan_t *scan, where_t where, const vector_t *mod, const vector_t *imports, const vector_t *consts, const vector_t *globals,
+                  const vector_t *procs, pl0_t *entry)
 {
     pl0_t *node = pl0_new(scan, where, ePl0Module);
     node->mod = mod;

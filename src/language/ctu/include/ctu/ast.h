@@ -80,7 +80,7 @@ typedef struct ctu_t {
 
             union {
                 /* eCtuImport */
-                vector_t *import_path;
+                const vector_t *import_path;
 
                 /* eCtuStmtWhile */
                 struct {
@@ -98,7 +98,7 @@ typedef struct ctu_t {
 
                 /* eCtuDeclFunction|eCtuTypeFunction */
                 struct {
-                    vector_t *params;
+                    const vector_t *params;
                     char *variadic;
                     ctu_t *return_type;
                     ctu_t *body;
@@ -111,7 +111,7 @@ typedef struct ctu_t {
                 };
 
                 /* eCtuDeclStruct|eCtuDeclUnion */
-                vector_t *fields;
+                const vector_t *fields;
 
                 /* eCtuField */
                 ctu_t *field_type;
@@ -146,10 +146,10 @@ typedef struct ctu_t {
         };
 
         /* eCtuExprInit */
-        vector_t *inits;
+        const vector_t *inits;
 
         /* eCtuExprName */
-        vector_t *path;
+        const vector_t *path;
 
         struct {
             union {
@@ -185,11 +185,11 @@ typedef struct ctu_t {
         /* eCtuExprCall */
         struct {
             ctu_t *callee;
-            vector_t *args;
+            const vector_t *args;
         };
 
         /* eCtuStmtList */
-        vector_t *stmts;
+        const vector_t *stmts;
 
         /* eCtuStmtReturn */
         ctu_t *result;
@@ -265,10 +265,10 @@ ctu_t *ctu_stmt_branch(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then, ct
 ctu_t *ctu_expr_int(scan_t *scan, where_t where, mpz_t value);
 ctu_t *ctu_expr_bool(scan_t *scan, where_t where, bool value);
 ctu_t *ctu_expr_string(scan_t *scan, where_t where, char *text, size_t length);
-ctu_t *ctu_expr_init(scan_t *scan, where_t where, vector_t *inits);
+ctu_t *ctu_expr_init(scan_t *scan, where_t where, const vector_t *inits);
 
-ctu_t *ctu_expr_call(scan_t *scan, where_t where, ctu_t *callee, vector_t *args);
-ctu_t *ctu_expr_name(scan_t *scan, where_t where, vector_t *path);
+ctu_t *ctu_expr_call(scan_t *scan, where_t where, ctu_t *callee, const vector_t *args);
+ctu_t *ctu_expr_name(scan_t *scan, where_t where, const vector_t *path);
 ctu_t *ctu_expr_cast(scan_t *scan, where_t where, ctu_t *expr, ctu_t *type);
 
 ctu_t *ctu_expr_ref(scan_t *scan, where_t where, ctu_t *expr);
@@ -288,14 +288,14 @@ ctu_t *ctu_expr_compare(scan_t *scan, where_t where, compare_t compare, ctu_t *l
 ctu_t *ctu_type_name(scan_t *scan, where_t where, vector_t *path);
 ctu_t *ctu_type_pointer(scan_t *scan, where_t where, ctu_t *pointer);
 ctu_t *ctu_type_array(scan_t *scan, where_t where, ctu_t *array, ctu_t *length);
-ctu_t *ctu_type_function(scan_t *scan, where_t where, vector_t *params, ctu_t *return_type);
+ctu_t *ctu_type_function(scan_t *scan, where_t where, const vector_t *params, ctu_t *return_type);
 
 ///
 /// real declarations
 ///
 
 ctu_t *ctu_decl_global(scan_t *scan, where_t where, bool exported, bool mutable, char *name, ctu_t *type, ctu_t *value);
-ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name, vector_t *params, char *variadic, ctu_t *return_type, ctu_t *body);
+ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name, const vector_t *params, char *variadic, ctu_t *return_type, ctu_t *body);
 
 ///
 /// type declarations
@@ -322,8 +322,8 @@ ctu_t *ctu_variant_case(scan_t *scan, where_t where, char *name, bool is_default
 ///
 
 typedef struct ctu_params_t {
-    vector_t *params;
+    const vector_t *params;
     char *variadic;
 } ctu_params_t;
 
-ctu_params_t ctu_params_new(vector_t *params, char *variadic);
+ctu_params_t ctu_params_new(const vector_t *params, char *variadic);

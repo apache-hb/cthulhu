@@ -13,6 +13,7 @@
 #include "interop/memory.h"
 #include "cthulhu/util/text.h"
 #include "cthulhu/events/events.h"
+#include "cthulhu/broker/scan.h"
 %}
 
 ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
@@ -182,22 +183,21 @@ WS [ \t\r\v\n\f]
 }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
-    cc_scan_t *ctx = cc_scan_context(yyextra);
-    arena_t *arena = scan_get_arena(yyextra);
+    arena_t *arena = ctx_get_string_arena(yyextra);
     yylval->ident = arena_strndup(yytext, yyleng, arena);
-    return (cc_get_typedef_name(ctx, yytext) != NULL) ? TYPEDEF_NAME : IDENT;
+    return (cc_get_typedef_name(yyextra, yytext) != NULL) ? TYPEDEF_NAME : IDENT;
 }
 
 \"([^"\\\n]|{ESCAPES})*\" {
-    cc_scan_t *scan = cc_scan_context(yyextra);
-    arena_t *arena = scan_get_arena(yyextra);
-	yylval->text = util_text_escape(scan->logger, node_new(yyextra, *yylloc), yytext + 1, yyleng - 2, arena);
+    arena_t *arena = ctx_get_string_arena(yyextra);
+    logger_t *logger = ctx_get_logger(yyextra);
+	yylval->text = util_text_escape(logger, node_new(yyextra, *yylloc), yytext + 1, yyleng - 2, arena);
     return STRING;
 }
 
 . {
-    cc_scan_t *scan = cc_scan_context(yyextra);
-    evt_scan_unknown(scan->logger, node_new(yyextra, *yylloc), yytext);
+    logger_t *logger = ctx_get_logger(yyextra);
+    evt_scan_unknown(logger, node_new(yyextra, *yylloc), yytext);
 }
 
 %%

@@ -2,9 +2,9 @@
 
 #include "arena/arena.h"
 #include "base/util.h"
+#include "cthulhu/broker/scan.h"
 #include "notify/notify.h"
 #include "oberon/driver.h"
-#include "oberon/scan.h"
 
 #include "std/str.h"
 
@@ -15,7 +15,6 @@ static void ensure_block_names_match(scan_t *scan, const node_t *node, const cha
                                      const char *name, const char *end)
 {
     CTASSERTF(type != NULL && name != NULL, "(type=%s, name=%s)", type, name);
-    obr_scan_t *ctx = obr_scan_context(scan);
 
     if (end == NULL)
     {
@@ -24,7 +23,8 @@ static void ensure_block_names_match(scan_t *scan, const node_t *node, const cha
 
     if (!str_equal(name, end))
     {
-        event_builder_t id = msg_notify(ctx->logger, &kEvent_BlockMismatchEnds, node,
+        logger_t *logger = ctx_get_logger(scan);
+        event_builder_t id = msg_notify(logger, &kEvent_BlockMismatchEnds, node,
                                         "mismatching %s block BEGIN and END names", type);
         msg_note(id, "BEGIN name `%s` does not match END name `%s`", name, end);
     }
@@ -32,13 +32,13 @@ static void ensure_block_names_match(scan_t *scan, const node_t *node, const cha
 
 static obr_t *obr_new(scan_t *scan, where_t where, obr_kind_t kind)
 {
-    obr_scan_t *ctx = obr_scan_context(scan);
+    arena_t *arena = ctx_get_ast_arena(scan);
 
-    obr_t *self = ARENA_MALLOC(sizeof(obr_t), "obr", scan, ctx->ast_arena);
+    obr_t *self = ARENA_MALLOC(sizeof(obr_t), "obr", scan, arena);
     self->kind = kind;
     self->node = node_new(scan, where);
 
-    ARENA_IDENTIFY(self->node, "node", self, ctx->ast_arena);
+    ARENA_IDENTIFY(self->node, "node", self, arena);
 
     return self;
 }

@@ -1,5 +1,7 @@
 #include "cthulhu/broker/broker.h"
 
+#include "base/log.h"
+#include "cthulhu/broker/scan.h"
 #include "cthulhu/events/events.h"
 
 #include "arena/arena.h"
@@ -394,8 +396,12 @@ void broker_parse(language_runtime_t *runtime, io_t *io)
 
     const language_t *lang = runtime->info;
     const module_info_t *info = &lang->info;
-    CTASSERTF(lang->context_size > 0, "language '%s' did not specify its scanner context size", info->name);
-    CTASSERTF(lang->fn_preparse != NULL, "language '%s' did not specify a preparse function", info->name);
+
+    scan_context_t *ctx = ARENA_MALLOC(sizeof(scan_context_t) + lang->context_size, "scan context", runtime, broker->arena);
+    ctx->logger = broker->logger;
+    ctx->arena = broker->arena;
+    ctx->string_arena = broker->arena;
+    ctx->ast_arena = broker->arena;
 
     // TODO: allow languages that dont use scanner callbacks
     CTASSERTF(lang->scanner != NULL, "language '%s' did not specify a scanner", info->name);
@@ -403,10 +409,15 @@ void broker_parse(language_runtime_t *runtime, io_t *io)
     scan_t *scan = scan_io(info->name, io, broker->arena);
     ARENA_REPARENT(scan, runtime, broker->arena);
 
-    void *context = ARENA_MALLOC(lang->context_size, "context", runtime, broker->arena);
-
-    lang->fn_preparse(runtime, context);
-    scan_set_context(scan, context);
+    if (lang->fn_preparse != NULL)
+    {
+        lang->fn_preparse(runtime, ctx->user);
+        scan_set_context(scan, ctx->user); // for backwards compatibility
+    }
+    else
+    {
+        scan_set_context(scan, ctx);
+    }
 
     parse_result_t result = scan_buffer(scan, lang->scanner);
     if (!parse_ok(result, scan, broker->logger))
@@ -434,11 +445,16 @@ void broker_run_pass(broker_t *broker, broker_pass_t pass)
             continue;
 
         language_runtime_t *lang = unit->lang;
-        CTASSERTF(lang != NULL, "unit '%s' has no language", tree_get_name(unit->tree));
+        CTASSERTF(lang != NULL, "unit '%s' has no associated language", tree_get_name(unit->tree));
 
         language_pass_t fn = lang->info->fn_passes[pass];
         if (fn == NULL)
+        {
+            const language_t *it = lang->info;
+            const module_info_t *info = &it->info;
+            ctu_log("language '%s' does not implement pass '%s'", info->name, broker_pass_name(pass));
             continue;
+        }
 
         OPT_EXEC(fn, lang, unit);
     }

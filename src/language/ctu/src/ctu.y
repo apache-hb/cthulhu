@@ -9,6 +9,7 @@
 %code top {
     #include "interop/flex.h"
     #include "interop/bison.h"
+    #include "std/vector.h"
 }
 
 %code requires {
@@ -26,7 +27,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %union {
     char *ident;
     text_t string;
-    ctu_digit_t digit;
+    mpz_t digit;
     bool boolean;
 
     vector_t *vector;
@@ -127,19 +128,19 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %type<vector>
     path
     import_seq
-    decls decl_seq
+    decl_seq
     record_fields
     stmt_list
     fn_param_list
     attrib_args
-    expr_list opt_expr_list
-    type_list opt_type_list
+    expr_list
+    type_list
     variant_field_list opt_variant_field_list
     initList
     attribs attrib attrib_body attrib_list
 
 %type<cvector>
-    modspec imports
+    modspec imports opt_type_list opt_expr_list decls
 
 /**
  * order of operations, tightest first
@@ -212,7 +213,7 @@ importAlias: %empty { $$ = NULL; }
 
 /* decorators */
 
-attribs: %empty { $$ = vector_of(0, BISON_ARENA(x)); }
+attribs: %empty { $$ = vector_new(4, BISON_ARENA(x)); }
     | attribs attrib { vector_append(&$1, $2); $$ = $1; }
     ;
 
@@ -266,7 +267,7 @@ underlying: %empty { $$ = NULL; }
     | COLON type { $$ = $2; }
     ;
 
-opt_variant_field_list: %empty { $$ = &kEmptyVector; }
+opt_variant_field_list: %empty { $$ = &gEmptyVector; }
     | variant_field_list { $$ = $1; }
     ;
 
@@ -436,7 +437,7 @@ expr_list: expr { $$ = vector_init($1, BISON_ARENA(x)); }
     ;
 
 primary_expr: LPAREN expr RPAREN { $$ = $2; }
-    | INTEGER { $$ = ctu_expr_int(x, @$, $1.value); }
+    | INTEGER { $$ = ctu_expr_int(x, @$, $1); }
     | BOOLEAN { $$ = ctu_expr_bool(x, @$, $1); }
     | STRING { $$ = ctu_expr_string(x, @$, $1.text, $1.length); }
     | path { $$ = ctu_expr_name(x, @$, $1); }

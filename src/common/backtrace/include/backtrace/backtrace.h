@@ -135,3 +135,5 @@ CT_BACKTRACE_API frame_resolve_t bt_resolve_symbol(IN_NOTNULL const bt_frame_t *
 /// @}
 
 CT_END_API
+
+CT_ENUM_FLAGS(frame_resolve_t)

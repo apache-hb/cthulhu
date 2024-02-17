@@ -17,7 +17,7 @@ typedef uint_fast64_t column_t;
 
 /// @brief a location inside a scanner
 /// locations are inclusive and 0-based
-typedef struct
+typedef struct where_t
 {
     /// @brief the first line of the location
     line_t first_line;

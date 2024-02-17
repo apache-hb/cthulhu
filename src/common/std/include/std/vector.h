@@ -21,10 +21,16 @@ typedef struct vector_t vector_t;
 
 /// @brief a global empty vector
 /// used to avoid allocating alot of empty vectors
-/// TODO: make this a const global
+///
 /// holding off on making it const until all the parsers are updated to handle it
 /// @warning doing anything with this vector aside from getting its length is invalid
-CT_STD_API extern vector_t kEmptyVector;
+CT_STD_API extern vector_t gEmptyVector;
+
+/// @brief a global empty vector
+/// used to avoid allocating alot of empty vectors
+///
+/// @warning doing anything with this vector aside from getting its length is invalid
+CT_STD_API extern const vector_t kEmptyVector;
 
 /// @brief destroy a vector
 /// @note this only frees the vector itself, not the data it references

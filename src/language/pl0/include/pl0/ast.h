@@ -115,22 +115,22 @@ typedef struct pl0_t
         struct
         {
             /* all immutable globals in the program */
-            vector_t *consts;
+            const vector_t *consts;
 
             /* all mutable globals in the program */
-            vector_t *globals;
+            const vector_t *globals;
 
             /* all procedures in the program */
-            vector_t *procs;
+            const vector_t *procs;
+
+            /* the public name of this module, defaults to the file name */
+            const vector_t *mod;
+
+            /* all modules imported by this module */
+            const vector_t *imports;
 
             /* the entry point function, if there is one */
             struct pl0_t *entry;
-
-            /* the public name of this module, defaults to the file name */
-            vector_t *mod;
-
-            /* all modules imported by this module */
-            vector_t *imports;
         };
     };
 } pl0_t;
@@ -158,5 +158,5 @@ pl0_t *pl0_value(scan_t *scan, where_t where, const char *name, pl0_t *value);
 
 pl0_t *pl0_import(scan_t *scan, where_t where, vector_t *parts);
 
-pl0_t *pl0_module(scan_t *scan, where_t where, vector_t *mod, vector_t *imports, vector_t *consts, vector_t *globals,
-                  vector_t *procs, pl0_t *entry);
+pl0_t *pl0_module(scan_t *scan, where_t where, const vector_t *mod, const vector_t *imports, const vector_t *consts, const vector_t *globals,
+                  const vector_t *procs, pl0_t *entry);

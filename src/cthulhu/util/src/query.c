@@ -43,7 +43,7 @@ static bool is_public(const tree_t *decl)
     return attrib->visibility == eVisiblePublic;
 }
 
-tree_t *util_search_namespace(tree_t *sema, const decl_search_t *search, const node_t *node, vector_t *path, bool *is_imported)
+tree_t *util_search_namespace(tree_t *sema, const decl_search_t *search, const node_t *node, const vector_t *path, bool *is_imported)
 {
     CTASSERTF(sema != NULL && search != NULL, "(sema = %p, search = %p)", (void*)sema, (void*)search);
     CTASSERT(vector_len(path) > 0);

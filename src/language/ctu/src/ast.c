@@ -1,17 +1,20 @@
 #include "ctu/ast.h"
-#include "ctu/scan.h"
+
+#include "std/vector.h"
 
 #include "arena/arena.h"
 
+#include "cthulhu/broker/scan.h"
+
 static ctu_t *ctu_new(scan_t *scan, where_t where, ctu_kind_t kind)
 {
-    ctu_scan_t *ctx = scan_get_context(scan);
+    arena_t *arena = ctx_get_ast_arena(scan);
 
-    ctu_t *self = ARENA_MALLOC(sizeof(ctu_t), "ctu", scan, ctx->ast_arena);
+    ctu_t *self = ARENA_MALLOC(sizeof(ctu_t), "ctu", scan, arena);
     self->kind = kind;
     self->node = node_new(scan, where);
 
-    ARENA_IDENTIFY(self->node, "node", self, ctx->ast_arena);
+    ARENA_IDENTIFY(self->node, "node", self, arena);
 
     return self;
 }
@@ -21,7 +24,7 @@ static ctu_t *ctu_decl(scan_t *scan, where_t where, ctu_kind_t kind, char *name,
     ctu_t *self = ctu_new(scan, where, kind);
     self->name = name;
     self->exported = exported;
-    self->attribs = NULL;
+    self->attribs = &kEmptyVector;
     return self;
 }
 
@@ -146,14 +149,14 @@ ctu_t *ctu_expr_string(scan_t *scan, where_t where, char *text, size_t length)
     return ast;
 }
 
-ctu_t *ctu_expr_init(scan_t *scan, where_t where, vector_t *inits)
+ctu_t *ctu_expr_init(scan_t *scan, where_t where, const vector_t *inits)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuExprInit);
     ast->inits = inits;
     return ast;
 }
 
-ctu_t *ctu_expr_call(scan_t *scan, where_t where, ctu_t *callee, vector_t *args)
+ctu_t *ctu_expr_call(scan_t *scan, where_t where, ctu_t *callee, const vector_t *args)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuExprCall);
     ast->callee = callee;
@@ -161,7 +164,7 @@ ctu_t *ctu_expr_call(scan_t *scan, where_t where, ctu_t *callee, vector_t *args)
     return ast;
 }
 
-ctu_t *ctu_expr_name(scan_t *scan, where_t where, vector_t *path)
+ctu_t *ctu_expr_name(scan_t *scan, where_t where, const vector_t *path)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuExprName);
     ast->path = path;
@@ -264,7 +267,7 @@ ctu_t *ctu_type_array(scan_t *scan, where_t where, ctu_t *array, ctu_t *length)
     return ast;
 }
 
-ctu_t *ctu_type_function(scan_t *scan, where_t where, vector_t *params, ctu_t *return_type)
+ctu_t *ctu_type_function(scan_t *scan, where_t where, const vector_t *params, ctu_t *return_type)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuTypeFunction);
     ast->params = params;
@@ -283,7 +286,7 @@ ctu_t *ctu_decl_global(scan_t *scan, where_t where, bool exported, bool mut, cha
     return ast;
 }
 
-ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name, vector_t *params, char *variadic, ctu_t *return_type, ctu_t *body)
+ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name, const vector_t *params, char *variadic, ctu_t *return_type, ctu_t *body)
 {
     ctu_t *ast = ctu_decl(scan, where, eCtuDeclFunction, name, exported);
     ast->params = params;
@@ -362,7 +365,7 @@ ctu_t *ctu_variant_case(scan_t *scan, where_t where, char *name, bool is_default
 /// extras
 ///
 
-ctu_params_t ctu_params_new(vector_t *params, char *variadic)
+ctu_params_t ctu_params_new(const vector_t *params, char *variadic)
 {
     ctu_params_t result = {
         .params = params,

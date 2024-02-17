@@ -50,7 +50,7 @@ typedef struct decl_search_t {
 /// @param is_imported whether the namespace was imported
 ///
 /// @return the namespace if found, an error otherwise
-CT_UTIL_API tree_t *util_search_namespace(tree_t *sema, const decl_search_t *search, const node_t *node, vector_t *path, bool *is_imported);
+CT_UTIL_API tree_t *util_search_namespace(tree_t *sema, const decl_search_t *search, const node_t *node, const vector_t *path, bool *is_imported);
 
 /// @brief search for a decl given a path
 ///

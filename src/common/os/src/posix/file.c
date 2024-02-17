@@ -57,20 +57,30 @@ os_error_t os_file_copy(const char *src, const char *dst)
     return result;
 }
 
+CT_CLANG_PRAGMA(clang diagnostic push)
+CT_CLANG_PRAGMA(clang diagnostic ignored "-Wswitch")
+
 static const char *get_access(os_access_t access)
 {
-    if (access & eAccessWrite)
+    switch (access)
     {
-        return (access & eAccessTruncate) ? "wb" : "r+b";
-    }
-
-    if (access & eAccessRead)
-    {
+    case eAccessRead:
         return "rb";
-    }
 
-    NEVER("invalid access flags 0x%x", access);
+    case eAccessWrite:
+    case (eAccessRead | eAccessWrite):
+        return "w+b";
+
+    case (eAccessWrite | eAccessTruncate):
+    case (eAccessRead | eAccessWrite | eAccessTruncate):
+        return "wb";
+
+    default:
+        NEVER("invalid access flags 0x%x", access);
+    }
 }
+
+CT_CLANG_PRAGMA(clang diagnostic pop)
 
 USE_DECL
 os_error_t os_file_exists(const char *path, bool *exists)

@@ -1,7 +1,7 @@
 subdir('memory')
 subdir('events')
 subdir('tree')
-subdir('attrib')
+#subdir('attrib')
 subdir('ssa')
 subdir('util')
 subdir('emit')

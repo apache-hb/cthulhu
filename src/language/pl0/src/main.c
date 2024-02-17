@@ -12,22 +12,13 @@
 
 CT_CALLBACKS(kCallbacks, pl0);
 
-static void pl0_preparse(language_runtime_t *runtime, void *context)
-{
-    pl0_scan_t *info = context;
-    info->logger = runtime->logger;
-    info->arena = runtime->arena;
-    info->string_arena = runtime->arena;
-    info->ast_arena = &runtime->ast_arena;
-}
-
 static void pl0_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
 {
     pl0_t *ast = tree;
     CTASSERT(ast->type == ePl0Module);
     arena_t *arena = runtime->arena;
 
-    vector_t *path = vector_len(ast->mod) > 0
+    const vector_t *path = vector_len(ast->mod) > 0
         ? ast->mod
         : vector_init(str_basename(scan_path(scan), arena), arena);
 
@@ -78,14 +69,12 @@ CT_DRIVER_API const language_t kPl0Module = {
         .length = ePl0TagTotal,
     },
 
-    .context_size = sizeof(pl0_scan_t),
     .ast_size = sizeof(pl0_t),
 
     .exts = kLangNames,
 
     .fn_create = pl0_init,
 
-    .fn_preparse = pl0_preparse,
     .fn_postparse = pl0_postparse,
     .scanner = &kCallbacks,
 

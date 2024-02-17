@@ -150,7 +150,7 @@ int main(int argc, const char **argv)
     meta_ast_t *ast = result.tree;
 
     const char *src_path = cfg_string_value(tool.source);
-    io_t *src = io_file(src_path, eAccessWrite, arena);
+    io_t *src = io_file(src_path, eAccessWrite | eAccessTruncate, arena);
 
     error = io_error(src);
     if (error != 0)
@@ -160,7 +160,7 @@ int main(int argc, const char **argv)
     }
 
     const char *hdr_path = cfg_string_value(tool.header);
-    io_t *hdr = io_file(hdr_path, eAccessWrite, arena);
+    io_t *hdr = io_file(hdr_path, eAccessWrite | eAccessTruncate, arena);
 
     error = io_error(hdr);
     if (error != 0)

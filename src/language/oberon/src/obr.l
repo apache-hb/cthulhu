@@ -8,11 +8,11 @@
 
 %{
 #include "obr_bison.h"
-#include "oberon/scan.h"
 #include "interop/flex.h"
 #include "interop/memory.h"
 #include "arena/arena.h"
 #include "cthulhu/util/text.h"
+#include "cthulhu/broker/scan.h"
 #include "cthulhu/events/events.h"
 %}
 
@@ -96,8 +96,8 @@ WS [ \t\r\v\n\f]
 "WITH" { return WITH; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
-    obr_scan_t *ctx = obr_scan_context(yyextra);
-    yylval->ident = arena_strdup(yytext, ctx->string_arena);
+    arena_t *arena = ctx_get_string_arena(yyextra);
+    yylval->ident = arena_strdup(yytext, arena);
     return IDENT;
 }
 
@@ -107,14 +107,15 @@ WS [ \t\r\v\n\f]
 }
 
 \"([^"\\\n]|{ESCAPES})*\" {
-    obr_scan_t *ctx = obr_scan_context(yyextra);
-	yylval->string = util_text_escape(ctx->logger, node_new(yyextra, *yylloc), yytext + 1, yyleng - 2, ctx->string_arena);
+    arena_t *arena = ctx_get_string_arena(yyextra);
+    logger_t *logger = ctx_get_logger(yyextra);
+	yylval->string = util_text_escape(logger, node_new(yyextra, *yylloc), yytext + 1, yyleng - 2, arena);
     return STRING;
 }
 
 . {
-    obr_scan_t *ctx = obr_scan_context(yyextra);
-    evt_scan_unknown(ctx->logger, node_new(yyextra, *yylloc), yytext);
+    logger_t *logger = ctx_get_logger(yyextra);
+    evt_scan_unknown(logger, node_new(yyextra, *yylloc), yytext);
 }
 
 %%

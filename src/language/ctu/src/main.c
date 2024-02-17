@@ -31,16 +31,6 @@ static const vector_t *find_mod_path(ctu_t *ast, const char *fp, arena_t *arena)
         : mod_basename(fp, arena);
 }
 
-static void ctu_preparse(language_runtime_t *runtime, void *context)
-{
-    ctu_scan_t *ctx = context;
-    ctx->logger = runtime->logger;
-    ctx->attribs = vector_new(4, runtime->arena);
-    ctx->arena = runtime->arena;
-    ctx->ast_arena = &runtime->ast_arena;
-    ctx->string_arena = runtime->arena;
-}
-
 static void ctu_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
 {
     ctu_t *ast = tree;
@@ -114,19 +104,16 @@ CT_DRIVER_API const language_t kCtuModule = {
 
     .exts = kLangNames,
 
-    .context_size = sizeof(ctu_scan_t),
     .ast_size = sizeof(ctu_t),
 
     .fn_create = ctu_init,
 
-    .fn_preparse = ctu_preparse,
     .fn_postparse = ctu_postparse,
     .scanner = &kCallbacks,
 
     .fn_passes = {
         [ePassForwardDecls] = ctu_forward_decls,
-        [ePassImportModules] = ctu_process_imports,
-        [ePassCompileDecls] = ctu_compile_module
+        [ePassImportModules] = ctu_process_imports
     }
 };
 

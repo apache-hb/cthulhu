@@ -167,7 +167,7 @@ void pl0_init(language_runtime_t *runtime, tree_t *root)
     vector_set(params, 0, tree_decl_param(node, "fmt", string_type));
 
     tree_t *signature = tree_type_closure(node, "printf", gIntType, params, eArityVariable);
-    gRuntimePrint = tree_decl_function(node, "printf", signature, params, &kEmptyVector, NULL);
+    gRuntimePrint = tree_decl_function(node, "printf", signature, params, &gEmptyVector, NULL);
     tree_set_attrib(gRuntimePrint, &kPrintAttrib);
 
     tree_t *param = tree_decl_param(node, "number", gIntType);
@@ -179,7 +179,7 @@ void pl0_init(language_runtime_t *runtime, tree_t *root)
     tree_t *call = tree_expr_call(node, gRuntimePrint, args);
 
     tree_t *putd_signature = tree_type_closure(node, "pl0_print", gVoidType, rt_print_params, eArityFixed);
-    gPrint = tree_decl_function(node, "pl0_print", putd_signature, rt_print_params, &kEmptyVector, call);
+    gPrint = tree_decl_function(node, "pl0_print", putd_signature, rt_print_params, &gEmptyVector, call);
     tree_set_attrib(gPrint, &kExportAttrib);
 
     // populate builtins
@@ -278,7 +278,7 @@ static tree_t *sema_call(tree_t *sema, pl0_t *node)
         return tree_error(node->node, &kEvent_FunctionNotFound, "unresolved procedure `%s`", node->procedure);
     }
 
-    return tree_expr_call(node->node, proc, &kEmptyVector);
+    return tree_expr_call(node->node, proc, &gEmptyVector);
 }
 
 static tree_t *sema_branch(tree_t *sema, pl0_t *node)
@@ -510,7 +510,7 @@ void pl0_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
     {
         pl0_t *it = vector_get(ast->procs, i);
 
-        tree_t *signature = tree_type_closure(it->node, it->name, gVoidType, &kEmptyVector, eArityFixed);
+        tree_t *signature = tree_type_closure(it->node, it->name, gVoidType, &gEmptyVector, eArityFixed);
         tree_resolve_info_t resolve = {
             .sema = root,
             .user = it,
@@ -572,8 +572,8 @@ void pl0_compile_module(language_runtime_t *runtime, compile_unit_t *unit)
         vector_push(&body->stmts, tree_stmt_return(ast->node, tree_expr_unit(ast->node, gVoidType)));
 
         // this is the entry point, we only support cli entry points in pl/0 for now
-        tree_t *signature = tree_type_closure(ast->node, name, gVoidType, &kEmptyVector, eArityFixed);
-        tree_t *entry = tree_decl_function(ast->node, name, signature, &kEmptyVector, &kEmptyVector, body);
+        tree_t *signature = tree_type_closure(ast->node, name, gVoidType, &gEmptyVector, eArityFixed);
+        tree_t *entry = tree_decl_function(ast->node, name, signature, &gEmptyVector, &gEmptyVector, body);
         tree_set_attrib(entry, &kEntryAttrib);
 
         // TODO: this is a hack until we support anonymous declarations

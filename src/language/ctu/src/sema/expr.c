@@ -41,7 +41,7 @@ static bool is_public(const tree_t *decl)
 }
 
 // TODO: needsLoad is awful
-static tree_t *sema_decl_name(tree_t *sema, const node_t *node, vector_t *path, bool *needs_load)
+static tree_t *sema_decl_name(tree_t *sema, const node_t *node, const vector_t *path, bool *needs_load)
 {
     bool is_imported = false;
     tree_t *ns = util_search_namespace(sema, &kSearchName, node, path, &is_imported);
@@ -641,7 +641,7 @@ static tree_t *sema_local(ctu_sema_t *sema, const ctu_t *stmt)
         return tree_stmt_assign(stmt->node, self, value);
     }
 
-    return tree_stmt_block(stmt->node, &kEmptyVector); // TODO: good enough
+    return tree_stmt_block(stmt->node, &gEmptyVector); // TODO: good enough
 }
 
 static tree_t *sema_stmts(ctu_sema_t *sema, const ctu_t *stmt)
@@ -683,7 +683,7 @@ static tree_t *sema_while(ctu_sema_t *sema, const ctu_t *stmt)
     tree_t *save = ctu_current_loop(sema);
 
     tree_t *cond = ctu_sema_rvalue(sema, stmt->cond, ctu_get_bool_type());
-    tree_t *loop = tree_stmt_loop(stmt->node, cond, tree_stmt_block(stmt->node, &kEmptyVector),
+    tree_t *loop = tree_stmt_loop(stmt->node, cond, tree_stmt_block(stmt->node, &gEmptyVector),
                                   NULL);
 
     if (stmt->name != NULL)

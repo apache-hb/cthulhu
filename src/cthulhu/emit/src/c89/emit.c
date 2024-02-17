@@ -31,7 +31,7 @@ static c89_source_t *header_for(c89_emit_t *emit, const ssa_module_t *mod, const
     char *it = str_format(emit->arena, "include/%s.h", path);
     fs_file_create(emit->fs, it);
 
-    io_t *io = fs_open(emit->fs, it, eAccessWrite);
+    io_t *io = fs_open(emit->fs, it, eAccessWrite | eAccessTruncate);
     c89_source_t *source = source_new(io, str_format(emit->arena, "%s.h", path), emit->arena);
     map_set(emit->hdrmap, mod, source);
     return source;
@@ -42,7 +42,7 @@ static c89_source_t *source_for(c89_emit_t *emit, const ssa_module_t *mod, const
     char *it = str_format(emit->arena, "src/%s.c", path);
     fs_file_create(emit->fs, it);
 
-    io_t *io = fs_open(emit->fs, it, eAccessWrite);
+    io_t *io = fs_open(emit->fs, it, eAccessWrite | eAccessTruncate);
     c89_source_t *source = source_new(io, it, emit->arena);
     map_set(emit->srcmap, mod, source);
     return source;

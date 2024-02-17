@@ -4,6 +4,7 @@
 %parse-param { void *scan } { scan_t *x }
 %locations
 %expect 0
+%define api.location.type {where_t}
 %define api.prefix {obr}
 
 %code top {
@@ -12,7 +13,6 @@
 }
 
 %code requires {
-    #include "oberon/scan.h"
     #include "oberon/ast.h"
 
     #define YYSTYPE OBRSTYPE

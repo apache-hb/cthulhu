@@ -147,4 +147,19 @@
 #   define CT_LOCAL
 #endif
 
+#ifdef __cplusplus
+namespace ctu::detail {
+    template<typename T>
+    struct EnumType;
+}
+#   define CT_ENUM_FLAGS(X) \
+    template<> struct ctu::detail::EnumType<X> { using type = __underlying_type(X); }; \
+    constexpr X operator|(X lhs, X rhs) { using T = ctu::detail::EnumType<X>::type; return X((T)rhs | (T)lhs); } \
+    constexpr X operator&(X lhs, X rhs) { using T = ctu::detail::EnumType<X>::type; return X((T)rhs & (T)lhs); } \
+    constexpr X operator^(X lhs, X rhs) { using T = ctu::detail::EnumType<X>::type; return X((T)rhs ^ (T)lhs); } \
+    constexpr X operator~(X rhs)        { using T = ctu::detail::EnumType<X>::type; return X(~(T)rhs); }
+#else
+#   define CT_ENUM_FLAGS(X)
+#endif
+
 /// @}

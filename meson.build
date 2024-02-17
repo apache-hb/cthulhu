@@ -77,17 +77,15 @@ plugin_timer = get_option('plugin_timer').disable_auto_if(meson.is_subproject())
 
 # tools like this are user facing, so dont disable them in release mode
 tool_diagnostic = get_option('tool_diagnostic').disable_auto_if(meson.is_subproject())
-tool_reflect = get_option('tool_reflect').disable_auto_if(meson.is_subproject())
 
-needs_cpp = tool_reflect.enabled() or frontend_gui.enabled()
-wants_cpp = tool_reflect.allowed() or frontend_gui.allowed()
+needs_cpp = frontend_gui.enabled()
+wants_cpp = frontend_gui.allowed()
 has_cpp = false
 
 if wants_cpp
     has_cpp = add_languages('cpp', native : false, required : needs_cpp)
 
     frontend_gui = frontend_gui.require(has_cpp)
-    tool_reflect = tool_reflect.require(has_cpp)
 endif
 
 frontend_gui = frontend_gui.require(target == 'windows')
@@ -381,8 +379,7 @@ build_summary = {
         'Notify': tool_notify.allowed(),
         'Diagnostics': tool_diagnostic.allowed(),
         'Display': tool_display.allowed(),
-        'Error': tool_error.allowed(),
-        'Reflect': tool_reflect.allowed()
+        'Error': tool_error.allowed()
     }
 }
 

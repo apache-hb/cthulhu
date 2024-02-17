@@ -215,7 +215,7 @@ static tree_t *forward_proc(tree_t *sema, obr_t *decl)
     // if this is an extern declaration it doesnt need a body
     if (decl->body == NULL)
     {
-        return tree_decl_function(decl->node, decl->name, signature, params, &kEmptyVector, NULL);
+        return tree_decl_function(decl->node, decl->name, signature, params, &gEmptyVector, NULL);
     }
 
     tree_resolve_info_t resolve = {
@@ -300,7 +300,7 @@ tree_t *obr_add_init(tree_t *sema, obr_t *mod)
         .fn_resolve = obr_resolve_init
     };
 
-    tree_t *signature = tree_type_closure(mod->node, mod->name, obr_get_void_type(), &kEmptyVector, eArityFixed);
+    tree_t *signature = tree_type_closure(mod->node, mod->name, obr_get_void_type(), &gEmptyVector, eArityFixed);
     tree_t *init = tree_open_function(mod->node, mod->name, signature, resolve);
     tree_set_attrib(init, &kEntryPoint);
     return init;
