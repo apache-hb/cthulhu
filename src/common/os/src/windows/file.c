@@ -74,7 +74,7 @@ static DWORD get_disp(os_access_t access)
 
     case eAccessWrite:
     case (eAccessWrite | eAccessRead):
-        return CREATE_NEW;
+        return OPEN_ALWAYS;
 
     case (eAccessWrite | eAccessTruncate):
     case (eAccessWrite | eAccessRead | eAccessTruncate):
