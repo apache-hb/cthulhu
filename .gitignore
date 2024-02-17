@@ -41,6 +41,8 @@
 
 # dont ignore licenses
 !LICENSE.txt
+!README
+!Changelog
 
 # dont ignore scripts
 !*.py

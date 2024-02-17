@@ -7,6 +7,8 @@ typedef struct arena_t arena_t;
 typedef struct scan_t scan_t;
 typedef struct where_t where_t;
 
+CT_BEGIN_API
+
 typedef struct scan_context_t
 {
     logger_t *logger;
@@ -17,8 +19,6 @@ typedef struct scan_context_t
 
     char user[];
 } scan_context_t;
-
-CT_BEGIN_API
 
 CT_BROKER_API logger_t *ctx_get_logger(const scan_t *scan);
 CT_BROKER_API arena_t *ctx_get_arena(const scan_t *scan);

@@ -4,8 +4,6 @@
 
 #include "base/panic.h"
 
-#if CTU_LOADER_DYNAMIC
-
 loaded_module_t load_shared_module(loader_t *loader, module_type_t mask, const char *name)
 {
     CTASSERT(loader != NULL);
@@ -56,16 +54,3 @@ loaded_module_t load_shared_module(loader_t *loader, module_type_t mask, const c
 
     return mod;
 }
-
-#else
-
-loaded_module_t load_shared_module(loader_t *loader, module_type_t mask, const char *name)
-{
-    CT_UNUSED(loader);
-    CT_UNUSED(mask);
-    CT_UNUSED(name);
-
-    return load_error(eLoadErrorDisabled, 0);
-}
-
-#endif

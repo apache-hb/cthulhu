@@ -15,7 +15,7 @@ is_shared = get_option('default_library') == 'shared'
 
 export_args = is_shared ? [ '-DMINI_GMP_SHARED=1' ] : []
 
-libgmp = library('gmp', [ 'mini_gmp.c', 'mini_mpq.c' ],
+libgmp = library('gmp', [ 'mini-gmp.c', 'mini-mpq.c' ],
     build_by_default : false,
     include_directories : '.',
     c_args : c_args,
