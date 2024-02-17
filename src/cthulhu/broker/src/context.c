@@ -46,3 +46,11 @@ void ctx_error(const where_t *where, const void *state, const scan_t *scan, cons
 
     evt_scan_error(logger, node, msg);
 }
+
+void ctx_unknown_symbol(const scan_t *scan, const where_t *where, const char *msg)
+{
+    logger_t *logger = ctx_get_logger(scan);
+    node_t *node = node_new(scan, *where);
+
+    evt_scan_unknown(logger, node, msg);
+}

@@ -11,9 +11,9 @@
 #include "interop/flex.h"
 #include "interop/memory.h"
 #include "arena/arena.h"
+#include "scan/node.h"
 #include "cthulhu/util/text.h"
 #include "cthulhu/broker/scan.h"
-#include "cthulhu/events/events.h"
 %}
 
 %x COMMENT
@@ -113,10 +113,7 @@ WS [ \t\r\v\n\f]
     return STRING;
 }
 
-. {
-    logger_t *logger = ctx_get_logger(yyextra);
-    evt_scan_unknown(logger, node_new(yyextra, *yylloc), yytext);
-}
+. { ctx_unknown_symbol(yyextra, yylloc, yytext); }
 
 %%
 

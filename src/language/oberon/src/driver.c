@@ -1,14 +1,17 @@
 #include "oberon/driver.h"
-#include "base/util.h"
-#include "cthulhu/broker/broker.h"
-#include "cthulhu/events/events.h"
 #include "oberon/ast.h"
 
 #include "oberon/sema/decl.h"
 
+#include "cthulhu/broker/broker.h"
+#include "cthulhu/events/events.h"
+
 #include "cthulhu/tree/query.h"
 
+#include "std/vector.h"
+
 #include "base/panic.h"
+#include "base/util.h"
 
 #include "core/macros.h"
 

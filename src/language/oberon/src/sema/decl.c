@@ -1,14 +1,20 @@
 #include "oberon/sema/decl.h"
-#include "arena/arena.h"
-#include "core/macros.h"
-#include "notify/notify.h"
 #include "oberon/sema/type.h"
 #include "oberon/sema/expr.h"
 
+#include "memory/memory.h"
+
 #include "cthulhu/util/util.h"
 
+#include "notify/notify.h"
+
+#include "arena/arena.h"
+
+#include "std/vector.h"
+
 #include "base/panic.h"
-#include "memory/memory.h"
+
+#include "core/macros.h"
 
 static visibility_t remap_visibility(obr_visibility_t vis)
 {

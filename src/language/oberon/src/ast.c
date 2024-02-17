@@ -1,13 +1,17 @@
 #include "oberon/ast.h"
-
-#include "arena/arena.h"
-#include "base/util.h"
-#include "cthulhu/broker/scan.h"
-#include "notify/notify.h"
 #include "oberon/driver.h"
 
-#include "std/str.h"
+#include "cthulhu/broker/scan.h"
 
+#include "notify/notify.h"
+
+#include "scan/node.h"
+#include "std/str.h"
+#include "std/vector.h"
+
+#include "arena/arena.h"
+
+#include "base/util.h"
 #include "base/panic.h"
 #include "memory/memory.h"
 

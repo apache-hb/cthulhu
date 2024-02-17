@@ -13,4 +13,3 @@ void obr_create(language_runtime_t *runtime, tree_t *root);
 
 void obr_forward_decls(language_runtime_t *runtime, compile_unit_t *unit);
 void obr_process_imports(language_runtime_t *runtime, compile_unit_t *unit);
-void obr_compile_module(language_runtime_t *runtime, compile_unit_t *unit);

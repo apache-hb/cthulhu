@@ -8,6 +8,8 @@
 #include "cthulhu/util/types.h"
 #include "cthulhu/util/util.h"
 
+#include "std/vector.h"
+
 #include "memory/memory.h"
 #include "base/panic.h"
 

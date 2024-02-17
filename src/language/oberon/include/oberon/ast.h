@@ -1,14 +1,17 @@
 #pragma once
 
-#include "scan/node.h"
-
-#include "std/vector.h"
+#include "core/where.h"
 
 #include "cthulhu/tree/ops.h"
 
 #include <gmp.h>
 
+#include <stdbool.h>
+
 typedef struct obr_t obr_t;
+typedef struct scan_t scan_t;
+typedef struct node_t node_t;
+typedef struct vector_t vector_t;
 
 ///
 /// symbols

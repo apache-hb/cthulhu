@@ -1,12 +1,15 @@
 #include "oberon/sema/expr.h"
-#include "cthulhu/events/events.h"
-#include "memory/memory.h"
 #include "oberon/sema/sema.h"
+#include "oberon/sema/type.h"
 
 #include "cthulhu/util/util.h"
 #include "cthulhu/util/types.h"
 
-#include "oberon/sema/type.h"
+#include "cthulhu/events/events.h"
+
+#include "memory/memory.h"
+
+#include "std/vector.h"
 #include "std/str.h"
 
 #include "base/panic.h"

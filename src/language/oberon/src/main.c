@@ -1,15 +1,18 @@
-#include "base/util.h"
-#include "cthulhu/broker/broker.h"
-
 #include "oberon/driver.h"
 
-#include "interop/compile.h"
+#include "oberon/sema/sema.h"
 
-#include "core/macros.h"
+#include "cthulhu/broker/broker.h"
 
 #include "driver/driver.h"
 
-#include "oberon/sema/sema.h"
+#include "interop/compile.h"
+
+#include "std/vector.h"
+
+#include "base/util.h"
+#include "core/macros.h"
+
 #include "obr_bison.h" // IWYU pragma: keep
 #include "obr_flex.h" // IWYU pragma: keep
 

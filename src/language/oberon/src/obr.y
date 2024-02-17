@@ -10,10 +10,15 @@
 %code top {
     #include "interop/flex.h"
     #include "interop/bison.h"
+    #include "std/vector.h"
+    #include "scan/scan.h"
 }
 
 %code requires {
     #include "oberon/ast.h"
+
+    #include "core/text.h"
+    #include "core/where.h"
 
     #define YYSTYPE OBRSTYPE
     #define YYLTYPE OBRLTYPE

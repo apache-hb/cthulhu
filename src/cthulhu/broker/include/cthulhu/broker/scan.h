@@ -28,5 +28,6 @@ CT_BROKER_API arena_t *ctx_get_ast_arena(const scan_t *scan);
 CT_BROKER_API void *ctx_get_user(const scan_t *scan);
 
 CT_BROKER_API void ctx_error(const where_t *where, const void *state, const scan_t *scan, const char *msg);
+CT_BROKER_API void ctx_unknown_symbol(const scan_t *scan, const where_t *where, const char *msg);
 
 CT_END_API
