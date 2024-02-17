@@ -103,7 +103,7 @@ MINI_GMP_API void mpq_swap (mpq_t, mpq_t);
   || defined (_STDIO_H_INCLUDED)      /* QNX4 */                \
   || defined (_ISO_STDIO_ISO_H)       /* Sun C++ */             \
   || defined (__STDIO_LOADED)         /* VMS */
-size_t mpq_out_str (FILE *, int, const mpq_t);
+MINI_GMP_API size_t mpq_out_str (FILE *, int, const mpq_t);
 #endif
 
 MINI_GMP_API void mpz_set_q (mpz_t, const mpq_t);

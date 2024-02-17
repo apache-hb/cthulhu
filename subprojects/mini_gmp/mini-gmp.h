@@ -318,7 +318,7 @@ MINI_GMP_API int mpz_init_set_str (mpz_t, const char *, int);
   || defined (__STDIO_LOADED)         /* VMS */			\
   || defined (_STDIO)                 /* HPE NonStop */         \
   || defined (__DEFINED_FILE)         /* musl */
-size_t mpz_out_str (FILE *, int, const mpz_t);
+MINI_GMP_API size_t mpz_out_str (FILE *, int, const mpz_t);
 #endif
 
 MINI_GMP_API void mpz_import (mpz_t, size_t, int, size_t, int, size_t, const void *);
