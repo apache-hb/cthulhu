@@ -180,11 +180,11 @@ int main(int argc, const char **argv)
 
     CHECK_LOG(reports, "parsing sources");
 
-    for (size_t stage = 0; stage < ePassCount; stage++)
+    for (size_t pass = 0; pass < ePassCount; pass++)
     {
-        broker_run_pass(broker, stage);
+        broker_run_pass(broker, pass);
 
-        char *msg = str_format(arena, "running stage %s", broker_pass_name(stage));
+        char *msg = str_format(arena, "running pass %s", broker_pass_name(pass));
         CHECK_LOG(reports, msg);
     }
 

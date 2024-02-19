@@ -27,10 +27,8 @@
 #include "io/io.h"
 
 #include "argparse/argparse.h"
-#include "base/panic.h"
-#include <stdio.h>
+#include "support/support.h"
 
-#if 0
 static const frontend_t kFrontendInfo = {
     .info = {
         .id = "frontend-example",
@@ -89,13 +87,11 @@ int main(int argc, const char **argv)
     arena_t *arena = ctu_default_alloc();
     node_t *node = node_builtin("example-frontend", arena);
     broker_t *broker = broker_new(&kFrontendInfo, arena);
-    loader_t *loader = loader_new(arena);
+    logger_t *logger = broker_get_logger(broker);
 
-    langs_t langs = get_langs();
-    for (size_t i = 0; i < langs.size; i++)
-    {
-        lifetime_add_language(lifetime, langs.langs[i]);
-    }
+    loader_t *loader = loader_new(arena);
+    support_t *support = support_new(broker, loader, arena);
+    support_load_default_modules(support);
 
     io_t *con = io_stdout();
 
@@ -117,9 +113,10 @@ int main(int argc, const char **argv)
     for (int i = 1; i < argc; i++)
     {
         const char *path = argv[i];
-        const char *ext = str_ext(path, arena);
-        const language_t *lang = lifetime_get_language(lifetime, ext);
 
+        // detect language by file extension
+        const char *ext = str_ext(path, arena);
+        language_runtime_t *lang = support_get_lang(support, ext);
         if (lang == NULL)
         {
             io_printf(con, "no language found for file: %s\n", path);
@@ -128,24 +125,24 @@ int main(int argc, const char **argv)
         io_t *io = make_file(logger, path, eAccessRead, arena);
         if (io != NULL)
         {
-            lifetime_parse(lifetime, lang, io);
+            broker_parse(lang, io);
         }
 
         CHECK_LOG(logger, "parsing source");
     }
 
-    for (size_t stage = 0; stage < eStageTotal; stage++)
+    for (size_t pass = 0; pass < ePassCount; pass++)
     {
-        lifetime_run_stage(lifetime, stage);
+        broker_run_pass(broker, pass);
 
-        char *msg = str_format(arena, "running stage %s", stage_to_string(stage));
+        char *msg = str_format(arena, "running compilation pass %s", broker_pass_name(pass));
         CHECK_LOG(logger, msg);
     }
 
-    lifetime_resolve(lifetime);
+    broker_resolve(broker);
     CHECK_LOG(logger, "resolving symbols");
 
-    map_t *modmap = lifetime_get_modules(lifetime);
+    vector_t *modmap = broker_get_modules(broker);
 
     check_tree(logger, modmap, arena);
     CHECK_LOG(logger, "checking tree");
@@ -198,12 +195,4 @@ int main(int argc, const char **argv)
         msg_notify(logger, &kEvent_FailedToWriteOutputFile, node, "failed to sync %s", result.path);
     }
     CHECK_LOG(logger, "syncing output directory");
-}
-#endif
-
-int main(void)
-{
-    setup_global();
-
-    NEVER("unimplemented");
 }
