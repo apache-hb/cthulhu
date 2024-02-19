@@ -26,7 +26,6 @@
   - `cthulhu` - compiler framework library. @ref runtime
     - `broker` - common module communication setup. @ref broker
     - `check` - validates state for various structures. @ref check
-    - `driver` - support library for creating language drivers. @ref drivers
     - `emit` - ssa emitter. @ref emit
     - `events` - shared compiler events between languages. @ref events
     - `memory` - global arena allocator. @ref global_memory
@@ -50,21 +49,21 @@
     - `oberon` - oberon-2 frontend (partial support)
     - `pl0` - pl0 frontend, good for referencing how to use the runtime (dare I say production ready)
 
-  - `loader` - language module enumeration and loading. @ref loader
-    - `support` - support library for frontends and interating with the broker. @ref module_loader
+  - `loader` - language module enumeration and loading
+    - `support` - support library for frontends and interating with the broker. @ref loader
 
   - `plugins` - compiler plugins
     - currently empty
 
   - `support` - utility libraries. @ref support
     - `argparse` - command line argument parsing. @ref argparse
+    - `driver` - support library for creating language drivers. @ref driver
     - `format` - text formatting for displaying to a user. @ref format
     - `gluon` - small build system implementation, similar to meson (skeleton)
     - `json` - json parsing library, does not currently support writing. @ref json
-    - `meta` - dsl for generating compiler data structures. @ref meta
+    - `meta` - dsl for generating compiler data structures
     - `setup` - default options for command line tools. @ref setup
     - `toml` - toml parser (TODO)
-    - `support` - lists enabled language drivers when built statically. @ref langs
 
   - `target` - codegen target libraries
     - `cfamily` - C and C++ codegen

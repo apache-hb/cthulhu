@@ -122,15 +122,11 @@ CT_ARENA_API void arena_free(
     IN_NOTNULL arena_t *arena);
 
 /// @brief allocate memory from a custom allocator
-/// @pre @p ptr must be allocated from @p arena
 /// @pre @p size must be > 0
 /// @pre @p arena must not be NULL
-/// @note is @p name is specified, it must be a valid null terminated string
 ///
 /// @param arena the allocator to use
 /// @param size the size of the allocation, must be greater than 0
-/// @param name the name of the allocation
-/// @param parent the parent of the allocation
 ///
 /// @return the allocated pointer
 CT_NODISCARD CT_ALLOC(arena_free) CT_ALLOC_SIZE(1)
@@ -248,12 +244,10 @@ CT_ARENA_API void arena_opt_free(
     IN_NOTNULL arena_t *arena);
 
 /// @brief allocate memory from a custom allocator
-/// @pre @p ptr must be allocated from @p arena
+/// @pre @p arena must not be NULL
 ///
 /// @param arena the allocator to use
 /// @param size the size of the allocation, must be greater than 0
-/// @param name the name of the allocation
-/// @param parent the parent of the allocation
 ///
 /// @return the allocated pointer
 CT_NODISCARD CT_ALLOC(arena_opt_free) CT_ALLOC_SIZE(1)

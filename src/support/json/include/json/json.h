@@ -19,6 +19,11 @@ typedef struct vector_t vector_t;
 
 CT_BEGIN_API
 
+/// @defgroup json JSON parsing
+/// @brief simple JSON parsing
+/// @ingroup support
+/// @{
+
 /// @brief the kind of json value
 typedef enum json_kind_t
 {
@@ -105,5 +110,7 @@ CT_JSON_API json_t *json_scan(IN_NOTNULL io_t *io, IN_NOTNULL logger_t *logger, 
 /// @return the name of the kind
 RET_NOTNULL
 CT_JSON_API const char *json_kind_name(IN_RANGE(<, eJsonCount) json_kind_t kind);
+
+/// @}
 
 CT_END_API

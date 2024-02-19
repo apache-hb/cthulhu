@@ -130,6 +130,12 @@
 #   define CT_BSWAP_U64(x) __builtin_bswap64(x)
 #endif
 
+#ifdef __cplusplus
+#   define CT_LINKAGE_C extern "C"
+#else
+#   define CT_LINKAGE_C
+#endif
+
 // we use _MSC_VER rather than CT_CC_MSVC because both clang-cl and msvc define it
 // and we want to detect both
 #ifdef _MSC_VER

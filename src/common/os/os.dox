@@ -11,8 +11,8 @@ Os is split into 2 headers, core.h and os.h.
 This is because os.h pulls in OS specific headers which can bloat compile times,
 often using core.h is enough in a header
 
-@TODO an os file path abstraction would be nice to have
-      currently if we want to support long paths on windows we would need to do sneaky allocations
-      which we dont advertise in the api.
+TODO: an os file path abstraction would be nice to have.
+Currently if we want to support long paths on windows we would need to do sneaky allocations
+which we dont advertise in the api.
 
 */

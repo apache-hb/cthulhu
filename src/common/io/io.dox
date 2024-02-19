@@ -4,42 +4,4 @@
 @brief Unified interface over streaming io
 @ingroup common
 
-These are currently all heap allocated but are moving over to a stack allocated approach.
-New apis should be designed as such.
-
-@code{.c}
-
-typedef struct buffer_t
-{
-    void *buffer;
-    size_t cursor;
-    size_t used;
-    size_t capacity;
-} buffer_t;
-
-typedef struct io_buffer_t
-{
-    io_t io; // the io header
-    buffer_t data;
-} io_buffer_t;
-
-io_t *io_buffer_new(io_buffer_t *self, params...)
-{
-    io_init(&self->io, ...);
-    // init other fields
-    return &self->io;
-}
-
-// used as such
-void do_thing()
-{
-    io_buffer_t data = { 0 };
-    io_t *io = io_buffer_new(&data, "hello");
-
-    // use io object as normal interface, valid for the lifetime of `data`
-    // may still need to call `io_close` depending on the type
-}
-
-@endcode
-
 */

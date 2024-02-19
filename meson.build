@@ -270,13 +270,15 @@ doxygen = find_program('doxygen', required : get_option('doxygen'))
 
 if doxygen.found()
     doxy_sources = [
-        source_dir / 'frontend',
         source_dir / 'common',
-        source_dir / 'support',
         source_dir / 'cthulhu',
+        source_dir / 'frontend',
         source_dir / 'language',
+        source_dir / 'loader',
+        source_dir / 'plugins',
+        source_dir / 'support',
         source_dir / 'target',
-        source_dir / 'extra',
+        source_dir / 'tools',
 
         data_dir / 'docs'
     ]
@@ -315,7 +317,7 @@ pkgconfig = import('pkgconfig')
 common_deps = [
     core, backtrace, base, arena, std, os,
     io, scan, fs,
-    interop, config, notify
+    interop, config, notify, endian
 ]
 
 runtime_deps = [
@@ -323,12 +325,16 @@ runtime_deps = [
     util, emit, broker, check
 ]
 
+support_deps = [
+    driver, argparse, format, setup, json
+]
+
 pkg_common = pkgconfig.generate(
-    description : 'Cthulhu base libraries',
+    description : 'Cthulhu common libraries',
     libraries : common_deps,
     version : meson.project_version(),
-    name : 'cthulhu-base',
-    filebase : 'cthulhu-base'
+    name : 'cthulhu-common',
+    filebase : 'cthulhu-common'
 )
 
 pkg_runtime = pkgconfig.generate(
@@ -338,6 +344,15 @@ pkg_runtime = pkgconfig.generate(
     version : meson.project_version(),
     name : 'cthulhu-runtime',
     filebase : 'cthulhu-runtime'
+)
+
+pkg_support = pkgconfig.generate(
+    description : 'Cthulhu support library',
+    libraries : support_deps,
+    requires : 'cthulhu-runtime',
+    version : meson.project_version(),
+    name : 'cthulhu-support',
+    filebase : 'cthulhu-support'
 )
 
 build_summary = {

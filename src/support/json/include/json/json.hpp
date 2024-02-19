@@ -9,6 +9,9 @@
 typedef struct logger_t logger_t;
 typedef struct io_t io_t;
 
+/// @ingroup json
+/// @{
+
 namespace ctu::json {
     class Json;
     class Object;
@@ -246,7 +249,7 @@ namespace ctu::json {
         Json get(size_t index) const;
 
         /// @brief get a value from an object by key
-        /// same as #get(const char *)
+        /// same as get(const char*)
         ///
         /// @param key the key to access
         ///
@@ -254,7 +257,7 @@ namespace ctu::json {
         Json operator[](const char *key) const;
 
         /// @brief get a value from an array by index
-        /// same as #get(size_t)
+        /// same as get(size_t)
         ///
         /// @param index the index to access
         ///
@@ -357,3 +360,5 @@ namespace ctu::json {
         logger_t *get_logger() const { return m_logger; }
     };
 }
+
+/// @}

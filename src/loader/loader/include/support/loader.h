@@ -14,6 +14,9 @@ typedef struct target_t target_t;
 
 CT_BEGIN_API
 
+/// @ingroup loader
+/// @{
+
 typedef struct loader_t loader_t;
 
 typedef enum loader_config_t
@@ -63,5 +66,7 @@ CT_SUPPORT_API loaded_module_t load_static_module(IN_NOTNULL loader_t *loader, m
 CT_SUPPORT_API loaded_module_t load_shared_module(IN_NOTNULL loader_t *loader, module_type_t mask, IN_STRING const char *name);
 
 CT_SUPPORT_API const char *load_error_string(load_error_t error);
+
+/// @}
 
 CT_END_API

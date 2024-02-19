@@ -19,6 +19,9 @@ typedef struct target_runtime_t target_runtime_t;
 
 CT_BEGIN_API
 
+/// @ingroup loader
+/// @{
+
 typedef struct support_t support_t;
 
 /// @brief create a support instance from an existing loader and broker
@@ -32,12 +35,14 @@ CT_SUPPORT_API support_t *support_new(IN_NOTNULL broker_t *broker, IN_NOTNULL lo
 /// @param support the support
 CT_SUPPORT_API void support_load_default_modules(IN_NOTNULL support_t *support);
 
-CT_SUPPORT_API bool support_load_module(IN_NOTNULL support_t *support,  module_type_t mask, IN_STRING const char *name, loaded_module_t *out);
+CT_SUPPORT_API bool support_load_module(IN_NOTNULL support_t *support, module_type_t mask, IN_STRING const char *name, loaded_module_t *out);
 
 CT_SUPPORT_API typevec_t *support_get_modules(IN_NOTNULL support_t *support);
 
 CT_SUPPORT_API language_runtime_t *support_get_lang(IN_NOTNULL support_t *support, IN_STRING const char *ext);
 CT_SUPPORT_API plugin_runtime_t *support_get_plugin(IN_NOTNULL support_t *support, IN_STRING const char *name);
 CT_SUPPORT_API target_runtime_t *support_get_target(IN_NOTNULL support_t *support, IN_STRING const char *name);
+
+/// @}
 
 CT_END_API
