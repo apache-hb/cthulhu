@@ -21,12 +21,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v1
+      - name: Install build dependencies
+        uses: actions/setup-python@v5
         with:
           python-version: '3.9'
           cache: 'pip'
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: doxygen graphviz ninja-build
+          version: 1.0
       - run: pip install meson
-      - run: sudo apt-get install -y doxygen graphviz ninja-build
       - run: meson setup build
       - run: ninja -C build docs
       - name: Setup Pages
