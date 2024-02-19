@@ -1,19 +1,6 @@
 #include "base/panic.h"
 
-#include "core/macros.h"
-
-#include <stdlib.h>
-
-static void default_panic_handler(source_info_t location, const char *fmt, va_list args)
-{
-    CT_UNUSED(location);
-    CT_UNUSED(fmt);
-    CT_UNUSED(args);
-
-    exit(CT_EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
-}
-
-panic_handler_t gPanicHandler = default_panic_handler;
+panic_handler_t gPanicHandler = NULL;
 
 USE_DECL
 void ctu_panic(source_info_t location, const char *msg, ...)
