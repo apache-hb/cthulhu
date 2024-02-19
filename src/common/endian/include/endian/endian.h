@@ -11,13 +11,6 @@
 /// @ingroup common
 /// @{
 
-/// @def CTU_BIG_ENDIAN
-/// @brief the big endian byte order
-/// @def CTU_LITTLE_ENDIAN
-/// @brief the little endian byte order
-/// @def CTU_BYTE_ORDER
-/// @brief the native byte order
-
 #if CT_OS_WINDOWS
 #   include "core/win32.h" // IWYU pragma: keep
 #   if CTU_WIN32_TRICKERY
@@ -37,6 +30,13 @@
 #   define CT_LITTLE_ENDIAN __ORDER_LITTLE_ENDIAN__
 #   define CT_BYTE_ORDER __BYTE_ORDER__
 #endif
+
+/// @def CT_BIG_ENDIAN
+/// @brief the big endian byte order
+/// @def CT_LITTLE_ENDIAN
+/// @brief the little endian byte order
+/// @def CT_BYTE_ORDER
+/// @brief the native byte order
 
 CT_BEGIN_API
 

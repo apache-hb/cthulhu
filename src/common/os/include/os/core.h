@@ -4,7 +4,6 @@
 
 #include "core/analyze.h"
 #include "core/compiler.h"
-#include "core/text.h"
 
 #include <stddef.h>
 
@@ -74,25 +73,6 @@ CT_OS_API void os_init(void);
 /// @return the string representation of the error code
 CT_NODISCARD RET_STRING
 CT_OS_API char *os_error_string(os_error_t error, IN_NOTNULL arena_t *arena);
-
-/// @brief parse a string into a path
-/// parses a platform specific path string into a generic path object
-///
-/// @param path the path to parse
-/// @param arena the arena to allocate from
-///
-/// @return the parsed path
-CT_NODISCARD
-CT_OS_API os_error_t os_path_parse(IN_STRING const char *path, IN_NOTNULL arena_t *arena, text_t *out);
-
-/// @brief get the string representation of a path for the current platform
-///
-/// @param path the path to get the string representation of
-/// @param arena the arena to allocate from
-///
-/// @return the string representation of the path
-CT_NODISCARD
-CT_OS_API char *os_path_string(IN_NOTNULL const text_t *path, IN_NOTNULL arena_t *arena);
 
 /// @}
 
