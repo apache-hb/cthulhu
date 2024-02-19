@@ -223,3 +223,15 @@ tar_error_t tar_extract(fs_t *dst, io_t *src)
 
     return eTarOk;
 }
+
+static const char *const kErrorNames[eTarCount] = {
+#define TAR_ERROR(id, name) [id] = (name),
+#include "tar/tar.def"
+};
+
+USE_DECL
+const char *tar_error_string(tar_error_t err)
+{
+    CTASSERTF(err < eTarCount, "invalid error code %d", err);
+    return kErrorNames[err];
+}
