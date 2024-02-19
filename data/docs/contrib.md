@@ -3,17 +3,18 @@
 ## Source tree structure
 
 - `data` - various data files
+  - `docs` - documentation
   - `meson` - cross files for various platforms
   - `scripts` - automation for arduous setup tasks
-  - `docs` - documentation
 
 - `src` - all source code
   - `common` - common code. @ref common
     - `arena` - memory allocation arenas. @ref memory
-    - `stacktrace` - backtrace retrieval. @ref backtrace
+    - `backtrace` - backtrace retrieval. @ref backtrace
     - `base` - base utils. @ref base
-    - `config` - configuration schema. @ref config
+    - `config` - configuration values. @ref config
     - `core` - header only compiler specific code. @ref core
+    - `endian` - endian handling, byteswaps. @ref endian
     - `fs` - filesystem abstraction. @ref filesystem
     - `interop` - flex & bison helper functions. @ref interop
     - `io` - file io abstraction. @ref io
@@ -23,46 +24,52 @@
     - `std` - collections and data structures. @ref standard
 
   - `cthulhu` - compiler framework library. @ref runtime
+    - `broker` - common module communication setup. @ref broker
     - `check` - validates state for various structures. @ref check
+    - `driver` - support library for creating language drivers. @ref drivers
     - `emit` - ssa emitter. @ref emit
-    - `events` - shared events between languages. @ref events
+    - `events` - shared compiler events between languages. @ref events
     - `memory` - global arena allocator. @ref global_memory
-    - `runtime` - code required to orchestrate communication between languages, the framework, and frontends. @ref mediator
-    - `ssa` - tree to ssa transforms, as well as optimizations. @ref ssa
+    - `ssa` - tree to ssa transformation. @ref ssa
     - `tree` - common typed ast. @ref tree
     - `util` - common utilities. @ref runtime_util
-
-  - `extra` - extra utility libraries that do not fall into a runtime category
-    - `json` - json parsing library, does not current support writing
 
   - `frontend` - user facing components used to interact with drivers and the collection
     - `cli` - command line user interface
     - `example` - example usage of the runtime
-    - `gui` - graphical user interface built with imgui (WIP)
+    - `gui` - graphical user interface built with imgui (partial)
 
   - `language` - language frontends
     - `driver` - language helper library. @ref driver
-    - `c` - C11 frontend (WIP)
-      - `pre` - C preprocessor (WIP)
-      - `lang` - C language driver (WIP)
-    - `ctu` - cthulhu language frontend (WIP)
+    - `c` - C11 frontend (skeleton)
+      - `pre` - C preprocessor
+      - `lang` - C language driver
+    - `ctu` - cthulhu language frontend (beta)
     - `example` - example frontend
-    - `jvm` - jvm classfile consumer (TODO)
-    - `oberon` - oberon-2 frontend (WIP)
-    - `pl0` - pl0 frontend, good for referencing how to use the common framework
+    - `jvm` - jvm classfile consumer (skeleton)
+    - `oberon` - oberon-2 frontend (partial support)
+    - `pl0` - pl0 frontend, good for referencing how to use the runtime (dare I say production ready)
 
-  - `support` - libraries shared between tools and frontends. @ref support
+  - `loader` - language module enumeration and loading. @ref loader
+    - `support` - support library for frontends and interating with the broker. @ref module_loader
+
+  - `plugins` - compiler plugins
+    - currently empty
+
+  - `support` - utility libraries. @ref support
     - `argparse` - command line argument parsing. @ref argparse
     - `format` - text formatting for displaying to a user. @ref format
+    - `gluon` - small build system implementation, similar to meson (skeleton)
+    - `json` - json parsing library, does not currently support writing. @ref json
+    - `meta` - dsl for generating compiler data structures. @ref meta
     - `setup` - default options for command line tools. @ref setup
+    - `toml` - toml parser (TODO)
     - `support` - lists enabled language drivers when built statically. @ref langs
 
   - `target` - codegen target libraries
     - `cfamily` - C and C++ codegen
     - `debug` - debug output
     - `hlsl` - hlsl shader target
-
-
 
   - `tools` - supporting tools and test utilities
     - `diagnostic` - diagnostic listing and querying tool

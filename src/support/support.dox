@@ -1,6 +1,6 @@
 /**
 
-@defgroup support Frontend support library
-@brief Supporting libraries for frontends and tools
+@defgroup support Support libraries for languages, plugins, and frontends
+@brief Support libraries
 
 */

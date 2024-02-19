@@ -1,0 +1,6 @@
+/**
+
+@defgroup loader Module loader
+@brief Module enumeration and shared library loading
+
+*/

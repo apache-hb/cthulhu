@@ -7,8 +7,8 @@ gmp = dependency('gmp', fallback : [ 'mini_gmp', 'gmp' ])
 # compiler libraries
 subdir('cthulhu')
 
-# miscellaneous libraries
-subdir('extra')
+# support libraries
+subdir('support')
 
 # codegen drivers
 subdir('target')
@@ -19,8 +19,8 @@ subdir('language')
 # compiler plugins
 subdir('plugins')
 
-# frontend and tool support libraries
-subdir('support')
+# module loader
+subdir('loader')
 
 # frontend programs
 subdir('frontend')

@@ -1,5 +1,0 @@
-subdir('json')
-subdir('argparse')
-subdir('format')
-subdir('setup')
-#subdir('meta')
