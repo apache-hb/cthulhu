@@ -57,10 +57,12 @@ int main(void)
 
         fs_t *result = fs_virtual("result", arena);
 
-        tar_error_t extract = tar_extract(result, dst, arena);
+        io_seek(dst, 0);
+
+        tar_error_t extract = tar_extract(result, dst);
         GROUP_EXPECT_PASS(group, "extract error", extract == eTarOk);
 
-        GROUP_EXPECT_PASS(group, "dir1", fs_dir_exists(result, "dir1"));
+        GROUP_EXPECT_PASS(group, "./dir1", fs_dir_exists(result, "dir1"));
         GROUP_EXPECT_PASS(group, "dir1/file.txt", fs_file_exists(result, "dir1/file.txt"));
         GROUP_EXPECT_PASS(group, "dir2", fs_dir_exists(result, "dir2"));
         GROUP_EXPECT_PASS(group, "dir2/file.txt", fs_file_exists(result, "dir2/file.txt"));

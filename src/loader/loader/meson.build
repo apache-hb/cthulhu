@@ -98,9 +98,13 @@ loader_config = configure_file(
 support_include = include_directories('.', 'include')
 support_impl_include = include_directories('src')
 
+# if no modules are provided then some loops never run
+# gcc warns on this
+support_args = cc.get_supported_arguments('-Wno-type-limits')
+
 libsupport = library('support', src,
     build_by_default : not meson.is_subproject(),
-    c_args : user_args + [ '-DCT_SUPPORT_BUILD=1' ],
+    c_args : user_args + support_args + [ '-DCT_SUPPORT_BUILD=1' ],
     include_directories : [ support_include, support_impl_include, driver_include ],
     dependencies : impl_deps
 )

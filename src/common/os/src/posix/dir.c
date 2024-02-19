@@ -1,10 +1,11 @@
-#include "core/macros.h"
 #include "os/os.h"
-#include "os_common.h"
-
-#include "base/panic.h"
 
 #include "arena/arena.h"
+
+#include "base/panic.h"
+#include "base/util.h"
+
+#include "core/macros.h"
 
 #include <errno.h>
 
@@ -45,7 +46,7 @@ bool os_iter_next(os_iter_t *iter, os_dir_t *result)
     struct dirent *ent = NULL;
     while ((ent = readdir(iter->dir)) != NULL)
     {
-        if (!is_special(ent->d_name))
+        if (!is_path_special(ent->d_name))
         {
             break;
         }

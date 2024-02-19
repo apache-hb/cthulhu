@@ -117,6 +117,11 @@ static io_t *vfs_io(virtual_file_t *file, os_access_t flags, arena_t *arena)
         .offset = 0
     };
 
+    if (flags & eOsAccessTruncate)
+    {
+        file->used = 0;
+    }
+
     return io_new(&kVirtualCallbacks, flags, file->name, &io, sizeof(virtual_io_t), arena);
 }
 

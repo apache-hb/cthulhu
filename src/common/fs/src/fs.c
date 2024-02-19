@@ -1,6 +1,7 @@
 #include "base/util.h"
 #include "common.h"
 
+#include "io/impl.h"
 #include "std/vector.h"
 #include "std/str.h"
 #include "std/map.h"
@@ -161,6 +162,15 @@ void fs_file_delete(fs_t *fs, const char *path)
     delete_file(fs, current, vector_tail(parts));
 }
 
+static const io_callbacks_t kInvalidIo = { 0 };
+
+static io_t *make_invalid_file(const char *name, os_access_t flags, arena_t *arena)
+{
+    io_t *io = io_new(&kInvalidIo, flags, name, NULL, 0, arena);
+    io->error = 2; // ENOENT
+    return io;
+}
+
 io_t *fs_open(fs_t *fs, const char *path, os_access_t flags)
 {
     // create a file if it doesn't exist then open it
@@ -177,7 +187,7 @@ io_t *fs_open(fs_t *fs, const char *path, os_access_t flags)
         {
         case eOsNodeDir: current = node; break;
         case eOsNodeNone: current = create_dir(fs, current, part); break;
-        default: return NULL; // TODO: return an invalid file, rather than NULL
+        default: return make_invalid_file(path, flags, fs->arena);
         }
     }
 
@@ -186,10 +196,13 @@ io_t *fs_open(fs_t *fs, const char *path, os_access_t flags)
     {
     case eOsNodeFile:
         return query_file(fs, file, flags);
+        break;
     case eOsNodeNone:
         file = create_file(fs, current, vector_tail(parts));
         return query_file(fs, file, flags);
-    default: return NULL; // TODO: same as above
+        break;
+    default:
+        return make_invalid_file(path, flags, fs->arena);
     }
 }
 
@@ -388,7 +401,7 @@ sync_result_t fs_sync(fs_t *dst, fs_t *src)
 
 static void iter_dirents(fs_t *fs, inode_t *node, const char *path, const char *name, void *data, fs_dirent_callback_t callback)
 {
-    CTASSERTF(node != NULL, "invalid inode (fs = %p)", fs);
+    CTASSERTF(node != NULL, "invalid inode (fs = %p)", (void*)fs);
 
     callback(path, name, node->type, data);
     if (node->type == eOsNodeFile) return;

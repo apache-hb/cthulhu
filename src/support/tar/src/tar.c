@@ -12,7 +12,7 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 
-#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define TAR_NAME_SIZE 100
@@ -70,7 +70,6 @@ typedef struct tar_context_t
 
 static bool build_tar_header(tar_header_t *header, io_t *dst, char type, size_t size)
 {
-    printf("name: %s\n", header->name);
     memcpy(header->magic, "ustar", sizeof(header->magic));
     memcpy(header->version, "00", sizeof(header->version));
 
@@ -91,13 +90,9 @@ static tar_error_t write_tar_dir(const char *dir, const char *name, tar_context_
     tar_header_t header = { 0 };
 
     if (is_path_special(name))
-    {
         str_printf(header.name, sizeof(header.name), "%s/", dir);
-    }
     else
-    {
         str_printf(header.name, sizeof(header.name), "%s/%s/", dir, name);
-    }
 
     bool result = build_tar_header(&header, ctx->dst, TAR_TYPE_DIR, 0);
 
@@ -106,26 +101,20 @@ static tar_error_t write_tar_dir(const char *dir, const char *name, tar_context_
 
 static tar_error_t write_tar_file(const char *dir, const char *name, tar_context_t *ctx)
 {
-    tar_error_t ret = ctx->error;
-
     tar_header_t header = { 0 };
 
     if (is_path_special(dir))
-    {
         str_printf(header.name, sizeof(header.name), "%s", name);
-    }
     else
-    {
         str_printf(header.name, sizeof(header.name), "%s/%s", dir, name);
-    }
 
-    const char *path = header.name;
-    io_t *src = fs_open(ctx->fs, path, eOsAccessRead);
-    CTASSERTF(src != NULL, "failed to open file `%s`", path);
+    io_t *src = fs_open(ctx->fs, header.name, eOsAccessRead);
     io_error_t err = io_error(src);
-    CTASSERTF(err == 0, "failed to open file `%s` (%s)", path, os_error_string(err, ctx->arena));
-    size_t size = io_size(src);
+    CTASSERTF(err == 0, "failed to open file `%s` (%s)", header.name, os_error_string(err, ctx->arena));
 
+    tar_error_t ret = ctx->error;
+
+    size_t size = io_size(src);
     bool ok = build_tar_header(&header, ctx->dst, TAR_TYPE_FILE, size);
     if (!ok)
     {
@@ -192,14 +181,45 @@ tar_error_t tar_archive(io_t *dst, fs_t *src, arena_t *arena)
     return ctx.error;
 }
 
-tar_error_t tar_extract(fs_t *dst, io_t *src, arena_t *arena)
+tar_error_t tar_extract(fs_t *dst, io_t *src)
 {
-    CT_UNUSED(dst);
-    CT_UNUSED(arena);
+    while (true)
+    {
+        tar_header_t header = { 0 };
+        size_t read = io_read(src, &header, sizeof(tar_header_t));
+        if (read != sizeof(tar_header_t)) break;
 
-    tar_header_t header;
-    size_t read = io_read(src, &header, sizeof(header));
-    TAR_REJECT(read != sizeof(header), eTarInvalidHeader);
+        if (header.name[0] == '\0') break;
+
+        if (header.type == TAR_TYPE_DIR)
+        {
+            fs_dir_create(dst, header.name);
+            continue;
+        }
+
+        CTASSERTF(header.type == TAR_TYPE_FILE, "unsupported tar entry type %c", header.type);
+        fs_file_create(dst, header.name);
+
+        size_t size = strtoull(header.size, NULL, 8);
+        size_t blocks = (size + TAR_BLOCK_SIZE - 1) / TAR_BLOCK_SIZE;
+
+        io_t *io = fs_open(dst, header.name, eOsAccessWrite | eOsAccessTruncate);
+        for (size_t i = 0; i < blocks; ++i)
+        {
+            char block[TAR_BLOCK_SIZE] = { 0 };
+            size_t read = io_read(src, block, sizeof(block));
+            if (read != sizeof(block))
+            {
+                return eTarReadError;
+            }
+
+            size_t write = (i == blocks - 1) ? size % TAR_BLOCK_SIZE : sizeof(block);
+
+            io_write(io, block, sizeof(write));
+        }
+
+        io_close(io);
+    }
 
     return eTarOk;
 }

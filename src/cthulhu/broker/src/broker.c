@@ -13,7 +13,7 @@
 #include "scan/node.h"
 #include "std/map.h"
 #include "std/vector.h"
-#include <stdio.h>
+
 #include <string.h>
 
 typedef struct broker_t

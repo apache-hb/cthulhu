@@ -46,7 +46,7 @@ typedef struct setup_options_t
 
 typedef struct setup_init_t
 {
-
+    void *empty;
 } setup_init_t;
 
 /// @brief initialise the runtime with default options

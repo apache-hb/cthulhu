@@ -5,5 +5,6 @@
 TAR_ERROR(eTarOk, "no error")
 TAR_ERROR(eTarInvalidHeader, "invalid header")
 TAR_ERROR(eTarWriteError, "write error")
+TAR_ERROR(eTarReadError, "read error")
 
 #undef TAR_ERROR

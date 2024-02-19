@@ -17,6 +17,6 @@ typedef enum tar_error_t
 } tar_error_t;
 
 tar_error_t tar_archive(io_t *dst, fs_t *src, arena_t *arena);
-tar_error_t tar_extract(fs_t *dst, io_t *tar, arena_t *arena);
+tar_error_t tar_extract(fs_t *dst, io_t *tar);
 
 CT_END_API

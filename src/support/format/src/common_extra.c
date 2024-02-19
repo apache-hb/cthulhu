@@ -16,7 +16,6 @@
 #include "std/vector.h"
 
 #include <ctype.h>
-#include <stdio.h>
 #include <string.h>
 
 #define COLOUR_UNKNOWN eColourMagenta
