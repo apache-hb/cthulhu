@@ -80,4 +80,5 @@ argparse_exe = executable('argparse.argparse', 'cases/argparse/argparse.c',
 
 test('argparse', argparse_exe, suite : 'unit')
 
+subdir('tar')
 subdir('json')

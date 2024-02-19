@@ -83,7 +83,7 @@ CT_NODISCARD CT_ALLOC(io_close)
 CT_IO_API io_t *io_string(IN_STRING const char *name, IN_STRING const char *string, IN_NOTNULL arena_t *arena);
 
 /// @brief read from an io object
-/// @pre the io object must have been created with the @a eAccessRead flag
+/// @pre the io object must have been created with the @a eOsAccessRead flag
 ///
 /// @param io the io object
 /// @param dst the dst buffer to read into
@@ -93,7 +93,7 @@ CT_IO_API io_t *io_string(IN_STRING const char *name, IN_STRING const char *stri
 CT_IO_API size_t io_read(IN_NOTNULL io_t *io, OUT_WRITES(size) void *dst, size_t size);
 
 /// @brief write to an io object
-/// @pre the io object must have been created with the @a eAccessWrite flag
+/// @pre the io object must have been created with the @a eOsAccessWrite flag
 ///
 /// @param io the io object
 /// @param src the source buffer to copy from
@@ -103,7 +103,7 @@ CT_IO_API size_t io_read(IN_NOTNULL io_t *io, OUT_WRITES(size) void *dst, size_t
 CT_IO_API size_t io_write(IN_NOTNULL io_t *io, IN_READS(size) const void *src, size_t size);
 
 /// @brief printf to an io object
-/// @pre the io object must have been created with the @a eAccessWrite flag
+/// @pre the io object must have been created with the @a eOsAccessWrite flag
 ///
 /// @param io the io object
 /// @param fmt the format string
@@ -113,7 +113,7 @@ CT_IO_API size_t io_write(IN_NOTNULL io_t *io, IN_READS(size) const void *src, s
 CT_IO_API size_t io_printf(IN_NOTNULL io_t *io, CT_FMT_STRING const char *fmt, ...) CT_PRINTF(2, 3);
 
 /// @brief vprintf to an io object
-/// @pre the io object must have been created with the @a eAccessWrite flag
+/// @pre the io object must have been created with the @a eOsAccessWrite flag
 ///
 /// @param io the io object
 /// @param fmt the format string

@@ -122,7 +122,7 @@ int main(int argc, const char **argv)
             io_printf(con, "no language found for file: %s\n", path);
         }
 
-        io_t *io = make_file(logger, path, eAccessRead, arena);
+        io_t *io = make_file(logger, path, eOsAccessRead, arena);
         if (io != NULL)
         {
             broker_parse(lang, io);

@@ -170,7 +170,7 @@ tree_t *obr_sema_rvalue(tree_t *sema, obr_t *expr, const tree_t *implicit_type)
     case eObrExprField: return tree_expr_load(expr->node, sema_field(sema, expr)); // TODO: may also be wrong for functions
     case eObrExprCall: return sema_call(sema, expr);
 
-    default: NEVER("unknown expr kind %d", expr->kind);
+    default: CT_NEVER("unknown expr kind %d", expr->kind);
     }
 }
 
@@ -184,7 +184,7 @@ tree_t *obr_sema_lvalue(tree_t *sema, obr_t *expr)
     {
     case eObrExprName: return sema_name(sema, expr);
     case eObrExprField: return sema_field(sema, expr);
-    default: NEVER("unknown expr kind %d", expr->kind);
+    default: CT_NEVER("unknown expr kind %d", expr->kind);
     }
 }
 
@@ -207,7 +207,7 @@ tree_t *obr_default_value(const node_t *node, const tree_t *type)
 
     case eTreeTypeReference: return obr_default_value(node, tree_ty_load_type(type));
 
-    default: NEVER("obr-default-value unknown type kind %s", tree_to_string(type));
+    default: CT_NEVER("obr-default-value unknown type kind %s", tree_to_string(type));
     }
 }
 
@@ -304,7 +304,7 @@ static tree_t *sema_stmt(tree_t *sema, obr_t *stmt)
     case eObrExprCall: return sema_call(sema, stmt);
     case eObrStmtBlock: return sema_block(sema, stmt);
     case eObrStmtBranch: return sema_branch(sema, stmt);
-    default: NEVER("unknown stmt kind %d", stmt->kind);
+    default: CT_NEVER("unknown stmt kind %d", stmt->kind);
     }
 }
 

@@ -16,7 +16,7 @@ USE_DECL
 size_t io_read(io_t *io, void *dst, size_t size)
 {
     CTASSERT(io != NULL);
-    CTASSERTF(io->flags & eAccessRead, "cannot io_read(%s). flags did not include eAccessRead", io_name(io));
+    CTASSERTF(io->flags & eOsAccessRead, "cannot io_read(%s). flags did not include eOsAccessRead", io_name(io));
     CTASSERTF(io->cb->fn_read, "fn_read not provided for `%s`", io->name);
 
     return io->cb->fn_read(io, dst, size);
@@ -26,7 +26,7 @@ USE_DECL
 size_t io_write(io_t *io, const void *src, size_t size)
 {
     CTASSERT(io != NULL);
-    CTASSERTF(io->flags & eAccessWrite, "cannot io_write(%s). flags did not include eAccessWrite", io_name(io));
+    CTASSERTF(io->flags & eOsAccessWrite, "cannot io_write(%s). flags did not include eOsAccessWrite", io_name(io));
     CTASSERTF(io->cb->fn_write, "fn_write not provided for `%s`", io->name);
 
     return io->cb->fn_write(io, src, size);
@@ -94,17 +94,17 @@ void *io_map(io_t *io, os_protect_t protect)
     CTASSERT(io != NULL);
     CTASSERTF(io->cb->fn_map, "fn_map not provided for `%s`", io->name);
 
-    CTASSERTF(protect != eProtectNone, "cannot io_map(%s). protect is eProtectNone", io_name(io));
+    CTASSERTF(protect != eOsProtectNone, "cannot io_map(%s). protect is eOsProtectNone", io_name(io));
 
     // validate protect against access flags
-    if (protect & eProtectRead)
+    if (protect & eOsProtectRead)
     {
-        CTASSERTF(io->flags & eAccessRead, "io.map(%s) flags not readable", io_name(io));
+        CTASSERTF(io->flags & eOsAccessRead, "io.map(%s) flags not readable", io_name(io));
     }
 
-    if (protect & eProtectWrite)
+    if (protect & eOsProtectWrite)
     {
-        CTASSERTF(io->flags & eAccessWrite, "io.map(%s) flags not writable", io_name(io));
+        CTASSERTF(io->flags & eOsAccessWrite, "io.map(%s) flags not writable", io_name(io));
     }
 
     if (io_size(io) == 0) { return ""; }

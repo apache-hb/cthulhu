@@ -1,0 +1,9 @@
+#ifndef TAR_ERROR
+#   define TAR_ERROR(id, str)
+#endif
+
+TAR_ERROR(eTarOk, "no error")
+TAR_ERROR(eTarInvalidHeader, "invalid header")
+TAR_ERROR(eTarWriteError, "write error")
+
+#undef TAR_ERROR

@@ -28,7 +28,7 @@ loaded_module_t load_static_module(loader_t *loader, module_type_t mask, const c
                 {
                     const language_t *old = mod.lang;
                     const module_info_t *prev = &old->info;
-                    NEVER("multiple static languages with the same id: %s (prev: %s, new: %s)", info->id, prev->name, info->name);
+                    CT_NEVER("multiple static languages with the same id: %s (prev: %s, new: %s)", info->id, prev->name, info->name);
                 }
 
                 mod.type |= eModLanguage;
@@ -50,7 +50,7 @@ loaded_module_t load_static_module(loader_t *loader, module_type_t mask, const c
                 {
                     const plugin_t *old = mod.plugin;
                     const module_info_t *prev = &old->info;
-                    NEVER("multiple static plugins with the same id: %s (prev: %s, new: %s)", info->id, prev->name, info->name);
+                    CT_NEVER("multiple static plugins with the same id: %s (prev: %s, new: %s)", info->id, prev->name, info->name);
                 }
 
                 mod.type |= eModPlugin;
@@ -71,7 +71,7 @@ loaded_module_t load_static_module(loader_t *loader, module_type_t mask, const c
                 {
                     const target_t *old = mod.target;
                     const module_info_t *prev = &old->info;
-                    NEVER("multiple static targets with the same id: %s (prev: %s, new: %s)", info->id, prev->name, info->name);
+                    CT_NEVER("multiple static targets with the same id: %s (prev: %s, new: %s)", info->id, prev->name, info->name);
                 }
 
                 mod.type |= eModTarget;

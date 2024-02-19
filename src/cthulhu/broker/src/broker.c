@@ -72,7 +72,7 @@ static bool parse_ok(parse_result_t result, scan_t *scan, logger_t *logger)
         msg_notify(logger, &kEvent_ScanFailed, node_new(scan, kNowhere), "failed to scan input");
         return false;
 
-    default: NEVER("unknown parse result %d", result.result);
+    default: CT_NEVER("unknown parse result %d", result.result);
     }
 }
 

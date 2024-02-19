@@ -111,11 +111,11 @@ CT_NORETURN CT_BASE_API ctu_vpanic(source_info_t location, CT_FMT_STRING const c
 /// @param expr the condition to assert
 #define CTASSERT(expr) CTASSERTM(expr, #expr)
 
-/// @def NEVER(...)
+/// @def CT_NEVER(...)
 /// @brief assert that a code path is never reached
 ///
 /// @param ... the format string and optional arguments to format
-#define NEVER(...) CT_PANIC(__VA_ARGS__)
+#define CT_NEVER(...) CT_PANIC(__VA_ARGS__)
 
 #if CTU_PARANOID
 #   define CT_PARANOID(...) __VA_ARGS__

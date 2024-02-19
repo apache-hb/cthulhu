@@ -74,7 +74,7 @@ static void parse_source(broker_t *broker, support_t *support, const char *path)
         return;
     }
 
-    io_t *io = io_file(path, eAccessRead, arena);
+    io_t *io = io_file(path, eOsAccessRead, arena);
     os_error_t err = io_error(io);
     if (err != 0)
     {

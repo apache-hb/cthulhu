@@ -47,7 +47,7 @@ static void add_arg(ap_t *ap, const char *arg, cfg_field_t *field)
     {
         const cfg_info_t *info = cfg_get_info(field);
         const cfg_info_t *prev = cfg_get_info(existing);
-        NEVER("a flag `%s` already exists (new: %s, old: %s)", arg, info->name, prev->name);
+        CT_NEVER("a flag `%s` already exists (new: %s, old: %s)", arg, info->name, prev->name);
     }
 
     map_set(ap->name_lookup, arg, field);

@@ -43,7 +43,7 @@ static size_t view_seek(io_t *self, size_t offset)
 
 static void *view_map(io_t *self, os_protect_t protect)
 {
-    CTASSERTF(protect == eProtectRead, "cannot map view with protection %d", protect);
+    CTASSERTF(protect == eOsProtectRead, "cannot map view with protection %d", protect);
     view_t *mem = view_data(self);
 
     return (void*)mem->data;
@@ -66,7 +66,7 @@ io_t *io_view(const char *name, const void *data, size_t size, arena_t *arena)
     CTASSERT(data != NULL);
     CTASSERT(arena != NULL);
 
-    os_access_t flags = eAccessRead;
+    os_access_t flags = eOsAccessRead;
 
     view_t view = {
         .data = data,

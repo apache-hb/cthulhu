@@ -244,7 +244,7 @@ static tree_t *sema_expr(tree_t *sema, pl0_t *node)
     case ePl0Unary:
         return sema_unary(sema, node);
     default:
-        NEVER("sema-expr: %d", node->type);
+        CT_NEVER("sema-expr: %d", node->type);
     }
 }
 
@@ -339,7 +339,7 @@ static tree_t *sema_stmt(tree_t *sema, pl0_t *node)
     case ePl0Loop: return sema_loop(sema, node);
     case ePl0Assign: return sema_assign(sema, node);
     case ePl0Print: return sema_print(sema, node);
-    default: NEVER("sema-stmt: %d", node->type);
+    default: CT_NEVER("sema-stmt: %d", node->type);
     }
 }
 
@@ -390,7 +390,7 @@ static tree_t *sema_compare(tree_t *sema, pl0_t *node)
     {
     case ePl0Odd: return sema_odd(sema, node);
     case ePl0Compare: return sema_comp(sema, node);
-    default: NEVER("sema-compare: %d", node->type);
+    default: CT_NEVER("sema-compare: %d", node->type);
     }
 }
 

@@ -27,30 +27,24 @@ typedef struct os_iter_t os_iter_t;
 /// @brief file access mode
 typedef enum os_access_t
 {
-    eAccessRead = (1 << 0),  ///< file is readable
-    eAccessWrite = (1 << 1), ///< file is writeable, does not imply readable
-    eAccessTruncate = (1 << 2), ///< file is truncated if it exists
+#define OS_ACCESS(ID, STR, BIT) ID = (BIT),
+#include "os.def"
 } os_access_t;
 
 /// @brief file mapping memory protection
 typedef enum os_protect_t
 {
-    eProtectNone = 0, ///< memory cannot be accessed
-
-    eProtectRead = (1 << 0), ///< memory can be read
-    eProtectWrite = (1 << 1), ///< memory can be written to (does not imply read)
-    eProtectExecute = (1 << 2), ///< memory can be executed (does not imply read or write)
+#define OS_PROTECT(ID, STR, BIT) ID = (BIT),
+#include "os.def"
 } os_protect_t;
 
 /// @brief directory entry type
 typedef enum os_dirent_t
 {
-    eOsNodeNone, ///< unknown node type
-    eOsNodeFile, ///< file node type
-    eOsNodeDir,  ///< directory node type
-    eOsNodeError,///< error node type
+#define OS_DIRENT(ID, STR) ID,
+#include "os.def"
 
-    eOsNodeTotal
+    eOsNodeCount
 } os_dirent_t;
 
 /// @brief error code

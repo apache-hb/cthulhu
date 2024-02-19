@@ -69,7 +69,7 @@ CT_INTEROP_API void flex_update(IN_NOTNULL where_t *where, IN_READS(steps) const
 
 /// install our own error handler for nicer error messages
 #ifndef YY_FATAL_ERROR
-#   define YY_FATAL_ERROR(msg) NEVER("fatal flex error: %s", msg)
+#   define YY_FATAL_ERROR(msg) CT_NEVER("fatal flex error: %s", msg)
 #endif
 
 /// @}

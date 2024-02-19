@@ -10,6 +10,7 @@ CT_BEGIN_API
 
 typedef struct arena_t arena_t;
 typedef struct io_t io_t;
+typedef struct vector_t vector_t;
 
 /// @defgroup filesystem Filesystem abstraction
 /// @brief virtual and physical filesystem interface
@@ -110,6 +111,8 @@ typedef struct sync_result_t
 /// @param dst the destination filesystem
 /// @param src the source filesystem
 CT_FS_API sync_result_t fs_sync(fs_t *dst, fs_t *src);
+
+CT_FS_API void fs_iter_dirents(fs_t *fs, const char *path, void *data, void (*callback)(const char *path, os_dirent_t type, void *data));
 
 /// @}
 

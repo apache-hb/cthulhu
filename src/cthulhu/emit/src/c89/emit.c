@@ -31,7 +31,7 @@ static c89_source_t *header_for(c89_emit_t *emit, const ssa_module_t *mod, const
     char *it = str_format(emit->arena, "include/%s.h", path);
     fs_file_create(emit->fs, it);
 
-    io_t *io = fs_open(emit->fs, it, eAccessWrite | eAccessTruncate);
+    io_t *io = fs_open(emit->fs, it, eOsAccessWrite | eOsAccessTruncate);
     c89_source_t *source = source_new(io, str_format(emit->arena, "%s.h", path), emit->arena);
     map_set(emit->hdrmap, mod, source);
     return source;
@@ -42,7 +42,7 @@ static c89_source_t *source_for(c89_emit_t *emit, const ssa_module_t *mod, const
     char *it = str_format(emit->arena, "src/%s.c", path);
     fs_file_create(emit->fs, it);
 
-    io_t *io = fs_open(emit->fs, it, eAccessWrite | eAccessTruncate);
+    io_t *io = fs_open(emit->fs, it, eOsAccessWrite | eOsAccessTruncate);
     c89_source_t *source = source_new(io, it, emit->arena);
     map_set(emit->srcmap, mod, source);
     return source;
@@ -132,7 +132,7 @@ static const char *format_c89_link(tree_link_t linkage)
     case eLinkEntryGui:
         return "";
 
-    default: NEVER("unknown linkage %d", linkage);
+    default: CT_NEVER("unknown linkage %d", linkage);
     }
 }
 
@@ -354,7 +354,7 @@ static const ssa_type_t *get_operand_type(c89_emit_t *emit, ssa_operand_t operan
         return type;
     }
 
-    default: NEVER("unknown operand kind %d", operand.kind);
+    default: CT_NEVER("unknown operand kind %d", operand.kind);
     }
 }
 
@@ -386,7 +386,7 @@ static const ssa_type_t *get_reg_type(const ssa_type_t *type)
         return pointer.pointer;
     }
 
-    default: NEVER("expected storage or pointer type, got %s (on %s)", ssa_type_name(type->kind), type->name);
+    default: CT_NEVER("expected storage or pointer type, got %s (on %s)", ssa_type_name(type->kind), type->name);
     }
 }
 
@@ -428,7 +428,7 @@ static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value)
     case eTypeBool: return value->bool_value ? "true" : "false";
     case eTypeDigit: return mpz_get_str(NULL, 10, value->digit_value);
     case eTypePointer: return c89_format_pointer(emit, value->data);
-    default: NEVER("unknown type kind %d", type->kind);
+    default: CT_NEVER("unknown type kind %d", type->kind);
     }
 }
 
@@ -476,7 +476,7 @@ static const char *c89_format_operand(c89_emit_t *emit, ssa_operand_t operand)
     case eOperandParam:
         return c89_format_param(emit, operand.param);
 
-    default: NEVER("unknown operand kind %d", operand.kind);
+    default: CT_NEVER("unknown operand kind %d", operand.kind);
     }
 }
 
@@ -688,7 +688,7 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
             break;
         }
 
-        default: NEVER("unknown opcode %d", step->opcode);
+        default: CT_NEVER("unknown opcode %d", step->opcode);
         }
     }
     io_printf(io, "} /* end %s */\n", get_block_name(&emit->emit, bb));

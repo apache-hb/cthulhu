@@ -95,7 +95,7 @@ ssa_value_t *ssa_value_from(map_t *types, const tree_t *expr)
     case eTreeExprBool: return ssa_value_bool(type, expr->bool_value);
     case eTreeExprDigit: return ssa_value_digit(type, expr->digit_value);
     case eTreeExprString: return ssa_value_string(type, expr->string_value);
-    default: NEVER("Invalid expr kind: %d", expr->kind);
+    default: CT_NEVER("Invalid expr kind: %d", expr->kind);
     }
 }
 

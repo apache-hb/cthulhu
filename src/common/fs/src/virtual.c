@@ -87,7 +87,7 @@ static size_t vfs_seek(io_t *self, size_t offset)
 
 static void *vfs_map(io_t *self, os_protect_t protect)
 {
-    CTASSERTF(!(protect & eProtectExecute), "cannot map vfs io object as executable `%s`", io_name(self));
+    CTASSERTF(!(protect & eOsProtectExecute), "cannot map vfs io object as executable `%s`", io_name(self));
 
     virtual_io_t *io = vfs_data(self);
     return io->data->data;
@@ -134,6 +134,11 @@ static inode_t *virtual_dir(arena_t *arena)
 static inode_t *vfs_query_node(fs_t *fs, inode_t *self, const char *name)
 {
     CT_UNUSED(fs);
+
+    if (str_equal(name, "."))
+    {
+        return self;
+    }
 
     virtual_dir_t *dir = inode_data(self);
     return map_get_default(dir->dirents, name, &gInvalidFileNode);

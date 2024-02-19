@@ -349,8 +349,8 @@ obr_t *obr_receiver(scan_t *scan, where_t where, bool mut, char *name, char *typ
 
 obr_symbol_t *obr_symbol(scan_t *scan, where_t where, char *name, obr_visibility_t visibility)
 {
-    arena_t *arena = scan_get_arena(scan);
-    obr_symbol_t *self = ARENA_MALLOC(sizeof(obr_symbol_t), "obr_symbol", scan, arena);
+    scan_context_t *ctx = scan_get_context(scan);
+    obr_symbol_t *self = ARENA_MALLOC(sizeof(obr_symbol_t), "obr_symbol", scan, ctx->arena);
     self->scan = scan;
     self->where = where;
     self->name = name;
@@ -360,8 +360,9 @@ obr_symbol_t *obr_symbol(scan_t *scan, where_t where, char *name, obr_visibility
 
 #define EXPAND_INNER(fn, scan, ...)                              \
     do                                                     \
-    {                                                      \
-        arena_t *arena = scan_get_arena(scan);               \
+    {                                                       \
+        scan_context_t *ctx = scan_get_context(scan); \
+        arena_t *arena = ctx->arena;               \
         size_t len = vector_len(symbols);                  \
         vector_t *result = vector_of(len, arena);    \
         for (size_t i = 0; i < len; i++)                   \

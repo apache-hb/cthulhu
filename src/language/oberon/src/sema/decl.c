@@ -23,7 +23,7 @@ static visibility_t remap_visibility(obr_visibility_t vis)
     case eObrVisPrivate: return eVisiblePrivate;
     case eObrVisPublic:
     case eObrVisReadOnly: return eVisiblePublic;
-    default: NEVER("remap-visibility %d", vis);
+    default: CT_NEVER("remap-visibility %d", vis);
     }
 }
 
@@ -261,7 +261,7 @@ static obr_forward_t forward_inner(tree_t *sema, obr_t *decl)
         return fwd;
     }
 
-    default: NEVER("obr-forward-decl %d", decl->kind);
+    default: CT_NEVER("obr-forward-decl %d", decl->kind);
     }
 }
 

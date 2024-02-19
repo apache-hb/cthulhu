@@ -268,7 +268,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
         const char *ext = str_ext(path, arena);
         language_runtime_t *lang = support_get_lang(support, ext);
 
-        io_t *io = make_file(path, eAccessRead, arena);
+        io_t *io = make_file(path, eOsAccessRead, arena);
 
         broker_parse(lang, io);
 

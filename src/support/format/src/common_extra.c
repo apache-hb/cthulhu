@@ -199,7 +199,7 @@ static text_view_t get_io_view(io_t *io)
         return text_view_from("");
     }
 
-    const void *memory = io_map(io, eProtectRead);
+    const void *memory = io_map(io, eOsProtectRead);
     size_t size = io_size(io);
 
     CTASSERTF(memory != NULL, "io_map(%s) failed", io_name(io));
@@ -281,7 +281,7 @@ text_cache_t *cache_emplace_file(cache_map_t *map, const char *path)
     text_cache_t *cache = map_get(map->map, path);
     if (cache != NULL && cache_is_valid(cache)) return cache;
 
-    io_t *io = io_file(path, eAccessRead, map->arena);
+    io_t *io = io_file(path, eOsAccessRead, map->arena);
     text_cache_t *text = text_cache_io(io, map->arena);
 
     // always insert the cache, even if it is invalid.
@@ -331,6 +331,8 @@ size_t cache_count_lines(text_cache_t *cache)
     return typevec_len(cache->line_info);
 }
 
+static const char *const kHexChars = "0123456789abcdef";
+
 static bool get_escaped_char(char *buf, char c)
 {
     if (isprint(c))
@@ -343,8 +345,8 @@ static bool get_escaped_char(char *buf, char c)
     // print 2 byte hex value, we need to do this manually rather than using snprintf
     // because snprintf is too slow and for some ungodly reason this is a hot path
     buf[0] = '\\';
-    buf[1] = "0123456789abcdef"[c >> 4];
-    buf[2] = "0123456789abcdef"[c & 0xf];
+    buf[1] = kHexChars[c >> 4];
+    buf[2] = kHexChars[c & 0xf];
     buf[3] = '\0';
 
     return true;

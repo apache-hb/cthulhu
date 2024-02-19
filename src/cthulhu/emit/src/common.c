@@ -163,6 +163,6 @@ const char *type_to_string(const ssa_type_t *type, arena_t *arena)
     case eTypeClosure: return closure_to_string(type->closure, arena);
     case eTypePointer: return pointer_to_string(type->pointer, arena);
     case eTypeStruct: return record_to_string(type->record, arena);
-    default: NEVER("unknown type kind %d", type->kind);
+    default: CT_NEVER("unknown type kind %d", type->kind);
     }
 }

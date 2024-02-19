@@ -507,7 +507,7 @@ class SourceCode
         path = io_name(io);
 
         size = io_size(io);
-        text = (char*)io_map(io, eProtectRead);
+        text = (char*)io_map(io, eOsProtectRead);
 
         error = io_error(io);
         if (error)
@@ -835,7 +835,7 @@ private:
                     ImGui::InputText("Path", source_path, std::size(source_path));
                     if (ImGui::Button("Add"))
                     {
-                        io_t *io = io_file(source_path, eAccessRead, &global);
+                        io_t *io = io_file(source_path, eOsAccessRead, &global);
                         sources.emplace_back(io, &global);
                         ImGui::CloseCurrentPopup();
                     }

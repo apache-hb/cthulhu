@@ -431,7 +431,7 @@ static ssa_operand_t add_jump(ssa_compile_t *ssa, ssa_loop_t *loop, tree_jump_t 
         return add_step(ssa, step);
     }
 
-    default: NEVER("unhandled jump %d", jump);
+    default: CT_NEVER("unhandled jump %d", jump);
     }
 }
 
@@ -710,7 +710,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
     case eTreeStmtLoop:
         return compile_loop(ssa, tree);
 
-    default: NEVER("unhandled tree %s", tree_to_string(tree));
+    default: CT_NEVER("unhandled tree %s", tree_to_string(tree));
     }
 }
 
@@ -977,7 +977,7 @@ const char *ssa_type_name(ssa_kind_t kind)
     {
 #define SSA_KIND(ID, NAME) case ID: return NAME;
 #include "cthulhu/ssa/ssa.def"
-    default: NEVER("unhandled ssa kind %d", kind);
+    default: CT_NEVER("unhandled ssa kind %d", kind);
     }
 }
 
@@ -987,7 +987,7 @@ const char *ssa_opkind_name(ssa_opkind_t kind)
     {
 #define SSA_OPKIND(ID, NAME) case ID: return NAME;
 #include "cthulhu/ssa/ssa.def"
-    default: NEVER("unhandled ssa opkind %d", kind);
+    default: CT_NEVER("unhandled ssa opkind %d", kind);
     }
 }
 
@@ -997,6 +997,6 @@ const char *ssa_opcode_name(ssa_opcode_t opcode)
     {
 #define SSA_OPCODE(ID, NAME) case ID: return NAME;
 #include "cthulhu/ssa/ssa.def"
-    default: NEVER("unhandled ssa opcode %d", opcode);
+    default: CT_NEVER("unhandled ssa opcode %d", opcode);
     }
 }

@@ -53,7 +53,7 @@ const char *tree_kind_to_string(tree_kind_t kind)
 #define TREE_KIND(ID, NAME, TAGS) case ID: return NAME;
 #include "cthulhu/tree/tree.def"
 
-    default: NEVER("invalid tree kind %d", kind);
+    default: CT_NEVER("invalid tree kind %d", kind);
     }
 }
 
@@ -190,7 +190,7 @@ const tree_t *tree_fn_get_return(const tree_t *self)
     case eTreeTypeClosure: return self->return_type;
     case eTreeDeclFunction: return tree_fn_get_return(tree_get_type(self));
 
-    default: NEVER("invalid function kind %s", tree_to_string(self));
+    default: CT_NEVER("invalid function kind %s", tree_to_string(self));
     }
 }
 
@@ -202,7 +202,7 @@ const vector_t *tree_fn_get_params(const tree_t *self)
     case eTreeTypeClosure: return self->params;
     case eTreeDeclFunction: return tree_fn_get_params(tree_get_type(self));
 
-    default: NEVER("invalid function kind %s", tree_to_string(self));
+    default: CT_NEVER("invalid function kind %s", tree_to_string(self));
     }
 }
 
@@ -216,7 +216,7 @@ arity_t tree_fn_get_arity(const tree_t *self)
         return type->arity;
     }
 
-    default: NEVER("invalid function kind %s", tree_to_string(self));
+    default: CT_NEVER("invalid function kind %s", tree_to_string(self));
     }
 }
 

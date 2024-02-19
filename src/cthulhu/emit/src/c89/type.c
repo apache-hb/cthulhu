@@ -38,7 +38,7 @@ static const char *get_c89_digit(ssa_type_digit_t ty)
     case eDigitFloat: return "float";
     case eDigitDouble: return "double";
 
-    default: NEVER("unknown digit %d", ty.digit);
+    default: CT_NEVER("unknown digit %d", ty.digit);
     }
 }
 
@@ -120,8 +120,8 @@ const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char
 
     case eTypeStruct: return format_c89_struct(emit, type, name, quals);
 
-    case eTypeEmpty: NEVER("cannot emit empty type `%s`", type->name);
-    default: NEVER("unknown type %s", type_to_string(type, emit->arena));
+    case eTypeEmpty: CT_NEVER("cannot emit empty type `%s`", type->name);
+    default: CT_NEVER("unknown type %s", type_to_string(type, emit->arena));
     }
 }
 

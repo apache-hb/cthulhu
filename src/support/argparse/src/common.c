@@ -115,7 +115,7 @@ void ap_on_string(scan_t *scan, cfg_field_t *param, char *value)
         break;
 
     default:
-        NEVER("unknown config type %d", type);
+        CT_NEVER("unknown config type %d", type);
     }
 }
 

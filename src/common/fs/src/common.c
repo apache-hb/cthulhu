@@ -11,12 +11,12 @@
 // inode api
 
 inode_t gInvalidFileNode = {
-    .type = eNodeInvalid
+    .type = eOsNodeNone
 };
 
-static inode_t *inode_new(inode_type_t type, const void *data, size_t size, arena_t *arena)
+static inode_t *inode_new(os_dirent_t type, const void *data, size_t size, arena_t *arena)
 {
-    CTASSERT(type < eNodeTotal);
+    CTASSERT(type < eOsNodeCount);
 
     inode_t *inode = ARENA_MALLOC(sizeof(inode_t) + size, "inode", NULL, arena);
     inode->type = type;
@@ -26,12 +26,12 @@ static inode_t *inode_new(inode_type_t type, const void *data, size_t size, aren
 
 inode_t *inode_file(const void *data, size_t size, arena_t *arena)
 {
-    return inode_new(eNodeFile, data, size, arena);
+    return inode_new(eOsNodeFile, data, size, arena);
 }
 
 inode_t *inode_dir(const void *data, size_t size, arena_t *arena)
 {
-    return inode_new(eNodeDir, data, size, arena);
+    return inode_new(eOsNodeDir, data, size, arena);
 }
 
 void *inode_data(inode_t *inode)
@@ -41,10 +41,10 @@ void *inode_data(inode_t *inode)
     return inode->data;
 }
 
-bool inode_is(inode_t *inode, inode_type_t type)
+bool inode_is(inode_t *inode, os_dirent_t type)
 {
     CTASSERT(inode != NULL);
-    CTASSERT(type < eNodeTotal);
+    CTASSERT(type < eOsNodeCount);
 
     return inode->type == type;
 }

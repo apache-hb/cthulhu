@@ -21,6 +21,11 @@ typedef struct map_t map_t;
 /// @brief String manipulation and processing
 /// @{
 
+CT_PRINTF(3, 4)
+CT_STD_API size_t str_printf(OUT_WRITES(len) char *str, size_t len, CT_FMT_STRING const char *fmt, ...);
+
+CT_STD_API size_t str_vprintf(OUT_WRITES(len) char *str, size_t len, IN_STRING const char *fmt, va_list args);
+
 /// @brief format a string
 ///
 /// format a string with printf-like syntax into a text buffer.

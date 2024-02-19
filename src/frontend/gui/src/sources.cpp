@@ -10,14 +10,14 @@ using namespace ed;
 
 Source::Source(const char *str, arena_t *arena)
     : path(str)
-    , io(io_file(path.c_str(), eAccessRead, arena))
+    , io(io_file(path.c_str(), eOsAccessRead, arena))
 {
     basename = str_filename(path.c_str(), arena);
 
     os_error_t err = io_error(io);
     if (err == 0)
     {
-        const void *data = io_map(io, eProtectRead);
+        const void *data = io_map(io, eOsProtectRead);
         size_t size = io_size(io);
 
         if (data == nullptr)

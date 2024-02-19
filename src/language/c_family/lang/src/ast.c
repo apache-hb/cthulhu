@@ -1,16 +1,20 @@
 #include "c/ast.h"
-#include "base/panic.h"
-#include "arena/arena.h"
+
+#include "cthulhu/broker/scan.h"
+
 #include "std/typed/vector.h"
 #include "std/vector.h"
+
+#include "arena/arena.h"
+#include "base/panic.h"
 
 static c_ast_t *c_ast_new(scan_t *scan, where_t where, c_kind_t kind)
 {
     CTASSERT(scan != NULL);
-    arena_t *arena = scan_get_arena(scan);
+    scan_context_t *ctx = scan_get_context(scan);
     node_t *node = node_new(scan, where);
 
-    c_ast_t *ast = ARENA_MALLOC(sizeof(c_ast_t), "c_ast_t", scan, arena);
+    c_ast_t *ast = ARENA_MALLOC(sizeof(c_ast_t), "c_ast_t", scan, ctx->ast_arena);
     ast->node = node;
     ast->kind = kind;
     return ast;
@@ -140,8 +144,9 @@ c_ast_t *c_ast_cast(scan_t *scan, where_t where, c_ast_t *expr, c_ast_t *type)
 
 c_ast_t *c_ast_string(scan_t *scan, where_t where, text_t text)
 {
+    scan_context_t *ctx = scan_get_context(scan);
     c_ast_t *ast = c_ast_new(scan, where, eAstString);
-    ast->string = typevec_of_array(sizeof(char), text.text, text.length, scan_get_arena(scan));
+    ast->string = typevec_of_array(sizeof(char), text.text, text.length, ctx->arena);
     return ast;
 }
 

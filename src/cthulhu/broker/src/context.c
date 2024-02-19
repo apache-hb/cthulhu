@@ -5,6 +5,8 @@
 #include "scan/node.h"
 #include "scan/scan.h"
 
+#include "std/vector.h"
+
 #include "core/macros.h"
 
 logger_t *ctx_get_logger(const scan_t *scan)
@@ -29,6 +31,12 @@ arena_t *ctx_get_ast_arena(const scan_t *scan)
 {
     scan_context_t *ctx = scan_get_context(scan);
     return ctx->ast_arena;
+}
+
+vector_t *ctx_vector_init(void *init, const scan_t *scan)
+{
+    scan_context_t *ctx = scan_get_context(scan);
+    return vector_init(init, ctx->arena);
 }
 
 void *ctx_get_user(const scan_t *scan)

@@ -7,18 +7,9 @@
 typedef struct map_t map_t;
 typedef struct arena_t arena_t;
 
-typedef enum inode_type_t
-{
-    eNodeFile,
-    eNodeDir,
-    eNodeInvalid,
-
-    eNodeTotal
-} inode_type_t;
-
 typedef struct inode_t
 {
-    inode_type_t type;
+    os_dirent_t type;
 
     // TODO: cant use alignas here because of an msvc bug
     char data[];
@@ -71,7 +62,7 @@ CT_LOCAL inode_t *inode_file(const void *data, size_t size, arena_t *arena);
 CT_LOCAL inode_t *inode_dir(const void *data, size_t size, arena_t *arena);
 
 CT_LOCAL void *inode_data(inode_t *inode);
-CT_LOCAL bool inode_is(inode_t *inode, inode_type_t type);
+CT_LOCAL bool inode_is(inode_t *inode, os_dirent_t type);
 
 // helpers
 CT_LOCAL os_error_t mkdir_recursive(const char *path, bool *success, arena_t *arena);

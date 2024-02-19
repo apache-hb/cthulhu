@@ -217,7 +217,7 @@ static ssa_type_t *ssa_type_create(map_t *cache, const tree_t *type, arena_t *ar
     case eTreeTypeStruct: return ssa_type_struct(name, quals, collect_fields(cache, type, arena));
     case eTreeTypeUnion: return ssa_type_union(name, quals, collect_fields(cache, type, arena));
 
-    default: NEVER("unexpected type kind: %s", tree_to_string(type));
+    default: CT_NEVER("unexpected type kind: %s", tree_to_string(type));
     }
 }
 

@@ -120,7 +120,7 @@ static int get_option_type(const cfg_field_t *field)
         return AP_STRING_OPTION;
 
     default:
-        NEVER("unknown option type %d", cfg_get_type(field));
+        CT_NEVER("unknown option type %d", cfg_get_type(field));
     }
 }
 

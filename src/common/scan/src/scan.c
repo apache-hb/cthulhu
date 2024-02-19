@@ -128,7 +128,7 @@ scan_t *scan_io(const char *language, io_t *io, arena_t *arena)
     CTASSERT(arena != NULL);
     CTASSERTF(err == 0, "constructing scanner from an io object (%s) thats in an error state: %s", path, os_error_string(err, arena));
 
-    const void *region = io_map(io, eProtectRead);
+    const void *region = io_map(io, eOsProtectRead);
     size_t size = io_size(io);
 
     CTASSERTF(region != NULL, "failed to map %s of size %zu (%s)", path, size, os_error_string(io_error(io), arena));

@@ -11,6 +11,7 @@
     #include "interop/flex.h"
     #include "interop/bison.h"
     #include "std/vector.h"
+    #include "cthulhu/broker/scan.h"
     #include "scan/scan.h"
 }
 
@@ -160,7 +161,7 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
 program: module_seq { scan_set(x, $1); }
     ;
 
-module_seq: module { $$ = vector_init($1, BISON_ARENA(x)); }
+module_seq: module { $$ = ctx_vector_init($1, x); }
     | module_seq module { vector_push(&$1, $2); $$ = $1; }
     ;
 
@@ -177,7 +178,7 @@ import_list: %empty { $$ = &kEmptyVector; }
     | IMPORT import_body_list SEMI { $$ = $2; }
     ;
 
-import_body_list: import_body { $$ = vector_init($1, BISON_ARENA(x)); }
+import_body_list: import_body { $$ = ctx_vector_init($1, x); }
     | import_body_list COMMA import_body { vector_push(&$1, $3); $$ = $1; }
     ;
 
@@ -194,8 +195,8 @@ decl_seq: decl { $$ = $1; }
 decl: value_decl_seq { $$ = $1; }
     | const_decl_seq { $$ = $1; }
     | type_decl_seq { $$ = $1; }
-    | forward SEMI { $$ = vector_init($1, BISON_ARENA(x)); }
-    | proc_decl SEMI { $$ = vector_init($1, BISON_ARENA(x)); }
+    | forward SEMI { $$ = ctx_vector_init($1, x); }
+    | proc_decl SEMI { $$ = ctx_vector_init($1, x); }
     ;
 
 /* procedures */
@@ -246,7 +247,7 @@ mut: %empty { $$ = false; }
 const_decl_seq: CONST const_seq { $$ = $2; }
     ;
 
-const_seq: const_decl { $$ = vector_init($1, BISON_ARENA(x)); }
+const_seq: const_decl { $$ = ctx_vector_init($1, x); }
     | const_seq const_decl { vector_push(&$1, $2); $$ = $1; }
     ;
 
@@ -270,7 +271,7 @@ value_decl: ident_list COLON type SEMI { $$ = obr_expand_vars(x, $1, $3); }
 type_decl_seq: TYPE type_seq { $$ = $2; }
     ;
 
-type_seq: type_decl { $$ = vector_init($1, BISON_ARENA(x)); }
+type_seq: type_decl { $$ = ctx_vector_init($1, x); }
     | type_seq type_decl { vector_push(&$1, $2); $$ = $1; }
     ;
 
@@ -298,7 +299,7 @@ field_decl: ident_list COLON type { $$ = obr_expand_fields(x, $1, $3); }
 
 /* statements */
 
-stmt_seq: stmt { $$ = vector_init($1, BISON_ARENA(x)); }
+stmt_seq: stmt { $$ = ctx_vector_init($1, x); }
     | stmt_seq SEMI stmt { vector_push(&$1, $3); $$ = $1; }
     ;
 
@@ -377,11 +378,11 @@ opt_expr_list: %empty { $$ = &kEmptyVector; }
     | expr_list { $$ = $1; }
     ;
 
-expr_list: expr { $$ = vector_init($1, BISON_ARENA(x)); }
+expr_list: expr { $$ = ctx_vector_init($1, x); }
     | expr_list COMMA expr { vector_push(&$1, $3); $$ = $1; }
     ;
 
-ident_list: ident_def { $$ = vector_init($1, BISON_ARENA(x)); }
+ident_list: ident_def { $$ = ctx_vector_init($1, x); }
     | ident_list COMMA ident_def { vector_push(&$1, $3); $$ = $1; }
     ;
 

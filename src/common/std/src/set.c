@@ -107,7 +107,7 @@ const void *set_add(set_t *set, const void *key)
         }
     }
 
-    NEVER("unreachable");
+    CT_NEVER("unreachable");
 }
 
 bool set_contains(const set_t *set, const void *key)
@@ -136,7 +136,7 @@ bool set_contains(const set_t *set, const void *key)
         }
     }
 
-    NEVER("unreachable");
+    CT_NEVER("unreachable");
 }
 
 void set_delete(set_t *set, const void *key)
@@ -166,7 +166,7 @@ void set_delete(set_t *set, const void *key)
         }
     }
 
-    NEVER("unreachable");
+    CT_NEVER("unreachable");
 }
 
 USE_DECL

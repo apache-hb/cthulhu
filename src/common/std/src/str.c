@@ -16,6 +16,27 @@
 #include <string.h>
 
 USE_DECL
+size_t str_printf(char *str, size_t len, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+
+    size_t result = str_vprintf(str, len, fmt, args);
+
+    va_end(args);
+
+    return result;
+}
+
+USE_DECL
+size_t str_vprintf(char *str, size_t len, const char *fmt, va_list args)
+{
+    CTASSERT(fmt != NULL);
+
+    return vsnprintf(str, len, fmt, args);
+}
+
+USE_DECL
 text_t text_format(arena_t *arena, const char *fmt, ...)
 {
     CTASSERT(arena != NULL);
@@ -42,14 +63,14 @@ text_t text_vformat(arena_t *arena, const char *fmt, va_list args)
     va_copy(again, args);
 
     // get the number of bytes needed to format
-    int len = vsnprintf(NULL, 0, fmt, args);
+    size_t len = str_vprintf(NULL, 0, fmt, args);
 
     CTASSERTF(len > 0, "text_vformat failed to format string: %s", fmt);
 
     char *out = ARENA_MALLOC(len + 1, "text_vformat", fmt, arena);
 
-    int result = vsnprintf(out, len + 1, fmt, again);
-    CTASSERTF(result == len, "text_vformat failed to format string: %s expected (%d == %d)", fmt, result, len);
+    size_t result = str_vprintf(out, len + 1, fmt, again);
+    CTASSERTF(result == len, "text_vformat failed to format string: %s expected (%zu == %zu)", fmt, result, len);
 
     va_end(again);
 

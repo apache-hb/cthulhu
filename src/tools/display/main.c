@@ -1,9 +1,11 @@
 #include "config/config.h"
 
-#include "core/macros.h"
+#include "setup/memory.h"
 #include "setup/setup.h"
+
 #include "io/console.h"
-#include "memory/memory.h"
+
+#include "core/macros.h"
 
 static const version_info_t kToolVersion = {
     .license = "GPLv3",
@@ -107,7 +109,7 @@ static tool_t make_config(arena_t *arena)
 int main(int argc, const char **argv)
 {
     setup_global();
-    arena_t *arena = get_global_arena();
+    arena_t *arena = ctu_default_alloc();
 
     io_t *io = io_stdout();
 

@@ -225,7 +225,7 @@ static const char *severity_to_string(severity_t severity)
     case eSeverityDebug:
         return "debug";
     default:
-        NEVER("unknown severity %d", severity);
+        CT_NEVER("unknown severity %d", severity);
     }
 }
 

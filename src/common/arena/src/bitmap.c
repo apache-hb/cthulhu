@@ -134,5 +134,5 @@ void bitmap_free(bitmap_t *bitmap, void *ptr, size_t size)
     if (bitmap_free_next(ptr, size, bitmap))
         return;
 
-    NEVER("bitmap arena: invalid pointer %p", ptr);
+    CT_NEVER("bitmap arena: invalid pointer %p", ptr);
 }

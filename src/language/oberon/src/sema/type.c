@@ -135,7 +135,7 @@ tree_t *obr_sema_type(tree_t *sema, obr_t *type, const char *name)
     case eObrTypeArray: return sema_type_array(sema, type, name);
     case eObrTypeRecord: return sema_type_record(sema, type, name);
 
-    default: NEVER("unknown type kind %d", type->kind);
+    default: CT_NEVER("unknown type kind %d", type->kind);
     }
 }
 

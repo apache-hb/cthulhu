@@ -284,7 +284,7 @@ static void check_call_arguments(check_t *check, const tree_t *expr)
         break;
 
     default:
-        NEVER("invalid arity %d (check-call-arguments)", arity);
+        CT_NEVER("invalid arity %d (check-call-arguments)", arity);
     }
 }
 
@@ -319,7 +319,7 @@ static void check_func_body(check_t *check, const tree_t *return_type, const tre
         break;
 
     default:
-        NEVER("invalid statement kind %s (check-func-body)", tree_to_string(stmt));
+        CT_NEVER("invalid statement kind %s (check-func-body)", tree_to_string(stmt));
     }
 }
 
@@ -424,7 +424,7 @@ static void check_expr_recursion(check_t *check, const tree_t *tree)
     case eTreeDeclGlobal:
         check_global_recursion(check, tree);
         break;
-    default: NEVER("invalid node kind %s (check-tree-recursion)", tree_to_string(tree));
+    default: CT_NEVER("invalid node kind %s (check-tree-recursion)", tree_to_string(tree));
     }
 }
 
@@ -489,7 +489,7 @@ static void check_struct_type_recursion(check_t *check, const tree_t *type)
         check_aggregate_recursion(check, type);
         break;
 
-    default: NEVER("invalid type kind %s (check-type-size)", tree_to_string(type));
+    default: CT_NEVER("invalid type kind %s (check-type-size)", tree_to_string(type));
     }
 }
 
@@ -570,7 +570,7 @@ static void check_inner_type_recursion(check_t *check, const tree_t *type)
         check_type_recursion(check, type->ptr);
         break;
 
-    default: NEVER("invalid type kind `%s` (check-type-size)", tree_to_string(type));
+    default: CT_NEVER("invalid type kind `%s` (check-type-size)", tree_to_string(type));
     }
 }
 

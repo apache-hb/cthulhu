@@ -74,7 +74,7 @@ static const ssa_value_t *ssa_opt_operand(ssa_scope_t *vm, ssa_operand_t operand
         return global->value;
     }
 
-    default: NEVER("unhandled operand kind %d (inside %s)", operand.kind, vm->symbol->name);
+    default: CT_NEVER("unhandled operand kind %d (inside %s)", operand.kind, vm->symbol->name);
     }
 }
 
@@ -89,9 +89,9 @@ static const ssa_value_t *ssa_opt_load(ssa_scope_t *vm, ssa_load_t step)
         return global->value;
     }
     case eOperandLocal:
-        NEVER("unhandled local %zu load (inside %s)", src.local, vm->symbol->name);
+        CT_NEVER("unhandled local %zu load (inside %s)", src.local, vm->symbol->name);
 
-    default: NEVER("unhandled load kind %d (inside %s)", src.kind, vm->symbol->name);
+    default: CT_NEVER("unhandled load kind %d (inside %s)", src.kind, vm->symbol->name);
     }
 }
 
@@ -155,7 +155,7 @@ static const ssa_value_t *ssa_opt_unary(ssa_scope_t *vm, ssa_unary_t step)
         CTASSERTF(value_is(operand, eTypeBool), "operand of unary %s is not a bool (inside %s)", unary_name(unary), vm->symbol->name);
         return ssa_value_bool(operand->type, !operand->bool_value);
 
-    default: NEVER("unhandled unary %s (inside %s)", unary_name(unary), vm->symbol->name);
+    default: CT_NEVER("unhandled unary %s (inside %s)", unary_name(unary), vm->symbol->name);
     }
 
     return ssa_value_digit(operand->type, result);
@@ -215,7 +215,7 @@ static const ssa_value_t *ssa_opt_binary(ssa_scope_t *vm, ssa_binary_t step)
         mpz_xor(result, lhs->digit_value, rhs->digit_value);
         break;
 
-    default: NEVER("unhandled binary %s (inside %s)", binary_name(binary), vm->symbol->name);
+    default: CT_NEVER("unhandled binary %s (inside %s)", binary_name(binary), vm->symbol->name);
     }
 
     // TODO: make sure this is actually the correct type
@@ -232,7 +232,7 @@ static const ssa_value_t *cast_to_opaque(const ssa_type_t *type, const ssa_value
     case eTypeDigit:
         return ssa_value_pointer(type, (void*)(uintptr_t)mpz_get_ui(value->digit_value));
 
-    default: NEVER("unhandled type %s", ssa_type_name(src->kind));
+    default: CT_NEVER("unhandled type %s", ssa_type_name(src->kind));
     }
 }
 
@@ -245,7 +245,7 @@ static const ssa_value_t *cast_to_pointer(const ssa_type_t *type, const ssa_valu
     case eTypePointer:
         return ssa_value_pointer(type, value->ptr_value);
 
-    default: NEVER("unhandled type %s", ssa_type_name(src->kind));
+    default: CT_NEVER("unhandled type %s", ssa_type_name(src->kind));
     }
 }
 
@@ -262,7 +262,7 @@ static const ssa_value_t *ssa_opt_cast(ssa_scope_t *vm, ssa_cast_t cast)
         return cast_to_pointer(type, value);
 
     default:
-        NEVER("unhandled type %s", ssa_type_name(type->kind));
+        CT_NEVER("unhandled type %s", ssa_type_name(type->kind));
     }
 }
 
@@ -277,7 +277,7 @@ static const ssa_value_t *ssa_opt_step(ssa_scope_t *vm, const ssa_step_t *step)
     case eOpBinary: return ssa_opt_binary(vm, step->binary);
     case eOpCast: return ssa_opt_cast(vm, step->cast);
 
-    default: NEVER("unhandled opcode %d (inside %s)", step->opcode, vm->symbol->name);
+    default: CT_NEVER("unhandled opcode %d (inside %s)", step->opcode, vm->symbol->name);
     }
 }
 

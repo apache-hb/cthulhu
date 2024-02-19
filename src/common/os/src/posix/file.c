@@ -64,19 +64,19 @@ static const char *get_access(os_access_t access)
 {
     switch (access)
     {
-    case eAccessRead:
+    case eOsAccessRead:
         return "rb";
 
-    case eAccessWrite:
-    case (eAccessRead | eAccessWrite):
+    case eOsAccessWrite:
+    case (eOsAccessRead | eOsAccessWrite):
         return "w+b";
 
-    case (eAccessWrite | eAccessTruncate):
-    case (eAccessRead | eAccessWrite | eAccessTruncate):
+    case (eOsAccessWrite | eOsAccessTruncate):
+    case (eOsAccessRead | eOsAccessWrite | eOsAccessTruncate):
         return "wb";
 
     default:
-        NEVER("invalid access flags 0x%x", access);
+        CT_NEVER("invalid access flags 0x%x", access);
     }
 }
 
@@ -108,8 +108,8 @@ os_error_t os_file_open(const char *path, os_access_t access, os_file_t *file)
 {
     CTASSERT(path != NULL);
     CTASSERT(file != NULL);
-    CTASSERTF(access & (eAccessRead | eAccessWrite), "%s: invalid access flags 0x%x", path, access);
-    CTASSERTF(access != (eAccessRead | eAccessTruncate), "%s: cannot truncate read only file", path);
+    CTASSERTF(access & (eOsAccessRead | eOsAccessWrite), "%s: invalid access flags 0x%x", path, access);
+    CTASSERTF(access != (eOsAccessRead | eOsAccessTruncate), "%s: cannot truncate read only file", path);
 
     FILE *fd = fopen(path, get_access(access));
 
@@ -260,17 +260,17 @@ static int get_mmap_prot(os_protect_t protect)
     // TODO: i hope prot_none is 0
     int result = PROT_NONE;
 
-    if (protect & eProtectRead)
+    if (protect & eOsProtectRead)
     {
         result |= PROT_READ;
     }
 
-    if (protect & eProtectWrite)
+    if (protect & eOsProtectWrite)
     {
         result |= PROT_WRITE;
     }
 
-    if (protect & eProtectExecute)
+    if (protect & eOsProtectExecute)
     {
         result |= PROT_EXEC;
     }

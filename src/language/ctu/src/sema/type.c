@@ -92,6 +92,6 @@ tree_t *ctu_sema_type(ctu_sema_t *sema, const ctu_t *type)
     case eCtuTypeFunction: return sema_type_function(sema, type);
     case eCtuTypeArray: return sema_type_array(sema, type);
 
-    default: NEVER("invalid type kind %d", type->kind);
+    default: CT_NEVER("invalid type kind %d", type->kind);
     }
 }

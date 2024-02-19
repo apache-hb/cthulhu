@@ -92,7 +92,7 @@ static const char *value_to_string(const ssa_value_t *value, arena_t *arena)
     case eTypeEmpty: return "empty";
     case eTypePointer: return pointer_value_to_string(value, arena);
 
-    default: NEVER("unknown type kind %d", type->kind);
+    default: CT_NEVER("unknown type kind %d", type->kind);
     }
 }
 
@@ -125,7 +125,7 @@ static const char *operand_to_string(ssa_emit_t *emit, ssa_operand_t operand)
         size_t index = operand.param;
         return str_format(arena, "param(%zu)", index);
     }
-    default: NEVER("unknown operand kind %d", operand.kind);
+    default: CT_NEVER("unknown operand kind %d", operand.kind);
     }
 }
 
@@ -263,7 +263,7 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
             );
             break;
         }
-        default: NEVER("unknown opcode %d", step->opcode);
+        default: CT_NEVER("unknown opcode %d", step->opcode);
         }
     }
 }
@@ -324,7 +324,7 @@ static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
     char *file = str_format(base->arena, "%s/%s.ssa", path, mod->name);
     fs_file_create(fs, file);
 
-    io_t *io = fs_open(fs, file, eAccessWrite | eAccessTruncate);
+    io_t *io = fs_open(fs, file, eOsAccessWrite | eOsAccessTruncate);
     io_printf(io, "module {name=%s", mod->name);
     if (ctu_strlen(path) > 0) { io_printf(io, ", path=%s", path); }
     io_printf(io, "}\n");

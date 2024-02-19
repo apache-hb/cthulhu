@@ -11,6 +11,7 @@
     #include "interop/flex.h"
     #include "interop/bison.h"
     #include "std/vector.h"
+    #include "cthulhu/broker/scan.h"
     #include "scan/scan.h"
 }
 
@@ -116,14 +117,14 @@ imports: %empty { $$ = vector_new(0, BISON_ARENA(x)); }
     | IMPORT paths SEMICOLON { $$ = $2; }
     ;
 
-paths: import { $$ = vector_init($1, BISON_ARENA(x)); }
+paths: import { $$ = ctx_vector_init($1, x); }
     | paths COMMA import { vector_push(&$1, $3); $$ = $1; }
     ;
 
 import: path { $$ = pl0_import(x, @$, $1); }
     ;
 
-path: IDENT { $$ = vector_init($1, BISON_ARENA(x)); }
+path: IDENT { $$ = ctx_vector_init($1, x); }
     | path DOT IDENT { vector_push(&$1, $3); $$ = $1; }
     ;
 
@@ -139,7 +140,7 @@ consts: %empty { $$ = vector_new(0, BISON_ARENA(x)); }
     | CONST inits SEMICOLON { $$ = $2; }
     ;
 
-inits: init { $$ = vector_init($1, BISON_ARENA(x)); }
+inits: init { $$ = ctx_vector_init($1, x); }
     | inits COMMA init { vector_push(&$1, $3); $$ = $1; }
     ;
 
@@ -150,7 +151,7 @@ vars: %empty { $$ = vector_new(0, BISON_ARENA(x)); }
     | VAR names SEMICOLON { $$ = $2; }
     ;
 
-names: name { $$ = vector_init($1, BISON_ARENA(x)); }
+names: name { $$ = ctx_vector_init($1, x); }
     | names COMMA name { vector_push(&$1, $3); $$ = $1; }
     ;
 
@@ -161,7 +162,7 @@ procedures: %empty { $$ = vector_new(0, BISON_ARENA(x)); }
     | proclist { $$ = $1; }
     ;
 
-proclist: procedure { $$ = vector_init($1, BISON_ARENA(x)); }
+proclist: procedure { $$ = ctx_vector_init($1, x); }
     | proclist procedure { vector_push(&$1, $2); $$ = $1; }
     ;
 
@@ -179,7 +180,7 @@ statement: statements { $$ = $1; }
 statements: START stmtlist END { $$ = pl0_stmts(x, @$, $2); }
     ;
 
-stmtlist: statement { $$ = vector_init($1, BISON_ARENA(x)); }
+stmtlist: statement { $$ = ctx_vector_init($1, x); }
     | stmtlist SEMICOLON statement { vector_push(&$1, $3); $$ = $1; }
     ;
 

@@ -281,7 +281,7 @@ namespace ctu::json {
             case eJsonArray: return func(as_array());
             case eJsonObject: return func(as_object());
             case eJsonNull: return func(nullptr);
-            default: NEVER("invalid json kind %d", get_kind());
+            default: CT_NEVER("invalid json kind %d", get_kind());
             }
         }
     };

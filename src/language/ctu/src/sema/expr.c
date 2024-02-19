@@ -88,7 +88,7 @@ static tree_t *sema_decl_name(tree_t *sema, const node_t *node, const vector_t *
         return tree_resolve(tree_get_cookie(sema), decl);
     }
 
-    NEVER("invalid namespace type %s", tree_to_string(ns));
+    CT_NEVER("invalid namespace type %s", tree_to_string(ns));
 }
 
 ///
@@ -260,7 +260,7 @@ static tree_t *sema_unary(ctu_sema_t *sema, const ctu_t *expr, const tree_t *imp
         }
         break;
 
-    default: NEVER("invalid unary %d", expr->unary);
+    default: CT_NEVER("invalid unary %d", expr->unary);
     }
 
     return tree_expr_unary(expr->node, expr->unary, inner);
@@ -572,7 +572,7 @@ tree_t *ctu_sema_lvalue(ctu_sema_t *sema, const ctu_t *expr)
     case eCtuExprField: return sema_field_lvalue(sema, expr);
     case eCtuExprFieldIndirect: return sema_field_indirect_lvalue(sema, expr);
 
-    default: NEVER("invalid lvalue-expr kind %d", expr->kind);
+    default: CT_NEVER("invalid lvalue-expr kind %d", expr->kind);
     }
 }
 
@@ -605,7 +605,7 @@ tree_t *ctu_sema_rvalue(ctu_sema_t *sema, const ctu_t *expr, const tree_t *impli
     case eCtuExprBinary: return sema_binary(sema, expr, inner);
     case eCtuExprUnary: return sema_unary(sema, expr, inner);
 
-    default: NEVER("invalid rvalue-expr kind %d", expr->kind);
+    default: CT_NEVER("invalid rvalue-expr kind %d", expr->kind);
     }
 }
 
@@ -786,7 +786,7 @@ tree_t *ctu_sema_stmt(ctu_sema_t *sema, const ctu_t *stmt)
 
     case eCtuExprCall: return ctu_sema_rvalue(sema, stmt, NULL);
 
-    default: NEVER("invalid stmt kind %d", stmt->kind);
+    default: CT_NEVER("invalid stmt kind %d", stmt->kind);
     }
 }
 
@@ -809,7 +809,7 @@ const tree_t *ctu_resolve_storage_type(const tree_t *type)
     {
     case eTreeTypeArray: return ctu_resolve_storage_type(type->ptr);
     case eTreeTypePointer: return type->ptr;
-    case eTreeTypeReference: NEVER("cannot resolve storage type of reference");
+    case eTreeTypeReference: CT_NEVER("cannot resolve storage type of reference");
 
     default: return type;
     }
@@ -822,7 +822,7 @@ const tree_t *ctu_resolve_decl_type(const tree_t *type)
     case eTreeTypeArray:
     case eTreeTypePointer: return type;
 
-    case eTreeTypeReference: NEVER("cannot resolve decl type of reference");
+    case eTreeTypeReference: CT_NEVER("cannot resolve decl type of reference");
 
     default: return tree_type_reference(tree_get_node(type), tree_get_name(type), type);
     }

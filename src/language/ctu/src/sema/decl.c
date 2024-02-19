@@ -331,7 +331,7 @@ static ctu_forward_t forward_decl_inner(tree_t *sema, ctu_t *decl)
         };
         return fwd;
     }
-    default: NEVER("invalid decl kind %d", decl->kind);
+    default: CT_NEVER("invalid decl kind %d", decl->kind);
     }
 }
 

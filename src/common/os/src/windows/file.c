@@ -32,8 +32,8 @@ os_error_t os_file_copy(const char *src, const char *dst)
 static DWORD get_access(os_access_t access)
 {
     DWORD result = 0;
-    if (access & eAccessRead) { result |= GENERIC_READ; }
-    if (access & eAccessWrite) { result |= GENERIC_WRITE; }
+    if (access & eOsAccessRead) { result |= GENERIC_READ; }
+    if (access & eOsAccessWrite) { result |= GENERIC_WRITE; }
     return result;
 }
 
@@ -69,19 +69,19 @@ static DWORD get_disp(os_access_t access)
 {
     switch (access)
     {
-    case eAccessRead:
+    case eOsAccessRead:
         return OPEN_EXISTING;
 
-    case eAccessWrite:
-    case (eAccessWrite | eAccessRead):
+    case eOsAccessWrite:
+    case (eOsAccessWrite | eOsAccessRead):
         return OPEN_ALWAYS;
 
-    case (eAccessWrite | eAccessTruncate):
-    case (eAccessWrite | eAccessRead | eAccessTruncate):
+    case (eOsAccessWrite | eOsAccessTruncate):
+    case (eOsAccessWrite | eOsAccessRead | eOsAccessTruncate):
         return CREATE_ALWAYS;
 
     default:
-        NEVER("invalid access flags 0x%x", access);
+        CT_NEVER("invalid access flags 0x%x", access);
     }
 }
 
@@ -92,8 +92,8 @@ os_error_t os_file_open(const char *path, os_access_t access, os_file_t *file)
 {
     CTASSERT(path != NULL);
     CTASSERT(file != NULL);
-    CTASSERTF(access & (eAccessRead | eAccessWrite), "%s: invalid access flags 0x%x", path, access);
-    CTASSERTF(access != (eAccessRead | eAccessTruncate), "%s: cannot truncate read only file", path);
+    CTASSERTF(access & (eOsAccessRead | eOsAccessWrite), "%s: invalid access flags 0x%x", path, access);
+    CTASSERTF(access != (eOsAccessRead | eOsAccessTruncate), "%s: cannot truncate read only file", path);
 
     DWORD dw_access = get_access(access);
     DWORD dw_disp = get_disp(access);
@@ -258,28 +258,28 @@ static DWORD get_protect(os_protect_t protect)
     // so we end up with a pretty big pile of conditionals
     switch (protect)
     {
-    case eProtectNone: return PAGE_NOACCESS; // none maps to noaccess
-    case eProtectRead: return PAGE_READONLY; // readonly
-    case eProtectExecute: return PAGE_EXECUTE; // execute only
+    case eOsProtectNone: return PAGE_NOACCESS; // none maps to noaccess
+    case eOsProtectRead: return PAGE_READONLY; // readonly
+    case eOsProtectExecute: return PAGE_EXECUTE; // execute only
 
     // we map both write and readwrite to PAGE_READWRITE
     // i want to avoid copyonwrite
-    case eProtectWrite:
-    case (eProtectRead | eProtectWrite):
+    case eOsProtectWrite:
+    case (eOsProtectRead | eOsProtectWrite):
         return PAGE_READWRITE;
 
-    case (eProtectRead | eProtectExecute):
+    case (eOsProtectRead | eOsProtectExecute):
         return PAGE_EXECUTE_READ;
 
     // wx and rwx are mapped to PAGE_EXECUTE_READWRITE
     // again, avoiding copyonwrite
-    case (eProtectWrite | eProtectExecute):
-    case (eProtectRead | eProtectWrite | eProtectExecute):
+    case (eOsProtectWrite | eOsProtectExecute):
+    case (eOsProtectRead | eOsProtectWrite | eOsProtectExecute):
         return PAGE_EXECUTE_READWRITE;
 
         // special cases
 
-    default: NEVER("unknown protect %x", protect);
+    default: CT_NEVER("unknown protect %x", protect);
     }
 }
 
@@ -290,9 +290,9 @@ static DWORD get_map_access(os_protect_t protect)
     // TODO: FILE_MAP_LARGE_PAGES would be fun to play with here for large files
 
     DWORD result = 0;
-    if (protect & eProtectRead) { result |= FILE_MAP_READ; }
-    if (protect & eProtectWrite) { result |= FILE_MAP_WRITE; }
-    if (protect & eProtectExecute) { result |= FILE_MAP_EXECUTE; }
+    if (protect & eOsProtectRead) { result |= FILE_MAP_READ; }
+    if (protect & eOsProtectWrite) { result |= FILE_MAP_WRITE; }
+    if (protect & eOsProtectExecute) { result |= FILE_MAP_EXECUTE; }
     return result;
 }
 

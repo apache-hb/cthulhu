@@ -1,18 +1,23 @@
 #include "ct-test.h"
 
-#include "base/log.h"
-#include "core/macros.h"
-#include "io/console.h"
+#include "setup/setup2.h"
+#include "setup/memory.h"
+#include "memory/memory.h"
+
 #include "format/backtrace.h"
 #include "format/colour.h"
+
+#include "io/console.h"
 #include "io/io.h"
-#include "memory/memory.h"
-#include "setup/memory.h"
-#include "backtrace/backtrace.h"
+
 #include "arena/arena.h"
 
 #include "std/str.h"
 #include "os/core.h"
+
+#include "base/log.h"
+
+#include "backtrace/backtrace.h"
 
 #include <stdlib.h>
 
@@ -149,39 +154,9 @@ void test_install_panic_handler(void)
     init_global_arena(gTestArena);
 }
 
-static void *ef_malloc(size_t size, void *self)
-{
-    CT_UNUSED(self);
-
-    NEVER("bzzt! electric fence hit with malloc of size %zu", size);
-}
-
-static void *ef_realloc(void *ptr, size_t new_size, size_t old_size, void *self)
-{
-    CT_UNUSED(ptr);
-    CT_UNUSED(self);
-
-    NEVER("bzzt! electric fence hit with realloc of size %zu old %zu", new_size, old_size);
-}
-
-static void ef_free(void *ptr, size_t size, void *self)
-{
-    CT_UNUSED(ptr);
-    CT_UNUSED(self);
-
-    NEVER("bzzt! electric fence hit with free of size %zu", size);
-}
-
-static arena_t gElectricFence = {
-    .name = "electric fence",
-    .fn_malloc = ef_malloc,
-    .fn_realloc = ef_realloc,
-    .fn_free = ef_free,
-};
-
 void test_install_electric_fence(void)
 {
-    init_global_arena(&gElectricFence);
+    init_global_arena(electric_fence_arena());
 }
 
 void test_begin_expect_panic(void)
