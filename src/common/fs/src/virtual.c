@@ -135,9 +135,11 @@ static inode_t *vfs_query_node(fs_t *fs, inode_t *self, const char *name)
 {
     CT_UNUSED(fs);
 
-    if (str_equal(name, "."))
+    if (ctu_strlen(name) == 0) return self;
+    if (ctu_strlen(name) == 1)
     {
-        return self;
+        if (name[0] == '.') return self;
+        if (name[0] == '/') return self;
     }
 
     virtual_dir_t *dir = inode_data(self);

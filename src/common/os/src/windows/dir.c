@@ -1,7 +1,7 @@
+#include "base/util.h"
 #include "core/win32.h" // IWYU pragma: keep
 #include "arena/arena.h"
 #include "os/os.h"
-#include "os_common.h"
 
 #include "base/panic.h"
 
@@ -40,7 +40,7 @@ os_error_t os_iter_begin(const char *path, os_iter_t *result, arena_t *arena)
 
     do
     {
-        if (!is_special(data.cFileName))
+        if (!is_path_special(data.cFileName))
         {
             break;
         }
@@ -80,7 +80,7 @@ bool os_iter_next(os_iter_t *iter, os_dir_t *result)
     // get the next directory
     while (find_next(iter->find, data, &iter->error) != 0)
     {
-        if (!is_special(data->cFileName))
+        if (!is_path_special(data->cFileName))
         {
             break;
         }

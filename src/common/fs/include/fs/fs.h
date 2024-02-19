@@ -112,7 +112,9 @@ typedef struct sync_result_t
 /// @param src the source filesystem
 CT_FS_API sync_result_t fs_sync(fs_t *dst, fs_t *src);
 
-CT_FS_API void fs_iter_dirents(fs_t *fs, const char *path, void *data, void (*callback)(const char *path, os_dirent_t type, void *data));
+typedef void (*fs_dirent_callback_t)(const char *path, const char *name, os_dirent_t type, void *data);
+
+CT_FS_API void fs_iter_dirents(fs_t *fs, const char *path, void *data, fs_dirent_callback_t callback);
 
 /// @}
 

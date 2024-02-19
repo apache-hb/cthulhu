@@ -5,6 +5,12 @@
 #include <string.h>
 
 USE_DECL
+bool is_path_special(const char *path)
+{
+    return path == NULL || str_equal(path, ".") || str_equal(path, "..");
+}
+
+USE_DECL
 size_t ptrhash(const void *ptr)
 {
     uintptr_t key = (uintptr_t)ptr;

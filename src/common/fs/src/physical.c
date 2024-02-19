@@ -1,3 +1,4 @@
+#include "base/util.h"
 #include "common.h"
 
 #include "std/str.h"
@@ -6,7 +7,6 @@
 #include "os/os.h"
 #include "io/impl.h"
 
-#include "base/util.h"
 #include "base/panic.h"
 
 typedef struct physical_t
@@ -24,13 +24,6 @@ typedef struct physical_dir_t
     const char *path; ///< path to directory relative to root
 } physical_dir_t;
 
-static bool is_special(const char *path)
-{
-    return path == NULL
-        || str_equal(path, ".")
-        || str_equal(path, "..");
-}
-
 static const char *get_absolute(fs_t *fs, inode_t *node, const char *path)
 {
     CTASSERT(fs != NULL);
@@ -38,19 +31,17 @@ static const char *get_absolute(fs_t *fs, inode_t *node, const char *path)
     const physical_t *self = fs_data(fs);
     const physical_dir_t *dir = inode_data(node);
 
-    // CTASSERT(!is_special(self->root));
-
-    if (is_special(dir->path) && is_special(path))
+    if (is_path_special(dir->path) && is_path_special(path))
     {
         return self->root;
     }
 
-    if (is_special(dir->path) && !is_special(path))
+    if (is_path_special(dir->path) && !is_path_special(path))
     {
         return str_format(fs->arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s", self->root, path);
     }
 
-    if (!is_special(dir->path) && is_special(path))
+    if (!is_path_special(dir->path) && is_path_special(path))
     {
         return str_format(fs->arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s", self->root, dir->path);
     }
@@ -62,17 +53,17 @@ static const char *get_relative(inode_t *node, const char *path, arena_t *arena)
 {
     const physical_dir_t *dir = inode_data(node);
 
-    if (is_special(dir->path) && !is_special(path))
+    if (is_path_special(dir->path) && !is_path_special(path))
     {
         return path;
     }
 
-    if (!is_special(dir->path) && is_special(path))
+    if (!is_path_special(dir->path) && is_path_special(path))
     {
         return dir->path;
     }
 
-    CTASSERT(!is_special(dir->path) && !is_special(path));
+    CTASSERT(!is_path_special(dir->path) && !is_path_special(path));
 
     return str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s", dir->path, path);
 }

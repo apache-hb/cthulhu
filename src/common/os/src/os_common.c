@@ -1,10 +1,15 @@
-#include "os_common.h"
+#include "base/panic.h"
+#include "os/core.h"
 
-#include "base/util.h"
+static const char *const kDirentNames[eOsNodeCount] = {
+#define OS_DIRENT(ID, STR) [ID] = (STR),
+#include "os/os.def"
+};
 
-bool is_special(const char *path)
+USE_DECL
+const char *os_dirent_string(os_dirent_t type)
 {
-    return path == NULL
-        || str_equal(path, ".")
-        || str_equal(path, "..");
+    CTASSERTF(type < eOsNodeCount, "invalid dirent type %d", type);
+
+    return kDirentNames[type];
 }

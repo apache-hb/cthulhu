@@ -14,6 +14,9 @@ CT_BEGIN_API
 /// @ingroup base
 /// @{
 
+CT_NODISCARD CT_CONSTFN
+CT_BASE_API bool is_path_special(IN_STRING const char *path);
+
 /// @brief hash a pointer value
 ///
 /// @param ptr the pointer to hash

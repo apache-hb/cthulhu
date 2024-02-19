@@ -68,6 +68,9 @@ CT_OS_API void os_init(void);
 CT_NODISCARD RET_STRING
 CT_OS_API char *os_error_string(os_error_t error, IN_NOTNULL arena_t *arena);
 
+CT_NODISCARD RET_STRING
+CT_OS_API const char *os_dirent_string(os_dirent_t type);
+
 /// @}
 
 CT_END_API

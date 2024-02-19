@@ -20,11 +20,18 @@ int main(void)
         fs_dir_create(fs, "dir1");
         fs_dir_create(fs, "dir2");
 
+        fs_dir_create(fs, "dir1/inner");
+        fs_file_create(fs, "dir1/inner/file.txt");
+
+        io_t *io = fs_open(fs, "dir1/inner/file.txt", eOsAccessWrite | eOsAccessRead);
+        io_write(io, "inner file", 5);
+        io_close(io);
+
         fs_file_create(fs, "dir1/file.txt");
         fs_file_create(fs, "dir2/file.txt");
         fs_file_create(fs, "root.txt");
 
-        io_t *io = fs_open(fs, "dir1/file.txt", eOsAccessWrite | eOsAccessRead);
+        io = fs_open(fs, "dir1/file.txt", eOsAccessWrite | eOsAccessRead);
         io_write(io, "hello", 5);
         io_close(io);
 

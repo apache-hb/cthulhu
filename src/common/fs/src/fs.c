@@ -386,29 +386,31 @@ sync_result_t fs_sync(fs_t *dst, fs_t *src)
     return sync_dir(dst, src, dst->root, src->root);
 }
 
-static void iter_dirents(fs_t *fs, inode_t *node, const char *path, void *data, void (*callback)(const char *path, os_dirent_t type, void *data))
+static void iter_dirents(fs_t *fs, inode_t *node, const char *path, const char *name, void *data, fs_dirent_callback_t callback)
 {
     CTASSERTF(node != NULL, "invalid inode (fs = %p)", fs);
 
-    callback(path, node->type, data);
+    callback(path, name, node->type, data);
     if (node->type == eOsNodeFile) return;
     if (node->type != eOsNodeDir) return;
 
+    const char *dir = str_format(fs->arena, "%s/%s", path, name);
+
     map_t *dirents = query_dirents(fs, node);
     map_iter_t iter = map_iter(dirents);
-    const char *name = NULL;
+    const char *id = NULL;
     inode_t *child = NULL;
-    while (CTU_MAP_NEXT(&iter, &name, &child))
+    while (CTU_MAP_NEXT(&iter, &id, &child))
     {
-        iter_dirents(fs, child, name, data, callback);
+        iter_dirents(fs, child, dir, id, data, callback);
     }
 }
 
-void fs_iter_dirents(fs_t *fs, const char *path, void *data, void (*callback)(const char *path, os_dirent_t type, void *data))
+void fs_iter_dirents(fs_t *fs, const char *path, void *data, fs_dirent_callback_t callback)
 {
     CTASSERT(fs != NULL);
     CTASSERT(path != NULL);
     CTASSERT(callback != NULL);
 
-    iter_dirents(fs, query_inode(fs, fs->root, path), path, data, callback);
+    iter_dirents(fs, query_inode(fs, fs->root, path), ".", path, data, callback);
 }

@@ -1,6 +1,7 @@
 #include "tar/tar.h"
 
 #include "base/panic.h"
+#include "base/util.h"
 #include "fs/fs.h"
 
 #include "io/io.h"
@@ -14,10 +15,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#define TAR_NAME_SIZE 100
+
 // POSIX 1003.1-1990 tar header block
 typedef struct tar_header_t
 {
-    char name[100];
+    char name[TAR_NAME_SIZE];
     char mode[8];
     char uid[8];
     char gid[8];
@@ -65,10 +68,9 @@ typedef struct tar_context_t
     tar_error_t error;
 } tar_context_t;
 
-static bool build_tar_header(tar_header_t *header, io_t *dst, char type, const char *path, size_t size)
+static bool build_tar_header(tar_header_t *header, io_t *dst, char type, size_t size)
 {
-    memset(header, 0, sizeof(*header));
-    strncpy(header->name, path, sizeof(header->name));
+    printf("name: %s\n", header->name);
     memcpy(header->magic, "ustar", sizeof(header->magic));
     memcpy(header->version, "00", sizeof(header->version));
 
@@ -84,25 +86,47 @@ static bool build_tar_header(tar_header_t *header, io_t *dst, char type, const c
     return written == sizeof(tar_header_t);
 }
 
-static tar_error_t write_tar_dir(const char *path, tar_context_t *ctx)
+static tar_error_t write_tar_dir(const char *dir, const char *name, tar_context_t *ctx)
 {
     tar_header_t header = { 0 };
-    bool result = build_tar_header(&header, ctx->dst, TAR_TYPE_DIR, path, 0);
+
+    if (is_path_special(name))
+    {
+        str_printf(header.name, sizeof(header.name), "%s/", dir);
+    }
+    else
+    {
+        str_printf(header.name, sizeof(header.name), "%s/%s/", dir, name);
+    }
+
+    bool result = build_tar_header(&header, ctx->dst, TAR_TYPE_DIR, 0);
+
     return result ? ctx->error : eTarWriteError;
 }
 
-static tar_error_t write_tar_file(const char *path, tar_context_t *ctx)
+static tar_error_t write_tar_file(const char *dir, const char *name, tar_context_t *ctx)
 {
     tar_error_t ret = ctx->error;
 
     tar_header_t header = { 0 };
+
+    if (is_path_special(dir))
+    {
+        str_printf(header.name, sizeof(header.name), "%s", name);
+    }
+    else
+    {
+        str_printf(header.name, sizeof(header.name), "%s/%s", dir, name);
+    }
+
+    const char *path = header.name;
     io_t *src = fs_open(ctx->fs, path, eOsAccessRead);
     CTASSERTF(src != NULL, "failed to open file `%s`", path);
     io_error_t err = io_error(src);
     CTASSERTF(err == 0, "failed to open file `%s` (%s)", path, os_error_string(err, ctx->arena));
     size_t size = io_size(src);
 
-    bool ok = build_tar_header(&header, ctx->dst, TAR_TYPE_FILE, path, size);
+    bool ok = build_tar_header(&header, ctx->dst, TAR_TYPE_FILE, size);
     if (!ok)
     {
         ret = eTarWriteError;
@@ -134,18 +158,19 @@ cleanup:
     return ret;
 }
 
-static void write_tar_entry(const char *path, os_dirent_t type, void *data)
+static void write_tar_entry(const char *dir, const char *name, os_dirent_t type, void *data)
 {
     tar_context_t *ctx = data;
-    printf("tar entry: %s %d\n", path, type);
+    if (str_startswith(dir, "./"))
+        dir += 2;
 
     switch (type)
     {
     case eOsNodeFile:
-        ctx->error = write_tar_file(path, ctx);
+        ctx->error = write_tar_file(dir, name, ctx);
         break;
     case eOsNodeDir:
-        ctx->error = write_tar_dir(path, ctx);
+        ctx->error = write_tar_dir(dir, name, ctx);
         break;
 
     default:
