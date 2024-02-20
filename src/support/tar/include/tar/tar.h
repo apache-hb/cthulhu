@@ -18,11 +18,29 @@ typedef enum tar_error_t
     eTarCount
 } tar_error_t;
 
+typedef struct tar_result_t
+{
+    tar_error_t error;
+    union {
+        /* eTarUnknownEntry */
+        char type;
+
+        /* eTarReadError, eTarWriteError */
+        struct {
+            size_t expected;
+            size_t actual;
+        };
+
+        /* eTarInvalidDirName */
+        char name[100];
+    };
+} tar_result_t;
+
 RET_INSPECT
 CT_TAR_API tar_error_t tar_archive(io_t *dst, IN_NOTNULL fs_t *src, IN_NOTNULL arena_t *arena);
 
 RET_INSPECT
-CT_TAR_API tar_error_t tar_extract(fs_t *dst, IN_NOTNULL io_t *tar);
+CT_TAR_API tar_result_t tar_extract(fs_t *dst, IN_NOTNULL io_t *tar);
 
 CT_NODISCARD RET_STRING CT_CONSTFN
 CT_TAR_API const char *tar_error_string(tar_error_t err);

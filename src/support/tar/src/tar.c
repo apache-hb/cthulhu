@@ -9,6 +9,7 @@
 #include "std/str.h"
 
 #include "core/macros.h"
+#include <stdio.h>
 
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -190,12 +191,16 @@ static size_t parse_tar_size(const tar_header_t *header)
     size_t result = 0;
     for (size_t i = 0; i < sizeof(header->size); ++i)
     {
+        char c = header->size[i];
+        if (c == '\0') break;
+        if (c == ' ') continue;
+
         result = result * 8 + (header->size[i] - '0');
     }
     return result;
 }
 
-tar_error_t tar_extract(fs_t *dst, io_t *src)
+tar_result_t tar_extract(fs_t *dst, io_t *src)
 {
     while (true)
     {
@@ -207,18 +212,34 @@ tar_error_t tar_extract(fs_t *dst, io_t *src)
 
         if (header.type == TAR_TYPE_DIR)
         {
-            fs_dir_create(dst, header.name);
+            printf("%s\n", header.name);
+            if (!fs_dir_create(dst, header.name))
+            {
+                tar_result_t result = {
+                    .error = eTarWriteError,
+                };
+                memcpy(result.name, header.name, sizeof(header.name) - 1);
+                return result;
+            }
+
             continue;
         }
 
         if (header.type != TAR_TYPE_FILE)
-            return eTarUnknownEntry;
+        {
+            tar_result_t result = {
+                .error = eTarUnknownEntry,
+                .type = header.type,
+            };
+            return result;
+        }
 
         fs_file_create(dst, header.name);
 
         size_t size = parse_tar_size(&header);
-        size_t blockcount = (size + TAR_BLOCK_SIZE - 1) / TAR_BLOCK_SIZE;
-        size_t blocks = CT_MAX(1, blockcount);
+        size_t blocks = (size + TAR_BLOCK_SIZE - 1) / TAR_BLOCK_SIZE;
+
+        printf("%s: size: %zu, blocks: %zu\n", header.name, size, blocks);
 
         io_t *io = fs_open(dst, header.name, eOsAccessWrite | eOsAccessTruncate);
         for (size_t i = 0; i < blocks; ++i)
@@ -227,7 +248,12 @@ tar_error_t tar_extract(fs_t *dst, io_t *src)
             size_t read = io_read(src, block, sizeof(block));
             if (read != sizeof(block))
             {
-                return eTarReadError;
+                tar_result_t result = {
+                    .error = eTarReadError,
+                    .expected = sizeof(block),
+                    .actual = read,
+                };
+                return result;
             }
 
             size_t write = (i == blocks - 1) ? size % TAR_BLOCK_SIZE : sizeof(block);
@@ -238,7 +264,11 @@ tar_error_t tar_extract(fs_t *dst, io_t *src)
         io_close(io);
     }
 
-    return eTarOk;
+    tar_result_t result = {
+        .error = eTarOk,
+    };
+
+    return result;
 }
 
 static const char *const kErrorNames[eTarCount] = {

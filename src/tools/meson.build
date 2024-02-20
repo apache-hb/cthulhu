@@ -17,3 +17,7 @@ endif
 if tool_error.allowed()
     subdir('error')
 endif
+
+if tool_tar.allowed()
+    subdir('tar_tool')
+endif

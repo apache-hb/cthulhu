@@ -59,8 +59,8 @@ int main(void)
 
         io_seek(dst, 0);
 
-        tar_error_t extract = tar_extract(result, dst);
-        GROUP_EXPECT_PASS(group, "extract error", extract == eTarOk);
+        tar_result_t extract = tar_extract(result, dst);
+        GROUP_EXPECT_PASS(group, "extract error", extract.error == eTarOk);
 
         GROUP_EXPECT_PASS(group, "./dir1", fs_dir_exists(result, "dir1"));
         GROUP_EXPECT_PASS(group, "dir1/file.txt", fs_file_exists(result, "dir1/file.txt"));

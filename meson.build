@@ -51,6 +51,7 @@ trace_memory = get_option('trace_memory').disable_auto_if(is_release or meson.is
 tool_notify = get_option('tool_notify').disable_auto_if(is_release or meson.is_subproject())
 tool_display = get_option('tool_display').disable_auto_if(is_release or meson.is_subproject())
 tool_error = get_option('tool_error').disable_auto_if(is_release or meson.is_subproject())
+tool_tar = get_option('tool_tar').disable_auto_if(is_release or meson.is_subproject())
 
 # all the frontend programs
 frontend_gui = get_option('frontend_gui').disable_auto_if(meson.is_subproject())
@@ -394,7 +395,8 @@ build_summary = {
         'Notify': tool_notify.allowed(),
         'Diagnostics': tool_diagnostic.allowed(),
         'Display': tool_display.allowed(),
-        'Error': tool_error.allowed()
+        'Error': tool_error.allowed(),
+        'Tar': tool_tar.allowed()
     }
 }
 

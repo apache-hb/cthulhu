@@ -405,6 +405,10 @@ sync_result_t fs_sync(fs_t *dst, fs_t *src)
 static void iter_dirents(fs_t *fs, inode_t *node, const char *path, const char *name, void *data, fs_dirent_callback_t callback)
 {
     CTASSERTF(node != NULL, "invalid inode (fs = %p)", (void*)fs);
+    CTASSERTF(node->type != eOsNodeNone && node->type != eOsNodeError, "invalid inode type (type = %d)", node->type);
+
+    if (str_startswith(path, "./"))
+        path += 2;
 
     callback(path, name, node->type, data);
     if (node->type == eOsNodeFile) return;

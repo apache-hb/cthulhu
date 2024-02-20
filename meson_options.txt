@@ -139,21 +139,26 @@ option('win32_trickery', type : 'feature',
 # tools
 
 option('tool_notify', type : 'feature',
-    description : 'build notify test tool',
+    description : 'notify testing tool',
     value : 'auto'
 )
 
 option('tool_diagnostic', type : 'feature',
-    description : 'build diagnostic search tool',
+    description : 'diagnostic search tool',
     value : 'auto'
 )
 
 option('tool_display', type : 'feature',
-    description : 'build format testing tool',
+    description : 'format testing tool',
     value : 'auto'
 )
 
 option('tool_error', type : 'feature',
-    description : 'build backtrace exception testing tool',
+    description : 'backtrace exception testing tool',
+    value : 'auto'
+)
+
+option('tool_tar', type : 'feature',
+    description : 'tar library frontend',
     value : 'auto'
 )
