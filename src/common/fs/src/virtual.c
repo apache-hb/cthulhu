@@ -112,7 +112,7 @@ static const io_callbacks_t kVirtualCallbacks = {
 
 static io_t *vfs_io(virtual_file_t *file, os_access_t flags, arena_t *arena)
 {
-    virtual_io_t io = {
+    virtual_io_t data = {
         .data = file,
         .offset = 0
     };
@@ -122,7 +122,7 @@ static io_t *vfs_io(virtual_file_t *file, os_access_t flags, arena_t *arena)
         file->used = 0;
     }
 
-    return io_new(&kVirtualCallbacks, flags, file->name, &io, sizeof(virtual_io_t), arena);
+    return io_new(&kVirtualCallbacks, flags, file->name, &data, sizeof(virtual_io_t), arena);
 }
 
 // fs impl

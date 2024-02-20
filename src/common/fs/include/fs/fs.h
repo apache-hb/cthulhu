@@ -43,7 +43,7 @@ CT_FS_API fs_t *fs_virtual(const char *name, arena_t *arena);
 ///
 /// @param fs the filesystem
 /// @param path the full path of the directory
-CT_FS_API void fs_dir_create(fs_t *fs, const char *path);
+CT_FS_API bool fs_dir_create(fs_t *fs, const char *path);
 
 /// @brief create a file
 /// @note this function will not create child directories

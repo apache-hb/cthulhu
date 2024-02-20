@@ -242,7 +242,7 @@ static inode_t *get_inode_for(fs_t *fs, inode_t *node, const char *name, os_dire
     }
 }
 
-void fs_dir_create(fs_t *fs, const char *path)
+bool fs_dir_create(fs_t *fs, const char *path)
 {
     CTASSERT(fs != NULL);
     CTASSERT(path != NULL);
@@ -266,14 +266,14 @@ void fs_dir_create(fs_t *fs, const char *path)
             break;
 
         case eOsNodeFile:
-            CTASSERTF(false, "cannot create directory with file in path (dir = %s, file = %s)", part, path);
-            return;
+            return false;
 
         default:
-            CTASSERTF(false, "invalid inode type (type = %d)", node->type);
-            return;
+            CT_NEVER("invalid inode type (type = %d)", node->type);
         }
     }
+
+    return true;
 }
 
 bool fs_dir_exists(fs_t *fs, const char *path)
