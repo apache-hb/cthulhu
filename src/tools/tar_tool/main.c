@@ -1,4 +1,5 @@
 #include "base/panic.h"
+#include "base/util.h"
 #include "core/macros.h"
 #include "fs/fs.h"
 #include "io/console.h"
@@ -47,7 +48,7 @@ int main(int argc, const char **argv)
     setup_global();
     arena_t *arena = ctu_default_alloc();
 
-    CTASSERTF(argc >= 2, "usage: %s input.tar", argv[0]);
+    CTASSERTF(argc > 2, "usage: %s input.tar", argv[0]);
 
     const char *input = argv[1];
     io_t *io = io_file(input, eOsAccessRead, arena);
@@ -83,5 +84,6 @@ int main(int argc, const char **argv)
 
     io_close(io);
 
-    fs_iter_dirents(dst, ".", dst, print_dirent);
+    if (str_equal(argv[2], "--list"))
+        fs_iter_dirents(dst, ".", dst, print_dirent);
 }

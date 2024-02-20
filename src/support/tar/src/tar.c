@@ -9,7 +9,6 @@
 #include "std/str.h"
 
 #include "core/macros.h"
-#include <stdio.h>
 
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -212,7 +211,6 @@ tar_result_t tar_extract(fs_t *dst, io_t *src)
 
         if (header.type == TAR_TYPE_DIR)
         {
-            printf("%s\n", header.name);
             if (!fs_dir_create(dst, header.name))
             {
                 tar_result_t result = {
@@ -239,8 +237,6 @@ tar_result_t tar_extract(fs_t *dst, io_t *src)
         size_t size = parse_tar_size(&header);
         size_t blocks = (size + TAR_BLOCK_SIZE - 1) / TAR_BLOCK_SIZE;
 
-        printf("%s: size: %zu, blocks: %zu\n", header.name, size, blocks);
-
         io_t *io = fs_open(dst, header.name, eOsAccessWrite | eOsAccessTruncate);
         for (size_t i = 0; i < blocks; ++i)
         {
@@ -258,7 +254,7 @@ tar_result_t tar_extract(fs_t *dst, io_t *src)
 
             size_t write = (i == blocks - 1) ? size % TAR_BLOCK_SIZE : sizeof(block);
 
-            io_write(io, block, sizeof(write));
+            io_write(io, block, write);
         }
 
         io_close(io);

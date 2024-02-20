@@ -188,12 +188,13 @@ static inode_t *vfs_create_file(fs_t *fs, inode_t *self, const char *name)
     virtual_file_t file = {
         .name = name,
 
-        .data = ARENA_MALLOC(0x1000, "virtual_file", self, fs->arena),
+        .data = ARENA_MALLOC(0x1000, name, self, fs->arena),
         .used = 0,
         .size = 0x1000
     };
 
     inode_t *node = inode_file(&file, sizeof(virtual_file_t), fs->arena);
+    ARENA_REPARENT(file.data, node, fs->arena);
     map_set(dir->dirents, name, node);
     return node;
 }
