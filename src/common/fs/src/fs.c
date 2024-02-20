@@ -198,6 +198,9 @@ io_t *fs_open(fs_t *fs, const char *path, os_access_t flags)
         return query_file(fs, file, flags);
         break;
     case eOsNodeNone:
+        if (flags == eOsAccessRead)
+            return make_invalid_file(path, flags, fs->arena);
+
         file = create_file(fs, current, vector_tail(parts));
         return query_file(fs, file, flags);
         break;
