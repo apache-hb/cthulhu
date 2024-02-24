@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #ifndef ENDIAN
 #   define ENDIAN(id, name, v)
 #endif

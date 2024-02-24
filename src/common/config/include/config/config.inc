@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #ifndef CFG_TYPE
 #   define CFG_TYPE(id, name)
 #endif

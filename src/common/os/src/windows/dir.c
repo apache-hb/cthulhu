@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #include "base/util.h"
 #include "core/win32.h" // IWYU pragma: keep
 #include "arena/arena.h"

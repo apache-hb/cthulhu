@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdbool.h>
-
 #include "setup/setup.h"
 
 typedef struct logger_t logger_t;

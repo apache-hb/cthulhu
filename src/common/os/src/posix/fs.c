@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #include "arena/arena.h"
 #include "base/util.h"
 #include "os/os.h"

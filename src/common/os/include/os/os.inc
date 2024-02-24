@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #ifndef OS_ACCESS
 #   define OS_ACCESS(id, str, value)
 #endif

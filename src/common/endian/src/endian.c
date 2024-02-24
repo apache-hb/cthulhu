@@ -1,8 +1,8 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #include "endian/endian.h"
 
 #include "base/panic.h"
-
-#include <stdlib.h> // IWYU pragma: keep
 
 uint16_t endian_swap16(uint16_t value)
 {

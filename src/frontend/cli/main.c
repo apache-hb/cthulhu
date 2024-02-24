@@ -1,4 +1,3 @@
-#include "base/log.h"
 #include "config/config.h"
 #include "setup/memory.h"
 #include "format/colour.h"
@@ -30,13 +29,6 @@
 #include "core/macros.h"
 #include "support/loader.h"
 #include "support/support.h"
-
-static const version_info_t kToolVersion = {
-    .license = "GPLv3",
-    .desc = "Cthulhu Compiler Collection CLI",
-    .author = "Elliot Haisley",
-    .version = CT_NEW_VERSION(0, 0, 3),
-};
 
 static const frontend_t kFrontendInfo = {
     .info = {
@@ -153,7 +145,10 @@ int main(int argc, const char **argv)
     broker_t *broker = broker_new(&kFrontendInfo, arena);
     loader_t *loader = loader_new(arena);
     support_t *support = support_new(broker, loader, arena);
-    //support_load_default_modules(support);
+
+#if CTU_LOADER_STATIC
+    support_load_default_modules(support);
+#endif
 
     logger_t *reports = broker_get_logger(broker);
     const node_t *node = broker_get_node(broker);
@@ -173,7 +168,7 @@ int main(int argc, const char **argv)
         .io = con,
 
         .group = tool.config,
-        .version = kToolVersion,
+        .version = kFrontendInfo.info.version,
 
         .argc = argc,
         .argv = argv,

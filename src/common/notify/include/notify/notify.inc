@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #ifndef SEVERITY
 #   define SEVERITY(ID, NAME)
 #endif

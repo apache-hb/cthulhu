@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #include "scan/scan.h"
 
 #include "core/text.h"

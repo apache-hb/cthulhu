@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #include "std/vector.h"
 #include "arena/arena.h"
 #include "base/panic.h"

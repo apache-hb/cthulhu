@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #include "interop/compile.h"
 
 static parse_result_t parse_error(parse_error_t result, int error)
