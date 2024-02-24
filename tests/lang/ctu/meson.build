@@ -230,6 +230,8 @@ cases = {
     }
 }
 
+load_lang = default_library == 'shared' ? [ ctu_shared.full_path() ] : [ ]
+
 foreach case, tests : tests
     passes = tests['pass']
     fails = tests['fail']
@@ -240,7 +242,7 @@ foreach case, tests : tests
         path = dir/where/'pass'/name + '.ct'
         id = 'pass-' + case + '-' + name
         test(id, harness,
-            args : [ id, path ],
+            args : [ id ] + load_lang + [ path ],
             suite : 'ctu'
         )
     endforeach
@@ -249,7 +251,7 @@ foreach case, tests : tests
         path = dir/where/'fail'/name + '.ct'
         id = 'fail-' + case + '-' + name
         test(id, harness,
-            args : [ id, path ],
+            args : [ id ] + load_lang + [ path ],
             suite : 'ctu',
             should_fail : true
         )
@@ -270,7 +272,7 @@ foreach name, data : cases
 
         id = 'fail-' + name + '-' + id
         test(id, harness,
-            args : [ id ] + sources,
+            args : [ id ] + load_lang + sources,
             suite : 'ctu',
             should_fail : true
         )
@@ -286,7 +288,7 @@ foreach name, data : cases
 
         id = 'pass-' + name + '-' + id
         test(id, harness,
-            args : [ id ] + sources,
+            args : [ id ] + load_lang + sources,
             suite : 'ctu'
         )
     endforeach
@@ -296,7 +298,7 @@ foreach case, success : crashes
     path = dir/'crashes'/case + '.ct'
     id = 'crash-' + case
     test(id, harness,
-        args : [ id, path ],
+        args : [ id ] + load_lang + [ path ],
         suite : 'ctu',
         should_fail : not success
     )

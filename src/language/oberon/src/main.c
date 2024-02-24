@@ -44,11 +44,11 @@ static void obr_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
 static void obr_destroy(language_runtime_t *handle) { CT_UNUSED(handle); }
 
 #define NEW_EVENT(id, ...) const diagnostic_t kEvent_##id = __VA_ARGS__;
-#include "oberon/oberon.def"
+#include "oberon/oberon.inc"
 
 static const diagnostic_t *const kDiagnosticTable[] = {
 #define NEW_EVENT(id, ...) &kEvent_##id,
-#include "oberon/oberon.def"
+#include "oberon/oberon.inc"
 };
 
 static const char *const kLangNames[] = { "m", "mod", "obr", "oberon", NULL };
@@ -62,7 +62,7 @@ static const size_t kDeclSizes[eObrTagTotal] = {
 
 static const char *const kDeclNames[eObrTagTotal] = {
 #define DECL_TAG(id, val, name) [id] = (name),
-#include "oberon/oberon.def"
+#include "oberon/oberon.inc"
 };
 
 CT_DRIVER_API const language_t kOberonModule = {

@@ -1,3 +1,4 @@
+#include "base/log.h"
 #include "config/config.h"
 #include "setup/memory.h"
 #include "format/colour.h"
@@ -100,6 +101,40 @@ static int check_reports(logger_t *logger, report_config_t config, const char *t
     return 0;
 }
 
+typedef struct cli_t
+{
+    broker_t *broker;
+    support_t *support;
+    logger_t *logger;
+    io_t *con;
+} cli_t;
+
+static bool on_langs(ap_t *ap, const cfg_field_t *param, const void *value, void *data)
+{
+    CT_UNUSED(ap);
+    CT_UNUSED(param);
+    CT_UNUSED(value);
+
+    cli_t *cli = data;
+
+#if CTU_LOADER_DYNAMIC
+    const char *path = value;
+    loaded_module_t mod = { 0 };
+
+    if (!support_load_module(cli->support, eModLanguage, path, &mod))
+    {
+        msg_notify(cli->logger, &kEvent_LanguageDriverConflict, broker_get_node(cli->broker), "failed to load language module at `%s`", path);
+        return false;
+    }
+
+    ctu_log("loaded language module `%s`", path);
+    return true;
+#else
+    msg_notify(cli->logger, &kEvent_DynamicLoadingDisabled, broker_get_node(cli->broker), "this distribution of cthulhu was not built with dynamic language loading");
+    return true;
+#endif
+}
+
 #define CHECK_LOG(logger, fmt)                               \
     do                                                       \
     {                                                        \
@@ -118,11 +153,18 @@ int main(int argc, const char **argv)
     broker_t *broker = broker_new(&kFrontendInfo, arena);
     loader_t *loader = loader_new(arena);
     support_t *support = support_new(broker, loader, arena);
-    support_load_default_modules(support);
+    //support_load_default_modules(support);
 
     logger_t *reports = broker_get_logger(broker);
     const node_t *node = broker_get_node(broker);
     io_t *con = io_stdout();
+
+    cli_t cli = {
+        .broker = broker,
+        .support = support,
+        .logger = reports,
+        .con = con
+    };
 
     tool_t tool = make_tool(arena);
 
@@ -139,11 +181,15 @@ int main(int argc, const char **argv)
 
     ap_t *ap = ap_new(tool.config, arena);
 
+    ap_event(ap, tool.langs, on_langs, &cli);
+
     int parse_err = parse_argparse(ap, tool.options, config);
     if (parse_err == CT_EXIT_SHOULD_EXIT)
     {
         return CT_EXIT_OK;
     }
+
+    broker_init(broker);
 
     vector_t *paths = ap_get_posargs(ap);
 

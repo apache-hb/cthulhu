@@ -10,6 +10,7 @@ src = [ 'src/target.c' ]
 
 libtarget = library('target', src,
     build_by_default : not meson.is_subproject(),
+    install : not meson.is_subproject(),
     c_args : [ '-DCT_TARGET_BUILD=1' ],
     dependencies : [ core, broker ],
     include_directories : target_include

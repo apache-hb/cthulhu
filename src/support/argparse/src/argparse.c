@@ -30,9 +30,15 @@ static void add_pos_callback(ap_t *self, ap_callback_t *cb)
 static void add_arg_callback(ap_t *self, const cfg_field_t *param, ap_callback_t *cb)
 {
     vector_t *events = map_get(self->event_lookup, param);
-    CTASSERT(events != NULL);
 
-    vector_push(&events, cb);
+    if (events == NULL)
+    {
+        events = vector_init(cb, self->arena);
+    }
+    else
+    {
+        vector_push(&events, cb);
+    }
 
     map_set(self->event_lookup, param, events);
 }

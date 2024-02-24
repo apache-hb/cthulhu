@@ -240,14 +240,16 @@ tar_result_t tar_extract(fs_t *dst, io_t *src)
         io_t *io = fs_open(dst, header.name, eOsAccessWrite | eOsAccessTruncate);
         for (size_t i = 0; i < blocks; ++i)
         {
+            // TODO: we should map the source file and copy all the blocks at once
+            // rather than this block by block approach
             char block[TAR_BLOCK_SIZE] = { 0 };
-            size_t read = io_read(src, block, sizeof(block));
-            if (read != sizeof(block))
+            size_t read_size = io_read(src, block, sizeof(block));
+            if (read_size != sizeof(block))
             {
                 tar_result_t result = {
                     .error = eTarReadError,
                     .expected = sizeof(block),
-                    .actual = read,
+                    .actual = read_size,
                 };
                 return result;
             }
@@ -269,7 +271,7 @@ tar_result_t tar_extract(fs_t *dst, io_t *src)
 
 static const char *const kErrorNames[eTarCount] = {
 #define TAR_ERROR(id, name) [id] = (name),
-#include "tar/tar.def"
+#include "tar/tar.inc"
 };
 
 USE_DECL

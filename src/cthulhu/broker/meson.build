@@ -13,6 +13,7 @@ src = [
 
 libbroker = library('broker', src,
     build_by_default : not meson.is_subproject(),
+    install : not meson.is_subproject(),
     c_args : [ '-DCT_BROKER_BUILD=1' ],
     dependencies : [ core, notify, tree, arena, scan, events, interop ],
     include_directories : broker_include

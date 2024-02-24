@@ -28,21 +28,21 @@ typedef struct os_iter_t os_iter_t;
 typedef enum os_access_t
 {
 #define OS_ACCESS(ID, STR, BIT) ID = (BIT),
-#include "os.def"
+#include "os.inc"
 } os_access_t;
 
 /// @brief file mapping memory protection
 typedef enum os_protect_t
 {
 #define OS_PROTECT(ID, STR, BIT) ID = (BIT),
-#include "os.def"
+#include "os.inc"
 } os_protect_t;
 
 /// @brief directory entry type
 typedef enum os_dirent_t
 {
 #define OS_DIRENT(ID, STR) ID,
-#include "os.def"
+#include "os.inc"
 
     eOsNodeCount
 } os_dirent_t;

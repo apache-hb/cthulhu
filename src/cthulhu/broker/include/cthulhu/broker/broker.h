@@ -47,7 +47,7 @@ typedef text_view_t unit_id_t;
 typedef enum broker_pass_t
 {
 #define BROKER_PASS(ID, STR) ID,
-#include "broker.def"
+#include "broker.inc"
 
     ePassCount
 } broker_pass_t;
@@ -56,7 +56,7 @@ typedef enum broker_pass_t
 typedef enum broker_stage_t
 {
 #define BROKER_STAGE(ID, STR) ID,
-#include "broker.def"
+#include "broker.inc"
 
     eStageCount
 } broker_stage_t;
@@ -65,7 +65,7 @@ typedef enum broker_stage_t
 typedef enum broker_event_t
 {
 #define BROKER_EVENT(ID, STR) ID,
-#include "broker.def"
+#include "broker.inc"
 
     eEventCount
 } broker_event_t;
@@ -73,7 +73,7 @@ typedef enum broker_event_t
 typedef enum broker_arena_t
 {
 #define BROKER_ARENA(ID, STR) ID,
-#include "broker.def"
+#include "broker.inc"
 
     eArenaCount
 } broker_arena_t;

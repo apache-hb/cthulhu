@@ -11,7 +11,7 @@ typedef struct language_runtime_t language_runtime_t;
 typedef enum ctu_tag_t
 {
 #define DECL_TAG(ID, INIT, STR) ID INIT,
-#include "ctu/ctu.def"
+#include "ctu/ctu.inc"
     eCtuTagTotal
 } ctu_tag_t;
 

@@ -27,8 +27,8 @@ obr_lang = static_library('obr_lang', src,
     override_options : [ 'unity=off' ]
 )
 
-if module_loader.contains('static')
-    obr_static = library('obr_static', 'src/main.c',
+if default_library == 'static'
+    obr_static = static_library('obr_static', 'src/main.c',
         link_with : obr_lang,
         dependencies : deps,
         c_args : user_args,
@@ -42,10 +42,10 @@ if module_loader.contains('static')
         'static': obr_static,
         'module': 'kOberonModule'
     }
-endif
-
-if module_loader.contains('shared')
+elif default_library == 'shared'
     obr_shared = shared_module('obr_shared', 'src/main.c',
+        build_by_default : not meson.is_subproject(),
+        install : not meson.is_subproject(),
         link_with : obr_lang,
         dependencies : deps,
         c_args : user_args + [ '-DCTU_DRIVER_SHARED=1' ],

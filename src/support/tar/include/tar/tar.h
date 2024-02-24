@@ -13,7 +13,7 @@ CT_BEGIN_API
 typedef enum tar_error_t
 {
 #define TAR_ERROR(id, str) id,
-#include "tar.def"
+#include "tar.inc"
 
     eTarCount
 } tar_error_t;

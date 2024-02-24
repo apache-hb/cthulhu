@@ -199,7 +199,7 @@ void msg_vnote(event_builder_t builder, const char *fmt, va_list args)
 
 static const char *const kSeverityNames[eSeverityTotal] = {
 #define SEVERITY(id, name) [id] = (name),
-#include "notify/notify.def"
+#include "notify/notify.inc"
 };
 
 USE_DECL

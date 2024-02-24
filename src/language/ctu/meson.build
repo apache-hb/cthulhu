@@ -33,8 +33,8 @@ ctu_lang = static_library('ctu_lang', src,
     override_options : [ 'unity=off' ]
 )
 
-if module_loader.contains('static')
-    ctu_static = library('ctu_static', 'src/main.c',
+if default_library == 'static'
+    ctu_static = static_library('ctu_static', 'src/main.c',
         link_with : ctu_lang,
         c_args : user_args,
         dependencies : deps,
@@ -48,10 +48,10 @@ if module_loader.contains('static')
         'static': ctu_static,
         'module': 'kCtuModule'
     }
-endif
-
-if module_loader.contains('shared')
+elif default_library == 'shared'
     ctu_shared = shared_module('ctu_shared', 'src/main.c',
+        build_by_default : not meson.is_subproject(),
+        install : not meson.is_subproject(),
         link_with : ctu_lang,
         dependencies : deps,
         c_args : user_args + [ '-DCTU_DRIVER_SHARED=1' ],

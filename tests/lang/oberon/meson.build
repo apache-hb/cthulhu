@@ -55,6 +55,8 @@ tests = {
     }
 }
 
+load_lang = default_library == 'shared' ? [ obr_shared.full_path() ] : [ ]
+
 foreach case, tests : tests
     passes = tests['pass']
     fails = tests['fail']
@@ -65,7 +67,7 @@ foreach case, tests : tests
         path = dir/where/'pass'/name + '.obr'
         id = 'pass-' + case + '-' + name
         test(id, harness,
-            args : [ id, path ],
+            args : [ id ] + load_lang + [ path ],
             suite : 'obr'
         )
     endforeach
@@ -74,7 +76,7 @@ foreach case, tests : tests
         path = dir/where/'fail'/name + '.obr'
         id = 'fail-' + case + '-' + name
         test(id, harness,
-            args : [ id, path ],
+            args : [ id ] + load_lang + [ path ],
             suite : 'obr',
             should_fail : true
         )

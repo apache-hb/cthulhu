@@ -14,4 +14,4 @@ void cc_process_imports(language_runtime_t *runtime, compile_unit_t *unit);
 void cc_compile_module(language_runtime_t *runtime, compile_unit_t *unit);
 
 #define NEW_EVENT(name, ...) extern const diagnostic_t kEvent_##name;
-#include "events.def"
+#include "events.inc"

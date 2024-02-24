@@ -568,4 +568,12 @@ CTU_EVENT(TargetConflict, {
         "A target with the same name already exists.",
 })
 
+CTU_EVENT(DynamicLoadingDisabled, {
+    .severity = eSeverityFatal,
+    .id = "M0078",
+    .brief = "Dynamic loading disabled",
+    .description =
+        "Dynamic loading is disabled in this distribution of cthulhu.",
+})
+
 #undef CTU_EVENT

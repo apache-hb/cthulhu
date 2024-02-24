@@ -8,6 +8,7 @@
 !*.c
 !*.h
 !*.def
+!*.inc
 !*.[ch].in
 !data/**/*
 !*.mm
@@ -53,6 +54,7 @@
 vendor/
 temp/
 *build/
+*bundle*/
 fuzz-*/
 genout*/
 out.c

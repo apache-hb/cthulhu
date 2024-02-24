@@ -9,7 +9,7 @@
 
 static const char *const kJsonNames[eJsonCount] = {
 #define JSON_TYPE(id, str) [id] = (str),
-#include "json/json.def"
+#include "json/json.inc"
 };
 
 const char *json_kind_name(json_kind_t kind)

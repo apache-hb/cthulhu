@@ -8,7 +8,7 @@ typedef struct compile_unit_t compile_unit_t;
 typedef enum pl0_tag_t
 {
 #define DECL_TAG(ID, INIT, STR) ID INIT,
-#include "pl0/pl0.def"
+#include "pl0/pl0.inc"
     ePl0TagTotal
 } pl0_tag_t;
 

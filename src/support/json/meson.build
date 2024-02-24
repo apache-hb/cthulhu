@@ -22,6 +22,7 @@ endif
 
 libjson = library('json', src,
     build_by_default : not meson.is_subproject(),
+    install : not meson.is_subproject(),
     c_args : json_args,
     cpp_args : json_args,
     dependencies : [ core, base, scan, interop, gmp, std, notify, events, util ],

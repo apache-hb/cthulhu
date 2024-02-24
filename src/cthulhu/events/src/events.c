@@ -5,13 +5,13 @@
 /// declare all the events
 
 #define CTU_EVENT(name, ...) const diagnostic_t kEvent_##name = __VA_ARGS__;
-#include "cthulhu/events/events.def"
+#include "cthulhu/events/events.inc"
 
 /// create the table of events
 
 static const diagnostic_t * const kDiagnosticTable[] = {
 #define CTU_EVENT(name, ...) &kEvent_##name,
-#include "cthulhu/events/events.def"
+#include "cthulhu/events/events.inc"
 };
 
 #define DIAGNOTSIC_COUNT (sizeof(kDiagnosticTable) / sizeof(diagnostic_t*))

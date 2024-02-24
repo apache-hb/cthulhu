@@ -976,7 +976,7 @@ const char *ssa_type_name(ssa_kind_t kind)
     switch (kind)
     {
 #define SSA_KIND(ID, NAME) case ID: return NAME;
-#include "cthulhu/ssa/ssa.def"
+#include "cthulhu/ssa/ssa.inc"
     default: CT_NEVER("unhandled ssa kind %d", kind);
     }
 }
@@ -986,7 +986,7 @@ const char *ssa_opkind_name(ssa_opkind_t kind)
     switch (kind)
     {
 #define SSA_OPKIND(ID, NAME) case ID: return NAME;
-#include "cthulhu/ssa/ssa.def"
+#include "cthulhu/ssa/ssa.inc"
     default: CT_NEVER("unhandled ssa opkind %d", kind);
     }
 }
@@ -996,7 +996,7 @@ const char *ssa_opcode_name(ssa_opcode_t opcode)
     switch (opcode)
     {
 #define SSA_OPCODE(ID, NAME) case ID: return NAME;
-#include "cthulhu/ssa/ssa.def"
+#include "cthulhu/ssa/ssa.inc"
     default: CT_NEVER("unhandled ssa opcode %d", opcode);
     }
 }

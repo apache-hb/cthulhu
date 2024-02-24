@@ -313,7 +313,7 @@ void draw_config_entry(cfg_field_t *field)
     ImGui::TreeNodeEx(info->name, kConfigValueNodeFlags);
 
     ImGui::TableNextColumn();
-    ImGui::TextUnformatted(cfg_type_name(type));
+    ImGui::TextUnformatted(cfg_type_string(type));
 
     ImGui::TableNextColumn();
     draw_value(field);

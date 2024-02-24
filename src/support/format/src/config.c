@@ -248,6 +248,37 @@ static void print_flags(format_config_t options, alignment_info_t alignment, con
     io_printf(options.io, "\n");
 }
 
+static void print_vector(io_t *io, const vector_t *vec)
+{
+    if (vec == NULL)
+    {
+        io_printf(io, "(default: empty)\n");
+        return;
+    }
+
+    size_t len = vector_len(vec);
+    if (len == 0)
+    {
+        io_printf(io, "(default: empty)\n");
+        return;
+    }
+
+    io_printf(io, "(default: ");
+
+    for (size_t i = 0; i < len; i++)
+    {
+        const char *str = vector_get(vec, i);
+        io_printf(io, "%s", str);
+
+        if (i != len - 1)
+        {
+            io_printf(io, ", ");
+        }
+    }
+
+    io_printf(io, ")");
+}
+
 static void print_field_default(format_config_t options, const cfg_field_t *field)
 {
     switch (cfg_get_type(field))
@@ -261,6 +292,13 @@ static void print_field_default(format_config_t options, const cfg_field_t *fiel
         const cfg_int_t *info = cfg_int_info(field);
         io_printf(options.io, "(default: %d)", info->initial);
         print_range(options.io, info->min, info->max);
+        io_printf(options.io, "\n");
+        break;
+    }
+
+    case eConfigVector: {
+        const vector_t *info = cfg_vector_info(field);
+        print_vector(options.io, info);
         io_printf(options.io, "\n");
         break;
     }
@@ -285,8 +323,11 @@ static void print_field_default(format_config_t options, const cfg_field_t *fiel
         break;
     }
 
-    default:
-        break;
+    default: {
+        const cfg_info_t *info = cfg_get_info(field);
+        const char *ty = cfg_type_string(cfg_get_type(field));
+        CT_NEVER("unknown field type %s (%s)", ty, info->name);
+    }
     }
 }
 

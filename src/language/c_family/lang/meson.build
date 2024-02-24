@@ -23,8 +23,8 @@ cc_lang = static_library('cc_lang', src,
 
 c = {}
 
-if module_loader.contains('static')
-    cc_static = library('cc_static', 'src/main.c',
+if default_library == 'static'
+    cc_static = static_library('cc_static', 'src/main.c',
         link_with : cc_lang,
         dependencies : deps,
         c_args : user_args,
@@ -38,10 +38,10 @@ if module_loader.contains('static')
         'static': cc_static,
         'module': 'kCModule'
     }
-endif
-
-if module_loader.contains('shared')
+elif default_library == 'shared'
     cc_shared = shared_module('cc_shared', 'src/main.c',
+        build_by_default : not meson.is_subproject(),
+        install : not meson.is_subproject(),
         link_with : cc_lang,
         dependencies : deps,
         c_args : user_args + [ '-DCTU_DRIVER_SHARED=1' ],

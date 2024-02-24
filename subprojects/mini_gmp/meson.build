@@ -17,6 +17,7 @@ export_args = is_shared ? [ '-DMINI_GMP_SHARED=1' ] : []
 
 libgmp = library('gmp', [ 'mini-gmp.c', 'mini-mpq.c' ],
     build_by_default : false,
+    install : true,
     include_directories : '.',
     c_args : c_args,
     c_shared_args : export_args + [ '-DMINI_GMP_EXPORTS=1' ]

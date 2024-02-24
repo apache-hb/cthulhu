@@ -28,7 +28,7 @@ CT_BEGIN_API
 typedef enum json_kind_t
 {
 #define JSON_TYPE(id, str) id,
-#include "json/json.def"
+#include "json/json.inc"
 
     eJsonCount
 } json_kind_t;

@@ -51,7 +51,7 @@ const char *tree_kind_to_string(tree_kind_t kind)
     switch (kind)
     {
 #define TREE_KIND(ID, NAME, TAGS) case ID: return NAME;
-#include "cthulhu/tree/tree.def"
+#include "cthulhu/tree/tree.inc"
 
     default: CT_NEVER("invalid tree kind %d", kind);
     }

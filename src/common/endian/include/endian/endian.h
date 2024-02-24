@@ -44,7 +44,7 @@ CT_BEGIN_API
 typedef enum endian_t
 {
 #define ENDIAN(id, name, v) id = (v),
-#include "endian.def"
+#include "endian.inc"
 
     eEndianCount
 } endian_t;

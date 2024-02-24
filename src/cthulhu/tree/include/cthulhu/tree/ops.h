@@ -14,7 +14,7 @@ CT_BEGIN_API
 typedef enum tree_kind_t
 {
 #define TREE_KIND(ID, NAME, TAGS) ID,
-#include "cthulhu/tree/tree.def"
+#include "cthulhu/tree/tree.inc"
     eTreeTotal
 } tree_kind_t;
 
@@ -22,14 +22,14 @@ typedef enum tree_kind_t
 typedef enum tree_quals_t
 {
 #define TYPE_QUALIFIER(ID, NAME, FLAG) ID = (FLAG),
-#include "tree.def"
+#include "tree.inc"
 } tree_quals_t;
 
 /// @brief all binary operators
 typedef enum binary_t
 {
 #define BINARY_OP(ID, NAME, SYMBOL) ID,
-#include "tree.def"
+#include "tree.inc"
     eBinaryTotal
 } binary_t;
 
@@ -37,7 +37,7 @@ typedef enum binary_t
 typedef enum compare_t
 {
 #define COMPARE_OP(ID, NAME, SYMBOL) ID,
-#include "tree.def"
+#include "tree.inc"
     eCompareTotal
 } compare_t;
 
@@ -45,7 +45,7 @@ typedef enum compare_t
 typedef enum unary_t
 {
 #define UNARY_OP(ID, NAME, SYMBOL) ID,
-#include "tree.def"
+#include "tree.inc"
     eUnaryTotal
 } unary_t;
 
@@ -53,7 +53,7 @@ typedef enum unary_t
 typedef enum cast_t
 {
 #define CAST_OP(ID, NAME) ID,
-#include "tree.def"
+#include "tree.inc"
     eCastTotal
 } cast_t;
 
@@ -61,7 +61,7 @@ typedef enum cast_t
 typedef enum builtin_t
 {
 #define TREE_BUILTIN(ID, NAME) ID,
-#include "tree.def"
+#include "tree.inc"
     eBuiltinTotal
 } builtin_t;
 
@@ -69,7 +69,7 @@ typedef enum builtin_t
 typedef enum arity_t
 {
 #define TREE_ARITY(ID, STR) ID,
-#include "tree.def"
+#include "tree.inc"
     eArityTotal
 } arity_t;
 
@@ -77,7 +77,7 @@ typedef enum arity_t
 typedef enum tree_link_t
 {
 #define TREE_LINKAGE(ID, STR) ID,
-#include "tree.def"
+#include "tree.inc"
     eLinkTotal
 } tree_link_t;
 
@@ -85,7 +85,7 @@ typedef enum tree_link_t
 typedef enum tree_jump_t
 {
 #define TREE_JUMP(ID, STR) ID,
-#include "tree.def"
+#include "tree.inc"
     eJumpTotal
 } tree_jump_t;
 
@@ -93,7 +93,7 @@ typedef enum tree_jump_t
 typedef enum visibility_t
 {
 #define TREE_VISIBILITY(ID, STR) ID,
-#include "tree.def"
+#include "tree.inc"
     eVisibileTotal
 } visibility_t;
 
@@ -101,7 +101,7 @@ typedef enum visibility_t
 typedef enum digit_t
 {
 #define DIGIT_KIND(ID, STR) ID,
-#include "tree.def"
+#include "tree.inc"
     eDigitTotal
 } digit_t;
 
@@ -109,7 +109,7 @@ typedef enum digit_t
 typedef enum sign_t
 {
 #define SIGN_KIND(ID, STR) ID,
-#include "tree.def"
+#include "tree.inc"
     eSignTotal
 } sign_t;
 
@@ -117,7 +117,7 @@ typedef enum sign_t
 typedef enum eval_model_t
 {
 #define TREE_EVAL_MODEL(ID, STR, BITS) ID = (BITS),
-#include "tree.def"
+#include "tree.inc"
 } eval_model_t;
 
 /// @brief get the pretty name of a unary operator

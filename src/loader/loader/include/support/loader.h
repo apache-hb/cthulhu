@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ctu_support_api.h>
+#include <loader_config.h>
 
 #include "core/analyze.h"
 #include "os/core.h"
@@ -22,13 +23,13 @@ typedef struct loader_t loader_t;
 typedef enum loader_config_t
 {
 #define LOADER_FEATURE(ID, STR, BIT) ID = (BIT),
-#include "loader.def"
+#include "loader.inc"
 } loader_config_t;
 
 typedef enum module_type_t
 {
 #define LOADER_MODULE(ID, STR, BIT) ID = (BIT),
-#include "loader.def"
+#include "loader.inc"
 
     eModCount
 } module_type_t;
@@ -36,7 +37,7 @@ typedef enum module_type_t
 typedef enum load_error_t
 {
 #define LOADER_ERROR(ID, STR) ID,
-#include "loader.def"
+#include "loader.inc"
 
     eErrorCount
 } load_error_t;

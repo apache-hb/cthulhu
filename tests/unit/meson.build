@@ -7,6 +7,7 @@ unit_api = configure_file(
 unit_include = include_directories('.', 'unit')
 
 libunit = library('unit', 'unit/ct-test.c',
+    build_by_default : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_UNIT_BUILD=1' ],
     include_directories : unit_include,
     dependencies : [ base, std, memory, os, io, setup, format, backtrace, arena ]

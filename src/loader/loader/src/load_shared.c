@@ -1,5 +1,6 @@
 #include "common.h"
 
+#include "driver/driver.h"
 #include "os/os.h"
 
 #include "base/panic.h"

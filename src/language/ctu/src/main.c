@@ -54,11 +54,11 @@ static void ctu_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
 }
 
 #define NEW_EVENT(name, ...) const diagnostic_t kEvent_##name = __VA_ARGS__;
-#include "ctu/ctu.def"
+#include "ctu/ctu.inc"
 
 static const diagnostic_t * const kDiagnosticTable[] = {
 #define NEW_EVENT(name, ...) &kEvent_##name,
-#include "ctu/ctu.def"
+#include "ctu/ctu.inc"
 };
 
 static const char *const kLangNames[] = { "ct", "ctu", "cthulhu", NULL };
@@ -75,7 +75,7 @@ static const size_t kDeclSizes[eCtuTagTotal] = {
 
 static const char *const kDeclNames[eCtuTagTotal] = {
 #define DECL_TAG(id, val, name) [id] = (name),
-#include "ctu/ctu.def"
+#include "ctu/ctu.inc"
 };
 
 CT_DRIVER_API const language_t kCtuModule = {

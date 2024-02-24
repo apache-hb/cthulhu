@@ -20,7 +20,7 @@ typedef struct vector_t vector_t;
 typedef enum obr_visibility_t
 {
 #define OBR_VIS(ID, STR, SYMBOL) ID,
-#include "oberon/oberon.def"
+#include "oberon/oberon.inc"
 } obr_visibility_t;
 
 typedef struct obr_symbol_t

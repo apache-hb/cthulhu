@@ -32,10 +32,13 @@ default_library = get_option('default_library')
 cc = meson.get_compiler('c')
 target = target_machine.system()
 
+if default_library == 'both'
+    error('cthulhu does not support building both static and shared libraries in a single build')
+endif
+
 opt_paranoid = get_option('paranoid').disable_auto_if(is_release)
 opt_analyze = get_option('analyze').disable_auto_if(meson.is_subproject())
 win32_trickery = get_option('win32_trickery')
-module_loader = get_option('module_loader')
 trace_time = get_option('trace_time').disable_auto_if(meson.is_subproject())
 
 # disable unit tests if we are a subproject or release build
@@ -366,7 +369,7 @@ build_summary = {
         'Bison': bison,
         'Win32 trickery': win32_trickery.allowed(),
         'Compile time tracing': trace_time.enabled(),
-        'Module loaders': module_loader,
+        'Module loader': default_library,
         'Unit tests': unit_tests,
         'Driver tests': driver_tests,
         'Doxygen': doxygen

@@ -6,7 +6,7 @@ typedef struct language_runtime_t language_runtime_t;
 
 typedef enum obr_tag_t {
 #define DECL_TAG(ID, VAL, STR) ID VAL,
-#include "oberon/oberon.def"
+#include "oberon/oberon.inc"
 
     eObrTagTotal
 } obr_tag_t;

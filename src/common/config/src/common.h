@@ -15,6 +15,7 @@ typedef struct cfg_field_t
         cfg_int_t int_config;
         bool bool_config;
         const char *string_config;
+        vector_t *vec_config;
         cfg_enum_t enum_config;
         cfg_flags_t flags_config;
     };

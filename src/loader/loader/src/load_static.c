@@ -1,5 +1,7 @@
 #include "common.h" // IWYU pragma: export
 
+#include <enum_modules.h>
+
 #include "base/util.h"
 #include "base/panic.h"
 

@@ -7,12 +7,12 @@
 typedef enum tree_tags_t
 {
 #define TREE_TAG(ID, NAME, TAGS) ID = (TAGS),
-#include "cthulhu/tree/tree.def"
+#include "cthulhu/tree/tree.inc"
 } tree_tags_t;
 
 static const tree_tags_t kTreeTags[eTreeTotal] = {
 #define TREE_KIND(ID, NAME, TAGS) [ID] = (TAGS),
-#include "cthulhu/tree/tree.def"
+#include "cthulhu/tree/tree.inc"
 };
 
 static bool kind_has_tag(tree_kind_t kind, tree_tags_t tags)

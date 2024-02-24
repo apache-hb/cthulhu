@@ -81,6 +81,8 @@ multi = {
     }
 }
 
+load_lang = default_library == 'shared' ? [ pl0_shared.full_path() ] : [ ]
+
 foreach case, tests : tests
     passes = tests['pass']
     fails = tests['fail']
@@ -90,10 +92,8 @@ foreach case, tests : tests
     foreach name : passes
         path = dir/where/'pass'/name + '.pl0'
         id = 'pass-' + case + '-' + name
-        # [ '--shared', langs['pl0']['shared'] ]
-        # these are broken until i can remove *all* global state
         test(id, harness,
-            args : [ id, path ],
+            args : [ id ] + load_lang + [ path ],
             suite : 'pl0'
         )
     endforeach
@@ -102,7 +102,7 @@ foreach case, tests : tests
         path = dir/where/'fail'/name + '.pl0'
         id = 'fail-' + case + '-' + name
         test(id, harness,
-            args : [ id, path ],
+            args : [ id ] + load_lang + [ path ],
             suite : 'pl0',
             should_fail : true
         )
@@ -117,7 +117,7 @@ foreach case, cfg : multi
 
     id = 'pass-multi-' + case
     test(id, harness,
-        args : [ id ] + paths,
+        args : [ id ] + load_lang + paths,
         suite : 'pl0',
         should_fail : not cfg['pass']
     )
@@ -127,7 +127,7 @@ foreach case, success : crashes
     path = dir/'crashes'/case + '.pl0'
     id = 'crash-' + case
     test(id, harness,
-        args : [ id, path ],
+        args : [ id ] + load_lang + [ path ],
         suite : 'pl0',
         should_fail : not success
     )

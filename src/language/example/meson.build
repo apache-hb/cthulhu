@@ -1,6 +1,6 @@
 src = [ 'src/main.c' ]
 
-ex = library('example', src,
+ex = static_library('example', src,
     dependencies : [ broker, interop, tree, notify, memory, driver ],
     c_args : user_args,
     include_directories : [ 'src' ]

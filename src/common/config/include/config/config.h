@@ -23,7 +23,7 @@ typedef struct vector_t vector_t;
 typedef enum cfg_type_t
 {
 #define CFG_TYPE(id, name) id,
-#include "config.def"
+#include "config.inc"
 
     eConfigCount
 } cfg_type_t;
@@ -234,6 +234,14 @@ CT_CONFIG_API bool cfg_bool_info(IN_NOTNULL const cfg_field_t *field);
 CT_PUREFN
 CT_CONFIG_API const char *cfg_string_info(IN_NOTNULL const cfg_field_t *field);
 
+/// @brief get the information about a vector field
+///
+/// @param field the field to get the information about
+///
+/// @return the information about @p field
+CT_PUREFN
+CT_CONFIG_API const vector_t *cfg_vector_info(IN_NOTNULL const cfg_field_t *field);
+
 /// @brief get the information about a choice field
 ///
 /// @param field the field to get the information about
@@ -256,7 +264,7 @@ CT_CONFIG_API const cfg_flags_t *cfg_flags_info(IN_NOTNULL const cfg_field_t *fi
 ///
 /// @return the name of @p type
 CT_CONSTFN RET_NOTNULL
-CT_CONFIG_API const char *cfg_type_name(IN_RANGE(<, eConfigCount) cfg_type_t type);
+CT_CONFIG_API const char *cfg_type_string(IN_RANGE(<, eConfigCount) cfg_type_t type);
 
 /// @brief get all subgroups in a configuration group
 ///

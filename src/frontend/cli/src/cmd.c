@@ -20,6 +20,16 @@ static const cfg_info_t kReportInfo = {
     .brief = "Reporting options"
 };
 
+static const char *const kLangShortArgs[] = { "l", NULL };
+static const char *const kLangLongArgs[] = { "lang", NULL };
+
+static const cfg_info_t kLang = {
+    .name = "lang",
+    .brief = "Load a language driver",
+    .short_args = kLangShortArgs,
+    .long_args = kLangLongArgs,
+};
+
 static const char *const kIrShortArgs[] = { "ir", NULL };
 static const char *const kIrLongArgs[] = { "emit-ir", NULL };
 
@@ -77,6 +87,8 @@ tool_t make_tool(arena_t *arena)
 
     default_options_t options = get_default_options(config);
 
+    cfg_field_t *lang_field = config_vector(config, &kLang, NULL);
+
     cfg_field_t *emit_ir_field = config_bool(config, &kEmitIr, false);
 
     cfg_field_t *output_dir_field = config_string(config, &kOutputDir, NULL);
@@ -97,6 +109,8 @@ tool_t make_tool(arena_t *arena)
     tool_t tool = {
         .config = config,
         .options = options,
+
+        .langs = lang_field,
 
         .emit_ssa = emit_ir_field,
         .output_dir = output_dir_field,

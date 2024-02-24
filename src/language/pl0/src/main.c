@@ -47,7 +47,7 @@ static const size_t kRootSizes[ePl0TagTotal] = {
 
 static const char *const kDeclNames[ePl0TagTotal] = {
 #define DECL_TAG(id, init, str) [id] = (str),
-#include "pl0/pl0.def"
+#include "pl0/pl0.inc"
 };
 
 CT_DRIVER_API const language_t kPl0Module = {

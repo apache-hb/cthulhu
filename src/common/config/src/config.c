@@ -154,6 +154,7 @@ cfg_field_t *config_vector(cfg_group_t *group, const cfg_info_t *info, vector_t 
     ASSERT_CONFIG_VALID(group, info);
 
     cfg_field_t *field = add_field(group, info, eConfigVector);
+    field->vec_config = initial;
     field->vec_value = initial != NULL ? initial : vector_new(4, group->arena);
 
     return field;

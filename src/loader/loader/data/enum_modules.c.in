@@ -1,7 +1,5 @@
 #include "enum_modules.h"
 
-#include <string.h>
-
 @EXTERNS@
 
 static_modules_t get_static_modules(void)

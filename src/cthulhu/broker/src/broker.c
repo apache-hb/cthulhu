@@ -578,7 +578,7 @@ text_view_t build_unit_id(const vector_t *parts, arena_t *arena)
 
 static const char *const kPassNames[ePassCount] = {
 #define BROKER_PASS(ID, STR) [ID] = (STR),
-#include "cthulhu/broker/broker.def"
+#include "cthulhu/broker/broker.inc"
 };
 
 const char *broker_pass_name(broker_pass_t pass)

@@ -24,8 +24,8 @@ pl0_lang = static_library('pl0_lang', src,
     override_options : [ 'unity=off' ]
 )
 
-if module_loader.contains('static')
-    pl0_static = library('pl0_static', 'src/main.c',
+if default_library == 'static'
+    pl0_static = static_library('pl0_static', 'src/main.c',
         link_with : pl0_lang,
         dependencies : deps,
         c_args : user_args,
@@ -39,10 +39,10 @@ if module_loader.contains('static')
         'static': pl0_static,
         'module': 'kPl0Module'
     }
-endif
-
-if module_loader.contains('shared')
+elif default_library == 'shared'
     pl0_shared = shared_module('pl0_shared', 'src/main.c',
+        build_by_default : not meson.is_subproject(),
+        install : not meson.is_subproject(),
         link_with : pl0_lang,
         dependencies : deps,
         c_args : user_args + [ '-DCTU_DRIVER_SHARED=1' ],

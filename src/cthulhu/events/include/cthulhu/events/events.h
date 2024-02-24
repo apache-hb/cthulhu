@@ -14,7 +14,7 @@ CT_BEGIN_API
 /// @{
 
 #define CTU_EVENT(name, ...) CT_EVENTS_API extern const diagnostic_t kEvent_##name;
-#include "events.def"
+#include "events.inc"
 
 /// @brief get all common diagnostics
 ///

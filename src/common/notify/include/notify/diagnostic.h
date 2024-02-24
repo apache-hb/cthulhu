@@ -15,7 +15,7 @@ CT_BEGIN_API
 typedef enum severity_t
 {
 #define SEVERITY(ID, NAME) ID,
-#include "notify.def"
+#include "notify.inc"
 
     eSeverityTotal
 } severity_t;

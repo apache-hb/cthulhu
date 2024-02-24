@@ -23,7 +23,7 @@ static void cc_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
 
 static const diagnostic_t * const kDiagnosticTable[] = {
 #define NEW_EVENT(name, ...) &kEvent_##name,
-#include "c/events.def"
+#include "c/events.inc"
 };
 
 static const char *const kLangNames[] = { "c", "h", NULL };

@@ -2,6 +2,11 @@
 
 #include "arena/arena.h"
 #include "base/panic.h"
+
+#if CTU_LOADER_STATIC
+#   include "enum_modules.h"
+#endif
+
 #include "std/typed/vector.h"
 
 static const loader_config_t kConfig = eLoadNone
@@ -116,7 +121,7 @@ loaded_module_t load_module(loader_t *loader, module_type_t mask, const char *na
 
 static const char *const kErrorStrings[eErrorCount] = {
 #define LOADER_ERROR(ID, STR) [ID] = (STR),
-#include "support/loader.def"
+#include "support/loader.inc"
 };
 
 const char *load_error_string(load_error_t error)

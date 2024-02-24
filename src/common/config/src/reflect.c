@@ -65,6 +65,14 @@ const char *cfg_string_info(const cfg_field_t *field)
 }
 
 USE_DECL
+const vector_t *cfg_vector_info(const cfg_field_t *field)
+{
+    ASSERT_FIELD_TYPE(field, eConfigVector);
+
+    return field->vec_config;
+}
+
+USE_DECL
 const cfg_enum_t *cfg_enum_info(const cfg_field_t *field)
 {
     ASSERT_FIELD_TYPE(field, eConfigEnum);
@@ -82,11 +90,11 @@ const cfg_flags_t *cfg_flags_info(const cfg_field_t *field)
 
 static const char *const kConfigTypeNames[eConfigCount] = {
 #define CFG_TYPE(id, name) [id] = (name),
-#include "config/config.def"
+#include "config/config.inc"
 };
 
 USE_DECL
-const char *cfg_type_name(cfg_type_t type)
+const char *cfg_type_string(cfg_type_t type)
 {
     CTASSERTF(type < eConfigCount, "invalid type %d", type);
 

@@ -24,7 +24,7 @@ os_api_build = '-DCT_OS_BUILD=1'
 # TODO: the impl libraries should be static, and os_common should route
 # to the native impl, allowing common checks to be done in common
 # would do now but time crunch
-lib_oscommon = static_library('os_common', src,
+lib_oscommon = library('os_common', src,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ os_api_build ],
@@ -46,7 +46,7 @@ subdir('src' / os_platform)
 
 os = declare_dependency(
     link_with : [ lib_osnative ],
-    dependencies : [ core ],
+    dependencies : [ os_common ],
     include_directories : os_include
 )
 

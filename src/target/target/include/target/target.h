@@ -3,6 +3,7 @@
 #include <ctu_target_api.h>
 
 #include "core/compiler.h"
+#include "core/analyze.h"
 
 typedef struct arena_t arena_t;
 typedef struct logger_t logger_t;
@@ -23,12 +24,8 @@ CT_BEGIN_API
 /// @brief output folder structure
 typedef enum file_layout_t
 {
-    /// @brief create subfolders matching the module path
-    eFileLayoutTree,
-
-    /// @brief name files with the full module path
-    eFileLayoutFlat,
-
+#define FILE_LAYOUT(ID, STR) ID,
+#include "target.inc"
     eFileLayoutCount
 } file_layout_t;
 
@@ -47,6 +44,9 @@ typedef struct emit_t
     /// @brief output layout
     file_layout_t layout;
 } emit_t;
+
+CT_CONSTFN
+CT_TARGET_API const char *file_layout_str(IN_RANGE(0, eFileLayoutCount - 1) file_layout_t layout);
 
 /// @}
 

@@ -1,7 +1,8 @@
 src = [ 'src/target.c' ]
 
-libtarget_hlsl = library('target_hlsl', src,
+libtarget_hlsl = static_library('target_hlsl', src,
     build_by_default : not meson.is_subproject(),
+    install : not meson.is_subproject(),
     include_directories : 'include',
     dependencies : [ target ]
 )

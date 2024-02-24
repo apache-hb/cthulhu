@@ -125,12 +125,6 @@ option('analyze', type : 'feature',
     value : 'disabled'
 )
 
-option('module_loader', type : 'array',
-    description : 'Which module loaders to build',
-    choices : [ 'static', 'shared' ],
-    value : [ 'static', 'shared' ]
-)
-
 option('win32_trickery', type : 'feature',
     description : 'enable some slightly hacky win32 handling to speed up builds',
     value : 'disabled'

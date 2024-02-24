@@ -13,6 +13,8 @@ typedef struct tool_t
 {
     cfg_group_t *config;
 
+    cfg_field_t *langs;
+
     cfg_field_t *emit_ssa;
     cfg_field_t *output_dir;
 
