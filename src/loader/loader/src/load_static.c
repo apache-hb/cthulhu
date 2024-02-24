@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #include "common.h" // IWYU pragma: export
 
 #include <enum_modules.h>

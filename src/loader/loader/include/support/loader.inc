@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #ifndef LOADER_MODULE
 #   define LOADER_MODULE(ID, STR, BIT)
 #endif
