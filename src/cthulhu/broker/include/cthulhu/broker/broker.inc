@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #ifndef BROKER_PASS
 #   define BROKER_PASS(ID, STR)
 #endif

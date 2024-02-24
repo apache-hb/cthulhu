@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #include "cthulhu/events/events.h"
 #include "scan/node.h"
 #include "std/str.h"

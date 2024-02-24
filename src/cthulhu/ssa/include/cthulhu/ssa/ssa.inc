@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #ifndef SSA_KIND
 #   define SSA_KIND(ID, NAME)
 #endif

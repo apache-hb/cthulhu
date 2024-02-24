@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #ifndef CTU_EVENT
 #   define CTU_EVENT(name, ...)
 #endif

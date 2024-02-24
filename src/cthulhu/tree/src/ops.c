@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #include "cthulhu/tree/ops.h"
 
 #include "base/panic.h"

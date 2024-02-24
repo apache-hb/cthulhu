@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #ifndef TREE_TAG
 #   define TREE_TAG(ID, NAME, BIT)
 #endif
