@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #include "argparse/argparse.h"
 #include "base/util.h"
 #include "setup/memory.h"

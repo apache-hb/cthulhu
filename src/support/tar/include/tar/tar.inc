@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #ifndef TAR_ERROR
 #   define TAR_ERROR(id, str)
 #endif

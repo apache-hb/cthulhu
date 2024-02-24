@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #include "json_scan.h"
 
 #include "core/macros.h"

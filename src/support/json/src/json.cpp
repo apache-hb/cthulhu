@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+
 #include "json/json.hpp"
 
 #include "json/json.h"
