@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 #ifndef C_AST_KIND
 #   define C_AST_KIND(id, name)
 #endif

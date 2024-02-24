@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 #ifndef NEW_EVENT
 #   define NEW_EVENT(id, ...)
 #endif

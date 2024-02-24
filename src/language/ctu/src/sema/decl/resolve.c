@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 #include "ctu/sema/decl/resolve.h"
 
 #include "core/macros.h"

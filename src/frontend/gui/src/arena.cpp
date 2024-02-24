@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 #include "editor/arena.hpp"
 #include "memory/memory.h"
 

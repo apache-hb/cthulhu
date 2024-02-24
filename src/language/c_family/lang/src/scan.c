@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 #include "c/scan.h"
 
 #include "base/panic.h"

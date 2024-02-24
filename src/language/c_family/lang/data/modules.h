@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 #pragma once
 
 #if !defined(__cplusplus) && __cpp_modules == 0

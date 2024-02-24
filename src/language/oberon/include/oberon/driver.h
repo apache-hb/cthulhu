@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 #pragma once
 
 #include "notify/diagnostic.h" // IWYU pragma: export

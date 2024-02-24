@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 #ifndef JVM_VERSION
 #   define JVM_VERSION(id, str, it)
 #endif

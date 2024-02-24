@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 #include "oberon/sema/type.h"
 
 #include "oberon/driver.h"

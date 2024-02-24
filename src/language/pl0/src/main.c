@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 #include "pl0/sema.h"
 #include "pl0/ast.h"
 

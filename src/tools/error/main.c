@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 #include "backtrace/backtrace.h"
 #include "base/panic.h"
 #include "setup/setup.h"

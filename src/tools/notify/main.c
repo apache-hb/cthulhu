@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 #include "argparse/argparse.h"
 #include "format/backtrace.h"
 #include "format/colour.h"

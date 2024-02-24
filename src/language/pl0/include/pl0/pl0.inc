@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 #ifndef DECL_TAG
 #   define DECL_TAG(id, init, str)
 #endif

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 #include "ctu/sema/type.h"
 #include "cthulhu/events/events.h"
 #include "ctu/sema/sema.h"

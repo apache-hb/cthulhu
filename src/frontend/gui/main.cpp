@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 #include "interop/compile.h"
 #include "io/io.h"
 #include "setup/setup.h"

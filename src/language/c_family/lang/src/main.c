@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 #include "driver/driver.h"
 
 #include "c/sema/sema.h"

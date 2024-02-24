@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 #include "cthulhu/broker/broker.h"
 
 #include "cthulhu/tree/tree.h"

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 #ifndef FILE_LAYOUT
 #   define FILE_LAYOUT(id, str)
 #endif
