@@ -13,7 +13,7 @@ all drivers must conform to the same dir structure
 // src/main.c
 
 /// default language extensions, must be null terminated
-static const char *const kLangNames[] = { "e", "example", NULL };
+static const char *const kLangNames[] = CT_LANG_EXTS("e", "example");
 
 /// exported driver module
 const language_t kExampleModule = {

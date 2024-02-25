@@ -13,7 +13,9 @@ typedef struct tool_t
 {
     cfg_group_t *config;
 
-    cfg_field_t *langs;
+    cfg_field_t *add_language;
+    cfg_field_t *add_plugin;
+    cfg_field_t *add_target;
 
     cfg_field_t *emit_ssa;
     cfg_field_t *output_dir;

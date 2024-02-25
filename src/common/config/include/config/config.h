@@ -30,6 +30,8 @@ typedef enum cfg_type_t
     eConfigCount
 } cfg_type_t;
 
+#define CT_ARGS(...) { __VA_ARGS__, NULL }
+
 typedef struct cfg_field_t cfg_field_t;
 typedef struct cfg_group_t cfg_group_t;
 

@@ -6,7 +6,7 @@
 
 CT_DRIVER_API const target_t kTargetC = {
     .info = {
-        .id = "target-c",
+        .id = "target/cfamily",
         .name = "C",
         .version = {
             .license = "LGPLv3",

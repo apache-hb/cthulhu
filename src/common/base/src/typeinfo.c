@@ -7,7 +7,14 @@ static size_t info_ptr_hash(const void *key) { return ptrhash(key); }
 static bool info_ptr_equal(const void *lhs, const void *rhs) { return lhs == rhs; }
 
 static size_t info_str_hash(const void *key) { return str_hash(key); }
-static bool info_str_equal(const void *lhs, const void *rhs) { return str_equal(lhs, rhs); }
+
+static bool info_str_equal(const void *lhs, const void *rhs)
+{
+    if (lhs == rhs) return true;
+    if (lhs == NULL || rhs == NULL) return false;
+
+    return str_equal(lhs, rhs);
+}
 
 static size_t info_text_hash(const void *key)
 {

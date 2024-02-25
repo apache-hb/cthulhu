@@ -22,7 +22,7 @@
 
 static const frontend_t kFrontendGui = {
     .info = {
-        .id = "frontend-gui",
+        .id = "frontend/gui",
         .name = "Cthulhu GUI",
         .version = {
             .license = "GPLv3",
@@ -62,7 +62,7 @@ public:
         .brief = "Test group to demonstrate config"
     };
 
-    constexpr static const char *kTestIntArgsLong[] = { "test-int", NULL };
+    constexpr static const char *kTestIntArgsLong[] = CT_ARGS("test-int");
 
     cfg_info_t test_int_info = {
         .name = "test_int",
@@ -76,7 +76,7 @@ public:
         .max = 99
     };
 
-    constexpr static const char *kTestBoolArgs[] = { "test-bool", NULL };
+    constexpr static const char *kTestBoolArgs[] = CT_ARGS("test-bool");
 
     cfg_info_t test_bool_info = {
         .name = "test_bool",
@@ -84,7 +84,7 @@ public:
         .long_args = kTestBoolArgs
     };
 
-    constexpr static const char *kTestStringArgs[] = { "test-string", NULL };
+    constexpr static const char *kTestStringArgs[] = CT_ARGS("test-string");
 
     cfg_info_t test_string_info = {
         .name = "test_string",
@@ -92,7 +92,7 @@ public:
         .long_args = kTestStringArgs
     };
 
-    constexpr static const char *kTestEnumArgs[] = { "test-enum", NULL };
+    constexpr static const char *kTestEnumArgs[] = CT_ARGS("test-enum");
 
     cfg_info_t test_enum_info = {
         .name = "test_enum",
@@ -112,7 +112,7 @@ public:
         .initial = 2
     };
 
-    constexpr static const char *kTestFlagsArgs[] = { "test-flags", NULL };
+    constexpr static const char *kTestFlagsArgs[] = CT_ARGS("test-flags");
 
     cfg_info_t test_flags_info = {
         .name = "test_flags",

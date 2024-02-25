@@ -6,7 +6,7 @@
 
 const language_t kCppModule = {
     .info = {
-        .id = "cpp",
+        .id = "lang/cpp",
         .name = "C Preprocessor",
         .version = {
             .license = "LGPLv3",

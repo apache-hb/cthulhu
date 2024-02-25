@@ -9,6 +9,7 @@
 
 #include "cthulhu/events/events.h"
 #include "notify/notify.h"
+#include "std/str.h"
 #include "std/typed/vector.h"
 #include "std/map.h"
 #include "std/set.h"
@@ -21,11 +22,17 @@ typedef struct support_t
 
     typevec_t *modules;
 
-    set_t *langs;
+    map_t *languages;
 
     // map of extensions to the associated language runtime
     // map_t<const char*, language_runtime_t*>
     map_t *extmap;
+
+    // map_t<const char*, plugin_runtime_t*>
+    map_t *plugins;
+
+    // map_t<const char*, target_runtime_t*>
+    map_t *targets;
 } support_t;
 
 static void add_loaded_module(support_t *support, loaded_module_t mod)
@@ -38,14 +45,17 @@ static void add_loaded_module(support_t *support, loaded_module_t mod)
     {
         const language_t *lang = mod.lang;
         const module_info_t *info = &lang->info;
-        if (set_contains(support->langs, info->id))
+        CTASSERTF_ALWAYS(str_startswith(info->id, "lang/"), "language id `%s` must start with `lang/`", info->id);
+
+        const char *id = info->id + sizeof("lang/") - 1;
+
+        if (map_contains(support->languages, id))
         {
-            msg_notify(logger, &kEvent_LanguageDriverConflict, node, "language %s already loaded", info->id);
+            msg_notify(logger, &kEvent_LanguageDriverConflict, node, "%s already loaded", info->id);
         }
 
-        set_add(support->langs, info->id);
-
         language_runtime_t *runtime = broker_add_language(support->broker, lang);
+        map_set(support->languages, id, runtime);
 
         for (size_t i = 0; lang->exts[i]; i++)
         {
@@ -55,10 +65,44 @@ static void add_loaded_module(support_t *support, loaded_module_t mod)
             {
                 const language_t *ol = old->info;
                 const module_info_t *prev = &ol->info;
-                msg_notify(logger, &kEvent_ExtensionConflict, node, "extension %s already associated with language %s", ext, prev->id);
+                msg_notify(logger, &kEvent_ExtensionConflict, node, "extension %s already associated with %s", ext, prev->id);
             }
             map_set(support->extmap, ext, runtime);
         }
+    }
+
+    if (mod.type & eModPlugin)
+    {
+        const plugin_t *plugin = mod.plugin;
+        const module_info_t *info = &plugin->info;
+        CTASSERTF_ALWAYS(str_startswith(info->id, "plugin/"), "plugin id `%s` must start with `plugin/`", info->id);
+
+        const char *id = info->id + sizeof("plugin/") - 1;
+
+        if (map_contains(support->plugins, id))
+        {
+            msg_notify(logger, &kEvent_PluginConflict, node, "%s already loaded", info->id);
+        }
+
+        plugin_runtime_t *runtime = broker_add_plugin(support->broker, plugin);
+        map_set(support->plugins, id, runtime);
+    }
+
+    if (mod.type & eModTarget)
+    {
+        const target_t *target = mod.target;
+        const module_info_t *info = &target->info;
+        CTASSERTF_ALWAYS(str_startswith(info->id, "target/"), "target id `%s` must start with `target/`", info->id);
+
+        const char *id = info->id + sizeof("target/") - 1;
+
+        if (map_contains(support->targets, id))
+        {
+            msg_notify(logger, &kEvent_TargetConflict, node, "%s already loaded", info->id);
+        }
+
+        target_runtime_t *runtime = broker_add_target(support->broker, target);
+        map_set(support->targets, id, runtime);
     }
 }
 
@@ -74,8 +118,10 @@ support_t *support_new(broker_t *broker, loader_t *loader, arena_t *arena)
     support->loader = loader;
 
     support->modules = typevec_new(sizeof(loaded_module_t), 16, arena);
-    support->langs = set_new(16, kTypeInfoString, arena);
+    support->languages = map_new(16, kTypeInfoString, arena);
     support->extmap = map_new(16, kTypeInfoString, arena);
+    support->plugins = map_new(16, kTypeInfoString, arena);
+    support->targets = map_new(16, kTypeInfoString, arena);
 
     return support;
 }
@@ -124,3 +170,14 @@ language_runtime_t *support_get_lang(support_t *support, const char *ext)
 
     return map_get(support->extmap, ext);
 }
+
+USE_DECL
+plugin_runtime_t *support_get_plugin(IN_NOTNULL support_t *support, IN_STRING const char *name)
+{
+    CTASSERT(support != NULL);
+
+    return map_get(support->extmap, name);
+}
+
+USE_DECL
+target_runtime_t *support_get_target(IN_NOTNULL support_t *support, IN_STRING const char *name);

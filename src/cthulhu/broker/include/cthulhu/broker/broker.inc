@@ -74,3 +74,21 @@ BROKER_ARENA(eArenaString, "string")
 BROKER_ARENA(eArenaTransient, "transient")
 
 #undef BROKER_ARENA
+
+#ifndef FILE_LAYOUT
+#   define FILE_LAYOUT(id, str)
+#endif
+
+// output files are organized in a tree
+FILE_LAYOUT(eFileLayoutTree, "tree")
+
+// output files are organized in a flat structure
+FILE_LAYOUT(eFileLayoutFlat, "flat")
+
+// all output is in a single file
+FILE_LAYOUT(eFileLayoutSingle, "single")
+
+// output in a source + header pair
+FILE_LAYOUT(eFileLayoutPair, "pair")
+
+#undef FILE_LAYOUT

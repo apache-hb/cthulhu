@@ -35,8 +35,8 @@ static const cfg_info_t kGroupInfo = {
     .brief = "General options",
 };
 
-static const char *const kHelpInfoShortArgs[] = {"h", "?", NULL};
-static const char *const kHelpInfoLongArgs[] = {"help", NULL};
+static const char *const kHelpInfoShortArgs[] = CT_ARGS("h", "?");
+static const char *const kHelpInfoLongArgs[] = CT_ARGS("help");
 
 static const cfg_info_t kHelpInfo = {
     .name = "help",
@@ -45,8 +45,8 @@ static const cfg_info_t kHelpInfo = {
     .long_args = kHelpInfoLongArgs,
 };
 
-static const char *const kVersionInfoShortArgs[] = {"v", NULL};
-static const char *const kVersionInfoLongArgs[] = {"version", NULL};
+static const char *const kVersionInfoShortArgs[] = CT_ARGS("v");
+static const char *const kVersionInfoLongArgs[] = CT_ARGS("version");
 
 static const cfg_info_t kVersionInfo = {
     .name = "version",
@@ -55,8 +55,8 @@ static const cfg_info_t kVersionInfo = {
     .long_args = kVersionInfoLongArgs,
 };
 
-static const char *const kArgparseUsageInfoShortArgs[] = {"u", NULL};
-static const char *const kArgparseUsageInfoLongArgs[] = {"argparse-usage", NULL};
+static const char *const kArgparseUsageInfoShortArgs[] = CT_ARGS("u");
+static const char *const kArgparseUsageInfoLongArgs[] = CT_ARGS("usage");
 
 static const cfg_info_t kArgparseUsageInfo = {
     .name = "argparse-usage",
@@ -65,8 +65,8 @@ static const cfg_info_t kArgparseUsageInfo = {
     .long_args = kArgparseUsageInfoLongArgs,
 };
 
-static const char *const kWindowsStyleInfoShortArgs[] = {"w", NULL};
-static const char *const kWindowsStyleInfoLongArgs[] = {"windows-style", NULL};
+static const char *const kWindowsStyleInfoShortArgs[] = CT_ARGS("w");
+static const char *const kWindowsStyleInfoLongArgs[] = CT_ARGS("windows-style");
 
 static const cfg_info_t kWindowsStyleInfo = {
     .name = "windows-style",
@@ -75,8 +75,8 @@ static const cfg_info_t kWindowsStyleInfo = {
     .long_args = kWindowsStyleInfoLongArgs,
 };
 
-static const char *const kColourInfoShortArgs[] = {"c", NULL};
-static const char *const kColourInfoLongArgs[] = {"colour", NULL};
+static const char *const kColourInfoShortArgs[] = CT_ARGS("c");
+static const char *const kColourInfoLongArgs[] = CT_ARGS("colour");
 
 static const cfg_info_t kColourInfo = {
     .name = "colour",
@@ -90,8 +90,8 @@ static const cfg_info_t kDebugGroupInfo = {
     .brief = "Internal debugging options",
 };
 
-static const char *const kVerboseLoggingInfoShortArgs[] = {"V", NULL};
-static const char *const kVerboseLoggingInfoLongArgs[] = {"verbose", NULL};
+static const char *const kVerboseLoggingInfoShortArgs[] = CT_ARGS("V");
+static const char *const kVerboseLoggingInfoLongArgs[] = CT_ARGS("verbose");
 
 static const cfg_info_t kVerboseLoggingInfo = {
     .name = "verbose",

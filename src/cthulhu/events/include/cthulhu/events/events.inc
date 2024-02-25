@@ -578,4 +578,12 @@ CTU_EVENT(DynamicLoadingDisabled, {
         "Dynamic loading is disabled in this distribution of cthulhu.",
 })
 
+CTU_EVENT(Unimplemented, {
+    .severity = eSeveritySorry,
+    .id = "M0079",
+    .brief = "Unimplemented",
+    .description =
+        "This feature has not yet been implemented.",
+})
+
 #undef CTU_EVENT

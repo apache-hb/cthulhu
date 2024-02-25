@@ -38,7 +38,7 @@ static void pl0_postparse(language_runtime_t *runtime, scan_t *scan, void *tree)
     lang_add_unit(runtime, build_unit_id(path, arena), ast->node, ast, sizes, ePl0TagTotal);
 }
 
-static const char *const kLangNames[] = { "pl", "pl0", NULL };
+static const char *const kLangNames[] = CT_LANG_EXTS("pl", "pl0");
 
 static const size_t kRootSizes[ePl0TagTotal] = {
     [ePl0TagValues] = 1,
@@ -54,7 +54,7 @@ static const char *const kDeclNames[ePl0TagTotal] = {
 
 CT_DRIVER_API const language_t kPl0Module = {
     .info = {
-        .id = "lang-pl0",
+        .id = "lang/pl0",
         .name = "PL/0",
         .version = {
             .license = "LGPLv3",

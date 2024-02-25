@@ -16,10 +16,10 @@ static void jvm_destroy(driver_t *handle)
     CT_UNUSED(handle);
 }
 
-static const char *const kLangNames[] = { "class", "jar", NULL };
+static const char *const kLangNames[] = CT_LANG_EXTS("class", "jar");
 
 const language_t kJvmModule = {
-    .id = "jvm",
+    .id = "lang/jvm",
     .name = "Java bytecode",
     .version = {
         .license = "LGPLv3",

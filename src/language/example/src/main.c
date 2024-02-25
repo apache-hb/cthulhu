@@ -38,7 +38,7 @@ static void ex_compile_symbols(language_runtime_t *context, compile_unit_t *unit
     ctu_log("ex_compile_symbols(context = 0x%p, unit = 0x%p)", (void*)context, (void*)unit);
 }
 
-static const char * const kLangNames[] = { "e", "example", NULL };
+static const char * const kLangNames[] = CT_LANG_EXTS("e", "example");
 
 static const size_t kDeclSizes[eSemaTotal] = {
     [eSemaValues] = 1,
@@ -49,7 +49,7 @@ static const size_t kDeclSizes[eSemaTotal] = {
 
 CT_DRIVER_API const language_t kExampleModule = {
     .info = {
-        .id = "example",
+        .id = "lang/example",
         .name = "Example",
         .version = {
             .license = "GPLv3",

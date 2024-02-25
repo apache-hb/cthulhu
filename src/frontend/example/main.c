@@ -33,7 +33,7 @@
 
 static const frontend_t kFrontendInfo = {
     .info = {
-        .id = "frontend-example",
+        .id = "frontend/example",
         .name = "Example Frontend",
         .version = {
             .license = "GPLv3",

@@ -37,7 +37,7 @@
 
 static const frontend_t kFrontendInfo = {
     .info = {
-        .id = "frontend-cli",
+        .id = "frontend/cli",
         .name = "Cthulhu CLI",
         .version = {
             .license = "GPLv3",
@@ -106,21 +106,17 @@ typedef struct cli_t
     io_t *con;
 } cli_t;
 
-static bool on_langs(ap_t *ap, const cfg_field_t *param, const void *value, void *data)
+static bool add_shared_module(cli_t *cli, const char *path, module_type_t type)
 {
-    CT_UNUSED(ap);
-    CT_UNUSED(param);
-    CT_UNUSED(value);
-
-    cli_t *cli = data;
+    CT_UNUSED(path);
+    CT_UNUSED(type);
 
 #if CTU_LOADER_DYNAMIC
-    const char *path = value;
     loaded_module_t mod = { 0 };
 
     if (!support_load_module(cli->support, eModLanguage, path, &mod))
     {
-        msg_notify(cli->logger, &kEvent_LanguageDriverConflict, broker_get_node(cli->broker), "failed to load language module at `%s`", path);
+        msg_notify(cli->logger, &kEvent_ModuleConflict, broker_get_node(cli->broker), "failed to load module at `%s`", path);
         return false;
     }
 
@@ -129,9 +125,33 @@ static bool on_langs(ap_t *ap, const cfg_field_t *param, const void *value, void
     ctu_log("loaded language module `%s`", path);
     return true;
 #else
-    msg_notify(cli->logger, &kEvent_DynamicLoadingDisabled, broker_get_node(cli->broker), "this distribution of cthulhu was not built with dynamic language loading");
-    return true;
+    msg_notify(cli->logger, &kEvent_DynamicLoadingDisabled, broker_get_node(cli->broker), "this distribution of cthulhu was not built with dynamic module loading");
+    return false;
 #endif
+}
+
+static bool on_add_plugin(ap_t *ap, const cfg_field_t *param, const void *value, void *data)
+{
+    CT_UNUSED(ap);
+    CT_UNUSED(param);
+
+    return add_shared_module(data, value, eModPlugin);
+}
+
+static bool on_add_target(ap_t *ap, const cfg_field_t *param, const void *value, void *data)
+{
+    CT_UNUSED(ap);
+    CT_UNUSED(param);
+
+    return add_shared_module(data, value, eModTarget);
+}
+
+static bool on_add_language(ap_t *ap, const cfg_field_t *param, const void *value, void *data)
+{
+    CT_UNUSED(ap);
+    CT_UNUSED(param);
+
+    return add_shared_module(data, value, eModLanguage);
 }
 
 #define CHECK_LOG(logger, fmt)                               \
@@ -183,7 +203,9 @@ int main(int argc, const char **argv)
 
     ap_t *ap = ap_new(tool.config, arena);
 
-    ap_event(ap, tool.langs, on_langs, &cli);
+    ap_event(ap, tool.add_language, on_add_language, &cli);
+    ap_event(ap, tool.add_plugin, on_add_plugin, &cli);
+    ap_event(ap, tool.add_target, on_add_target, &cli);
 
     int parse_err = parse_argparse(ap, tool.options, config);
     if (parse_err == CT_EXIT_SHOULD_EXIT)

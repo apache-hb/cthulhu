@@ -253,6 +253,9 @@ target_runtime_t *broker_add_target(broker_t *broker, const target_t *target)
 
     target_runtime_t *runtime = ARENA_MALLOC(sizeof(target_runtime_t), info.name, broker, arena);
     runtime->info = target;
+    runtime->broker = broker;
+    runtime->arena = arena;
+    runtime->logger = broker->logger;
 
     vector_push(&broker->targets, runtime);
 
@@ -560,13 +563,41 @@ text_view_t build_unit_id(const vector_t *parts, arena_t *arena)
     return text_view_make(buf, size);
 }
 
+USE_DECL
+void target_emit_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *emit)
+{
+    CTASSERT(runtime != NULL);
+    CTASSERT(ssa != NULL);
+    CTASSERT(emit != NULL);
+
+    const target_t *target = runtime->info;
+    CTASSERT(target->fn_ssa != NULL);
+
+    target->fn_ssa(runtime, ssa, emit);
+}
+
 static const char *const kPassNames[ePassCount] = {
 #define BROKER_PASS(ID, STR) [ID] = (STR),
 #include "cthulhu/broker/broker.inc"
 };
 
+USE_DECL
 const char *broker_pass_name(broker_pass_t pass)
 {
-    CTASSERTF(pass < ePassCount, "invalid pass %d", pass);
+    CT_ASSERT_RANGE(pass, 0, ePassCount - 1);
+
     return kPassNames[pass];
+}
+
+static const char *const kFileLayoutNames[] = {
+#define FILE_LAYOUT(ID, STR) [ID] = (STR),
+#include "cthulhu/broker/broker.inc"
+};
+
+USE_DECL
+const char *file_layout_name(file_layout_t layout)
+{
+    CT_ASSERT_RANGE(layout, 0, eFileLayoutCount - 1);
+
+    return kFileLayoutNames[layout];
 }

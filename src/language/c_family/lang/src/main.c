@@ -28,7 +28,7 @@ static const diagnostic_t * const kDiagnosticTable[] = {
 #include "c/events.inc"
 };
 
-static const char *const kLangNames[] = { "c", "h", NULL };
+static const char *const kLangNames[] = CT_LANG_EXTS("c", "h");
 
 static const size_t kDeclSizes[eCTagTotal] = {
     [eCTagValues] = 1,
@@ -39,7 +39,7 @@ static const size_t kDeclSizes[eCTagTotal] = {
 
 CT_DRIVER_API const language_t kCModule = {
     .info = {
-        .id = "c",
+        .id = "lang/c",
         .name = "C",
         .version = {
             .license = "LGPLv3",

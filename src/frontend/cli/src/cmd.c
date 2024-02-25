@@ -22,8 +22,8 @@ static const cfg_info_t kReportInfo = {
     .brief = "Reporting options"
 };
 
-static const char *const kLangShortArgs[] = { "l", NULL };
-static const char *const kLangLongArgs[] = { "lang", NULL };
+static const char *const kLangShortArgs[] = CT_ARGS("l");
+static const char *const kLangLongArgs[] = CT_ARGS("lang");
 
 static const cfg_info_t kLang = {
     .name = "lang",
@@ -32,8 +32,28 @@ static const cfg_info_t kLang = {
     .long_args = kLangLongArgs,
 };
 
-static const char *const kIrShortArgs[] = { "ir", NULL };
-static const char *const kIrLongArgs[] = { "emit-ir", NULL };
+static const char *const kPluginShortArgs[] = CT_ARGS("p");
+static const char *const kPluginLongArgs[] = CT_ARGS("plugin");
+
+static const cfg_info_t kPlugin = {
+    .name = "plugin",
+    .brief = "Load a plugin",
+    .short_args = kPluginShortArgs,
+    .long_args = kPluginLongArgs,
+};
+
+static const char *const kTargetShortArgs[] = CT_ARGS("t");
+static const char *const kTargetLongArgs[] = CT_ARGS("target");
+
+static const cfg_info_t kTarget = {
+    .name = "target",
+    .brief = "Load a target",
+    .short_args = kTargetShortArgs,
+    .long_args = kTargetLongArgs,
+};
+
+static const char *const kIrShortArgs[] = CT_ARGS("ir");
+static const char *const kIrLongArgs[] = CT_ARGS("emit-ssa");
 
 static const cfg_info_t kEmitIr = {
     .name = "emit-ssa",
@@ -42,7 +62,7 @@ static const cfg_info_t kEmitIr = {
     .long_args = kIrLongArgs,
 };
 
-static const char *const kWarnAsErrorShortArgs[] = { "Werror", NULL };
+static const char *const kWarnAsErrorShortArgs[] = CT_ARGS("Werror");
 
 static const cfg_info_t kWarnAsError = {
     .name = "warn-as-error",
@@ -50,7 +70,7 @@ static const cfg_info_t kWarnAsError = {
     .short_args = kWarnAsErrorShortArgs
 };
 
-static const char *const kReportLimitShortArgs[] = { "fmax-errors", NULL };
+static const char *const kReportLimitShortArgs[] = CT_ARGS("fmax-errors");
 
 static const cfg_info_t kReportLimit = {
     .name = "max-errors",
@@ -58,8 +78,8 @@ static const cfg_info_t kReportLimit = {
     .short_args = kReportLimitShortArgs
 };
 
-static const char *const kOutputDirShortArgs[] = { "o", NULL };
-static const char *const kOutputDirLongArgs[] = { "dir", NULL };
+static const char *const kOutputDirShortArgs[] = CT_ARGS("o");
+static const char *const kOutputDirLongArgs[] = CT_ARGS("output-dir");
 
 static const cfg_info_t kOutputDir = {
     .name = "output-dir",
@@ -68,8 +88,8 @@ static const cfg_info_t kOutputDir = {
     .long_args = kOutputDirLongArgs,
 };
 
-static const char *const kReportStyleShortArgs[] = { "r", NULL };
-static const char *const kReportStyleLongArgs[] = { "report", NULL };
+static const char *const kReportStyleShortArgs[] = CT_ARGS("report");
+static const char *const kReportStyleLongArgs[] = CT_ARGS("report-style");
 
 static const cfg_info_t kReportStyle = {
     .name = "report-style",
@@ -89,7 +109,10 @@ tool_t make_tool(arena_t *arena)
 
     default_options_t options = get_default_options(config);
 
-    cfg_field_t *lang_field = config_vector(config, &kLang, NULL);
+    cfg_field_t *add_language_field = config_vector(config, &kLang, NULL);
+
+    cfg_field_t *add_plugin_field = config_vector(config, &kPlugin, NULL);
+    cfg_field_t *add_target_field = config_vector(config, &kTarget, NULL);
 
     cfg_field_t *emit_ir_field = config_bool(config, &kEmitIr, false);
 
@@ -112,7 +135,9 @@ tool_t make_tool(arena_t *arena)
         .config = config,
         .options = options,
 
-        .langs = lang_field,
+        .add_language = add_language_field,
+        .add_plugin = add_plugin_field,
+        .add_target = add_target_field,
 
         .emit_ssa = emit_ir_field,
         .output_dir = output_dir_field,

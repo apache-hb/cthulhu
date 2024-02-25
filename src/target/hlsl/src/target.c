@@ -6,7 +6,7 @@
 
 CT_DRIVER_API const target_t kTargetHlsl = {
     .info = {
-        .id = "target-hlsl",
+        .id = "target/hlsl",
         .name = "HLSL",
         .version = {
             .license = "LGPLv3",

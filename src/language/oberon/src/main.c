@@ -53,7 +53,7 @@ static const diagnostic_t *const kDiagnosticTable[] = {
 #include "oberon/oberon.inc"
 };
 
-static const char *const kLangNames[] = { "m", "mod", "obr", "oberon", NULL };
+static const char *const kLangNames[] = CT_LANG_EXTS("m", "mod", "obr", "oberon");
 
 static const size_t kDeclSizes[eObrTagTotal] = {
     [eObrTagValues] = 32,
@@ -69,7 +69,7 @@ static const char *const kDeclNames[eObrTagTotal] = {
 
 CT_DRIVER_API const language_t kOberonModule = {
     .info = {
-        .id = "lang-oberon2",
+        .id = "lang/oberon2",
         .name = "Oberon-2",
         .version = {
             .license = "LGPLv3",

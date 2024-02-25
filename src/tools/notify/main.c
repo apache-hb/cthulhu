@@ -44,8 +44,8 @@ static const cfg_info_t kToolInfo = {
     .brief = "Notification testing options",
 };
 
-static const char *const kBacktraceArgsShort[] = { "bt", NULL };
-static const char *const kBacktraceArgsLong[] = { "backtrace", NULL };
+static const char *const kBacktraceArgsShort[] = CT_ARGS("bt");
+static const char *const kBacktraceArgsLong[] = CT_ARGS("backtrace");
 
 static const cfg_info_t kBacktraceInfo = {
     .name = "backtrace",
@@ -61,7 +61,7 @@ static const cfg_choice_t kNotifyOptions[] = {
 };
 #define NOTIFY_OPTION_COUNT (sizeof(kNotifyOptions) / sizeof(cfg_choice_t))
 
-static const char *const kNotifyArgsShort[] = { "notify", NULL };
+static const char *const kNotifyArgsShort[] = CT_ARGS("notify");
 
 static const cfg_info_t kNotifyInfo = {
     .name = "notify",
@@ -81,7 +81,7 @@ static const cfg_choice_t kHeadingOptions[] = {
 #   define HEADING_DEFAULT_OPTION eHeadingGeneric
 #endif
 
-static const char *const kHeadingArgsShort[] = { "heading", NULL };
+static const char *const kHeadingArgsShort[] = CT_ARGS("heading");
 
 static const cfg_info_t kHeadingInfo = {
     .name = "heading",
@@ -89,7 +89,7 @@ static const cfg_info_t kHeadingInfo = {
     .short_args = kHeadingArgsShort,
 };
 
-static const char *const kZeroIndexedArgsShort[] = { "zl", NULL };
+static const char *const kZeroIndexedArgsShort[] = CT_ARGS("zl");
 
 static const cfg_info_t kZeroIndexedInfo = {
     .name = "zero_indexed",

@@ -12,21 +12,21 @@ static const version_info_t kToolVersion = {
     .version = CT_NEW_VERSION(0, 1, 0),
 };
 
-static const char *const kSourcePathArgs[] = { "source", NULL };
+static const char *const kSourcePathArgs[] = CT_ARGS("source");
 static const cfg_info_t kSourcePathInfo = {
     .name = "source",
     .brief = "The output source file",
     .short_args = kSourcePathArgs,
 };
 
-static const char *const kHeaderPathArgs[] = { "header", NULL };
+static const char *const kHeaderPathArgs[] = CT_ARGS("header");
 static const cfg_info_t kHeaderPathInfo = {
     .name = "header",
     .brief = "The output header file",
     .short_args = kHeaderPathArgs,
 };
 
-static const char *const kAstInputArgs[] = { "ast", NULL };
+static const char *const kAstInputArgs[] = CT_ARGS("ast");
 static const cfg_info_t kAstInputInfo = {
     .name = "ast",
     .brief = "The input AST file",

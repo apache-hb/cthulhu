@@ -14,6 +14,7 @@
 typedef struct scan_callbacks_t scan_callbacks_t;
 typedef struct scan_t scan_t;
 typedef struct arena_t arena_t;
+typedef struct fs_t fs_t;
 typedef struct tree_t tree_t;
 typedef struct vector_t vector_t;
 typedef struct tree_cookie_t tree_cookie_t;
@@ -40,6 +41,10 @@ typedef struct language_runtime_t language_runtime_t;
 typedef struct compile_unit_t compile_unit_t;
 typedef struct plugin_runtime_t plugin_runtime_t;
 typedef struct target_runtime_t target_runtime_t;
+
+typedef struct target_emit_t target_emit_t;
+
+#define CT_LANG_EXTS(...) { __VA_ARGS__, NULL }
 
 /// @brief the name of a module
 /// to represent the name `java.lang` use `CT_TEXT_VIEW("java\0lang")
@@ -78,6 +83,14 @@ typedef enum broker_arena_t
 
     eArenaCount
 } broker_arena_t;
+
+/// @brief output folder structure
+typedef enum file_layout_t
+{
+#define FILE_LAYOUT(ID, STR) ID,
+#include "broker.inc"
+    eFileLayoutCount
+} file_layout_t;
 
 /// @brief common information about anything the broker supports
 typedef struct module_info_t
@@ -135,7 +148,7 @@ typedef struct language_t
     /// @brief convert a tree node to a string
     lang_repr_tree_t repr_tree;
 
-    /// @brief the file extensions this language can parse
+    /// @brief the default file extensions this language should be used for
     /// @note this is a null terminated array
     const char * const *exts;
 
@@ -205,7 +218,7 @@ typedef void (*target_destroy_t)(target_runtime_t *runtime);
 typedef void (*target_tree_t)(target_runtime_t *runtime, tree_t *tree);
 
 /// @brief ssa output generation
-typedef void (*target_ssa_t)(target_runtime_t *runtime, ssa_result_t *ssa);
+typedef void (*target_ssa_t)(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *emit);
 
 /// @brief a codegen target backend
 typedef struct target_t
@@ -277,7 +290,19 @@ typedef struct plugin_runtime_t
 typedef struct target_runtime_t
 {
     const target_t *info;
+    broker_t *broker;
+
+    arena_t *arena;
+
+    logger_t *logger;
 } target_runtime_t;
+
+typedef struct target_emit_t
+{
+    file_layout_t layout;
+
+    fs_t *fs;
+} target_emit_t;
 
 /// broker api
 /// should only really be called by the frontend
@@ -320,18 +345,18 @@ CT_BROKER_API text_view_t build_unit_id(IN_NOTNULL const vector_t *parts, IN_NOT
 
 /// all plugin apis
 
-CT_BROKER_API logger_t *plugin_get_logger(IN_NOTNULL plugin_runtime_t *runtime);
-CT_BROKER_API arena_t *plugin_get_arena(IN_NOTNULL plugin_runtime_t *runtime);
 
 /// all target apis
 
-CT_BROKER_API logger_t *target_get_logger(IN_NOTNULL target_runtime_t *runtime);
-CT_BROKER_API arena_t *target_get_arena(IN_NOTNULL target_runtime_t *runtime);
+CT_BROKER_API void target_emit_ssa(IN_NOTNULL target_runtime_t *runtime, IN_NOTNULL const ssa_result_t *ssa, IN_NOTNULL target_emit_t *emit);
 
 /// extra stuff
 
 RET_NOTNULL
 CT_BROKER_API const char *broker_pass_name(IN_RANGE(<, ePassCount) broker_pass_t pass);
+
+CT_CONSTFN
+CT_BROKER_API const char *file_layout_name(IN_RANGE(<, eFileLayoutCount) file_layout_t layout);
 
 /// @}
 

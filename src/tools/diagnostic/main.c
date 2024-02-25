@@ -37,7 +37,7 @@ static const cfg_info_t kGroupInfo = {
     .brief = "Diagnostic query options"
 };
 
-static const char *const kPrintLangsArgs[] = { "langs", NULL };
+static const char *const kPrintLangsArgs[] = CT_ARGS("langs");
 
 static const cfg_info_t kPrintLangsInfo = {
     .name = "langs",
@@ -45,7 +45,7 @@ static const cfg_info_t kPrintLangsInfo = {
     .short_args = kPrintLangsArgs
 };
 
-static const char *const kPrintSingleLangArgs[] = { "lang", NULL };
+static const char *const kPrintSingleLangArgs[] = CT_ARGS("lang");
 
 static const cfg_info_t kPrintSingleLangInfo = {
     .name = "lang",
@@ -53,7 +53,7 @@ static const cfg_info_t kPrintSingleLangInfo = {
     .short_args = kPrintSingleLangArgs
 };
 
-static const char *const kPrintDiagInfoArgs[] = { "all-diags", NULL };
+static const char *const kPrintDiagInfoArgs[] = CT_ARGS("all-diags");
 
 static const cfg_info_t kPrintDiagsInfo = {
     .name = "diags",
@@ -61,7 +61,7 @@ static const cfg_info_t kPrintDiagsInfo = {
     .short_args = kPrintDiagInfoArgs
 };
 
-static const char *const kPrintSingleDiagInfoArgs[] = { "lang-diag", NULL };
+static const char *const kPrintSingleDiagInfoArgs[] = CT_ARGS("lang-diag");
 
 static const cfg_info_t kPrintSingleDiagInfo = {
     .name = "lang-diag",

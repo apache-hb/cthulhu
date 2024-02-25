@@ -63,7 +63,7 @@ static const diagnostic_t * const kDiagnosticTable[] = {
 #include "ctu/ctu.inc"
 };
 
-static const char *const kLangNames[] = { "ct", "ctu", "cthulhu", NULL };
+static const char *const kLangNames[] = CT_LANG_EXTS("ct", "ctu", "cthulhu");
 
 static const size_t kDeclSizes[eCtuTagTotal] = {
     [eCtuTagValues] = 1,
@@ -82,7 +82,7 @@ static const char *const kDeclNames[eCtuTagTotal] = {
 
 CT_DRIVER_API const language_t kCtuModule = {
     .info = {
-        .id = "lang-cthulhu",
+        .id = "lang/cthulhu",
         .name = "Cthulhu",
         .version = {
             .license = "LGPLv3",
