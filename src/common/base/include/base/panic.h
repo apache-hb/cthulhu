@@ -119,6 +119,16 @@ CT_NORETURN CT_BASE_API ctu_vpanic(source_info_t location, CT_FMT_STRING const c
 /// @param ... the format string and optional arguments to format
 #define CT_NEVER(...) CT_PANIC(__VA_ARGS__)
 
+/// @def CT_ASSERT_RANGE(value, min, max)
+/// @brief assert that a value is in a range
+/// inclusive bounds check
+///
+/// @param value the value to check
+/// @param min the minimum value
+/// @param max the maximum value
+#define CT_ASSERT_RANGE(value, min, max) \
+    CTASSERTF((value) >= (min) && (value) <= (max), "value %d not in range %d-%d", (value), (min), (max))
+
 #if CTU_PARANOID
 #   define CT_PARANOID(...) __VA_ARGS__
 #   define CT_PARANOID_ASSERTF(expr, ...) CTASSERTF(expr, __VA_ARGS__)

@@ -21,13 +21,17 @@ endif
 
 os_api_build = '-DCT_OS_BUILD=1'
 
+# we use a switch case over bitflags in get_protect
+# this is safe, but compilers warn about it
+os_args = cc.get_supported_arguments('-Wno-switch', '/wd4063')
+
 # TODO: the impl libraries should be static, and os_common should route
 # to the native impl, allowing common checks to be done in common
 # would do now but time crunch
 lib_oscommon = library('os_common', src,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
-    c_args : user_args + [ os_api_build ],
+    c_args : user_args + [ os_api_build ] + os_args,
     dependencies : [ core, base, arena, std ],
     include_directories : [ os_include, os_impl_include ]
 )

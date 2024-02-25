@@ -771,10 +771,14 @@ private:
     {
         if (!default_modules_loaded)
         {
+#if CTU_LOADER_STATIC
             if (ImGui::Button("Load default modules"))
             {
                 load_default_modules();
             }
+#else
+            ImGui::TextDisabled("This distribution does not include default modules");
+#endif
         }
 
         ImGui::InputText("Load shared module", module_path, std::size(module_path));
@@ -787,6 +791,7 @@ private:
             loaded_module_t mod = {};
             if (support_load_module(support, module_type_t(mask), module_path, &mod))
             {
+                bt_update();
                 add_module(mod);
             }
             else

@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 void bt_init(void) { }
+void bt_update(void) { }
 
 USE_DECL
 const char *bt_backend(void)

@@ -82,8 +82,16 @@ static void fd_close(io_t *self)
     io_file_t *file = fd_data(self);
     if (io_error(self) == 0)
     {
-        os_file_unmap(&file->mapping);
-        os_file_close(&file->file);
+        os_error_t err = 0;
+
+        if (os_mapping_active(&file->mapping))
+        {
+            err = os_file_unmap(&file->mapping);
+            CTASSERTF(err == 0, "failed to unmap file (%s)", os_error_string(err, self->arena));
+        }
+
+        err = os_file_close(&file->file);
+        CTASSERTF(err == 0, "failed to close file (%s)", os_error_string(err, self->arena));
     }
 }
 

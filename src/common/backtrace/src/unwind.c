@@ -13,6 +13,11 @@ void bt_init(void)
     unw_getcontext(&gContext);
 }
 
+void bt_update(void)
+{
+
+}
+
 USE_DECL
 const char *bt_backend(void)
 {

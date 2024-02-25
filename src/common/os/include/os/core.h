@@ -70,8 +70,29 @@ CT_OS_API void os_init(void);
 CT_NODISCARD RET_STRING
 CT_OS_API char *os_error_string(os_error_t error, IN_NOTNULL arena_t *arena);
 
-CT_NODISCARD RET_STRING
+/// @brief get the string representation of a directory entry type
+///
+/// @param type the directory entry type
+///
+/// @return the string representation
+CT_CONSTFN RET_STRING
 CT_OS_API const char *os_dirent_string(os_dirent_t type);
+
+/// @brief get the string representation of a file access mode
+///
+/// @param access the file access mode
+///
+/// @return the string representation
+CT_CONSTFN RET_STRING
+CT_OS_API const char *os_access_string(os_access_t access);
+
+/// @brief get the string representation of a file mapping memory protection
+///
+/// @param protect the file mapping memory protection
+///
+/// @return the string representation
+CT_CONSTFN RET_STRING
+CT_OS_API const char *os_protect_string(os_protect_t protect);
 
 /// @}
 

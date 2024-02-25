@@ -4,6 +4,10 @@
 
 #include "base/panic.h"
 
+#if CT_OS_WINDOWS
+#   include <stdlib.h> // IWYU pragma: keep
+#endif
+
 uint16_t endian_swap16(uint16_t value)
 {
     return CT_BSWAP_U16(value);

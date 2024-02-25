@@ -85,9 +85,6 @@ void bt_read_inner(bt_trace_t callback, void *user)
 
 frame_resolve_t bt_resolve_inner(const bt_frame_t *frame, bt_symbol_t *symbol)
 {
-    // TODO: is there a better way of supporting shared libraries?
-    SymRefreshModuleList(GetCurrentProcess());
-
     union disp_t disp = { 0 };
     IMAGEHLP_LINE64 line = { 0 };
     HANDLE process = GetCurrentProcess();
@@ -155,4 +152,9 @@ void bt_init(void)
     SymSetOptions(SYMOPT_LOAD_LINES);
 
     SetUnhandledExceptionFilter(bt_exception_handler);
+}
+
+void bt_update(void)
+{
+    SymRefreshModuleList(GetCurrentProcess());
 }

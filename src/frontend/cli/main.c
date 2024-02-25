@@ -32,6 +32,9 @@
 #include "support/loader.h"
 #include "support/support.h"
 
+#include "backtrace/backtrace.h" // IWYU pragma: keep
+#include "base/log.h" // IWYU pragma: keep
+
 static const frontend_t kFrontendInfo = {
     .info = {
         .id = "frontend-cli",
@@ -120,6 +123,8 @@ static bool on_langs(ap_t *ap, const cfg_field_t *param, const void *value, void
         msg_notify(cli->logger, &kEvent_LanguageDriverConflict, broker_get_node(cli->broker), "failed to load language module at `%s`", path);
         return false;
     }
+
+    bt_update();
 
     ctu_log("loaded language module `%s`", path);
     return true;

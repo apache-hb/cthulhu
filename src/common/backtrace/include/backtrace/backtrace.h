@@ -112,6 +112,11 @@ CT_BACKTRACE_API extern bt_error_t gSystemError;
 /// @note this function must be called before any other backtrace function
 CT_BACKTRACE_API void bt_init(void);
 
+/// @brief update the loaded module cache
+/// @warning this function is not thread safe
+/// @note this function should be called after loading a shared library
+CT_BACKTRACE_API void bt_update(void);
+
 /// @brief get the backtrace backend name
 ///
 /// @return the backtrace backend name

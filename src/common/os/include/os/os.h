@@ -48,6 +48,12 @@ CT_OS_API os_fn_t os_library_symbol(IN_NOTNULL os_library_t *library, IN_STRING 
 
 /// filesytem api
 
+/// @brief copy a file from one location to another
+///
+/// @param src the source file
+/// @param dst the destination file
+///
+/// @return an error if the file could not be copied
 RET_INSPECT
 CT_OS_API os_error_t os_file_copy(IN_STRING const char *src, IN_STRING const char *dst);
 
@@ -176,15 +182,22 @@ CT_OS_API char *os_dir_name(IN_NOTNULL os_dir_t *dir, IN_NOTNULL arena_t *arena)
 /// @param access the access mode to open the file with
 /// @param file the file handle to fill
 ///
-/// @return a file handle on success
 /// @return an error if the file could not be opened
 RET_INSPECT
 CT_OS_API os_error_t os_file_open(IN_STRING const char *path, os_access_t access, os_file_t *file);
 
+/// @brief create a temporary file
+///
+/// @param file the file handle to fill
+///
+/// @return an error if the file could not be created
+RET_INSPECT
+CT_OS_API os_error_t os_tmpfile_open(IN_NOTNULL os_file_t *file);
+
 /// @brief close a file
 ///
 /// @param file the file to close
-CT_OS_API void os_file_close(OUT_PTR_INVALID os_file_t *file);
+CT_OS_API os_error_t os_file_close(OUT_PTR_INVALID os_file_t *file);
 
 /// @brief read from a file
 ///
@@ -270,7 +283,7 @@ CT_OS_API os_error_t os_file_map(IN_NOTNULL os_file_t *file, os_protect_t protec
 /// @note invalidates all memory pointers returned by @a os_mapping_data
 ///
 /// @param mapping the mapping to unmap
-CT_OS_API void os_file_unmap(IN_NOTNULL os_mapping_t *mapping);
+CT_OS_API os_error_t os_file_unmap(IN_NOTNULL os_mapping_t *mapping);
 
 /// @brief get the data of a file mapping
 ///
@@ -287,7 +300,7 @@ CT_OS_API void *os_mapping_data(IN_NOTNULL os_mapping_t *mapping);
 ///
 /// @return true if the mapping is valid
 CT_NODISCARD
-CT_OS_API bool os_mapping_active(IN_NOTNULL os_mapping_t *mapping);
+CT_OS_API bool os_mapping_active(IN_NOTNULL const os_mapping_t *mapping);
 
 /// @brief get the name of a file
 ///
@@ -295,7 +308,7 @@ CT_OS_API bool os_mapping_active(IN_NOTNULL os_mapping_t *mapping);
 ///
 /// @return the name of the file
 CT_NODISCARD
-CT_OS_API const char *os_file_name(IN_NOTNULL os_file_t *file);
+CT_OS_API const char *os_file_name(IN_NOTNULL const os_file_t *file);
 
 /// @}
 

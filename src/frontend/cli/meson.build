@@ -9,6 +9,6 @@ cli = executable('cli', src,
         memory, broker, argparse, support,
         tree, ssa, emit, io, fs,
         scan, notify, config, events, setup, format,
-        arena, check
+        arena, check, backtrace
     ]
 )

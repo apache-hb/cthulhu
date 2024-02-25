@@ -4,6 +4,7 @@
 #   define OS_ACCESS(id, str, value)
 #endif
 
+OS_ACCESS(eOsAccessNone, "none", 0) ///< file is not accessible
 OS_ACCESS(eOsAccessRead, "read", (1 << 0)) ///< file is readable
 OS_ACCESS(eOsAccessWrite, "write", (1 << 1)) ///< file is writeable, does not imply readable
 OS_ACCESS(eOsAccessTruncate, "truncate", (1 << 2)) ///< file is truncated if it exists

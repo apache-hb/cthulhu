@@ -75,7 +75,7 @@ static const char *get_access(os_access_t access)
         return "wb";
 
     default:
-        CT_NEVER("invalid access flags 0x%x", access);
+        CT_NEVER("invalid access flags %s", os_access_string(access));
     }
 }
 
@@ -124,12 +124,38 @@ os_error_t os_file_open(const char *path, os_access_t access, os_file_t *file)
     return 0;
 }
 
-void os_file_close(os_file_t *file)
+USE_DECL
+os_error_t os_tmpfile_open(os_file_t *file)
 {
     CTASSERT(file != NULL);
 
-    // TODO: check result
-    (void)fclose(file->file);
+    FILE *fd = tmpfile();
+
+    if (fd == NULL)
+    {
+        return errno;
+    }
+
+    os_file_t result = {
+        .path = "<tmpfile>",
+        .file = fd,
+    };
+
+    *file = result;
+    return 0;
+
+}
+
+os_error_t os_file_close(os_file_t *file)
+{
+    CTASSERT(file != NULL);
+
+    if (fclose(file->file) != 0)
+    {
+        return errno;
+    }
+
+    return 0;
 }
 
 USE_DECL
@@ -298,11 +324,16 @@ os_error_t os_file_map(os_file_t *file, os_protect_t protect, size_t size, os_ma
 }
 
 USE_DECL
-void os_file_unmap(os_mapping_t *mapping)
+os_error_t os_file_unmap(os_mapping_t *mapping)
 {
     CTASSERT(mapping != NULL);
 
-    munmap(mapping->data, mapping->size);
+    if (munmap(mapping->data, mapping->size) != 0)
+    {
+        return errno;
+    }
+
+    return 0;
 }
 
 USE_DECL
@@ -314,7 +345,7 @@ void *os_mapping_data(os_mapping_t *mapping)
 }
 
 USE_DECL
-bool os_mapping_active(os_mapping_t *mapping)
+bool os_mapping_active(const os_mapping_t *mapping)
 {
     CTASSERT(mapping != NULL);
 
@@ -324,7 +355,7 @@ bool os_mapping_active(os_mapping_t *mapping)
 }
 
 USE_DECL
-const char *os_file_name(os_file_t *file)
+const char *os_file_name(const os_file_t *file)
 {
     CTASSERT(file != NULL);
 

@@ -83,7 +83,7 @@ static DWORD get_disp(os_access_t access)
         return CREATE_ALWAYS;
 
     default:
-        CT_NEVER("invalid access flags 0x%x", access);
+        CT_NEVER("invalid access flags %s", os_access_string(access));
     }
 }
 
@@ -124,11 +124,38 @@ os_error_t os_file_open(const char *path, os_access_t access, os_file_t *file)
 }
 
 USE_DECL
-void os_file_close(os_file_t *fd)
+os_error_t os_tmpfile_open(os_file_t *file)
+{
+    CTASSERT(file != NULL);
+
+    char path[MAX_PATH];
+    DWORD result = GetTempPathA(MAX_PATH, path);
+    if (result == 0)
+    {
+        return GetLastError();
+    }
+
+    char name[MAX_PATH];
+    result = GetTempFileNameA(path, "ctu", 0, name);
+    if (result == 0)
+    {
+        return GetLastError();
+    }
+
+    return os_file_open(name, eOsAccessWrite, file);
+}
+
+USE_DECL
+os_error_t os_file_close(os_file_t *fd)
 {
     CTASSERT(fd != NULL);
 
-    CloseHandle(fd->handle); // TODO: check result
+    if (CloseHandle(fd->handle) == 0)
+    {
+        return GetLastError();
+    }
+
+    return ERROR_SUCCESS;
 }
 
 USE_DECL
@@ -136,7 +163,7 @@ os_error_t os_file_read(os_file_t *file, void *buffer, size_t size, size_t *actu
 {
     CTASSERT(file != NULL);
     CTASSERT(buffer != NULL);
-    CTASSERTF(size > 0 && size <= UINT32_MAX, "size=%zu", size);
+    CTASSERTF(size <= UINT32_MAX, "cannot read more than %u bytes at once (%zu is too big)", UINT32_MAX, size);
     CTASSERT(actual != NULL);
 
     DWORD read_size = 0;
@@ -158,8 +185,8 @@ os_error_t os_file_write(os_file_t *file, const void *buffer, size_t size, size_
 {
     CTASSERT(file != NULL);
     CTASSERT(buffer != NULL);
-    CTASSERTF(size > 0 && size <= UINT32_MAX, "size %zu out of range", size);
     CTASSERT(actual != NULL);
+    CTASSERTF(size <= UINT32_MAX, "cannot write more than %u bytes at once (%zu is too big)", UINT32_MAX, size);
 
     DWORD written_size = 0;
     BOOL result = WriteFile(file->handle, buffer, (DWORD)size, &written_size, NULL);
@@ -281,7 +308,7 @@ static DWORD get_protect(os_protect_t protect)
 
         // special cases
 
-    default: CT_NEVER("unknown protect %x", protect);
+    default: CT_NEVER("unknown protect %s", os_protect_string(protect));
     }
 }
 
@@ -303,7 +330,7 @@ os_error_t os_file_map(os_file_t *file, os_protect_t protect, size_t size, os_ma
 {
     CTASSERT(file != NULL);
     CTASSERT(mapping != NULL);
-    // TODO: how should we constrain size?
+    CTASSERT(size > 0);
 
     DWORD prot = get_protect(protect);
     DWORD access = get_map_access(protect);
@@ -347,13 +374,21 @@ os_error_t os_file_map(os_file_t *file, os_protect_t protect, size_t size, os_ma
 }
 
 USE_DECL
-void os_file_unmap(os_mapping_t *mapping)
+os_error_t os_file_unmap(os_mapping_t *mapping)
 {
     CTASSERT(mapping != NULL);
 
-    // TODO: not sure if we should check the result of these
-    UnmapViewOfFile(mapping->view);
-    CloseHandle(mapping->handle);
+    if (!UnmapViewOfFile(mapping->view))
+    {
+        return GetLastError();
+    }
+
+    if (!CloseHandle(mapping->handle))
+    {
+        return GetLastError();
+    }
+
+    return ERROR_SUCCESS;
 }
 
 USE_DECL
@@ -365,7 +400,7 @@ void *os_mapping_data(os_mapping_t *mapping)
 }
 
 USE_DECL
-bool os_mapping_active(os_mapping_t *mapping)
+bool os_mapping_active(const os_mapping_t *mapping)
 {
     CTASSERT(mapping != NULL);
 
@@ -373,7 +408,7 @@ bool os_mapping_active(os_mapping_t *mapping)
 }
 
 USE_DECL
-const char *os_file_name(os_file_t *file)
+const char *os_file_name(const os_file_t *file)
 {
     CTASSERT(file != NULL);
 
