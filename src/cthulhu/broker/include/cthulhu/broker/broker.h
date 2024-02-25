@@ -5,7 +5,6 @@
 #include <ctu_broker_api.h>
 
 #include "arena/arena.h"
-#include "arena/bitmap.h"
 #include "core/compiler.h"
 #include "core/text.h"
 #include "core/version_def.h"
@@ -247,8 +246,7 @@ typedef struct language_runtime_t
     arena_t *arena;
 
     /// @brief arena for the language ast
-    arena_t ast_arena;
-    bitmap_t *ast_bitmap;
+    arena_t *ast_arena;
 
     /// @brief logger
     logger_t *logger;

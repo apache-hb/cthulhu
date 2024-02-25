@@ -196,25 +196,7 @@ language_runtime_t *broker_add_language(broker_t *broker, const language_t *lang
     // TODO: seperate arena per language
     runtime->arena = arena;
     runtime->logger = broker->logger;
-
-    if (lang->ast_size != 0)
-    {
-        runtime->ast_bitmap = bitmap_new(0x1000, lang->ast_size, arena);
-        ARENA_IDENTIFY(runtime->ast_bitmap, "ast bitmap arena", runtime, arena);
-
-        arena_t ast_arena = {
-            .name = "ast",
-            .parent = arena,
-        };
-
-        bitmap_arena_init(&ast_arena, runtime->ast_bitmap);
-        runtime->ast_arena = ast_arena;
-    }
-    else
-    {
-        runtime->ast_bitmap = NULL;
-        memset(&runtime->ast_arena, 0, sizeof(arena_t));
-    }
+    runtime->ast_arena = arena;
 
     node_t *node = node_builtin(info.id, arena);
     ARENA_REPARENT(node, runtime, arena);

@@ -7,8 +7,7 @@ arena_api = configure_file(
 arena_include = include_directories('.', 'include')
 
 src = [
-    'src/arena.c',
-    'src/bitmap.c'
+    'src/arena.c'
 ]
 
 libarena = library('arena', src,

@@ -138,10 +138,9 @@ CT_ARENA_API void *arena_malloc(
     IN_NOTNULL arena_t *arena);
 
 /// @brief allocate memory from a custom allocator
-/// @pre @p ptr must be allocated from @p arena
 /// @pre @p size must be > 0
 /// @pre @p arena must not be NULL
-/// @note is @p name is specified, it must be a valid null terminated string
+/// @pre @p name must either be NULL or a valid null terminated string
 ///
 /// @param arena the allocator to use
 /// @param size the size of the allocation, must be greater than 0
@@ -160,9 +159,7 @@ CT_ARENA_API void *arena_malloc_info(
 /// @brief resize a memory allocation from a custom allocator
 /// @pre @p ptr must be allocated from @p arena
 /// @pre @p new_size must be > 0
-/// @pre @p old_size must be the size originally allocated,
-///      note that this may not line up with the actual size of the allocation if
-///      the arena decided to overallocate the memory.
+/// @pre @p old_size must be the size originally allocated
 /// @pre @p arena must not be NULL
 ///
 /// @param arena the allocator to use
@@ -259,6 +256,7 @@ CT_ARENA_API void *arena_opt_malloc(
 
 /// @brief allocate memory from a custom allocator
 /// @pre @p ptr must be allocated from @p arena
+/// @pre @p arena must not be NULL
 ///
 /// @param arena the allocator to use
 /// @param size the size of the allocation, must be greater than 0
