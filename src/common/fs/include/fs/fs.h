@@ -22,6 +22,11 @@ typedef struct vector_t vector_t;
 /// @brief a filesystem interface
 typedef struct fs_t fs_t;
 
+/// @brief delete a filesystem handle
+///
+/// @param fs the filesystem to delete
+CT_FS_API void fs_delete(OUT_PTR_INVALID fs_t *fs);
+
 /// @brief create a filesystem interface to a physical location on disk
 ///
 /// @param root the root directory to mount this filesystem on

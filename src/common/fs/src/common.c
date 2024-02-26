@@ -75,6 +75,7 @@ os_error_t mkdir_recursive(const char *path, bool *create, arena_t *arena)
 
 fs_t *fs_new(inode_t *root, const fs_callbacks_t *cb, const void *data, size_t size, arena_t *arena)
 {
+    CTASSERT(root != NULL);
     CTASSERT(cb != NULL);
 
     fs_t *fs = ARENA_MALLOC(sizeof(fs_t) + size, "fs", cb, arena);

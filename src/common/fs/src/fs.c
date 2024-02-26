@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
+#include "arena/arena.h"
 #include "base/util.h"
 #include "common.h"
 
@@ -99,6 +100,16 @@ static void delete_file(fs_t *fs, inode_t *node, const char *name)
     CTASSERT(fs->cb->pfn_delete_file != NULL);
 
     fs->cb->pfn_delete_file(fs, node, name);
+}
+
+// fs delete
+
+USE_DECL
+void fs_delete(fs_t *fs)
+{
+    CTASSERT(fs != NULL);
+
+    arena_free(fs, CT_ALLOC_SIZE_UNKNOWN, fs->arena);
 }
 
 // fs file api
