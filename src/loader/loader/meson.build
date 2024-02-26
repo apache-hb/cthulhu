@@ -14,11 +14,7 @@ target_count = targets.keys().length()
 
 has_static_modules = lang_count > 0 or plugin_count > 0 or target_count > 0
 
-if default_library == 'static'
-    if not has_static_modules
-        error('cannot build a static distribution without any enabled modules')
-    endif
-
+if default_library == 'static' and has_static_modules
     loader_header = configure_file(
         input : 'data/enum_modules.h.in',
         output : 'enum_modules.h',
