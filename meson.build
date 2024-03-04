@@ -142,18 +142,20 @@ all_args = cc.get_supported_arguments(
 )
 
 has_time_trace = cc.has_argument('-ftime-trace')
-ninjatracing = find_program('data/scripts/ninjatracing/ninjatracing')
+ninjatracing = find_program('data/scripts/ninjatracing/ninjatracing', required : trace_time.enabled())
 
 if trace_time.enabled() and has_time_trace
     all_args += [ '-ftime-trace' ]
 endif
 
-trace_args = has_time_trace ? [ '--embed-time-trace' ] : [ ]
-custom_target('gather_time_trace',
-    output : 'trace.json',
-    capture : true,
-    command : [ ninjatracing, meson.global_build_root() / '.ninja_log' ] + trace_args
-)
+if ninjatracing.found()
+    trace_args = has_time_trace ? [ '--embed-time-trace' ] : [ ]
+    custom_target('gather_time_trace',
+        output : 'trace.json',
+        capture : true,
+        command : [ ninjatracing, meson.global_build_root() / '.ninja_log' ] + trace_args
+    )
+endif
 
 # args for handwritten code only
 user_args = cc.get_supported_arguments(

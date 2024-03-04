@@ -118,7 +118,7 @@ frame_resolve_t bt_resolve_inner(const bt_frame_t *frame, bt_symbol_t *symbol)
         }
 
         // even though we're a C codebase still run the demangler to catch C++ code
-        // that end users may have written
+        // that people consuming this library might be using
         if (UnDecorateSymbolName(info->Name, name.text, name_size, UNDNAME_COMPLETE))
         {
             resolve |= eResolveDemangledName;

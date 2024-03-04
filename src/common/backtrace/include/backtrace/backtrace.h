@@ -67,6 +67,7 @@ typedef enum frame_resolve_t
     eResolveDemangledName = (1 << 2) | eResolveName,
 
     /// @brief the file path was found
+    /// @note this does not imply @a eResolveLine
     eResolveFile = (1 << 3),
 
     eResolveCount
