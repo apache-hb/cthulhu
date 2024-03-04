@@ -12,7 +12,6 @@
 #include "base/panic.h"
 
 #include <stdarg.h>
-#include <string.h>
 #include <stdint.h>
 
 char *begin_module(emit_t *emit, fs_t *fs, const ssa_module_t *mod)

@@ -3,10 +3,10 @@
 #include "base/bitset.h"
 
 #include "base/panic.h"
+#include "base/util.h"
 #include "core/macros.h"
 
 #include <limits.h>
-#include <string.h>
 
 typedef unsigned char bitset_word_t;
 
@@ -154,7 +154,7 @@ USE_DECL
 void bitset_reset(bitset_t set)
 {
     bitset_word_t *data = bitset_start(set);
-    memset(data, 0, set.words);
+    ctu_memset(data, 0, set.words);
 }
 
 USE_DECL

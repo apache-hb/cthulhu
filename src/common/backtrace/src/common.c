@@ -1,35 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
 #include "common.h"
-#include "core/macros.h"
 
-#include <stdlib.h>
-#include <string.h>
-
-static void bt_error_begin(size_t error, void *user)
-{
-    CT_UNUSED(error);
-    CT_UNUSED(user);
-}
-
-static void bt_error_next(const bt_frame_t *frame, void *user)
-{
-    CT_UNUSED(user);
-    CT_UNUSED(frame);
-}
-
-static void bt_error_end(void *user)
-{
-    CT_UNUSED(user);
-    exit(CT_EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
-}
-
-bt_error_t gSystemError = {
-    .begin = bt_error_begin,
-    .end = bt_error_end,
-    .next = bt_error_next,
-    .user = NULL
-};
+bt_error_t gSystemError = { 0 };
 
 USE_DECL
 frame_resolve_t bt_resolve_symbol(const bt_frame_t *frame, bt_symbol_t *symbol)

@@ -19,8 +19,6 @@
 
 #include "core/macros.h"
 
-#include <string.h>
-
 ///
 /// init
 ///

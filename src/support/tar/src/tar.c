@@ -12,10 +12,6 @@
 
 #include "core/macros.h"
 
-#define _CRT_SECURE_NO_WARNINGS
-
-#include <string.h>
-
 #define TAR_NAME_SIZE 100
 
 // POSIX 1003.1-1990 tar header block
@@ -50,7 +46,7 @@ CT_STATIC_ASSERT(sizeof(tar_header_t) == 512, "tar header size mismatch");
 
 static void checksum(tar_header_t *header)
 {
-    memset(header->checksum, ' ', sizeof(header->checksum)); // exclude the last space
+    ctu_memset(header->checksum, ' ', sizeof(header->checksum)); // exclude the last space
 
     unsigned int sum = 0;
     for (size_t i = 0; i < sizeof(*header); ++i)
@@ -71,11 +67,11 @@ typedef struct tar_context_t
 
 static bool build_tar_header(tar_header_t *header, io_t *dst, char type, size_t size)
 {
-    memcpy(header->magic, "ustar", sizeof(header->magic));
-    memcpy(header->version, "00", sizeof(header->version));
+    ctu_memcpy(header->magic, "ustar", sizeof(header->magic));
+    ctu_memcpy(header->version, "00", sizeof(header->version));
 
-    memset(header->uid, '0', sizeof(header->uid) - 1);
-    memset(header->gid, '0', sizeof(header->gid) - 1);
+    ctu_memset(header->uid, '0', sizeof(header->uid) - 1);
+    ctu_memset(header->gid, '0', sizeof(header->gid) - 1);
 
     header->type = type;
 
@@ -83,7 +79,7 @@ static bool build_tar_header(tar_header_t *header, io_t *dst, char type, size_t 
     str_printf(header->mode, sizeof(header->mode), "%07o", 0644);
     str_printf(header->mtime, sizeof(header->mtime), "%011o", 0);
 
-    memset(header->checksum, ' ', sizeof(header->checksum) - 1);
+    ctu_memset(header->checksum, ' ', sizeof(header->checksum) - 1);
 
     checksum(header);
 
@@ -137,7 +133,7 @@ static tar_error_t write_tar_file(const char *dir, const char *name, tar_context
         size_t read = io_read(src, block, sizeof(block));
         if (read != sizeof(block))
         {
-            memset(block + read, 0, sizeof(block) - read);
+            ctu_memset(block + read, 0, sizeof(block) - read);
         }
 
         size_t written = io_write(ctx->dst, block, sizeof(block));
@@ -218,7 +214,7 @@ tar_result_t tar_extract(fs_t *dst, io_t *src)
                 tar_result_t result = {
                     .error = eTarWriteError,
                 };
-                memcpy(result.name, header.name, sizeof(header.name) - 1);
+                ctu_memcpy(result.name, header.name, sizeof(header.name) - 1);
                 return result;
             }
 

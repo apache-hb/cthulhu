@@ -18,8 +18,6 @@
 #include "io/io.h"
 #include "fs/fs.h"
 
-#include <string.h>
-
 typedef struct ssa_emit_t
 {
     emit_t emit;

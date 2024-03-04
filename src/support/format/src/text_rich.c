@@ -23,7 +23,6 @@
 #include "core/macros.h"
 
 #include <ctype.h>
-#include <string.h>
 
 #define COLOUR_PATH eColourBlue
 #define COLOUR_UNDERLINE eColourMagenta

@@ -9,8 +9,6 @@
 #include "arena/arena.h"
 #include "io/io.h"
 
-#include <string.h>
-
 static scan_t *scan_new(const char *language, const char *path, io_t *io, arena_t *arena)
 {
     CTASSERT(language != NULL);

@@ -7,9 +7,6 @@
 
 #include <gmp.h>
 
-#include <string.h>
-#include <stdlib.h>
-
 ///
 /// global allocator
 ///

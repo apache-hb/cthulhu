@@ -16,8 +16,6 @@
 #include "std/map.h"
 #include "std/vector.h"
 
-#include <string.h>
-
 typedef struct broker_t
 {
     const frontend_t *frontend;

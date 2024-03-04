@@ -22,7 +22,6 @@
 #include "config/config.h"
 #include "std/str.h"
 #include "std/vector.h"
-#include <stdlib.h>
 
 #if CT_OS_WINDOWS
 #   define DISPLAY_WIN_STYLE true
@@ -300,7 +299,7 @@ static void pretty_panic_handler(source_info_t location, const char *fmt, va_lis
     io_printf(io, "[panic][%s:%zu] => %s: %s\n", location.file, location.line, location.function, msg);
 
     print_backtrace(backtrace_config, report);
-    exit(CT_EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
+    os_exit(CT_EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
 }
 
 static void default_error_begin(size_t error, void *user)
@@ -338,7 +337,7 @@ static void default_error_next(const bt_frame_t *frame, void *user)
 static void default_error_end(void *user)
 {
     io_printf(user, "exiting\n");
-    exit(CT_EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
+    os_exit(CT_EXIT_INTERNAL); // NOLINT(concurrency-mt-unsafe)
 }
 
 static void default_verbose(const char *fmt, va_list args)

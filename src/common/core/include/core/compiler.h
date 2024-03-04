@@ -85,8 +85,10 @@
 ///       use with caution
 
 #ifdef CT_CC_MSVC
+#   define CT_UNREACHABLE() __assume(0)
 #   define CT_ASSUME(expr) __assume(expr)
 #elif CT_CC_GNU || CT_CC_CLANG
+#   define CT_UNREACHABLE() __builtin_unreachable()
 #   define CT_ASSUME(expr)                                                                                            \
         do                                                                                                              \
         {                                                                                                               \
@@ -96,6 +98,7 @@
             }                                                                                                           \
         } while (0)
 #else
+#   define CT_UNREACHABLE() ((void)0)
 #   define CT_ASSUME(expr) ((void)0)
 #endif
 

@@ -93,6 +93,17 @@ CT_BASE_API int ctu_strncmp(IN_STRING const char *lhs, IN_STRING const char *rhs
 CT_NOALIAS
 CT_BASE_API void *ctu_memcpy(OUT_WRITES(size) void *CT_RESTRICT dst, IN_READS(size) const void *CT_RESTRICT src, size_t size);
 
+/// @brief set memory to a value
+/// equivalent to memset but with safety checks
+///
+/// @pre @p dst must not be null and must be at least @p size bytes long
+///
+/// @param dst the destination
+/// @param value the value to set
+/// @param size the number of bytes to set
+CT_NOALIAS
+CT_BASE_API void ctu_memset(OUT_WRITES(size) void *dst, int value, size_t size);
+
 // text api
 
 /// @brief create a new owning text array

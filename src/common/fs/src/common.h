@@ -21,8 +21,12 @@ typedef inode_t *(*fs_query_node_t)(fs_t *fs, inode_t *node, const char *name);
 typedef map_t *(*fs_query_dirents_t)(fs_t *fs, inode_t *node);
 typedef io_t *(*fs_query_file_t)(fs_t *fs, inode_t *node, os_access_t flags);
 
+typedef inode_t *(*fs_inode_create_t)(fs_t *fs, inode_t *node, const char *name, os_dirent_t type);
+
 typedef inode_t *(*fs_dir_create_t)(fs_t *fs, inode_t *node, const char *name);
 typedef inode_t *(*fs_file_create_t)(fs_t *fs, inode_t *node, const char *name);
+
+typedef void (*fs_inode_delete_t)(fs_t *fs, inode_t *node, const char *name);
 
 typedef void (*fs_dir_delete_t)(fs_t *fs, inode_t *node, const char *name);
 typedef void (*fs_file_delete_t)(fs_t *fs, inode_t *node, const char *name);

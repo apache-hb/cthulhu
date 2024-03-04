@@ -8,8 +8,8 @@
 
 #include "cthulhu/tree/ops.h"
 
-#include <gmp.h>
 #include <stdbool.h>
+#include <gmp.h>
 
 CT_BEGIN_API
 

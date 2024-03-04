@@ -91,6 +91,14 @@ void *ctu_memcpy(void *restrict dst, const void *restrict src, size_t size)
     return memcpy(dst, src, size);
 }
 
+USE_DECL CT_NOALIAS
+void ctu_memset(void *dst, int value, size_t size)
+{
+    CTASSERT(dst != NULL);
+
+    memset(dst, value, size);
+}
+
 USE_DECL
 text_t text_make(char *text, size_t length)
 {

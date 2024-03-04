@@ -15,8 +15,6 @@
 #include "arena/arena.h"
 #include "base/panic.h"
 
-#include <string.h>
-
 /// @brief the ssa compilation context
 typedef struct ssa_compile_t
 {

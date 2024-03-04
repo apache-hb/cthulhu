@@ -17,8 +17,6 @@
 
 #include "core/macros.h"
 
-#include <string.h>
-
 #define COLOUR_ADDR eColourRed
 #define COLOUR_SYMBOL eColourBlue
 #define COLOUR_INDEX eColourCyan

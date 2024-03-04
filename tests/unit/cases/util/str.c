@@ -8,7 +8,6 @@
 #include "std/str.h"
 #include "std/vector.h"
 
-#include <string.h>
 #include <stdint.h>
 
 typedef struct pair_t

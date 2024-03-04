@@ -26,6 +26,7 @@ void json_parse_integer(mpz_t integer, scan_t *scan, where_t where, const char *
 
 void json_parse_float(float *real, scan_t *scan, where_t where, const char *text)
 {
+    // TODO: dont use strtof
     float result = strtof(text, NULL);
     if (result != 1)
     {

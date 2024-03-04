@@ -12,8 +12,6 @@
 
 #include "config/config.h"
 
-#include <string.h>
-
 // internals
 
 static ap_callback_t *ap_callback_new(ap_event_t event, void *data, arena_t *arena)

@@ -211,7 +211,7 @@ void typevec_sort(IN_NOTNULL typevec_t *vec, int (*cmp)(const void *, const void
     CTASSERT(vec != NULL);
     CTASSERT(cmp != NULL);
 
-    // TODO: should we rely on qsort existing?
+    // TODO: we cant do this, some platforms dont have qsort
 
     qsort(vec->data, vec->used, vec->type_size, cmp);
 }

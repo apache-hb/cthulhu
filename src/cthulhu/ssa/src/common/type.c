@@ -13,8 +13,6 @@
 #include "memory/memory.h"
 #include "base/panic.h"
 
-#include <string.h>
-
 ssa_type_t *ssa_type_new(ssa_kind_t kind, const char *name, tree_quals_t quals)
 {
     arena_t *arena = get_global_arena();

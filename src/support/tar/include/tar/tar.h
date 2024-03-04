@@ -6,6 +6,8 @@
 
 #include "core/analyze.h"
 
+#include <stddef.h>
+
 typedef struct fs_t fs_t;
 typedef struct io_t io_t;
 typedef struct arena_t arena_t;

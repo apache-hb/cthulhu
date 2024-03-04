@@ -5,8 +5,6 @@
 #include "core/macros.h"
 #include "core/win32.h" // IWYU pragma: keep
 
-#include <stdlib.h>
-
 #if CTU_WIN32_TRICKERY
 #   include <windef.h>
 #   include <winbase.h>

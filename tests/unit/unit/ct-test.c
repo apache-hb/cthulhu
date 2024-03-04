@@ -1,5 +1,6 @@
 #include "ct-test.h"
 
+#include "core/macros.h"
 #include "setup/setup2.h"
 #include "setup/memory.h"
 #include "memory/memory.h"
@@ -18,8 +19,6 @@
 #include "base/log.h"
 
 #include "backtrace/backtrace.h"
-
-#include <stdlib.h>
 
 typedef enum test_error_t
 {
@@ -134,7 +133,7 @@ static void test_panic_handler(source_info_t location, const char *fmt, va_list 
 
         print_backtrace(config, report);
 
-        abort();
+        os_exit(CT_EXIT_INTERNAL);
     }
 
     char *msg = str_vformat(gTestArena, fmt, args);

@@ -11,7 +11,6 @@
 
 #include "base/panic.h"
 
-#include <stdlib.h>
 #include <stdint.h>
 
 void *util_select_decl(tree_t *sema, const size_t *tags, size_t len, const char *name)

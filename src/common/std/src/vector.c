@@ -5,8 +5,6 @@
 #include "base/panic.h"
 #include "base/util.h"
 
-#include <stdlib.h>
-
 /**
  * a vector of non-owning pointers
  *

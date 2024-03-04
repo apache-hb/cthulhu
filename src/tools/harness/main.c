@@ -35,9 +35,8 @@
 #include "support/support.h"
 #include "support/loader.h"
 
-#include <stdalign.h>
 #include <stddef.h>
-#include <stdlib.h>
+#include <stdlib.h> // for malloc, free, system
 
 #define CHECK_REPORTS(reports, msg)                         \
     do                                                      \
