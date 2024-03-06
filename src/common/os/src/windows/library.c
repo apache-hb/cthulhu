@@ -24,18 +24,30 @@ os_error_t os_library_open(const char *path, os_library_t *library)
 }
 
 USE_DECL
-void os_library_close(os_library_t *library)
+os_error_t os_library_close(os_library_t *library)
 {
     CTASSERT(library != NULL);
 
-    FreeLibrary(library->library);
+    if (!FreeLibrary(library->library))
+    {
+        return GetLastError();
+    }
+
+    return ERROR_SUCCESS;
 }
 
 USE_DECL
-os_fn_t os_library_symbol(os_library_t *library, const char *name)
+os_error_t os_library_symbol(os_library_t *library, os_symbol_t *symbol, const char *name)
 {
     CTASSERT(library != NULL);
     CTASSERT(name != NULL);
 
-    return (os_fn_t)GetProcAddress(library->library, name);
+    os_symbol_t addr = (os_symbol_t)GetProcAddress(library->library, name);
+    if (addr == NULL)
+    {
+        return GetLastError();
+    }
+
+    *symbol = addr;
+    return ERROR_SUCCESS;
 }

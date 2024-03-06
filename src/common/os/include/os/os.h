@@ -35,16 +35,17 @@ CT_OS_API os_error_t os_library_open(IN_STRING const char *path, IN_NOTNULL os_l
 ///
 /// @param library the library to close
 RET_INSPECT
-CT_OS_API void os_library_close(IN_NOTNULL os_library_t *library);
+CT_OS_API os_error_t os_library_close(IN_NOTNULL os_library_t *library);
 
 /// @brief get a symbol from a shared library
 ///
 /// @param library the library to get the symbol from
+/// @param symbol the symbol to fill
 /// @param name the name of the symbol to get
 ///
 /// @return the symbol or NULL if it could not be found
 CT_NODISCARD
-CT_OS_API os_fn_t os_library_symbol(IN_NOTNULL os_library_t *library, IN_STRING const char *name);
+CT_OS_API os_error_t os_library_symbol(IN_NOTNULL os_library_t *library, os_symbol_t *symbol, IN_STRING const char *name);
 
 /// filesytem api
 

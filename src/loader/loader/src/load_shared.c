@@ -24,36 +24,42 @@ loaded_module_t load_shared_module(loader_t *loader, module_type_t mask, const c
 
     if (mask & eModLanguage)
     {
-        lang_main_t lang = (lang_main_t)os_library_symbol(&library, CT_LANG_ENTRY);
-        if (lang != NULL)
+        lang_main_t fn_lang;
+        error = os_library_symbol(&library, (os_symbol_t*)&fn_lang, CT_LANG_ENTRY);
+        if (error == 0)
         {
             mod.type |= eModLanguage;
-            mod.lang = lang();
+            mod.lang = fn_lang();
             mod.error = eLoadErrorNone;
         }
     }
 
     if (mask & eModTarget)
     {
-        target_main_t target = (target_main_t)os_library_symbol(&library, CT_TARGET_ENTRY);
-        if (target != NULL)
+        target_main_t fn_target;
+        error = os_library_symbol(&library, (os_symbol_t*)&fn_target, CT_TARGET_ENTRY);
+        if (error == 0)
         {
             mod.type |= eModTarget;
-            mod.target = target();
+            mod.target = fn_target();
             mod.error = eLoadErrorNone;
         }
     }
 
     if (mask & eModPlugin)
     {
-        plugin_main_t plugin = (plugin_main_t)os_library_symbol(&library, CT_PLUGIN_ENTRY);
-        if (plugin != NULL)
+        plugin_main_t fn_plugin;
+        error = os_library_symbol(&library, (os_symbol_t*)&fn_plugin, CT_PLUGIN_ENTRY);
+        if (error == 0)
         {
             mod.type |= eModPlugin;
-            mod.plugin = plugin();
+            mod.plugin = fn_plugin();
             mod.error = eLoadErrorNone;
         }
     }
+
+    // TODO: what should we do if this fails?
+    (void)os_library_close(&library);
 
     return mod;
 }

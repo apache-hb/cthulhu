@@ -58,7 +58,7 @@ typedef int os_exit_t;
 /// @brief function pointer
 /// used for shared library symbols rather than void*
 /// because casting a function pointer to void* is undefined behavior
-typedef void (*os_fn_t)(void);
+typedef void (*os_symbol_t)(void);
 
 /// @brief initialize the os api
 /// @note this must be called before using any other os api
@@ -67,7 +67,7 @@ CT_OS_API void os_init(void);
 /// @brief exit the program
 ///
 /// @param code the exit code
-CT_OS_API CT_NORETURN os_exit(os_exit_t code);
+CT_NORETURN CT_OS_API os_exit(os_exit_t code);
 
 /// @brief convert an os error code to a string
 ///

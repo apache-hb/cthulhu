@@ -4,6 +4,11 @@
 
 #include "base/panic.h"
 
+// _byteswap_ushort, _byteswap_ulong, _byteswap_uint64
+#if CT_CC_MSVC || CT_CC_CLANGCL
+#   include <stdlib.h> // IWYU pragma: keep
+#endif
+
 uint16_t endian_swap16(uint16_t value)
 {
     return CT_BSWAP_U16(value);
