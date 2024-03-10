@@ -4,6 +4,7 @@
 
 #include "cthulhu/broker/broker.h"
 
+#include "memory/memory.h"
 #include "notify/notify.h"
 
 #include "std/str.h"
@@ -29,9 +30,8 @@ static constexpr frontend_t kEditorInfo = {
 
 Broker::Broker(loader_t *loader, const char *name)
     : name(name)
-    , broker(broker_new(&kEditorInfo, &global))
+    , broker(broker_new(&kEditorInfo, get_global_arena()))
     , loader(loader)
-    , sources(&global)
 { }
 
 /// @brief parse a source file
@@ -42,18 +42,19 @@ Broker::Broker(loader_t *loader, const char *name)
 char *Broker::parse_source(size_t index)
 {
     const char *path = sources.get_path(index);
+    arena_t *arena = get_global_arena();
 
-    char *ext = str_ext(path, &global);
+    char *ext = str_ext(path, arena);
     if (ext == nullptr)
     {
-        return str_format(&global, "could not determine file extension for '%s'", path);
+        return str_format(arena, "could not determine file extension for '%s'", path);
     }
 
     language_runtime_t *lang = support_get_lang(support, ext);
     if (lang == nullptr)
     {
-        const char *basepath = str_filename(path, &global);
-        return str_format(&global, "could not find language for `%s` by extension `%s`", basepath, ext);
+        const char *basepath = str_filename(path, arena);
+        return str_format(arena, "could not find language for `%s` by extension `%s`", basepath, ext);
     }
 
     io_t *io = sources.get_io(index);
@@ -62,15 +63,9 @@ char *Broker::parse_source(size_t index)
     return nullptr;
 }
 
-void Broker::init_alloc()
-{
-    global.install_global();
-    gmp.install_gmp();
-}
-
 void Broker::init_support()
 {
-    support = support_new(broker, loader, &global);
+    support = support_new(broker, loader, get_global_arena());
     support_load_default_modules(support);
 }
 
@@ -79,7 +74,6 @@ void Broker::init()
     if (setup) return;
     setup = true;
 
-    init_alloc();
     init_support();
 }
 

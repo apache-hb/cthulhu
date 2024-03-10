@@ -2,8 +2,7 @@
 
 #include "editor/compile.hpp"
 
-#include "base/panic.h"
-
+#include "core/source_info.h"
 #include "backtrace/backtrace.h"
 
 #include <string>

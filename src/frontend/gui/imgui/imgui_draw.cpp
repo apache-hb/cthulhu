@@ -1,4 +1,4 @@
-// dear imgui, v1.90.1 WIP
+// dear imgui, v1.90.2 WIP
 // (drawing and font code)
 
 /*
@@ -34,7 +34,7 @@ Index of this file:
 #ifndef IMGUI_DISABLE
 #include "imgui_internal.h"
 #ifdef IMGUI_ENABLE_FREETYPE
-#include "misc/freetype/imgui_freetype.h"
+#include "misc/imgui_freetype.h"
 #endif
 
 #include <stdio.h>      // vsnprintf, sscanf, printf
@@ -4231,8 +4231,8 @@ static unsigned int stb_decompress(unsigned char *output, const unsigned char *i
 //-----------------------------------------------------------------------------
 // ProggyClean.ttf
 // Copyright (c) 2004, 2005 Tristan Grimmer
-// MIT license (see License.txt in http://www.upperbounds.net/download/ProggyClean.ttf.zip)
-// Download and more information at http://upperbounds.net
+// MIT license (see License.txt in http://www.proggyfonts.net/index.php?menu=download)
+// Download and more information at http://www.proggyfonts.net or http://upperboundsinteractive.com/fonts.php
 //-----------------------------------------------------------------------------
 // File: 'ProggyClean.ttf' (41208 bytes)
 // Exported using misc/fonts/binary_to_compressed_c.cpp (with compression + base85 string encoding).

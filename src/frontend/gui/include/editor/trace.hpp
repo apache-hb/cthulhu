@@ -8,27 +8,19 @@
 
 namespace ed
 {
-    struct alloc_info_t
-    {
-        size_t size;
-        const char *name;
-        const void *parent;
-    };
-
     class TraceArena final : public IArena
     {
-    public:
-        /// @brief the draw mode for the gui view of this allocator
-        enum draw_mode_t : int
+        struct alloc_info_t
         {
-            /// @brief draw the allocations as a tree using parent data
-            eDrawTree,
-
-            /// @brief draw the allocations as a flat list
-            eDrawFlat
+            size_t size;
+            const char *name;
+            const void *parent;
         };
 
-        TraceArena(const char *alloc_name, draw_mode_t default_mode);
+        // use maps rather than unordered_map for deterministic output
+        using AllocMap = std::map<const void*, alloc_info_t>;
+        using AllocTree = std::map<const void*, std::vector<const void*>>;
+        using AllocMapIter = AllocMap::iterator;
 
         // IArena
         void *malloc(size_t size) override;
@@ -38,13 +30,7 @@ namespace ed
         void set_name(const void *ptr, const char *new_name) override;
         void set_parent(const void *ptr, const void *parent) override;
 
-        // TraceArena
-        void draw_info();
-        void reset();
-
-    private:
-        // DrawType
-        // stored as an int for direct use with imgui
+        // actually a DrawType, stored as an int for direct use with imgui
         int draw_mode;
 
         // number of calls to each function
@@ -52,12 +38,9 @@ namespace ed
         size_t realloc_calls = 0;
         size_t free_calls = 0;
 
-        // peak memory usage
-        size_t peak_usage = 0;
-
-        using AllocMap = std::map<const void*, alloc_info_t>;
-        using AllocTree = std::map<const void*, std::vector<const void*>>;
-        using AllocMapIter = AllocMap::iterator;
+        // usage stats in bytes
+        size_t peak_memory_usage = 0;
+        size_t live_memory_usage = 0;
 
         std::unordered_set<void *> live_allocs;
 
@@ -90,5 +73,22 @@ namespace ed
 
         // flat output
         void draw_flat() const;
+
+    public:
+        /// @brief the draw mode for the gui view of this allocator
+        enum draw_mode_t : int
+        {
+            /// @brief draw the allocations as a tree using parent data
+            eDrawTree,
+
+            /// @brief draw the allocations as a flat list
+            eDrawFlat
+        };
+
+        TraceArena(const char *id, draw_mode_t default_mode);
+
+        // TraceArena
+        void draw_info();
+        void reset();
     };
 }

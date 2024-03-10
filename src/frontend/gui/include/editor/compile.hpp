@@ -1,7 +1,6 @@
 #pragma once
 
-#include "editor/trace.hpp"
-#include "editor/sources.hpp"
+#include "editor/panels/sources.hpp"
 
 #include "cthulhu/broker/broker.h"
 
@@ -15,10 +14,6 @@ namespace ed
     {
     public:
         Broker(loader_t *loader, const char *name);
-
-        // editor objects
-        ed::TraceArena global{"global", ed::TraceArena::eDrawTree};
-        ed::TraceArena gmp{"gmp", ed::TraceArena::eDrawFlat};
 
         // run state
         std::string name;
@@ -47,7 +42,6 @@ namespace ed
         bool check_reports() const;
 
     private:
-        void init_alloc();
         void init_support();
     };
 }

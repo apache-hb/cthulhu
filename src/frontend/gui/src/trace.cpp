@@ -6,8 +6,8 @@
 
 using namespace ed;
 
-TraceArena::TraceArena(const char *alloc_name, draw_mode_t default_mode)
-    : IArena(alloc_name)
+TraceArena::TraceArena(const char *id, draw_mode_t default_mode)
+    : IArena(id)
     , draw_mode(default_mode)
 { }
 
@@ -28,7 +28,7 @@ void *TraceArena::realloc(void *ptr, size_t new_size, size_t)
 
     size_t old_size = allocs[ptr].size;
     if (old_size < new_size)
-        peak_usage += (new_size - old_size);
+        peak_memory_usage += (new_size - old_size);
 
     void *new_ptr = ::realloc(ptr, new_size);
 
@@ -62,7 +62,8 @@ void TraceArena::reset()
     malloc_calls = 0;
     realloc_calls = 0;
     free_calls = 0;
-    peak_usage = 0;
+    peak_memory_usage = 0;
+    live_memory_usage = 0;
 
     // free all allocations
     for (void *ptr : live_allocs)
@@ -77,16 +78,15 @@ void TraceArena::reset()
 
 void TraceArena::draw_info()
 {
-    // usage
-    ImGui::Text("malloc: %zu", malloc_calls);
-    ImGui::Text("realloc: %zu", realloc_calls);
-    ImGui::Text("free: %zu", free_calls);
-    ImGui::Text("peak usage: %zu", peak_usage);
+    ImGui::TextWrapped("Memory usage: (%zu mallocs, %zu reallocs, %zu frees, %zu bytes peak, %zu bytes live)", malloc_calls, realloc_calls, free_calls, peak_memory_usage, live_memory_usage);
 
     if (ImGui::Button("Reset"))
     {
         reset();
     }
+    ImGui::SameLine();
+    ImGui::Text("Visualize as:");
+    ImGui::SameLine();
 
     // body
     ImGui::RadioButton("Tree", &draw_mode, eDrawTree);
@@ -105,7 +105,8 @@ void TraceArena::draw_info()
 
 void TraceArena::create_alloc(void *ptr, size_t size)
 {
-    peak_usage += size;
+    peak_memory_usage += size;
+    live_memory_usage += size;
     allocs[ptr].size = size;
 
     live_allocs.insert(ptr);
@@ -117,6 +118,8 @@ void TraceArena::delete_alloc(void *ptr)
 
     auto iter = allocs.find(ptr);
     if (iter == allocs.end()) return;
+
+    live_memory_usage -= iter->second.size;
 
     allocs.erase(iter);
     live_allocs.erase(ptr);

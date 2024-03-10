@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "editor/draw.hpp"
+#include "draw/draw.hpp"
 
 #include "imgui.h"
-#include "imgui_impl_win32.h"
-#include "imgui_impl_dx12.h"
+#include "backends/imgui_impl_win32.h"
+#include "backends/imgui_impl_dx12.h"
+
+#include "implot.h"
+
 #include <d3d12.h>
 #include <dxgi1_4.h>
 #include <tchar.h>
@@ -299,6 +302,13 @@ bool draw::create(const wchar_t *title)
     ::RegisterClassExW(&wc);
     hwnd = ::CreateWindowW(wc.lpszClassName, title, WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, nullptr, nullptr, wc.hInstance, nullptr);
 
+    // center window
+    RECT rc;
+    GetWindowRect(hwnd, &rc);
+    int xPos = (GetSystemMetrics(SM_CXSCREEN) - rc.right) / 2;
+    int yPos = (GetSystemMetrics(SM_CYSCREEN) - rc.bottom) / 2;
+    SetWindowPos(hwnd, 0, xPos, yPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+
     // Initialize Direct3D
     if (!CreateDeviceD3D(hwnd))
     {
@@ -322,8 +332,11 @@ bool draw::create(const wchar_t *title)
     //io.ConfigViewportsNoAutoMerge = true;
     //io.ConfigViewportsNoTaskBarIcon = true;
 
+    ImPlot::CreateContext();
+
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
+    ImPlot::StyleColorsDark();
     //ImGui::StyleColorsLight();
 
     // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
@@ -367,6 +380,7 @@ void draw::destroy()
     // Cleanup
     ImGui_ImplDX12_Shutdown();
     ImGui_ImplWin32_Shutdown();
+    ImPlot::DestroyContext();
     ImGui::DestroyContext();
 
     CleanupDeviceD3D();

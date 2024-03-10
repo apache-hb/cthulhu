@@ -1,34 +1,31 @@
 #pragma once
 
-#include "core/macros.h"
-
 #include "arena/arena.h"
+
+#define CTX_UNUSED [[maybe_unused]]
 
 namespace ed
 {
-    class IArena : public arena_t
+    class IArena : arena_t
     {
-    protected:
-        IArena(const char *alloc_name);
+        static void *wrap_malloc(size_t size, void *user);
+        static void *wrap_realloc(void *ptr, size_t new_size, size_t old_size, void *user);
+        static void wrap_free(void *ptr, size_t size, void *user);
+        static void wrap_rename(const void *ptr, const char *name, void *user);
+        static void wrap_reparent(const void *ptr, const void *parent, void *user);
 
-    public:
         virtual void *malloc(size_t size) = 0;
         virtual void *realloc(void *ptr, size_t new_size, size_t old_size) = 0;
         virtual void free(void *ptr, size_t size) = 0;
 
-        virtual void set_name(const void *ptr, const char *new_name)
-        {
-            CT_UNUSED(ptr);
-            CT_UNUSED(new_name);
-        }
+        virtual void set_name(CTX_UNUSED const void *ptr, CTX_UNUSED const char *new_name) { }
+        virtual void set_parent(CTX_UNUSED const void *ptr, CTX_UNUSED const void *new_parent) { }
 
-        virtual void set_parent(const void *ptr, const void *new_parent)
-        {
-            CT_UNUSED(ptr);
-            CT_UNUSED(new_parent);
-        }
+    protected:
+        IArena(const char *id);
 
-        void install_global();
-        void install_gmp();
+    public:
+        arena_t *get_arena() { return this; }
+        const char *get_name() const { return name; }
     };
 } // namespace ed
