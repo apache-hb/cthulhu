@@ -82,6 +82,15 @@ int ctu_strncmp(const char *lhs, const char *rhs, size_t length)
     return strncmp(lhs, rhs, length);
 }
 
+USE_DECL
+int ctu_strcmp(const char *lhs, const char *rhs)
+{
+    CTASSERT(lhs != NULL);
+    CTASSERT(rhs != NULL);
+
+    return strcmp(lhs, rhs);
+}
+
 USE_DECL CT_NOALIAS
 void *ctu_memcpy(void *restrict dst, const void *restrict src, size_t size)
 {
@@ -97,6 +106,15 @@ void ctu_memset(void *dst, int value, size_t size)
     CTASSERT(dst != NULL);
 
     memset(dst, value, size);
+}
+
+USE_DECL
+char *ctu_strstr(IN_STRING const char *haystack, IN_STRING const char *needle)
+{
+    CTASSERT(haystack != NULL);
+    CTASSERT(needle != NULL);
+
+    return strstr(haystack, needle);
 }
 
 USE_DECL

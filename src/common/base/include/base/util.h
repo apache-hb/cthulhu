@@ -80,6 +80,18 @@ CT_BASE_API size_t ctu_strlen(IN_STRING const char *str);
 CT_NODISCARD CT_PUREFN
 CT_BASE_API int ctu_strncmp(IN_STRING const char *lhs, IN_STRING const char *rhs, size_t length);
 
+/// @brief compare two strings
+/// equivalent to strcmp but with safety checks
+///
+/// @pre @p lhs and @p rhs must not be null
+///
+/// @param lhs the left hand side
+/// @param rhs the right hand side
+///
+/// @return the comparison result
+CT_NODISCARD CT_PUREFN
+CT_BASE_API int ctu_strcmp(IN_STRING const char *lhs, IN_STRING const char *rhs);
+
 /// @brief copy memory from one location to another
 /// equivalent to memcpy but with safety checks
 ///
@@ -103,6 +115,18 @@ CT_BASE_API void *ctu_memcpy(OUT_WRITES(size) void *CT_RESTRICT dst, IN_READS(si
 /// @param size the number of bytes to set
 CT_NOALIAS
 CT_BASE_API void ctu_memset(OUT_WRITES(size) void *dst, int value, size_t size);
+
+/// @brief find a substring in a string
+/// equivalent to strstr but with safety checks
+///
+/// @pre @p haystack and @p needle must not be null
+///
+/// @param haystack the string to search in
+/// @param needle the string to search for
+///
+/// @return the position of @p needle in @p haystack or null if not found
+CT_NODISCARD CT_PUREFN
+CT_BASE_API char *ctu_strstr(IN_STRING const char *haystack, IN_STRING const char *needle);
 
 // text api
 

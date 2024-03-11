@@ -23,10 +23,36 @@ typedef struct map_t map_t;
 /// @brief String manipulation and processing
 /// @{
 
-CT_PRINTF(3, 4)
-CT_STD_API size_t str_printf(OUT_WRITES(len) char *str, size_t len, CT_FMT_STRING const char *fmt, ...);
+/// @brief format a string with printf-like syntax
+///
+/// format a string with a va_list and printf-like syntax into a text buffer.
+///
+/// @pre @p str is a pointer to a buffer of at least @p len bytes
+/// @pre @p fmt is a valid format string
+///
+/// @param str the buffer to format into
+/// @param len the length of the buffer
+/// @param fmt the format string
+/// @param args the arguments to format
+///
+/// @return the number of characters written
+CT_STD_API size_t str_vsprintf(OUT_WRITES(len) char *str, size_t len, IN_STRING const char *fmt, va_list args);
 
-CT_STD_API size_t str_vprintf(OUT_WRITES(len) char *str, size_t len, IN_STRING const char *fmt, va_list args);
+/// @brief format a string with printf-like syntax
+///
+/// format a string with printf-like syntax into a text buffer.
+///
+/// @pre @p str is a pointer to a buffer of at least @p len bytes
+/// @pre @p fmt is a valid format string
+///
+/// @param str the buffer to format into
+/// @param len the length of the buffer
+/// @param fmt the format string
+/// @param ... the arguments to format
+///
+/// @return the number of characters written
+CT_PRINTF(3, 4)
+CT_STD_API size_t str_sprintf(OUT_WRITES(len) char *str, size_t len, CT_FMT_STRING const char *fmt, ...);
 
 /// @brief format a string
 ///

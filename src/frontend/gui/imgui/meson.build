@@ -1,4 +1,4 @@
-gui_args = user_args + cpp.get_supported_arguments('/wd4611', '/wd4201', '-D_HAS_EXCEPTIONS=0')
+gui_args = user_args + cpp.get_supported_arguments('/wd4611', '/wd4201', '-D_HAS_EXCEPTIONS=0', '-Wno-deprecated-enum-enum-conversion')
 
 src = [
     'imgui.cpp',
@@ -13,8 +13,9 @@ src = [
     'misc/cpp/imgui_stdlib.cpp',
 ]
 
-deps = [ cpp.find_library('d3d12'), cpp.find_library('dxgi'), base ]
 inc = include_directories('.', 'misc/cpp')
+
+deps = [ cpp.find_library('d3d12'), cpp.find_library('dxgi'), base, stb_sprintf ]
 
 libimgui = static_library('imgui', src,
     build_by_default : not meson.is_subproject(),
@@ -27,5 +28,6 @@ libimgui = static_library('imgui', src,
 imgui = declare_dependency(
     link_with : libimgui,
     include_directories : inc,
-    dependencies : deps
+    dependencies : deps,
+    compile_args : gui_args
 )

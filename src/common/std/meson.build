@@ -16,11 +16,13 @@ src = [
     'src/typed/vector.c'
 ]
 
+deps = [ arena, base, stb_sprintf ]
+
 libstd = library('std', src,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_STD_BUILD=1' ],
-    dependencies : [ arena, base ],
+    dependencies : deps,
     include_directories : std_include
 )
 

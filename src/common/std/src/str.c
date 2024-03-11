@@ -14,16 +14,28 @@
 #include "core/macros.h"
 
 #include <limits.h>
-#include <stdio.h>
-#include <string.h>
+
+#if CTU_STB_SPRINTF
+#   include "stb_sprintf.h"
+#   define CT_SPRINTF stbsp_snprintf
+#   define CT_SNPRINTF stbsp_snprintf
+#   define CT_VSNPRINTF stbsp_vsnprintf
+#else
+#   include <string.h>
+#   define CT_SPRINTF snprintf
+#   define CT_SNPRINTF snprintf
+#   define CT_VSNPRINTF vsnprintf
+#endif
+
+// TODO: is it worth using stbsp_vsprintfcb when its available?
 
 USE_DECL
-size_t str_printf(char *str, size_t len, const char *fmt, ...)
+size_t str_sprintf(char *str, size_t len, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
 
-    size_t result = str_vprintf(str, len, fmt, args);
+    size_t result = str_vsprintf(str, len, fmt, args);
 
     va_end(args);
 
@@ -31,11 +43,37 @@ size_t str_printf(char *str, size_t len, const char *fmt, ...)
 }
 
 USE_DECL
-size_t str_vprintf(char *str, size_t len, const char *fmt, va_list args)
+size_t str_vsprintf(char *str, size_t len, const char *fmt, va_list args)
 {
     CTASSERT(fmt != NULL);
+    CTASSERTF(len < INT_MAX, "len = %zu", len);
 
-    return vsnprintf(str, len, fmt, args);
+    return CT_VSNPRINTF(str, (int)len, fmt, args);
+}
+
+USE_DECL
+text_t text_vformat(arena_t *arena, const char *fmt, va_list args)
+{
+    CTASSERT(arena != NULL);
+    CTASSERT(fmt != NULL);
+
+    // make a copy of the args for the second format
+    va_list again;
+    va_copy(again, args);
+
+    // get the number of bytes needed to format
+    size_t len = str_vsprintf(NULL, 0, fmt, args);
+
+    CTASSERTF(len > 0, "text_vformat failed to format string: %s", fmt);
+
+    char *out = ARENA_MALLOC(len + 1, "text_vformat", fmt, arena);
+
+    size_t result = str_vsprintf(out, len + 1, fmt, again);
+    CTASSERTF(result == len, "text_vformat failed to format string: %s expected (%zu == %zu)", fmt, result, len);
+
+    va_end(again);
+
+    return text_make(out, len);
 }
 
 USE_DECL
@@ -52,31 +90,6 @@ text_t text_format(arena_t *arena, const char *fmt, ...)
     va_end(args);
 
     return text;
-}
-
-USE_DECL
-text_t text_vformat(arena_t *arena, const char *fmt, va_list args)
-{
-    CTASSERT(arena != NULL);
-    CTASSERT(fmt != NULL);
-
-    // make a copy of the args for the second format
-    va_list again;
-    va_copy(again, args);
-
-    // get the number of bytes needed to format
-    size_t len = str_vprintf(NULL, 0, fmt, args);
-
-    CTASSERTF(len > 0, "text_vformat failed to format string: %s", fmt);
-
-    char *out = ARENA_MALLOC(len + 1, "text_vformat", fmt, arena);
-
-    size_t result = str_vprintf(out, len + 1, fmt, again);
-    CTASSERTF(result == len, "text_vformat failed to format string: %s expected (%zu == %zu)", fmt, result, len);
-
-    va_end(again);
-
-    return text_make(out, len);
 }
 
 USE_DECL
@@ -400,7 +413,7 @@ static size_t normstr(char *out, char c)
         out[1] = 'r';
         return 2;
     default: {
-        int result = snprintf(out, 5, "\\x%02x", (c & 0xFF));
+        int result = CT_SNPRINTF(out, 5, "\\x%02x", (c & 0xFF));
         CTASSERT(result > 0);
         return result;
     }
@@ -530,7 +543,7 @@ bool str_contains(const char *str, const char *search)
     CTASSERT(str != NULL);
     CTASSERT(search != NULL);
 
-    return strstr(str, search) != NULL;
+    return ctu_strstr(str, search) != NULL;
 }
 
 USE_DECL
@@ -733,7 +746,7 @@ size_t str_find(const char *str, const char *sub)
     CTASSERT(str != NULL);
     CTASSERT(sub != NULL);
 
-    const char *ptr = strstr(str, sub);
+    const char *ptr = ctu_strstr(str, sub);
     return ptr == NULL ? SIZE_MAX : (size_t)(ptr - str);
 }
 

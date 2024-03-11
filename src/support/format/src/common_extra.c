@@ -18,7 +18,6 @@
 #include "std/vector.h"
 
 #include <ctype.h>
-#include <string.h>
 
 #define COLOUR_UNKNOWN eColourMagenta
 #define COLOUR_SORRY eColourMagenta
@@ -166,8 +165,8 @@ static void load_lineinfo(text_cache_t *text)
 
     while (start < end)
     {
-        const char *next = strchr(start, '\n');
-        if (next == NULL) next = end;
+        size_t i = str_find(start, "\n");
+        const char *next = (i == SIZE_MAX) ? end : start + i;
 
         lineinfo_t info = {
             .offset = offset,

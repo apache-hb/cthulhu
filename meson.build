@@ -41,6 +41,10 @@ opt_analyze = get_option('analyze').disable_auto_if(meson.is_subproject())
 win32_trickery = get_option('win32_trickery')
 trace_time = get_option('trace_time').disable_auto_if(meson.is_subproject())
 
+# disable stb_sprintf by default if we're a subproject, people may not
+# want us to bring in new dependencies that we dont require to function
+opt_stb_sprintf = get_option('stb_sprintf').disable_auto_if(meson.is_subproject())
+
 # disable unit tests if we are a subproject or release build
 # this is because they require some different flags that slow down the final binary.
 # but only on gcc
@@ -82,15 +86,10 @@ plugin_timer = get_option('plugin_timer').disable_auto_if(meson.is_subproject())
 # tools like this are user facing, so dont disable them in release mode
 tool_diagnostic = get_option('tool_diagnostic').disable_auto_if(meson.is_subproject())
 
-needs_cpp = frontend_gui.enabled()
-wants_cpp = frontend_gui.allowed()
-has_cpp = false
+needs_cpp = frontend_gui.allowed()
 
-if wants_cpp
-    has_cpp = add_languages('cpp', native : false, required : needs_cpp)
-
-    frontend_gui = frontend_gui.require(has_cpp)
-endif
+has_cpp = add_languages('cpp', native : false, required : needs_cpp)
+frontend_gui = frontend_gui.require(has_cpp)
 
 frontend_gui = frontend_gui.require(target == 'windows')
 
@@ -126,6 +125,7 @@ config_cdata.set10('CTU_DISABLE_FN_PURITY', unit_tests.allowed() and cc.get_id()
 config_cdata.set10('CTU_HAS_PRETTY_FUNCTION', warning_level < 3)
 
 config_cdata.set10('CTU_TRACE_MEMORY', trace_memory.allowed())
+config_cdata.set10('CTU_STB_SPRINTF', opt_stb_sprintf.allowed())
 
 # args for all code
 all_args = cc.get_supported_arguments(
@@ -211,7 +211,7 @@ if has_cpp
     extra_cpp_args = cpp.get_supported_arguments(
         # introduced in clang-19, warns on missing designated initializer fields
         # i've never had a bug from not initializing a field, since they are always
-        # default initialized to something sane. so this warning is just noise
+        # default initialized to 0 in c. so this warning is just noise
         '-Wno-missing-field-initializers'
     )
 
@@ -374,7 +374,8 @@ build_summary = {
         'Module loader': default_library,
         'Unit tests': unit_tests,
         'Driver tests': driver_tests,
-        'Doxygen': doxygen
+        'Doxygen': doxygen,
+        'STB sprintf': opt_stb_sprintf
     },
     'Targets': {
         'C Family': target_cfamily.allowed(),

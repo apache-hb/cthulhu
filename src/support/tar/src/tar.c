@@ -54,7 +54,7 @@ static void checksum(tar_header_t *header)
         sum += ((unsigned char *)header)[i];
     }
 
-    str_printf(header->checksum, sizeof(header->checksum) - 1, "%06o", sum);
+    str_sprintf(header->checksum, sizeof(header->checksum) - 1, "%06o", sum);
 }
 
 typedef struct tar_context_t
@@ -75,9 +75,9 @@ static bool build_tar_header(tar_header_t *header, io_t *dst, char type, size_t 
 
     header->type = type;
 
-    str_printf(header->size, sizeof(header->size), "%011o", (unsigned int)size);
-    str_printf(header->mode, sizeof(header->mode), "%07o", 0644);
-    str_printf(header->mtime, sizeof(header->mtime), "%011o", 0);
+    str_sprintf(header->size, sizeof(header->size), "%011o", (unsigned int)size);
+    str_sprintf(header->mode, sizeof(header->mode), "%07o", 0644);
+    str_sprintf(header->mtime, sizeof(header->mtime), "%011o", 0);
 
     ctu_memset(header->checksum, ' ', sizeof(header->checksum) - 1);
 
@@ -92,9 +92,9 @@ static tar_error_t write_tar_dir(const char *dir, const char *name, tar_context_
     tar_header_t header = { 0 };
 
     if (is_path_special(name))
-        str_printf(header.name, sizeof(header.name), "%s/", dir);
+        str_sprintf(header.name, sizeof(header.name), "%s/", dir);
     else
-        str_printf(header.name, sizeof(header.name), "%s/%s/", dir, name);
+        str_sprintf(header.name, sizeof(header.name), "%s/%s/", dir, name);
 
     bool result = build_tar_header(&header, ctx->dst, TAR_TYPE_DIR, 0);
 
@@ -106,9 +106,9 @@ static tar_error_t write_tar_file(const char *dir, const char *name, tar_context
     tar_header_t header = { 0 };
 
     if (is_path_special(dir))
-        str_printf(header.name, sizeof(header.name), "%s", name);
+        str_sprintf(header.name, sizeof(header.name), "%s", name);
     else
-        str_printf(header.name, sizeof(header.name), "%s/%s", dir, name);
+        str_sprintf(header.name, sizeof(header.name), "%s/%s", dir, name);
 
     io_t *src = fs_open(ctx->fs, header.name, eOsAccessRead);
     io_error_t err = io_error(src);

@@ -14,7 +14,9 @@
 
 #pragma once
 
-#include "base/panic.h" // IWYU pragma: keep
+#include "base/panic.h"
+
+// TODO: support building the gui frontend in shared mode
 
 //---- Define assertion handler. Defaults to calling assert().
 // If your macro uses multiple statements, make sure is enclosed in a 'do { .. } while (0)' block so it can be used as a single statement.
@@ -73,7 +75,9 @@
 
 //---- Use stb_sprintf.h for a faster implementation of vsnprintf instead of the one from libc (unless IMGUI_DISABLE_DEFAULT_FORMAT_FUNCTIONS is defined)
 // Compatibility checks of arguments and formats done by clang and GCC will be disabled in order to support the extra formats provided by stb_sprintf.h.
-//#define IMGUI_USE_STB_SPRINTF
+#if CTU_STB_SPRINTF
+#   define IMGUI_USE_STB_SPRINTF
+#endif
 
 //---- Use FreeType to build and rasterize the font atlas (instead of stb_truetype which is embedded by default in Dear ImGui)
 // Requires FreeType headers to be available in the include path. Requires program to be compiled with 'misc/freetype/imgui_freetype.cpp' (in this repository) + the FreeType library (not provided).
@@ -102,7 +106,7 @@
         operator MyVec4() const { return MyVec4(x,y,z,w); }
 */
 //---- ...Or use Dear ImGui's own very basic math operators.
-//#define IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
 
 //---- Use 32-bit vertex indices (default is 16-bit) is one way to allow large meshes with more than 64K vertices.
 // Your renderer backend will need to support it (most example renderer backends support both 16/32-bit indices).

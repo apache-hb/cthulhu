@@ -8,7 +8,6 @@
 
 %code top {
     #include "interop/flex.h"
-    #include <string.h>
 }
 
 %code requires {

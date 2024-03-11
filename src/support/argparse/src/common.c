@@ -13,8 +13,6 @@
 #include "std/vector.h"
 #include "std/str.h"
 
-#include <string.h>
-
 typedef struct where_t where_t;
 
 // internals

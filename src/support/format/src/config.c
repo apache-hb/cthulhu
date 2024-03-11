@@ -17,7 +17,6 @@
 #include "core/macros.h"
 
 #include <limits.h>
-#include <string.h>
 #include <stdint.h>
 
 #define COLOUR_ARG eColourWhite

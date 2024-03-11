@@ -130,6 +130,11 @@ option('win32_trickery', type : 'feature',
     value : 'disabled'
 )
 
+option('stb_sprintf', type : 'feature',
+    description : 'use stb_sprintf instead of the libc printf',
+    value : 'auto'
+)
+
 # tools
 
 option('tool_notify', type : 'feature',

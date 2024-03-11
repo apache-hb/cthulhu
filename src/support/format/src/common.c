@@ -9,8 +9,6 @@
 
 #include "std/str.h"
 
-#include <string.h>
-
 size_t get_offset_line(bool zero_indexed_lines, size_t line)
 {
     // if the first line is 0, then we don't need to do anything

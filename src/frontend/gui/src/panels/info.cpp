@@ -110,11 +110,11 @@ void LanguageInfoPanel::draw_content()
     if (ImGui::TreeNode((void*)&lang.builtin, "Builtin"))
     {
         ImGui::BulletText("Builtin module: %s", builtin.c_str());
-        language_info_t builtin = lang.builtin;
-        for (size_t i = 0; i < builtin.length; i++)
+        language_info_t mod = lang.builtin;
+        for (size_t i = 0; i < mod.length; i++)
         {
-            const char *name = builtin.names ? builtin.names[i] : "unknown";
-            ImGui::BulletText("Initial size %s: %zu", name, builtin.decls[i]);
+            const char *id = mod.names ? mod.names[i] : "unknown";
+            ImGui::BulletText("Initial size %s: %zu", id, mod.decls[i]);
         }
         ImGui::TreePop();
     }

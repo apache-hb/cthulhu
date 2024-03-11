@@ -13,9 +13,8 @@
 #include "std/typed/vector.h"
 #include "std/vector.h"
 
+#include "base/util.h"
 #include "base/panic.h"
-
-#include <string.h>
 
 #define COLOUR_NOTE eColourGreen
 #define COLOUR_PATH eColourBlue
@@ -62,7 +61,7 @@ static int entry_cmp(const void *lhs, const void *rhs)
     const char *path_lhs = scan_path(scan_lhs);
     const char *path_rhs = scan_path(scan_rhs);
 
-    return strcmp(path_lhs, path_rhs);
+    return ctu_strcmp(path_lhs, path_rhs);
 }
 
 static void print_segment(simple_t *simple, const segment_t *segment, size_t scan_idx, size_t segment_idx)
