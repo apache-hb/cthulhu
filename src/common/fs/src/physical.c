@@ -140,23 +140,35 @@ static io_t *pfs_query_file(fs_t *fs, fs_inode_t *self, os_access_t flags)
     return io_file(absolute, flags, fs->arena);
 }
 
-static fs_inode_t *pfs_file_create(fs_t *fs, fs_inode_t *self, const char *name)
+static inode_result_t pfs_file_create(fs_t *fs, fs_inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
     os_error_t err = os_file_create(absolute);
-    CTASSERTF(err == 0, "failed to create file `%s` (%s) %s", absolute, name, os_error_string(err, fs->arena));
+    if (err != eOsSuccess)
+    {
+        inode_result_t result = { .error = err };
+        return result;
+    }
 
-    return physical_file(get_relative(self, name, fs->arena), fs->arena);
+    fs_inode_t *inode = physical_file(get_relative(self, name, fs->arena), fs->arena);
+    inode_result_t result = { .node = inode };
+    return result;
 }
 
-static fs_inode_t *pfs_dir_create(fs_t *fs, fs_inode_t *self, const char *name)
+static inode_result_t pfs_dir_create(fs_t *fs, fs_inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
     bool create = false;
     os_error_t err = mkdir_recursive(absolute, &create, fs->arena);
-    CTASSERTF(err == 0, "failed to create dir `%s` %s", absolute, os_error_string(err, fs->arena));
+    if (err != eOsSuccess)
+    {
+        inode_result_t result = { .error = err };
+        return result;
+    }
 
-    return physical_dir(get_relative(self, name, fs->arena), fs->arena);
+    fs_inode_t *inode = physical_dir(get_relative(self, name, fs->arena), fs->arena);
+    inode_result_t result = { .node = inode };
+    return result;
 }
 
 static os_error_t pfs_dir_delete(fs_t *fs, fs_inode_t *self, const char *name)

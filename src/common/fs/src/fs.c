@@ -66,7 +66,9 @@ static fs_inode_t *create_file(fs_t *fs, fs_inode_t *node, const char *name)
     CTASSERT(inode_is(node, eOsNodeDir));
     CTASSERT(fs->cb->pfn_create_file != NULL);
 
-    return fs->cb->pfn_create_file(fs, node, name);
+    inode_result_t result = fs->cb->pfn_create_file(fs, node, name);
+
+    return result.node;
 }
 
 static os_error_t delete_file(fs_t *fs, fs_inode_t *node, const char *name)
@@ -90,7 +92,9 @@ static fs_inode_t *create_dir(fs_t *fs, fs_inode_t *node, const char *name)
     CTASSERT(inode_is(node, eOsNodeDir));
     CTASSERT(fs->cb->pfn_create_dir != NULL);
 
-    return fs->cb->pfn_create_dir(fs, node, name);
+    inode_result_t result = fs->cb->pfn_create_dir(fs, node, name);
+
+    return result.node;
 }
 
 static os_error_t delete_dir(fs_t *fs, fs_inode_t *node, const char *name)

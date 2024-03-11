@@ -9,19 +9,21 @@
 typedef struct map_t map_t;
 typedef struct arena_t arena_t;
 
+typedef struct inode_result_t
+{
+    fs_inode_t *node;
+    os_error_t error;
+} inode_result_t;
+
 typedef fs_inode_t *(*fs_query_node_t)(fs_t *fs, fs_inode_t *node, const char *name);
 typedef map_t *(*fs_query_dirents_t)(fs_t *fs, fs_inode_t *node);
 typedef io_t *(*fs_query_file_t)(fs_t *fs, fs_inode_t *node, os_access_t flags);
 
-typedef fs_inode_t *(*fs_inode_create_t)(fs_t *fs, fs_inode_t *node, const char *name, os_dirent_t type);
-
-typedef fs_inode_t *(*fs_dir_create_t)(fs_t *fs, fs_inode_t *node, const char *name);
-typedef fs_inode_t *(*fs_file_create_t)(fs_t *fs, fs_inode_t *node, const char *name);
-
-typedef void (*fs_inode_delete_t)(fs_t *fs, fs_inode_t *node, const char *name);
-
-typedef os_error_t (*fs_dir_delete_t)(fs_t *fs, fs_inode_t *node, const char *name);
+typedef inode_result_t (*fs_file_create_t)(fs_t *fs, fs_inode_t *node, const char *name);
 typedef os_error_t (*fs_file_delete_t)(fs_t *fs, fs_inode_t *node, const char *name);
+
+typedef inode_result_t (*fs_dir_create_t)(fs_t *fs, fs_inode_t *node, const char *name);
+typedef os_error_t (*fs_dir_delete_t)(fs_t *fs, fs_inode_t *node, const char *name);
 
 /// @brief fs callback to delete the fs
 ///

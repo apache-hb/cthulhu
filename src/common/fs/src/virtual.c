@@ -168,12 +168,14 @@ static io_t *vfs_query_file(fs_t *fs, fs_inode_t *self, os_access_t flags)
     return vfs_io(file, flags, fs->arena);
 }
 
-static fs_inode_t *vfs_create_dir(fs_t *fs, fs_inode_t *self, const char *name)
+static inode_result_t vfs_create_dir(fs_t *fs, fs_inode_t *self, const char *name)
 {
     virtual_dir_t *dir = inode_data(self);
     fs_inode_t *node = virtual_dir(fs->arena);
     map_set(dir->dirents, name, node);
-    return node;
+
+    inode_result_t result = { .node = node };
+    return result;
 }
 
 static os_error_t vfs_delete_dir(fs_t *fs, fs_inode_t *self, const char *name)
@@ -185,7 +187,7 @@ static os_error_t vfs_delete_dir(fs_t *fs, fs_inode_t *self, const char *name)
     return result ? eOsSuccess : eOsNotFound;
 }
 
-static fs_inode_t *vfs_create_file(fs_t *fs, fs_inode_t *self, const char *name)
+static inode_result_t vfs_create_file(fs_t *fs, fs_inode_t *self, const char *name)
 {
     virtual_dir_t *dir = inode_data(self);
 
@@ -200,7 +202,8 @@ static fs_inode_t *vfs_create_file(fs_t *fs, fs_inode_t *self, const char *name)
     fs_inode_t *node = inode_file(&file, sizeof(virtual_file_t), fs->arena);
     ARENA_REPARENT(file.data, node, fs->arena);
     map_set(dir->dirents, name, node);
-    return node;
+    inode_result_t result = { .node = node };
+    return result;
 }
 
 static os_error_t vfs_delete_file(fs_t *fs, fs_inode_t *self, const char *name)
