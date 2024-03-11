@@ -1,16 +1,19 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
-#include "arena/arena.h"
-#include "base/util.h"
 #include "common.h"
 
+#include "arena/arena.h"
+
+#include "os/os.h"
+
 #include "io/impl.h"
+#include "io/io.h"
+
 #include "std/vector.h"
 #include "std/str.h"
 #include "std/map.h"
 
-#include "io/io.h"
-
+#include "base/util.h"
 #include "base/panic.h"
 
 static vector_t *path_split(const char *path, arena_t *arena)
@@ -114,6 +117,7 @@ void fs_delete(fs_t *fs)
 
 // fs file api
 
+USE_DECL
 void fs_file_create(fs_t *fs, const char *path)
 {
     vector_t *parts = path_split(path, fs->arena);
@@ -134,6 +138,7 @@ void fs_file_create(fs_t *fs, const char *path)
     create_file(fs, current, vector_tail(parts));
 }
 
+USE_DECL
 bool fs_file_exists(fs_t *fs, const char *path)
 {
     vector_t *parts = path_split(path, fs->arena);
@@ -155,6 +160,7 @@ bool fs_file_exists(fs_t *fs, const char *path)
     return inode_is(file, eOsNodeFile);
 }
 
+USE_DECL
 void fs_file_delete(fs_t *fs, const char *path)
 {
     vector_t *parts = path_split(path, fs->arena);
@@ -180,10 +186,11 @@ static const io_callbacks_t kInvalidIo = { 0 };
 static io_t *make_invalid_file(const char *name, os_access_t flags, arena_t *arena)
 {
     io_t *io = io_new(&kInvalidIo, flags, name, NULL, 0, arena);
-    io->error = 2; // ENOENT
+    io->error = eOsNotFound;
     return io;
 }
 
+USE_DECL
 io_t *fs_open(fs_t *fs, const char *path, os_access_t flags)
 {
     // create a file if it doesn't exist then open it
@@ -258,6 +265,7 @@ static inode_t *get_inode_for(fs_t *fs, inode_t *node, const char *name, os_dire
     }
 }
 
+USE_DECL
 bool fs_dir_create(fs_t *fs, const char *path)
 {
     CTASSERT(fs != NULL);
@@ -292,6 +300,7 @@ bool fs_dir_create(fs_t *fs, const char *path)
     return true;
 }
 
+USE_DECL
 bool fs_dir_exists(fs_t *fs, const char *path)
 {
     vector_t *parts = path_split(path, fs->arena);
@@ -320,7 +329,8 @@ bool fs_dir_exists(fs_t *fs, const char *path)
     return inode_is(current, eOsNodeDir);
 }
 
-void fs_dir_delete(fs_t *fs, const char *path)
+USE_DECL
+os_error_t fs_dir_delete(fs_t *fs, const char *path)
 {
     vector_t *parts = path_split(path, fs->arena);
     size_t len = vector_len(parts);
@@ -340,16 +350,16 @@ void fs_dir_delete(fs_t *fs, const char *path)
 
         case eOsNodeNone:
         case eOsNodeFile:
-            return;
+            return eOsNotFound;
 
         default:
-            CTASSERTF(false, "invalid inode type (type = %d)", node->type);
-            return;
+            CT_NEVER("invalid inode type (type = %d)", node->type);
         }
     }
 
     // TODO: recursively delete all files and directories inside the directory
     delete_dir(fs, current, vector_tail(parts));
+    return eOsSuccess;
 }
 
 // fs sync
@@ -407,6 +417,7 @@ static sync_result_t sync_dir(fs_t *dst, fs_t *src, inode_t *dst_node, inode_t *
     return result;
 }
 
+USE_DECL
 sync_result_t fs_sync(fs_t *dst, fs_t *src)
 {
     CTASSERT(dst != NULL);

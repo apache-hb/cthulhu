@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <dirent.h>
+#include <errno.h>
 
 typedef struct os_file_t
 {
@@ -32,3 +33,8 @@ typedef struct os_library_t
 {
     void *library;
 } os_library_t;
+
+enum {
+    eOsSuccess = 0,
+    eOsNotFound = ENOENT,
+};

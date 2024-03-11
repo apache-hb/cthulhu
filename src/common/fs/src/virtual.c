@@ -109,7 +109,7 @@ static const io_callbacks_t kVirtualCallbacks = {
     .fn_seek = vfs_seek,
 
     .fn_map = vfs_map,
-    .fn_close = vfs_close
+    .fn_close = vfs_close,
 };
 
 static io_t *vfs_io(virtual_file_t *file, os_access_t flags, arena_t *arena)
@@ -218,9 +218,10 @@ static const fs_callbacks_t kVirtualInterface = {
     .pfn_delete_dir = vfs_delete_dir,
 
     .pfn_create_file = vfs_create_file,
-    .pfn_delete_file = vfs_delete_file
+    .pfn_delete_file = vfs_delete_file,
 };
 
+USE_DECL
 fs_t *fs_virtual(const char *name, arena_t *arena)
 {
     CTASSERT(name != NULL);

@@ -182,9 +182,10 @@ static const fs_callbacks_t kPhysicalInterface = {
     .pfn_delete_dir = pfs_dir_delete,
 
     .pfn_create_file = pfs_file_create,
-    .pfn_delete_file = pfs_file_delete
+    .pfn_delete_file = pfs_file_delete,
 };
 
+USE_DECL
 fs_t *fs_physical(const char *root, arena_t *arena)
 {
     CTASSERT(root != NULL);

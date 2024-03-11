@@ -35,3 +35,8 @@ typedef struct os_library_t
 {
     HMODULE library;
 } os_library_t;
+
+enum {
+    eOsSuccess = ERROR_SUCCESS,
+    eOsNotFound = ERROR_FILE_NOT_FOUND,
+};
