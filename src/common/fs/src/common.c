@@ -12,38 +12,38 @@
 
 // inode api
 
-inode_t gInvalidFileNode = {
+fs_inode_t gInvalidFileNode = {
     .type = eOsNodeNone
 };
 
-static inode_t *inode_new(os_dirent_t type, const void *data, size_t size, arena_t *arena)
+static fs_inode_t *inode_new(os_dirent_t type, const void *data, size_t size, arena_t *arena)
 {
     CTASSERT(type < eOsNodeCount);
 
-    inode_t *inode = ARENA_MALLOC(sizeof(inode_t) + size, "inode", NULL, arena);
+    fs_inode_t *inode = ARENA_MALLOC(sizeof(fs_inode_t) + size, "inode", NULL, arena);
     inode->type = type;
     ctu_memcpy(inode->data, data, size);
     return inode;
 }
 
-inode_t *inode_file(const void *data, size_t size, arena_t *arena)
+fs_inode_t *inode_file(const void *data, size_t size, arena_t *arena)
 {
     return inode_new(eOsNodeFile, data, size, arena);
 }
 
-inode_t *inode_dir(const void *data, size_t size, arena_t *arena)
+fs_inode_t *inode_dir(const void *data, size_t size, arena_t *arena)
 {
     return inode_new(eOsNodeDir, data, size, arena);
 }
 
-void *inode_data(inode_t *inode)
+void *inode_data(fs_inode_t *inode)
 {
     CTASSERT(inode != NULL);
 
     return inode->data;
 }
 
-bool inode_is(inode_t *inode, os_dirent_t type)
+bool inode_is(fs_inode_t *inode, os_dirent_t type)
 {
     CTASSERT(inode != NULL);
     CTASSERT(type < eOsNodeCount);
@@ -73,7 +73,7 @@ os_error_t mkdir_recursive(const char *path, bool *create, arena_t *arena)
 
 // fs api
 
-fs_t *fs_new(inode_t *root, const fs_callbacks_t *cb, const void *data, size_t size, arena_t *arena)
+fs_t *fs_new(fs_inode_t *root, const fs_callbacks_t *cb, const void *data, size_t size, arena_t *arena)
 {
     CTASSERT(root != NULL);
     CTASSERT(cb != NULL);

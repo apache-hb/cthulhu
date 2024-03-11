@@ -26,7 +26,7 @@ typedef struct physical_dir_t
     const char *path; ///< path to directory relative to root
 } physical_dir_t;
 
-static const char *get_absolute(fs_t *fs, inode_t *node, const char *path)
+static const char *get_absolute(fs_t *fs, fs_inode_t *node, const char *path)
 {
     CTASSERT(fs != NULL);
 
@@ -51,7 +51,7 @@ static const char *get_absolute(fs_t *fs, inode_t *node, const char *path)
     return str_format(fs->arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s" CT_NATIVE_PATH_SEPARATOR "%s", self->root, dir->path, path);
 }
 
-static const char *get_relative(inode_t *node, const char *path, arena_t *arena)
+static const char *get_relative(fs_inode_t *node, const char *path, arena_t *arena)
 {
     const physical_dir_t *dir = inode_data(node);
 
@@ -70,7 +70,7 @@ static const char *get_relative(inode_t *node, const char *path, arena_t *arena)
     return str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s", dir->path, path);
 }
 
-static inode_t *physical_dir(const char *path, arena_t *arena)
+static fs_inode_t *physical_dir(const char *path, arena_t *arena)
 {
     physical_dir_t dir = {
         .path = path
@@ -79,7 +79,7 @@ static inode_t *physical_dir(const char *path, arena_t *arena)
     return inode_dir(&dir, sizeof(physical_dir_t), arena);
 }
 
-static inode_t *physical_file(const char *path, arena_t *arena)
+static fs_inode_t *physical_file(const char *path, arena_t *arena)
 {
     physical_file_t file = {
         .path = path
@@ -88,7 +88,7 @@ static inode_t *physical_file(const char *path, arena_t *arena)
     return inode_file(&file, sizeof(physical_file_t), arena);
 }
 
-static inode_t *pfs_query_node(fs_t *fs, inode_t *self, const char *name)
+static fs_inode_t *pfs_query_node(fs_t *fs, fs_inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
     os_dirent_t dirent = os_dirent_type(absolute);
@@ -107,7 +107,7 @@ static inode_t *pfs_query_node(fs_t *fs, inode_t *self, const char *name)
     }
 }
 
-static map_t *pfs_query_dirents(fs_t *fs, inode_t *self)
+static map_t *pfs_query_dirents(fs_t *fs, fs_inode_t *self)
 {
     const char *absolute = get_absolute(fs, self, NULL);
 
@@ -124,7 +124,7 @@ static map_t *pfs_query_dirents(fs_t *fs, inode_t *self)
         if (os_iter_error(&iter)) { break; }
         const char *path = os_dir_name(&dir, fs->arena);
 
-        inode_t *inode = pfs_query_node(fs, self, path);
+        fs_inode_t *inode = pfs_query_node(fs, self, path);
         CTASSERTF(inode != NULL, "failed to query node %s '%s'", absolute, path);
         map_set(dirents, path, inode);
     }
@@ -134,13 +134,13 @@ static map_t *pfs_query_dirents(fs_t *fs, inode_t *self)
     return dirents;
 }
 
-static io_t *pfs_query_file(fs_t *fs, inode_t *self, os_access_t flags)
+static io_t *pfs_query_file(fs_t *fs, fs_inode_t *self, os_access_t flags)
 {
     const char *absolute = get_absolute(fs, self, NULL);
     return io_file(absolute, flags, fs->arena);
 }
 
-static inode_t *pfs_file_create(fs_t *fs, inode_t *self, const char *name)
+static fs_inode_t *pfs_file_create(fs_t *fs, fs_inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
     os_error_t err = os_file_create(absolute);
@@ -149,7 +149,7 @@ static inode_t *pfs_file_create(fs_t *fs, inode_t *self, const char *name)
     return physical_file(get_relative(self, name, fs->arena), fs->arena);
 }
 
-static inode_t *pfs_dir_create(fs_t *fs, inode_t *self, const char *name)
+static fs_inode_t *pfs_dir_create(fs_t *fs, fs_inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
     bool create = false;
@@ -159,14 +159,14 @@ static inode_t *pfs_dir_create(fs_t *fs, inode_t *self, const char *name)
     return physical_dir(get_relative(self, name, fs->arena), fs->arena);
 }
 
-static void pfs_dir_delete(fs_t *fs, inode_t *self, const char *name)
+static void pfs_dir_delete(fs_t *fs, fs_inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
     os_error_t check = os_dir_delete(absolute);
     CTASSERT(check == 0);
 }
 
-static void pfs_file_delete(fs_t *fs, inode_t *self, const char *name)
+static void pfs_file_delete(fs_t *fs, fs_inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
     os_error_t check = os_file_delete(absolute);
@@ -209,7 +209,7 @@ fs_t *fs_physical(const char *root, arena_t *arena)
         .root = root
     };
 
-    inode_t *dir = physical_dir(".", arena);
+    fs_inode_t *dir = physical_dir(".", arena);
 
     return fs_new(dir, &kPhysicalInterface, &self, sizeof(physical_t), arena);
 }

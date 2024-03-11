@@ -23,7 +23,7 @@ static vector_t *path_split(const char *path, arena_t *arena)
 
 // fs interface api
 
-static inode_t *query_inode(fs_t *fs, inode_t *node, const char *name)
+static fs_inode_t *query_inode(fs_t *fs, fs_inode_t *node, const char *name)
 {
     CTASSERT(fs != NULL);
     CTASSERT(node != NULL);
@@ -35,7 +35,7 @@ static inode_t *query_inode(fs_t *fs, inode_t *node, const char *name)
     return fs->cb->pfn_query_node(fs, node, name);
 }
 
-static map_t *query_dirents(fs_t *fs, inode_t *node)
+static map_t *query_dirents(fs_t *fs, fs_inode_t *node)
 {
     CTASSERT(fs != NULL);
     CTASSERT(node != NULL);
@@ -46,7 +46,7 @@ static map_t *query_dirents(fs_t *fs, inode_t *node)
     return fs->cb->pfn_query_dirents(fs, node);
 }
 
-static io_t *query_file(fs_t *fs, inode_t *node, os_access_t flags)
+static io_t *query_file(fs_t *fs, fs_inode_t *node, os_access_t flags)
 {
     CTASSERT(fs != NULL);
     CTASSERT(node != NULL);
@@ -57,7 +57,7 @@ static io_t *query_file(fs_t *fs, inode_t *node, os_access_t flags)
     return fs->cb->pfn_query_file(fs, node, flags);
 }
 
-static inode_t *create_dir(fs_t *fs, inode_t *node, const char *name)
+static fs_inode_t *create_dir(fs_t *fs, fs_inode_t *node, const char *name)
 {
     CTASSERT(fs != NULL);
     CTASSERT(node != NULL);
@@ -69,7 +69,7 @@ static inode_t *create_dir(fs_t *fs, inode_t *node, const char *name)
     return fs->cb->pfn_create_dir(fs, node, name);
 }
 
-static void delete_dir(fs_t *fs, inode_t *node, const char *name)
+static void delete_dir(fs_t *fs, fs_inode_t *node, const char *name)
 {
     CTASSERT(fs != NULL);
     CTASSERT(node != NULL);
@@ -81,7 +81,7 @@ static void delete_dir(fs_t *fs, inode_t *node, const char *name)
     fs->cb->pfn_delete_dir(fs, node, name);
 }
 
-static inode_t *create_file(fs_t *fs, inode_t *node, const char *name)
+static fs_inode_t *create_file(fs_t *fs, fs_inode_t *node, const char *name)
 {
     CTASSERT(fs != NULL);
     CTASSERT(node != NULL);
@@ -93,7 +93,7 @@ static inode_t *create_file(fs_t *fs, inode_t *node, const char *name)
     return fs->cb->pfn_create_file(fs, node, name);
 }
 
-static void delete_file(fs_t *fs, inode_t *node, const char *name)
+static void delete_file(fs_t *fs, fs_inode_t *node, const char *name)
 {
     CTASSERT(fs != NULL);
     CTASSERT(node != NULL);
@@ -122,12 +122,12 @@ void fs_file_create(fs_t *fs, const char *path)
 {
     vector_t *parts = path_split(path, fs->arena);
     size_t len = vector_len(parts);
-    inode_t *current = fs->root;
+    fs_inode_t *current = fs->root;
 
     for (size_t i = 0; i < len - 1; i++)
     {
         const char *part = vector_get(parts, i);
-        inode_t *node = query_inode(fs, current, part);
+        fs_inode_t *node = query_inode(fs, current, part);
         switch (node->type)
         {
         case eOsNodeDir: current = node; break;
@@ -143,12 +143,12 @@ bool fs_file_exists(fs_t *fs, const char *path)
 {
     vector_t *parts = path_split(path, fs->arena);
     size_t len = vector_len(parts);
-    inode_t *current = fs->root;
+    fs_inode_t *current = fs->root;
 
     for (size_t i = 0; i < len - 1; i++)
     {
         const char *part = vector_get(parts, i);
-        inode_t *node = query_inode(fs, current, part);
+        fs_inode_t *node = query_inode(fs, current, part);
         switch (node->type)
         {
         case eOsNodeDir: current = node; break;
@@ -156,7 +156,7 @@ bool fs_file_exists(fs_t *fs, const char *path)
         }
     }
 
-    inode_t *file = query_inode(fs, current, vector_tail(parts));
+    fs_inode_t *file = query_inode(fs, current, vector_tail(parts));
     return inode_is(file, eOsNodeFile);
 }
 
@@ -165,12 +165,12 @@ void fs_file_delete(fs_t *fs, const char *path)
 {
     vector_t *parts = path_split(path, fs->arena);
     size_t len = vector_len(parts);
-    inode_t *current = fs->root;
+    fs_inode_t *current = fs->root;
 
     for (size_t i = 0; i < len - 1; i++)
     {
         const char *part = vector_get(parts, i);
-        inode_t *node = query_inode(fs, current, part);
+        fs_inode_t *node = query_inode(fs, current, part);
         switch (node->type)
         {
         case eOsNodeDir: current = node; break;
@@ -197,12 +197,12 @@ io_t *fs_open(fs_t *fs, const char *path, os_access_t flags)
 
     vector_t *parts = path_split(path, fs->arena);
     size_t len = vector_len(parts);
-    inode_t *current = fs->root;
+    fs_inode_t *current = fs->root;
 
     for (size_t i = 0; i < len - 1; i++)
     {
         const char *part = vector_get(parts, i);
-        inode_t *node = query_inode(fs, current, part);
+        fs_inode_t *node = query_inode(fs, current, part);
         switch (node->type)
         {
         case eOsNodeDir: current = node; break;
@@ -211,7 +211,7 @@ io_t *fs_open(fs_t *fs, const char *path, os_access_t flags)
         }
     }
 
-    inode_t *file = query_inode(fs, current, vector_tail(parts));
+    fs_inode_t *file = query_inode(fs, current, vector_tail(parts));
     switch (file->type)
     {
     case eOsNodeFile:
@@ -231,9 +231,9 @@ io_t *fs_open(fs_t *fs, const char *path, os_access_t flags)
 
 // fs dir api
 
-static inode_t *get_dir_or_create(fs_t *fs, inode_t *node, const char *name)
+static fs_inode_t *get_dir_or_create(fs_t *fs, fs_inode_t *node, const char *name)
 {
-    inode_t *dir = query_inode(fs, node, name);
+    fs_inode_t *dir = query_inode(fs, node, name);
     switch (dir->type)
     {
     case eOsNodeDir: return dir;
@@ -243,9 +243,9 @@ static inode_t *get_dir_or_create(fs_t *fs, inode_t *node, const char *name)
     }
 }
 
-static inode_t *get_file_or_create(fs_t *fs, inode_t *node, const char *name)
+static fs_inode_t *get_file_or_create(fs_t *fs, fs_inode_t *node, const char *name)
 {
-    inode_t *file = query_inode(fs, node, name);
+    fs_inode_t *file = query_inode(fs, node, name);
     switch (file->type)
     {
     case eOsNodeFile: return file;
@@ -255,7 +255,7 @@ static inode_t *get_file_or_create(fs_t *fs, inode_t *node, const char *name)
     }
 }
 
-static inode_t *get_inode_for(fs_t *fs, inode_t *node, const char *name, os_dirent_t type)
+static fs_inode_t *get_inode_for(fs_t *fs, fs_inode_t *node, const char *name, os_dirent_t type)
 {
     switch (type)
     {
@@ -274,12 +274,12 @@ bool fs_dir_create(fs_t *fs, const char *path)
 
     vector_t *parts = path_split(path, fs->arena);
     size_t len = vector_len(parts);
-    inode_t *current = fs->root;
+    fs_inode_t *current = fs->root;
 
     for (size_t i = 0; i < len; i++)
     {
         const char *part = vector_get(parts, i);
-        inode_t *node = query_inode(fs, current, part);
+        fs_inode_t *node = query_inode(fs, current, part);
         switch (node->type)
         {
         case eOsNodeDir:
@@ -305,12 +305,12 @@ bool fs_dir_exists(fs_t *fs, const char *path)
 {
     vector_t *parts = path_split(path, fs->arena);
     size_t len = vector_len(parts);
-    inode_t *current = fs->root;
+    fs_inode_t *current = fs->root;
 
     for (size_t i = 0; i < len; i++)
     {
         const char *part = vector_get(parts, i);
-        inode_t *node = query_inode(fs, current, part);
+        fs_inode_t *node = query_inode(fs, current, part);
         switch (node->type)
         {
         case eOsNodeDir:
@@ -334,14 +334,14 @@ os_error_t fs_dir_delete(fs_t *fs, const char *path)
 {
     vector_t *parts = path_split(path, fs->arena);
     size_t len = vector_len(parts);
-    inode_t *current = fs->root;
+    fs_inode_t *current = fs->root;
 
     CTASSERT(len > 0);
 
     for (size_t i = 0; i < len - 1; i++)
     {
         const char *part = vector_get(parts, i);
-        inode_t *node = query_inode(fs, current, part);
+        fs_inode_t *node = query_inode(fs, current, part);
         switch (node->type)
         {
         case eOsNodeDir:
@@ -364,7 +364,7 @@ os_error_t fs_dir_delete(fs_t *fs, const char *path)
 
 // fs sync
 
-static void sync_file(fs_t *dst_fs, fs_t *src_fs, inode_t *dst_node, inode_t *src_node)
+static void sync_file(fs_t *dst_fs, fs_t *src_fs, fs_inode_t *dst_node, fs_inode_t *src_node)
 {
     CTASSERT(inode_is(dst_node, eOsNodeFile));
     CTASSERT(inode_is(src_node, eOsNodeFile));
@@ -384,15 +384,15 @@ static void sync_file(fs_t *dst_fs, fs_t *src_fs, inode_t *dst_node, inode_t *sr
     io_close(src_io);
 }
 
-static sync_result_t sync_dir(fs_t *dst, fs_t *src, inode_t *dst_node, inode_t *src_node)
+static sync_result_t sync_dir(fs_t *dst, fs_t *src, fs_inode_t *dst_node, fs_inode_t *src_node)
 {
     map_t *dirents = query_dirents(src, src_node);
     map_iter_t iter = map_iter(dirents);
     const char *name = NULL;
-    inode_t *child = NULL;
+    fs_inode_t *child = NULL;
     while (CTU_MAP_NEXT(&iter, &name, &child))
     {
-        inode_t *other = get_inode_for(dst, dst_node, name, child->type);
+        fs_inode_t *other = get_inode_for(dst, dst_node, name, child->type);
         if (other == NULL)
         {
             sync_result_t result = { .path = name };
@@ -426,7 +426,7 @@ sync_result_t fs_sync(fs_t *dst, fs_t *src)
     return sync_dir(dst, src, dst->root, src->root);
 }
 
-static void iter_dirents(fs_t *fs, inode_t *node, const char *path, const char *name, void *data, fs_dirent_callback_t callback)
+static void iter_dirents(fs_t *fs, fs_inode_t *node, const char *path, const char *name, void *data, fs_dirent_callback_t callback)
 {
     CTASSERTF(node != NULL, "invalid inode (fs = %p)", (void*)fs);
     CTASSERTF(node->type != eOsNodeNone && node->type != eOsNodeError, "invalid inode type (type = %d)", node->type);
@@ -443,7 +443,7 @@ static void iter_dirents(fs_t *fs, inode_t *node, const char *path, const char *
     map_t *dirents = query_dirents(fs, node);
     map_iter_t iter = map_iter(dirents);
     const char *id = NULL;
-    inode_t *child = NULL;
+    fs_inode_t *child = NULL;
     while (CTU_MAP_NEXT(&iter, &id, &child))
     {
         iter_dirents(fs, child, dir, id, data, callback);

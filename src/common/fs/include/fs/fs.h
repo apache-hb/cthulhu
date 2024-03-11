@@ -6,6 +6,8 @@
 
 #include "os/core.h"
 
+#include "fs/impl.h"
+
 #include <stdbool.h>
 
 CT_BEGIN_API
@@ -18,9 +20,6 @@ typedef struct vector_t vector_t;
 /// @brief virtual and physical filesystem interface
 /// @ingroup common
 /// @{
-
-/// @brief a filesystem interface
-typedef struct fs_t fs_t;
 
 /// @brief delete a filesystem handle
 ///
