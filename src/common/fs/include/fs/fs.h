@@ -49,10 +49,12 @@ CT_FS_API fs_t *fs_virtual(IN_STRING const char *name, IN_NOTNULL arena_t *arena
 ///
 /// @param fs the filesystem
 /// @param path the full path of the directory
-CT_FS_API bool fs_dir_create(IN_NOTNULL fs_t *fs, IN_STRING const char *path);
+///
+/// @return 0 on success, an error code otherwise
+CT_FS_API os_error_t fs_dir_create(IN_NOTNULL fs_t *fs, IN_STRING const char *path);
 
 /// @brief create a file
-/// @note this function will not create child directories
+/// @note this function will not create intermediate directories
 ///
 /// create a file inside a directory
 ///
@@ -67,7 +69,7 @@ CT_FS_API void fs_file_create(IN_NOTNULL fs_t *fs, IN_STRING const char *path);
 /// @param path the path of the file
 /// @param flags the access modifiers to use when opening the file
 ///
-/// @return an io object representing the file on disk, or NULL on failure
+/// @return an io object representing the file on disk
 CT_NODISCARD
 CT_FS_API io_t *fs_open(IN_NOTNULL fs_t *fs, IN_STRING const char *path, os_access_t flags);
 
@@ -94,13 +96,17 @@ CT_FS_API bool fs_file_exists(IN_NOTNULL fs_t *fs, IN_STRING const char *path);
 ///
 /// @param fs the filesystem
 /// @param path the path to the folder
+///
+/// @return 0 on success, an error code otherwise
 CT_FS_API os_error_t fs_dir_delete(IN_NOTNULL fs_t *fs, IN_STRING const char *path);
 
 /// @brief delete a file
 ///
 /// @param fs the filesystem
 /// @param path the path to the file
-CT_FS_API void fs_file_delete(IN_NOTNULL fs_t *fs, IN_STRING const char *path);
+///
+/// @return 0 on success, an error code otherwise
+CT_FS_API os_error_t fs_file_delete(IN_NOTNULL fs_t *fs, IN_STRING const char *path);
 
 /// @brief the result of a @a fs_sync call
 /// this is here because we cant use @ref notify in the fs api

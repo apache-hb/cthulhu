@@ -159,18 +159,16 @@ static fs_inode_t *pfs_dir_create(fs_t *fs, fs_inode_t *self, const char *name)
     return physical_dir(get_relative(self, name, fs->arena), fs->arena);
 }
 
-static void pfs_dir_delete(fs_t *fs, fs_inode_t *self, const char *name)
+static os_error_t pfs_dir_delete(fs_t *fs, fs_inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
-    os_error_t check = os_dir_delete(absolute);
-    CTASSERT(check == 0);
+    return os_dir_delete(absolute);
 }
 
-static void pfs_file_delete(fs_t *fs, fs_inode_t *self, const char *name)
+static os_error_t pfs_file_delete(fs_t *fs, fs_inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
-    os_error_t check = os_file_delete(absolute);
-    CTASSERT(check == 0);
+    return os_file_delete(absolute);
 }
 
 static const fs_callbacks_t kPhysicalInterface = {

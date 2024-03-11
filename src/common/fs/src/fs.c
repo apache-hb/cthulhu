@@ -69,7 +69,7 @@ static fs_inode_t *create_dir(fs_t *fs, fs_inode_t *node, const char *name)
     return fs->cb->pfn_create_dir(fs, node, name);
 }
 
-static void delete_dir(fs_t *fs, fs_inode_t *node, const char *name)
+static os_error_t delete_dir(fs_t *fs, fs_inode_t *node, const char *name)
 {
     CTASSERT(fs != NULL);
     CTASSERT(node != NULL);
@@ -78,7 +78,7 @@ static void delete_dir(fs_t *fs, fs_inode_t *node, const char *name)
     CTASSERT(inode_is(node, eOsNodeDir));
     CTASSERT(fs->cb->pfn_delete_dir != NULL);
 
-    fs->cb->pfn_delete_dir(fs, node, name);
+    return fs->cb->pfn_delete_dir(fs, node, name);
 }
 
 static fs_inode_t *create_file(fs_t *fs, fs_inode_t *node, const char *name)
@@ -93,7 +93,7 @@ static fs_inode_t *create_file(fs_t *fs, fs_inode_t *node, const char *name)
     return fs->cb->pfn_create_file(fs, node, name);
 }
 
-static void delete_file(fs_t *fs, fs_inode_t *node, const char *name)
+static os_error_t delete_file(fs_t *fs, fs_inode_t *node, const char *name)
 {
     CTASSERT(fs != NULL);
     CTASSERT(node != NULL);
@@ -102,7 +102,7 @@ static void delete_file(fs_t *fs, fs_inode_t *node, const char *name)
     CTASSERT(inode_is(node, eOsNodeDir));
     CTASSERT(fs->cb->pfn_delete_file != NULL);
 
-    fs->cb->pfn_delete_file(fs, node, name);
+    return fs->cb->pfn_delete_file(fs, node, name);
 }
 
 // fs delete
@@ -161,7 +161,7 @@ bool fs_file_exists(fs_t *fs, const char *path)
 }
 
 USE_DECL
-void fs_file_delete(fs_t *fs, const char *path)
+os_error_t fs_file_delete(fs_t *fs, const char *path)
 {
     vector_t *parts = path_split(path, fs->arena);
     size_t len = vector_len(parts);
@@ -174,11 +174,11 @@ void fs_file_delete(fs_t *fs, const char *path)
         switch (node->type)
         {
         case eOsNodeDir: current = node; break;
-        default: return;
+        default: return eOsNotFound;
         }
     }
 
-    delete_file(fs, current, vector_tail(parts));
+    return delete_file(fs, current, vector_tail(parts));
 }
 
 static const io_callbacks_t kInvalidIo = { 0 };
@@ -266,7 +266,7 @@ static fs_inode_t *get_inode_for(fs_t *fs, fs_inode_t *node, const char *name, o
 }
 
 USE_DECL
-bool fs_dir_create(fs_t *fs, const char *path)
+os_error_t fs_dir_create(fs_t *fs, const char *path)
 {
     CTASSERT(fs != NULL);
     CTASSERT(path != NULL);
@@ -290,7 +290,7 @@ bool fs_dir_create(fs_t *fs, const char *path)
             break;
 
         case eOsNodeFile:
-            return false;
+            return eOsExists;
 
         default:
             CT_NEVER("invalid inode type (type = %d)", node->type);
@@ -358,7 +358,7 @@ os_error_t fs_dir_delete(fs_t *fs, const char *path)
     }
 
     // TODO: recursively delete all files and directories inside the directory
-    delete_dir(fs, current, vector_tail(parts));
+    return delete_dir(fs, current, vector_tail(parts));
     return eOsSuccess;
 }
 

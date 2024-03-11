@@ -37,4 +37,5 @@ typedef struct os_library_t
 enum {
     eOsSuccess = 0,
     eOsNotFound = ENOENT,
+    eOsExists = EEXIST,
 };

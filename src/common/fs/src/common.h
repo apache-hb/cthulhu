@@ -20,8 +20,8 @@ typedef fs_inode_t *(*fs_file_create_t)(fs_t *fs, fs_inode_t *node, const char *
 
 typedef void (*fs_inode_delete_t)(fs_t *fs, fs_inode_t *node, const char *name);
 
-typedef void (*fs_dir_delete_t)(fs_t *fs, fs_inode_t *node, const char *name);
-typedef void (*fs_file_delete_t)(fs_t *fs, fs_inode_t *node, const char *name);
+typedef os_error_t (*fs_dir_delete_t)(fs_t *fs, fs_inode_t *node, const char *name);
+typedef os_error_t (*fs_file_delete_t)(fs_t *fs, fs_inode_t *node, const char *name);
 
 /// @brief fs callback to delete the fs
 ///

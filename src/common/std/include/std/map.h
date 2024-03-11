@@ -96,7 +96,9 @@ CT_STD_API bool map_contains(IN_NOTNULL const map_t *map, IN_NOTNULL const void 
 ///
 /// @param map the map to delete the key-value pair from
 /// @param key the key to delete
-CT_STD_API void map_delete(IN_NOTNULL map_t *map, IN_NOTNULL const void *key);
+///
+/// @retval true the key-value pair was deleted
+CT_STD_API bool map_delete(IN_NOTNULL map_t *map, IN_NOTNULL const void *key);
 
 /// @brief collect all the values from a map into a vector
 ///

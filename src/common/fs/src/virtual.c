@@ -3,6 +3,7 @@
 #include "common.h"
 
 #include "arena/arena.h"
+#include "os/os.h"
 
 #include "io/impl.h"
 #include "std/map.h"
@@ -175,12 +176,13 @@ static fs_inode_t *vfs_create_dir(fs_t *fs, fs_inode_t *self, const char *name)
     return node;
 }
 
-static void vfs_delete_dir(fs_t *fs, fs_inode_t *self, const char *name)
+static os_error_t vfs_delete_dir(fs_t *fs, fs_inode_t *self, const char *name)
 {
     CT_UNUSED(fs);
 
     virtual_dir_t *dir = inode_data(self);
-    map_delete(dir->dirents, name);
+    bool result = map_delete(dir->dirents, name);
+    return result ? eOsSuccess : eOsNotFound;
 }
 
 static fs_inode_t *vfs_create_file(fs_t *fs, fs_inode_t *self, const char *name)
@@ -201,12 +203,13 @@ static fs_inode_t *vfs_create_file(fs_t *fs, fs_inode_t *self, const char *name)
     return node;
 }
 
-static void vfs_delete_file(fs_t *fs, fs_inode_t *self, const char *name)
+static os_error_t vfs_delete_file(fs_t *fs, fs_inode_t *self, const char *name)
 {
     CT_UNUSED(fs);
 
     virtual_dir_t *dir = inode_data(self);
-    map_delete(dir->dirents, name);
+    bool result = map_delete(dir->dirents, name);
+    return result ? eOsSuccess : eOsNotFound;
 }
 
 static const fs_callbacks_t kVirtualInterface = {

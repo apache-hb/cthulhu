@@ -331,7 +331,7 @@ bool map_contains(const map_t *map, const void *key)
 }
 
 USE_DECL
-void map_delete(map_t *map, const void *key)
+bool map_delete(map_t *map, const void *key)
 {
     CTASSERT(map != NULL);
     CTASSERT(key != NULL);
@@ -344,12 +344,14 @@ void map_delete(map_t *map, const void *key)
         if (entry->key != NULL && impl_key_equal(map, entry->key, key))
         {
             impl_delete_bucket(previous, entry);
-            break;
+            return true;
         }
 
         previous = entry;
         entry = entry->next;
     }
+
+    return false;
 }
 
 USE_DECL
