@@ -32,15 +32,20 @@ os_error_t os_iter_begin(const char *path, os_iter_t *result, arena_t *arena)
     return 0;
 }
 
-void os_iter_end(os_iter_t *iter)
+os_error_t os_iter_end(os_iter_t *iter)
 {
     CTASSERT(iter != NULL);
 
-    closedir(iter->dir);
+    if (closedir(iter->dir) != 0)
+    {
+        return errno;
+    }
+
+    return 0;
 }
 
 USE_DECL
-bool os_iter_next(os_iter_t *iter, os_dir_t *result)
+bool os_iter_next(os_iter_t *iter, os_inode_t *result)
 {
     CTASSERT(iter != NULL);
     CTASSERT(result != NULL);
@@ -60,7 +65,7 @@ bool os_iter_next(os_iter_t *iter, os_dir_t *result)
         return false;
     }
 
-    os_dir_t dir = {
+    os_inode_t dir = {
         .ent = ent
     };
     *result = dir;
@@ -77,7 +82,7 @@ os_error_t os_iter_error(os_iter_t *iter)
 }
 
 USE_DECL
-char *os_dir_name(os_dir_t *dir, arena_t *arena)
+char *os_dir_name(os_inode_t *dir, arena_t *arena)
 {
     CTASSERT(dir != NULL);
 

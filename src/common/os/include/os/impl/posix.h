@@ -24,10 +24,10 @@ typedef struct os_iter_t
     int error;
 } os_iter_t;
 
-typedef struct os_dir_t
+typedef struct os_inode_t
 {
     struct dirent *ent;
-} os_dir_t;
+} os_inode_t;
 
 typedef struct os_library_t
 {

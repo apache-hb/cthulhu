@@ -20,8 +20,8 @@ CT_BEGIN_API
 /// @brief file handle
 typedef struct os_file_t os_file_t;
 
-/// @brief directory handle
-typedef struct os_dir_t os_dir_t;
+/// @brief inode handle
+typedef struct os_inode_t os_inode_t;
 
 /// @brief directory iterator
 typedef struct os_iter_t os_iter_t;

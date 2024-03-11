@@ -147,7 +147,7 @@ CT_OS_API os_error_t os_iter_begin(IN_STRING const char *path, os_iter_t *iter, 
 /// @brief close a directory iterator
 ///
 /// @param iter iterator to close
-CT_OS_API void os_iter_end(IN_NOTNULL os_iter_t *iter);
+CT_OS_API os_error_t os_iter_end(IN_NOTNULL os_iter_t *iter);
 
 /// @brief get the next directory entry
 ///
@@ -156,7 +156,7 @@ CT_OS_API void os_iter_end(IN_NOTNULL os_iter_t *iter);
 ///
 /// @return true if a directory entry was found
 CT_NODISCARD
-CT_OS_API bool os_iter_next(IN_NOTNULL os_iter_t *iter, os_dir_t *dir);
+CT_OS_API bool os_iter_next(IN_NOTNULL os_iter_t *iter, os_inode_t *dir);
 
 /// @brief get the error state of a directory iterator
 ///
@@ -173,7 +173,7 @@ CT_OS_API os_error_t os_iter_error(IN_NOTNULL os_iter_t *iter);
 ///
 /// @return the name of the directory entry
 CT_NODISCARD
-CT_OS_API char *os_dir_name(IN_NOTNULL os_dir_t *dir, IN_NOTNULL arena_t *arena);
+CT_OS_API char *os_dir_name(IN_NOTNULL os_inode_t *dir, IN_NOTNULL arena_t *arena);
 
 /// file api
 

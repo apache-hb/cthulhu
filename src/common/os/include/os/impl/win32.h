@@ -26,10 +26,10 @@ typedef struct os_iter_t
     DWORD error;
 } os_iter_t;
 
-typedef struct os_dir_t
+typedef struct os_inode_t
 {
     WIN32_FIND_DATA data;
-} os_dir_t;
+} os_inode_t;
 
 typedef struct os_library_t
 {

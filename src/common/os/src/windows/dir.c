@@ -59,15 +59,20 @@ os_error_t os_iter_begin(const char *path, os_iter_t *result, arena_t *arena)
 }
 
 USE_DECL
-void os_iter_end(os_iter_t *iter)
+os_error_t os_iter_end(os_iter_t *iter)
 {
     CTASSERT(iter != NULL);
 
-    FindClose(iter->find); // TODO: check result
+    if (FindClose(iter->find) == 0)
+    {
+        return GetLastError();
+    }
+
+    return ERROR_SUCCESS;
 }
 
 USE_DECL
-bool os_iter_next(os_iter_t *iter, os_dir_t *result)
+bool os_iter_next(os_iter_t *iter, os_inode_t *result)
 {
     CTASSERT(iter != NULL);
     CTASSERT(result != NULL);
@@ -77,7 +82,7 @@ bool os_iter_next(os_iter_t *iter, os_dir_t *result)
         return false;
 
     PWIN32_FIND_DATA data = &iter->data;
-    os_dir_t dir = { .data = iter->data };
+    os_inode_t dir = { .data = iter->data };
 
     // get the next directory
     while (find_next(iter->find, data, &iter->error) != 0)
@@ -104,7 +109,7 @@ os_error_t os_iter_error(os_iter_t *iter)
 }
 
 USE_DECL
-char *os_dir_name(os_dir_t *dir, arena_t *arena)
+char *os_dir_name(os_inode_t *dir, arena_t *arena)
 {
     CTASSERT(dir != NULL);
 
