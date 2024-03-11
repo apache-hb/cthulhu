@@ -57,30 +57,6 @@ static io_t *query_file(fs_t *fs, fs_inode_t *node, os_access_t flags)
     return fs->cb->pfn_query_file(fs, node, flags);
 }
 
-static fs_inode_t *create_dir(fs_t *fs, fs_inode_t *node, const char *name)
-{
-    CTASSERT(fs != NULL);
-    CTASSERT(node != NULL);
-    CTASSERT(name != NULL);
-
-    CTASSERT(inode_is(node, eOsNodeDir));
-    CTASSERT(fs->cb->pfn_create_dir != NULL);
-
-    return fs->cb->pfn_create_dir(fs, node, name);
-}
-
-static os_error_t delete_dir(fs_t *fs, fs_inode_t *node, const char *name)
-{
-    CTASSERT(fs != NULL);
-    CTASSERT(node != NULL);
-    CTASSERT(name != NULL);
-
-    CTASSERT(inode_is(node, eOsNodeDir));
-    CTASSERT(fs->cb->pfn_delete_dir != NULL);
-
-    return fs->cb->pfn_delete_dir(fs, node, name);
-}
-
 static fs_inode_t *create_file(fs_t *fs, fs_inode_t *node, const char *name)
 {
     CTASSERT(fs != NULL);
@@ -103,6 +79,30 @@ static os_error_t delete_file(fs_t *fs, fs_inode_t *node, const char *name)
     CTASSERT(fs->cb->pfn_delete_file != NULL);
 
     return fs->cb->pfn_delete_file(fs, node, name);
+}
+
+static fs_inode_t *create_dir(fs_t *fs, fs_inode_t *node, const char *name)
+{
+    CTASSERT(fs != NULL);
+    CTASSERT(node != NULL);
+    CTASSERT(name != NULL);
+
+    CTASSERT(inode_is(node, eOsNodeDir));
+    CTASSERT(fs->cb->pfn_create_dir != NULL);
+
+    return fs->cb->pfn_create_dir(fs, node, name);
+}
+
+static os_error_t delete_dir(fs_t *fs, fs_inode_t *node, const char *name)
+{
+    CTASSERT(fs != NULL);
+    CTASSERT(node != NULL);
+    CTASSERT(name != NULL);
+
+    CTASSERT(inode_is(node, eOsNodeDir));
+    CTASSERT(fs->cb->pfn_delete_dir != NULL);
+
+    return fs->cb->pfn_delete_dir(fs, node, name);
 }
 
 // fs delete
