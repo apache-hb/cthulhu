@@ -363,7 +363,6 @@ os_error_t fs_dir_delete(fs_t *fs, const char *path)
 
     // TODO: recursively delete all files and directories inside the directory
     return delete_dir(fs, current, vector_tail(parts));
-    return eOsSuccess;
 }
 
 // fs sync

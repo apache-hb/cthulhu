@@ -22,6 +22,7 @@
 #   define CT_VSNPRINTF stbsp_vsnprintf
 #else
 #   include <string.h>
+#   include <stdio.h>
 #   define CT_SPRINTF snprintf
 #   define CT_SNPRINTF snprintf
 #   define CT_VSNPRINTF vsnprintf
