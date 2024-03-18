@@ -1,6 +1,6 @@
-#include "editor/panels/panel.hpp"
+#include "stdafx.hpp"
 
-#include "imgui/imgui.h"
+#include "editor/panels/panel.hpp"
 
 using namespace ed;
 

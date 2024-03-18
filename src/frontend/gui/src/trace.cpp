@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
+#include "stdafx.hpp"
 
 #include "editor/trace.hpp"
-
-#include "imgui/imgui.h"
 
 using namespace ed;
 

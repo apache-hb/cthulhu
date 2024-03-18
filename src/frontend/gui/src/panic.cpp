@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
+#include "stdafx.hpp"
 
 #include "editor/panic.hpp"
 
@@ -7,10 +8,6 @@
 #include "cthulhu/broker/broker.h"
 #include "memory/memory.h"
 #include "std/str.h"
-
-#include "imgui/imgui.h"
-
-#include <csetjmp>
 
 using namespace ed;
 

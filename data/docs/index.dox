@@ -43,5 +43,9 @@ As alot of code can be shared, adding a feature for one language may often requi
 
 @subpage todo The ever growing todo list
 
+<h3>License</h3>
+All source code under the `src/common` directory is licensed under LGPLv3.
+All other code, unless explicitly stated, is licensed under GPLv3.
+
 All source code is available on <a href="https://github.com/apache-hb/cthulhu">Github</a>
 */

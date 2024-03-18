@@ -4,7 +4,7 @@ base_api = configure_file(
     configuration : { 'MOD': 'BASE' }
 )
 
-base_include = include_directories('.', 'include')
+inc = include_directories('.', 'include')
 
 src = [
     'src/util.c',
@@ -14,18 +14,20 @@ src = [
     'src/typeinfo.c'
 ]
 
+deps = [ core ]
+
 libbase = library('base', src,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_BASE_BUILD=1' ],
-    dependencies : [ core ],
-    include_directories : base_include
+    dependencies : deps,
+    include_directories : inc
 )
 
 base = declare_dependency(
     link_with : libbase,
-    dependencies : [ core ],
-    include_directories : base_include
+    dependencies : deps,
+    include_directories : inc
 )
 
 install_headers(base_api)

@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
+#include "stdafx.hpp"
 
 #include "editor/panels/sources.hpp"
-
-#include "imgui/imgui.h"
-#include "imgui_stdlib.h"
 
 #include "memory/memory.h"
 #include "base/util.h"
@@ -69,7 +67,7 @@ void SourceList::draw_content()
 
     if (open || add)
     {
-        paths.emplace_back(buffer);
+        sources.emplace_back(buffer);
         buffer[0] = '\0';
     }
 
@@ -77,9 +75,9 @@ void SourceList::draw_content()
 
     char label[1024] = {};
 
-    for (size_t i = 0; i < paths.size(); i++)
+    for (size_t i = 0; i < sources.size(); i++)
     {
-        Source& src = paths[i];
+        Source& src = sources[i];
         if (ImGui::CollapsingHeader(src.get_title(), ImGuiTreeNodeFlags_DefaultOpen))
         {
             (void)snprintf(label, std::size(label), "Remove##%s", src.get_path());
@@ -97,6 +95,6 @@ void SourceList::draw_content()
 
     if (idx != SIZE_MAX)
     {
-        paths.erase(paths.begin() + (ptrdiff_t)idx);
+        sources.erase(sources.begin() + (ptrdiff_t)idx);
     }
 }

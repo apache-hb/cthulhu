@@ -20,6 +20,7 @@ namespace ed
     protected:
         bool visible = true;
         bool enabled = true;
+        ImGuiWindowFlags flags = ImGuiWindowFlags_None;
 
         void set_enabled(bool value) { enabled = value; }
 

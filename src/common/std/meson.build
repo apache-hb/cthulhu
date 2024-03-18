@@ -4,7 +4,7 @@ std_api = configure_file(
     configuration : { 'MOD': 'STD' }
 )
 
-std_include = include_directories('.', 'include')
+inc = include_directories('.', 'include')
 
 src = [
     'src/map.c',
@@ -16,20 +16,18 @@ src = [
     'src/typed/vector.c'
 ]
 
-deps = [ arena, base, stb_sprintf ]
-
 libstd = library('std', src,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_STD_BUILD=1' ],
-    dependencies : deps,
-    include_directories : std_include
+    dependencies : [ arena, base, stb_sprintf ],
+    include_directories : inc
 )
 
 std = declare_dependency(
     link_with : libstd,
     dependencies : base,
-    include_directories : std_include
+    include_directories : inc
 )
 
 install_headers(std_api)

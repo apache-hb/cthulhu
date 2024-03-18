@@ -4,24 +4,21 @@ endian_api = configure_file(
     configuration : { 'MOD': 'ENDIAN' }
 )
 
-endian_include = include_directories('.', 'include')
-
-src = [
-    'src/endian.c'
-]
+inc = include_directories('.', 'include')
+src = [ 'src/endian.c' ]
 
 libendian = library('endian', src,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_ENDIAN_BUILD=1' ],
     dependencies : [ base ],
-    include_directories : endian_include
+    include_directories : inc
 )
 
 endian = declare_dependency(
     link_with : libendian,
     dependencies : core,
-    include_directories : endian_include
+    include_directories : inc
 )
 
 install_headers(endian_api)

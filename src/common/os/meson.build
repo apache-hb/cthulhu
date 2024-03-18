@@ -7,9 +7,7 @@ os_api = configure_file(
 os_include = include_directories('.', 'include')
 os_impl_include = include_directories('src')
 
-src = [
-    'src/os_common.c'
-]
+src = [ 'src/os_common.c' ]
 
 if target == 'windows'
     os_platform = 'windows'

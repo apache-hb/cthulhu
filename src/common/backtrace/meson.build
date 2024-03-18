@@ -4,7 +4,7 @@ backtrace_api = configure_file(
     configuration : { 'MOD': 'BACKTRACE' }
 )
 
-backtrace_include = include_directories('.', 'include')
+inc = include_directories('.', 'include')
 
 src = [ 'src/common.c' ]
 
@@ -28,13 +28,13 @@ libbacktrace = library('backtrace', src,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_BACKTRACE_BUILD=1' ],
-    include_directories : backtrace_include,
+    include_directories : inc,
     dependencies : [ backtrace_deps, core ]
 )
 
 backtrace = declare_dependency(
     link_with : libbacktrace,
-    include_directories : backtrace_include,
+    include_directories : inc,
     dependencies : [ core ]
 )
 

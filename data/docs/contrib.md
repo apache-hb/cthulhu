@@ -135,10 +135,10 @@ As such we aim to only use user provided allocators, and to not use any global m
 <h3>Naming and style for allocating interfaces</h3>
 In order of importance:
 
-1. When a type is always heap allocated its constructor must be named `<type>_new` and take its @ref arena_t as the last parameter.
+1. When an object is heap allocated its constructor must be named `<type>_new` and need a @ref arena_t as the last parameter.
   - `map_new`, `vector_new`, `set_new` etc
 
-2. When a type is only every stack allocated a `<type>_make` function should be provided when construction requires logic beyond assignment
+2. When an object is stack allocated a `<type>_make` function should be provided when construction requires logic
 
 ```c
 typedef struct text_t
@@ -155,11 +155,11 @@ inline text_t text_make(const char *string)
 }
 ```
 
-3. If an object only requires memory then do not provide a `delete` function unless very necassery
+3. If an object only requires memory then do not provide a `delete` function unless very necessary
   - Types that manage external resources *must* provide a delete function
 
 4. If a type could reasonably be allocated on either the stack or heap a `<type>_init` function should be provided
-  - These should take a pointer to an unitialized instance of the object and populate the required fields
+  - These should take a pointer to an uninitialized instance of the object and populate the required fields
   - Providing both `_new` and `_make` functions may also be good depending on how commonly the type is used
     - These functions should always be wrappers for the `_init` functions logic
 
@@ -196,6 +196,7 @@ Cthulhu also aims to be easy to port to more "exotic" systems, as such avoid rel
 ## Styleguide
 * all macros in headers should be prefixed with `CT`
 * all macros defined in generated files should be prefixed with `CTU_`
+* all macros used in c++ should be prefixed with `CTX_`
 
 * @ref arena_t should always be the last argument to a function
   * the exception to this rule is variadic functions
@@ -221,7 +222,6 @@ Source files contents should be layed out in the following order
 
 // implementations
 ```
-
   - use `const` whenever its easy to do so
   - use `#pragma once` over include guards
   - use `#define` for constant unrelated values in headers
@@ -233,6 +233,7 @@ Source files contents should be layed out in the following order
   - no `volatile`, it doesnt do what you think it does
   - no compiler specific extensions without ifdef guards
   - no mutable global state, all code must be reentrant and thread safe
+    - exceptions have been made for the global panic and os error handlers
   - no inline asm
   - no thread local values
   - no non-const static locals

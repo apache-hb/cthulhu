@@ -4,7 +4,7 @@ config_api = configure_file(
     configuration : { 'MOD': 'CONFIG' }
 )
 
-config_include = include_directories('.', 'include')
+inc = include_directories('.', 'include')
 
 src = [
     'src/config.c',
@@ -17,12 +17,12 @@ libconfig = library('config', src,
     install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_CONFIG_BUILD=1' ],
     dependencies : [ base, std, arena, io ],
-    include_directories : config_include
+    include_directories : inc
 )
 
 config = declare_dependency(
     link_with : libconfig,
-    include_directories : config_include,
+    include_directories : inc,
     dependencies : [ base, std ]
 )
 

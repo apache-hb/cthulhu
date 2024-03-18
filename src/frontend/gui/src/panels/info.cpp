@@ -1,7 +1,8 @@
+#include "stdafx.hpp"
+
 #include "editor/panels/info.hpp"
 
 #include "core/macros.h"
-#include "imgui/imgui.h"
 
 #include "cthulhu/broker/broker.h"
 #include "interop/compile.h"
@@ -104,8 +105,8 @@ void LanguageInfoPanel::draw_content()
 {
     ModuleInfoPanel::draw_info();
     ImGui::Text("Default extensions: %s", extensions.c_str());
-    ImGui::Text("Context size: %zu", lang.context_size);
-    ImGui::Text("AST size: %zu", lang.ast_size);
+    ImGui::Text("Context struct size: %zu bytes", lang.context_size);
+    ImGui::Text("AST struct size: %zu bytes", lang.ast_size);
 
     if (ImGui::TreeNode((void*)&lang.builtin, "Builtin"))
     {
@@ -121,11 +122,11 @@ void LanguageInfoPanel::draw_content()
 
     if (ImGui::TreeNode((void*)&lang, "Callbacks"))
     {
-        ImGui::BulletText("Create %p", lang.fn_create);
-        ImGui::BulletText("Destroy %p", lang.fn_destroy);
+        ImGui::BulletText("Create 0x%p", lang.fn_create);
+        ImGui::BulletText("Destroy 0x%p", lang.fn_destroy);
 
-        ImGui::BulletText("Preparse %p", lang.fn_preparse);
-        ImGui::BulletText("Postparse %p", lang.fn_postparse);
+        ImGui::BulletText("Preparse 0x%p", lang.fn_preparse);
+        ImGui::BulletText("Postparse 0x%p", lang.fn_postparse);
         ImGui::TreePop();
     }
 
@@ -138,8 +139,10 @@ void LanguageInfoPanel::draw_content()
         ImGui::BulletText("Scan: %p", scan->scan);
         ImGui::BulletText("Destroy Buffer: %p", scan->destroy);
         ImGui::BulletText("Destroy: %p", scan->destroy);
+        ImGui::TreePop();
     }
-    ImGui::TreePop();
+    ImGui::EndDisabled();
+
     if (scan == nullptr)
     {
         ImGui::SetItemTooltip("This language does not provide a scanner");

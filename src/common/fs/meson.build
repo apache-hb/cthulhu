@@ -4,8 +4,8 @@ fs_api = configure_file(
     configuration : { 'MOD': 'FS' }
 )
 
-fs_include = include_directories('.', 'include')
-fs_impl_include = include_directories('src')
+inc = include_directories('.', 'include')
+impl_include = include_directories('src')
 
 src = [
     'src/fs.c',
@@ -21,13 +21,13 @@ libfs = library('fs', src,
     install : not meson.is_subproject(),
     c_args : user_args + fs_args + [ '-DCT_FS_BUILD=1' ],
     dependencies : [ arena, std, os, io, base ],
-    include_directories : [ fs_include, fs_impl_include ]
+    include_directories : [ inc, impl_include ]
 )
 
 fs = declare_dependency(
     link_with : libfs,
     dependencies : [ os ],
-    include_directories : fs_include
+    include_directories : inc
 )
 
 install_headers(fs_api)

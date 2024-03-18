@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
+#include "stdafx.hpp"
 
 // drawing library
 
-#include "backtrace/backtrace.h"
 #include "draw/draw.hpp"
 
 // editor functionality
@@ -16,13 +16,9 @@
 #include "editor/panels/sources.hpp"
 #include "editor/panels/arena.hpp"
 
-// dear imgui
-
-#include "imgui.h"
-#include "imfilebrowser.h"
-#include "implot.h"
-
 // cthulhu includes
+
+#include "backtrace/backtrace.h"
 
 #include "setup/setup.h"
 
@@ -166,8 +162,9 @@ class EditorModulePanel : public ed::IEditorPanel
 
                 ImGui::EndTabItem();
             }
+
+            ImGui::EndTabBar();
         }
-        ImGui::EndTabBar();
     }
 
 public:
@@ -234,7 +231,7 @@ class StaticModulePanel final : public ed::IEditorPanel
 
 public:
     StaticModulePanel(EditorModulePanel& loader, support_t *support, ed::panel_info_t setup = {})
-        : IEditorPanel("Modules", setup)
+        : IEditorPanel("Loader", setup)
         , loader(loader)
         , support(support)
     { }
@@ -280,7 +277,7 @@ class DynamicModulePanel final : public ed::IEditorPanel
 
 public:
     DynamicModulePanel(EditorModulePanel& loader, support_t *support, ed::panel_info_t setup = {})
-        : IEditorPanel("Modules", setup)
+        : IEditorPanel("Loader", setup)
         , loader(loader)
         , support(support)
     {

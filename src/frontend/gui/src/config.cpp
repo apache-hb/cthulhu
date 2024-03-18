@@ -1,16 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-only
+#include "stdafx.hpp"
 
 #include "editor/config.hpp"
 
-#include "imgui/imgui.h"
-
-// for some reason the ImU64 overload of ImGui::CheckboxFlags is not included in imgui.h
-#include "imgui/imgui_internal.h" // IWYU pragma: keep
-
 #include "std/typed/vector.h"
 #include "std/vector.h"
-
-#include <array>
 
 using namespace ed;
 

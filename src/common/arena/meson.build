@@ -4,24 +4,22 @@ arena_api = configure_file(
     configuration : { 'MOD': 'ARENA' }
 )
 
-arena_include = include_directories('.', 'include')
-
-src = [
-    'src/arena.c'
-]
+inc = include_directories('.', 'include')
+src = [ 'src/arena.c' ]
+deps = [ base ]
 
 libarena = library('arena', src,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_ARENA_BUILD=1' ],
-    dependencies : [ base ],
-    include_directories : arena_include
+    dependencies : deps,
+    include_directories : inc
 )
 
 arena = declare_dependency(
     link_with : libarena,
-    dependencies : [ base ],
-    include_directories : arena_include
+    dependencies : deps,
+    include_directories : inc
 )
 
 install_headers(arena_api)

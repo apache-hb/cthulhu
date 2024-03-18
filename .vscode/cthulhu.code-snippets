@@ -144,5 +144,19 @@
 		"body": [
 			"typedef struct $1 $1;"
 		]
+	},
+	"GPL3 SPDX License": {
+		"scope": "c,cpp",
+		"prefix": "gpl3",
+		"body": [
+			"// SPDX-License-Identifier: GPL-3.0-or-later",
+		]
+	},
+	"LGPL3 SDPX License": {
+		"scope": "c,cpp",
+		"prefix": "lgpl3",
+		"body": [
+			"// SPDX-License-Identifier: LGPL-3.0-or-later",
+		]
 	}
 }

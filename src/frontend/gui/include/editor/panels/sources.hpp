@@ -39,7 +39,7 @@ namespace ed
     class SourceList final : public IEditorPanel
     {
         std::string buffer;
-        std::vector<Source> paths;
+        std::vector<Source> sources;
 
         // IEditorPanel
         void draw_content() override;
@@ -47,9 +47,9 @@ namespace ed
     public:
         SourceList(panel_info_t setup = {});
 
-        bool is_empty() const { return paths.empty(); }
-        size_t count() const { return paths.size(); }
-        const char *get_path(size_t index) const { return paths[index].get_path(); }
-        io_t *get_io(size_t index) const { return paths[index].get_io(); }
+        bool is_empty() const { return sources.empty(); }
+        size_t count() const { return sources.size(); }
+        const char *get_path(size_t index) const { return sources[index].get_path(); }
+        io_t *get_io(size_t index) const { return sources[index].get_io(); }
     };
 }

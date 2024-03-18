@@ -1,4 +1,4 @@
-project('stb', 'c')
+project('stb_sprintf', 'c')
 
 src = [ 'stb_sprintf.c' ]
 inc = include_directories('.')

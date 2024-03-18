@@ -3,10 +3,10 @@ ctu_config_header = configure_file(
     configuration : config_cdata
 )
 
-config_include = include_directories('.')
+inc = include_directories('.')
 
 core = declare_dependency(
-    include_directories : [ 'include', config_include ]
+    include_directories : [ 'include', inc ]
 )
 
 # use files() as this file is referenced in other places and we need to preserve the path properly

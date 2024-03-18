@@ -1,5 +1,14 @@
+gui_args = user_args + cpp.get_supported_arguments([
+    '/wd4611', '/wd4201', '-D_HAS_EXCEPTIONS=0',
+    '-Wno-deprecated-enum-enum-conversion', '-Wno-unused-function'
+])
+
+subdir('simcoe')
+
 # we provide imgui here ourselves so we can configure the assert handler
 subdir('imgui')
+
+# we also modify imfilebrowser to not need exceptions enabled
 subdir('imfilebrowser')
 subdir('implot')
 
@@ -27,9 +36,10 @@ src = [
 
 executable('gui', src,
     cpp_args : gui_args,
+    cpp_pch : 'src/stdafx.hpp',
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
-    include_directories : 'include',
+    include_directories : [ 'include', 'src' ],
     dependencies : [
         draw, imgui, imfilebrowser, implot,
         core, os, scan,

@@ -4,24 +4,21 @@ notify_api = configure_file(
     configuration : { 'MOD': 'NOTIFY' }
 )
 
-notify_include = include_directories('.', 'include')
-
-src = [
-    'src/notify.c'
-]
+inc = include_directories('.', 'include')
+src = [ 'src/notify.c' ]
 
 libnotify = library('notify', src,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_NOTIFY_BUILD=1' ],
     dependencies : [ std, arena ],
-    include_directories : notify_include
+    include_directories : inc
 )
 
 notify = declare_dependency(
     link_with : libnotify,
-    dependencies : [ core, base ],
-    include_directories : notify_include
+    dependencies : base,
+    include_directories : inc
 )
 
 install_headers(notify_api)
