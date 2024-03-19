@@ -9,7 +9,7 @@
 
 #include "editor/compile.hpp"
 #include "editor/panels/info.hpp"
-#include "editor/trace.hpp"
+#include "editor/panels/arena.hpp"
 
 // editor panels
 
@@ -34,7 +34,6 @@
 #include "std/typed/vector.h"
 
 #include "core/macros.h"
-#include <bitset>
 
 static const frontend_t kFrontendGui = {
     .info = {
@@ -416,10 +415,6 @@ class EditorUi
     broker_t *broker;
     support_t *support;
 
-    ed::TraceArenaPanel global_arena_panel { gGlobalArena };
-    ed::TraceArenaPanel gmp_arena_panel { gGmpArena };
-    ed::TraceArenaPanel imgui_arena_panel { gGuiArena };
-
     ed::FrontendInfoPanel version_info_panel { kFrontendGui };
 
     ed::ImGuiDemoPanel imgui_demo_panel;
@@ -429,7 +424,7 @@ class EditorUi
     DynamicModulePanel dynamic_module_panel { module_panel, support };
     StaticModulePanel static_module_panel { module_panel, support };
 
-    ed::IEditorPanel& get_loader_panel()
+    auto& get_loader_panel()
     {
 #if CTU_LOADER_STATIC
         return static_module_panel;
@@ -453,7 +448,7 @@ class EditorUi
             .sections = {
                 menu_section_t {
                     .name = "Memory",
-                    .panels = { &global_arena_panel, &gmp_arena_panel, &imgui_arena_panel }
+                    .panels = { &gGlobalArena, &gGmpArena, &gGuiArena }
                 },
                 menu_section_t {
                     .name = "Demo",
@@ -533,13 +528,16 @@ public:
 
     void draw_windows()
     {
-        draw_setup_window();
+        draw_loader_window();
+
+        draw_compiler_tabs();
 
         for (auto& menu : menus)
         {
             for (auto& panel : menu.header)
             {
                 panel->draw_window();
+                panel->update();
             }
 
             for (auto& section : menu.sections)
@@ -547,6 +545,7 @@ public:
                 for (auto& panel : section.panels)
                 {
                     panel->draw_window();
+                    panel->update();
                 }
             }
         }
@@ -570,23 +569,13 @@ public:
         | ImGuiWindowFlags_NoNavFocus
         | ImGuiWindowFlags_NoDocking;
 
-    void dock_space()
+    void dockspace()
     {
-        const ImGuiViewport *viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(viewport->WorkPos);
-        ImGui::SetNextWindowSize(viewport->WorkSize);
-        ImGui::SetNextWindowViewport(viewport->ID);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
+        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+    }
 
-        ImGui::Begin("Editor", nullptr, kDockWindowFlags);
-
-        ImGui::PopStyleVar(3);
-
-        ImGuiID id = ImGui::GetID("EditorDock");
-        ImGui::DockSpace(id, ImVec2(0.f, 0.f), kDockFlags);
-
+    void mainmenu()
+    {
         if (ImGui::BeginMainMenuBar())
         {
             ImGui::Text("Cthulhu");
@@ -596,8 +585,6 @@ public:
 
             ImGui::EndMainMenuBar();
         }
-
-        ImGui::End();
     }
 
 private:
@@ -607,20 +594,36 @@ private:
         loader_panel.draw();
     }
 
-    static constexpr ImGuiWindowFlags kMainFlags = ImGuiWindowFlags_NoDecoration
-                                                 | ImGuiWindowFlags_NoMove;
+    static constexpr ImGuiWindowFlags kMainFlags
+        = ImGuiWindowFlags_NoDecoration
+        | ImGuiWindowFlags_NoMove;
 
     ImGui::FileBrowser file_browser { ImGuiFileBrowserFlags_MultipleSelection | ImGuiFileBrowserFlags_ConfirmOnEnter };
 
-    bool show_loader = true;
-
-    void draw_setup_window()
+    void draw_loader_window()
     {
-        const ImGuiViewport *viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(viewport->WorkPos);
-        ImGui::SetNextWindowSize(viewport->WorkSize);
+        auto& loader = get_loader_panel();
+        if (!loader.is_enabled())
+            return;
 
-        if (ImGui::Begin("Compiler", nullptr, kMainFlags))
+        const ImGuiViewport *viewport = ImGui::GetMainViewport();
+
+        // center the window
+        ImGui::SetNextWindowPos(
+            ImVec2(viewport->Pos + viewport->Size / 2.f),
+            ImGuiCond_Appearing,
+            ImVec2(0.5f, 0.5f));
+
+        if (ImGui::Begin("Loader", nullptr, kMainFlags))
+        {
+            loader.draw();
+        }
+        ImGui::End();
+    }
+
+    void draw_compiler_tabs()
+    {
+        if (ImGui::Begin("Compiler"))
         {
             if (ImGui::BeginTabBar("CompilerTabs"))
             {
@@ -628,21 +631,6 @@ private:
                     file_browser.Open();
 
                 draw_source_files();
-
-                bool *p_show_loader = module_panel.is_empty() ? nullptr : &show_loader;
-
-                // only let the user close the loader once there are modules loaded
-                if (module_panel.is_empty() || show_loader)
-                {
-                    if (ImGui::BeginTabItem("Loader", p_show_loader, ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip))
-                    {
-                        draw_module_loader();
-                        ImGui::EndTabItem();
-                    }
-
-                    if (!module_panel.is_empty())
-                        show_loader = false;
-                }
             }
             ImGui::EndTabBar();
         }
@@ -680,7 +668,8 @@ int main(int argc, const char **argv)
 
     while (draw::begin_frame())
     {
-        ui.dock_space();
+        ui.dockspace();
+        ui.mainmenu();
         ui.draw_windows();
 
         draw::end_frame();

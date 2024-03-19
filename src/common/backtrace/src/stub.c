@@ -15,14 +15,14 @@ const char *bt_backend(void)
 
 void bt_read_inner(bt_trace_t callback, void *user)
 {
-    bt_frame_t frame = { 0 };
-    callback(&frame, user);
+    bt_address_t frame = 0;
+    callback(frame, user);
 }
 
-frame_resolve_t bt_resolve_inner(const bt_frame_t *frame, bt_symbol_t *symbol)
+frame_resolve_t bt_resolve_inner(bt_address_t frame, bt_symbol_t *symbol)
 {
     text_t name = symbol->name;
-    (void)snprintf(name.text, name.length, "%" PRI_ADDRESS, frame->address);
+    (void)snprintf(name.text, name.length, "%" PRI_ADDRESS, frame);
 
     return eResolveNothing;
 }

@@ -65,11 +65,9 @@ static void read_context_stack(CONTEXT *ctx, bt_trace_t callback, void *user)
 
     while (walk_stack(&stackframe, ctx, process, thread))
     {
-        bt_frame_t frame = {
-            .address = stackframe.AddrPC.Offset,
-        };
+        bt_address_t frame = stackframe.AddrPC.Offset;
 
-        callback(&frame, user);
+        callback(frame, user);
     }
 }
 
@@ -81,7 +79,7 @@ void bt_read_inner(bt_trace_t callback, void *user)
     read_context_stack(&ctx, callback, user);
 }
 
-frame_resolve_t bt_resolve_inner(const bt_frame_t *frame, bt_symbol_t *symbol)
+frame_resolve_t bt_resolve_inner(bt_address_t frame, bt_symbol_t *symbol)
 {
     union disp_t disp = { 0 };
     IMAGEHLP_LINE64 line = { 0 };
@@ -104,11 +102,11 @@ frame_resolve_t bt_resolve_inner(const bt_frame_t *frame, bt_symbol_t *symbol)
 
     frame_resolve_t resolve = eResolveNothing;
 
-    if (SymFromAddr(process, frame->address, &disp.disp64, info))
+    if (SymFromAddr(process, frame, &disp.disp64, info))
     {
         resolve |= eResolveName;
 
-        if (SymGetLineFromAddr64(process, frame->address, &disp.disp, &line))
+        if (SymGetLineFromAddr64(process, frame, &disp.disp, &line))
         {
             // subtract 1 from the line number because dbghelp is 1-indexed
             symbol->line = line.LineNumber - 1;

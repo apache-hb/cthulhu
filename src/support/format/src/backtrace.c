@@ -479,7 +479,7 @@ bt_report_t *bt_report_new(arena_t *arena)
     return report;
 }
 
-static void read_stacktrace_frame(const bt_frame_t *frame, void *user)
+static void read_stacktrace_frame(bt_address_t frame, void *user)
 {
     bt_report_add(user, frame);
 }
@@ -495,10 +495,9 @@ bt_report_t *bt_report_collect(arena_t *arena)
 }
 
 USE_DECL
-void bt_report_add(bt_report_t *report, const bt_frame_t *frame)
+void bt_report_add(bt_report_t *report, bt_address_t frame)
 {
     CTASSERT(report != NULL);
-    CTASSERT(frame != NULL);
 
     char path[1024];
     char name[1024];
@@ -514,7 +513,7 @@ void bt_report_add(bt_report_t *report, const bt_frame_t *frame)
         .file = arena_strndup(symbol.path.text, symbol.path.length, report->arena),
         .symbol = arena_strndup(symbol.name.text, symbol.name.length, report->arena),
         .line = symbol.line,
-        .address = frame->address,
+        .address = frame,
     };
 
     typevec_push(report->entries, &entry);

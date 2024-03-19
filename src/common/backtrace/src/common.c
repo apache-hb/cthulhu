@@ -5,10 +5,9 @@
 bt_error_t gSystemError = { 0 };
 
 USE_DECL
-frame_resolve_t bt_resolve_symbol(const bt_frame_t *frame, bt_symbol_t *symbol)
+frame_resolve_t bt_resolve_symbol(bt_address_t frame, bt_symbol_t *symbol)
 {
     // we return nothing rather than asserting because we might be called from inside an assert
-    if (frame == NULL) return eResolveNothing;
     if (symbol == NULL) return eResolveNothing;
 
     text_t name = symbol->name;

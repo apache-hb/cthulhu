@@ -2,6 +2,7 @@
 #include "stdafx.hpp"
 
 #include "editor/config.hpp"
+#include "editor/utils.hpp"
 
 #include "std/typed/vector.h"
 #include "std/vector.h"
@@ -34,9 +35,9 @@ const char *get_name(const cfg_field_t *field)
     return info->name;
 }
 
-void get_label(char *buf, size_t size, const cfg_field_t *field)
+ed::SmallString<64> get_label(const cfg_field_t *field)
 {
-    (void)snprintf(buf, size, "##%s", get_name(field));
+    return ed::strfmt<64>("##%s", get_name(field));
 }
 
 void draw_info_preamble(const cfg_info_t *info)
@@ -107,11 +108,8 @@ void draw_group_info(const cfg_group_t *group)
 
 void draw_bool(cfg_field_t *field)
 {
-    char label[64];
-    get_label(label, std::size(label), field);
-
     bool value = cfg_bool_value(field);
-    if (ImGui::Checkbox(label, &value))
+    if (ImGui::Checkbox(get_label(field), &value))
     {
         cfg_set_bool(field, value);
     }
@@ -119,12 +117,9 @@ void draw_bool(cfg_field_t *field)
 
 void draw_int(cfg_field_t *field)
 {
-    char label[64];
-    get_label(label, std::size(label), field);
-
     const cfg_int_t *cfg = cfg_int_info(field);
     int value = cfg_int_value(field);
-    if (ImGui::DragInt(label, &value, 1.f, cfg->min, cfg->max))
+    if (ImGui::DragInt(get_label(field), &value, 1.f, cfg->min, cfg->max))
     {
         // we know that the value is in range because of the drag constraints
         (void)cfg_set_int(field, value);
@@ -133,13 +128,10 @@ void draw_int(cfg_field_t *field)
 
 void draw_string(cfg_field_t *field)
 {
-    char label[64];
-    get_label(label, std::size(label), field);
-
     const char *value = cfg_string_value(field);
     char buffer[256] = { 0 };
     strncpy_s(buffer, value, std::size(buffer));
-    if (ImGui::InputText(label, buffer, std::size(buffer)))
+    if (ImGui::InputText(get_label(field), buffer, std::size(buffer)))
     {
         cfg_set_string(field, buffer);
     }
@@ -147,9 +139,6 @@ void draw_string(cfg_field_t *field)
 
 void draw_enum(cfg_field_t *field)
 {
-    char label[64];
-    get_label(label, std::size(label), field);
-
     const cfg_enum_t *cfg = cfg_enum_info(field);
     size_t value = cfg_enum_value(field);
 
@@ -163,9 +152,9 @@ void draw_enum(cfg_field_t *field)
         }
     }
 
-    CTASSERTF(current != SIZE_MAX, "invalid enum value %zu for field %s", value, label);
+    CTASSERTF(current != SIZE_MAX, "invalid enum value %zu for field %s", value, get_name(field));
 
-    if (ImGui::BeginCombo(label, cfg->options[current].text))
+    if (ImGui::BeginCombo(get_label(field), cfg->options[current].text))
     {
         for (size_t i = 0; i < cfg->count; i++)
         {
@@ -189,8 +178,6 @@ void draw_enum(cfg_field_t *field)
 void draw_flags(cfg_field_t *field)
 {
     const char *edit_flags_popup = "Edit Flags";
-    char label[64];
-    get_label(label, std::size(label), field);
 
     const cfg_flags_t *cfg = cfg_flags_info(field);
     ImU64 value = cfg_flags_value(field);

@@ -42,13 +42,6 @@ typedef struct bt_symbol_t
     text_t path;
 } bt_symbol_t;
 
-/// @brief a backtrace frame
-typedef struct bt_frame_t
-{
-    /// @brief the frame address
-    bt_address_t address;
-} bt_frame_t;
-
 /// @brief how much of a frame was reconstructed
 typedef enum frame_resolve_t
 {
@@ -77,7 +70,7 @@ typedef enum frame_resolve_t
 ///
 /// @param frame the frame to resolve
 /// @param user user data
-typedef void (*bt_trace_t)(const bt_frame_t *frame, void *user);
+typedef void (*bt_trace_t)(bt_address_t frame, void *user);
 
 /// @brief called once when a system error occurs
 ///
@@ -138,7 +131,7 @@ CT_BACKTRACE_API void bt_read(IN_NOTNULL bt_trace_t callback, void *user);
 ///
 /// @param frame the frame to resolve
 /// @param symbol the symbol to fill
-CT_BACKTRACE_API frame_resolve_t bt_resolve_symbol(IN_NOTNULL const bt_frame_t *frame, IN_NOTNULL bt_symbol_t *symbol);
+CT_BACKTRACE_API frame_resolve_t bt_resolve_symbol(bt_address_t frame, IN_NOTNULL bt_symbol_t *symbol);
 
 /// @}
 

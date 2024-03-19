@@ -8,8 +8,6 @@
 #include <string>
 #include <vector>
 
-typedef struct bt_frame_t bt_frame_t;
-
 namespace ed
 {
     void install_panic_handler();

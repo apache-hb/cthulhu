@@ -29,6 +29,8 @@ namespace ed
 
         virtual ~IEditorPanel() = default;
 
+        virtual void update() { }
+
         // draw the panel inside its own window
         virtual bool draw_window();
 
@@ -39,6 +41,8 @@ namespace ed
         virtual bool menu_item(const char *shortcut = nullptr);
 
         const char *get_title() const { return name.c_str(); }
+        bool is_visible() const { return visible; }
+        bool is_enabled() const { return enabled; }
     };
 
     class ImGuiDemoPanel final : public IEditorPanel

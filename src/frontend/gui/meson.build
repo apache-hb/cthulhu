@@ -18,7 +18,6 @@ subdir('draw')
 
 src = [
     'src/arena.cpp',
-    'src/trace.cpp',
     'src/config.cpp',
     'src/panic.cpp',
     'src/compile.cpp',

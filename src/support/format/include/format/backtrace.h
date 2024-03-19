@@ -4,6 +4,8 @@
 
 #include <ctu_format_api.h>
 
+#include "backtrace/backtrace.h"
+
 #include "core/analyze.h"
 
 #include "format/format.h"
@@ -22,9 +24,6 @@ typedef struct typevec_t typevec_t;
 
 /// @brief a backtrace report context
 typedef struct bt_report_t bt_report_t;
-
-/// @brief a single frame in a backtrace
-typedef struct bt_frame_t bt_frame_t;
 
 /// @brief printing options for a backtrace
 typedef struct print_backtrace_t
@@ -59,7 +58,7 @@ CT_FORMAT_API bt_report_t *bt_report_collect(IN_NOTNULL arena_t *arena);
 ///
 /// @param report the report to add the frame to
 /// @param frame the frame to add to the report
-CT_FORMAT_API void bt_report_add(IN_NOTNULL bt_report_t *report, IN_NOTNULL const bt_frame_t *frame);
+CT_FORMAT_API void bt_report_add(IN_NOTNULL bt_report_t *report, bt_address_t frame);
 
 /// @brief print a backtrace report
 ///

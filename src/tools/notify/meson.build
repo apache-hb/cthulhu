@@ -6,5 +6,5 @@ cfg_include = include_directories('.')
 
 executable('tool_notify', 'main.c',
     include_directories : [ cfg_include ],
-    dependencies : [ notify, memory, scan, io, std, config, setup, argparse, format ]
+    dependencies : [ notify, memory, scan, io, std, config, setup, argparse, format, backtrace ]
 )

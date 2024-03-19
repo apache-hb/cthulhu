@@ -33,7 +33,6 @@
 ///  note: note message
 
 typedef struct io_t io_t;
-typedef struct bt_frame_t bt_frame_t;
 typedef struct event_t event_t;
 typedef struct typevec_t typevec_t;
 typedef struct arena_t arena_t;

@@ -99,7 +99,7 @@ struct trace_capture_t
     PanicInfo *info = nullptr;
 };
 
-static void trace_callback(const bt_frame_t *frame, void *user)
+static void trace_callback(bt_address_t frame, void *user)
 {
     auto& [symbol, info] = *reinterpret_cast<trace_capture_t*>(user);
 
@@ -109,7 +109,7 @@ static void trace_callback(const bt_frame_t *frame, void *user)
     text_t name = symbol.name;
 
     stack_frame_t stack_frame = {
-        .address = frame->address,
+        .address = frame,
         .line = symbol.line,
         .symbol = std::string(name.text, name.length),
         .file = std::string(path.text, path.length),

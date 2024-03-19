@@ -36,18 +36,16 @@ void bt_read_inner(bt_trace_t callback, void *user)
         unw_get_reg(&cursor, UNW_REG_IP, &ip);
         unw_get_reg(&cursor, UNW_REG_SP, &sp);
 
-        bt_frame_t frame = {
-            .address = ip
-        };
+        bt_address_t frame = ip;
 
-        callback(user, &frame);
+        callback(frame, &frame);
     }
 }
 
-frame_resolve_t bt_resolve_inner(const bt_frame_t *frame, bt_symbol_t *symbol)
+frame_resolve_t bt_resolve_inner(bt_address_t frame, bt_symbol_t *symbol)
 {
     text_t name = symbol->name;
-    (void)snprintf(name.text, name.length, "0x%" PRIxPTR, frame->address);
+    (void)snprintf(name.text, name.length, "0x%" PRIxPTR, frame);
 
     return eResolveNothing;
 }
