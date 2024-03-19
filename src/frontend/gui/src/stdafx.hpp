@@ -8,6 +8,8 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <map>
+#include <unordered_set>
 
 #include "imgui.h"
 #include "imgui_internal.h"

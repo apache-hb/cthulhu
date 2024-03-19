@@ -34,6 +34,7 @@
 #include "std/typed/vector.h"
 
 #include "core/macros.h"
+#include <bitset>
 
 static const frontend_t kFrontendGui = {
     .info = {
@@ -328,8 +329,93 @@ public:
     }
 };
 
+enum theme_t {
+    eThemeDark,
+    eThemeLight,
+    eThemeClassic,
+
+    eThemeCount
+};
+
+static theme_t gTheme = eThemeDark;
+
+template<typename F>
+class ThemeMenuItem final : public ed::IEditorPanel
+{
+    theme_t theme;
+    F func;
+
+public:
+    ThemeMenuItem(const char *name, theme_t theme, F&& func)
+        : IEditorPanel(name)
+        , theme(theme)
+        , func(std::forward<F>(func))
+    { }
+
+    bool is_selected() const
+    {
+        return gTheme == theme;
+    }
+
+    bool menu_item(CTX_UNUSED const char *shortcut) override
+    {
+        bool result = ImGui::MenuItem(get_title(), nullptr, is_selected(), !is_selected());
+        if (result)
+        {
+            gTheme = theme;
+            func();
+        }
+        return result;
+    }
+};
+
+static ed::IEditorPanel *theme_menu(const char *name, theme_t theme, auto&& func)
+{
+    return new ThemeMenuItem(name, theme, std::forward<decltype(func)>(func));
+}
+
+struct menu_section_t
+{
+    std::string name;
+    bool seperator = true; // if true use a seperator, otherwise use a nested menu
+    std::vector<ed::IEditorPanel*> panels;
+
+    void draw_menu_items()
+    {
+        for (ed::IEditorPanel *panel : panels)
+        {
+            panel->menu_item();
+        }
+    }
+};
+
+struct menu_t
+{
+    std::string name;
+    std::vector<ed::IEditorPanel*> header;
+    std::vector<menu_section_t> sections;
+};
+
+static void seperator_opt(const std::string& str)
+{
+    if (str.empty())
+    {
+        ImGui::Separator();
+    }
+    else
+    {
+        ImGui::SeparatorText(str.c_str());
+    }
+}
+
 class EditorUi
 {
+    static constexpr size_t kMaxPanels = 1024;
+
+    loader_t *loader;
+    broker_t *broker;
+    support_t *support;
+
     ed::TraceArenaPanel global_arena_panel { gGlobalArena };
     ed::TraceArenaPanel gmp_arena_panel { gGmpArena };
     ed::TraceArenaPanel imgui_arena_panel { gGuiArena };
@@ -338,10 +424,6 @@ class EditorUi
 
     ed::ImGuiDemoPanel imgui_demo_panel;
     ed::ImPlotDemoPanel implot_demo_panel;
-
-    loader_t *loader;
-    broker_t *broker;
-    support_t *support;
 
     EditorModulePanel module_panel;
     DynamicModulePanel dynamic_module_panel { module_panel, support };
@@ -354,6 +436,78 @@ class EditorUi
 #else
         return dynamic_module_panel;
 #endif
+    }
+
+    std::vector<menu_t> menus;
+
+    void add_menu(const menu_t &menu)
+    {
+        menus.push_back(menu);
+    }
+
+    void init()
+    {
+        menu_t windows_menu = {
+            .name = "Windows",
+            .header = { &version_info_panel },
+            .sections = {
+                menu_section_t {
+                    .name = "Memory",
+                    .panels = { &global_arena_panel, &gmp_arena_panel, &imgui_arena_panel }
+                },
+                menu_section_t {
+                    .name = "Demo",
+                    .panels = { &imgui_demo_panel, &implot_demo_panel }
+                }
+            }
+        };
+
+        menu_t styles_menu = {
+            .name = "Styles",
+            .header = {
+                theme_menu("Dark", eThemeDark, []() { ImGui::StyleColorsDark(); ImPlot::StyleColorsDark(); }),
+                theme_menu("Light", eThemeLight, []() { ImGui::StyleColorsLight(); ImPlot::StyleColorsLight(); }),
+                theme_menu("Classic", eThemeClassic, []() { ImGui::StyleColorsClassic(); ImPlot::StyleColorsClassic(); }),
+            }
+        };
+
+        add_menu(windows_menu);
+        add_menu(styles_menu);
+    }
+
+    void draw_menubar()
+    {
+        for (auto &menu : menus)
+        {
+            if (ImGui::BeginMenu(menu.name.c_str()))
+            {
+                for (auto &item : menu.header)
+                {
+                    item->menu_item();
+                }
+
+                for (auto &section : menu.sections)
+                {
+                    if (section.panels.empty())
+                        continue;
+
+                    if (section.seperator)
+                    {
+                        seperator_opt(section.name);
+                        section.draw_menu_items();
+                        continue;
+                    }
+
+                    if (ImGui::BeginMenu(section.name.c_str()))
+                    {
+                        section.draw_menu_items();
+                        ImGui::EndMenu();
+                    }
+                }
+
+                ImGui::EndMenu();
+            }
+        }
     }
 
     std::vector<SourceCode> sources;
@@ -373,20 +527,29 @@ public:
         , support(support_new(broker, loader, get_global_arena()))
     {
         file_browser.SetTitle("Open Source Files");
+
+        init();
     }
 
     void draw_windows()
     {
         draw_setup_window();
 
-        version_info_panel.draw_window();
-        global_arena_panel.draw_window();
-        gmp_arena_panel.draw_window();
-        imgui_arena_panel.draw_window();
-        imgui_demo_panel.draw_window();
-        implot_demo_panel.draw_window();
+        for (auto& menu : menus)
+        {
+            for (auto& panel : menu.header)
+            {
+                panel->draw_window();
+            }
 
-        module_panel.draw_window();
+            for (auto& section : menu.sections)
+            {
+                for (auto& panel : section.panels)
+                {
+                    panel->draw_window();
+                }
+            }
+        }
 
         auto& loader_panel = get_loader_panel();
         if (!module_panel.is_empty())
@@ -429,48 +592,7 @@ public:
             ImGui::Text("Cthulhu");
             ImGui::Separator();
 
-            if (ImGui::BeginMenu("Style"))
-            {
-                if (ImGui::MenuItem("Classic"))
-                {
-                    ImGui::StyleColorsClassic();
-                    ImPlot::StyleColorsClassic();
-                }
-
-                if (ImGui::MenuItem("Dark"))
-                {
-                    ImGui::StyleColorsDark();
-                    ImPlot::StyleColorsDark();
-                }
-
-                if (ImGui::MenuItem("Light"))
-                {
-                    ImGui::StyleColorsLight();
-                    ImPlot::StyleColorsLight();
-                }
-
-                ImGui::EndMenu();
-            }
-
-            if (ImGui::BeginMenu("Windows"))
-            {
-                ImGui::SeparatorText("Info");
-                version_info_panel.menu_item();
-                auto& loader_panel = get_loader_panel();
-                loader_panel.menu_item();
-
-                ImGui::SeparatorText("Modules");
-                module_panel.menu_item();
-                global_arena_panel.menu_item();
-                gmp_arena_panel.menu_item();
-                imgui_arena_panel.menu_item();
-
-                ImGui::SeparatorText("Demo Windows");
-                imgui_demo_panel.menu_item();
-                implot_demo_panel.menu_item();
-
-                ImGui::EndMenu();
-            }
+            draw_menubar();
 
             ImGui::EndMainMenuBar();
         }

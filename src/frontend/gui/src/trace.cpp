@@ -75,6 +75,10 @@ void TraceArena::reset()
     allocs.clear();
 }
 
+static constexpr ImGuiChildFlags kChildFlags
+    = ImGuiChildFlags_ResizeY
+    | ImGuiChildFlags_ResizeX;
+
 void TraceArena::draw_info()
 {
     ImGui::TextWrapped("Memory usage: (%zu mallocs, %zu reallocs, %zu frees, %zu bytes peak, %zu bytes live)", malloc_calls, realloc_calls, free_calls, peak_memory_usage, live_memory_usage);
@@ -92,13 +96,17 @@ void TraceArena::draw_info()
     ImGui::SameLine();
     ImGui::RadioButton("Flat", &draw_mode, eDrawFlat);
 
-    if (draw_mode == eDrawTree)
+    if (ImGui::BeginChild("MemoryView", ImVec2(0, 0), kChildFlags))
     {
-        draw_tree();
-    }
-    else
-    {
-        draw_flat();
+        if (draw_mode == eDrawTree)
+        {
+            draw_tree();
+        }
+        else
+        {
+            draw_flat();
+        }
+        ImGui::EndChild();
     }
 }
 

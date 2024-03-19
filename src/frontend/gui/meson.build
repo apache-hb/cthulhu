@@ -3,8 +3,6 @@ gui_args = user_args + cpp.get_supported_arguments([
     '-Wno-deprecated-enum-enum-conversion', '-Wno-unused-function'
 ])
 
-subdir('simcoe')
-
 # we provide imgui here ourselves so we can configure the assert handler
 subdir('imgui')
 
@@ -24,12 +22,14 @@ src = [
     'src/config.cpp',
     'src/panic.cpp',
     'src/compile.cpp',
+    'src/units.cpp',
 
     'src/panels/panel.cpp',
     'src/panels/sources.cpp',
     'src/panels/info.cpp',
     'src/panels/arena.cpp',
     'src/panels/demo.cpp',
+    'src/panels/settings.cpp',
 
     'main.cpp'
 ]

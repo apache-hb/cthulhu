@@ -1,6 +1,8 @@
 #pragma once
 
-#include <stdint.h>
+#include "core/analyze.h"
+
+#include <compare> // IWYU pragma: keep
 
 namespace sm {
     /// @brief represents a non-negative amount of memory
@@ -14,6 +16,9 @@ namespace sm {
             /// @brief bytes
             eBytes,
 
+
+            eBeginIEC,
+
             /// @brief kilobytes (1000 bytes)
             eKilo,
 
@@ -26,6 +31,11 @@ namespace sm {
             /// @brief terabytes (1000 gigabytes)
             eTera,
 
+            eEndIEC,
+
+
+            eBeginSI,
+
             /// @brief kibibytes (1024 bytes)
             eKibi,
 
@@ -37,6 +47,9 @@ namespace sm {
 
             /// @brief tebibytes (1024 gibibytes)
             eTebi,
+
+            eEndSI,
+
 
             eUnitCount
         };
@@ -57,35 +70,107 @@ namespace sm {
             uintmax_t size;
         };
 
+        /// @brief information about each unit
         static constexpr unit_info_t kUnits[eUnitCount] = {
             { "b",  1                },
+            {}, // eBeginIEC
             { "kb", 1000             },
             { "mb", 1000'000         },
             { "gb", 1000'000'000     },
             { "tb", 1000'000'000'000 },
+            {}, // eEndIEC
+            {}, // eBeginSI
             { "ki", 0x400            },
             { "mi", 0x100'000        },
             { "gi", 0x40'000'000     },
-            { "ti", 0x10'000'000'000 }
+            { "ti", 0x10'000'000'000 },
+            {}, // eEndSI
         };
 
-        static constexpr uintmax_t kIECBase = 1024;
-        static constexpr uintmax_t kSIBase = 1000;
+        struct format_info_t {
+            const char *name;
+            uintmax_t base;
+        };
 
-        // maximum length of the string representation of a memory value
-        // memory is formatted as 1tb+3gb+2mb+1kb+3b or 1tib+3gib+2mib+1kib+3b
-        // maximum size of a string depends on sizeof(uintmax_t), and we always print in base 10
-        // static constexpr size_t kMaxDigitLength = sizeof(uintmax_t) * 3 + 1;
-        // static constexpr size_t kMaxLengthIEC = kMaxDigitLength * 5 + 4; // 5 units, 4 '+'s, 1 'b'
-        // static constexpr size_t kMaxLengthSI = kMaxDigitLength * 5 + 4 + 4; // 5 units, 4 'i's, 4 '+'s, 1 'b'
+        /// @brief information about each format
+        static constexpr format_info_t kBase[eFormatCount] = {
+            /* IEC */ { "IEC", 1024 },
+            /* SI  */ { "SI",  1000 }
+        };
 
-        static constexpr uintmax_t get_unit_size(unit_t unit) { return kUnits[unit].size; }
+        /// @brief get the factor for the given unit
+        ///
+        /// @param unit the unit to get the factor for
+        ///
+        /// @return the factor for the given unit
+        static constexpr uintmax_t get_unit_factor(unit_t unit) { return kUnits[unit].size; }
+
+        /// @brief get the name of the given unit
+        ///
+        /// @param unit the unit to get the name of
+        ///
+        /// @return the name of the given unit
         static constexpr const char *get_unit_name(unit_t unit) { return kUnits[unit].name; }
+
+
+        /// @brief get the base for the given format
+        ///
+        /// @param format the format to get the base for
+        ///
+        /// @return the base for the given format
+        static constexpr uintmax_t get_base(format_t format) { return kBase[format].base; }
+
+        /// @brief get the name of the given format
+        ///
+        /// @param format the format to get the name of
+        ///
+        /// @return the name of the given format
+        static constexpr const char *get_format_name(format_t format) { return kBase[format].name; }
+
+        // in the future these may be wrong if uintmax_t gets larger than 64 bits
+        static constexpr size_t kMaxLengthIEC = 64;
+        static constexpr size_t kMaxLengthSI = 64;
+
+        /// @brief format a human readable string representation of the memory value
+        ///
+        /// @pre @p buffer points to a valid memory location with at least @p length bytes
+        /// @pre if @p format is IEC, @p length is at least kMaxLengthIEC
+        /// @pre if @p format is SI, @p length is at least kMaxLengthSI
+        ///
+        /// @param buffer the buffer to write the string to
+        /// @param length the length of the buffer
+        /// @param format the format to use
+        ///
+        /// @return the number of characters written to the buffer
+        /// @return SIZE_MAX if @p format is not a valid format
+        size_t to_chars(OUT_WRITES(length) char *buffer, size_t length, format_t format) const;
+
+        /// @brief format a human readable string representation of the memory value in IEC format
+        ///
+        /// @pre @p length is at least kMaxLengthIEC
+        /// @pre @p buffer points to a valid memory location with at least @p length bytes
+        ///
+        /// @param buffer the buffer to write the string to
+        /// @param length the length of the buffer
+        ///
+        /// @return the number of characters written to the buffer
+        size_t to_chars_iec(OUT_WRITES(length) char *buffer, size_t length) const;
+
+        /// @brief format a human readable string representation of the memory value in SI format
+        ///
+        /// @pre @p length is at least kMaxLengthSI
+        /// @pre @p buffer points to a valid memory location with at least @p length bytes
+        ///
+        /// @param buffer the buffer to write the string to
+        /// @param length the length of the buffer
+        ///
+        /// @return the number of characters written to the buffer
+        size_t to_chars_si(OUT_WRITES(length) char *buffer, size_t length) const;
 
         constexpr Memory() = default;
 
         constexpr Memory(uintmax_t bytes, unit_t unit = eBytes)
-            : value(bytes * get_unit_size(unit))
+            : value(bytes * get_unit_factor(unit))
         { }
 
         constexpr static Memory bytes(uintmax_t bytes) { return Memory(bytes, Memory::eBytes); }
@@ -103,7 +188,7 @@ namespace sm {
         constexpr uintmax_t b() const { return value; }
         constexpr uintmax_t as_bytes() const { return value; }
 
-        constexpr uintmax_t as(unit_t unit) const { return value / get_unit_size(unit); }
+        constexpr uintmax_t as(unit_t unit) const { return value / get_unit_factor(unit); }
 
         constexpr uintmax_t kb() const { return as(eKilo); }
         constexpr uintmax_t mb() const { return as(eMega); }

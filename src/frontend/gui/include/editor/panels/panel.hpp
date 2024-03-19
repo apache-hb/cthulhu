@@ -27,6 +27,8 @@ namespace ed
     public:
         IEditorPanel(std::string_view name, panel_info_t setup = {});
 
+        virtual ~IEditorPanel() = default;
+
         // draw the panel inside its own window
         virtual bool draw_window();
 
