@@ -22,7 +22,7 @@ src = [
     'src/config.cpp',
     'src/panic.cpp',
     'src/compile.cpp',
-    'src/units.cpp',
+    'src/utils.cpp',
 
     'src/panels/panel.cpp',
     'src/panels/sources.cpp',

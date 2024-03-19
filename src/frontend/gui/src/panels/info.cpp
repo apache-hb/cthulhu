@@ -1,7 +1,6 @@
 #include "stdafx.hpp"
 
-#include "editor/small.hpp"
-#include "editor/panels/settings.hpp"
+#include "editor/utils.hpp"
 
 #include "editor/panels/info.hpp"
 
