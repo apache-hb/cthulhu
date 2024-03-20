@@ -7,7 +7,7 @@ project('cthulhu', 'c',
         # gcc is picky about POSIX stdlib extensions
         'c_std=gnu11,c11',
 
-        'cpp_std=c++latest',
+        'cpp_std=c++latest,c++20',
 
         # we use setjmp/longjmp for error handling
         # on msvc c++ exceptions do not work with setjmp/longjmp
