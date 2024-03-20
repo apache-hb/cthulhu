@@ -444,7 +444,7 @@ class EditorUi
     {
         menu_t windows_menu = {
             .name = "Windows",
-            .header = { &version_info_panel },
+            .header = { &version_info_panel, &module_panel },
             .sections = {
                 menu_section_t {
                     .name = "Memory",

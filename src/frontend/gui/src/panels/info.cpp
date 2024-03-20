@@ -13,6 +13,14 @@ using namespace ed;
 
 // helpers
 
+static const ImGuiTableFlags kCallbackTableFlags
+    = ImGuiTableFlags_BordersV
+    | ImGuiTableFlags_BordersOuterH
+    | ImGuiTableFlags_Resizable
+    | ImGuiTableFlags_RowBg
+    | ImGuiTableFlags_NoHostExtendX
+    | ImGuiTableFlags_NoBordersInBody;
+
 static std::string_view from_text_view(const text_view_t& view)
 {
     return std::string_view(view.text, view.length);
@@ -27,20 +35,57 @@ static void draw_version(const char *id, version_t version)
     ImGui::Text("%s: %d.%d.%d", id, major, minor, patch);
 }
 
+static bool begin_table_node(const void *ptr_id, const char *label, int columns, ImGuiTableFlags flags)
+{
+    if (ImGui::TreeNode(ptr_id, label))
+    {
+        if (ImGui::BeginTable(label, columns, flags))
+        {
+            return true;
+        }
+        else
+        {
+            ImGui::TreePop();
+        }
+    }
+
+    return false;
+}
+
+static void end_table_node()
+{
+    ImGui::EndTable();
+    ImGui::TreePop();
+}
+
 static void draw_diagnostics(diagnostic_list_t list)
 {
-    if (ImGui::TreeNode((void*)&list, "Diagnostics: %zu", list.count))
+    if (begin_table_node((void*)&list, "Diagnostics", 4, kCallbackTableFlags))
     {
+        ImGui::TableSetupColumn("ID");
+        ImGui::TableSetupColumn("Severity");
+        ImGui::TableSetupColumn("Brief");
+        ImGui::TableSetupColumn("Description");
+        ImGui::TableHeadersRow();
+
         for (size_t i = 0; i < list.count; i++)
         {
             const diagnostic_t *diag = list.diagnostics[i];
-            char label[128];
-            (void)std::snprintf(label, std::size(label), "Diagnostic %s | %s", diag->id, severity_name(diag->severity));
-            ImGui::SeparatorText(label);
-            ImGui::TextWrapped("%s", diag->brief ? diag->brief : "no brief");
-            ImGui::TextWrapped("%s", diag->description ? diag->description : "no description");
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            ImGui::TextUnformatted(diag->id);
+
+            ImGui::TableNextColumn();
+            ImGui::TextUnformatted(severity_name(diag->severity));
+
+            ImGui::TableNextColumn();
+            ImGui::TextUnformatted(diag->brief ? diag->brief : "no brief");
+
+            ImGui::TableNextColumn();
+            ImGui::TextUnformatted(diag->description ? diag->description : "no description");
         }
-        ImGui::TreePop();
+
+        end_table_node();
     }
 }
 
@@ -56,22 +101,6 @@ static void draw_feature(const char *name, bool supported)
     {
         ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Not Available");
     }
-}
-
-static void text_memory(uintmax_t value)
-{
-    char buffer[64];
-    ed::format_memory(value, buffer);
-    ImGui::Text("%s", buffer);
-    ImGui::SetItemTooltip("%ju bytes", value);
-}
-
-static void draw_memory(const char *label, uintmax_t value)
-{
-    ImGui::Text("%s: ", label);
-    ImGui::SameLine();
-
-    text_memory(value);
 }
 
 // module info
@@ -122,14 +151,6 @@ LanguageInfoPanel::LanguageInfoPanel(const language_t& lang, panel_info_t setup)
     }
 }
 
-static const ImGuiTableFlags kCallbackTableFlags
-    = ImGuiTableFlags_BordersV
-    | ImGuiTableFlags_BordersOuterH
-    | ImGuiTableFlags_Resizable
-    | ImGuiTableFlags_RowBg
-    | ImGuiTableFlags_NoHostExtendX
-    | ImGuiTableFlags_NoBordersInBody;
-
 static float get_tooltip_width()
 {
     ImVec2 ttsize = ImGui::CalcTextSize("(?)");
@@ -163,37 +184,14 @@ static void draw_row(const char *name, const void *pfn, const char *tooltip)
     draw_function_address(pfn);
 }
 
-static bool begin_table_node(const void *ptr_id, const char *label, int columns, ImGuiTableFlags flags)
-{
-    if (ImGui::TreeNode(ptr_id, label))
-    {
-        if (ImGui::BeginTable(label, columns, flags))
-        {
-            return true;
-        }
-        else
-        {
-            ImGui::TreePop();
-        }
-    }
-
-    return false;
-}
-
-static void end_table_node()
-{
-    ImGui::EndTable();
-    ImGui::TreePop();
-}
-
 void LanguageInfoPanel::draw_content()
 {
     float ttwidth = get_tooltip_width();
     ModuleInfoPanel::draw_info();
     ImGui::Text("Default extensions: %s", extensions.c_str());
 
-    draw_memory("Context struct size", lang.context_size);
-    draw_memory("AST struct size", lang.ast_size);
+    ImGui::Text("Context struct size: %zu", lang.context_size);
+    ImGui::Text("AST struct size: %zu", lang.ast_size);
 
     if (begin_table_node((void*)&lang.builtin, "Builtin", 2, kCallbackTableFlags))
     {
@@ -203,16 +201,19 @@ void LanguageInfoPanel::draw_content()
 
         for (size_t i = 0; i < lang.builtin.length; i++)
         {
+            const char *name = "no name";
+            if (lang.builtin.names)
+                name = lang.builtin.names[i];
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            ImGui::TextUnformatted(lang.builtin.names[i]);
+            ImGui::TextUnformatted(name ? name : "no name");
             ImGui::TableNextColumn();
-            text_memory(lang.builtin.decls[i]);
+            ImGui::Text("%zu", lang.builtin.decls[i]);
         }
         end_table_node();
     }
 
-    if (begin_table_node((void*)&lang.fn_passes, "Callbacks", 3, kCallbackTableFlags))
+    if (begin_table_node((void*)&lang, "Callbacks", 3, kCallbackTableFlags))
     {
         ImGui::TableSetupColumn("Info", ImGuiTableColumnFlags_WidthFixed, ttwidth);
         ImGui::TableSetupColumn("Name");
@@ -276,11 +277,12 @@ void LanguageInfoPanel::draw_content()
         ImGui::SetItemTooltip("This language does not provide a scanner");
     }
 
-    if (begin_table_node((void*)&lang.fn_passes, "Passes", 2, kCallbackTableFlags))
+    if (begin_table_node((void*)&lang.fn_passes, "Passes", 3, kCallbackTableFlags))
     {
         ImGui::TableSetupColumn("Index", ImGuiTableColumnFlags_WidthFixed, 30.f);
         ImGui::TableSetupColumn("Name");
         ImGui::TableSetupColumn("Address");
+        ImGui::TableHeadersRow();
 
         for (size_t i = 0; i < ePassCount; i++)
         {
