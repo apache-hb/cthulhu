@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
 #include "os/core.h"
+#include "os_common.h"
 
 #include <stdlib.h>
 #include <crtdbg.h>
@@ -12,6 +13,16 @@
 #   include <winbase.h>
 #   include <pathcch.h>
 #endif
+
+size_t impl_maxname(void)
+{
+    return MAX_PATH;
+}
+
+size_t impl_maxpath(void)
+{
+    return MAX_PATH;
+}
 
 void os_init(void)
 {

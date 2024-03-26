@@ -7,11 +7,8 @@
 #include <windef.h>
 #include <minwinbase.h>
 
-typedef struct os_file_t
-{
-    const char *path;
-    HANDLE handle;
-} os_file_t;
+typedef HMODULE os_library_impl_t;
+typedef HANDLE os_file_impl_t;
 
 typedef struct os_mapping_t
 {
@@ -31,13 +28,13 @@ typedef struct os_inode_t
     WIN32_FIND_DATA data;
 } os_inode_t;
 
-typedef struct os_library_t
-{
-    HMODULE library;
-} os_library_t;
-
 enum {
     eOsSuccess = ERROR_SUCCESS,
     eOsNotFound = ERROR_FILE_NOT_FOUND,
     eOsExists = ERROR_ALREADY_EXISTS,
 };
+
+#define CT_OS_INVALID_FILE INVALID_HANDLE_VALUE
+#define CT_OS_INVALID_MAPPING NULL
+
+#define CT_OS_NAME_MAX MAX_PATH

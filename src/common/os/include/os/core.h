@@ -130,12 +130,20 @@ CT_OS_API char *os_error_string(os_error_t error, IN_NOTNULL arena_t *arena);
 
 /// @brief get the current working directory
 ///
-/// @param[out] cwd the current working directory
 /// @param arena the arena to allocate from
 ///
 /// @return an error if the current working directory could not be retrieved
 RET_INSPECT
-CT_OS_API os_error_t os_getcwd(text_t *cwd, IN_NOTNULL arena_t *arena);
+CT_OS_API char *os_cwd_string(IN_NOTNULL arena_t *arena);
+
+/// @brief get the current working directory
+///
+/// @param text the text to write to
+/// @param arena the arena to allocate from
+///
+/// @return an error if the current working directory could not be retrieved
+RET_INSPECT
+CT_OS_API os_error_t os_getcwd(OUT_NOTNULL text_t *text, IN_NOTNULL arena_t *arena);
 
 /// @brief get the string representation of a directory entry type
 ///

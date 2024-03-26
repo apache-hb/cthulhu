@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
+#include "os/os.h"
+#include "os_common.h"
+
 #include "base/util.h"
-#include "core/macros.h"
 #include "core/win32.h" // IWYU pragma: keep
 #include "arena/arena.h"
-#include "os/os.h"
 
 #include "base/panic.h"
 
@@ -99,7 +100,7 @@ bool os_iter_next(os_iter_t *iter, os_inode_t *result)
 }
 
 USE_DECL
-os_error_t os_iter_error(os_iter_t *iter)
+os_error_t os_iter_error(const os_iter_t *iter)
 {
     CTASSERT(iter != NULL);
 
@@ -109,21 +110,7 @@ os_error_t os_iter_error(os_iter_t *iter)
     return iter->error;
 }
 
-USE_DECL
-size_t os_dir_get_string(const os_inode_t *dir, char *buffer, size_t size)
+const char *impl_dirname(const os_inode_t *inode)
 {
-    CTASSERT(dir != NULL);
-
-    if (size == 0)
-    {
-        return MAX_PATH;
-    }
-
-    CTASSERT(buffer != NULL);
-
-    size_t ret = ctu_strlen(dir->data.cFileName) + 1;
-    size_t len = CT_MIN(size, ret);
-    ctu_strcpy(buffer, dir->data.cFileName, len);
-
-    return len;
+    return inode->data.cFileName;
 }

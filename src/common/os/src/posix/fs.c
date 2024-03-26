@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
-#include "arena/arena.h"
 #include "base/util.h"
 #include "os/os.h"
 
 #include "base/panic.h"
+#include "os_common.h"
 
 #include <sys/stat.h>
 #include <unistd.h>
@@ -82,15 +82,6 @@ os_error_t os_dir_delete(const char *path)
 }
 
 USE_DECL
-bool os_dir_exists(const char *path)
-{
-    CTASSERT(path != NULL);
-
-    struct stat sb;
-    return stat(path, &sb) == 0 && S_ISDIR(sb.st_mode);
-}
-
-USE_DECL
 os_dirent_t os_dirent_type(const char *path)
 {
     CTASSERT(path != NULL);
@@ -121,13 +112,14 @@ os_dirent_t os_dirent_type(const char *path)
 USE_DECL
 size_t os_cwd_get_string(char *buffer, size_t size)
 {
-    CTASSERT(buffer != NULL);
-
     if (size == 0)
     {
         // caller is asking for the size of the buffer
-        return gMaxPathLength;
+        CTASSERT(buffer == NULL);
+        return impl_maxname();
     }
+
+    CTASSERT(buffer != NULL);
 
     if (getcwd(buffer, size) == NULL)
     {

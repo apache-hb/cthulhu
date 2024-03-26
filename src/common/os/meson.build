@@ -14,7 +14,7 @@ if target == 'windows'
 elif target == 'darwin' or target == 'linux'
     os_platform = 'posix'
 else
-    error('unknown os api')
+    error('unsupported target os ' + target)
 endif
 
 os_api_build = '-DCT_OS_BUILD=1'
@@ -23,28 +23,42 @@ os_api_build = '-DCT_OS_BUILD=1'
 # this is safe, but compilers warn about it
 os_args = cc.get_supported_arguments('-Wno-switch', '/wd4063')
 
-# TODO: the impl libraries should be static, and os_common should route
-# to the native impl, allowing common checks to be done in common
-# would do now but time crunch
-lib_oscommon = static_library('os_common', src,
+lib_oscommon = library('os_common', src,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
-    c_args : user_args + [ os_api_build ] + os_args,
-    dependencies : [ core, base, arena, std ],
+    c_args : user_args + os_args + [ os_api_build ],
+    dependencies : [ base ],
     include_directories : [ os_include ]
 )
 
 os_common = declare_dependency(
     link_with : lib_oscommon,
     dependencies : [ core ],
-    include_directories : [ os_include, os_impl_include ]
+    include_directories : [ os_include ]
 )
 
-# get the backend
+# get the backend data
 
 subdir('src' / os_platform)
 
-# create the native library
+os_cdata = configuration_data()
+os_cdata.set10('CTU_OS_COPYFILE', os_config['copyfile'])
+os_cdata.set10('CTU_OS_SHARED', os_config['dlopen'])
+os_config = configure_file(
+    output : 'os_config.h',
+    configuration : os_cdata
+)
+
+osnative_inc = include_directories('.')
+
+lib_osnative = static_library('os_' + os_platform,
+    build_by_default : false,
+    c_args : user_args + os_args + [ os_api_build ],
+    dependencies : [ base, std, os_common, os_native ],
+    include_directories : [ os_include, os_impl_include, osnative_inc ]
+)
+
+# create the os interface library
 
 src = [ 'src/os.c' ]
 
@@ -52,9 +66,8 @@ libos = library('os', src,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ os_api_build ] + os_args,
-    dependencies : [ core, base, arena, std, os_common ],
-    include_directories : [ os_include ],
-    link_with : [ lib_oscommon, lib_osnative ]
+    dependencies : [ base, arena, std, os_common ],
+    link_with : [ lib_osnative ]
 )
 
 os = declare_dependency(

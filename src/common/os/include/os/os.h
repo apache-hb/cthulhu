@@ -19,6 +19,21 @@ CT_BEGIN_API
 /// @ingroup os
 /// @{
 
+/// @brief a shared library handle
+/// @warning do not access the library handle directly, it is platform specific
+typedef struct os_library_t
+{
+    os_library_impl_t library;
+} os_library_t;
+
+/// @brief a file handle
+/// @warning do not access the file handle directly, it is platform specific
+typedef struct os_file_t
+{
+    const char *path;
+    os_file_impl_t file;
+} os_file_t;
+
 /// shared library api
 
 /// @brief open a shared library from disk
@@ -28,13 +43,16 @@ CT_BEGIN_API
 ///
 /// @return 0 on success, error otherwise
 RET_INSPECT
-CT_OS_API os_error_t os_library_open(IN_STRING const char *path, IN_NOTNULL os_library_t *library);
+CT_OS_API os_error_t os_library_open(
+        IN_STRING const char *path,
+        OUT_NOTNULL os_library_t *library);
 
 /// @brief close a shared library
 ///
 /// @param library the library to close
 RET_INSPECT
-CT_OS_API os_error_t os_library_close(IN_NOTNULL os_library_t *library);
+CT_OS_API os_error_t os_library_close(
+        INOUT_NOTNULL os_library_t *library);
 
 /// @brief get a symbol from a shared library
 ///
@@ -44,7 +62,10 @@ CT_OS_API os_error_t os_library_close(IN_NOTNULL os_library_t *library);
 ///
 /// @return the symbol or NULL if it could not be found
 CT_NODISCARD
-CT_OS_API os_error_t os_library_symbol(IN_NOTNULL os_library_t *library, os_symbol_t *symbol, IN_STRING const char *name);
+CT_OS_API os_error_t os_library_symbol(
+        INOUT_NOTNULL os_library_t *library,
+        OUT_NOTNULL os_symbol_t *symbol,
+        IN_STRING const char *name);
 
 /// filesytem api
 
@@ -55,7 +76,9 @@ CT_OS_API os_error_t os_library_symbol(IN_NOTNULL os_library_t *library, os_symb
 ///
 /// @return an error if the file could not be copied
 RET_INSPECT
-CT_OS_API os_error_t os_file_copy(IN_STRING const char *src, IN_STRING const char *dst);
+CT_OS_API os_error_t os_file_copy(
+        IN_STRING const char *dst,
+        IN_STRING const char *src);
 
 /// @brief check if a file exists
 ///
@@ -64,7 +87,7 @@ CT_OS_API os_error_t os_file_copy(IN_STRING const char *src, IN_STRING const cha
 ///
 /// @return error if the file could not be checked
 RET_INSPECT
-CT_OS_API os_error_t os_file_exists(IN_STRING const char *path, IN_NOTNULL bool *exists);
+CT_OS_API os_error_t os_file_exists(IN_STRING const char *path, OUT_NOTNULL bool *exists);
 
 /// @brief create a file
 ///
@@ -92,7 +115,7 @@ CT_OS_API os_error_t os_file_delete(IN_STRING const char *path);
 /// @return true if the directory exists, false otherwise
 /// @return an error if the directory could not be checked
 RET_INSPECT
-CT_OS_API os_error_t os_dir_create(IN_STRING const char *path, IN_NOTNULL bool *create);
+CT_OS_API os_error_t os_dir_create(IN_STRING const char *path, OUT_NOTNULL bool *create);
 
 /// @brief delete a directory
 ///
@@ -132,12 +155,12 @@ CT_OS_API os_dirent_t os_dirent_type(IN_STRING const char *path);
 ///
 /// @return result containing either a valid iterator or an error, NULL if dir does not exist
 RET_INSPECT
-CT_OS_API os_error_t os_iter_begin(IN_STRING const char *path, os_iter_t *iter, IN_NOTNULL arena_t *arena);
+CT_OS_API os_error_t os_iter_begin(IN_STRING const char *path, OUT_NOTNULL os_iter_t *iter, IN_NOTNULL arena_t *arena);
 
 /// @brief close a directory iterator
 ///
 /// @param iter iterator to close
-CT_OS_API os_error_t os_iter_end(IN_NOTNULL os_iter_t *iter);
+CT_OS_API os_error_t os_iter_end(OUT_PTR_INVALID os_iter_t *iter);
 
 /// @brief get the next directory entry
 ///
@@ -146,7 +169,7 @@ CT_OS_API os_error_t os_iter_end(IN_NOTNULL os_iter_t *iter);
 ///
 /// @return true if a directory entry was found
 CT_NODISCARD
-CT_OS_API bool os_iter_next(IN_NOTNULL os_iter_t *iter, os_inode_t *dir);
+CT_OS_API bool os_iter_next(INOUT_NOTNULL os_iter_t *iter, OUT_NOTNULL os_inode_t *dir);
 
 /// @brief get the error state of a directory iterator
 ///
@@ -154,7 +177,7 @@ CT_OS_API bool os_iter_next(IN_NOTNULL os_iter_t *iter, os_inode_t *dir);
 ///
 /// @return the error state of the iterator
 RET_INSPECT
-CT_OS_API os_error_t os_iter_error(IN_NOTNULL os_iter_t *iter);
+CT_OS_API os_error_t os_iter_error(IN_NOTNULL const os_iter_t *iter);
 
 /// file api
 
@@ -166,7 +189,7 @@ CT_OS_API os_error_t os_iter_error(IN_NOTNULL os_iter_t *iter);
 ///
 /// @return an error if the file could not be opened
 RET_INSPECT
-CT_OS_API os_error_t os_file_open(IN_STRING const char *path, os_access_t access, os_file_t *file);
+CT_OS_API os_error_t os_file_open(IN_STRING const char *path, os_access_t access, INOUT_NOTNULL os_file_t *file);
 
 /// @brief create a temporary file
 ///
@@ -174,7 +197,7 @@ CT_OS_API os_error_t os_file_open(IN_STRING const char *path, os_access_t access
 ///
 /// @return an error if the file could not be created
 RET_INSPECT
-CT_OS_API os_error_t os_tmpfile_open(IN_NOTNULL os_file_t *file);
+CT_OS_API os_error_t os_tmpfile_open(OUT_NOTNULL os_file_t *file);
 
 /// @brief close a file
 ///
@@ -192,10 +215,10 @@ CT_OS_API os_error_t os_file_close(OUT_PTR_INVALID os_file_t *file);
 /// @return an error if the file could not be read from
 RET_INSPECT
 CT_OS_API os_error_t os_file_read(
-        IN_NOTNULL os_file_t *file,
-        void *buffer,
+        INOUT_NOTNULL os_file_t *file,
+        OUT_WRITES(size) void *buffer,
         IN_RANGE(>, 0) size_t size,
-        size_t *actual);
+        OUT_NOTNULL size_t *actual);
 
 /// @brief write to a file
 ///
@@ -208,10 +231,10 @@ CT_OS_API os_error_t os_file_read(
 /// @return an error if the file could not be written to
 RET_INSPECT
 CT_OS_API os_error_t os_file_write(
-        IN_NOTNULL os_file_t *file,
+        INOUT_NOTNULL os_file_t *file,
         IN_READS(size) const void *buffer,
         IN_RANGE(>, 0) size_t size,
-        size_t *actual);
+        OUT_NOTNULL size_t *actual);
 
 /// @brief get the size of a file
 ///
@@ -220,7 +243,7 @@ CT_OS_API os_error_t os_file_write(
 ///
 /// @return an error if the file size could not be retrieved
 RET_INSPECT
-CT_OS_API os_error_t os_file_size(IN_NOTNULL os_file_t *file, IN_NOTNULL size_t *actual);
+CT_OS_API os_error_t os_file_size(INOUT_NOTNULL os_file_t *file, OUT_NOTNULL size_t *actual);
 
 /// @brief seek to a position in a file
 ///
@@ -230,7 +253,7 @@ CT_OS_API os_error_t os_file_size(IN_NOTNULL os_file_t *file, IN_NOTNULL size_t 
 ///
 /// @return an error if the file could not be seeked
 RET_INSPECT
-CT_OS_API os_error_t os_file_seek(IN_NOTNULL os_file_t *file, size_t offset, size_t *actual);
+CT_OS_API os_error_t os_file_seek(INOUT_NOTNULL os_file_t *file, size_t offset, OUT_NOTNULL size_t *actual);
 
 /// @brief get the current position in a file
 ///
@@ -239,7 +262,7 @@ CT_OS_API os_error_t os_file_seek(IN_NOTNULL os_file_t *file, size_t offset, siz
 ///
 /// @return an error if the file position could not be retrieved
 RET_INSPECT
-CT_OS_API os_error_t os_file_tell(IN_NOTNULL os_file_t *file, IN_NOTNULL size_t *actual);
+CT_OS_API os_error_t os_file_tell(INOUT_NOTNULL os_file_t *file, OUT_NOTNULL size_t *actual);
 
 /// @brief truncate/expand a file to a specific size
 ///
@@ -248,24 +271,28 @@ CT_OS_API os_error_t os_file_tell(IN_NOTNULL os_file_t *file, IN_NOTNULL size_t 
 ///
 /// @return an error if the operation could not be performed
 RET_INSPECT
-CT_OS_API os_error_t os_file_expand(IN_NOTNULL os_file_t *file, size_t size);
+CT_OS_API os_error_t os_file_expand(INOUT_NOTNULL os_file_t *file, size_t size);
 
 /// @brief map a file into memory
 ///
 /// @param file the file to map
 /// @param protect the memory protection to use
-/// @param size the size of the mapping
+/// @param size the size of the mapping, 0 for the whole file
 /// @param mapping the mapping to fill
 ///
 /// @return an error if the file could not be mapped
 RET_INSPECT
-CT_OS_API os_error_t os_file_map(IN_NOTNULL os_file_t *file, os_protect_t protect, size_t size, os_mapping_t *mapping);
+CT_OS_API os_error_t os_file_map(
+        INOUT_NOTNULL os_file_t *file,
+        os_protect_t protect,
+        size_t size,
+        OUT_NOTNULL os_mapping_t *mapping);
 
 /// @brief unmap a file from memory
 /// @note invalidates all memory pointers returned by @a os_mapping_data
 ///
 /// @param mapping the mapping to unmap
-CT_OS_API os_error_t os_file_unmap(IN_NOTNULL os_mapping_t *mapping);
+CT_OS_API os_error_t os_file_unmap(INOUT_NOTNULL os_mapping_t *mapping);
 
 /// @brief get the data of a file mapping
 ///
@@ -273,7 +300,7 @@ CT_OS_API os_error_t os_file_unmap(IN_NOTNULL os_mapping_t *mapping);
 ///
 /// @return the data of the mapping
 CT_NODISCARD
-CT_OS_API void *os_mapping_data(IN_NOTNULL os_mapping_t *mapping);
+CT_OS_API void *os_mapping_data(INOUT_NOTNULL os_mapping_t *mapping);
 
 /// @brief does the mapping object contain a valid mapping
 /// checks if the mapping data exists, not for the validity of the mapping
@@ -282,7 +309,7 @@ CT_OS_API void *os_mapping_data(IN_NOTNULL os_mapping_t *mapping);
 ///
 /// @return true if the mapping is valid
 CT_NODISCARD
-CT_OS_API bool os_mapping_active(IN_NOTNULL const os_mapping_t *mapping);
+CT_OS_API bool os_mapping_active(INOUT_NOTNULL const os_mapping_t *mapping);
 
 /// @brief get the name of a file
 ///
@@ -290,7 +317,7 @@ CT_OS_API bool os_mapping_active(IN_NOTNULL const os_mapping_t *mapping);
 ///
 /// @return the name of the file
 CT_NODISCARD
-CT_OS_API const char *os_file_name(IN_NOTNULL const os_file_t *file);
+CT_OS_API const char *os_file_name(INOUT_NOTNULL const os_file_t *file);
 
 /// @}
 

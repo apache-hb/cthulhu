@@ -93,13 +93,6 @@ os_error_t os_dir_delete(const char *path)
 }
 
 USE_DECL
-bool os_dir_exists(const char *path)
-{
-    os_dirent_t type = os_dirent_type(path);
-    return type == eOsNodeDir;
-}
-
-USE_DECL
 os_dirent_t os_dirent_type(const char *path)
 {
     DWORD attributes = GetFileAttributesA(path);

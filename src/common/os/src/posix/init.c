@@ -4,14 +4,25 @@
 
 #include <limits.h>
 #include <stdlib.h>
+#include <unistd.h>
 
-long gMaxPathLength = 0;
+static long gMaxNameLength = 0;
+static long gMaxPathLength = 0;
+
+size_t impl_maxname(void)
+{
+    return gMaxNameLength;
+}
+
+size_t impl_maxpath(void)
+{
+    return gMaxPathLength;
+}
 
 void os_init(void)
 {
-    // empty
-    long size = pathconf(".", _PC_PATH_MAX);
-    if (size < 0)
+    long path = pathconf(".", _PC_PATH_MAX);
+    if (path < 0)
     {
         // best guess if pathconf() fails
         // TODO: should there be a way to notify the user that the path length is unknown?
@@ -19,7 +30,18 @@ void os_init(void)
     }
     else
     {
-        gMaxPathLength = size;
+        gMaxPathLength = path;
+    }
+
+    long name = pathconf(".", _PC_NAME_MAX);
+    if (name < 0)
+    {
+        // best guess if pathconf() fails
+        gMaxNameLength = NAME_MAX;
+    }
+    else
+    {
+        gMaxNameLength = name;
     }
 }
 

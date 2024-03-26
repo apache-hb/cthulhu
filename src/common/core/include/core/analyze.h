@@ -37,6 +37,9 @@
 #   define IN_STRING _In_z_
 #   define IN_RANGE(cmp, it) _In_range_(cmp, it)
 
+#   define OUT_NOTNULL _Out_
+#   define OUT_STRING _Out_z_
+
 #   define INOUT_NOTNULL _Inout_
 #   define INOUT_STRING _Inout_z_
 #else
@@ -55,6 +58,9 @@
 
 #   define IN_STRING
 #   define IN_RANGE(cmp, it)
+
+#   define OUT_NOTNULL
+#   define OUT_STRING
 
 #   define INOUT_STRING
 #   define INOUT_NOTNULL

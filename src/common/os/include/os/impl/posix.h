@@ -6,15 +6,12 @@
 #include <dirent.h>
 #include <errno.h>
 
-typedef struct os_file_t
-{
-    const char *path;
-    FILE *file;
-} os_file_t;
+typedef void *os_library_impl_t;
+typedef FILE *os_file_impl_t;
 
 typedef struct os_mapping_t
 {
-    void *data;
+    void *view;
     size_t size;
 } os_mapping_t;
 
@@ -29,13 +26,13 @@ typedef struct os_inode_t
     struct dirent *ent;
 } os_inode_t;
 
-typedef struct os_library_t
-{
-    void *library;
-} os_library_t;
-
 enum {
     eOsSuccess = 0,
     eOsNotFound = ENOENT,
     eOsExists = EEXIST,
 };
+
+#define CT_OS_INVALID_FILE NULL
+#define CT_OS_INVALID_MAPPING NULL
+
+#define CT_OS_NAME_MAX NAME_MAX

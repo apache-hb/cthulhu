@@ -18,7 +18,7 @@ int main(void)
 
     text_t cwd = {0};
     os_error_t err = os_getcwd(&cwd, arena);
-    CTASSERTF(err == 0, "os_getcwd() failed with error %s", os_error_string(err, arena));
+    CTASSERTF(err == eOsSuccess, "os_getcwd() failed with error %s", os_error_string(err, arena));
 
     {
         test_group_t group = test_group(&suite, "physical");

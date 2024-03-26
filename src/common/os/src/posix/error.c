@@ -8,8 +8,9 @@
 #define _POSIX_C_SOURCE 200112L
 
 #include <string.h>
+#include <errno.h>
 
-os_error_t os_last_error(void)
+os_error_t impl_last_error(void)
 {
     return (os_error_t)errno;
 }

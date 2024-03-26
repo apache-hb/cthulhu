@@ -11,54 +11,6 @@
 
 #include <sys/mman.h>
 
-USE_DECL
-os_error_t os_file_copy(const char *src, const char *dst)
-{
-    CTASSERT(src != NULL);
-    CTASSERT(dst != NULL);
-
-    // do naive copy for now
-    // theres a pile of platform specific calls to do this faster
-    // copyfile on macos, sendfile on linux, copy_file_range on bsd, etc
-
-    FILE *src_file = fopen(src, "rb");
-    if (src_file == NULL)
-    {
-        return errno;
-    }
-
-    FILE *dst_file = fopen(dst, "wb");
-    if (dst_file == NULL)
-    {
-        fclose(src_file); // TODO: duplicated logic with cleanup
-        return errno;
-    }
-
-    char buffer[4096];
-    size_t read = 0;
-    size_t written = 0;
-
-    int result = 0;
-
-    while ((read = fread(buffer, 1, sizeof(buffer), src_file)) > 0)
-    {
-        written = fwrite(buffer, 1, read, dst_file);
-
-        if (written < read)
-        {
-            if (ferror(dst_file))
-            {
-                result = errno;
-                break;
-            }
-        }
-    }
-
-    fclose(src_file);
-    fclose(dst_file);
-    return result;
-}
-
 static const char *get_access(os_access_t access)
 {
     switch (access)
@@ -313,7 +265,7 @@ os_error_t os_file_map(os_file_t *file, os_protect_t protect, size_t size, os_ma
     void *ptr = mmap(NULL, size, prot, MAP_PRIVATE, fd, 0);
 
     os_mapping_t result = {
-        .data = ptr,
+        .view = ptr,
         .size = size,
     };
 
@@ -328,36 +280,10 @@ os_error_t os_file_unmap(os_mapping_t *mapping)
 {
     CTASSERT(mapping != NULL);
 
-    if (munmap(mapping->data, mapping->size) != 0)
+    if (munmap(mapping->view, mapping->size) != 0)
     {
         return errno;
     }
 
     return 0;
-}
-
-USE_DECL
-void *os_mapping_data(os_mapping_t *mapping)
-{
-    CTASSERT(mapping != NULL);
-
-    return mapping->data;
-}
-
-USE_DECL
-bool os_mapping_active(const os_mapping_t *mapping)
-{
-    CTASSERT(mapping != NULL);
-
-    // if mmap ever gives us 0 as a valid address we'll need to change this
-    return mapping->data != NULL
-        && mapping->data != MAP_FAILED;
-}
-
-USE_DECL
-const char *os_file_name(const os_file_t *file)
-{
-    CTASSERT(file != NULL);
-
-    return file->path;
 }

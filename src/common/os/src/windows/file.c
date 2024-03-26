@@ -14,15 +14,12 @@
 #   include <winerror.h>
 #endif
 
-USE_DECL
-os_error_t os_file_copy(const char *src, const char *dst)
+os_error_t impl_copyfile(const os_file_t *dst, const os_file_t *src)
 {
-    CTASSERT(src != NULL);
     CTASSERT(dst != NULL);
+    CTASSERT(src != NULL);
 
-    // use CopyFile, i dont think we have a reason to need CopyFileEx
-
-    BOOL result = CopyFileA(src, dst, FALSE);
+    BOOL result = CopyFileA(src->path, dst->path, FALSE);
     if (!result)
     {
         return GetLastError();
@@ -111,7 +108,7 @@ os_error_t os_file_open(const char *path, os_access_t access, os_file_t *file)
 
     os_file_t result = {
         .path = path,
-        .handle = handle
+        .file = handle
     };
 
     *file = result;
@@ -145,7 +142,7 @@ os_error_t os_file_close(os_file_t *fd)
 {
     CTASSERT(fd != NULL);
 
-    if (CloseHandle(fd->handle) == 0)
+    if (CloseHandle(fd->file) == 0)
     {
         return GetLastError();
     }
@@ -162,7 +159,7 @@ os_error_t os_file_read(os_file_t *file, void *buffer, size_t size, size_t *actu
     CTASSERT(actual != NULL);
 
     DWORD read_size = 0;
-    BOOL result = ReadFile(file->handle, buffer, (DWORD)size, &read_size, NULL);
+    BOOL result = ReadFile(file->file, buffer, (DWORD)size, &read_size, NULL);
 
     size_t read = read_size;
 
@@ -184,7 +181,7 @@ os_error_t os_file_write(os_file_t *file, const void *buffer, size_t size, size_
     CTASSERTF(size <= UINT32_MAX, "cannot write more than %u bytes at once (%zu is too big)", UINT32_MAX, size);
 
     DWORD written_size = 0;
-    BOOL result = WriteFile(file->handle, buffer, (DWORD)size, &written_size, NULL);
+    BOOL result = WriteFile(file->file, buffer, (DWORD)size, &written_size, NULL);
 
     size_t written = written_size;
 
@@ -204,7 +201,7 @@ os_error_t os_file_size(os_file_t *file, size_t *actual)
     CTASSERT(actual != NULL);
 
     LARGE_INTEGER size;
-    BOOL result = GetFileSizeEx(file->handle, &size);
+    BOOL result = GetFileSizeEx(file->file, &size);
     *actual = size.QuadPart;
 
     if (!result)
@@ -223,7 +220,7 @@ os_error_t os_file_seek(os_file_t *file, size_t offset, size_t *actual)
 
     LARGE_INTEGER it = { .QuadPart = (LONGLONG)offset };
     LARGE_INTEGER out = { 0 };
-    BOOL result = SetFilePointerEx(file->handle, it, &out, FILE_BEGIN);
+    BOOL result = SetFilePointerEx(file->file, it, &out, FILE_BEGIN);
     *actual = out.QuadPart;
 
     if (!result)
@@ -241,7 +238,7 @@ os_error_t os_file_tell(os_file_t *file, size_t *actual)
 
     LARGE_INTEGER offset = { 0 };
     LARGE_INTEGER zero = { 0 };
-    BOOL result = SetFilePointerEx(file->handle, zero, &offset, FILE_CURRENT);
+    BOOL result = SetFilePointerEx(file->file, zero, &offset, FILE_CURRENT);
     *actual = offset.QuadPart;
 
     if (!result)
@@ -258,13 +255,13 @@ os_error_t os_file_expand(os_file_t *file, size_t size)
     CTASSERT(file != NULL);
 
     LARGE_INTEGER it = { .QuadPart = (LONGLONG)size };
-    BOOL result = SetFilePointerEx(file->handle, it, NULL, FILE_BEGIN);
+    BOOL result = SetFilePointerEx(file->file, it, NULL, FILE_BEGIN);
     if (!result)
     {
         return GetLastError();
     }
 
-    result = SetEndOfFile(file->handle);
+    result = SetEndOfFile(file->file);
     if (!result)
     {
         return GetLastError();
@@ -328,7 +325,7 @@ os_error_t os_file_map(os_file_t *file, os_protect_t protect, size_t size, os_ma
     DWORD low = (DWORD)(size & 0xFFFFFFFF);
 
     HANDLE handle = CreateFileMapping(
-        /* hFile = */ file->handle,
+        /* hFile = */ file->file,
         /* lpFileMappingAttributes = */ NULL,
         /* flProtect = */ prot,
         /* dwMaximumSizeHigh = */ high,
@@ -378,28 +375,4 @@ os_error_t os_file_unmap(os_mapping_t *mapping)
     }
 
     return ERROR_SUCCESS;
-}
-
-USE_DECL
-void *os_mapping_data(os_mapping_t *mapping)
-{
-    CTASSERT(mapping != NULL);
-
-    return mapping->view;
-}
-
-USE_DECL
-bool os_mapping_active(const os_mapping_t *mapping)
-{
-    CTASSERT(mapping != NULL);
-
-    return mapping->view != NULL;
-}
-
-USE_DECL
-const char *os_file_name(const os_file_t *file)
-{
-    CTASSERT(file != NULL);
-
-    return file->path;
 }

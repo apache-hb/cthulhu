@@ -217,9 +217,8 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     loader_t *loader = loader_new(arena);
     support_t *support = support_new(broker, loader, arena);
 
-    text_t cwd = {0};
-    os_error_t err = os_getcwd(&cwd, arena);
-    CTASSERTF(err == 0, "failed to get cwd %s", os_error_string(err, arena));
+    char *cwd = os_cwd_string(arena);
+    CTASSERTF(ctu_strlen(cwd), "failed to get cwd");
 
     // test name
     const char *name = argv[1];
@@ -315,7 +314,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     c89_emit_result_t c89_emit_result = emit_c89(&c89_emit_options);
     CHECK_LOG(logger, "emitting c89");
 
-    const char *test_dir = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "test-out", cwd.text);
+    const char *test_dir = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "test-out", cwd);
     const char *run_dir = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s", test_dir, name);
 
     fs_t *out = fs_physical(run_dir, arena);

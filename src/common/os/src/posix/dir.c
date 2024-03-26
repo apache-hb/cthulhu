@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
 #include "os/os.h"
-
-#include "arena/arena.h"
+#include "os_common.h"
 
 #include "base/panic.h"
 #include "base/util.h"
@@ -74,28 +73,14 @@ bool os_iter_next(os_iter_t *iter, os_inode_t *result)
 }
 
 USE_DECL
-os_error_t os_iter_error(os_iter_t *iter)
+os_error_t os_iter_error(const os_iter_t *iter)
 {
     CTASSERT(iter != NULL);
 
     return iter->error;
 }
 
-USE_DECL
-size_t os_dir_get_string(const os_inode_t *dir, char *buffer, size_t size)
+const char *impl_dirname(const os_inode_t *inode)
 {
-    CTASSERT(dir != NULL);
-
-    if (size == 0)
-    {
-        return NAME_MAX;
-    }
-
-    CTASSERT(buffer != NULL);
-
-    size_t len = ctu_strlen(dir->ent->d_name);
-    size_t ret = CT_MIN(size, len);
-    ctu_strcpy(buffer, dir->ent->d_name, ret);
-
-    return ret;
+    return inode->ent->d_name;
 }
