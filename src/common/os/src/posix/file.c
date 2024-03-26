@@ -32,21 +32,13 @@ static const char *get_access(os_access_t access)
 }
 
 USE_DECL
-os_error_t os_file_exists(const char *path, bool *exists)
+os_error_t os_file_exists(const char *path)
 {
     CTASSERT(path != NULL);
-    CTASSERT(exists != NULL);
 
     if (access(path, F_OK) == 0)
     {
-        *exists = true;
-        return 0;
-    }
-
-    if (errno == ENOENT)
-    {
-        *exists = false;
-        return 0;
+        return eOsExists;
     }
 
     return errno;

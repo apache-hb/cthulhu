@@ -5,7 +5,6 @@
 
 #include "base/util.h"
 #include "core/win32.h" // IWYU pragma: keep
-#include "arena/arena.h"
 
 #include "base/panic.h"
 
@@ -26,12 +25,13 @@ static BOOL find_next(HANDLE handle, WIN32_FIND_DATA *data, DWORD *error)
 }
 
 USE_DECL
-os_error_t os_iter_begin(const char *path, os_iter_t *result, arena_t *arena)
+os_error_t os_iter_begin(const char *path, os_iter_t *result)
 {
     CTASSERT(path != NULL);
     CTASSERT(result != NULL);
 
-    char *wild = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "*", path);
+    char wild[MAX_PATH];
+    str_sprintf(wild, sizeof(wild), "%s" CT_NATIVE_PATH_SEPARATOR "*", path);
 
     WIN32_FIND_DATA data;
     DWORD error = ERROR_SUCCESS;

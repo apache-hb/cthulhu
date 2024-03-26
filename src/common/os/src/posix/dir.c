@@ -6,17 +6,13 @@
 #include "base/panic.h"
 #include "base/util.h"
 
-#include "core/macros.h"
-
 #include <errno.h>
 
 USE_DECL
-os_error_t os_iter_begin(const char *path, os_iter_t *result, arena_t *arena)
+os_error_t os_iter_begin(const char *path, os_iter_t *result)
 {
     CTASSERT(path != NULL);
     CTASSERT(result != NULL);
-
-    CT_UNUSED(arena);
 
     DIR *dir = opendir(path);
     if (dir == NULL)

@@ -1,7 +1,7 @@
 os_config = {
     'name': 'posix',
     'copyfile': false,
-    'dlopen': true,
+    'dynamic': true,
 }
 
 src = files('init.c', 'file.c', 'dir.c', 'fs.c', 'error.c', 'library.c')

@@ -42,8 +42,12 @@ os_common = declare_dependency(
 subdir('src' / os_platform)
 
 os_cdata = configuration_data()
+
+# is there an optimized way to copy a file?
 os_cdata.set10('CTU_OS_COPYFILE', os_config['copyfile'])
-os_cdata.set10('CTU_OS_SHARED', os_config['dlopen'])
+
+# is dynamic loading supported?
+os_cdata.set10('CTU_OS_SHARED', os_config['dynamic'])
 os_config = configure_file(
     output : 'os_config.h',
     configuration : os_cdata

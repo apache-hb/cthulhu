@@ -83,17 +83,17 @@ CT_OS_API os_error_t os_file_copy(
 /// @brief check if a file exists
 ///
 /// @param path the path to the file to check
-/// @param exists true if the file exists, false otherwise
 ///
 /// @return error if the file could not be checked
+/// @retval eOsExists if the file exists
+/// @retval eOsNotFound if the file does not exist
 RET_INSPECT
-CT_OS_API os_error_t os_file_exists(IN_STRING const char *path, OUT_NOTNULL bool *exists);
+CT_OS_API os_error_t os_file_exists(IN_STRING const char *path);
 
 /// @brief create a file
 ///
 /// @param path the path to the file to create
 ///
-/// @return true if the file was created, false if it already exists
 /// @return an error if the file could not be created
 RET_INSPECT
 CT_OS_API os_error_t os_file_create(IN_STRING const char *path);
@@ -102,7 +102,6 @@ CT_OS_API os_error_t os_file_create(IN_STRING const char *path);
 ///
 /// @param path the path to the file to delete
 ///
-/// @return true if the file was deleted, false if it did not exist
 /// @return an error if the file could not be deleted
 RET_INSPECT
 CT_OS_API os_error_t os_file_delete(IN_STRING const char *path);
@@ -112,7 +111,6 @@ CT_OS_API os_error_t os_file_delete(IN_STRING const char *path);
 /// @param path the path to the directory to check
 /// @param create true if the directory was created, false if it already existed
 ///
-/// @return true if the directory exists, false otherwise
 /// @return an error if the directory could not be checked
 RET_INSPECT
 CT_OS_API os_error_t os_dir_create(IN_STRING const char *path, OUT_NOTNULL bool *create);
@@ -121,7 +119,6 @@ CT_OS_API os_error_t os_dir_create(IN_STRING const char *path, OUT_NOTNULL bool 
 ///
 /// @param path the path to the directory to delete
 ///
-/// @return true if the directory was deleted, false if it did not exist
 /// @return an error if the directory could not be deleted
 RET_INSPECT
 CT_OS_API os_error_t os_dir_delete(IN_STRING const char *path);
@@ -131,7 +128,6 @@ CT_OS_API os_error_t os_dir_delete(IN_STRING const char *path);
 /// @param path the path to the directory to check
 ///
 /// @return true if the directory exists, false otherwise
-/// @return an error if the directory could not be checked
 RET_INSPECT
 CT_OS_API bool os_dir_exists(IN_STRING const char *path);
 
@@ -140,7 +136,6 @@ CT_OS_API bool os_dir_exists(IN_STRING const char *path);
 /// @param path the path to the inode entry to check
 ///
 /// @return the type of the inode entry
-/// @return an error if the inode entry could not be checked
 CT_NODISCARD
 CT_OS_API os_dirent_t os_dirent_type(IN_STRING const char *path);
 
@@ -151,11 +146,10 @@ CT_OS_API os_dirent_t os_dirent_type(IN_STRING const char *path);
 ///
 /// @param path path to directory
 /// @param iter iterator to fill
-/// @param arena the arena to allocate from
 ///
 /// @return result containing either a valid iterator or an error, NULL if dir does not exist
 RET_INSPECT
-CT_OS_API os_error_t os_iter_begin(IN_STRING const char *path, OUT_NOTNULL os_iter_t *iter, IN_NOTNULL arena_t *arena);
+CT_OS_API os_error_t os_iter_begin(IN_STRING const char *path, OUT_NOTNULL os_iter_t *iter);
 
 /// @brief close a directory iterator
 ///

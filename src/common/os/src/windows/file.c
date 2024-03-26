@@ -37,10 +37,9 @@ static DWORD get_access(os_access_t access)
 }
 
 USE_DECL
-os_error_t os_file_exists(const char *path, bool *exists)
+os_error_t os_file_exists(const char *path)
 {
     CTASSERT(path != NULL);
-    CTASSERT(exists != NULL);
 
     DWORD attr = GetFileAttributes(path);
     if (attr == INVALID_FILE_ATTRIBUTES)
@@ -48,8 +47,7 @@ os_error_t os_file_exists(const char *path, bool *exists)
         DWORD error = GetLastError();
         if (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND)
         {
-            *exists = false;
-            return ERROR_SUCCESS;
+            return eOsNotFound;
         }
         else
         {
@@ -57,8 +55,7 @@ os_error_t os_file_exists(const char *path, bool *exists)
         }
     }
 
-    *exists = true;
-    return ERROR_SUCCESS;
+    return eOsExists;
 }
 
 static DWORD get_disp(os_access_t access)

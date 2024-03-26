@@ -112,7 +112,7 @@ static map_t *pfs_query_dirents(fs_t *fs, fs_inode_t *self)
     const char *absolute = get_absolute(fs, self, NULL);
 
     os_iter_t iter = { 0 };
-    os_error_t err = os_iter_begin(absolute, &iter, fs->arena);
+    os_error_t err = os_iter_begin(absolute, &iter);
     CTASSERTF(err == 0, "failed to query dirents %s (%s)", absolute, os_error_string(err, fs->arena));
 
     os_inode_t dir = { 0 };
