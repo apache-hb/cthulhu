@@ -122,7 +122,7 @@ static map_t *pfs_query_dirents(fs_t *fs, fs_inode_t *self)
     while (os_iter_next(&iter, &dir))
     {
         if (os_iter_error(&iter)) { break; }
-        const char *path = os_dir_name(&dir, fs->arena);
+        const char *path = os_dir_string(&dir, fs->arena);
 
         fs_inode_t *inode = pfs_query_node(fs, self, path);
         CTASSERTF(inode != NULL, "failed to query node %s '%s'", absolute, path);

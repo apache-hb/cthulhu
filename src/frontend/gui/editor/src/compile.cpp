@@ -40,8 +40,9 @@ Broker::Broker(loader_t *loader, const char *name)
 /// @param index the index of the source file to parse
 ///
 /// @return nullptr on success, otherwise an error message
-char *Broker::parse_source(size_t index)
+char *Broker::parse_source(size_t)
 {
+#if 0
     const char *path = sources.get_path(index);
     arena_t *arena = get_global_arena();
 
@@ -61,6 +62,7 @@ char *Broker::parse_source(size_t index)
     io_t *io = sources.get_io(index);
 
     broker_parse(lang, io);
+#endif
     return nullptr;
 }
 

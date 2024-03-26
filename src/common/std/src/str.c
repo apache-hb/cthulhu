@@ -582,6 +582,53 @@ static const map_entry_t *find_matching_key(typevec_t *pairs, const char *str)
 }
 
 USE_DECL
+void str_replace_inplace(text_t *text, const char *search, const char *repl)
+{
+    CTASSERT(text != NULL);
+    CTASSERT(search != NULL);
+    CTASSERT(repl != NULL);
+    CTASSERT(text->text != NULL);
+    CTASSERT(ctu_strlen(search) > 0);
+
+    size_t search_len = ctu_strlen(search);
+    size_t repl_len = ctu_strlen(repl);
+
+    char *str = text->text;
+    size_t len = text->length;
+
+    size_t offset = 0;
+
+    while (offset < len)
+    {
+        const char *found = ctu_strstr(str + offset, search);
+        if (found == NULL)
+        {
+            break;
+        }
+
+        size_t found_offset = (size_t)(found - str);
+        size_t found_len = ctu_strlen(found);
+
+        // move the found string to the end of the buffer
+        ctu_memmove(str + offset + repl_len, found + search_len, found_len - search_len);
+
+        // copy the replacement string
+        ctu_memcpy(str + offset, repl, repl_len);
+
+        // update the length of the string
+        len -= search_len - repl_len;
+
+        // update the offset
+        offset = found_offset + repl_len;
+    }
+
+    text->length = len;
+
+    // null terminate the string
+    str[len] = '\0';
+}
+
+USE_DECL
 char *str_replace_many(const char *str, const map_t *repl, arena_t *arena)
 {
     CTASSERT(str != NULL);

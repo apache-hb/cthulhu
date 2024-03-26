@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 #pragma once
 
 #include "editor/panels/sources.hpp"
@@ -23,8 +24,6 @@ namespace ed
         broker_t *broker = nullptr;
         loader_t *loader = nullptr;
         support_t *support = nullptr;
-
-        ed::SourceList sources;
 
         /// @brief parse a source file
         ///

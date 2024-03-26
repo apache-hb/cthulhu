@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "core/text.h"
 #include "os/core.h"
 
 #if CT_OS_WINDOWS
@@ -122,15 +121,6 @@ CT_OS_API bool os_dir_exists(IN_STRING const char *path);
 CT_NODISCARD
 CT_OS_API os_dirent_t os_dirent_type(IN_STRING const char *path);
 
-/// @brief get the current working directory
-///
-/// @param[out] cwd the current working directory
-/// @param arena the arena to allocate from
-///
-/// @return an error if the current working directory could not be retrieved
-RET_INSPECT
-CT_OS_API os_error_t os_getcwd(text_t *cwd, IN_NOTNULL arena_t *arena);
-
 /// directory iteration
 
 /// @brief open a directory for iteration
@@ -165,15 +155,6 @@ CT_OS_API bool os_iter_next(IN_NOTNULL os_iter_t *iter, os_inode_t *dir);
 /// @return the error state of the iterator
 RET_INSPECT
 CT_OS_API os_error_t os_iter_error(IN_NOTNULL os_iter_t *iter);
-
-/// @brief get the name of a directory entry
-///
-/// @param dir directory entry to get the name of
-/// @param arena the arena to allocate from
-///
-/// @return the name of the directory entry
-CT_NODISCARD
-CT_OS_API char *os_dir_name(IN_NOTNULL os_inode_t *dir, IN_NOTNULL arena_t *arena);
 
 /// file api
 

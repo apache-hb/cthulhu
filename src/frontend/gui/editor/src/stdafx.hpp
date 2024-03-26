@@ -10,6 +10,7 @@
 #include <vector>
 #include <map>
 #include <unordered_set>
+#include <filesystem>
 
 #include "imgui.h"
 #include "imgui_internal.h"

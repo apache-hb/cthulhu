@@ -91,6 +91,15 @@ int ctu_strcmp(const char *lhs, const char *rhs)
     return strcmp(lhs, rhs);
 }
 
+USE_DECL
+char *ctu_strcpy(char *dst, const char *src, size_t size)
+{
+    CTASSERT(dst != NULL);
+    CTASSERT(src != NULL);
+
+    return strncpy(dst, src, size);
+}
+
 USE_DECL CT_NOALIAS
 void *ctu_memcpy(void *restrict dst, const void *restrict src, size_t size)
 {
@@ -98,6 +107,15 @@ void *ctu_memcpy(void *restrict dst, const void *restrict src, size_t size)
     CTASSERT(src != NULL);
 
     return memcpy(dst, src, size);
+}
+
+USE_DECL
+void *ctu_memmove(void *dst, const void *src, size_t size)
+{
+    CTASSERT(dst != NULL);
+    CTASSERT(src != NULL);
+
+    return memmove(dst, src, size);
 }
 
 USE_DECL CT_NOALIAS

@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
 #include "os/core.h"
+#include "os_common.h"
 
 #include "std/str.h"
+#include "base/panic.h"
+#include "base/util.h"
 
 #include "core/win32.h" // IWYU pragma: keep
 
@@ -13,25 +16,44 @@
 
 #define FORMAT_FLAGS (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS)
 
-USE_DECL
-char *os_error_string(os_error_t error, arena_t *arena)
+os_error_t os_last_error(void)
 {
-    char buffer[0x1000];
+    return (os_error_t)GetLastError();
+}
 
-    DWORD written = FormatMessage(
+static DWORD format_inner(os_error_t error, char *buffer, size_t size)
+{
+    return FormatMessage(
         /* dwFlags = */ FORMAT_FLAGS,
         /* lpSource = */ NULL,
         /* dwMessageId = */ (DWORD)error,
         /* dwLanguageId = */ MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         /* lpBuffer = */ buffer,
-        /* nSize = */ sizeof(buffer),
+        /* nSize = */ size,
         /* Arguments = */ NULL);
+}
+
+USE_DECL
+size_t os_error_get_string(os_error_t error, char *buffer, size_t size)
+{
+    if (size == 0)
+    {
+        // caller is asking for the size of the buffer
+        return format_inner(error, NULL, 0);
+    }
+
+    CTASSERT(buffer != NULL);
+    DWORD written = format_inner(error, buffer, size);
 
     if (written == 0)
     {
-        return str_format(arena, "unknown error (0x%08lX)", (DWORD)error);
+        return str_sprintf(buffer, size, "unknown error (0x%08lX)", (DWORD)error);
     }
 
-    char *cleaned = str_erase(buffer, written, "\n\r.");
-    return str_format(arena, "%s (0x%08lX)", cleaned, (DWORD)error);
+    // replace every instance of \n\r\t with a single space
+    // if there are consecutive newlines or whitespace, replace them with a single space.
+    text_t text = text_make(buffer, written);
+    str_replace_inplace(&text, "\r\n\t", " ");
+
+    return text.length;
 }

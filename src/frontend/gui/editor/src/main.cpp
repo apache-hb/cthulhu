@@ -35,6 +35,8 @@
 
 #include "core/macros.h"
 
+namespace fs = std::filesystem;
+
 static const frontend_t kFrontendGui = {
     .info = {
         .id = "frontend/gui",
@@ -505,13 +507,13 @@ class EditorUi
         }
     }
 
-    std::vector<SourceCode> sources;
+    std::vector<ed::SourceView> sources;
 
     void draw_source_files()
     {
         for (auto &source : sources)
         {
-            source.draw_body();
+            source.draw_content();
         }
     }
 
@@ -630,9 +632,32 @@ private:
                 if (ImGui::TabItemButton("+", ImGuiTabItemFlags_NoTooltip | ImGuiTabItemFlags_Trailing))
                     file_browser.Open();
 
-                draw_source_files();
+                size_t index = SIZE_MAX;
+
+                for (size_t i = 0; i < sources.size(); i++)
+                {
+                    bool open = true;
+                    auto &source = sources[i];
+                    if (ImGui::BeginTabItem(source.get_basename(), &open))
+                    {
+                        source.draw_content();
+                        ImGui::EndTabItem();
+                    }
+
+                    if (!open)
+                    {
+                        index = i;
+                    }
+                }
+
+                if (index != SIZE_MAX)
+                {
+                    // TODO: remove the source file
+                    //sources.erase(sources.begin() + (ptrdiff_t)index);
+                }
+
+                ImGui::EndTabBar();
             }
-            ImGui::EndTabBar();
         }
         ImGui::End();
 
@@ -640,12 +665,11 @@ private:
 
         if (file_browser.HasSelected())
         {
-            for (const auto &file : file_browser.GetMultiSelected())
+            for (const fs::path &file : file_browser.GetMultiSelected())
             {
-                char *path = arena_strdup(file.string().c_str(), get_global_arena());
-                io_t *io = io_file(path, eOsAccessRead, get_global_arena());
-                sources.emplace_back(io);
+                sources.emplace_back(file);
             }
+
             file_browser.ClearSelected();
         }
     }

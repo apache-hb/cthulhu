@@ -11,6 +11,7 @@
 
 typedef struct path_t path_t;
 typedef struct arena_t arena_t;
+typedef struct text_t text_t;
 
 CT_BEGIN_API
 
@@ -70,6 +71,55 @@ CT_OS_API void os_init(void);
 CT_NORETURN CT_OS_API os_exit(os_exit_t code);
 
 /// @brief convert an os error code to a string
+/// writes to a buffer rather than allocating.
+/// if @p size is 0, the function will return the number of characters needed to write the string.
+///
+/// @pre @p buffer must point to a valid buffer of at least @p size chars
+///
+/// @param error the error code to convert
+/// @param buffer the buffer to write to
+/// @param size the size of the buffer
+///
+/// @return the number of characters written
+CT_NODISCARD
+CT_OS_API size_t os_error_get_string(os_error_t error, OUT_WRITES(size) char *buffer, size_t size);
+
+/// @brief get the current working directory
+///
+/// @pre @p buffer must point to a valid buffer of at least @p size chars
+///
+/// @param buffer the buffer to write to
+/// @param size the size of the buffer
+///
+/// @return the number of characters written, or 0 on error
+CT_NODISCARD
+CT_OS_API size_t os_cwd_get_string(OUT_WRITES(size) char *buffer, size_t size);
+
+/// @brief get the name of a directory entry
+/// writes the name of the directory entry to the buffer.
+/// if @p buffer is NULL, and @p size is 0, the function will return the required size of the buffer.
+///
+/// @pre @p dir is a valid directory entry
+/// @pre if @p size is not 0, @p buffer is a valid buffer of size @p size
+///
+/// @param dir directory entry to get the name of
+/// @param buffer the buffer to write the name to
+/// @param size the size of the buffer
+///
+/// @return the number of characters written
+RET_INSPECT
+CT_OS_API size_t os_dir_get_string(IN_NOTNULL const os_inode_t *dir, OUT_WRITES(size) char *buffer, size_t size);
+
+/// @brief get the name of a directory entry
+///
+/// @param dir directory entry to get the name of
+/// @param arena the arena to allocate from
+///
+/// @return the name of the directory entry
+CT_NODISCARD
+CT_OS_API char *os_dir_string(IN_NOTNULL const os_inode_t *dir, IN_NOTNULL arena_t *arena);
+
+/// @brief convert an os error code to a string
 ///
 /// @param error the error code to convert
 /// @param arena the arena to allocate from
@@ -77,6 +127,15 @@ CT_NORETURN CT_OS_API os_exit(os_exit_t code);
 /// @return the string representation of the error code
 CT_NODISCARD RET_STRING
 CT_OS_API char *os_error_string(os_error_t error, IN_NOTNULL arena_t *arena);
+
+/// @brief get the current working directory
+///
+/// @param[out] cwd the current working directory
+/// @param arena the arena to allocate from
+///
+/// @return an error if the current working directory could not be retrieved
+RET_INSPECT
+CT_OS_API os_error_t os_getcwd(text_t *cwd, IN_NOTNULL arena_t *arena);
 
 /// @brief get the string representation of a directory entry type
 ///

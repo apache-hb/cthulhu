@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
-#include "arena/arena.h"
 #include "base/panic.h"
 
-#include "base/util.h"
 #include "core/win32.h" // IWYU pragma: keep
 
 #include "os/os.h"
@@ -128,26 +126,12 @@ os_dirent_t os_dirent_type(const char *path)
 }
 
 USE_DECL
-os_error_t os_getcwd(text_t *cwd, arena_t *arena)
+size_t os_cwd_get_string(char *buffer, size_t size)
 {
-    CTASSERT(cwd != NULL);
-    CTASSERT(arena != NULL);
+    if (size == 0)
+        CTASSERT(buffer == NULL);
+    else
+        CTASSERT(buffer != NULL);
 
-    DWORD len = GetCurrentDirectoryA(0, NULL);
-    if (len == 0)
-    {
-        return GetLastError();
-    }
-
-    char *path = ARENA_MALLOC(len, "cwd", NULL, arena);
-
-    DWORD ret = GetCurrentDirectoryA(len, path);
-
-    if (ret == 0)
-    {
-        return GetLastError();
-    }
-
-    *cwd = text_make(path, len - 1);
-    return ERROR_SUCCESS;
+    return GetCurrentDirectoryA((DWORD)size, buffer);
 }

@@ -26,12 +26,12 @@ os_args = cc.get_supported_arguments('-Wno-switch', '/wd4063')
 # TODO: the impl libraries should be static, and os_common should route
 # to the native impl, allowing common checks to be done in common
 # would do now but time crunch
-lib_oscommon = library('os_common', src,
+lib_oscommon = static_library('os_common', src,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ os_api_build ] + os_args,
     dependencies : [ core, base, arena, std ],
-    include_directories : [ os_include, os_impl_include ]
+    include_directories : [ os_include ]
 )
 
 os_common = declare_dependency(
@@ -46,8 +46,19 @@ subdir('src' / os_platform)
 
 # create the native library
 
+src = [ 'src/os.c' ]
+
+libos = library('os', src,
+    build_by_default : not meson.is_subproject(),
+    install : not meson.is_subproject(),
+    c_args : user_args + [ os_api_build ] + os_args,
+    dependencies : [ core, base, arena, std, os_common ],
+    include_directories : [ os_include ],
+    link_with : [ lib_oscommon, lib_osnative ]
+)
+
 os = declare_dependency(
-    link_with : [ lib_osnative ],
+    link_with : libos,
     dependencies : [ os_common ],
     include_directories : os_include
 )

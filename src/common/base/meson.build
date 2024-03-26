@@ -19,7 +19,7 @@ deps = [ core ]
 libbase = library('base', src,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
-    c_args : user_args + [ '-DCT_BASE_BUILD=1' ],
+    c_args : user_args + [ '-DCT_BASE_BUILD=1', '-D_CRT_SECURE_NO_WARNINGS' ],
     dependencies : deps,
     include_directories : inc
 )

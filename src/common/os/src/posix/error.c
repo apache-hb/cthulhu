@@ -1,21 +1,33 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
 #include "os/core.h"
+#include "os_common.h"
 
 #include "std/str.h"
 
+#define _POSIX_C_SOURCE 200112L
+
 #include <string.h>
 
-USE_DECL
-char *os_error_string(os_error_t error, arena_t *arena)
+os_error_t os_last_error(void)
 {
-    int err = (int)error;
+    return (os_error_t)errno;
+}
 
-    const char *str = strerror(err);
-    if (str == NULL)
+USE_DECL
+size_t os_error_get_string(os_error_t error, char *buffer, size_t size)
+{
+    if (size == 0)
     {
-        return str_format(arena, "errno: %d", err);
+        // caller is asking for the size of the buffer
+        return 256; // TODO: find a way to get the size of the buffer
     }
 
-    return str_format(arena, "%s (%d)", str, err);
+    int err = (int)error;
+    if (strerror_r(err, buffer, size) != 0)
+    {
+        return str_sprintf(buffer, size, "errno: %d", err);
+    }
+
+    return strlen(buffer);
 }

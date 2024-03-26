@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
 #include "base/util.h"
+#include "core/macros.h"
 #include "core/win32.h" // IWYU pragma: keep
 #include "arena/arena.h"
 #include "os/os.h"
@@ -15,7 +16,7 @@
 
 static BOOL find_next(HANDLE handle, WIN32_FIND_DATA *data, DWORD *error)
 {
-    BOOL result = FindNextFile(handle, data);
+    BOOL result = FindNextFileA(handle, data);
     if (result == 0)
     {
         *error = GetLastError();
@@ -33,7 +34,7 @@ os_error_t os_iter_begin(const char *path, os_iter_t *result, arena_t *arena)
 
     WIN32_FIND_DATA data;
     DWORD error = ERROR_SUCCESS;
-    HANDLE find = FindFirstFile(wild, &data);
+    HANDLE find = FindFirstFileA(wild, &data);
 
     if (find == INVALID_HANDLE_VALUE)
     {
@@ -109,11 +110,20 @@ os_error_t os_iter_error(os_iter_t *iter)
 }
 
 USE_DECL
-char *os_dir_name(os_inode_t *dir, arena_t *arena)
+size_t os_dir_get_string(const os_inode_t *dir, char *buffer, size_t size)
 {
     CTASSERT(dir != NULL);
 
-    // TODO: does this return the full or relative path?
-    // TODO: duplicating this string is not ideal
-    return arena_strdup(dir->data.cFileName, arena);
+    if (size == 0)
+    {
+        return MAX_PATH;
+    }
+
+    CTASSERT(buffer != NULL);
+
+    size_t ret = ctu_strlen(dir->data.cFileName) + 1;
+    size_t len = CT_MIN(size, ret);
+    ctu_strcpy(buffer, dir->data.cFileName, len);
+
+    return len;
 }

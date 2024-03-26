@@ -56,6 +56,18 @@ CT_BASE_API size_t text_hash(text_view_t text);
 CT_NODISCARD CT_PUREFN
 CT_BASE_API bool str_equal(IN_STRING const char *lhs, IN_STRING const char *rhs);
 
+/// @brief copy a string
+/// equivalent to strcpy but with safety checks
+///
+/// @pre @p dst and @p src must not be null and @p dst must be at least @p size bytes long
+///
+/// @param dst the destination
+/// @param src the source
+/// @param size the size of @p dst
+///
+/// @return the destination
+CT_BASE_API char *ctu_strcpy(OUT_WRITES(size) char *dst, IN_STRING const char *src, size_t size);
+
 /// @brief get the length of a string not including the null terminator
 /// equivalent to strlen but with safety checks
 ///
@@ -104,6 +116,18 @@ CT_BASE_API int ctu_strcmp(IN_STRING const char *lhs, IN_STRING const char *rhs)
 /// @return the destination
 CT_NOALIAS
 CT_BASE_API void *ctu_memcpy(OUT_WRITES(size) void *CT_RESTRICT dst, IN_READS(size) const void *CT_RESTRICT src, size_t size);
+
+/// @brief move memory from one location to another
+/// equivalent to memmove but with safety checks
+///
+/// @pre @p dst and @p src must not be null and must be at least @p size bytes long
+///
+/// @param dst the destination
+/// @param src the source
+/// @param size the number of bytes to move
+///
+/// @return the destination
+CT_BASE_API void *ctu_memmove(OUT_WRITES(size) void *dst, IN_READS(size) const void *src, size_t size);
 
 /// @brief set memory to a value
 /// equivalent to memset but with safety checks

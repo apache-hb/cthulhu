@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 #pragma once
 
 #include "imgui.h"
@@ -9,6 +10,20 @@ namespace ed
     struct panel_info_t
     {
         bool open_on_start = false;
+    };
+
+    class ScopeID
+    {
+        ScopeID(const ScopeID&) = delete;
+        ScopeID& operator=(const ScopeID&) = delete;
+
+        ScopeID(ScopeID&&) = delete;
+        ScopeID& operator=(ScopeID&&) = delete;
+    public:
+        ScopeID(const void *ptr) { ImGui::PushID(ptr); }
+        ScopeID(int i) { ImGui::PushID(i); }
+        ScopeID(const char *str) { ImGui::PushID(str); }
+        ~ScopeID() { ImGui::PopID(); }
     };
 
     class IEditorPanel

@@ -3,7 +3,6 @@ src = [
     'src/config.cpp',
     'src/panic.cpp',
     'src/compile.cpp',
-    'src/utils.cpp',
 
     'src/panels/panel.cpp',
     'src/panels/sources.cpp',
@@ -11,6 +10,8 @@ src = [
     'src/panels/arena.cpp',
     'src/panels/demo.cpp',
     'src/panels/settings.cpp',
+
+    'src/utils/io.cpp',
 
     'src/main.cpp'
 ]

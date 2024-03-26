@@ -82,10 +82,20 @@ os_error_t os_iter_error(os_iter_t *iter)
 }
 
 USE_DECL
-char *os_dir_name(os_inode_t *dir, arena_t *arena)
+size_t os_dir_get_string(const os_inode_t *dir, char *buffer, size_t size)
 {
     CTASSERT(dir != NULL);
 
-    // have to copy the string because it's owned by the dirent
-    return arena_strdup(dir->ent->d_name, arena);
+    if (size == 0)
+    {
+        return NAME_MAX;
+    }
+
+    CTASSERT(buffer != NULL);
+
+    size_t len = ctu_strlen(dir->ent->d_name);
+    size_t ret = CT_MIN(size, len);
+    ctu_strcpy(buffer, dir->ent->d_name, ret);
+
+    return ret;
 }

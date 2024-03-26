@@ -36,6 +36,9 @@
 #   define IN_NOTNULL _In_
 #   define IN_STRING _In_z_
 #   define IN_RANGE(cmp, it) _In_range_(cmp, it)
+
+#   define INOUT_NOTNULL _Inout_
+#   define INOUT_STRING _Inout_z_
 #else
 #   define CT_FMT_STRING
 #   define USE_DECL
@@ -52,6 +55,9 @@
 
 #   define IN_STRING
 #   define IN_RANGE(cmp, it)
+
+#   define INOUT_STRING
+#   define INOUT_NOTNULL
 #endif
 
 /// @def CT_PRINTF(a, b)

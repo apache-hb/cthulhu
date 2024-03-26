@@ -119,23 +119,20 @@ os_dirent_t os_dirent_type(const char *path)
 }
 
 USE_DECL
-os_error_t os_getcwd(text_t *cwd, arena_t *arena)
+size_t os_cwd_get_string(char *buffer, size_t size)
 {
-    CTASSERT(cwd != NULL);
-    CTASSERT(arena != NULL);
+    CTASSERT(buffer != NULL);
 
-    long size = pathconf(".", _PC_PATH_MAX);
-    if (size == -1)
+    if (size == 0)
     {
-        return errno;
+        // caller is asking for the size of the buffer
+        return gMaxPathLength;
     }
 
-    char *buf = ARENA_MALLOC(size + 1, "os_getcwd", NULL, arena);
-    if (getcwd(buf, size) == NULL)
+    if (getcwd(buffer, size) == NULL)
     {
-        return errno;
+        return 0;
     }
 
-    *cwd = text_make(buf, size);
-    return 0;
+    return strlen(buffer);
 }

@@ -45,6 +45,7 @@ CompileError ed::run_compile(Broker& info)
         return error;
     }
 
+#if 0
     for (size_t i = 0; i < info.sources.count(); i++)
     {
         char *message = info.parse_source(i);
@@ -57,7 +58,7 @@ CompileError ed::run_compile(Broker& info)
             return error;
         }
     }
-
+#endif
     if (!info.check_reports())
     {
         CompileError error = {

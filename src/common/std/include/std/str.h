@@ -242,6 +242,13 @@ CT_STD_API bool str_contains(IN_STRING const char *str, IN_STRING const char *se
 CT_NODISCARD
 CT_STD_API char *str_replace(IN_STRING const char *str, IN_STRING const char *search, IN_STRING const char *repl, IN_NOTNULL arena_t *arena);
 
+/// @brief replace all instances of a substring in a string in place
+///
+/// @param text the text to replace elements in
+/// @param search the substring to replace
+/// @param repl the replacement substring
+CT_STD_API void str_replace_inplace(INOUT_NOTNULL text_t *text, IN_STRING const char *search, IN_STRING const char *repl);
+
 /// @brief replace all instances of a each substring in a string with provided replacement
 ///
 /// @param str the string to replace elements in
