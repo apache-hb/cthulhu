@@ -14,6 +14,7 @@ typedef struct os_mapping_t
 {
     HANDLE handle;
     LPVOID view;
+    size_t size;
 } os_mapping_t;
 
 typedef struct os_iter_t
@@ -32,9 +33,11 @@ enum {
     eOsSuccess = ERROR_SUCCESS,
     eOsNotFound = ERROR_FILE_NOT_FOUND,
     eOsExists = ERROR_ALREADY_EXISTS,
+    eOsTooSmall = ERROR_DISK_FULL,
 };
 
 #define CT_OS_INVALID_FILE INVALID_HANDLE_VALUE
+#define CT_OS_INVALID_LIBRARY NULL
 #define CT_OS_INVALID_MAPPING NULL
 
 #define CT_OS_NAME_MAX MAX_PATH

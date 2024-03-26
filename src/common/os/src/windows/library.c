@@ -1,53 +1,22 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
-#include "os/os.h"
-
-#include "base/panic.h"
+#include "os_common.h"
 
 #if CTU_WIN32_TRICKERY
 #   include <winbase.h>
 #endif
 
-USE_DECL
-os_error_t os_library_open(const char *path, os_library_t *library)
+os_library_impl_t impl_library_open(const char *path)
 {
-    CTASSERT(path != NULL);
-    CTASSERT(library != NULL);
-
-    library->library = LoadLibraryA(path);
-    if (library->library == NULL)
-    {
-        return GetLastError();
-    }
-
-    return ERROR_SUCCESS;
+    return LoadLibraryA(path);
 }
 
-USE_DECL
-os_error_t os_library_close(os_library_t *library)
+bool impl_library_close(os_library_impl_t lib)
 {
-    CTASSERT(library != NULL);
-
-    if (!FreeLibrary(library->library))
-    {
-        return GetLastError();
-    }
-
-    return ERROR_SUCCESS;
+    return FreeLibrary(lib);
 }
 
-USE_DECL
-os_error_t os_library_symbol(os_library_t *library, os_symbol_t *symbol, const char *name)
+os_symbol_t impl_library_symbol(os_library_impl_t lib, const char *name)
 {
-    CTASSERT(library != NULL);
-    CTASSERT(name != NULL);
-
-    os_symbol_t addr = (os_symbol_t)GetProcAddress(library->library, name);
-    if (addr == NULL)
-    {
-        return GetLastError();
-    }
-
-    *symbol = addr;
-    return ERROR_SUCCESS;
+    return (os_symbol_t)GetProcAddress(lib, name);
 }

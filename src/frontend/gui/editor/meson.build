@@ -10,6 +10,7 @@ src = [
     'src/panels/arena.cpp',
     'src/panels/demo.cpp',
     'src/panels/settings.cpp',
+    'src/panels/events.cpp',
 
     'src/utils/io.cpp',
 
@@ -23,7 +24,7 @@ executable('gui', src,
     install : not meson.is_subproject(),
     include_directories : [ 'include', 'src' ],
     dependencies : [
-        draw, imgui, imfilebrowser, implot,
+        draw, imgui, imfilebrowser, implot, memedit,
         core, os, scan,
         memory, notify, config, setup,
         io, broker, support, ssa, tree, backtrace,

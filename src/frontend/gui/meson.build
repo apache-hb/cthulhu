@@ -6,6 +6,10 @@ gui_args = user_args + cpp.get_supported_arguments([
 # we provide imgui here ourselves so we can configure the assert handler
 subdir('imgui')
 
+memedit = declare_dependency(
+    include_directories : 'imgui_memory_editor'
+)
+
 # we also modify imfilebrowser to not need exceptions enabled
 subdir('imfilebrowser')
 subdir('implot')

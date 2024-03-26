@@ -89,6 +89,11 @@ option('trace_memory', type : 'feature',
     value : 'auto'
 )
 
+option('events', type : 'feature',
+    description : 'enable event callbacks',
+    value : 'auto'
+)
+
 option('paranoid', type : 'feature',
     description : 'enable paranoid assertions',
     value : 'auto'

@@ -23,6 +23,7 @@ CT_BEGIN_API
 /// @warning do not access the library handle directly, it is platform specific
 typedef struct os_library_t
 {
+    const char *name;
     os_library_impl_t library;
 } os_library_t;
 
@@ -66,6 +67,14 @@ CT_OS_API os_error_t os_library_symbol(
         INOUT_NOTNULL os_library_t *library,
         OUT_NOTNULL os_symbol_t *symbol,
         IN_STRING const char *name);
+
+/// @brief get the name of a shared library
+///
+/// @param library the library to get the name of
+///
+/// @return the name of the library
+CT_NODISCARD
+CT_OS_API const char *os_library_name(IN_NOTNULL const os_library_t *library);
 
 /// filesytem api
 
@@ -286,7 +295,7 @@ CT_OS_API os_error_t os_file_map(
 /// @note invalidates all memory pointers returned by @a os_mapping_data
 ///
 /// @param mapping the mapping to unmap
-CT_OS_API os_error_t os_file_unmap(INOUT_NOTNULL os_mapping_t *mapping);
+CT_OS_API os_error_t os_unmap(INOUT_NOTNULL os_mapping_t *mapping);
 
 /// @brief get the data of a file mapping
 ///
@@ -295,6 +304,14 @@ CT_OS_API os_error_t os_file_unmap(INOUT_NOTNULL os_mapping_t *mapping);
 /// @return the data of the mapping
 CT_NODISCARD
 CT_OS_API void *os_mapping_data(INOUT_NOTNULL os_mapping_t *mapping);
+
+/// @brief get the size of a file mapping
+///
+/// @param mapping the mapping to get the size of
+///
+/// @return the size of the mapping
+CT_NODISCARD
+CT_OS_API size_t os_mapping_size(INOUT_NOTNULL const os_mapping_t *mapping);
 
 /// @brief does the mapping object contain a valid mapping
 /// checks if the mapping data exists, not for the validity of the mapping
@@ -312,6 +329,27 @@ CT_OS_API bool os_mapping_active(INOUT_NOTNULL const os_mapping_t *mapping);
 /// @return the name of the file
 CT_NODISCARD
 CT_OS_API const char *os_file_name(INOUT_NOTNULL const os_file_t *file);
+
+#if CTU_EVENTS
+
+typedef struct os_events_t
+{
+    void (*on_file_open)(const os_file_t *file);
+    void (*on_file_close)(const os_file_t *file);
+    void (*on_file_read)(const os_file_t *file, size_t size);
+    void (*on_file_write)(const os_file_t *file, size_t size);
+
+    void (*on_library_open)(const os_library_t *library);
+    void (*on_library_close)(const os_library_t *library);
+    void (*on_library_symbol)(const os_library_t *library, const char *name, const os_symbol_t *symbol);
+
+    void (*on_mapping_open)(const os_file_t *file, const os_mapping_t *mapping);
+    void (*on_mapping_close)(const os_mapping_t *mapping);
+} os_events_t;
+
+CT_OS_API extern os_events_t gOsEvents;
+
+#endif
 
 /// @}
 

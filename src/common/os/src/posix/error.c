@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
+#define _POSIX_C_SOURCE 200112L
+
 #include "os/core.h"
 #include "os_common.h"
 
 #include "std/str.h"
-
-#define _POSIX_C_SOURCE 200112L
 
 #include <string.h>
 #include <errno.h>

@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
 #include "os/os.h"
+#include "os_common.h"
 
 #include "base/panic.h"
+#include "core/macros.h"
 
 #include <limits.h>
 #include <stdio.h>
@@ -44,28 +46,9 @@ os_error_t os_file_exists(const char *path)
     return errno;
 }
 
-USE_DECL
-os_error_t os_file_open(const char *path, os_access_t access, os_file_t *file)
+os_file_impl_t impl_file_open(const char *path, os_access_t access)
 {
-    CTASSERT(path != NULL);
-    CTASSERT(file != NULL);
-    CTASSERTF(access & (eOsAccessRead | eOsAccessWrite), "%s: invalid access flags 0x%x", path, access);
-    CTASSERTF(access != (eOsAccessRead | eOsAccessTruncate), "%s: cannot truncate read only file", path);
-
-    FILE *fd = fopen(path, get_access(access));
-
-    if (fd == NULL)
-    {
-        return errno;
-    }
-
-    os_file_t result = {
-        .path = path,
-        .file = fd,
-    };
-
-    *file = result;
-    return 0;
+    return fopen(path, get_access(access));
 }
 
 USE_DECL
@@ -89,16 +72,9 @@ os_error_t os_tmpfile_open(os_file_t *file)
     return 0;
 }
 
-os_error_t os_file_close(os_file_t *file)
+bool impl_file_close(os_file_t *file)
 {
-    CTASSERT(file != NULL);
-
-    if (fclose(file->file) != 0)
-    {
-        return errno;
-    }
-
-    return 0;
+    return fclose(file->file) == 0;
 }
 
 USE_DECL
@@ -118,6 +94,8 @@ os_error_t os_file_read(os_file_t *file, void *buffer, size_t size, size_t *actu
             return errno;
         }
     }
+
+    EVENT_FILE_READ(file, read);
 
     *actual = read;
     return 0;
@@ -140,6 +118,8 @@ os_error_t os_file_write(os_file_t *file, const void *buffer, size_t size, size_
             return errno;
         }
     }
+
+    EVENT_FILE_WRITE(file, written);
 
     *actual = written;
     return errno;
@@ -243,34 +223,19 @@ static int get_mmap_prot(os_protect_t protect)
     return result;
 }
 
-USE_DECL
-os_error_t os_file_map(os_file_t *file, os_protect_t protect, size_t size, os_mapping_t *mapping)
+void *impl_file_map(os_file_t *file, os_protect_t protect, size_t size, os_mapping_t *mapping)
 {
-    CTASSERT(file != NULL);
-    CTASSERT(mapping != NULL);
+    CT_UNUSED(mapping);
 
     int prot = get_mmap_prot(protect);
 
     int fd = fileno(file->file);
-    void *ptr = mmap(NULL, size, prot, MAP_PRIVATE, fd, 0);
-
-    os_mapping_t result = {
-        .view = ptr,
-        .size = size,
-    };
-
-    *mapping = result;
-
-    // always store the result of mmap in the mapping so we can check for MAP_FAILED
-    return (ptr == MAP_FAILED) ? errno : 0;
+    return mmap(NULL, size, prot, MAP_PRIVATE, fd, 0);
 }
 
-USE_DECL
-os_error_t os_file_unmap(os_mapping_t *mapping)
+os_error_t impl_unmap(os_mapping_t *map)
 {
-    CTASSERT(mapping != NULL);
-
-    if (munmap(mapping->view, mapping->size) != 0)
+    if (munmap(map->view, map->size) != 0)
     {
         return errno;
     }

@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
-#include "os/core.h"
+#include "os/os.h" // IWYU pragma: keep
 
 #include "base/panic.h"
+
+#if CTU_EVENTS
+os_events_t gOsEvents = { 0 };
+#endif
 
 static const char *const kDirentNames[eOsNodeCount] = {
 #define OS_DIRENT(ID, STR) [ID] = (STR),

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
+#include "editor/panels/events.hpp"
 #include "stdafx.hpp"
 
 // drawing library
@@ -375,27 +376,13 @@ static ed::IEditorPanel *theme_menu(const char *name, theme_t theme, auto&& func
     return new ThemeMenuItem(name, theme, std::forward<decltype(func)>(func));
 }
 
-struct menu_section_t
+void draw_menu_items(ed::menu_section_t& section)
 {
-    std::string name;
-    bool seperator = true; // if true use a seperator, otherwise use a nested menu
-    std::vector<ed::IEditorPanel*> panels;
-
-    void draw_menu_items()
+    for (ed::IEditorPanel *panel : section.panels)
     {
-        for (ed::IEditorPanel *panel : panels)
-        {
-            panel->menu_item();
-        }
+        panel->menu_item();
     }
-};
-
-struct menu_t
-{
-    std::string name;
-    std::vector<ed::IEditorPanel*> header;
-    std::vector<menu_section_t> sections;
-};
+}
 
 static void seperator_opt(const std::string& str)
 {
@@ -432,31 +419,35 @@ class EditorUi
 #endif
     }
 
-    std::vector<menu_t> menus;
+    std::vector<ed::menu_t> menus;
 
-    void add_menu(const menu_t &menu)
+    void add_menu(const ed::menu_t &menu)
     {
         menus.push_back(menu);
     }
 
     void init()
     {
-        menu_t windows_menu = {
+        ed::menu_t windows_menu = {
             .name = "Windows",
             .header = { &version_info_panel, &module_panel },
             .sections = {
-                menu_section_t {
+                ed::menu_section_t {
                     .name = "Memory",
                     .panels = { &gGlobalArena, &gGmpArena, &gGuiArena }
                 },
-                menu_section_t {
+                ed::menu_section_t {
+                    .name = "Events",
+                    .panels = { ed::create_events_panel() }
+                },
+                ed::menu_section_t {
                     .name = "Demo",
                     .panels = { ed::create_imgui_demo_panel(), ed::create_implot_demo_panel() }
                 }
             }
         };
 
-        menu_t styles_menu = {
+        ed::menu_t styles_menu = {
             .name = "Styles",
             .header = {
                 theme_menu("Dark", eThemeDark, []() { ImGui::StyleColorsDark(); ImPlot::StyleColorsDark(); }),
@@ -488,13 +479,13 @@ class EditorUi
                     if (section.seperator)
                     {
                         seperator_opt(section.name);
-                        section.draw_menu_items();
+                        draw_menu_items(section);
                         continue;
                     }
 
                     if (ImGui::BeginMenu(section.name.c_str()))
                     {
-                        section.draw_menu_items();
+                        draw_menu_items(section);
                         ImGui::EndMenu();
                     }
                 }
@@ -679,6 +670,7 @@ int main(int argc, const char **argv)
 
     setup_global();
     ed::install_trace_arenas();
+    ed::init_events();
 
     draw::config_t config = {
         .title = L"Editor",

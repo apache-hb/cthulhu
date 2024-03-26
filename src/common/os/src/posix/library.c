@@ -7,28 +7,14 @@
 #include <dlfcn.h>
 #include <errno.h>
 
-USE_DECL
-os_error_t os_library_open(const char *path, os_library_t *library)
+os_library_impl_t impl_library_open(const char *path)
 {
-    CTASSERT(path != NULL);
-    CTASSERT(library != NULL);
-
-    library->library = dlopen(path, RTLD_NOW);
-
-    if (library->library == NULL)
-    {
-        return errno;
-    }
-
-    return 0;
+    return dlopen(path, RTLD_NOW);
 }
 
-USE_DECL
-os_error_t os_library_close(os_library_t *library)
+bool impl_library_close(os_library_impl_t lib)
 {
-    CTASSERT(library != NULL);
-
-    return dlclose(library->library);
+    return dlclose(lib);
 }
 
 // casting a object pointer to a function pointer is unspecified behavior.
@@ -38,25 +24,20 @@ os_error_t os_library_close(os_library_t *library)
 #   pragma GCC diagnostic ignored "-Wpedantic"
 #endif
 
-USE_DECL
-os_error_t os_library_symbol(os_library_t *library, os_symbol_t *symbol, const char *name)
+os_symbol_t impl_library_symbol(os_library_impl_t lib, const char *name)
 {
-    CTASSERT(library != NULL);
-    CTASSERT(name != NULL);
-
     // clear any previous errors
     dlerror();
 
-    os_symbol_t addr = (os_symbol_t)dlsym(library->library, name);
+    os_symbol_t addr = (os_symbol_t)dlsym(lib, name);
 
     const char *error = dlerror();
     if (error != NULL)
     {
-        return errno;
+        return NULL;
     }
 
-    *symbol = addr;
-    return 0;
+    return addr;
 }
 
 #if CT_CC_GNU

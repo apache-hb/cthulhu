@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
-#include "base/util.h"
 #include "os/os.h"
+#include "os_common.h"
 
 #include "base/panic.h"
-#include "os_common.h"
+#include "base/util.h"
 
 #include <sys/stat.h>
 #include <unistd.h>

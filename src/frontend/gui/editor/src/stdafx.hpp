@@ -10,6 +10,7 @@
 #include <vector>
 #include <map>
 #include <unordered_set>
+#include <unordered_map>
 #include <filesystem>
 
 #include "imgui.h"
@@ -17,6 +18,7 @@
 #include "imgui_stdlib.h"
 #include "implot.h"
 #include "imfilebrowser.h"
+#include "imgui_memory_editor.h"
 #include "draw/draw.hpp"
 
 // IWYU pragma: end_exports

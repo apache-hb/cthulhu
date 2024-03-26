@@ -53,6 +53,7 @@ driver_tests = get_option('driver_tests').disable_auto_if(meson.is_subproject())
 warning_level = get_option('warning_level').to_int()
 
 trace_memory = get_option('trace_memory').disable_auto_if(is_release or meson.is_subproject())
+events = get_option('events').disable_auto_if(is_release or meson.is_subproject())
 
 # these are tools for internal use, so disable them in release mode
 tool_notify = get_option('tool_notify').disable_auto_if(is_release or meson.is_subproject())
@@ -126,6 +127,7 @@ config_cdata.set10('CTU_HAS_PRETTY_FUNCTION', warning_level < 3)
 
 config_cdata.set10('CTU_TRACE_MEMORY', trace_memory.allowed())
 config_cdata.set10('CTU_STB_SPRINTF', opt_stb_sprintf.allowed())
+config_cdata.set10('CTU_EVENTS', events.allowed())
 
 # args for all code
 all_args = cc.get_supported_arguments(

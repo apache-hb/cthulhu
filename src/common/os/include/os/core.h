@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <ctu_config.h>
 #include <ctu_os_api.h>
 
 #include "core/analyze.h"

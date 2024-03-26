@@ -31,7 +31,12 @@ void IEditorPanel::draw()
 
 bool IEditorPanel::menu_item(const char *shortcut)
 {
-    return ImGui::MenuItem(get_title(), shortcut, &visible, enabled);
+    bool result = ImGui::MenuItem(get_title(), shortcut, &visible, enabled);
+    if (!enabled && !disabled_reason.empty())
+    {
+        ImGui::SetItemTooltip("%s", disabled_reason.c_str());
+    }
+    return result;
 }
 
 void ed::draw_seperated(IEditorPanel& panel, const char *title)

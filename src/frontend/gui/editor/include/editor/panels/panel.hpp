@@ -29,9 +29,11 @@ namespace ed
     protected:
         bool visible = true;
         bool enabled = true;
+        std::string disabled_reason;
         ImGuiWindowFlags flags = ImGuiWindowFlags_None;
 
         void set_enabled(bool value) { enabled = value; }
+        void disable(std::string_view reason) { enabled = false; disabled_reason = reason; }
 
     public:
         IEditorPanel(std::string_view name);
@@ -52,6 +54,20 @@ namespace ed
         const char *get_title() const { return name.c_str(); }
         bool is_visible() const { return visible; }
         bool is_enabled() const { return enabled; }
+    };
+
+    struct menu_section_t
+    {
+        std::string name;
+        bool seperator = true; // if true use a seperator, otherwise use a nested menu
+        std::vector<ed::IEditorPanel*> panels;
+    };
+
+    struct menu_t
+    {
+        std::string name;
+        std::vector<ed::IEditorPanel*> header;
+        std::vector<menu_section_t> sections;
     };
 
     IEditorPanel *create_imgui_demo_panel();

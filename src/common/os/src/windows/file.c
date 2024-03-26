@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
-#include "base/panic.h"
-
 #include "os/os.h"
+#include "os_common.h"
+
+#include "base/panic.h"
 
 #include <stdint.h>
 
@@ -14,12 +15,12 @@
 #   include <winerror.h>
 #endif
 
-os_error_t impl_copyfile(const os_file_t *dst, const os_file_t *src)
+os_error_t impl_copyfile(const char *dst, const char *src)
 {
     CTASSERT(dst != NULL);
     CTASSERT(src != NULL);
 
-    BOOL result = CopyFileA(src->path, dst->path, FALSE);
+    BOOL result = CopyFileA(src, dst, FALSE);
     if (!result)
     {
         return GetLastError();
@@ -78,18 +79,12 @@ static DWORD get_disp(os_access_t access)
     }
 }
 
-USE_DECL
-os_error_t os_file_open(const char *path, os_access_t access, os_file_t *file)
+os_file_impl_t impl_file_open(const char *path, os_access_t access)
 {
-    CTASSERT(path != NULL);
-    CTASSERT(file != NULL);
-    CTASSERTF(access & (eOsAccessRead | eOsAccessWrite), "%s: invalid access flags 0x%x", path, access);
-    CTASSERTF(access != (eOsAccessRead | eOsAccessTruncate), "%s: cannot truncate read only file", path);
-
     DWORD dw_access = get_access(access);
     DWORD dw_disp = get_disp(access);
 
-    HANDLE handle = CreateFile(
+    return CreateFile(
         /* lpFileName = */ path,
         /* dwDesiredAccess = */ dw_access,
         /* dwShareMode = */ FILE_SHARE_READ,
@@ -97,19 +92,6 @@ os_error_t os_file_open(const char *path, os_access_t access, os_file_t *file)
         /* dwCreationDisposition = */ dw_disp,
         /* dwFlagsAndAttributes = */ FILE_ATTRIBUTE_NORMAL,
         /* hTemplateFile = */ NULL);
-
-    if (handle == INVALID_HANDLE_VALUE)
-    {
-        return GetLastError();
-    }
-
-    os_file_t result = {
-        .path = path,
-        .file = handle
-    };
-
-    *file = result;
-    return ERROR_SUCCESS;
 }
 
 USE_DECL
@@ -134,17 +116,9 @@ os_error_t os_tmpfile_open(os_file_t *file)
     return os_file_open(name, eOsAccessWrite, file);
 }
 
-USE_DECL
-os_error_t os_file_close(os_file_t *fd)
+bool impl_file_close(os_file_t *fd)
 {
-    CTASSERT(fd != NULL);
-
-    if (CloseHandle(fd->file) == 0)
-    {
-        return GetLastError();
-    }
-
-    return ERROR_SUCCESS;
+    return CloseHandle(fd->file) != 0;
 }
 
 USE_DECL
@@ -164,6 +138,8 @@ os_error_t os_file_read(os_file_t *file, void *buffer, size_t size, size_t *actu
     {
         return GetLastError();
     }
+
+    EVENT_FILE_READ(file, read);
 
     *actual = read;
     return 0;
@@ -186,6 +162,8 @@ os_error_t os_file_write(os_file_t *file, const void *buffer, size_t size, size_
     {
         return GetLastError();
     }
+
+    EVENT_FILE_WRITE(file, written);
 
     *actual = written;
     return ERROR_SUCCESS;
@@ -308,13 +286,8 @@ static DWORD get_map_access(os_protect_t protect)
     return result;
 }
 
-USE_DECL
-os_error_t os_file_map(os_file_t *file, os_protect_t protect, size_t size, os_mapping_t *mapping)
+void *impl_file_map(os_file_t *file, os_protect_t protect, size_t size, os_mapping_t *mapping)
 {
-    CTASSERT(file != NULL);
-    CTASSERT(mapping != NULL);
-    CTASSERT(size > 0);
-
     DWORD prot = get_protect(protect);
     DWORD access = get_map_access(protect);
 
@@ -331,7 +304,7 @@ os_error_t os_file_map(os_file_t *file, os_protect_t protect, size_t size, os_ma
 
     if (handle == NULL)
     {
-        return GetLastError();
+        return NULL;
     }
 
     LPVOID view = MapViewOfFile(
@@ -343,30 +316,23 @@ os_error_t os_file_map(os_file_t *file, os_protect_t protect, size_t size, os_ma
 
     if (view == NULL)
     {
-        return GetLastError();
+        CloseHandle(handle);
+        return NULL;
     }
 
-    os_mapping_t result = {
-        .handle = handle,
-        .view = view
-    };
+    mapping->handle = handle;
 
-    *mapping = result;
-
-    return ERROR_SUCCESS;
+    return view;
 }
 
-USE_DECL
-os_error_t os_file_unmap(os_mapping_t *mapping)
+os_error_t impl_unmap(os_mapping_t *map)
 {
-    CTASSERT(mapping != NULL);
-
-    if (!UnmapViewOfFile(mapping->view))
+    if (!UnmapViewOfFile(map->view))
     {
         return GetLastError();
     }
 
-    if (!CloseHandle(mapping->handle))
+    if (!CloseHandle(map->handle))
     {
         return GetLastError();
     }

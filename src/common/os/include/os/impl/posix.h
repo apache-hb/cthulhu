@@ -30,9 +30,11 @@ enum {
     eOsSuccess = 0,
     eOsNotFound = ENOENT,
     eOsExists = EEXIST,
+    eOsTooSmall = ENOSPC,
 };
 
 #define CT_OS_INVALID_FILE NULL
+#define CT_OS_INVALID_LIBRARY NULL
 #define CT_OS_INVALID_MAPPING NULL
 
 #define CT_OS_NAME_MAX NAME_MAX

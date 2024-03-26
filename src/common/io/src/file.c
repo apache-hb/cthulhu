@@ -86,7 +86,7 @@ static void fd_close(io_t *self)
 
         if (os_mapping_active(&file->mapping))
         {
-            err = os_file_unmap(&file->mapping);
+            err = os_unmap(&file->mapping);
             CTASSERTF(err == 0, "failed to unmap file (%s)", os_error_string(err, self->arena));
         }
 

@@ -4,6 +4,8 @@
 
 #include <ctu_broker_api.h>
 
+#include <stddef.h>
+
 typedef struct logger_t logger_t;
 typedef struct arena_t arena_t;
 typedef struct scan_t scan_t;
