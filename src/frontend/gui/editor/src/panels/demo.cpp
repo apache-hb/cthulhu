@@ -5,30 +5,50 @@
 
 using namespace ed;
 
-bool ImGuiDemoPanel::draw_window()
+class ImGuiDemoPanel final : public IEditorPanel
 {
-    if (visible)
+public:
+    // IEditorPanel
+    bool draw_window() override
     {
-        ImGui::ShowDemoWindow(&visible);
+        if (visible)
+        {
+            ImGui::ShowDemoWindow(&visible);
+        }
+
+        return visible;
     }
 
-    return visible;
-}
+    ImGuiDemoPanel()
+        : IEditorPanel("ImGui Demo")
+    { }
+};
 
-ImGuiDemoPanel::ImGuiDemoPanel(panel_info_t setup)
-    : IEditorPanel("ImGui Demo", setup)
-{ }
-
-bool ImPlotDemoPanel::draw_window()
+class ImPlotDemoPanel final : public IEditorPanel
 {
-    if (visible)
+    // IEditorPanel
+    bool draw_window() override
     {
-        ImPlot::ShowDemoWindow(&visible);
+        if (visible)
+        {
+            ImPlot::ShowDemoWindow(&visible);
+        }
+
+        return visible;
     }
 
-    return visible;
+public:
+    ImPlotDemoPanel()
+        : IEditorPanel("ImPlot Demo")
+    { }
+};
+
+IEditorPanel *ed::create_imgui_demo_panel()
+{
+    return new ImGuiDemoPanel();
 }
 
-ImPlotDemoPanel::ImPlotDemoPanel(panel_info_t setup)
-    : IEditorPanel("ImPlot Demo", setup)
-{ }
+IEditorPanel *ed::create_implot_demo_panel()
+{
+    return new ImPlotDemoPanel();
+}

@@ -106,8 +106,8 @@ static void draw_feature(const char *name, bool supported)
 
 // module info
 
-ModuleInfoPanel::ModuleInfoPanel(const module_info_t& info, panel_info_t setup)
-    : IEditorPanel(info.name, setup)
+ModuleInfoPanel::ModuleInfoPanel(const module_info_t& info)
+    : IEditorPanel(info.name)
     , info(info)
 { }
 
@@ -125,8 +125,8 @@ void ModuleInfoPanel::draw_info()
 
 // frontend info
 
-FrontendInfoPanel::FrontendInfoPanel(const frontend_t& frontend, panel_info_t setup)
-    : ModuleInfoPanel(frontend.info, setup)
+FrontendInfoPanel::FrontendInfoPanel(const frontend_t& frontend)
+    : ModuleInfoPanel(frontend.info)
     , frontend(frontend)
 { }
 
@@ -138,8 +138,8 @@ void FrontendInfoPanel::draw_content()
 
 // language info
 
-LanguageInfoPanel::LanguageInfoPanel(const language_t& lang, panel_info_t setup)
-    : ModuleInfoPanel(lang.info, setup)
+LanguageInfoPanel::LanguageInfoPanel(const language_t& lang)
+    : ModuleInfoPanel(lang.info)
     , lang(lang)
 {
     builtin = from_text_view(lang.builtin.name);
@@ -302,8 +302,8 @@ void LanguageInfoPanel::draw_content()
 
 // plugin info
 
-PluginInfoPanel::PluginInfoPanel(const plugin_t& plugin, panel_info_t setup)
-    : ModuleInfoPanel(plugin.info, setup)
+PluginInfoPanel::PluginInfoPanel(const plugin_t& plugin)
+    : ModuleInfoPanel(plugin.info)
     , plugin(plugin)
 { }
 
@@ -325,8 +325,8 @@ void PluginInfoPanel::draw_content()
 
 // target info
 
-TargetInfoPanel::TargetInfoPanel(const target_t& target, panel_info_t setup)
-    : ModuleInfoPanel(target.info, setup)
+TargetInfoPanel::TargetInfoPanel(const target_t& target)
+    : ModuleInfoPanel(target.info)
     , target(target)
 { }
 

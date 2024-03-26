@@ -19,7 +19,7 @@ namespace ed
         void draw_info();
 
     public:
-        ModuleInfoPanel(const module_info_t& info, panel_info_t setup = {});
+        ModuleInfoPanel(const module_info_t& info);
     };
 
     class FrontendInfoPanel final : public ModuleInfoPanel
@@ -29,7 +29,7 @@ namespace ed
         // IEditorPanel
         void draw_content() override;
     public:
-        FrontendInfoPanel(const frontend_t& info, panel_info_t setup = {});
+        FrontendInfoPanel(const frontend_t& info);
     };
 
     class LanguageInfoPanel final : public ModuleInfoPanel
@@ -42,7 +42,7 @@ namespace ed
         // IEditorPanel
         void draw_content() override;
     public:
-        LanguageInfoPanel(const language_t& lang, panel_info_t setup = {});
+        LanguageInfoPanel(const language_t& lang);
     };
 
     class PluginInfoPanel final : public ModuleInfoPanel
@@ -52,7 +52,7 @@ namespace ed
         // IEditorPanel
         void draw_content() override;
     public:
-        PluginInfoPanel(const plugin_t& plugin, panel_info_t setup = {});
+        PluginInfoPanel(const plugin_t& plugin);
     };
 
     class TargetInfoPanel final : public ModuleInfoPanel
@@ -62,6 +62,6 @@ namespace ed
         // IEditorPanel
         void draw_content() override;
     public:
-        TargetInfoPanel(const target_t& target, panel_info_t setup = {});
+        TargetInfoPanel(const target_t& target);
     };
 }

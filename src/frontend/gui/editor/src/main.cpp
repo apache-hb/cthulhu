@@ -170,8 +170,8 @@ class EditorModulePanel : public ed::IEditorPanel
     }
 
 public:
-    EditorModulePanel(ed::panel_info_t setup = {})
-        : IEditorPanel("Modules", setup)
+    EditorModulePanel()
+        : IEditorPanel("Modules")
     {
         set_enabled(false);
     }
@@ -232,8 +232,8 @@ class StaticModulePanel final : public ed::IEditorPanel
     support_t *support;
 
 public:
-    StaticModulePanel(EditorModulePanel& loader, support_t *support, ed::panel_info_t setup = {})
-        : IEditorPanel("Loader", setup)
+    StaticModulePanel(EditorModulePanel& loader, support_t *support)
+        : IEditorPanel("Loader")
         , loader(loader)
         , support(support)
     { }
@@ -278,8 +278,8 @@ class DynamicModulePanel final : public ed::IEditorPanel
     std::string os_error;
 
 public:
-    DynamicModulePanel(EditorModulePanel& loader, support_t *support, ed::panel_info_t setup = {})
-        : IEditorPanel("Loader", setup)
+    DynamicModulePanel(EditorModulePanel& loader, support_t *support)
+        : IEditorPanel("Loader")
         , loader(loader)
         , support(support)
     {
@@ -358,7 +358,7 @@ public:
         return gTheme == theme;
     }
 
-    bool menu_item(CTX_UNUSED const char *shortcut) override
+    bool menu_item(const char *) override
     {
         bool result = ImGui::MenuItem(get_title(), nullptr, is_selected(), !is_selected());
         if (result)
@@ -419,9 +419,6 @@ class EditorUi
 
     ed::FrontendInfoPanel version_info_panel { kFrontendGui };
 
-    ed::ImGuiDemoPanel imgui_demo_panel;
-    ed::ImPlotDemoPanel implot_demo_panel;
-
     EditorModulePanel module_panel;
     DynamicModulePanel dynamic_module_panel { module_panel, support };
     StaticModulePanel static_module_panel { module_panel, support };
@@ -454,7 +451,7 @@ class EditorUi
                 },
                 menu_section_t {
                     .name = "Demo",
-                    .panels = { &imgui_demo_panel, &implot_demo_panel }
+                    .panels = { ed::create_imgui_demo_panel(), ed::create_implot_demo_panel() }
                 }
             }
         };
@@ -507,13 +504,13 @@ class EditorUi
         }
     }
 
-    std::vector<ed::SourceView> sources;
+    std::vector<std::unique_ptr<ed::SourceView>> sources;
 
     void draw_source_files()
     {
         for (auto &source : sources)
         {
-            source.draw_content();
+            source->draw_content();
         }
     }
 
@@ -638,9 +635,9 @@ private:
                 {
                     bool open = true;
                     auto &source = sources[i];
-                    if (ImGui::BeginTabItem(source.get_basename(), &open))
+                    if (ImGui::BeginTabItem(source->get_basename(), &open))
                     {
-                        source.draw_content();
+                        source->draw_content();
                         ImGui::EndTabItem();
                     }
 
@@ -653,7 +650,7 @@ private:
                 if (index != SIZE_MAX)
                 {
                     // TODO: remove the source file
-                    //sources.erase(sources.begin() + (ptrdiff_t)index);
+                    sources.erase(sources.begin() + (ptrdiff_t)index);
                 }
 
                 ImGui::EndTabBar();
@@ -667,7 +664,7 @@ private:
         {
             for (const fs::path &file : file_browser.GetMultiSelected())
             {
-                sources.emplace_back(file);
+                sources.emplace_back(std::make_unique<ed::SourceView>(file));
             }
 
             file_browser.ClearSelected();

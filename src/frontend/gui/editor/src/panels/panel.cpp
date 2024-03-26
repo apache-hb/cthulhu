@@ -5,9 +5,9 @@
 
 using namespace ed;
 
-IEditorPanel::IEditorPanel(std::string_view name, panel_info_t setup)
+IEditorPanel::IEditorPanel(std::string_view name)
     : name(name)
-    , visible(setup.open_on_start)
+    , visible(false)
 { }
 
 bool IEditorPanel::draw_window()
@@ -25,9 +25,8 @@ bool IEditorPanel::draw_window()
 
 void IEditorPanel::draw()
 {
-    ImGui::PushID(this);
+    ScopeID id(this);
     draw_content();
-    ImGui::PopID();
 }
 
 bool IEditorPanel::menu_item(const char *shortcut)

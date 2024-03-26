@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
+#include "editor/panels/panel.hpp"
 #include "stdafx.hpp"
 
 #include "editor/config.hpp"
@@ -336,7 +337,7 @@ void draw_config_group_fields(cfg_group_t *group)
 
 void draw_config_group(cfg_group_t *group)
 {
-    ImGui::PushID(group);
+    ScopeID id(group);
 
     ImGui::TableNextColumn();
 
@@ -358,8 +359,6 @@ void draw_config_group(cfg_group_t *group)
 
         ImGui::TreePop();
     }
-
-    ImGui::PopID();
 }
 
 void ed::draw_config_panel(cfg_group_t *config)

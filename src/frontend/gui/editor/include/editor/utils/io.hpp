@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 #pragma once
 
-#include "editor/utils/utils.hpp"
-
 #include "io/io.h"
 
 namespace ctu

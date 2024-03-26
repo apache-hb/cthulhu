@@ -37,9 +37,9 @@ size_t TraceArena::add_backtrace(const backtrace_t& trace)
     return index;
 }
 
-TraceArena::TraceArena(const char *id, draw_mode_t default_mode, bool stacktrace, panel_info_t setup)
+TraceArena::TraceArena(const char *id, draw_mode_t default_mode, bool stacktrace)
     : IArena(id)
-    , IEditorPanel(id, setup)
+    , IEditorPanel(id)
     , draw_mode(default_mode)
     , enable_stacktrace(stacktrace)
 { }
@@ -329,10 +329,10 @@ void TraceArena::draw_backtrace(bt_address_t it) const
 
 void TraceArena::draw_name(const alloc_info_t& info) const
 {
-    ImGui::PushID((void*)&info);
-    if (info.name)
+    ScopeID scope(info.name.c_str());
+    if (!info.name.empty())
     {
-        ImGui::Text("%s", info.name);
+        ImGui::Text("%s", info.name.c_str());
     }
     else
     {
@@ -351,17 +351,16 @@ void TraceArena::draw_name(const alloc_info_t& info) const
         }
         ImGui::EndPopup();
     }
-    ImGui::PopID();
 }
 
 void TraceArena::draw_extern_name(const void *ptr) const
 {
     if (auto it = allocs.find(ptr); it != allocs.end())
     {
-        const char *id = it->second.name;
-        if (id != nullptr)
+        const auto& info = it->second;
+        if (!info.name.empty())
         {
-            ImGui::Text("%s (external)", id);
+            ImGui::Text("%s (external)", info.name.c_str());
         }
         else
         {
@@ -509,7 +508,7 @@ void TraceArena::draw_flat() const
         ImGui::TableSetupScrollFreeze(0, 1);
         ImGui::TableHeadersRow();
 
-        for (auto& [ptr, info] : allocs)
+        for (const auto& [ptr, info] : allocs)
         {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();

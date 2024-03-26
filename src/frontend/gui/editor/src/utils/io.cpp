@@ -20,7 +20,11 @@ const char *OsError::what() const
 {
     if (failed() && msg.empty())
     {
-        msg = os_error_string(error, get_global_arena());
+        size_t size = os_error_get_string(error, nullptr, 0);
+        msg.resize(size);
+
+        size_t written = os_error_get_string(error, msg.data(), size);
+        msg.resize(written);
     }
 
     return msg.c_str();

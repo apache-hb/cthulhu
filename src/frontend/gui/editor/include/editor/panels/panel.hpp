@@ -3,22 +3,16 @@
 
 #include "imgui.h"
 
+#include "editor/utils/utils.hpp"
+
 #include <string>
 
 namespace ed
 {
-    struct panel_info_t
-    {
-        bool open_on_start = false;
-    };
-
     class ScopeID
     {
-        ScopeID(const ScopeID&) = delete;
-        ScopeID& operator=(const ScopeID&) = delete;
-
-        ScopeID(ScopeID&&) = delete;
-        ScopeID& operator=(ScopeID&&) = delete;
+        CTU_NOCOPY(ScopeID);
+        CTU_NOMOVE(ScopeID);
     public:
         ScopeID(const void *ptr) { ImGui::PushID(ptr); }
         ScopeID(int i) { ImGui::PushID(i); }
@@ -40,7 +34,7 @@ namespace ed
         void set_enabled(bool value) { enabled = value; }
 
     public:
-        IEditorPanel(std::string_view name, panel_info_t setup = {});
+        IEditorPanel(std::string_view name);
 
         virtual ~IEditorPanel() = default;
 
@@ -60,23 +54,8 @@ namespace ed
         bool is_enabled() const { return enabled; }
     };
 
-    class ImGuiDemoPanel final : public IEditorPanel
-    {
-    public:
-        // IEditorPanel
-        bool draw_window() override;
-
-        ImGuiDemoPanel(panel_info_t setup = {});
-    };
-
-    class ImPlotDemoPanel final : public IEditorPanel
-    {
-    public:
-        // IEditorPanel
-        bool draw_window() override;
-
-        ImPlotDemoPanel(panel_info_t setup = {});
-    };
+    IEditorPanel *create_imgui_demo_panel();
+    IEditorPanel *create_implot_demo_panel();
 
     // draw the content with a SeperatorText(get_title()) before it
     void draw_seperated(IEditorPanel& panel, const char *title = nullptr);

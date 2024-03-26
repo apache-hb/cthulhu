@@ -48,7 +48,7 @@ namespace ed
             size_t size; // the size of the allocation
             size_t trace; // index into traces
 
-            const char *name; // the name of the allocation
+            std::string name; // the name of the allocation
             const void *parent; // the parent of the allocation
         };
 
@@ -152,7 +152,7 @@ namespace ed
         /// @param default_mode the default draw mode for the panel
         /// @param stacktrace whether to capture stack traces
         /// @param setup the setup for the panel
-        TraceArena(const char *id, draw_mode_t default_mode, bool stacktrace, panel_info_t setup = {});
+        TraceArena(const char *id, draw_mode_t default_mode, bool stacktrace);
 
         // TraceArena
         void draw_info();
