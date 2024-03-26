@@ -37,8 +37,17 @@ arena_t *ctx_get_ast_arena(const scan_t *scan)
 
 vector_t *ctx_vector_init(void *init, const scan_t *scan)
 {
-    scan_context_t *ctx = scan_get_context(scan);
-    return vector_init(init, ctx->arena);
+    return vector_init(init, ctx_get_arena(scan));
+}
+
+vector_t *ctx_vector_new(size_t size, const scan_t *scan)
+{
+    return vector_new(size, ctx_get_arena(scan));
+}
+
+vector_t *ctx_vector_of(size_t size, const scan_t *scan)
+{
+    return vector_of(size, ctx_get_arena(scan));
 }
 
 void *ctx_get_user(const scan_t *scan)

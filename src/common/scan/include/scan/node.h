@@ -64,7 +64,9 @@ CT_SCAN_API node_t *node_new(const scan_t *scan, where_t where);
 ///
 /// @return the builtin node
 CT_NODISCARD CT_PUREFN
-CT_SCAN_API node_t *node_builtin(IN_STRING const char *name, IN_NOTNULL arena_t *arena);
+CT_SCAN_API node_t *node_builtin(
+    IN_STRING const char *name,
+    IN_NOTNULL arena_t *arena);
 
 /// @brief check if a node is the builtin node
 ///

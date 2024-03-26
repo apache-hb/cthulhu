@@ -21,7 +21,7 @@ CT_BEGIN_API
 ///
 /// @param where a pointer to the current location
 /// @param text current source text
-CT_INTEROP_API void flex_action(IN_NOTNULL where_t *where, IN_STRING const char *text);
+CT_INTEROP_API void flex_action(INOUT_NOTNULL where_t *where, IN_STRING const char *text);
 
 /// @brief retrevies more input for flex
 ///
@@ -30,19 +30,19 @@ CT_INTEROP_API void flex_action(IN_NOTNULL where_t *where, IN_STRING const char 
 /// @param size total number of characters to write
 ///
 /// @return number of characters written
-CT_INTEROP_API int flex_input(IN_NOTNULL scan_t *scan, OUT_WRITES(size) char *out, int size);
+CT_INTEROP_API int flex_input(INOUT_NOTNULL scan_t *scan, OUT_WRITES(size) char *out, int size);
 
 /// @brief initialize source location tracking
 ///
 /// @param where the source location to initialize
-CT_INTEROP_API void flex_init(IN_NOTNULL where_t *where);
+CT_INTEROP_API void flex_init(OUT_NOTNULL where_t *where);
 
 /// @brief update the source location
 ///
 /// @param where the source location to update
 /// @param offsets the source location offsets
 /// @param steps the number of steps to update by
-CT_INTEROP_API void flex_update(IN_NOTNULL where_t *where, IN_READS(steps) const where_t *offsets, int steps);
+CT_INTEROP_API void flex_update(INOUT_NOTNULL where_t *where, IN_READS(steps) const where_t *offsets, int steps);
 
 /// track source locations inside flex and bison
 #ifndef YY_USER_ACTION

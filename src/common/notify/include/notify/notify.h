@@ -125,8 +125,8 @@ CT_NOTIFY_API void logger_reset(IN_NOTNULL logger_t *logs);
 /// @return the new event builder
 CT_PRINTF(4, 5)
 CT_NOTIFY_API event_builder_t msg_notify(
-    IN_NOTNULL logger_t *logs,
-    const diagnostic_t *diagnostic,
+    INOUT_NOTNULL logger_t *logs,
+    IN_NOTNULL const diagnostic_t *diagnostic,
     const node_t *node,
     CT_FMT_STRING const char *fmt, ...);
 
@@ -140,7 +140,7 @@ CT_NOTIFY_API event_builder_t msg_notify(
 ///
 /// @return the new event
 CT_NOTIFY_API event_builder_t msg_vnotify(
-    IN_NOTNULL logger_t *logs,
+    INOUT_NOTNULL logger_t *logs,
     IN_NOTNULL const diagnostic_t *diagnostic,
     const node_t *node,
     const char *fmt, va_list args);

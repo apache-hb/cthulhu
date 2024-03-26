@@ -104,8 +104,9 @@ typedef struct parse_result_t
 /// @param callbacks the flex/bison callbacks
 ///
 /// @return the parse result
-CT_INTEROP_API parse_result_t scan_buffer(IN_NOTNULL scan_t *extra,
-                                          IN_NOTNULL const scan_callbacks_t *callbacks);
+CT_INTEROP_API parse_result_t scan_buffer(
+    IN_NOTNULL scan_t *extra,
+    IN_NOTNULL const scan_callbacks_t *callbacks);
 
 /// @}
 

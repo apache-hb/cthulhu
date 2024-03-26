@@ -23,7 +23,7 @@ CT_BEGIN_API
 typedef struct scan_t
 {
     /// @brief the backing io object
-    /// this will be NULL if the scanner is a builtin scanner
+    /// @note this will be NULL if the scanner is a builtin scanner
     io_t *io;
 
     /// @brief the allocator to use
@@ -95,6 +95,7 @@ CT_SCAN_API void scan_set_context(IN_NOTNULL scan_t *scan, void *value);
 /// @param scan the scanner to get the context of
 ///
 /// @return the context of @p scan
+CT_NODISCARD CT_PUREFN
 CT_SCAN_API void *scan_get_context(IN_NOTNULL const scan_t *scan);
 
 /// @brief get a text span of the scanners contents
@@ -121,7 +122,10 @@ CT_SCAN_API arena_t *scan_get_arena(IN_NOTNULL const scan_t *scan);
 ///
 /// @return the number of bytes read
 CT_NODISCARD RET_RANGE(0, size) CT_NOALIAS
-CT_SCAN_API size_t scan_read(IN_NOTNULL scan_t *scan, OUT_WRITES(size) void *dst, size_t size);
+CT_SCAN_API size_t scan_read(
+    IN_NOTNULL scan_t *scan,
+    OUT_WRITES(size) void *dst,
+    size_t size);
 
 /// @brief create a scanner from an io source
 ///
@@ -131,9 +135,10 @@ CT_SCAN_API size_t scan_read(IN_NOTNULL scan_t *scan, OUT_WRITES(size) void *dst
 ///
 /// @return the created scanner
 CT_NODISCARD
-CT_SCAN_API scan_t *scan_io(IN_STRING const char *language,
-                IN_NOTNULL io_t *io,
-                IN_NOTNULL arena_t *arena);
+CT_SCAN_API scan_t *scan_io(
+    IN_STRING const char *language,
+    IN_NOTNULL io_t *io,
+    IN_NOTNULL arena_t *arena);
 
 /// @brief create a builtin scanner
 ///

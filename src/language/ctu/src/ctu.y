@@ -214,7 +214,7 @@ importAlias: %empty { $$ = NULL; }
 
 /* decorators */
 
-attribs: %empty { $$ = vector_new(4, BISON_ARENA(x)); }
+attribs: %empty { $$ = ctx_vector_new(4, x); }
     | attribs attrib { vector_append(&$1, $2); $$ = $1; }
     ;
 
@@ -370,7 +370,7 @@ opt_type_list: %empty { $$ = &kEmptyVector; }
 
 /* statements */
 
-stmt_list: %empty { $$ = vector_of(0, BISON_ARENA(x)); }
+stmt_list: %empty { $$ = ctx_vector_of(0, x); }
     | stmt_list stmt { vector_push(&$1, $2); $$ = $1; }
     ;
 

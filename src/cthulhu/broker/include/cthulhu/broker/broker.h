@@ -215,7 +215,7 @@ typedef void (*target_create_t)(target_runtime_t *runtime);
 typedef void (*target_destroy_t)(target_runtime_t *runtime);
 
 /// @brief tree output generation
-typedef void (*target_tree_t)(target_runtime_t *runtime, tree_t *tree);
+typedef void (*target_tree_t)(target_runtime_t *runtime, const tree_t *tree, target_emit_t *emit);
 
 /// @brief ssa output generation
 typedef void (*target_ssa_t)(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *emit);
