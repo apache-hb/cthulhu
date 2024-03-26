@@ -13,21 +13,6 @@
 #include <string.h>
 
 USE_DECL
-os_error_t os_file_create(const char *path)
-{
-    CTASSERT(path != NULL);
-
-    FILE *fd = fopen(path, "wb+");
-    if (fd != NULL)
-    {
-        fclose(fd);
-        return 0;
-    }
-
-    return errno;
-}
-
-USE_DECL
 os_error_t os_file_delete(const char *path)
 {
     CTASSERT(path != NULL);
@@ -37,7 +22,7 @@ os_error_t os_file_delete(const char *path)
         return errno;
     }
 
-    return errno;
+    return 0;
 }
 
 USE_DECL

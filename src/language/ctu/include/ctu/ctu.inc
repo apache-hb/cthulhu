@@ -22,6 +22,15 @@ NEW_EVENT(InvalidDereference, {
         "You can only dereference pointers.\n",
 })
 
+NEW_EVENT(EmptyAggregate, {
+    .severity = eSeverityFatal,
+    .id = "CTU0003",
+    .brief = "empty aggregate",
+    .description =
+        "empty aggregate.\n"
+        "Aggregates must have at least one member.\n",
+})
+
 #undef NEW_EVENT
 
 #ifndef DECL_TAG

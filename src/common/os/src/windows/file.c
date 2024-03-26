@@ -155,8 +155,8 @@ os_error_t os_file_read(os_file_t *file, void *buffer, size_t size, size_t *actu
 {
     CTASSERT(file != NULL);
     CTASSERT(buffer != NULL);
-    CTASSERTF(size <= UINT32_MAX, "cannot read more than %u bytes at once (%zu is too big)", UINT32_MAX, size);
     CTASSERT(actual != NULL);
+    CTASSERTF(size <= UINT32_MAX, "cannot read more than %u bytes at once (%zu is too big)", UINT32_MAX, size);
 
     DWORD read_size = 0;
     BOOL result = ReadFile(file->file, buffer, (DWORD)size, &read_size, NULL);

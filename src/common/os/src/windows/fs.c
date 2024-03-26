@@ -14,37 +14,6 @@
 #   include <winerror.h>
 #endif
 
-// TODO: this feels janky
-USE_DECL
-os_error_t os_file_create(const char *path)
-{
-    HANDLE handle = CreateFile(
-        /* lpFileName = */ path,
-        /* dwDesiredAccess = */ GENERIC_WRITE,
-        /* dwShareMode = */ FILE_SHARE_READ,
-        /* lpSecurityAttributes = */ NULL,
-        /* dwCreationDisposition = */ CREATE_NEW,
-        /* dwFlagsAndAttributes = */ FILE_ATTRIBUTE_NORMAL,
-        /* hTemplateFile = */ NULL);
-
-    bool valid = handle != INVALID_HANDLE_VALUE;
-
-    if (!valid)
-    {
-        DWORD error = GetLastError();
-        if (error != ERROR_ALREADY_EXISTS)
-        {
-            return error;
-        }
-    }
-    else
-    {
-        CloseHandle(handle);
-    }
-
-    return ERROR_SUCCESS;
-}
-
 USE_DECL
 os_error_t os_file_delete(const char *path)
 {

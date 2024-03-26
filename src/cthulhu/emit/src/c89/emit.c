@@ -213,7 +213,11 @@ static void define_enum(io_t *io, const ssa_type_t *type, c89_emit_t *emit)
     io_printf(io, "typedef %s;\n", tydef);
 
     io_printf(io, "enum %s_cases_t { /* %zu cases */\n", type->name, len);
-    for (size_t i = 0; i < len; i++)
+    if (len == 0)
+    {
+        io_printf(io, "\te%s_empty = 0,\n", type->name);
+    }
+    else for (size_t i = 0; i < len; i++)
     {
         const ssa_case_t *field = typevec_offset(it.cases, i);
 

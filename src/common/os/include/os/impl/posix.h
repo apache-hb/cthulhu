@@ -2,9 +2,9 @@
 
 #pragma once
 
+#include <errno.h>
 #include <stdio.h>
 #include <dirent.h>
-#include <errno.h>
 
 typedef void *os_library_impl_t;
 typedef FILE *os_file_impl_t;

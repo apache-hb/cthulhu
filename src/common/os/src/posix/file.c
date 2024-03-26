@@ -95,7 +95,6 @@ os_error_t os_tmpfile_open(os_file_t *file)
 
     *file = result;
     return 0;
-
 }
 
 os_error_t os_file_close(os_file_t *file)
@@ -232,7 +231,6 @@ os_error_t os_file_tell(os_file_t *file, size_t *actual)
 
 static int get_mmap_prot(os_protect_t protect)
 {
-    // TODO: i hope prot_none is 0
     int result = PROT_NONE;
 
     if (protect & eOsProtectRead)

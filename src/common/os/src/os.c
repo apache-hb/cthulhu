@@ -91,6 +91,21 @@ const char *os_file_name(const os_file_t *file)
     return file->path;
 }
 
+USE_DECL
+os_error_t os_file_create(const char *path)
+{
+    CTASSERT(path != NULL);
+
+    os_file_t fd = { 0 };
+    os_error_t err = os_file_open(path, eOsAccessWrite | eOsAccessTruncate, &fd);
+    if (err != eOsSuccess)
+    {
+        return err;
+    }
+
+    return os_file_close(&fd);
+}
+
 ///
 /// directory iteration operations
 ///
