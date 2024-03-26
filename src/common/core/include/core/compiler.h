@@ -147,8 +147,7 @@
 #   define CT_EXPORT __declspec(dllexport)
 #   define CT_IMPORT __declspec(dllimport)
 #   define CT_LOCAL
-#elif __GNUC__ >= 4 || defined(__clang__)
-// also check for clang here because we may not be using clang-cl
+#elif __GNUC__ >= 4
 #   define CT_EXPORT __attribute__((visibility("default")))
 #   define CT_IMPORT
 #   define CT_LOCAL __attribute__((visibility("internal")))

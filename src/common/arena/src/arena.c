@@ -173,10 +173,6 @@ void arena_rename(const void *ptr, const char *name, arena_t *arena)
     {
         arena->fn_rename(ptr, name, arena_data(arena));
     }
-    else if (arena->parent != NULL)
-    {
-        arena_rename(ptr, name, arena->parent);
-    }
 }
 
 USE_DECL
@@ -189,10 +185,6 @@ void arena_reparent(const void *ptr, const void *parent, arena_t *arena)
     if (arena->fn_reparent != NULL)
     {
         arena->fn_reparent(ptr, parent, arena_data(arena));
-    }
-    else if (arena->parent != NULL)
-    {
-        arena_reparent(ptr, parent, arena->parent);
     }
 }
 

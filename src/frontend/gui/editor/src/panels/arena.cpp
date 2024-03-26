@@ -37,10 +37,11 @@ size_t TraceArena::add_backtrace(const backtrace_t& trace)
     return index;
 }
 
-TraceArena::TraceArena(const char *id, draw_mode_t default_mode, panel_info_t setup)
+TraceArena::TraceArena(const char *id, draw_mode_t default_mode, bool stacktrace, panel_info_t setup)
     : IArena(id)
     , IEditorPanel(id, setup)
     , draw_mode(default_mode)
+    , enable_stacktrace(stacktrace)
 { }
 
 void *TraceArena::malloc(size_t size)
@@ -151,7 +152,9 @@ void TraceArena::create_alloc(void *ptr, size_t size)
     live_memory_usage += size;
     allocs[ptr].event = counter++;
     allocs[ptr].size = size;
-    allocs[ptr].trace = add_backtrace(trace);
+
+    if (enable_stacktrace)
+        allocs[ptr].trace = add_backtrace(trace);
 
     live_allocs.insert(ptr);
 }
@@ -338,7 +341,14 @@ void TraceArena::draw_name(const alloc_info_t& info) const
 
     if (ImGui::BeginPopupContextItem("TracePopup"))
     {
-        draw_backtrace(info.trace);
+        if (enable_stacktrace)
+        {
+            draw_backtrace(info.trace);
+        }
+        else
+        {
+            ImGui::TextDisabled("Stacktrace collection disabled");
+        }
         ImGui::EndPopup();
     }
     ImGui::PopID();

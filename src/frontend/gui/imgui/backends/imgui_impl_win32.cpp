@@ -189,8 +189,8 @@ static bool ImGui_ImplWin32_InitEx(void* hwnd, bool platform_has_own_dc)
         if (HMODULE dll = ::LoadLibraryA(xinput_dll_names[n]))
         {
             bd->XInputDLL = dll;
-            bd->XInputGetCapabilities = (PFN_XInputGetCapabilities)::GetProcAddress(dll, "XInputGetCapabilities");
-            bd->XInputGetState = (PFN_XInputGetState)::GetProcAddress(dll, "XInputGetState");
+            bd->XInputGetCapabilities = (PFN_XInputGetCapabilities)(void*)::GetProcAddress(dll, "XInputGetCapabilities");
+            bd->XInputGetState = (PFN_XInputGetState)(void*)::GetProcAddress(dll, "XInputGetState");
             break;
         }
 #endif // IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
@@ -840,7 +840,7 @@ static BOOL _IsWindowsVersionOrGreater(WORD major, WORD minor, WORD)
     static PFN_RtlVerifyVersionInfo RtlVerifyVersionInfoFn = nullptr;
 	if (RtlVerifyVersionInfoFn == nullptr)
 		if (HMODULE ntdllModule = ::GetModuleHandleA("ntdll.dll"))
-			RtlVerifyVersionInfoFn = (PFN_RtlVerifyVersionInfo)GetProcAddress(ntdllModule, "RtlVerifyVersionInfo");
+			RtlVerifyVersionInfoFn = (PFN_RtlVerifyVersionInfo)(void*)::GetProcAddress(ntdllModule, "RtlVerifyVersionInfo");
     if (RtlVerifyVersionInfoFn == nullptr)
         return FALSE;
 
@@ -884,7 +884,7 @@ void ImGui_ImplWin32_EnableDpiAwareness()
     if (_IsWindows10OrGreater())
     {
         static HINSTANCE user32_dll = ::LoadLibraryA("user32.dll"); // Reference counted per-process
-        if (PFN_SetThreadDpiAwarenessContext SetThreadDpiAwarenessContextFn = (PFN_SetThreadDpiAwarenessContext)::GetProcAddress(user32_dll, "SetThreadDpiAwarenessContext"))
+        if (PFN_SetThreadDpiAwarenessContext SetThreadDpiAwarenessContextFn = (PFN_SetThreadDpiAwarenessContext)(void*)::GetProcAddress(user32_dll, "SetThreadDpiAwarenessContext"))
         {
             SetThreadDpiAwarenessContextFn(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
             return;
@@ -893,7 +893,7 @@ void ImGui_ImplWin32_EnableDpiAwareness()
     if (_IsWindows8Point1OrGreater())
     {
         static HINSTANCE shcore_dll = ::LoadLibraryA("shcore.dll"); // Reference counted per-process
-        if (PFN_SetProcessDpiAwareness SetProcessDpiAwarenessFn = (PFN_SetProcessDpiAwareness)::GetProcAddress(shcore_dll, "SetProcessDpiAwareness"))
+        if (PFN_SetProcessDpiAwareness SetProcessDpiAwarenessFn = (PFN_SetProcessDpiAwareness)(void*)::GetProcAddress(shcore_dll, "SetProcessDpiAwareness"))
         {
             SetProcessDpiAwarenessFn(PROCESS_PER_MONITOR_DPI_AWARE);
             return;
@@ -916,7 +916,7 @@ float ImGui_ImplWin32_GetDpiScaleForMonitor(void* monitor)
 		static HINSTANCE shcore_dll = ::LoadLibraryA("shcore.dll"); // Reference counted per-process
 		static PFN_GetDpiForMonitor GetDpiForMonitorFn = nullptr;
 		if (GetDpiForMonitorFn == nullptr && shcore_dll != nullptr)
-            GetDpiForMonitorFn = (PFN_GetDpiForMonitor)::GetProcAddress(shcore_dll, "GetDpiForMonitor");
+            GetDpiForMonitorFn = (PFN_GetDpiForMonitor)(void*)::GetProcAddress(shcore_dll, "GetDpiForMonitor");
 		if (GetDpiForMonitorFn != nullptr)
 		{
 			GetDpiForMonitorFn((HMONITOR)monitor, MDT_EFFECTIVE_DPI, &xdpi, &ydpi);

@@ -33,6 +33,7 @@ static FrameContext                 g_frameContext[NUM_FRAMES_IN_FLIGHT] = {};
 static UINT                         g_frameIndex = 0;
 
 static int const                    NUM_BACK_BUFFERS = 3;
+static IDXGIAdapter3*               g_adapter = nullptr;
 static ID3D12Device*                g_pd3dDevice = nullptr;
 static ID3D12DescriptorHeap*        g_pd3dRtvDescHeap = nullptr;
 static ID3D12DescriptorHeap*        g_pd3dSrvDescHeap = nullptr;
@@ -59,7 +60,7 @@ FrameContext* WaitForNextFrameResources();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // Helper functions
-bool CreateDeviceD3D(HWND hWnd)
+bool CreateDeviceD3D(HWND hWnd, bool use_warp_adapter)
 {
     // Setup swap chain
     DXGI_SWAP_CHAIN_DESC1 sd;
@@ -86,9 +87,19 @@ bool CreateDeviceD3D(HWND hWnd)
         pdx12Debug->EnableDebugLayer();
 #endif
 
+    if (use_warp_adapter)
+    {
+        IDXGIFactory4* dxgiFactory = nullptr;
+        if (CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory)) != S_OK)
+            return false;
+        if (dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&g_adapter)) != S_OK)
+            return false;
+        dxgiFactory->Release();
+    }
+
     // Create device
     D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_0;
-    if (D3D12CreateDevice(nullptr, featureLevel, IID_PPV_ARGS(&g_pd3dDevice)) != S_OK)
+    if (D3D12CreateDevice(g_adapter, featureLevel, IID_PPV_ARGS(&g_pd3dDevice)) != S_OK)
         return false;
 
     // [DEBUG] Setup debug interface to break on any warnings/errors
@@ -198,6 +209,8 @@ void CleanupDeviceD3D()
         pDebug->Release();
     }
 #endif
+
+    if (g_adapter) { g_adapter->Release(); g_adapter = nullptr; }
 }
 
 void CreateRenderTarget()
@@ -294,13 +307,13 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return ::DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
-bool draw::create(const wchar_t *title)
+bool draw::create(const config_t& config)
 {
     // Create application window
     //ImGui_ImplWin32_EnableDpiAwareness();
     wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ImGui Example", nullptr };
     ::RegisterClassExW(&wc);
-    hwnd = ::CreateWindowW(wc.lpszClassName, title, WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, nullptr, nullptr, wc.hInstance, nullptr);
+    hwnd = ::CreateWindowW(wc.lpszClassName, config.title, WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, nullptr, nullptr, wc.hInstance, nullptr);
 
     // center window
     RECT rc;
@@ -310,7 +323,7 @@ bool draw::create(const wchar_t *title)
     SetWindowPos(hwnd, 0, xPos, yPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 
     // Initialize Direct3D
-    if (!CreateDeviceD3D(hwnd))
+    if (!CreateDeviceD3D(hwnd, !config.hardware_acceleration))
     {
         CleanupDeviceD3D();
         ::UnregisterClassW(wc.lpszClassName, wc.hInstance);

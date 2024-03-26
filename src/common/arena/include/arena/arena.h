@@ -105,9 +105,6 @@ typedef struct arena_t
 
     /// @brief user data pointer
     void *user;
-
-    /// @brief parent arena
-    struct arena_t *parent;
 } arena_t;
 
 /// @brief release memory from a custom allocator

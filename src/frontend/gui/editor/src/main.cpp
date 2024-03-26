@@ -48,9 +48,9 @@ static const frontend_t kFrontendGui = {
     },
 };
 
-static ed::TraceArena gGlobalArena{"Global Arena", ed::TraceArena::eDrawTree};
-static ed::TraceArena gGmpArena{"GMP Arena", ed::TraceArena::eDrawFlat};
-static ed::TraceArena gGuiArena{"Dear ImGui Arena", ed::TraceArena::eDrawTree};
+static ed::TraceArena gGlobalArena{"Global Arena", ed::TraceArena::eDrawTree, true};
+static ed::TraceArena gGmpArena{"GMP Arena", ed::TraceArena::eDrawFlat, true};
+static ed::TraceArena gGuiArena{"Dear ImGui Arena", ed::TraceArena::eDrawTree, false};
 
 namespace ed
 {
@@ -659,7 +659,12 @@ int main(int argc, const char **argv)
     setup_global();
     ed::install_trace_arenas();
 
-    if (!draw::create(L"Editor"))
+    draw::config_t config = {
+        .title = L"Editor",
+        .hardware_acceleration = false,
+    };
+
+    if (!draw::create(config))
     {
         return 1;
     }

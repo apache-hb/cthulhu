@@ -2,7 +2,13 @@
 
 namespace draw
 {
-    bool create(const wchar_t *title);
+    struct config_t
+    {
+        const wchar_t *title = L"draw";
+        bool hardware_acceleration:1 = true;
+    };
+
+    bool create(const config_t& config);
     void destroy();
 
     bool begin_frame();

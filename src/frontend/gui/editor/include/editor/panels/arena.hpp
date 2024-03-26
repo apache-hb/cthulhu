@@ -95,6 +95,7 @@ namespace ed
 
         const frame_info_t& get_frame_info(bt_address_t address) const;
 
+        bool enable_stacktrace;
         std::vector<backtrace_t> traces;
         size_t add_backtrace(const backtrace_t& trace);
 
@@ -141,10 +142,16 @@ namespace ed
             eDrawTree,
 
             /// @brief draw the allocations as a flat list
-            eDrawFlat
+            eDrawFlat,
         };
 
-        TraceArena(const char *id, draw_mode_t default_mode, panel_info_t setup = {});
+        /// @brief the setup for the panel
+        ///
+        /// @param id the id of the panel
+        /// @param default_mode the default draw mode for the panel
+        /// @param stacktrace whether to capture stack traces
+        /// @param setup the setup for the panel
+        TraceArena(const char *id, draw_mode_t default_mode, bool stacktrace, panel_info_t setup = {});
 
         // TraceArena
         void draw_info();
