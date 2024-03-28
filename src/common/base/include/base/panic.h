@@ -3,6 +3,7 @@
 #pragma once
 
 #include <ctu_base_api.h>
+#include <ctu_config.h>
 
 #include "core/source_info.h"
 
@@ -13,11 +14,6 @@ CT_BEGIN_API
 /// @defgroup panic Assertions and panic handling
 /// @ingroup base
 /// @{
-
-#ifdef WITH_DOXYGEN
-#   define CTU_DEBUG 1
-#   define CTU_PARANOID 1
-#endif
 
 /// @def CTU_DEBUG
 /// @brief enable panic handling

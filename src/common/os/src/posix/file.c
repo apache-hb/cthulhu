@@ -95,8 +95,6 @@ os_error_t os_file_read(os_file_t *file, void *buffer, size_t size, size_t *actu
         }
     }
 
-    EVENT_FILE_READ(file, read);
-
     *actual = read;
     return 0;
 }
@@ -118,8 +116,6 @@ os_error_t os_file_write(os_file_t *file, const void *buffer, size_t size, size_
             return errno;
         }
     }
-
-    EVENT_FILE_WRITE(file, written);
 
     *actual = written;
     return errno;

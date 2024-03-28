@@ -3,6 +3,7 @@
 #pragma once
 
 #include <ctu_arena_api.h>
+#include <ctu_config.h>
 
 #include "core/analyze.h"
 #include "core/compiler.h"
@@ -20,10 +21,6 @@ CT_BEGIN_API
 /// for weaker garuntees, the @ref memory_opt functions can be used.
 /// @ingroup common
 /// @{
-
-#ifdef WITH_DOXYGEN
-#   define CTU_TRACE_MEMORY 1
-#endif
 
 /// @def CTU_TRACE_MEMORY
 /// @brief a compile time flag to enable memory tracing

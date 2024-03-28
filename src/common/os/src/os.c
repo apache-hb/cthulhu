@@ -144,8 +144,6 @@ os_error_t os_file_map(os_file_t *file, os_protect_t protect, size_t size, os_ma
         mapping->view = ptr;
     }
 
-    EVENT_MAPPING_OPEN(file, mapping);
-
     return err;
 }
 
@@ -153,8 +151,6 @@ USE_DECL
 os_error_t os_unmap(os_mapping_t *mapping)
 {
     CTASSERT(mapping != NULL);
-
-    EVENT_MAPPING_CLOSE(mapping);
 
     return impl_unmap(mapping);
 }
@@ -204,8 +200,6 @@ os_error_t os_library_open(const char *path, os_library_t *library)
     library->library = lib;
     library->name = path;
 
-    EVENT_LIBRARY_OPEN(library);
-
     return eOsSuccess;
 }
 
@@ -213,8 +207,6 @@ USE_DECL
 os_error_t os_library_close(os_library_t *library)
 {
     CTASSERT(library != NULL);
-
-    EVENT_LIBRARY_CLOSE(library);
 
     if (!impl_library_close(library->library))
     {
@@ -237,7 +229,6 @@ os_error_t os_library_symbol(os_library_t *library, os_symbol_t *symbol, const c
     }
 
     *symbol = addr;
-    EVENT_LIBRARY_SYMBOL(library, name, symbol);
 
     return eOsSuccess;
 }
@@ -271,8 +262,6 @@ os_error_t os_file_open(const char *path, os_access_t access, os_file_t *file)
     file->file = fd;
     file->path = path;
 
-    EVENT_FILE_OPEN(file);
-
     return eOsSuccess;
 }
 
@@ -281,8 +270,6 @@ os_error_t os_file_close(os_file_t *fd)
 {
     CTASSERT(fd != NULL);
     CTASSERTF(fd->file != CT_OS_INVALID_FILE, "invalid file handle (%s)", fd->path);
-
-    EVENT_FILE_CLOSE(fd);
 
     if (!impl_file_close(fd))
     {

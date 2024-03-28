@@ -7,14 +7,6 @@
 
 #include <stdint.h>
 
-#if CTU_WIN32_TRICKERY
-#   include <errhandlingapi.h>
-#   include <handleapi.h>
-#   include <fileapi.h>
-#   include <winbase.h>
-#   include <winerror.h>
-#endif
-
 os_error_t impl_copyfile(const char *dst, const char *src)
 {
     CTASSERT(dst != NULL);
@@ -139,8 +131,6 @@ os_error_t os_file_read(os_file_t *file, void *buffer, size_t size, size_t *actu
         return GetLastError();
     }
 
-    EVENT_FILE_READ(file, read);
-
     *actual = read;
     return 0;
 }
@@ -162,8 +152,6 @@ os_error_t os_file_write(os_file_t *file, const void *buffer, size_t size, size_
     {
         return GetLastError();
     }
-
-    EVENT_FILE_WRITE(file, written);
 
     *actual = written;
     return ERROR_SUCCESS;

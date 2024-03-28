@@ -6,14 +6,6 @@
 
 #include "os/os.h"
 
-#if CTU_WIN32_TRICKERY
-#   include <errhandlingapi.h>
-#   include <fileapi.h>
-#   include <handleapi.h>
-#   include <processenv.h>
-#   include <winerror.h>
-#endif
-
 USE_DECL
 os_error_t os_file_delete(const char *path)
 {
@@ -28,25 +20,23 @@ os_error_t os_file_delete(const char *path)
 }
 
 USE_DECL
-os_error_t os_dir_create(const char *path, bool *create)
+os_error_t os_dir_create(const char *path)
 {
     CTASSERT(path != NULL);
-    CTASSERT(create != NULL);
 
     bool result = CreateDirectoryA(path, NULL);
     if (!result)
     {
         DWORD error = GetLastError();
-        if (error != ERROR_ALREADY_EXISTS)
+        if (error == ERROR_ALREADY_EXISTS)
         {
-            return error;
+            return eOsExists;
         }
 
-        result = true;
+        return error;
     }
 
-    *create = result;
-    return 0;
+    return eOsSuccess;
 }
 
 USE_DECL

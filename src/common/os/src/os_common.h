@@ -11,28 +11,6 @@ typedef struct os_mapping_t os_mapping_t;
 CT_BEGIN_API
 
 ///
-/// event logging
-///
-
-#if CTU_EVENTS
-#   define EVENT_APPLY(fn, ...) do { if (gOsEvents.fn != NULL) gOsEvents.fn(__VA_ARGS__); } while (0)
-#else
-#   define EVENT_APPLY(fn, ...)
-#endif
-
-#define EVENT_FILE_OPEN(file) EVENT_APPLY(on_file_open, file)
-#define EVENT_FILE_CLOSE(file) EVENT_APPLY(on_file_close, file)
-#define EVENT_FILE_READ(file, size) EVENT_APPLY(on_file_read, file, size)
-#define EVENT_FILE_WRITE(file, size) EVENT_APPLY(on_file_write, file, size)
-
-#define EVENT_LIBRARY_OPEN(lib) EVENT_APPLY(on_library_open, lib)
-#define EVENT_LIBRARY_CLOSE(lib) EVENT_APPLY(on_library_close, lib)
-#define EVENT_LIBRARY_SYMBOL(lib, name, sym) EVENT_APPLY(on_library_symbol, lib, name, sym)
-
-#define EVENT_MAPPING_OPEN(file, map) EVENT_APPLY(on_mapping_open, file, map)
-#define EVENT_MAPPING_CLOSE(map) EVENT_APPLY(on_mapping_close, map)
-
-///
 /// provided by the platform implementation
 ///
 

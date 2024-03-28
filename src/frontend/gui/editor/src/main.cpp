@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-#include "editor/panels/events.hpp"
+#include "editor/panels/theme.hpp"
 #include "stdafx.hpp"
 
 // drawing library
@@ -27,10 +27,7 @@
 #include "support/support.h"
 
 #include "memory/memory.h"
-#include "interop/compile.h"
 #include "config/config.h"
-
-#include "io/io.h"
 
 #include "std/typed/vector.h"
 
@@ -55,76 +52,24 @@ static ed::TraceArena gGlobalArena{"Global Arena", ed::TraceArena::eDrawTree, tr
 static ed::TraceArena gGmpArena{"GMP Arena", ed::TraceArena::eDrawFlat, true};
 static ed::TraceArena gGuiArena{"Dear ImGui Arena", ed::TraceArena::eDrawTree, false};
 
-namespace ed
+static void *imgui_malloc(size_t size, void *user)
 {
-    static void *imgui_malloc(size_t size, void *user)
-    {
-        arena_t *arena = reinterpret_cast<arena_t*>(user);
-        return ARENA_OPT_MALLOC(size, "ImGui::MemAlloc", NULL, arena);
-    }
-
-    static void imgui_free(void *ptr, void *user)
-    {
-        arena_t *arena = reinterpret_cast<arena_t*>(user);
-        arena_opt_free(ptr, CT_ALLOC_SIZE_UNKNOWN, arena);
-    }
-
-    void install_trace_arenas()
-    {
-        init_global_arena(gGlobalArena.get_arena());
-        init_gmp_arena(gGmpArena.get_arena());
-        ImGui::SetAllocatorFunctions(imgui_malloc, imgui_free, gGuiArena.get_arena());
-    }
+    arena_t *arena = reinterpret_cast<arena_t*>(user);
+    return ARENA_OPT_MALLOC(size, "ImGui::MemAlloc", NULL, arena);
 }
 
-class SourceCode
+static void imgui_free(void *ptr, void *user)
 {
-    io_t *io = nullptr;
-    const char *path = nullptr;
-    const char *text = nullptr;
-    size_t size = 0;
+    arena_t *arena = reinterpret_cast<arena_t*>(user);
+    arena_opt_free(ptr, CT_ALLOC_SIZE_UNKNOWN, arena);
+}
 
-    io_error_t error = 0;
-    char *str = nullptr;
-    bool open = true;
-
-    void init()
-    {
-        path = io_name(io);
-
-        size = io_size(io);
-        text = (char*)io_map(io, eOsProtectRead);
-
-        error = io_error(io);
-        if (error)
-        {
-            str = os_error_string(error, get_global_arena());
-        }
-    }
-public:
-    SourceCode(io_t *io)
-        : io(io)
-    {
-        init();
-    }
-
-    void draw_body()
-    {
-        if (ImGui::BeginTabItem(path, &open, ImGuiTabItemFlags_None))
-        {
-            if (error)
-            {
-                ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "Error: %s", str);
-            }
-            else
-            {
-                ImGui::TextWrapped("%s", text);
-            }
-
-            ImGui::EndTabItem();
-        }
-    }
-};
+static void install_trace_arenas()
+{
+    init_global_arena(gGlobalArena.get_arena());
+    init_gmp_arena(gGmpArena.get_arena());
+    ImGui::SetAllocatorFunctions(imgui_malloc, imgui_free, gGuiArena.get_arena());
+}
 
 class EditorModulePanel : public ed::IEditorPanel
 {
@@ -331,51 +276,6 @@ public:
     }
 };
 
-enum theme_t {
-    eThemeDark,
-    eThemeLight,
-    eThemeClassic,
-
-    eThemeCount
-};
-
-static theme_t gTheme = eThemeDark;
-
-template<typename F>
-class ThemeMenuItem final : public ed::IEditorPanel
-{
-    theme_t theme;
-    F func;
-
-public:
-    ThemeMenuItem(const char *name, theme_t theme, F&& func)
-        : IEditorPanel(name)
-        , theme(theme)
-        , func(std::forward<F>(func))
-    { }
-
-    bool is_selected() const
-    {
-        return gTheme == theme;
-    }
-
-    bool menu_item(const char *) override
-    {
-        bool result = ImGui::MenuItem(get_title(), nullptr, is_selected(), !is_selected());
-        if (result)
-        {
-            gTheme = theme;
-            func();
-        }
-        return result;
-    }
-};
-
-static ed::IEditorPanel *theme_menu(const char *name, theme_t theme, auto&& func)
-{
-    return new ThemeMenuItem(name, theme, std::forward<decltype(func)>(func));
-}
-
 void draw_menu_items(ed::menu_section_t& section)
 {
     for (ed::IEditorPanel *panel : section.panels)
@@ -437,10 +337,6 @@ class EditorUi
                     .panels = { &gGlobalArena, &gGmpArena, &gGuiArena }
                 },
                 ed::menu_section_t {
-                    .name = "Events",
-                    .panels = { ed::create_events_panel() }
-                },
-                ed::menu_section_t {
                     .name = "Demo",
                     .panels = { ed::create_imgui_demo_panel(), ed::create_implot_demo_panel() }
                 }
@@ -450,9 +346,9 @@ class EditorUi
         ed::menu_t styles_menu = {
             .name = "Styles",
             .header = {
-                theme_menu("Dark", eThemeDark, []() { ImGui::StyleColorsDark(); ImPlot::StyleColorsDark(); }),
-                theme_menu("Light", eThemeLight, []() { ImGui::StyleColorsLight(); ImPlot::StyleColorsLight(); }),
-                theme_menu("Classic", eThemeClassic, []() { ImGui::StyleColorsClassic(); ImPlot::StyleColorsClassic(); }),
+                ed::dark_theme(),
+                ed::light_theme(),
+                ed::classic_theme(),
             }
         };
 
@@ -669,8 +565,7 @@ int main(int argc, const char **argv)
     CT_UNUSED(argv);
 
     setup_global();
-    ed::install_trace_arenas();
-    ed::init_events();
+    install_trace_arenas();
 
     draw::config_t config = {
         .title = L"Editor",

@@ -2,10 +2,6 @@
 
 #include "os_common.h"
 
-#if CTU_WIN32_TRICKERY
-#   include <winbase.h>
-#endif
-
 os_library_impl_t impl_library_open(const char *path)
 {
     return LoadLibraryA(path);

@@ -15,10 +15,6 @@
 
 #if CT_OS_WINDOWS
 #   include "core/win32.h" // IWYU pragma: keep
-#   if CTU_WIN32_TRICKERY
-#       include <windef.h>
-#       include <winnt.h>
-#   endif
 #   define CT_BIG_ENDIAN REG_DWORD_BIG_ENDIAN
 #   define CT_LITTLE_ENDIAN REG_DWORD_LITTLE_ENDIAN
 #   define CT_BYTE_ORDER REG_DWORD

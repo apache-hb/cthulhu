@@ -128,6 +128,18 @@ typedef void (*fs_dirent_callback_t)(const char *path, const char *name, os_dire
 
 CT_FS_API void fs_iter_dirents(fs_t *fs, const char *path, void *data, fs_dirent_callback_t callback);
 
+CT_FS_API os_error_t fs_iter_begin(
+    IN_NOTNULL fs_t *fs,
+    IN_STRING const char *path,
+    OUT_NOTNULL fs_iter_t **iter);
+
+CT_FS_API os_error_t fs_iter_end(
+    IN_NOTNULL fs_iter_t *iter);
+
+CT_FS_API os_error_t fs_iter_next(
+    IN_NOTNULL fs_iter_t *iter,
+    OUT_NOTNULL fs_inode_t **inode);
+
 /// @}
 
 CT_END_API

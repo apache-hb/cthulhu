@@ -53,22 +53,21 @@ bool inode_is(fs_inode_t *inode, os_dirent_t type)
 
 // helpers
 
-os_error_t mkdir_recursive(const char *path, bool *create, arena_t *arena)
+os_error_t mkdir_recursive(const char *path, arena_t *arena)
 {
     CTASSERT(path != NULL);
-    CTASSERT(create != NULL);
 
     size_t index = str_rfind(path, CT_NATIVE_PATH_SEPARATOR);
     if (index != SIZE_MAX)
     {
         // create parent directory
         char *parent = arena_strndup(path, index, arena);
-        os_error_t result = mkdir_recursive(parent, create, arena);
-        if (result != 0) { return result; }
+        os_error_t result = mkdir_recursive(parent, arena);
+        if (result != 0 && result != eOsExists) { return result; }
     }
 
     // create this directory
-    return os_dir_create(path, create);
+    return os_dir_create(path);
 }
 
 // fs api

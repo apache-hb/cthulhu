@@ -158,9 +158,8 @@ static inode_result_t pfs_file_create(fs_t *fs, fs_inode_t *self, const char *na
 static inode_result_t pfs_dir_create(fs_t *fs, fs_inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
-    bool create = false;
-    os_error_t err = mkdir_recursive(absolute, &create, fs->arena);
-    if (err != eOsSuccess)
+    os_error_t err = mkdir_recursive(absolute, fs->arena);
+    if (err != eOsSuccess && err != eOsExists)
     {
         inode_result_t result = { .error = err };
         return result;
@@ -203,13 +202,9 @@ fs_t *fs_physical(const char *root, arena_t *arena)
     bool exist = os_dir_exists(root);
     if (exist)
     {
-        bool create = false;
-        os_error_t err = mkdir_recursive(root, &create, arena);
+        os_error_t err = mkdir_recursive(root, arena);
 
-        // TODO: make this work recursively
-        CTASSERTF(err == 0, "error creating root directory: %s. %s", root, os_error_string(err, arena));
-
-        if (!create)
+        if (err != eOsSuccess && err != eOsExists)
         {
             return NULL;
         }

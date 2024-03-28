@@ -9,8 +9,7 @@ src = [
     'src/panels/info.cpp',
     'src/panels/arena.cpp',
     'src/panels/demo.cpp',
-    'src/panels/settings.cpp',
-    'src/panels/events.cpp',
+    'src/panels/theme.cpp',
 
     'src/utils/io.cpp',
 

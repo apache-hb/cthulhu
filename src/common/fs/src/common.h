@@ -65,7 +65,7 @@ CT_LOCAL void *inode_data(fs_inode_t *inode);
 CT_LOCAL bool inode_is(fs_inode_t *inode, os_dirent_t type);
 
 // helpers
-CT_LOCAL os_error_t mkdir_recursive(const char *path, bool *success, arena_t *arena);
+CT_LOCAL os_error_t mkdir_recursive(const char *path, arena_t *arena);
 
 // fs api
 

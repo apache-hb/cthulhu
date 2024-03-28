@@ -118,11 +118,12 @@ CT_OS_API os_error_t os_file_delete(IN_STRING const char *path);
 /// @brief check if a directory exists
 ///
 /// @param path the path to the directory to check
-/// @param create true if the directory was created, false if it already existed
 ///
 /// @return an error if the directory could not be checked
+/// @retval eOsSuccess if the directory was created
+/// @retval eOsExists if the directory already exists
 RET_INSPECT
-CT_OS_API os_error_t os_dir_create(IN_STRING const char *path, OUT_NOTNULL bool *create);
+CT_OS_API os_error_t os_dir_create(IN_STRING const char *path);
 
 /// @brief delete a directory
 ///
@@ -329,27 +330,6 @@ CT_OS_API bool os_mapping_active(INOUT_NOTNULL const os_mapping_t *mapping);
 /// @return the name of the file
 CT_NODISCARD
 CT_OS_API const char *os_file_name(INOUT_NOTNULL const os_file_t *file);
-
-#if CTU_EVENTS
-
-typedef struct os_events_t
-{
-    void (*on_file_open)(const os_file_t *file);
-    void (*on_file_close)(const os_file_t *file);
-    void (*on_file_read)(const os_file_t *file, size_t size);
-    void (*on_file_write)(const os_file_t *file, size_t size);
-
-    void (*on_library_open)(const os_library_t *library);
-    void (*on_library_close)(const os_library_t *library);
-    void (*on_library_symbol)(const os_library_t *library, const char *name, const os_symbol_t *symbol);
-
-    void (*on_mapping_open)(const os_file_t *file, const os_mapping_t *mapping);
-    void (*on_mapping_close)(const os_mapping_t *mapping);
-} os_events_t;
-
-CT_OS_API extern os_events_t gOsEvents;
-
-#endif
 
 /// @}
 

@@ -26,31 +26,26 @@ os_error_t os_file_delete(const char *path)
 }
 
 USE_DECL
-os_error_t os_dir_create(const char *path, bool *create)
+os_error_t os_dir_create(const char *path)
 {
     CTASSERT(path != NULL);
-    CTASSERT(create != NULL);
 
     // TODO: this is a bit of a hack to avoid a bug in mkdir_recursive
     // on linux it will pass an empty string into mkdir because of the leading `/`
     if (ctu_strlen(path) == 0)
     {
-        *create = true;
-        return 0;
+        return eOsSuccess;
     }
 
     if (mkdir(path, 0777) != 0)
     {
-        if (errno != EEXIST)
+        if (errno == EEXIST)
         {
-            return errno;
+            return eOsExists;
         }
-
-        errno = 0;
     }
 
-    *create = (errno == 0);
-    return 0;
+    return errno;
 }
 
 USE_DECL

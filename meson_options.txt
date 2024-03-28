@@ -15,23 +15,8 @@ option('lang_oberon', type : 'feature',
     value : 'auto'
 )
 
-option('lang_jvm', type : 'feature',
-    description : 'build the jvm language driver',
-    value : 'disabled'
-)
-
 option('lang_example', type : 'feature',
     description : 'build the example language driver',
-    value : 'auto'
-)
-
-option('lang_c', type : 'feature',
-    description : 'build the c language driver, implies lang_cpp',
-    value : 'auto'
-)
-
-option('lang_cpp', type : 'feature',
-    description : 'build the c preprocessor',
     value : 'auto'
 )
 
@@ -89,11 +74,6 @@ option('trace_memory', type : 'feature',
     value : 'auto'
 )
 
-option('events', type : 'feature',
-    description : 'enable event callbacks',
-    value : 'auto'
-)
-
 option('paranoid', type : 'feature',
     description : 'enable paranoid assertions',
     value : 'auto'
@@ -127,11 +107,6 @@ option('doxygen', type : 'feature',
 
 option('analyze', type : 'feature',
     description : 'enable static code analysis',
-    value : 'disabled'
-)
-
-option('win32_trickery', type : 'feature',
-    description : 'enable some slightly hacky win32 handling to speed up builds',
     value : 'disabled'
 )
 

@@ -4,13 +4,6 @@
 
 #include "core/macros.h"
 #include "core/win32.h" // IWYU pragma: keep
-
-#if CTU_WIN32_TRICKERY
-#   include <windef.h>
-#   include <winbase.h>
-#   include <verrsrc.h>
-#endif
-
 #include <dbghelp.h>
 
 #define MAX_NAME_SIZE 512

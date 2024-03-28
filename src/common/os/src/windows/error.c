@@ -9,11 +9,6 @@
 
 #include "core/win32.h" // IWYU pragma: keep
 
-#if CTU_WIN32_TRICKERY
-#   include <windef.h>
-#   include <winbase.h>
-#endif
-
 #define FORMAT_FLAGS (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS)
 
 os_error_t impl_last_error(void)

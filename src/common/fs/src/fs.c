@@ -461,3 +461,30 @@ void fs_iter_dirents(fs_t *fs, const char *path, void *data, fs_dirent_callback_
 
     iter_dirents(fs, query_inode(fs, fs->root, path), ".", path, data, callback);
 }
+
+USE_DECL
+os_error_t fs_iter_begin(fs_t *fs, const char *path, fs_iter_t **iter)
+{
+    CTASSERT(fs != NULL);
+    CTASSERT(path != NULL);
+    CTASSERT(iter != NULL);
+
+    return eOsSuccess;
+}
+
+USE_DECL
+os_error_t fs_iter_end(fs_iter_t *iter)
+{
+    CTASSERT(iter != NULL);
+
+    return eOsSuccess;
+}
+
+USE_DECL
+os_error_t fs_iter_next(fs_iter_t *iter, fs_inode_t **inode)
+{
+    CTASSERT(iter != NULL);
+    CTASSERT(inode != NULL);
+
+    return eOsSuccess;
+}

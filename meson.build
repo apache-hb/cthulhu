@@ -38,7 +38,6 @@ endif
 
 opt_paranoid = get_option('paranoid').disable_auto_if(is_release)
 opt_analyze = get_option('analyze').disable_auto_if(meson.is_subproject())
-win32_trickery = get_option('win32_trickery')
 trace_time = get_option('trace_time').disable_auto_if(meson.is_subproject())
 
 # disable stb_sprintf by default if we're a subproject, people may not
@@ -53,7 +52,6 @@ driver_tests = get_option('driver_tests').disable_auto_if(meson.is_subproject())
 warning_level = get_option('warning_level').to_int()
 
 trace_memory = get_option('trace_memory').disable_auto_if(is_release or meson.is_subproject())
-events = get_option('events').disable_auto_if(is_release or meson.is_subproject())
 
 # these are tools for internal use, so disable them in release mode
 tool_notify = get_option('tool_notify').disable_auto_if(is_release or meson.is_subproject())
@@ -70,10 +68,7 @@ frontend_example = get_option('frontend_example').disable_auto_if(meson.is_subpr
 lang_ctu = get_option('lang_ctu').disable_auto_if(meson.is_subproject())
 lang_pl0 = get_option('lang_pl0').disable_auto_if(meson.is_subproject())
 lang_oberon = get_option('lang_oberon').disable_auto_if(meson.is_subproject())
-lang_jvm = get_option('lang_jvm').disable_auto_if(meson.is_subproject())
 lang_example = get_option('lang_example').disable_auto_if(meson.is_subproject())
-lang_c = get_option('lang_c').disable_auto_if(meson.is_subproject())
-lang_cpp = get_option('lang_cpp').disable_auto_if(meson.is_subproject())
 
 # all the codegen targets
 target_cfamily = get_option('target_cfamily').disable_auto_if(meson.is_subproject())
@@ -114,7 +109,6 @@ config_cdata.set('CTU_PATCH', parts[2].to_int())
 config_cdata.set10('CTU_DEBUG', is_debug)
 config_cdata.set10('CTU_PARANOID', opt_paranoid.allowed())
 config_cdata.set10('CTU_BUILD_SHARED', default_library == 'shared')
-config_cdata.set10('CTU_WIN32_TRICKERY', win32_trickery.allowed())
 
 # we use `__attribute__((const|pure))` heavily, but during unit tests we
 # violate function preconditions to test assertions.
@@ -127,7 +121,6 @@ config_cdata.set10('CTU_HAS_PRETTY_FUNCTION', warning_level < 3)
 
 config_cdata.set10('CTU_TRACE_MEMORY', trace_memory.allowed())
 config_cdata.set10('CTU_STB_SPRINTF', opt_stb_sprintf.allowed())
-config_cdata.set10('CTU_EVENTS', events.allowed())
 
 # args for all code
 all_args = cc.get_supported_arguments(
@@ -371,13 +364,12 @@ build_summary = {
         'Paranoid asserts': opt_paranoid.allowed(),
         'Flex': flex,
         'Bison': bison,
-        'Win32 trickery': win32_trickery.allowed(),
         'Compile time tracing': trace_time.enabled(),
         'Module loader': default_library,
         'Unit tests': unit_tests,
         'Driver tests': driver_tests,
         'Doxygen': doxygen,
-        'STB sprintf': opt_stb_sprintf
+        'STB sprintf': opt_stb_sprintf,
     },
     'Targets': {
         'C Family': target_cfamily.allowed(),
@@ -391,12 +383,9 @@ build_summary = {
         'Example': frontend_example.allowed()
     },
     'Languages': {
-        'C': lang_c.allowed(),
-        'C preprocessor': lang_cpp.allowed(),
         'Cthulhu': lang_ctu.allowed(),
         'PL/0': lang_pl0.allowed(),
         'Oberon-2': lang_oberon.allowed(),
-        'JVM bytecode': lang_jvm.allowed(),
         'Example': lang_example.allowed()
     },
     'Tools': {

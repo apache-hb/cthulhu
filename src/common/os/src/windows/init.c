@@ -8,12 +8,6 @@
 
 #include "core/win32.h" // IWYU pragma: keep
 
-#if CTU_WIN32_TRICKERY
-#   include <windef.h>
-#   include <winbase.h>
-#   include <pathcch.h>
-#endif
-
 size_t impl_maxname(void)
 {
     return MAX_PATH;
