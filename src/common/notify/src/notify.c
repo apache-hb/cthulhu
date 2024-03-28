@@ -94,6 +94,14 @@ void logger_reset(logger_t *logs)
 }
 
 USE_DECL
+arena_t *logger_get_arena(const logger_t *logs)
+{
+    CTASSERT(logs != NULL);
+
+    return logs->arena;
+}
+
+USE_DECL
 event_builder_t msg_notify(logger_t *reports, const diagnostic_t *diagnostic, const node_t *node, const char *fmt, ...)
 {
     va_list args;

@@ -562,6 +562,19 @@ text_view_t build_unit_id(const vector_t *parts, arena_t *arena)
 }
 
 USE_DECL
+void target_emit_tree(target_runtime_t *runtime, const tree_t *tree, target_emit_t *emit)
+{
+    CTASSERT(runtime != NULL);
+    CTASSERT(tree != NULL);
+    CTASSERT(emit != NULL);
+
+    const target_t *target = runtime->info;
+    CTASSERTF(target->fn_tree != NULL, "target '%s' does not implement tree emission", target->info.name);
+
+    target->fn_tree(runtime, tree, emit);
+}
+
+USE_DECL
 void target_emit_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *emit)
 {
     CTASSERT(runtime != NULL);
@@ -569,7 +582,7 @@ void target_emit_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_
     CTASSERT(emit != NULL);
 
     const target_t *target = runtime->info;
-    CTASSERT(target->fn_ssa != NULL);
+    CTASSERTF(target->fn_ssa != NULL, "target '%s' does not implement ssa emission", target->info.name);
 
     target->fn_ssa(runtime, ssa, emit);
 }

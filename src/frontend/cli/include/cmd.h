@@ -17,8 +17,10 @@ typedef struct tool_t
     cfg_field_t *add_plugin;
     cfg_field_t *add_target;
 
+    cfg_field_t *emit_tree;
     cfg_field_t *emit_ssa;
     cfg_field_t *output_dir;
+    cfg_field_t *output_layout;
 
     cfg_field_t *warn_as_error;
     cfg_field_t *report_limit;

@@ -4,6 +4,7 @@
 
 #include "config/config.h"
 
+#include "cthulhu/broker/broker.h"
 #include "format/notify.h"
 #include "std/vector.h"
 #include "std/str.h"
@@ -62,6 +63,31 @@ static const cfg_info_t kEmitIr = {
     .long_args = kIrLongArgs,
 };
 
+static const char *const kTreeShortArgs[] = CT_ARGS("tree");
+static const char *const kTreeLongArgs[] = CT_ARGS("emit-tree");
+
+static const cfg_info_t kEmitTree = {
+    .name = "emit-tree",
+    .brief = "Emit the parse tree to the output directory",
+    .short_args = kTreeShortArgs,
+    .long_args = kTreeLongArgs,
+};
+
+static const char *const kFileLayoutArgs[] = CT_ARGS("file-layout");
+
+static const cfg_info_t kFileLayout = {
+    .name = "file-layout",
+    .brief = "File layout to use",
+    .short_args = kFileLayoutArgs,
+};
+
+static const cfg_choice_t kFileLayoutChoices[] = {
+    { "pair", eFileLayoutPair },
+    { "single", eFileLayoutSingle },
+    { "tree", eFileLayoutTree },
+    { "flat", eFileLayoutFlat },
+};
+
 static const char *const kWarnAsErrorShortArgs[] = CT_ARGS("Werror");
 
 static const cfg_info_t kWarnAsError = {
@@ -114,9 +140,17 @@ tool_t make_tool(arena_t *arena)
     cfg_field_t *add_plugin_field = config_vector(config, &kPlugin, NULL);
     cfg_field_t *add_target_field = config_vector(config, &kTarget, NULL);
 
+    cfg_field_t *emit_tree_field = config_bool(config, &kEmitTree, false);
     cfg_field_t *emit_ir_field = config_bool(config, &kEmitIr, false);
 
     cfg_field_t *output_dir_field = config_string(config, &kOutputDir, NULL);
+
+    cfg_enum_t file_layout_options = {
+        .options = kFileLayoutChoices,
+        .count = (sizeof(kFileLayoutChoices) / sizeof(cfg_choice_t)),
+        .initial = eFileLayoutPair,
+    };
+    cfg_field_t *file_layout_field = config_enum(config, &kFileLayout, file_layout_options);
 
     cfg_group_t *report_group = config_group(config, &kReportInfo);
     cfg_field_t *warn_as_error_field = config_bool(report_group, &kWarnAsError, false);
@@ -139,8 +173,10 @@ tool_t make_tool(arena_t *arena)
         .add_plugin = add_plugin_field,
         .add_target = add_target_field,
 
+        .emit_tree = emit_tree_field,
         .emit_ssa = emit_ir_field,
         .output_dir = output_dir_field,
+        .output_layout = file_layout_field,
 
         .warn_as_error = warn_as_error_field,
         .report_limit = report_limit_field,

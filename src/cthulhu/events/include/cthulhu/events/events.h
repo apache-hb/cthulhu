@@ -7,6 +7,7 @@
 #include "core/compiler.h"
 
 #include "notify/notify.h"
+#include "os/core.h"
 
 CT_BEGIN_API
 
@@ -29,16 +30,20 @@ CT_EVENTS_API diagnostic_list_t get_common_diagnostics(void);
 /// @param logger the logger to report to
 /// @param node the node that caused the error
 /// @param msg the error message
-CT_EVENTS_API void evt_scan_error(IN_NOTNULL logger_t *logger, IN_NOTNULL const node_t *node,
-                                  IN_STRING const char *msg);
+CT_EVENTS_API void evt_scan_error(
+    IN_NOTNULL logger_t *logger,
+    IN_NOTNULL const node_t *node,
+    IN_STRING const char *msg);
 
 /// @brief signal that a scanner has encountered an unknown token
 ///
 /// @param logger the logger to report to
 /// @param node the node that caused the error
 /// @param msg the error message
-CT_EVENTS_API void evt_scan_unknown(IN_NOTNULL logger_t *logger, IN_NOTNULL const node_t *node,
-                                    IN_STRING const char *msg);
+CT_EVENTS_API void evt_scan_unknown(
+    IN_NOTNULL logger_t *logger,
+    IN_NOTNULL const node_t *node,
+    IN_STRING const char *msg);
 
 /// @brief signal that a declaration would shadow a previous declaration
 ///
@@ -48,10 +53,24 @@ CT_EVENTS_API void evt_scan_unknown(IN_NOTNULL logger_t *logger, IN_NOTNULL cons
 /// @param next the new declaration
 ///
 /// @return the event builder
-CT_EVENTS_API event_builder_t evt_symbol_shadowed(IN_NOTNULL logger_t *logger,
-                                                  IN_STRING const char *name,
-                                                  IN_NOTNULL const node_t *prev,
-                                                  IN_NOTNULL const node_t *next);
+CT_EVENTS_API event_builder_t evt_symbol_shadowed(
+    IN_NOTNULL logger_t *logger,
+    IN_STRING const char *name,
+    IN_NOTNULL const node_t *prev,
+    IN_NOTNULL const node_t *next);
+
+/// @brief signal that an os error has occurred
+///
+/// @param logger the logger to report to
+/// @param error the os error
+/// @param msg the error message
+///
+/// @return the event builder
+CT_EVENTS_API event_builder_t evt_os_error(
+    IN_NOTNULL logger_t *logger,
+    const diagnostic_t *diagnostic,
+    os_error_t error,
+    IN_STRING const char *msg);
 
 /// @}
 

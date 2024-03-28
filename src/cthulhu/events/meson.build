@@ -14,13 +14,13 @@ libevents = library('events', src,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_EVENTS_BUILD=1' ],
-    dependencies : [ memory, std, scan, notify ],
+    dependencies : [ memory, std, scan, notify, os ],
     include_directories : events_include
 )
 
 events = declare_dependency(
     link_with : libevents,
-    dependencies : [ base, notify ],
+    dependencies : [ base, notify, os ],
     include_directories : events_include
 )
 

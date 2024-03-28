@@ -40,10 +40,23 @@ void evt_scan_unknown(logger_t *logger, const node_t *node, const char *msg)
     msg_notify(logger, &kEvent_UnknownToken, node, "unknown symbol: `%s`", str_normalize(msg, arena));
 }
 
-event_builder_t evt_symbol_shadowed(logger_t *logger, const char *name, const node_t *prev,
-                             const node_t *next)
+event_builder_t evt_symbol_shadowed(
+    logger_t *logger,
+    const char *name,
+    const node_t *prev,
+    const node_t *next)
 {
     event_builder_t event = msg_notify(logger, &kEvent_SymbolShadowed, next, "symbol `%s` shadows previous declaration", name);
     msg_append(event, prev, "previous declaration here");
     return event;
+}
+
+event_builder_t evt_os_error(
+    logger_t *logger,
+    const diagnostic_t *diagnostic,
+    os_error_t error,
+    const char *msg)
+{
+    char *err = os_error_string(error, logger_get_arena(logger));
+    return msg_notify(logger, diagnostic, NULL, "%s: %s", msg, err);
 }

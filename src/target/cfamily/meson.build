@@ -1,10 +1,13 @@
-src = [ 'src/target.c' ]
+src = [
+    'src/tree.c',
+    'src/target.c'
+]
 
 libtarget_cfamily = static_library('target_cfamily', src,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     include_directories : 'include',
-    dependencies : [ target ]
+    dependencies : [ target, fs, io, events ]
 )
 
 targets += {

@@ -348,6 +348,7 @@ CT_BROKER_API text_view_t build_unit_id(IN_NOTNULL const vector_t *parts, IN_NOT
 
 /// all target apis
 
+CT_BROKER_API void target_emit_tree(IN_NOTNULL target_runtime_t *runtime, IN_NOTNULL const tree_t *tree, IN_NOTNULL target_emit_t *emit);
 CT_BROKER_API void target_emit_ssa(IN_NOTNULL target_runtime_t *runtime, IN_NOTNULL const ssa_result_t *ssa, IN_NOTNULL target_emit_t *emit);
 
 /// extra stuff

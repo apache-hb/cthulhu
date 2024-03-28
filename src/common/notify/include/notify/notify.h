@@ -113,6 +113,9 @@ CT_NOTIFY_API bool logger_has_errors(IN_NOTNULL const logger_t *logs, notify_rul
 /// @param logs the logger
 CT_NOTIFY_API void logger_reset(IN_NOTNULL logger_t *logs);
 
+RET_NOTNULL CT_NODISCARD
+CT_NOTIFY_API arena_t *logger_get_arena(IN_NOTNULL const logger_t *logs);
+
 /// @brief notify the logger of a new message
 /// @warning adding a new message invalidates all previous events handles
 ///
