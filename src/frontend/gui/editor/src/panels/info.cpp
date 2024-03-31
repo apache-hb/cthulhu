@@ -38,7 +38,7 @@ static void draw_version(const char *id, version_t version)
 
 static bool begin_table_node(const void *ptr_id, const char *label, int columns, ImGuiTableFlags flags)
 {
-    if (ImGui::TreeNode(ptr_id, label))
+    if (ImGui::TreeNode(ptr_id, "%s", label))
     {
         if (ImGui::BeginTable(label, columns, flags))
         {

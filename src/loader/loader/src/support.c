@@ -123,6 +123,12 @@ support_t *support_new(broker_t *broker, loader_t *loader, arena_t *arena)
     support->plugins = map_new(16, kTypeInfoString, arena);
     support->targets = map_new(16, kTypeInfoString, arena);
 
+    ARENA_IDENTIFY(support->modules, "modules", support, arena);
+    ARENA_IDENTIFY(support->languages, "languages", support, arena);
+    ARENA_IDENTIFY(support->extmap, "extmap", support, arena);
+    ARENA_IDENTIFY(support->plugins, "plugins", support, arena);
+    ARENA_IDENTIFY(support->targets, "targets", support, arena);
+
     return support;
 }
 
@@ -172,7 +178,7 @@ language_runtime_t *support_get_lang(support_t *support, const char *ext)
 }
 
 USE_DECL
-plugin_runtime_t *support_get_plugin(IN_NOTNULL support_t *support, IN_STRING const char *name)
+plugin_runtime_t *support_get_plugin(support_t *support, const char *name)
 {
     CTASSERT(support != NULL);
 
@@ -180,4 +186,9 @@ plugin_runtime_t *support_get_plugin(IN_NOTNULL support_t *support, IN_STRING co
 }
 
 USE_DECL
-target_runtime_t *support_get_target(IN_NOTNULL support_t *support, IN_STRING const char *name);
+target_runtime_t *support_get_target(support_t *support, const char *name)
+{
+    CTASSERT(support != NULL);
+
+    return map_get(support->extmap, name);
+}

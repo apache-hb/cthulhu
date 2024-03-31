@@ -88,7 +88,15 @@ static const cfg_choice_t kFileLayoutChoices[] = {
     { "flat", eFileLayoutFlat },
 };
 
-static const char *const kWarnAsErrorShortArgs[] = CT_ARGS("Werror");
+static const char *const kTargetOutputArgs[] = CT_ARGS("target-output");
+
+static const cfg_info_t kTargetOutput = {
+    .name = "target-output",
+    .brief = "Target to use for output generation",
+    .short_args = kTargetOutputArgs,
+};
+
+static const char *const kWarnAsErrorShortArgs[] = CT_ARGS("Werror", "WX");
 
 static const cfg_info_t kWarnAsError = {
     .name = "warn-as-error",
@@ -152,6 +160,8 @@ tool_t make_tool(arena_t *arena)
     };
     cfg_field_t *file_layout_field = config_enum(config, &kFileLayout, file_layout_options);
 
+    cfg_field_t *output_target_field = config_string(config, &kTargetOutput, NULL);
+
     cfg_group_t *report_group = config_group(config, &kReportInfo);
     cfg_field_t *warn_as_error_field = config_bool(report_group, &kWarnAsError, false);
 
@@ -177,6 +187,7 @@ tool_t make_tool(arena_t *arena)
         .emit_ssa = emit_ir_field,
         .output_dir = output_dir_field,
         .output_layout = file_layout_field,
+        .output_target = output_target_field,
 
         .warn_as_error = warn_as_error_field,
         .report_limit = report_limit_field,

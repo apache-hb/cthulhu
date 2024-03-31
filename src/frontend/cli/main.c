@@ -173,9 +173,7 @@ int main(int argc, const char **argv)
     loader_t *loader = loader_new(arena);
     support_t *support = support_new(broker, loader, arena);
 
-#if CTU_LOADER_STATIC
     support_load_default_modules(support);
-#endif
 
     logger_t *reports = broker_get_logger(broker);
     const node_t *node = broker_get_node(broker);

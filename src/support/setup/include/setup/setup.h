@@ -60,7 +60,7 @@ typedef struct default_options_t
     cfg_field_t *enable_usage;
 
     // print help with windows style options
-    cfg_field_t *enable_windows_style;
+    cfg_field_t *heading_style;
 
     // enable colour output
     cfg_field_t *colour_output;

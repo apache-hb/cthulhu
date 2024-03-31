@@ -75,12 +75,6 @@ static const cfg_choice_t kHeadingOptions[] = {
 };
 #define HEADING_OPTION_COUNT (sizeof(kHeadingOptions) / sizeof(cfg_choice_t))
 
-#if CT_OS_WINDOWS
-#   define HEADING_DEFAULT_OPTION eHeadingMicrosoft
-#else
-#   define HEADING_DEFAULT_OPTION eHeadingGeneric
-#endif
-
 static const char *const kHeadingArgsShort[] = CT_ARGS("heading");
 
 static const cfg_info_t kHeadingInfo = {
@@ -113,7 +107,7 @@ static tool_t make_config(arena_t *arena)
     cfg_enum_t heading_info = {
         .options = kHeadingOptions,
         .count = HEADING_OPTION_COUNT,
-        .initial = HEADING_DEFAULT_OPTION,
+        .initial = CT_DEFAULT_HEADER_STYLE,
     };
 
     cfg_field_t *heading = config_enum(config, &kHeadingInfo, heading_info);
@@ -414,14 +408,14 @@ static void do_backtrace(io_t *io, arena_t *arena)
 
     print_backtrace_t config1 = {
         .options = options,
-        .heading_style = eHeadingGeneric,
+        .header = eHeadingGeneric,
         .zero_indexed_lines = false,
         .project_source_path = source_root,
     };
 
     print_backtrace_t config2 = {
         .options = options,
-        .heading_style = eHeadingMicrosoft,
+        .header = eHeadingMicrosoft,
         .zero_indexed_lines = true,
         .project_source_path = source_root,
     };

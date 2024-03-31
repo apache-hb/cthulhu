@@ -600,7 +600,7 @@ const char *broker_pass_name(broker_pass_t pass)
     return kPassNames[pass];
 }
 
-static const char *const kFileLayoutNames[] = {
+static const char *const kFileLayoutNames[eFileLayoutCount] = {
 #define FILE_LAYOUT(ID, STR) [ID] = (STR),
 #include "cthulhu/broker/broker.inc"
 };

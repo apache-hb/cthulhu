@@ -311,7 +311,7 @@ static const char *fmt_entry_location(backtrace_t *pass, const entry_t *entry)
             source_config_t source_config = {
                 .context = pass->format_context,
                 .colour = eColourDefault,
-                .heading_style = config.heading_style,
+                .heading_style = config.header,
                 .zero_indexed_lines = config.zero_indexed_lines,
             };
 

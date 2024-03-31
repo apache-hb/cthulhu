@@ -23,12 +23,6 @@
 #include "std/str.h"
 #include "std/vector.h"
 
-#if CT_OS_WINDOWS
-#   define DISPLAY_WIN_STYLE true
-#else
-#   define DISPLAY_WIN_STYLE false
-#endif
-
 static const cfg_info_t kGroupInfo = {
     .name = "general",
     .brief = "General options",
@@ -64,14 +58,18 @@ static const cfg_info_t kArgparseUsageInfo = {
     .long_args = kArgparseUsageInfoLongArgs,
 };
 
-static const char *const kWindowsStyleInfoShortArgs[] = CT_ARGS("w");
-static const char *const kWindowsStyleInfoLongArgs[] = CT_ARGS("windows-style");
+static const cfg_choice_t kHeadingOptions[] = {
+    { .text = "generic", .value = eHeadingGeneric },
+    { .text = "microsoft", .value = eHeadingMicrosoft },
+};
+#define HEADING_OPTION_COUNT (sizeof(kHeadingOptions) / sizeof(cfg_choice_t))
 
-static const cfg_info_t kWindowsStyleInfo = {
-    .name = "windows-style",
-    .brief = "Enable windows style help output\nprints /flags instead of -flags",
-    .short_args = kWindowsStyleInfoShortArgs,
-    .long_args = kWindowsStyleInfoLongArgs,
+static const char *const kHeadingArgsShort[] = CT_ARGS("heading");
+
+static const cfg_info_t kHeadingInfo = {
+    .name = "heading",
+    .brief = "Heading style. Windows style /flags or unix style -flags",
+    .short_args = kHeadingArgsShort,
 };
 
 static const char *const kColourInfoShortArgs[] = CT_ARGS("c");
@@ -111,7 +109,13 @@ default_options_t get_default_options(cfg_group_t *group)
 
     cfg_field_t *argparse_usage = config_bool(general, &kArgparseUsageInfo, false);
 
-    cfg_field_t *windows_style = config_bool(general, &kWindowsStyleInfo, DISPLAY_WIN_STYLE);
+    cfg_enum_t heading_info = {
+        .options = kHeadingOptions,
+        .count = HEADING_OPTION_COUNT,
+        .initial = CT_DEFAULT_HEADER_STYLE,
+    };
+
+    cfg_field_t *heading = config_enum(general, &kHeadingInfo, heading_info);
 
     cfg_field_t *colour = config_bool(general, &kColourInfo, false);
 
@@ -124,7 +128,7 @@ default_options_t get_default_options(cfg_group_t *group)
         .print_help = help,
         .print_version = version,
         .enable_usage = argparse_usage,
-        .enable_windows_style = windows_style,
+        .heading_style = heading,
         .colour_output = colour,
 
         .debug_group = debug,
@@ -156,7 +160,7 @@ int process_default_options(default_options_t options, tool_config_t config)
         print_config_t config_display = {
             .options = base,
             .print_usage = cfg_bool_value(options.enable_usage),
-            .win_style = cfg_bool_value(options.enable_windows_style),
+            .win_style = cfg_enum_value(options.heading_style) == eHeadingMicrosoft,
             .name = name
         };
 
@@ -251,7 +255,7 @@ static int process_argparse_result(default_options_t options, tool_config_t conf
     print_config_t display = {
         .options = base,
         .print_usage = cfg_bool_value(options.enable_usage),
-        .win_style = cfg_bool_value(options.enable_windows_style),
+        .win_style = cfg_enum_value(options.heading_style) == eHeadingMicrosoft,
         .name = config.argv[0]
     };
 
@@ -290,7 +294,7 @@ static void pretty_panic_handler(source_info_t location, const char *fmt, va_lis
 
     print_backtrace_t backtrace_config = {
         .options = print_options,
-        .heading_style = eHeadingGeneric,
+        .header = eHeadingGeneric,
         .zero_indexed_lines = false,
     };
 

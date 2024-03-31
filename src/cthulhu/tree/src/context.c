@@ -34,14 +34,10 @@ static bool tree_has_tag(const tree_t *tree, tree_tags_t tags)
 /// getters and setters
 ///
 
-#if CTU_DEBUG
 static const char *tree_kind_string(const tree_t *tree)
 {
     return tree_kind_to_string(tree_get_kind(tree));
 }
-#else
-#   define tree_kind_string(tree) ""
-#endif
 
 USE_DECL
 void tree_set_qualifiers(tree_t *tree, tree_quals_t qualifiers)

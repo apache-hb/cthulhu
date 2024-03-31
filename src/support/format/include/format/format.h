@@ -27,6 +27,12 @@ typedef enum heading_style_t
     eHeadingCount
 } heading_style_t;
 
+#if CT_OS_WINDOWS
+#   define CT_DEFAULT_HEADER_STYLE eHeadingMicrosoft
+#else
+#   define CT_DEFAULT_HEADER_STYLE eHeadingGeneric
+#endif
+
 /// @brief generic print options
 typedef struct print_options_t
 {

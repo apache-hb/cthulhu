@@ -127,7 +127,7 @@ static void test_panic_handler(source_info_t location, const char *fmt, va_list 
                 .io = io,
                 .pallete = &kColourDefault,
             },
-            .heading_style = eHeadingGeneric,
+            .header = eHeadingGeneric,
             .zero_indexed_lines = false,
         };
 
