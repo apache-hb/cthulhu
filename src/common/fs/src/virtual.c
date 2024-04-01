@@ -152,27 +152,19 @@ static fs_inode_t *virtual_dir(fs_t *fs, const char *name)
     return inode_dir(fs, name, &inode);
 }
 
-static fs_inode_t *vfs_query_node(fs_t *fs, fs_inode_t *self, const char *name)
+static fs_inode_t *vfs_query_node(fs_t *fs, const fs_inode_t *self, const char *name)
 {
     CT_UNUSED(fs);
 
-    if (ctu_strlen(name) == 0) return self;
+    if (ctu_strlen(name) == 0) return (fs_inode_t*)self;
     if (ctu_strlen(name) == 1)
     {
-        if (name[0] == '.') return self;
-        if (name[0] == '/') return self;
+        if (name[0] == '.') return (fs_inode_t*)self;
+        if (name[0] == '/') return (fs_inode_t*)self;
     }
 
-    virtual_dir_t *dir = inode_data(self);
+    virtual_dir_t *dir = inode_data((fs_inode_t*)self);
     return map_get_default(dir->dirents, name, &gInvalidFileNode);
-}
-
-static map_t *vfs_query_dirents(fs_t *fs, fs_inode_t *self)
-{
-    CT_UNUSED(fs);
-
-    virtual_dir_t *dir = inode_data(self);
-    return dir->dirents;
 }
 
 static io_t *vfs_query_file(fs_t *fs, fs_inode_t *self, os_access_t flags)
@@ -230,9 +222,37 @@ static os_error_t vfs_delete_file(fs_t *fs, fs_inode_t *self, const char *name)
     return result ? eOsSuccess : eOsNotFound;
 }
 
+static os_error_t vfs_iter_begin(fs_t *fs, const fs_inode_t *dir, fs_iter_t *iter)
+{
+    CT_UNUSED(fs);
+
+    virtual_dir_t *data = inode_data((fs_inode_t*)dir);
+    map_iter_t *result = iter_data(iter);
+    *result = map_iter(data->dirents);
+
+    return eOsSuccess;
+}
+
+static os_error_t vfs_iter_next(fs_iter_t *iter)
+{
+    map_iter_t *it = iter_data(iter);
+    if (!map_has_next(it))
+        return eOsNotFound;
+
+    map_entry_t entry = map_next(it);
+    iter->current = entry.value;
+
+    return eOsSuccess;
+}
+
+static os_error_t vfs_iter_end(fs_iter_t *iter)
+{
+    CT_UNUSED(iter);
+    return eOsSuccess;
+}
+
 static const fs_callbacks_t kVirtualInterface = {
     .pfn_query_node = vfs_query_node,
-    .pfn_query_dirents = vfs_query_dirents,
     .pfn_query_file = vfs_query_file,
 
     .pfn_create_dir = vfs_create_dir,
@@ -240,6 +260,10 @@ static const fs_callbacks_t kVirtualInterface = {
 
     .pfn_create_file = vfs_create_file,
     .pfn_delete_file = vfs_delete_file,
+
+    .pfn_iter_begin = vfs_iter_begin,
+    .pfn_iter_next = vfs_iter_next,
+    .pfn_iter_end = vfs_iter_end,
 
     .iter_size = sizeof(map_iter_t),
     .inode_size = sizeof(virtual_inode_t)

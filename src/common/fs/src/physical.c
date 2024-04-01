@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
+#include "arena/arena.h"
 #include "base/util.h"
 #include "common.h"
 
@@ -10,6 +11,7 @@
 #include "io/impl.h"
 
 #include "base/panic.h"
+#include <stdint.h>
 
 typedef struct physical_t
 {
@@ -21,12 +23,12 @@ typedef struct physical_inode_t
     const char *path; ///< path to file or directory relative to root
 } physical_inode_t;
 
-static const char *get_absolute(fs_t *fs, fs_inode_t *node, const char *path)
+static const char *get_absolute(fs_t *fs, const fs_inode_t *node, const char *path)
 {
     CTASSERT(fs != NULL);
 
     const physical_t *self = fs_data(fs);
-    const physical_inode_t *dir = inode_data(node);
+    const physical_inode_t *dir = inode_data((fs_inode_t*)node);
 
     if (is_path_special(dir->path) && is_path_special(path))
     {
@@ -46,9 +48,9 @@ static const char *get_absolute(fs_t *fs, fs_inode_t *node, const char *path)
     return str_format(fs->arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s" CT_NATIVE_PATH_SEPARATOR "%s", self->root, dir->path, path);
 }
 
-static const char *get_relative(fs_inode_t *node, const char *path, arena_t *arena)
+static const char *get_relative(const fs_inode_t *node, const char *path, arena_t *arena)
 {
-    const physical_inode_t *dir = inode_data(node);
+    const physical_inode_t *dir = inode_data((fs_inode_t*)node);
 
     if (is_path_special(dir->path) && !is_path_special(path))
     {
@@ -67,16 +69,17 @@ static const char *get_relative(fs_inode_t *node, const char *path, arena_t *are
 
 static fs_inode_t *physical_dir(fs_t *fs, const char *path)
 {
+    char *id = arena_strdup(path, fs->arena);
     physical_inode_t inode = {
-        .path = path
+        .path = id
     };
 
-    const char *name = path;
+    const char *name = id;
 
-    size_t i = str_rfind(path, CT_NATIVE_PATH_SEPARATOR);
+    size_t i = str_rfind(id, CT_NATIVE_PATH_SEPARATOR);
     if (i != SIZE_MAX)
     {
-        name = path + i + 1;
+        name = id + i + 1;
     }
 
     return inode_dir(fs, name, &inode);
@@ -84,22 +87,23 @@ static fs_inode_t *physical_dir(fs_t *fs, const char *path)
 
 static fs_inode_t *physical_file(fs_t *fs, const char *path)
 {
+    char *id = arena_strdup(path, fs->arena);
     physical_inode_t inode = {
-        .path = path
+        .path = id
     };
 
-    const char *name = path;
+    const char *name = id;
 
-    size_t i = str_rfind(path, CT_NATIVE_PATH_SEPARATOR);
+    size_t i = str_rfind(id, CT_NATIVE_PATH_SEPARATOR);
     if (i != SIZE_MAX)
     {
-        name = path + i + 1;
+        name = id + i + 1;
     }
 
     return inode_file(fs, name, &inode);
 }
 
-static fs_inode_t *pfs_query_node(fs_t *fs, fs_inode_t *self, const char *name)
+static fs_inode_t *pfs_query_node(fs_t *fs, const fs_inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
     os_dirent_t dirent = os_dirent_type(absolute);
@@ -116,33 +120,6 @@ static fs_inode_t *pfs_query_node(fs_t *fs, fs_inode_t *self, const char *name)
     default:
         return &gInvalidFileNode;
     }
-}
-
-static map_t *pfs_query_dirents(fs_t *fs, fs_inode_t *self)
-{
-    const char *absolute = get_absolute(fs, self, NULL);
-
-    os_iter_t iter = { 0 };
-    os_error_t err = os_iter_begin(absolute, &iter);
-    CTASSERTF(err == 0, "failed to query dirents %s (%s)", absolute, os_error_string(err, fs->arena));
-
-    os_inode_t dir = { 0 };
-
-    map_t *dirents = map_new(64, kTypeInfoString, fs->arena);
-
-    while (os_iter_next(&iter, &dir))
-    {
-        if (os_iter_error(&iter)) { break; }
-        const char *path = os_dir_string(&dir, fs->arena);
-
-        fs_inode_t *inode = pfs_query_node(fs, self, path);
-        CTASSERTF(inode != NULL, "failed to query node %s '%s'", absolute, path);
-        map_set(dirents, path, inode);
-    }
-
-    os_iter_end(&iter);
-
-    return dirents;
 }
 
 static io_t *pfs_query_file(fs_t *fs, fs_inode_t *self, os_access_t flags)
@@ -193,19 +170,20 @@ static os_error_t pfs_file_delete(fs_t *fs, fs_inode_t *self, const char *name)
     return os_file_delete(absolute);
 }
 
-static os_error_t pfs_iter_begin(fs_t *fs, fs_inode_t *dir, fs_iter_t *iter)
+static os_error_t pfs_iter_begin(fs_t *fs, const fs_inode_t *dir, fs_iter_t *iter)
 {
     const char *absolute = get_absolute(fs, dir, NULL);
-    return os_iter_begin(absolute, iter_data(iter));
+    os_iter_t *data = iter_data(iter);
+    return os_iter_begin(absolute, data);
 }
 
 static os_error_t pfs_iter_next(fs_iter_t *iter)
 {
     os_inode_t cur = { 0 };
-    if (os_iter_next(iter_data(iter), &cur))
-    {
+    if (!os_iter_next(iter_data(iter), &cur))
+        return eOsNotFound;
 
-    }
+    iter->current = pfs_query_node(iter->fs, iter->dir, os_inode_name(&cur));
 
     return eOsSuccess;
 }
@@ -217,7 +195,6 @@ static os_error_t pfs_iter_end(fs_iter_t *iter)
 
 static const fs_callbacks_t kPhysicalInterface = {
     .pfn_query_node = pfs_query_node,
-    .pfn_query_dirents = pfs_query_dirents,
     .pfn_query_file = pfs_query_file,
 
     .pfn_create_dir = pfs_dir_create,

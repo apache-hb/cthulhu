@@ -19,6 +19,7 @@ typedef struct fs_inode_t
 typedef struct fs_iter_t
 {
     fs_t *fs;
+    const fs_inode_t *dir;
     fs_inode_t *current;
     char data[];
 } fs_iter_t;
@@ -29,8 +30,7 @@ typedef struct inode_result_t
     os_error_t error;
 } inode_result_t;
 
-typedef fs_inode_t *(*fs_query_node_t)(fs_t *fs, fs_inode_t *node, const char *name);
-typedef map_t *(*fs_query_dirents_t)(fs_t *fs, fs_inode_t *node);
+typedef fs_inode_t *(*fs_query_node_t)(fs_t *fs, const fs_inode_t *node, const char *name);
 typedef io_t *(*fs_query_file_t)(fs_t *fs, fs_inode_t *node, os_access_t flags);
 
 typedef inode_result_t (*fs_file_create_t)(fs_t *fs, fs_inode_t *node, const char *name);
@@ -39,7 +39,7 @@ typedef os_error_t (*fs_file_delete_t)(fs_t *fs, fs_inode_t *node, const char *n
 typedef inode_result_t (*fs_dir_create_t)(fs_t *fs, fs_inode_t *node, const char *name);
 typedef os_error_t (*fs_dir_delete_t)(fs_t *fs, fs_inode_t *node, const char *name);
 
-typedef os_error_t (*fs_iter_begin_t)(fs_t *fs, fs_inode_t *dir, fs_iter_t *iter);
+typedef os_error_t (*fs_iter_begin_t)(fs_t *fs, const fs_inode_t *dir, fs_iter_t *iter);
 typedef os_error_t (*fs_iter_next_t)(fs_iter_t *iter);
 typedef os_error_t (*fs_iter_end_t)(fs_iter_t *iter);
 
@@ -52,7 +52,6 @@ typedef struct fs_callbacks_t
 {
     fs_query_node_t pfn_query_node;
 
-    fs_query_dirents_t pfn_query_dirents;
     fs_query_file_t pfn_query_file;
 
     fs_dir_create_t pfn_create_dir;

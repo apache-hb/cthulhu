@@ -419,10 +419,12 @@ bool os_iter_next(os_iter_t *iter, os_inode_t *result)
     os_inode_impl_t data;
     while (iter_next(iter, &data))
     {
-        if (!is_path_special(impl_inode_name(&data)))
+        if (is_path_special(impl_inode_name(&data)))
         {
-            break;
+            continue;
         }
+
+        break;
     }
 
     if (iter->error != eOsSuccess)

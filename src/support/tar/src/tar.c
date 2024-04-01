@@ -7,6 +7,7 @@
 #include "fs/fs.h"
 
 #include "io/io.h"
+#include "os/os.h"
 
 #include "std/str.h"
 
@@ -149,7 +150,7 @@ cleanup:
     return ret;
 }
 
-static void write_tar_entry(const char *dir, const char *name, os_dirent_t type, void *data)
+static void archive_file(const char *dir, const char *name, os_dirent_t type, void *data)
 {
     tar_context_t *ctx = data;
     if (str_startswith(dir, "./"))
@@ -169,6 +170,44 @@ static void write_tar_entry(const char *dir, const char *name, os_dirent_t type,
     }
 }
 
+static tar_error_t archive_dir(io_t *dst, fs_t *src, fs_iter_t *iter, const char *dir, arena_t *arena)
+{
+    tar_context_t ctx = {
+        .fs = src,
+        .dst = dst,
+        .arena = arena,
+        .error = eTarOk,
+    };
+
+    fs_inode_t *inode;
+
+    while (fs_iter_next(iter, &inode) == eOsSuccess)
+    {
+        os_dirent_t type = fs_inode_type(inode);
+        const char *name = fs_inode_name(inode);
+
+        if (type == eOsNodeDir)
+        {
+            fs_iter_t *inner;
+            os_error_t err = fs_iter_begin(src, inode, &inner);
+            if (err != eOsSuccess)
+            {
+                return eTarReadError;
+            }
+
+            archive_dir(dst, src, inner, name, arena);
+
+            fs_iter_end(inner);
+        }
+        else if (type == eOsNodeFile)
+        {
+            archive_file(dir, name, type, &ctx);
+        }
+    }
+
+    return ctx.error;
+}
+
 tar_error_t tar_archive(io_t *dst, fs_t *src, arena_t *arena)
 {
     tar_context_t ctx = {
@@ -178,7 +217,18 @@ tar_error_t tar_archive(io_t *dst, fs_t *src, arena_t *arena)
         .error = eTarOk,
     };
 
-    fs_iter_dirents(src, ".", &ctx, write_tar_entry);
+    fs_iter_t *iter;
+    os_error_t err;
+
+    err = fs_iter_begin(src, fs_root_inode(src), &iter);
+    if (err != eOsSuccess)
+    {
+        return eTarReadError;
+    }
+
+    archive_dir(dst, src, iter, ".", arena);
+
+    fs_iter_end(iter);
 
     return ctx.error;
 }

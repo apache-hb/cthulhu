@@ -35,17 +35,6 @@ static fs_inode_t *impl_query_inode(fs_t *fs, fs_inode_t *node, const char *name
     return fs->cb->pfn_query_node(fs, node, name);
 }
 
-static map_t *impl_query_dirents(fs_t *fs, fs_inode_t *node)
-{
-    CTASSERT(fs != NULL);
-    CTASSERT(node != NULL);
-
-    CTASSERTF(inode_is(node, eOsNodeDir), "invalid inode type (type = %d)", node->type);
-    CTASSERT(fs->cb->pfn_query_dirents != NULL);
-
-    return fs->cb->pfn_query_dirents(fs, node);
-}
-
 static io_t *impl_query_file(fs_t *fs, fs_inode_t *node, os_access_t flags)
 {
     CTASSERT(fs != NULL);
@@ -109,23 +98,13 @@ static os_error_t impl_delete_dir(fs_t *fs, fs_inode_t *node, const char *name)
     return fs->cb->pfn_delete_dir(fs, node, name);
 }
 
-// static os_error_t impl_delete_inode(fs_t *fs, fs_inode_t *node)
-// {
-//     CTASSERT(fs != NULL);
-//     CTASSERT(node != NULL);
-
-//     CTASSERT(fs->cb->pfn_delete_inode != NULL);
-
-//     return fs->cb->pfn_delete_inode(fs, node);
-// }
-
-static os_error_t impl_iter_begin(fs_t *fs, fs_inode_t *dir, fs_iter_t *iter)
+static os_error_t impl_iter_begin(fs_t *fs, const fs_inode_t *dir, fs_iter_t *iter)
 {
     CTASSERT(fs != NULL);
     CTASSERT(dir != NULL);
     CTASSERT(iter != NULL);
 
-    CTASSERT(inode_is(dir, eOsNodeDir));
+    CTASSERT(fs_inode_is(dir, eOsNodeDir));
     CTASSERT(fs->cb->pfn_iter_begin != NULL);
 
     return fs->cb->pfn_iter_begin(fs, dir, iter);
@@ -153,7 +132,7 @@ static os_error_t impl_iter_end(fs_iter_t *iter)
 
 // private impl
 
-static fs_inode_t *fsi_find_node(fs_t *fs, fs_inode_t *start, const char *path)
+static fs_inode_t *find_inode(fs_t *fs, fs_inode_t *start, const char *path)
 {
     vector_t *parts = path_split(path, fs->arena);
     size_t len = vector_len(parts);
@@ -297,7 +276,7 @@ io_t *fs_open(fs_t *fs, const char *path, os_access_t flags)
         break;
     case eOsNodeNone:
         if (flags == eOsAccessRead)
-            return make_invalid_file(path, flags, fs->arena);
+            return make_invalid_file(path, eOsAccessNone, fs->arena);
 
         file = impl_create_file(fs, current, vector_tail(parts));
         return impl_query_file(fs, file, flags);
@@ -477,37 +456,45 @@ cleanup:
 
 static sync_result_t sync_dir(fs_t *dst, fs_t *src, fs_inode_t *dst_node, fs_inode_t *src_node)
 {
-    map_t *dirents = impl_query_dirents(src, src_node);
-    map_iter_t iter = map_iter(dirents);
+    fs_iter_t *iter;
     os_error_t err = eOsSuccess;
-    const char *name = NULL;
-    fs_inode_t *child = NULL;
-    while (CTU_MAP_NEXT(&iter, &name, &child))
+
+    err = fs_iter_begin(src, src_node, &iter);
+    if (err != eOsSuccess)
     {
-        fs_inode_t *other = get_inode_for(dst, dst_node, name, child->type);
+        sync_result_t result = { .path = NULL };
+        return result;
+    }
+
+    fs_inode_t *child;
+    while (fs_iter_next(iter, &child) != eOsNotFound)
+    {
+        fs_inode_t *other = get_inode_for(dst, dst_node, child->name, child->type);
         if (other == NULL)
         {
-            sync_result_t result = { .path = name };
+            sync_result_t result = { .path = child->name };
             return result;
         }
 
-        switch (child->type)
+        if (child->type == eOsNodeDir)
         {
-        case eOsNodeDir:
             sync_dir(dst, src, other, child);
-            break;
-        case eOsNodeFile:
+        }
+        else if (child->type == eOsNodeFile)
+        {
             if ((err = sync_file(dst, src, other, child)) != eOsSuccess)
             {
-                sync_result_t result = { .path = name };
+                sync_result_t result = { .path = child->name };
                 return result;
             }
-            break;
-
-        default:
+        }
+        else
+        {
             CT_NEVER("invalid inode type (type = %d)", child->type);
         }
     }
+
+    fs_iter_end(iter);
 
     sync_result_t result = { .path = NULL };
     return result;
@@ -522,70 +509,63 @@ sync_result_t fs_sync(fs_t *dst, fs_t *src)
     return sync_dir(dst, src, dst->root, src->root);
 }
 
-static void iter_dirents(fs_t *fs, fs_inode_t *node, const char *path, const char *name, void *data, fs_dirent_callback_t callback)
+USE_DECL
+os_dirent_t fs_inode_type(const fs_inode_t *inode)
 {
-    CTASSERTF(node != NULL, "invalid inode (fs = %p)", (void*)fs);
-    CTASSERTF(node->type != eOsNodeNone && node->type != eOsNodeError, "invalid inode type (type = %d)", node->type);
+    CTASSERT(inode != NULL);
 
-    if (str_startswith(path, "./"))
-        path += 2;
-
-    callback(path, name, node->type, data);
-    if (node->type == eOsNodeFile) return;
-    if (node->type != eOsNodeDir) return;
-
-    const char *dir = str_format(fs->arena, "%s/%s", path, name);
-
-    map_t *dirents = impl_query_dirents(fs, node);
-    map_iter_t iter = map_iter(dirents);
-    const char *id = NULL;
-    fs_inode_t *child = NULL;
-    while (CTU_MAP_NEXT(&iter, &id, &child))
-    {
-        iter_dirents(fs, child, dir, id, data, callback);
-    }
-}
-
-void fs_iter_dirents(fs_t *fs, const char *path, void *data, fs_dirent_callback_t callback)
-{
-    CTASSERT(fs != NULL);
-    CTASSERT(path != NULL);
-    CTASSERT(callback != NULL);
-
-    iter_dirents(fs, impl_query_inode(fs, fs->root, path), ".", path, data, callback);
+    return inode->type;
 }
 
 USE_DECL
 bool fs_inode_is(const fs_inode_t *inode, os_dirent_t type)
 {
-    CTASSERT(inode != NULL);
     CT_ASSERT_RANGE(type, 0, eOsNodeCount - 1);
 
-    return inode->type == type;
+    return fs_inode_type(inode) == type;
 }
 
 USE_DECL
-os_error_t fs_iter_begin(fs_t *fs, const char *path, fs_iter_t **iter)
+const char *fs_inode_name(const fs_inode_t *inode)
+{
+    CTASSERT(inode != NULL);
+
+    return inode->name;
+}
+
+USE_DECL
+fs_inode_t *fs_find_inode(fs_t *fs, const char *path)
 {
     CTASSERT(fs != NULL);
     CTASSERT(path != NULL);
+
+    return find_inode(fs, fs->root, path);
+}
+
+USE_DECL
+fs_inode_t *fs_root_inode(fs_t *fs)
+{
+    CTASSERT(fs != NULL);
+
+    return fs->root;
+}
+
+USE_DECL
+os_error_t fs_iter_begin(fs_t *fs, const fs_inode_t *node, fs_iter_t **iter)
+{
+    CTASSERT(fs != NULL);
+    CTASSERT(node != NULL);
     CTASSERT(iter != NULL);
 
-    fs_inode_t *node = fsi_find_node(fs, fs->root, path);
-    if (node == NULL)
-    {
-        return eOsNotFound;
-    }
-
-    if (!inode_is(node, eOsNodeDir))
+    if (!fs_inode_is(node, eOsNodeDir))
     {
         return eOsExists;
     }
-
     const size_t sz = sizeof(fs_iter_t) + fs->cb->iter_size;
 
     fs_iter_t *data = ARENA_MALLOC(sz, "fs_iter", node, fs->arena);
     data->fs = fs;
+    data->dir = node;
     data->current = NULL;
 
     os_error_t err = impl_iter_begin(fs, node, data);

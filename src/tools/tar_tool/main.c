@@ -12,13 +12,47 @@
 #include "std/str.h"
 #include "tar/tar.h"
 
-static void print_dirent(const char *dir, const char *name, os_dirent_t type, void *user)
+#include "os/os.h"
+
+static void print_dirent(fs_t *fs, const fs_inode_t *inode, const char *dir);
+
+static void print_folder(fs_t *fs, const fs_inode_t *inode, const char *dir)
+{
+    io_t *con = io_stdout();
+    arena_t *arena = ctu_default_alloc();
+    const char *name = fs_inode_name(inode);
+    os_dirent_t type = fs_inode_type(inode);
+
+    char *path = str_format(arena, "%s/%s", dir, name);
+
+    io_printf(con, "%s/%s (%s)\n", dir, name, os_dirent_string(type));
+
+    if (type == eOsNodeDir)
+    {
+        CTASSERTF(fs_dir_exists(fs, path), "directory `%s` does not exist", path);
+
+        fs_iter_t *iter;
+        fs_inode_t *child;
+        os_error_t err = fs_iter_begin(fs, inode, &iter);
+        CTASSERTF(err == eOsSuccess, "failed to begin iteration");
+
+        while (fs_iter_next(iter, &child) == eOsSuccess)
+        {
+            print_dirent(fs, inode, path);
+        }
+
+        fs_iter_end(iter);
+    }
+}
+
+static void print_dirent(fs_t *fs, const fs_inode_t *inode, const char *dir)
 {
     CT_UNUSED(dir);
 
-    fs_t *fs = user;
     io_t *con = io_stdout();
     arena_t *arena = ctu_default_alloc();
+    const char *name = fs_inode_name(inode);
+    os_dirent_t type = fs_inode_type(inode);
 
     char *path = str_format(arena, "%s/%s", dir, name);
 
@@ -29,6 +63,7 @@ static void print_dirent(const char *dir, const char *name, os_dirent_t type, vo
 
     if (type != eOsNodeFile)
     {
+        print_folder(fs, inode, path);
         return;
     }
 
@@ -87,5 +122,17 @@ int main(int argc, const char **argv)
     io_close(io);
 
     if (str_equal(argv[2], "--list"))
-        fs_iter_dirents(dst, ".", dst, print_dirent);
+    {
+        fs_iter_t *iter;
+        fs_inode_t *inode;
+        os_error_t err = fs_iter_begin(dst, fs_root_inode(dst), &iter);
+        CTASSERTF(err == eOsSuccess, "failed to begin iteration");
+
+        while (fs_iter_next(iter, &inode) == eOsSuccess)
+        {
+            print_dirent(dst, inode, ".");
+        }
+
+        fs_iter_end(iter);
+    }
 }

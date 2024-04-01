@@ -23,7 +23,7 @@ fs_inode_t *inode_new(fs_t *fs, os_dirent_t type, const char *name, const void *
 
     fs_inode_t *inode = ARENA_MALLOC(sizeof(fs_inode_t) + fs->cb->inode_size, name, fs, fs->arena);
     inode->type = type;
-    inode->name = name;
+    inode->name = arena_strdup(name, fs->arena);
     ctu_memcpy(inode->data, data, fs->cb->inode_size);
     return inode;
 }

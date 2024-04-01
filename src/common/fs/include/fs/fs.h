@@ -126,20 +126,71 @@ typedef struct sync_result_t
 /// @param src the source filesystem
 CT_FS_API sync_result_t fs_sync(fs_t *dst, fs_t *src);
 
-typedef void (*fs_dirent_callback_t)(const char *path, const char *name, os_dirent_t type, void *data);
+/// @brief get the type of an inode
+///
+/// @param inode the inode to get the type of
+///
+/// @return the type of the inode
+CT_FS_API os_dirent_t fs_inode_type(IN_NOTNULL const fs_inode_t *inode);
 
-CT_FS_API void fs_iter_dirents(fs_t *fs, const char *path, void *data, fs_dirent_callback_t callback);
-
+/// @brief check if a given inode is of a certain type
+///
+/// @param inode the inode to check
+/// @param type the type to check against
+///
+/// @return true if the inode is of the given type, false otherwise
 CT_FS_API bool fs_inode_is(IN_NOTNULL const fs_inode_t *inode, os_dirent_t type);
 
+/// @brief get the name of an inode
+/// @note the name is only valid for the lifetime of the inode
+///
+/// @param inode the inode to get the name of
+///
+/// @return the name of the inode
+CT_FS_API const char *fs_inode_name(IN_NOTNULL const fs_inode_t *inode);
+
+/// @brief find an inode in a filesystem
+///
+/// @param fs the filesystem to search
+/// @param path the path to the inode
+///
+/// @return the inode if it exists, NULL otherwise
+CT_FS_API fs_inode_t *fs_find_inode(IN_NOTNULL fs_t *fs, IN_STRING const char *path);
+
+/// @brief get the root inode of a filesystem
+///
+/// @param fs the filesystem to get the root inode of
+///
+/// @return the root inode of the filesystem
+CT_FS_API fs_inode_t *fs_root_inode(IN_NOTNULL fs_t *fs);
+
+/// @brief begin iterating over a directory
+///
+/// @param fs the filesystem to iterate
+/// @param path the path to the directory
+/// @param iter the iterator to create
+///
+/// @return eOsSuccess on success, an error code otherwise
 CT_FS_API os_error_t fs_iter_begin(
     IN_NOTNULL fs_t *fs,
-    IN_STRING const char *path,
+    IN_STRING const fs_inode_t *path,
     OUT_NOTNULL fs_iter_t **iter);
 
+/// @brief end an iteration
+///
+/// @param iter the iterator to end
+///
+/// @return eOsSuccess on success, an error code otherwise
 CT_FS_API os_error_t fs_iter_end(
     IN_NOTNULL fs_iter_t *iter);
 
+/// @brief get the next inode in an iteration
+///
+/// @param iter the iterator to get the next inode from
+/// @param inode the inode to write to
+///
+/// @return eOsSuccess on success, an error code otherwise
+/// @retval eOsNotFound if there are no more inodes
 CT_FS_API os_error_t fs_iter_next(
     IN_NOTNULL fs_iter_t *iter,
     OUT_NOTNULL fs_inode_t **inode);
