@@ -99,7 +99,7 @@ size_t os_dir_get_string(const os_inode_t *dir, char *buffer, size_t size)
     }
 
     CTASSERT(buffer != NULL);
-    const char *name = impl_dirname(dir);
+    const char *name = os_inode_name(dir);
     size_t len = ctu_strlen(name);
     size_t copy = CT_MIN(len, size - 1);
     ctu_strcpy(buffer, name, copy);
@@ -197,7 +197,7 @@ os_error_t os_library_open(const char *path, os_library_t *library)
         return impl_last_error();
     }
 
-    library->library = lib;
+    library->impl = lib;
     library->name = path;
 
     return eOsSuccess;
@@ -208,7 +208,7 @@ os_error_t os_library_close(os_library_t *library)
 {
     CTASSERT(library != NULL);
 
-    if (!impl_library_close(library->library))
+    if (!impl_library_close(library->impl))
     {
         return impl_last_error();
     }
@@ -217,12 +217,12 @@ os_error_t os_library_close(os_library_t *library)
 }
 
 USE_DECL
-os_error_t os_library_symbol(os_library_t *library, os_symbol_t *symbol, const char *name)
+os_error_t os_library_symbol(os_library_t *library, void **symbol, const char *name)
 {
     CTASSERT(library != NULL);
     CTASSERT(name != NULL);
 
-    os_symbol_t addr = impl_library_symbol(library->library, name);
+    void *addr = impl_library_symbol(library->impl, name);
     if (addr == NULL)
     {
         return impl_last_error();
@@ -259,8 +259,8 @@ os_error_t os_file_open(const char *path, os_access_t access, os_file_t *file)
         return impl_last_error();
     }
 
-    file->file = fd;
     file->path = path;
+    file->impl = fd;
 
     return eOsSuccess;
 }
@@ -269,9 +269,9 @@ USE_DECL
 os_error_t os_file_close(os_file_t *fd)
 {
     CTASSERT(fd != NULL);
-    CTASSERTF(fd->file != CT_OS_INVALID_FILE, "invalid file handle (%s)", fd->path);
+    CTASSERTF(fd->impl != CT_OS_INVALID_FILE, "invalid file handle (%s)", fd->path);
 
-    if (!impl_file_close(fd))
+    if (!impl_file_close(fd->impl))
     {
         return impl_last_error();
     }
@@ -355,4 +355,107 @@ bool os_dir_exists(const char *path)
 {
     os_dirent_t type = os_dirent_type(path);
     return type == eOsNodeDir;
+}
+
+///
+/// directory iteration operations
+///
+
+static void inode_create(os_inode_t *dst, const os_inode_impl_t *src)
+{
+    dst->type = impl_inode_type(src);
+    ctu_strcpy(dst->name, impl_inode_name(src), CT_OS_NAME_MAX);
+}
+
+static bool iter_next(os_iter_t *iter, os_inode_impl_t *result)
+{
+    bool ok = impl_iter_next(iter->impl, result);
+    if (!ok)
+    {
+        iter->error = impl_last_error();
+    }
+
+    return ok;
+}
+
+USE_DECL
+os_error_t os_iter_begin(const char *path, os_iter_t *result)
+{
+    CTASSERT(path != NULL);
+    CTASSERT(result != NULL);
+
+    result->error = eOsSuccess;
+    result->impl = impl_iter_open(path, &result->current);
+    if (result->impl == CT_OS_INVALID_ITER)
+    {
+        result->error = impl_last_error();
+    }
+
+    return result->error;
+}
+
+USE_DECL
+os_error_t os_iter_end(os_iter_t *iter)
+{
+    CTASSERT(iter != NULL);
+
+    if (!impl_iter_close(iter->impl))
+    {
+        return impl_last_error();
+    }
+
+    return eOsSuccess;
+}
+
+USE_DECL
+bool os_iter_next(os_iter_t *iter, os_inode_t *result)
+{
+    CTASSERT(iter != NULL);
+    CTASSERT(result != NULL);
+
+    if (iter->error != eOsSuccess)
+        return false;
+
+    os_inode_impl_t data;
+    while (iter_next(iter, &data))
+    {
+        if (!is_path_special(impl_inode_name(&data)))
+        {
+            break;
+        }
+    }
+
+    if (iter->error != eOsSuccess)
+        return false;
+
+    inode_create(result, &data);
+    return true;
+}
+
+USE_DECL
+os_error_t os_iter_error(const os_iter_t *iter)
+{
+    CTASSERT(iter != NULL);
+
+    return iter->error;
+}
+
+///
+/// inode operations
+///
+
+USE_DECL
+os_dirent_t os_inode_type(const os_inode_t *node)
+{
+    CTASSERT(node != NULL);
+
+    return node->type;
+}
+
+USE_DECL
+const char *os_inode_name(const os_inode_t *node)
+{
+    CTASSERT(node != NULL);
+
+    return node->name;
 }

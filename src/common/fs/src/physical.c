@@ -182,6 +182,28 @@ static os_error_t pfs_file_delete(fs_t *fs, fs_inode_t *self, const char *name)
     return os_file_delete(absolute);
 }
 
+static os_error_t pfs_iter_begin(fs_t *fs, fs_inode_t *dir, fs_iter_t *iter)
+{
+    const char *absolute = get_absolute(fs, dir, NULL);
+    return os_iter_begin(absolute, iter_data(iter));
+}
+
+static os_error_t pfs_iter_next(fs_iter_t *iter)
+{
+    os_inode_t cur = { 0 };
+    if (os_iter_next(iter_data(iter), &cur))
+    {
+
+    }
+
+    return eOsSuccess;
+}
+
+static os_error_t pfs_iter_end(fs_iter_t *iter)
+{
+    return os_iter_end(iter_data(iter));
+}
+
 static const fs_callbacks_t kPhysicalInterface = {
     .pfn_query_node = pfs_query_node,
     .pfn_query_dirents = pfs_query_dirents,
@@ -192,6 +214,12 @@ static const fs_callbacks_t kPhysicalInterface = {
 
     .pfn_create_file = pfs_file_create,
     .pfn_delete_file = pfs_file_delete,
+
+    .pfn_iter_begin = pfs_iter_begin,
+    .pfn_iter_next = pfs_iter_next,
+    .pfn_iter_end = pfs_iter_end,
+
+    .iter_size = sizeof(os_iter_t)
 };
 
 USE_DECL

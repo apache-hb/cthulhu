@@ -4,7 +4,7 @@
 
 #include "core/compiler.h" // IWYU pragma: export
 
-#if CTU_BUILD_SHARED
+#if CT_BUILD_SHARED
 #   if CT_@MOD@_BUILD
 #       define CT_@MOD@_API CT_EXPORT
 #   else

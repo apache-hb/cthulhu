@@ -2,8 +2,11 @@
 
 #pragma once
 
-#include <loader_config.h>
-
 #include "support/loader.h"
+
+typedef struct loader_t
+{
+    arena_t *arena;
+} loader_t;
 
 loaded_module_t load_error(load_error_t error, os_error_t os);

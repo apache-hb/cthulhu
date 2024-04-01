@@ -312,7 +312,7 @@ class EditorUi
 
     auto& get_loader_panel()
     {
-#if CTU_LOADER_STATIC
+#if CT_BUILD_STATIC
         return static_module_panel;
 #else
         return dynamic_module_panel;
@@ -488,8 +488,8 @@ private:
 
     void draw_loader_window()
     {
-        auto& loader = get_loader_panel();
-        if (!loader.is_enabled())
+        auto& panel = get_loader_panel();
+        if (!panel.is_enabled())
             return;
 
         const ImGuiViewport *viewport = ImGui::GetMainViewport();
@@ -502,7 +502,7 @@ private:
 
         if (ImGui::Begin("Loader", nullptr, kMainFlags))
         {
-            loader.draw();
+            panel.draw();
         }
         ImGui::End();
     }

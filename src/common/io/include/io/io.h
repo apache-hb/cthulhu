@@ -24,7 +24,7 @@ typedef os_error_t io_error_t;
 /// @brief destroy an IO object
 ///
 /// @param io the io object
-CT_IO_API void io_close(OUT_PTR_INVALID io_t *io);
+CT_IO_API io_error_t io_close(OUT_PTR_INVALID io_t *io);
 
 /// @brief create an IO object from a file
 ///

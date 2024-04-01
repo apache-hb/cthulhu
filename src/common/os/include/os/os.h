@@ -23,17 +23,45 @@ CT_BEGIN_API
 /// @warning do not access the library handle directly, it is platform specific
 typedef struct os_library_t
 {
+    // used by os_common
     const char *name;
-    os_library_impl_t library;
+
+    // used by os_native
+    os_library_impl_t impl;
 } os_library_t;
 
 /// @brief a file handle
 /// @warning do not access the file handle directly, it is platform specific
 typedef struct os_file_t
 {
+    // used by os_common
     const char *path;
-    os_file_impl_t file;
+
+    // used by os_native
+    os_file_impl_t impl;
 } os_file_t;
+
+/// @brief an inode entry
+/// @warning do not access the inode entry directly, it is platform specific
+typedef struct os_inode_t
+{
+    // used by os_common
+    os_dirent_t type;
+    char name[CT_OS_NAME_MAX];
+} os_inode_t;
+
+/// @brief a directory iterator
+/// @warning do not access the iterator directly, it is platform specific
+typedef struct os_iter_t
+{
+    // used by os_common
+    os_error_t error;
+    os_inode_t inode;
+
+    // used by os_native
+    os_iter_impl_t impl;
+    os_inode_impl_t current;
+} os_iter_t;
 
 /// shared library api
 
@@ -65,7 +93,7 @@ CT_OS_API os_error_t os_library_close(
 CT_NODISCARD
 CT_OS_API os_error_t os_library_symbol(
         INOUT_NOTNULL os_library_t *library,
-        OUT_NOTNULL os_symbol_t *symbol,
+        OUT_NOTNULL void **symbol,
         IN_STRING const char *name);
 
 /// @brief get the name of a shared library

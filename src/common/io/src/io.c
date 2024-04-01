@@ -3,15 +3,25 @@
 #include "io/io.h"
 #include "io/impl.h"
 
+#include "os/os.h"
 #include "base/panic.h"
 #include "std/str.h"
+#include "arena/arena.h"
 
-void io_close(io_t *io)
+io_error_t io_close(io_t *io)
 {
     CTASSERT(io != NULL);
 
+    io_error_t err = io_error(io);
+    if (err != eOsSuccess)
+        return err;
+
     if (io->cb->fn_close != NULL)
-        io->cb->fn_close(io);
+        return io->cb->fn_close(io);
+
+    arena_free(io, sizeof(io_t) + io->cb->size, io->arena);
+
+    return eOsSuccess;
 }
 
 USE_DECL
@@ -55,9 +65,9 @@ size_t io_vprintf(io_t *io, const char *fmt, va_list args)
     CTASSERT(io != NULL);
 
     const io_callbacks_t *cb = io->cb;
-    if (cb->fn_write_format != NULL)
+    if (cb->fn_fwrite != NULL)
     {
-        return cb->fn_write_format(io, fmt, args);
+        return cb->fn_fwrite(io, fmt, args);
     }
 
     text_t text = text_vformat(io->arena, fmt, args);
@@ -98,15 +108,15 @@ void *io_map(io_t *io, os_protect_t protect)
 
     CTASSERTF(protect != eOsProtectNone, "cannot io_map(%s). protect is eOsProtectNone", io_name(io));
 
-    // validate protect against access flags
+    // validate protect flags against access flags
     if (protect & eOsProtectRead)
     {
-        CTASSERTF(io->flags & eOsAccessRead, "io.map(%s) flags not readable", io_name(io));
+        CTASSERTF(io->flags & eOsAccessRead, "io_map(%s) flags not readable", io_name(io));
     }
 
     if (protect & eOsProtectWrite)
     {
-        CTASSERTF(io->flags & eOsAccessWrite, "io.map(%s) flags not writable", io_name(io));
+        CTASSERTF(io->flags & eOsAccessWrite, "io_map(%s) flags not writable", io_name(io));
     }
 
     if (io_size(io) == 0) { return ""; }

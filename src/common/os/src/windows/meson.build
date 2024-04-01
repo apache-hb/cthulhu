@@ -8,5 +8,5 @@ src = files('init.c', 'file.c', 'dir.c', 'fs.c', 'error.c', 'library.c')
 
 os_native = declare_dependency(
     sources : src,
-    dependencies : [ arena ]
+    dependencies : [ core ]
 )

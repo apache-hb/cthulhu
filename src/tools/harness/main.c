@@ -224,7 +224,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     const char *name = argv[1];
     int start = 2;
 
-#if CTU_LOADER_DYNAMIC
+#if CT_BUILD_SHARED
     start = 3;
     loaded_module_t mod = {0};
     CTASSERTF(support_load_module(support, eModLanguage, argv[2], &mod), "failed to load module `%s` (%s: %s)", argv[2], load_error_string(mod.error), os_error_string(mod.os, arena));
@@ -262,6 +262,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
         const char *path = argv[i];
         const char *ext = str_ext(path, arena);
         language_runtime_t *lang = support_get_lang(support, ext);
+        CTASSERTF(lang != NULL, "no language for extension `%s`", ext);
 
         io_t *io = make_file(path, eOsAccessRead, arena);
 

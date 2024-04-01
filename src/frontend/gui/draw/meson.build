@@ -2,7 +2,7 @@ src = [ 'src/draw.cpp' ]
 inc = include_directories('include')
 deps = [ imgui, implot ]
 
-libdraw = library('draw', src,
+libdraw = static_library('draw', src,
     cpp_args : gui_args,
     build_by_default : false,
     install : not meson.is_subproject(),

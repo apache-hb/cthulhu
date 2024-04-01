@@ -17,9 +17,6 @@ CT_BEGIN_API
 // get the last error
 CT_LOCAL os_error_t impl_last_error(void);
 
-// get the name of an inode
-CT_LOCAL const char *impl_dirname(const os_inode_t *inode);
-
 // get the max length of a name or path
 CT_LOCAL size_t impl_maxname(void);
 CT_LOCAL size_t impl_maxpath(void);
@@ -30,15 +27,28 @@ CT_LOCAL os_error_t impl_copyfile(const char *dst, const char *src);
 
 // files
 CT_LOCAL os_file_impl_t impl_file_open(const char *path, os_access_t access);
-CT_LOCAL bool impl_file_close(os_file_t *file);
+
+// close a file handle
+// return false if there was an error
+CT_LOCAL bool impl_file_close(os_file_impl_t impl);
 
 // file mapping
 CT_LOCAL void *impl_file_map(os_file_t *file, os_protect_t protect, size_t size, os_mapping_t *map);
 CT_LOCAL os_error_t impl_unmap(os_mapping_t *map);
 
+// iteration
+
+// returns true if there was a new inode
+CT_LOCAL os_iter_impl_t impl_iter_open(const char *path, os_inode_impl_t *inode);
+CT_LOCAL bool impl_iter_next(os_iter_impl_t impl, os_inode_impl_t *inode);
+CT_LOCAL bool impl_iter_close(os_iter_impl_t impl);
+
+CT_LOCAL const char *impl_inode_name(const os_inode_impl_t *inode);
+CT_LOCAL os_dirent_t impl_inode_type(const os_inode_impl_t *inode);
+
 // libraries
 CT_LOCAL os_library_impl_t impl_library_open(const char *path);
 CT_LOCAL bool impl_library_close(os_library_impl_t lib);
-CT_LOCAL os_symbol_t impl_library_symbol(os_library_impl_t lib, const char *name);
+CT_LOCAL void *impl_library_symbol(os_library_impl_t lib, const char *name);
 
 CT_END_API

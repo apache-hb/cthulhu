@@ -1,7 +1,7 @@
 src = [ 'imfilebrowser.cpp' ]
 inc = include_directories('.')
 
-libimfilebrowser = library('imfilebrowser', src,
+libimfilebrowser = static_library('imfilebrowser', src,
     include_directories : inc,
     dependencies : imgui
 )

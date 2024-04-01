@@ -8,23 +8,14 @@
 
 typedef void *os_library_impl_t;
 typedef FILE *os_file_impl_t;
+typedef struct dirent *os_inode_impl_t;
+typedef DIR *os_iter_impl_t;
 
 typedef struct os_mapping_t
 {
     void *view;
     size_t size;
 } os_mapping_t;
-
-typedef struct os_iter_t
-{
-    DIR *dir;
-    int error;
-} os_iter_t;
-
-typedef struct os_inode_t
-{
-    struct dirent *ent;
-} os_inode_t;
 
 enum {
     eOsSuccess = 0,
@@ -36,5 +27,11 @@ enum {
 #define CT_OS_INVALID_FILE NULL
 #define CT_OS_INVALID_LIBRARY NULL
 #define CT_OS_INVALID_MAPPING NULL
+#define CT_OS_INVALID_ITER NULL
 
-#define CT_OS_NAME_MAX NAME_MAX
+// TODO: this is wrong, im not sure how i might go about fixing it
+#ifdef _DIRENT_HAVE_D_NAMLEN
+#   define CT_OS_NAME_MAX NAME_MAX
+#else
+#   define CT_OS_NAME_MAX 255
+#endif

@@ -5,25 +5,22 @@
 #include "arena/arena.h"
 #include "base/panic.h"
 
-#if CTU_LOADER_STATIC
+#include <ctu_config.h>
+
+#if CT_BUILD_STATIC
 #   include "enum_modules.h"
 #endif
 
 #include "std/typed/vector.h"
 
 static const loader_config_t kConfig = eLoadNone
-#if CTU_LOADER_STATIC
+#if CT_BUILD_STATIC
     | eLoadStatic
 #endif
-#if CTU_LOADER_DYNAMIC
+#if CT_BUILD_SHARED
     | eLoadDynamic
 #endif
 ;
-
-typedef struct loader_t
-{
-    arena_t *arena;
-} loader_t;
 
 loaded_module_t load_error(load_error_t error, os_error_t os)
 {
@@ -57,7 +54,7 @@ typevec_t *load_default_modules(loader_t *loader)
 {
     CTASSERT(loader != NULL);
 
-#if CTU_LOADER_STATIC
+#if CT_BUILD_STATIC
     static_modules_t mods = get_static_modules();
 
     typevec_t *vec = typevec_new(sizeof(loaded_module_t), CT_LANG_COUNT + CT_PLUGIN_COUNT + CT_TARGET_COUNT, loader->arena);

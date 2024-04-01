@@ -111,7 +111,7 @@ static bool add_shared_module(cli_t *cli, const char *path, module_type_t type)
     CT_UNUSED(path);
     CT_UNUSED(type);
 
-#if CTU_LOADER_DYNAMIC
+#if CT_BUILD_SHARED
     loaded_module_t mod = { 0 };
 
     if (!support_load_module(cli->support, eModLanguage, path, &mod))

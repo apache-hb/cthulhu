@@ -108,9 +108,9 @@ os_error_t os_tmpfile_open(os_file_t *file)
     return os_file_open(name, eOsAccessWrite, file);
 }
 
-bool impl_file_close(os_file_t *fd)
+bool impl_file_close(os_file_impl_t impl)
 {
-    return CloseHandle(fd->file) != 0;
+    return CloseHandle(impl) != 0;
 }
 
 USE_DECL
@@ -122,7 +122,7 @@ os_error_t os_file_read(os_file_t *file, void *buffer, size_t size, size_t *actu
     CTASSERTF(size <= UINT32_MAX, "cannot read more than %u bytes at once (%zu is too big)", UINT32_MAX, size);
 
     DWORD read_size = 0;
-    BOOL result = ReadFile(file->file, buffer, (DWORD)size, &read_size, NULL);
+    BOOL result = ReadFile(file->impl, buffer, (DWORD)size, &read_size, NULL);
 
     size_t read = read_size;
 
@@ -144,7 +144,7 @@ os_error_t os_file_write(os_file_t *file, const void *buffer, size_t size, size_
     CTASSERTF(size <= UINT32_MAX, "cannot write more than %u bytes at once (%zu is too big)", UINT32_MAX, size);
 
     DWORD written_size = 0;
-    BOOL result = WriteFile(file->file, buffer, (DWORD)size, &written_size, NULL);
+    BOOL result = WriteFile(file->impl, buffer, (DWORD)size, &written_size, NULL);
 
     size_t written = written_size;
 
@@ -164,7 +164,7 @@ os_error_t os_file_size(os_file_t *file, size_t *actual)
     CTASSERT(actual != NULL);
 
     LARGE_INTEGER size;
-    BOOL result = GetFileSizeEx(file->file, &size);
+    BOOL result = GetFileSizeEx(file->impl, &size);
     *actual = size.QuadPart;
 
     if (!result)
@@ -183,7 +183,7 @@ os_error_t os_file_seek(os_file_t *file, size_t offset, size_t *actual)
 
     LARGE_INTEGER it = { .QuadPart = (LONGLONG)offset };
     LARGE_INTEGER out = { 0 };
-    BOOL result = SetFilePointerEx(file->file, it, &out, FILE_BEGIN);
+    BOOL result = SetFilePointerEx(file->impl, it, &out, FILE_BEGIN);
     *actual = out.QuadPart;
 
     if (!result)
@@ -201,7 +201,7 @@ os_error_t os_file_tell(os_file_t *file, size_t *actual)
 
     LARGE_INTEGER offset = { 0 };
     LARGE_INTEGER zero = { 0 };
-    BOOL result = SetFilePointerEx(file->file, zero, &offset, FILE_CURRENT);
+    BOOL result = SetFilePointerEx(file->impl, zero, &offset, FILE_CURRENT);
     *actual = offset.QuadPart;
 
     if (!result)
@@ -218,13 +218,13 @@ os_error_t os_file_expand(os_file_t *file, size_t size)
     CTASSERT(file != NULL);
 
     LARGE_INTEGER it = { .QuadPart = (LONGLONG)size };
-    BOOL result = SetFilePointerEx(file->file, it, NULL, FILE_BEGIN);
+    BOOL result = SetFilePointerEx(file->impl, it, NULL, FILE_BEGIN);
     if (!result)
     {
         return GetLastError();
     }
 
-    result = SetEndOfFile(file->file);
+    result = SetEndOfFile(file->impl);
     if (!result)
     {
         return GetLastError();
@@ -283,7 +283,7 @@ void *impl_file_map(os_file_t *file, os_protect_t protect, size_t size, os_mappi
     DWORD low = (DWORD)(size & 0xFFFFFFFF);
 
     HANDLE handle = CreateFileMapping(
-        /* hFile = */ file->file,
+        /* hFile = */ file->impl,
         /* lpFileMappingAttributes = */ NULL,
         /* flProtect = */ prot,
         /* dwMaximumSizeHigh = */ high,

@@ -17,14 +17,6 @@ static void cfamily_destroy(target_runtime_t *runtime)
     CT_UNUSED(runtime);
 }
 
-static void cfamily_tree(target_runtime_t *runtime, const tree_t *tree, target_emit_t *emit)
-{
-    // empty
-    CT_UNUSED(runtime);
-    CT_UNUSED(tree);
-    CT_UNUSED(emit);
-}
-
 static void cfamily_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *emit)
 {
     // empty

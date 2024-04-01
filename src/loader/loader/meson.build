@@ -86,15 +86,6 @@ else
     src += [ 'src/disable_shared.c' ]
 endif
 
-loader_cdata = configuration_data()
-loader_cdata.set10('CTU_LOADER_STATIC', default_library == 'static')
-loader_cdata.set10('CTU_LOADER_DYNAMIC', default_library == 'shared')
-
-loader_config = configure_file(
-    output : 'loader_config.h',
-    configuration : loader_cdata
-)
-
 support_include = include_directories('.', 'include')
 support_impl_include = include_directories('src')
 

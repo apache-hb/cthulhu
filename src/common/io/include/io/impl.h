@@ -76,7 +76,7 @@ typedef void *(*io_map_t)(io_t *self, os_protect_t protect);
 /// destroy an io objects backing data and any associated resources
 ///
 /// @param self the io object
-typedef void (*io_close_t)(io_t *self);
+typedef os_error_t (*io_close_t)(io_t *self);
 
 /// @brief io callback interface
 typedef struct io_callbacks_t
@@ -92,7 +92,7 @@ typedef struct io_callbacks_t
     /// @brief write format callback
     /// may be NULL on non-writable objects
     /// @note if this is NULL, @a fn_write will be used instead
-    io_write_format_t fn_write_format;
+    io_write_format_t fn_fwrite;
 
     /// @brief total size callback
     /// must always be provided
@@ -109,6 +109,9 @@ typedef struct io_callbacks_t
     /// @brief close callback
     /// optional if backing data does not require lifetime management
     io_close_t fn_close;
+
+    /// @brief the size of the io objects private data
+    size_t size;
 } io_callbacks_t;
 
 /// @brief io object implementation
@@ -162,7 +165,6 @@ CT_IO_API io_t *io_new(
     os_access_t flags,
     IN_STRING const char *name,
     IN_READS(size) const void *data,
-    IN_RANGE(>, 0) size_t size,
     IN_NOTNULL arena_t *arena);
 
 /// @}

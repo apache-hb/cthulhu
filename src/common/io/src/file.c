@@ -77,22 +77,19 @@ static void *fd_map(io_t *self, os_protect_t protect)
     return os_mapping_data(&file->mapping);
 }
 
-static void fd_close(io_t *self)
+static os_error_t fd_close(io_t *self)
 {
     io_file_t *file = fd_data(self);
-    if (io_error(self) == 0)
+    os_error_t err = 0;
+
+    if (os_mapping_active(&file->mapping))
     {
-        os_error_t err = 0;
-
-        if (os_mapping_active(&file->mapping))
-        {
-            err = os_unmap(&file->mapping);
-            CTASSERTF(err == 0, "failed to unmap file (%s)", os_error_string(err, self->arena));
-        }
-
-        err = os_file_close(&file->file);
-        CTASSERTF(err == 0, "failed to close file (%s)", os_error_string(err, self->arena));
+        err = os_unmap(&file->mapping);
+        if (err != eOsSuccess)
+            return err;
     }
+
+    return os_file_close(&file->file);
 }
 
 static const io_callbacks_t kFileCallbacks = {
@@ -104,6 +101,8 @@ static const io_callbacks_t kFileCallbacks = {
 
     .fn_map = fd_map,
     .fn_close = fd_close,
+
+    .size = sizeof(io_file_t),
 };
 
 USE_DECL
@@ -119,7 +118,7 @@ io_t *io_file(const char *path, os_access_t mode, arena_t *arena)
         .file = fd,
     };
 
-    io_t *io = io_new(&kFileCallbacks, mode, path, &data, sizeof(io_file_t), arena);
+    io_t *io = io_new(&kFileCallbacks, mode, path, &data, arena);
     io->error = err;
 
     return io;

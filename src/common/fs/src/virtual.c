@@ -96,10 +96,10 @@ static void *vfs_map(io_t *self, os_protect_t protect)
     return io->data->data;
 }
 
-static void vfs_close(io_t *self)
+static os_error_t vfs_close(io_t *self)
 {
     CT_UNUSED(self);
-    /* empty */
+    return eOsSuccess;
 }
 
 static const io_callbacks_t kVirtualCallbacks = {
@@ -111,6 +111,8 @@ static const io_callbacks_t kVirtualCallbacks = {
 
     .fn_map = vfs_map,
     .fn_close = vfs_close,
+
+    .size = sizeof(virtual_io_t),
 };
 
 static io_t *vfs_io(virtual_file_t *file, os_access_t flags, arena_t *arena)
@@ -125,7 +127,7 @@ static io_t *vfs_io(virtual_file_t *file, os_access_t flags, arena_t *arena)
         file->used = 0;
     }
 
-    return io_new(&kVirtualCallbacks, flags, file->name, &data, sizeof(virtual_io_t), arena);
+    return io_new(&kVirtualCallbacks, flags, file->name, &data, arena);
 }
 
 // fs impl
@@ -225,6 +227,8 @@ static const fs_callbacks_t kVirtualInterface = {
 
     .pfn_create_file = vfs_create_file,
     .pfn_delete_file = vfs_delete_file,
+
+    .iter_size = sizeof(map_iter_t)
 };
 
 USE_DECL

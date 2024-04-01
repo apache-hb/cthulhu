@@ -6,8 +6,6 @@
 
 #include "os/core.h"
 
-#include "fs/impl.h"
-
 #include <stdbool.h>
 
 CT_BEGIN_API
@@ -20,6 +18,10 @@ typedef struct vector_t vector_t;
 /// @brief virtual and physical filesystem interface
 /// @ingroup common
 /// @{
+
+typedef struct fs_t fs_t;
+typedef struct fs_inode_t fs_inode_t;
+typedef struct fs_iter_t fs_iter_t;
 
 /// @brief delete a filesystem handle
 ///
@@ -127,6 +129,8 @@ CT_FS_API sync_result_t fs_sync(fs_t *dst, fs_t *src);
 typedef void (*fs_dirent_callback_t)(const char *path, const char *name, os_dirent_t type, void *data);
 
 CT_FS_API void fs_iter_dirents(fs_t *fs, const char *path, void *data, fs_dirent_callback_t callback);
+
+CT_FS_API bool fs_inode_is(IN_NOTNULL const fs_inode_t *inode, os_dirent_t type);
 
 CT_FS_API os_error_t fs_iter_begin(
     IN_NOTNULL fs_t *fs,

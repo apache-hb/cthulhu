@@ -65,16 +65,16 @@ os_error_t os_tmpfile_open(os_file_t *file)
 
     os_file_t result = {
         .path = "<tmpfile>",
-        .file = fd,
+        .impl = fd,
     };
 
     *file = result;
     return 0;
 }
 
-bool impl_file_close(os_file_t *file)
+bool impl_file_close(os_file_impl_t file)
 {
-    return fclose(file->file) == 0;
+    return fclose(file) == 0;
 }
 
 USE_DECL
@@ -85,11 +85,11 @@ os_error_t os_file_read(os_file_t *file, void *buffer, size_t size, size_t *actu
     CTASSERT(size > 0);
     CTASSERT(actual != NULL);
 
-    size_t read = fread(buffer, 1, size, file->file);
+    size_t read = fread(buffer, 1, size, file->impl);
 
     if (read < size)
     {
-        if (ferror(file->file))
+        if (ferror(file->impl))
         {
             return errno;
         }
@@ -107,11 +107,11 @@ os_error_t os_file_write(os_file_t *file, const void *buffer, size_t size, size_
     CTASSERT(size > 0);
     CTASSERT(actual != NULL);
 
-    size_t written = fwrite(buffer, 1, size, file->file);
+    size_t written = fwrite(buffer, 1, size, file->impl);
 
     if (written < size)
     {
-        if (ferror(file->file))
+        if (ferror(file->impl))
         {
             return errno;
         }
@@ -127,15 +127,15 @@ os_error_t os_file_size(os_file_t *file, size_t *actual)
     CTASSERT(file != NULL);
     CTASSERT(actual != NULL);
 
-    long pos = ftell(file->file);
+    long pos = ftell(file->impl);
 
     if (pos < 0) { return errno; }
-    if (fseek(file->file, 0, SEEK_END) < 0) { return errno; }
+    if (fseek(file->impl, 0, SEEK_END) < 0) { return errno; }
 
-    long size = ftell(file->file);
+    long size = ftell(file->impl);
 
     if (size < 0) { return errno; }
-    if (fseek(file->file, pos, SEEK_SET) < 0) { return errno; }
+    if (fseek(file->impl, pos, SEEK_SET) < 0) { return errno; }
 
     *actual = size;
     return 0;
@@ -147,16 +147,16 @@ os_error_t os_file_expand(os_file_t *file, size_t size)
     CTASSERT(file != NULL);
 
     // save the current position
-    long pos = ftell(file->file);
+    long pos = ftell(file->impl);
     if (pos < 0)
         return errno;
 
-    int result = ftruncate(fileno(file->file), size);
+    int result = ftruncate(fileno(file->impl), size);
     if (result < 0)
         return errno;
 
     // restore the position
-    result = fseek(file->file, pos, SEEK_SET);
+    result = fseek(file->impl, pos, SEEK_SET);
     if (result < 0)
         return errno;
 
@@ -170,7 +170,7 @@ os_error_t os_file_seek(os_file_t *file, size_t offset, size_t *actual)
     CTASSERT(offset < LONG_MAX);
     CTASSERT(actual != NULL);
 
-    int result = fseek(file->file, (long)offset, SEEK_SET);
+    int result = fseek(file->impl, (long)offset, SEEK_SET);
     if (result < 0)
     {
         return errno;
@@ -186,7 +186,7 @@ os_error_t os_file_tell(os_file_t *file, size_t *actual)
     CTASSERT(file != NULL);
     CTASSERT(actual != NULL);
 
-    long pos = ftell(file->file);
+    long pos = ftell(file->impl);
 
     if (pos < 0)
     {
@@ -225,7 +225,7 @@ void *impl_file_map(os_file_t *file, os_protect_t protect, size_t size, os_mappi
 
     int prot = get_mmap_prot(protect);
 
-    int fd = fileno(file->file);
+    int fd = fileno(file->impl);
     return mmap(NULL, size, prot, MAP_PRIVATE, fd, 0);
 }
 

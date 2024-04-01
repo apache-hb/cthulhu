@@ -22,6 +22,9 @@ CT_BEGIN_API
 /// @brief file handle
 typedef struct os_file_t os_file_t;
 
+/// @brief memory mapping handle
+typedef struct os_mapping_t os_mapping_t;
+
 /// @brief inode handle
 typedef struct os_inode_t os_inode_t;
 
@@ -145,6 +148,23 @@ CT_OS_API char *os_cwd_string(IN_NOTNULL arena_t *arena);
 /// @return an error if the current working directory could not be retrieved
 RET_INSPECT
 CT_OS_API os_error_t os_getcwd(OUT_NOTNULL text_t *text, IN_NOTNULL arena_t *arena);
+
+/// @brief get the type of an inode
+///
+/// @param node the inode to get the type of
+///
+/// @return the type of the inode
+CT_NODISCARD
+CT_OS_API os_dirent_t os_inode_type(IN_NOTNULL const os_inode_t *node);
+
+/// @brief get the name of an inode
+/// @note the name is only valid for the lifetime of the inode
+///
+/// @param node the inode to get the name of
+///
+/// @return the name of the inode
+CT_NODISCARD
+CT_OS_API const char *os_inode_name(IN_NOTNULL const os_inode_t *node);
 
 /// @brief get the string representation of a directory entry type
 ///

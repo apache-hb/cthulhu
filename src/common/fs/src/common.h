@@ -9,6 +9,19 @@
 typedef struct map_t map_t;
 typedef struct arena_t arena_t;
 
+typedef struct fs_inode_t
+{
+    os_dirent_t type;
+    char data[];
+} fs_inode_t;
+
+typedef struct fs_iter_t
+{
+    fs_t *fs;
+    fs_inode_t *current;
+    char data[];
+} fs_iter_t;
+
 typedef struct inode_result_t
 {
     fs_inode_t *node;
@@ -24,6 +37,10 @@ typedef os_error_t (*fs_file_delete_t)(fs_t *fs, fs_inode_t *node, const char *n
 
 typedef inode_result_t (*fs_dir_create_t)(fs_t *fs, fs_inode_t *node, const char *name);
 typedef os_error_t (*fs_dir_delete_t)(fs_t *fs, fs_inode_t *node, const char *name);
+
+typedef os_error_t (*fs_iter_begin_t)(fs_t *fs, fs_inode_t *dir, fs_iter_t *iter);
+typedef os_error_t (*fs_iter_next_t)(fs_iter_t *iter);
+typedef os_error_t (*fs_iter_end_t)(fs_iter_t *iter);
 
 /// @brief fs callback to delete the fs
 ///
@@ -43,6 +60,12 @@ typedef struct fs_callbacks_t
 
     fs_file_create_t pfn_create_file;
     fs_file_delete_t pfn_delete_file;
+
+    fs_iter_begin_t pfn_iter_begin;
+    fs_iter_next_t pfn_iter_next;
+    fs_iter_end_t pfn_iter_end;
+
+    size_t iter_size;
 } fs_callbacks_t;
 
 typedef struct fs_t
@@ -60,9 +83,12 @@ CT_LOCAL extern fs_inode_t gInvalidFileNode;
 
 CT_LOCAL fs_inode_t *inode_file(const void *data, size_t size, arena_t *arena);
 CT_LOCAL fs_inode_t *inode_dir(const void *data, size_t size, arena_t *arena);
+CT_LOCAL fs_inode_t *inode_new(os_dirent_t type, const void *data, size_t size, arena_t *arena);
 
 CT_LOCAL void *inode_data(fs_inode_t *inode);
 CT_LOCAL bool inode_is(fs_inode_t *inode, os_dirent_t type);
+
+CT_LOCAL void *iter_data(fs_iter_t *iter);
 
 // helpers
 CT_LOCAL os_error_t mkdir_recursive(const char *path, arena_t *arena);

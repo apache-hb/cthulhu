@@ -7,6 +7,7 @@
 
 #include "base/panic.h"
 #include "base/util.h"
+#include "os/os.h"
 
 /// @brief a read/write in memory file
 typedef struct buffer_t
@@ -70,10 +71,12 @@ static void *mem_map(io_t *self, os_protect_t protect)
     return mem->data;
 }
 
-static void mem_close(io_t *self)
+static os_error_t mem_close(io_t *self)
 {
     buffer_t *mem = mem_data(self);
     arena_free(mem->data, mem->total, self->arena);
+
+    return eOsSuccess;
 }
 
 static const io_callbacks_t kBufferCallbacks = {
@@ -84,7 +87,9 @@ static const io_callbacks_t kBufferCallbacks = {
     .fn_seek = mem_seek,
 
     .fn_map = mem_map,
-    .fn_close = mem_close
+    .fn_close = mem_close,
+
+    .size = sizeof(buffer_t)
 };
 
 USE_DECL
@@ -103,7 +108,7 @@ io_t *io_memory(const char *name, const void *data, size_t size, os_access_t fla
 
     ctu_memcpy(buffer.data, data, size);
 
-    io_t *io = io_new(&kBufferCallbacks, flags, name, &buffer, sizeof(buffer_t), arena);
+    io_t *io = io_new(&kBufferCallbacks, flags, name, &buffer, arena);
     ARENA_REPARENT(buffer.data, io, arena);
     return io;
 }
@@ -121,7 +126,7 @@ io_t *io_blob(const char *name, size_t size, os_access_t flags, arena_t *arena)
         .offset = 0
     };
 
-    io_t *io = io_new(&kBufferCallbacks, flags, name, &buffer, sizeof(buffer_t), arena);
+    io_t *io = io_new(&kBufferCallbacks, flags, name, &buffer, arena);
     ARENA_REPARENT(buffer.data, io, arena);
     return io;
 }

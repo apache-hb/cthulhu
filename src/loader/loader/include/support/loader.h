@@ -3,10 +3,10 @@
 #pragma once
 
 #include <ctu_support_api.h>
-#include <loader_config.h>
 
 #include "core/analyze.h"
 #include "os/core.h"
+#include "os/os.h"
 
 typedef struct arena_t arena_t;
 typedef struct typevec_t typevec_t;
@@ -51,6 +51,7 @@ typedef struct loaded_module_t
     const language_t *lang;
     const plugin_t *plugin;
     const target_t *target;
+    os_library_t library;
     load_error_t error;
     os_error_t os;
 } loaded_module_t;

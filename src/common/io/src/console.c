@@ -7,28 +7,40 @@
 
 #include <stdio.h>
 
-static size_t con_out_write(io_t *self, const char *fmt, va_list args)
+static size_t cout_write(io_t *self, const void *src, size_t size)
 {
     CT_UNUSED(self);
+    return fwrite(src, 1, size, stdout);
+}
 
+static size_t cout_fwrite(io_t *self, const char *fmt, va_list args)
+{
+    CT_UNUSED(self);
     return vfprintf(stdout, fmt, args);
 }
 
-static size_t con_error_write(io_t *self, const char *fmt, va_list args)
+static size_t cerr_write(io_t *self, const void *src, size_t size)
 {
     CT_UNUSED(self);
+    return fwrite(src, 1, size, stderr);
+}
 
+static size_t cerr_fwrite(io_t *self, const char *fmt, va_list args)
+{
+    CT_UNUSED(self);
     return vfprintf(stderr, fmt, args);
 }
 
 // TODO: find a way to simplify this down to a single io_t
 
 static const io_callbacks_t kConsoleOutCallbacks = {
-    .fn_write_format = con_out_write,
+    .fn_write = cout_write,
+    .fn_fwrite = cout_fwrite,
 };
 
 static const io_callbacks_t kConsoleErrorCallbacks = {
-    .fn_write_format = con_error_write,
+    .fn_write = cerr_write,
+    .fn_fwrite = cerr_fwrite,
 };
 
 static io_t gConsoleOutIo = {

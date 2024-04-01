@@ -12,8 +12,8 @@ TraceArena::backtrace_t TraceArena::get_backtrace()
 {
     backtrace_t capture{};
 
-    bt_read([](bt_address_t address, void *user) {
-        backtrace_t *capture = static_cast<backtrace_t*>(user);
+    bt_read([](bt_address_t address, void *ptr) {
+        backtrace_t *capture = static_cast<backtrace_t*>(ptr);
         if (capture->full())
             return;
 
@@ -327,12 +327,12 @@ void TraceArena::draw_backtrace(bt_address_t it) const
     }
 }
 
-void TraceArena::draw_name(const alloc_info_t& info) const
+void TraceArena::draw_name(const alloc_info_t& alloc) const
 {
-    ScopeID scope(info.name.c_str());
-    if (!info.name.empty())
+    ScopeID scope(alloc.name.c_str());
+    if (!alloc.name.empty())
     {
-        ImGui::Text("%s", info.name.c_str());
+        ImGui::Text("%s", alloc.name.c_str());
     }
     else
     {
@@ -343,7 +343,7 @@ void TraceArena::draw_name(const alloc_info_t& info) const
     {
         if (enable_stacktrace)
         {
-            draw_backtrace(info.trace);
+            draw_backtrace(alloc.trace);
         }
         else
         {
@@ -357,10 +357,10 @@ void TraceArena::draw_extern_name(const void *ptr) const
 {
     if (auto it = allocs.find(ptr); it != allocs.end())
     {
-        const auto& info = it->second;
-        if (!info.name.empty())
+        const auto& alloc = it->second;
+        if (!alloc.name.empty())
         {
-            ImGui::Text("%s (external)", info.name.c_str());
+            ImGui::Text("%s (external)", alloc.name.c_str());
         }
         else
         {
@@ -383,36 +383,36 @@ static const ImGuiTreeNodeFlags kValueNodeFlags
     | ImGuiTreeNodeFlags_Bullet
     | ImGuiTreeNodeFlags_NoTreePushOnOpen;
 
-void TraceArena::draw_tree_child(const void *ptr, const alloc_info_t& info) const
+void TraceArena::draw_tree_child(const void *ptr, const alloc_info_t& alloc) const
 {
     ImGui::TreeNodeEx(ptr, kValueNodeFlags, "%p", ptr);
 
     ImGui::TableNextColumn();
-    ImGui::Text("%zu", info.size);
+    ImGui::Text("%zu", alloc.size);
 
     ImGui::TableNextColumn();
-    draw_name(info);
+    draw_name(alloc);
 
     if (ImGui::BeginItemTooltip())
     {
-        ImGui::Text("parent: %p", info.parent);
+        ImGui::Text("parent: %p", alloc.parent);
         ImGui::EndTooltip();
     }
 }
 
-void TraceArena::draw_tree_group(const void *ptr, const alloc_info_t& info) const
+void TraceArena::draw_tree_group(const void *ptr, const alloc_info_t& alloc) const
 {
     bool is_open = ImGui::TreeNodeEx(ptr, kGroupNodeFlags, "%p", ptr);
 
     ImGui::TableNextColumn();
-    ImGui::Text("%zu", info.size);
+    ImGui::Text("%zu", alloc.size);
 
     ImGui::TableNextColumn();
-    draw_name(info);
+    draw_name(alloc);
 
     if (ImGui::BeginItemTooltip())
     {
-        ImGui::Text("parent: %p", info.parent);
+        ImGui::Text("parent: %p", alloc.parent);
         ImGui::EndTooltip();
     }
 
@@ -427,17 +427,17 @@ void TraceArena::draw_tree_group(const void *ptr, const alloc_info_t& info) cons
     }
 }
 
-void TraceArena::draw_tree_node_info(const void *ptr, const alloc_info_t& info) const
+void TraceArena::draw_tree_node_info(const void *ptr, const alloc_info_t& alloc) const
 {
     ImGui::TableNextRow();
     ImGui::TableNextColumn();
     if (has_children(ptr))
     {
-        draw_tree_group(ptr, info);
+        draw_tree_group(ptr, alloc);
     }
     else
     {
-        draw_tree_child(ptr, info);
+        draw_tree_child(ptr, alloc);
     }
 }
 
@@ -478,15 +478,15 @@ void TraceArena::draw_tree() const
 
             if (is_external(root) && !has_parent(root))
             {
-                alloc_info_t info = { .name = "extern" };
-                draw_tree_node_info(root, info);
+                alloc_info_t it = { .name = "extern" };
+                draw_tree_node_info(root, it);
             }
         }
 
         // draw all nodes that don't have parents and don't have children
-        for (auto& [ptr, info] : allocs)
+        for (auto& [ptr, alloc] : allocs)
         {
-            if (info.parent != nullptr || has_children(ptr)) continue;
+            if (alloc.parent != nullptr || has_children(ptr)) continue;
 
             draw_tree_node(ptr);
         }
@@ -508,7 +508,7 @@ void TraceArena::draw_flat() const
         ImGui::TableSetupScrollFreeze(0, 1);
         ImGui::TableHeadersRow();
 
-        for (const auto& [ptr, info] : allocs)
+        for (const auto& [ptr, alloc] : allocs)
         {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
@@ -516,18 +516,18 @@ void TraceArena::draw_flat() const
             ImGui::Text("%p", ptr);
 
             ImGui::TableNextColumn();
-            ImGui::Text("%zu", info.size);
+            ImGui::Text("%zu", alloc.size);
 
             ImGui::TableNextColumn();
-            draw_name(info);
+            draw_name(alloc);
 
             ImGui::TableNextColumn();
-            if (info.parent)
+            if (alloc.parent)
             {
-                ImGui::Text("%p", info.parent);
+                ImGui::Text("%p", alloc.parent);
                 if (ImGui::BeginItemTooltip())
                 {
-                    draw_extern_name(info.parent);
+                    draw_extern_name(alloc.parent);
                     ImGui::EndTooltip();
                 }
             }

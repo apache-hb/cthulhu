@@ -16,9 +16,9 @@ fs_inode_t gInvalidFileNode = {
     .type = eOsNodeNone
 };
 
-static fs_inode_t *inode_new(os_dirent_t type, const void *data, size_t size, arena_t *arena)
+fs_inode_t *inode_new(os_dirent_t type, const void *data, size_t size, arena_t *arena)
 {
-    CTASSERT(type < eOsNodeCount);
+    CT_ASSERT_RANGE(type, 0, eOsNodeCount - 1);
 
     fs_inode_t *inode = ARENA_MALLOC(sizeof(fs_inode_t) + size, "inode", NULL, arena);
     inode->type = type;
@@ -41,6 +41,13 @@ void *inode_data(fs_inode_t *inode)
     CTASSERT(inode != NULL);
 
     return inode->data;
+}
+
+void *iter_data(fs_iter_t *iter)
+{
+    CTASSERT(iter != NULL);
+
+    return iter->data;
 }
 
 bool inode_is(fs_inode_t *inode, os_dirent_t type)

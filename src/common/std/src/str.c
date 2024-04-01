@@ -629,6 +629,25 @@ void str_replace_inplace(text_t *text, const char *search, const char *repl)
 }
 
 USE_DECL
+void str_trim_back_inplace(text_t *text, const char *chars)
+{
+    CTASSERT(text != NULL);
+    CTASSERT(chars != NULL);
+    CTASSERT(text->text != NULL);
+
+    size_t len = text->length;
+    char *str = text->text;
+
+    while (len > 0 && char_is_any_of(str[len - 1], chars))
+    {
+        len -= 1;
+    }
+
+    text->length = len;
+    str[len] = '\0';
+}
+
+USE_DECL
 char *str_replace_many(const char *str, const map_t *repl, arena_t *arena)
 {
     CTASSERT(str != NULL);

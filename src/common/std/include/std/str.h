@@ -249,6 +249,12 @@ CT_STD_API char *str_replace(IN_STRING const char *str, IN_STRING const char *se
 /// @param repl the replacement substring
 CT_STD_API void str_replace_inplace(INOUT_NOTNULL text_t *text, IN_STRING const char *search, IN_STRING const char *repl);
 
+/// @brief trim chars from the back of a string in place
+///
+/// @param text the text to trim
+/// @param chars the characters to trim
+CT_STD_API void str_trim_back_inplace(INOUT_NOTNULL text_t *text, IN_STRING const char *chars);
+
 /// @brief replace all instances of a each substring in a string with provided replacement
 ///
 /// @param str the string to replace elements in

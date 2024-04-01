@@ -53,12 +53,13 @@ static void *view_map(io_t *self, os_protect_t protect)
 
 static const io_callbacks_t kViewCallbacks = {
     .fn_read = view_read,
-    .fn_write = NULL,
 
     .fn_get_size = view_size,
     .fn_seek = view_seek,
 
-    .fn_map = view_map
+    .fn_map = view_map,
+
+    .size = sizeof(view_t),
 };
 
 USE_DECL
@@ -76,7 +77,7 @@ io_t *io_view(const char *name, const void *data, size_t size, arena_t *arena)
         .offset = 0
     };
 
-    return io_new(&kViewCallbacks, flags, name, &view, sizeof(view_t), arena);
+    return io_new(&kViewCallbacks, flags, name, &view, arena);
 }
 
 USE_DECL

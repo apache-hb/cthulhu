@@ -26,18 +26,18 @@ loaded_module_t load_static_module(loader_t *loader, module_type_t mask, const c
             const language_t *lang = mods.langs[i];
             const module_info_t *info = &lang->info;
 
-            if (str_equal(info->id, name))
-            {
-                if (mod.lang != NULL)
-                {
-                    const language_t *old = mod.lang;
-                    const module_info_t *prev = &old->info;
-                    CT_NEVER("multiple static languages with the same id: %s (prev: %s, new: %s)", info->id, prev->name, info->name);
-                }
+            if (!str_equal(info->id, name))
+                continue;
 
-                mod.type |= eModLanguage;
-                mod.lang = lang;
+            if (mod.lang != NULL)
+            {
+                const language_t *old = mod.lang;
+                const module_info_t *prev = &old->info;
+                CT_NEVER("multiple static languages with the same id: %s (prev: %s, new: %s)", info->id, prev->name, info->name);
             }
+
+            mod.type |= eModLanguage;
+            mod.lang = lang;
         }
     }
 
@@ -48,18 +48,18 @@ loaded_module_t load_static_module(loader_t *loader, module_type_t mask, const c
             const plugin_t *plugin = mods.plugins[i];
             const module_info_t *info = &plugin->info;
 
-            if (str_equal(info->id, name))
-            {
-                if (mod.plugin != NULL)
-                {
-                    const plugin_t *old = mod.plugin;
-                    const module_info_t *prev = &old->info;
-                    CT_NEVER("multiple static plugins with the same id: %s (prev: %s, new: %s)", info->id, prev->name, info->name);
-                }
+            if (!str_equal(info->id, name))
+                continue;
 
-                mod.type |= eModPlugin;
-                mod.plugin = plugin;
+            if (mod.plugin != NULL)
+            {
+                const plugin_t *old = mod.plugin;
+                const module_info_t *prev = &old->info;
+                CT_NEVER("multiple static plugins with the same id: %s (prev: %s, new: %s)", info->id, prev->name, info->name);
             }
+
+            mod.type |= eModPlugin;
+            mod.plugin = plugin;
         }
     }
 
@@ -69,18 +69,18 @@ loaded_module_t load_static_module(loader_t *loader, module_type_t mask, const c
         {
             const target_t *target = mods.targets[i];
             const module_info_t *info = &target->info;
-            if (str_equal(info->id, name))
-            {
-                if (mod.target != NULL)
-                {
-                    const target_t *old = mod.target;
-                    const module_info_t *prev = &old->info;
-                    CT_NEVER("multiple static targets with the same id: %s (prev: %s, new: %s)", info->id, prev->name, info->name);
-                }
+            if (!str_equal(info->id, name))
+                continue;
 
-                mod.type |= eModTarget;
-                mod.target = target;
+            if (mod.target != NULL)
+            {
+                const target_t *old = mod.target;
+                const module_info_t *prev = &old->info;
+                CT_NEVER("multiple static targets with the same id: %s (prev: %s, new: %s)", info->id, prev->name, info->name);
             }
+
+            mod.type |= eModTarget;
+            mod.target = target;
         }
     }
 

@@ -24,7 +24,7 @@ static DWORD format_inner(os_error_t error, char *buffer, size_t size)
         /* dwMessageId = */ (DWORD)error,
         /* dwLanguageId = */ MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         /* lpBuffer = */ buffer,
-        /* nSize = */ size,
+        /* nSize = */ (DWORD)size,
         /* Arguments = */ NULL);
 }
 
@@ -34,7 +34,11 @@ size_t os_error_get_string(os_error_t error, char *buffer, size_t size)
     if (size == 0)
     {
         // caller is asking for the size of the buffer
-        return format_inner(error, NULL, 0);
+        CTASSERT(buffer == NULL);
+
+        // TODO: is there a way of asking for the size of the buffer at all?
+        // this is what .NET core does, but its not clear if this is correct.
+        return 0x1000 * sizeof(TCHAR);
     }
 
     CTASSERT(buffer != NULL);
@@ -49,6 +53,9 @@ size_t os_error_get_string(os_error_t error, char *buffer, size_t size)
     // if there are consecutive newlines or whitespace, replace them with a single space.
     text_t text = text_make(buffer, written);
     str_replace_inplace(&text, "\r\n\t", " ");
+
+    // trim trailing whitespace and . characters
+    str_trim_back_inplace(&text, "\r\n\t .");
 
     return text.length;
 }

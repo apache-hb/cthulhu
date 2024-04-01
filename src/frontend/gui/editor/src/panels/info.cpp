@@ -202,12 +202,12 @@ void LanguageInfoPanel::draw_content()
 
         for (size_t i = 0; i < lang.builtin.length; i++)
         {
-            const char *name = "no name";
+            const char *id = "no name";
             if (lang.builtin.names)
-                name = lang.builtin.names[i];
+                id = lang.builtin.names[i];
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            ImGui::TextUnformatted(name ? name : "no name");
+            ImGui::TextUnformatted(id ? id : "no name");
             ImGui::TableNextColumn();
             ImGui::Text("%zu", lang.builtin.decls[i]);
         }

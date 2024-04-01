@@ -12,7 +12,7 @@ bool impl_library_close(os_library_impl_t lib)
     return FreeLibrary(lib);
 }
 
-os_symbol_t impl_library_symbol(os_library_impl_t lib, const char *name)
+void *impl_library_symbol(os_library_impl_t lib, const char *name)
 {
-    return (os_symbol_t)GetProcAddress(lib, name);
+    return (void*)GetProcAddress(lib, name);
 }

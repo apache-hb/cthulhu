@@ -48,6 +48,8 @@
 #define CT_INNER_STR(x) #x
 #define CT_STR(x) CT_INNER_STR(x)
 
+#define CT_VERSION CT_STR(CTU_MAJOR) "." CT_STR(CTU_MINOR) "." CT_STR(CTU_PATCH)
+
 /// @defgroup ansi_colour ANSI Colour macros
 /// @brief ANSI escape string colour macros
 /// @ingroup core

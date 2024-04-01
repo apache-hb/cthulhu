@@ -13,6 +13,7 @@
 #include "std/typed/vector.h"
 #include "std/map.h"
 #include "std/set.h"
+#include <stdio.h>
 
 typedef struct support_t
 {
@@ -44,7 +45,9 @@ static void add_loaded_module(support_t *support, loaded_module_t mod)
     if (mod.type & eModLanguage)
     {
         const language_t *lang = mod.lang;
+        CTASSERTF(lang != NULL, "language module is NULL");
         const module_info_t *info = &lang->info;
+        CTASSERTF(info != NULL, "language info is NULL");
         CTASSERTF_ALWAYS(str_startswith(info->id, "lang/"), "language id `%s` must start with `lang/`", info->id);
 
         const char *id = info->id + sizeof("lang/") - 1;

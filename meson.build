@@ -1,6 +1,6 @@
 project('cthulhu', 'c',
-    license : 'LGPLv3',
-    version : '0.2.8',
+    license : 'LGPL-3.0-only AND GPL-3.0-only',
+    version : '0.2.9',
     license_files : 'LICENSE',
     meson_version : '>=1.3.0',
     default_options : [
@@ -92,35 +92,6 @@ frontend_gui = frontend_gui.require(target == 'windows')
 if unit_tests.enabled() and is_release and cc.get_id() == 'gcc'
     warning('enabling unit tests in release mode with gcc will result in degraded performance')
 endif
-
-version = meson.project_version()
-host = host_machine.system()
-parts = version.split('.')
-
-source_dir = meson.project_source_root() / 'src'
-data_dir = meson.project_source_root() / 'data'
-
-config_cdata = configuration_data()
-
-config_cdata.set('CTU_MAJOR', parts[0].to_int())
-config_cdata.set('CTU_MINOR', parts[1].to_int())
-config_cdata.set('CTU_PATCH', parts[2].to_int())
-
-config_cdata.set10('CTU_DEBUG', is_debug)
-config_cdata.set10('CTU_PARANOID', opt_paranoid.allowed())
-config_cdata.set10('CTU_BUILD_SHARED', default_library == 'shared')
-
-# we use `__attribute__((const|pure))` heavily, but during unit tests we
-# violate function preconditions to test assertions.
-# msvc and clang dont mind, but gcc does. so we disable the attributes for gcc
-config_cdata.set10('CTU_DISABLE_FN_PURITY', unit_tests.allowed() and cc.get_id() == 'gcc')
-
-# gcc warns about __PRETY_FUNCTION__ not being ISO C when warning_leve=3
-# which is weird seeing as we specify gnu11, maybe its a gcc bug?
-config_cdata.set10('CTU_HAS_PRETTY_FUNCTION', warning_level < 3)
-
-config_cdata.set10('CTU_TRACE_MEMORY', trace_memory.allowed())
-config_cdata.set10('CTU_STB_SPRINTF', opt_stb_sprintf.allowed())
 
 # args for all code
 all_args = cc.get_supported_arguments(
@@ -218,6 +189,7 @@ add_project_arguments(all_args, language : [ 'c' ])
 lexargs = []
 parseargs = []
 
+host = host_machine.system()
 # setup required flex/bison args
 if host == 'windows'
     lexargs += [ '--wincompat' ]
@@ -270,6 +242,9 @@ endif
 doxygen = find_program('doxygen', required : get_option('doxygen'))
 
 if doxygen.found()
+    source_dir = meson.project_source_root() / 'src'
+    data_dir = meson.project_source_root() / 'data'
+
     doxy_sources = [
         source_dir / 'common',
         source_dir / 'cthulhu',

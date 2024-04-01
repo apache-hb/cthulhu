@@ -24,12 +24,12 @@ bool impl_library_close(os_library_impl_t lib)
 #   pragma GCC diagnostic ignored "-Wpedantic"
 #endif
 
-os_symbol_t impl_library_symbol(os_library_impl_t lib, const char *name)
+void *impl_library_symbol(os_library_impl_t lib, const char *name)
 {
     // clear any previous errors
     dlerror();
 
-    os_symbol_t addr = (os_symbol_t)dlsym(lib, name);
+    void *addr = (void*)dlsym(lib, name);
 
     const char *error = dlerror();
     if (error != NULL)

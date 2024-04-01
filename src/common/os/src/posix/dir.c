@@ -2,81 +2,35 @@
 
 #include "os/os.h"
 #include "os_common.h"
+#include "core/macros.h"
 
-#include "base/panic.h"
-#include "base/util.h"
-
-#include <errno.h>
-
-USE_DECL
-os_error_t os_iter_begin(const char *path, os_iter_t *result)
+os_iter_impl_t impl_iter_open(const char *path, os_inode_impl_t *inode)
 {
-    CTASSERT(path != NULL);
-    CTASSERT(result != NULL);
+    CT_UNUSED(inode);
 
-    DIR *dir = opendir(path);
-    if (dir == NULL)
-    {
-        return errno;
-    }
-
-    os_iter_t iter = {
-        .dir = dir
-    };
-    *result = iter;
-    return 0;
+    return opendir(path);
 }
 
-os_error_t os_iter_end(os_iter_t *iter)
+bool impl_iter_next(os_iter_impl_t impl, os_inode_impl_t *inode)
 {
-    CTASSERT(iter != NULL);
-
-    if (closedir(iter->dir) != 0)
-    {
-        return errno;
-    }
-
-    return 0;
+    struct dirent *ent = readdir(impl);
+    *inode = ent;
+    return ent != NULL;
 }
 
-USE_DECL
-bool os_iter_next(os_iter_t *iter, os_inode_t *result)
+bool impl_iter_close(os_iter_impl_t impl)
 {
-    CTASSERT(iter != NULL);
-    CTASSERT(result != NULL);
-
-    struct dirent *ent = NULL;
-    while ((ent = readdir(iter->dir)) != NULL)
-    {
-        if (!is_path_special(ent->d_name))
-        {
-            break;
-        }
-    }
-
-    if (ent == NULL)
-    {
-        iter->error = errno;
-        return false;
-    }
-
-    os_inode_t dir = {
-        .ent = ent
-    };
-    *result = dir;
-
-    return true;
+    return closedir(impl) == 0;
 }
 
-USE_DECL
-os_error_t os_iter_error(const os_iter_t *iter)
+const char *impl_inode_name(const os_inode_impl_t *inode)
 {
-    CTASSERT(iter != NULL);
-
-    return iter->error;
+    struct dirent *ent = *inode;
+    return ent->d_name;
 }
 
-const char *impl_dirname(const os_inode_t *inode)
+os_dirent_t impl_inode_type(const os_inode_impl_t *inode)
 {
-    return inode->ent->d_name;
+    struct dirent *ent = *inode;
+    return ent->d_type == DT_DIR ? eOsNodeDir : eOsNodeFile;
 }
