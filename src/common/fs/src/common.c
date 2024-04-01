@@ -16,24 +16,26 @@ fs_inode_t gInvalidFileNode = {
     .type = eOsNodeNone
 };
 
-fs_inode_t *inode_new(os_dirent_t type, const void *data, size_t size, arena_t *arena)
+fs_inode_t *inode_new(fs_t *fs, os_dirent_t type, const char *name, const void *data)
 {
+    CTASSERT(fs != NULL);
     CT_ASSERT_RANGE(type, 0, eOsNodeCount - 1);
 
-    fs_inode_t *inode = ARENA_MALLOC(sizeof(fs_inode_t) + size, "inode", NULL, arena);
+    fs_inode_t *inode = ARENA_MALLOC(sizeof(fs_inode_t) + fs->cb->inode_size, name, fs, fs->arena);
     inode->type = type;
-    ctu_memcpy(inode->data, data, size);
+    inode->name = name;
+    ctu_memcpy(inode->data, data, fs->cb->inode_size);
     return inode;
 }
 
-fs_inode_t *inode_file(const void *data, size_t size, arena_t *arena)
+fs_inode_t *inode_file(fs_t *fs, const char *name, const void *data)
 {
-    return inode_new(eOsNodeFile, data, size, arena);
+    return inode_new(fs, eOsNodeFile, name, data);
 }
 
-fs_inode_t *inode_dir(const void *data, size_t size, arena_t *arena)
+fs_inode_t *inode_dir(fs_t *fs, const char *name, const void *data)
 {
-    return inode_new(eOsNodeDir, data, size, arena);
+    return inode_new(fs, eOsNodeDir, name, data);
 }
 
 void *inode_data(fs_inode_t *inode)
@@ -58,6 +60,13 @@ bool inode_is(fs_inode_t *inode, os_dirent_t type)
     return inode->type == type;
 }
 
+const char *inode_name(fs_inode_t *inode)
+{
+    CTASSERT(inode != NULL);
+
+    return inode->name;
+}
+
 // helpers
 
 os_error_t mkdir_recursive(const char *path, arena_t *arena)
@@ -79,7 +88,7 @@ os_error_t mkdir_recursive(const char *path, arena_t *arena)
 
 // fs api
 
-fs_t *fs_new(fs_inode_t *root, const fs_callbacks_t *cb, const void *data, size_t size, arena_t *arena)
+fs_t *fs_new(void *root, const fs_callbacks_t *cb, const void *data, size_t size, arena_t *arena)
 {
     CTASSERT(root != NULL);
     CTASSERT(cb != NULL);
@@ -87,7 +96,7 @@ fs_t *fs_new(fs_inode_t *root, const fs_callbacks_t *cb, const void *data, size_
     fs_t *fs = ARENA_MALLOC(sizeof(fs_t) + size, "fs", cb, arena);
     fs->arena = arena;
     fs->cb = cb;
-    fs->root = root;
+    fs->root = inode_dir(fs, ".", root);
 
     ctu_memcpy(fs->data, data, size);
 

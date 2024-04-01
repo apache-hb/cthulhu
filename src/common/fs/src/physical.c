@@ -16,22 +16,17 @@ typedef struct physical_t
     const char *root; ///< absolute path to root directory
 } physical_t;
 
-typedef struct physical_file_t
+typedef struct physical_inode_t
 {
-    const char *path; ///< path to file relative to root
-} physical_file_t;
-
-typedef struct physical_dir_t
-{
-    const char *path; ///< path to directory relative to root
-} physical_dir_t;
+    const char *path; ///< path to file or directory relative to root
+} physical_inode_t;
 
 static const char *get_absolute(fs_t *fs, fs_inode_t *node, const char *path)
 {
     CTASSERT(fs != NULL);
 
     const physical_t *self = fs_data(fs);
-    const physical_dir_t *dir = inode_data(node);
+    const physical_inode_t *dir = inode_data(node);
 
     if (is_path_special(dir->path) && is_path_special(path))
     {
@@ -53,7 +48,7 @@ static const char *get_absolute(fs_t *fs, fs_inode_t *node, const char *path)
 
 static const char *get_relative(fs_inode_t *node, const char *path, arena_t *arena)
 {
-    const physical_dir_t *dir = inode_data(node);
+    const physical_inode_t *dir = inode_data(node);
 
     if (is_path_special(dir->path) && !is_path_special(path))
     {
@@ -70,22 +65,38 @@ static const char *get_relative(fs_inode_t *node, const char *path, arena_t *are
     return str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s", dir->path, path);
 }
 
-static fs_inode_t *physical_dir(const char *path, arena_t *arena)
+static fs_inode_t *physical_dir(fs_t *fs, const char *path)
 {
-    physical_dir_t dir = {
+    physical_inode_t inode = {
         .path = path
     };
 
-    return inode_dir(&dir, sizeof(physical_dir_t), arena);
+    const char *name = path;
+
+    size_t i = str_rfind(path, CT_NATIVE_PATH_SEPARATOR);
+    if (i != SIZE_MAX)
+    {
+        name = path + i + 1;
+    }
+
+    return inode_dir(fs, name, &inode);
 }
 
-static fs_inode_t *physical_file(const char *path, arena_t *arena)
+static fs_inode_t *physical_file(fs_t *fs, const char *path)
 {
-    physical_file_t file = {
+    physical_inode_t inode = {
         .path = path
     };
 
-    return inode_file(&file, sizeof(physical_file_t), arena);
+    const char *name = path;
+
+    size_t i = str_rfind(path, CT_NATIVE_PATH_SEPARATOR);
+    if (i != SIZE_MAX)
+    {
+        name = path + i + 1;
+    }
+
+    return inode_file(fs, name, &inode);
 }
 
 static fs_inode_t *pfs_query_node(fs_t *fs, fs_inode_t *self, const char *name)
@@ -99,9 +110,9 @@ static fs_inode_t *pfs_query_node(fs_t *fs, fs_inode_t *self, const char *name)
     switch (dirent)
     {
     case eOsNodeFile:
-        return physical_file(relative, fs->arena);
+        return physical_file(fs, relative);
     case eOsNodeDir:
-        return physical_dir(relative, fs->arena);
+        return physical_dir(fs, relative);
     default:
         return &gInvalidFileNode;
     }
@@ -150,7 +161,7 @@ static inode_result_t pfs_file_create(fs_t *fs, fs_inode_t *self, const char *na
         return result;
     }
 
-    fs_inode_t *inode = physical_file(get_relative(self, name, fs->arena), fs->arena);
+    fs_inode_t *inode = physical_file(fs, get_relative(self, name, fs->arena));
     inode_result_t result = { .node = inode };
     return result;
 }
@@ -165,7 +176,7 @@ static inode_result_t pfs_dir_create(fs_t *fs, fs_inode_t *self, const char *nam
         return result;
     }
 
-    fs_inode_t *inode = physical_dir(get_relative(self, name, fs->arena), fs->arena);
+    fs_inode_t *inode = physical_dir(fs, get_relative(self, name, fs->arena));
     inode_result_t result = { .node = inode };
     return result;
 }
@@ -219,7 +230,8 @@ static const fs_callbacks_t kPhysicalInterface = {
     .pfn_iter_next = pfs_iter_next,
     .pfn_iter_end = pfs_iter_end,
 
-    .iter_size = sizeof(os_iter_t)
+    .iter_size = sizeof(os_iter_t),
+    .inode_size = sizeof(physical_inode_t),
 };
 
 USE_DECL
@@ -242,7 +254,9 @@ fs_t *fs_physical(const char *root, arena_t *arena)
         .root = root
     };
 
-    fs_inode_t *dir = physical_dir(".", arena);
+    physical_inode_t inode = {
+        .path = "."
+    };
 
-    return fs_new(dir, &kPhysicalInterface, &self, sizeof(physical_t), arena);
+    return fs_new(&inode, &kPhysicalInterface, &self, sizeof(physical_t), arena);
 }

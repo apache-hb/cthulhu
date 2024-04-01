@@ -199,7 +199,7 @@ CT_OS_API os_error_t os_iter_end(OUT_PTR_INVALID os_iter_t *iter);
 /// @param iter iterator to use
 /// @param dir directory entry to fill
 ///
-/// @return true if a directory entry was found
+/// @return true if there was a new directory entry
 CT_NODISCARD
 CT_OS_API bool os_iter_next(INOUT_NOTNULL os_iter_t *iter, OUT_NOTNULL os_inode_t *dir);
 
