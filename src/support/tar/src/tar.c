@@ -12,6 +12,7 @@
 #include "std/str.h"
 
 #include "core/macros.h"
+#include <stdio.h>
 
 #define TAR_NAME_SIZE 100
 
@@ -195,7 +196,7 @@ static tar_error_t archive_dir(io_t *dst, fs_t *src, fs_iter_t *iter, const char
                 return eTarReadError;
             }
 
-            archive_dir(dst, src, inner, name, arena);
+            archive_dir(dst, src, inner, str_format(arena, "%s/%s", dir, name), arena);
 
             fs_iter_end(inner);
         }
