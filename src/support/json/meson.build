@@ -5,7 +5,7 @@ json_api = configure_file(
 )
 
 json_include = include_directories('.', 'include')
-json_impl_include = include_directories('src')
+json_impl_include = include_directories('src', 'src/query')
 json_args = [ '-DCT_JSON_BUILD=1', generated_args ]
 
 src = [
@@ -13,7 +13,13 @@ src = [
     'src/ast.c',
     'src/scan.c',
     lex.process('src/json.l'),
-    parse.process('src/json.y')
+    parse.process('src/json.y'),
+
+    'src/query/query.c',
+    'src/query/query_ast.c',
+    'src/query/query_scan.c',
+    lex.process('src/query/query.l'),
+    parse.process('src/query/query.y'),
 ]
 
 if has_cpp
@@ -25,7 +31,7 @@ libjson = library('json', src,
     install : not meson.is_subproject(),
     c_args : json_args,
     cpp_args : json_args,
-    dependencies : [ core, base, scan, interop, gmp, std, notify, events, util ],
+    dependencies : [ core, base, scan, interop, gmp, std, notify, events, util, io ],
     include_directories : [ json_include, json_impl_include ],
     override_options : [ 'unity=off' ]
 )

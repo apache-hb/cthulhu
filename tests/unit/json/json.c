@@ -58,5 +58,24 @@ int main(void)
         GROUP_EXPECT_PASS(group, "dependency_2", json_array_get(dependencies, 2)->kind == eJsonString);
     }
 
+    {
+        test_group_t group = test_group(&suite, "query");
+        logger_t *logger = logger_new(arena);
+        io_t *io = io_string("test.json", kTestJson, arena);
+        json_t *json = json_scan(io, logger, arena);
+
+        GROUP_EXPECT_PASS(group, "json", json != NULL);
+
+        json_t *name = json_query(json, "root.name", arena);
+        GROUP_EXPECT_PASS(group, "name", name != NULL);
+        GROUP_EXPECT_PASS(group, "name_kind", name->kind == eJsonString);
+        GROUP_EXPECT_PASS(group, "name_value", ctu_strncmp(name->string.text, "ctu", name->string.length) == 0);
+
+        json_t *dep1 = json_query(json, "root.dependencies[1]", arena);
+        GROUP_EXPECT_PASS(group, "dep1", dep1 != NULL);
+        GROUP_EXPECT_PASS(group, "dep_kind", dep1->kind == eJsonString);
+        GROUP_EXPECT_PASS(group, "dep_value", ctu_strncmp(dep1->string.text, "std", dep1->string.length) == 0);
+    }
+
     return test_suite_finish(&suite);
 }

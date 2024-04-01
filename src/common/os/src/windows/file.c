@@ -213,7 +213,7 @@ os_error_t os_file_tell(os_file_t *file, size_t *actual)
 }
 
 USE_DECL
-os_error_t os_file_expand(os_file_t *file, size_t size)
+os_error_t os_file_resize(os_file_t *file, size_t size)
 {
     CTASSERT(file != NULL);
 

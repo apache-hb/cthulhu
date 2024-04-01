@@ -38,7 +38,7 @@ size_t os_error_get_string(os_error_t error, char *buffer, size_t size)
 
         // TODO: is there a way of asking for the size of the buffer at all?
         // this is what .NET core does, but its not clear if this is correct.
-        return 0x1000 * sizeof(TCHAR);
+        return 512 * sizeof(TCHAR);
     }
 
     CTASSERT(buffer != NULL);

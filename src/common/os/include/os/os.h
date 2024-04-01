@@ -303,7 +303,7 @@ CT_OS_API os_error_t os_file_tell(INOUT_NOTNULL os_file_t *file, OUT_NOTNULL siz
 ///
 /// @return an error if the operation could not be performed
 RET_INSPECT
-CT_OS_API os_error_t os_file_expand(INOUT_NOTNULL os_file_t *file, size_t size);
+CT_OS_API os_error_t os_file_resize(INOUT_NOTNULL os_file_t *file, size_t size);
 
 /// @brief map a file into memory
 ///
@@ -332,7 +332,7 @@ CT_OS_API os_error_t os_unmap(INOUT_NOTNULL os_mapping_t *mapping);
 ///
 /// @return the data of the mapping
 CT_NODISCARD
-CT_OS_API void *os_mapping_data(INOUT_NOTNULL os_mapping_t *mapping);
+CT_OS_API void *os_mapping_data(IN_NOTNULL os_mapping_t *mapping);
 
 /// @brief get the size of a file mapping
 ///
@@ -340,7 +340,7 @@ CT_OS_API void *os_mapping_data(INOUT_NOTNULL os_mapping_t *mapping);
 ///
 /// @return the size of the mapping
 CT_NODISCARD
-CT_OS_API size_t os_mapping_size(INOUT_NOTNULL const os_mapping_t *mapping);
+CT_OS_API size_t os_mapping_size(IN_NOTNULL const os_mapping_t *mapping);
 
 /// @brief does the mapping object contain a valid mapping
 /// checks if the mapping data exists, not for the validity of the mapping
@@ -349,7 +349,7 @@ CT_OS_API size_t os_mapping_size(INOUT_NOTNULL const os_mapping_t *mapping);
 ///
 /// @return true if the mapping is valid
 CT_NODISCARD
-CT_OS_API bool os_mapping_active(INOUT_NOTNULL const os_mapping_t *mapping);
+CT_OS_API bool os_mapping_active(IN_NOTNULL const os_mapping_t *mapping);
 
 /// @brief get the name of a file
 ///
@@ -357,7 +357,7 @@ CT_OS_API bool os_mapping_active(INOUT_NOTNULL const os_mapping_t *mapping);
 ///
 /// @return the name of the file
 CT_NODISCARD
-CT_OS_API const char *os_file_name(INOUT_NOTNULL const os_file_t *file);
+CT_OS_API const char *os_file_name(IN_NOTNULL const os_file_t *file);
 
 /// @}
 

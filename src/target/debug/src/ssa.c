@@ -380,10 +380,6 @@ void debug_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t
     CT_UNUSED(ssa);
     CT_UNUSED(config);
 
-    const node_t *node = broker_get_node(runtime->broker);
-
-    msg_notify(runtime->logger, &kEvent_Unimplemented, node, "debug ssa not implemented");
-
     arena_t *arena = runtime->arena;
     ssa_emit_t emit = {
         .emit = {

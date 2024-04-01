@@ -10,6 +10,9 @@ libtarget_hlsl = static_library('target_hlsl', src,
 targets += {
     'hlsl': {
         'dep': declare_dependency(link_with : libtarget_hlsl),
-        'mod': 'kTargetHlsl'
+        'mod': 'kTargetHlsl',
+
+        'static': libtarget_hlsl,
+        'module': 'kTargetHlsl'
     }
 }

@@ -26,6 +26,8 @@ enum {
 
 #define CT_OS_INVALID_FILE NULL
 #define CT_OS_INVALID_LIBRARY NULL
+
+// TODO: this may actually be UINTPTR_MAX
 #define CT_OS_INVALID_MAPPING NULL
 #define CT_OS_INVALID_ITER NULL
 

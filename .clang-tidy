@@ -1,5 +1,5 @@
 Checks:
-  - 'performance*,portability*,bugprone*,clang-analyzer*,cert*,concurrency*,readability-identifier-naming'
+  - 'performance*,portability*,bugprone*,clang-analyzer*,cert*,concurrency*,readability*'
   - '-bugprone-easily-swappable-parameters'
   - '-performance-no-int-to-ptr'
 CheckOptions:
@@ -21,4 +21,7 @@ CheckOptions:
   - { key: readability-identifier-naming.GlobalConstantPrefix, value: k }
   - { key: readability-identifier-naming.GlobalVariableCase, value: CamelCase }
   - { key: readability-identifier-naming.GlobalVariablePrefix, value: g }
-HeaderFilterRegex: ''
+  - { key: readability-identifier-naming.ScopedEnumConstantCase, value: CamelCase }
+  - { key: readability-identifier-naming.ScopedEnumConstantPrefix, value: '' }
+HeaderFileExtensions: ['h']
+ImplementationFileExtensions: ['c']

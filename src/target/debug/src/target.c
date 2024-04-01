@@ -12,11 +12,12 @@ CT_DRIVER_API const target_t kTargetDebug = {
             .license = "LGPLv3",
             .author = "Elliot Haisley",
             .desc = "Debug code generation target",
-            .version = CT_NEW_VERSION(0, 0, 1),
+            .version = CT_NEW_VERSION(0, 0, 2),
         },
     },
 
-    .fn_ssa = debug_ssa
+    .fn_tree = debug_tree,
+    .fn_ssa = debug_ssa,
 };
 
 CT_TARGET_EXPORT(kTargetDebug)
