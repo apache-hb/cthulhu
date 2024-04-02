@@ -17,8 +17,6 @@ src = [
     'src/main.cpp'
 ]
 
-flecs = subproject('flecs').get_variable('flecs_dep')
-
 deps = [
     # render backend
     draw,
@@ -34,10 +32,7 @@ deps = [
     setup, memory, broker, support, ssa, tree,
 
     # extra utilities
-    json,
-
-    # ecs
-    flecs
+    json
 ]
 
 executable('gui', src,

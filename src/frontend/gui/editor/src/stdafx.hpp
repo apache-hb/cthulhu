@@ -25,7 +25,4 @@
 // drawing
 #include "draw/draw.hpp"
 
-// ecs
-#include "flecs.h"
-
 // IWYU pragma: end_exports
