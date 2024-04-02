@@ -125,6 +125,10 @@ namespace ctu::json {
         { }
 
     public:
+        constexpr Json()
+            : m_ast(nullptr)
+        { }
+
         /// @brief check if the value is a string
         /// @retval true if the value is a string
         /// @retval false if the value is not a string

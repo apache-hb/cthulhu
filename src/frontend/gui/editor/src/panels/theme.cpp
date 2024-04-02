@@ -18,7 +18,6 @@ class ThemeMenuItem final : public ed::IEditorPanel
 {
     theme_t theme;
     F func;
-
 public:
     ThemeMenuItem(const char *name, theme_t theme, F&& func)
         : IEditorPanel(name)

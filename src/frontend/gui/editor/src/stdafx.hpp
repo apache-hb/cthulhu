@@ -3,6 +3,7 @@
 
 // IWYU pragma: begin_exports
 
+// c/c++ stdlib
 #include <csetjmp>
 #include <iterator>
 #include <string>
@@ -13,12 +14,18 @@
 #include <unordered_map>
 #include <filesystem>
 
+// dear imgui + widgets
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "imgui_stdlib.h"
 #include "implot.h"
 #include "imfilebrowser.h"
 #include "imgui_memory_editor.h"
+
+// drawing
 #include "draw/draw.hpp"
+
+// ecs
+#include "flecs.h"
 
 // IWYU pragma: end_exports

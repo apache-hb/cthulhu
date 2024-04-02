@@ -1,3 +1,6 @@
 [submodule "data/scripts/ninjatracing"]
 	path = data/scripts/ninjatracing
 	url = https://github.com/nico/ninjatracing.git
+[submodule "subprojects/flecs"]
+	path = subprojects/flecs
+	url = https://github.com/apache-hb/flecs
