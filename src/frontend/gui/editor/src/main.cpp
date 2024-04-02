@@ -455,6 +455,11 @@ public:
         | ImGuiWindowFlags_NoNavFocus
         | ImGuiWindowFlags_NoDocking;
 
+    void dockspace()
+    {
+        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+    }
+
     void mainmenu()
     {
         if (ImGui::BeginMainMenuBar())
@@ -554,18 +559,357 @@ private:
     }
 };
 
-using namespace ed;
+enum {
+    kMenuFile,
+    kMenuEdit,
+    kMenuView,
+    kMenuDebug,
+    kMenuHelp,
+};
 
-static void init_menus()
+static void init_menu(flecs::world& ecs)
 {
-    Holder file = g.add_menu("File");
-    file->add(g.add_item("New File"));
-    file->add(MenuSeparator{});
-    file->add(g.add_item("Open File"));
-    file->add(g.add_item("Open Folder"));
-    file->add(MenuSeparator{});
-    file->add(g.add_item("Save"));
-    file->add(g.add_item("Save As"));
+    auto mainmenu = ecs.entity("Main Menu")
+        .add<MainMenu>();
+
+    ecs.set<MainMenu>({ mainmenu });
+
+    auto menu = ecs.prefab("Menu")
+        .add<Menu>()
+        .set_override(Title { })
+        .set_override(Priority{ 0 });
+
+    auto item = ecs.prefab("Item")
+        .add<MenuItem>()
+        .set_override(Title { })
+        .set_override(Priority{ 0 });
+
+    auto section = ecs.prefab("Section")
+        .add<MenuSection>()
+        .set_override(Title { })
+        .set_override(Priority{ 0 });
+
+    {
+        auto file = ecs.entity("File")
+            .set(Title{ "File" })
+            .set(Priority{ kMenuFile })
+            .is_a(menu)
+            .child_of(mainmenu);
+
+        enum {
+            eNew,
+            eOpen,
+            eSave,
+            eSaveAs,
+            eSeparator,
+            eOpenRecent,
+        };
+
+        ecs.entity("New")
+            .set(Title{ "New" })
+            .set(ShortCut{ ImGuiMod_Ctrl | ImGuiKey_N })
+            .set(Priority{ eNew })
+            .is_a(item)
+            .child_of(file);
+
+        {
+            auto open = ecs.entity("Open")
+                .set(Priority{ eOpen })
+                .child_of(file)
+                .is_a(section);
+
+            ecs.entity("Open")
+                .set(Title{ "Open" })
+                .set(ShortCut{ ImGuiMod_Ctrl | ImGuiKey_O })
+                .set(Priority{ eOpen })
+                .is_a(item)
+                .child_of(open);
+
+            ecs.entity("Open Recent")
+                .set(Title{ "Open Recent" })
+                .set(Priority{ eOpenRecent })
+                .is_a(item)
+                .child_of(open);
+        }
+
+        {
+            auto ss = ecs.entity("Save")
+                .add<Separator>()
+                .set(Priority{ eSeparator })
+                .is_a(section)
+                .child_of(file);
+
+            ecs.entity("Save")
+                .set(Title{ "Save" })
+                .set(ShortCut{ ImGuiMod_Ctrl | ImGuiKey_S })
+                .set(Priority{ eSave })
+                .is_a(item)
+                .child_of(ss);
+
+            ecs.entity("Save As")
+                .set(Title{ "Save As" })
+                .set(ShortCut{ ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_S })
+                .set(Priority{ eSaveAs })
+                .is_a(item)
+                .child_of(ss);
+        }
+    }
+
+    {
+        enum {
+            eUndo,
+            eRedo,
+            eSeparator,
+            eCut,
+            eCopy,
+            ePaste,
+        };
+
+        auto edit = ecs.entity("Edit")
+            .set(Title{ "Edit" })
+            .set(Priority{ kMenuEdit })
+            .is_a(menu)
+            .child_of(mainmenu);
+
+        ecs.entity("Undo")
+            .set(Title{ "Undo" })
+            .set(ShortCut{ ImGuiMod_Ctrl | ImGuiKey_Z })
+            .set(Priority{ eUndo })
+            .is_a(item)
+            .child_of(edit);
+
+        ecs.entity("Redo")
+            .set(Title{ "Redo" })
+            .set(ShortCut{ ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_Z })
+            .set(Priority{ eRedo })
+            .is_a(item)
+            .child_of(edit);
+
+        ecs.entity("Separator")
+            .add<Separator>()
+            .set(Priority{ eSeparator })
+            .child_of(edit);
+
+        ecs.entity("Cut")
+            .set(Title{ "Cut" })
+            .set(ShortCut{ ImGuiMod_Ctrl | ImGuiKey_X })
+            .set(Priority{ eCut })
+            .is_a(item)
+            .child_of(edit);
+
+        ecs.entity("Copy")
+            .set(Title{ "Copy" })
+            .set(ShortCut{ ImGuiMod_Ctrl | ImGuiKey_C })
+            .set(Priority{ eCopy })
+            .is_a(item)
+            .child_of(edit);
+
+        ecs.entity("Paste")
+            .set(Title{ "Paste" })
+            .set(ShortCut{ ImGuiMod_Ctrl | ImGuiKey_V })
+            .set(Priority{ ePaste })
+            .is_a(item)
+            .child_of(edit);
+    }
+
+    {
+        auto view = ecs.entity("View")
+            .set(Title{ "View" })
+            .set(Priority{ kMenuView })
+            .is_a(menu)
+            .child_of(mainmenu);
+
+        enum {
+            eThemes,
+            eDark,
+            eLight,
+            eClassic,
+        };
+
+        {
+            auto themes = ecs.entity("Themes")
+                .set(Title{ "Themes" })
+                .add<Separator>()
+                .set(Priority{ eThemes })
+                .is_a(section)
+                .child_of(view);
+
+            ecs.entity("Dark")
+                .set(Title{ "Dark" })
+                .set(Priority{ eDark })
+                .is_a(item)
+                .child_of(themes);
+
+            ecs.entity("Light")
+                .set(Title{ "Light" })
+                .set(Priority{ eLight })
+                .is_a(item)
+                .child_of(themes);
+
+            ecs.entity("Classic")
+                .set(Title{ "Classic" })
+                .set(Priority{ eClassic })
+                .is_a(item)
+                .child_of(themes);
+        }
+    }
+
+    {
+        auto debug = ecs.entity("Debug")
+            .set(Title{ "Debug" })
+            .set(Priority{ kMenuDebug })
+            .is_a(menu)
+            .child_of(mainmenu);
+
+        enum {
+            eMemory,
+            eMemoryArena,
+            eGlobalArena,
+            eGmpArena,
+            eDearImGuiArena,
+        };
+
+        {
+            auto memory = ecs.entity("Memory")
+                .set(Title{ "Memory" })
+                .set(Priority{ eMemory })
+                .is_a(section)
+                .child_of(debug);
+
+            ecs.entity("Global Arena")
+                .set(Title{ "Global Arena" })
+                .set(Priority{ eGlobalArena })
+                .is_a(item)
+                .child_of(memory);
+
+            ecs.entity("GMP Arena")
+                .set(Title{ "GMP Arena" })
+                .set(Priority{ eGmpArena })
+                .is_a(item)
+                .child_of(memory);
+
+            ecs.entity("Dear ImGui Arena")
+                .set(Title{ "Dear ImGui Arena" })
+                .set(Priority{ eDearImGuiArena })
+                .is_a(item)
+                .child_of(memory);
+        }
+    }
+
+    {
+        auto help = ecs.entity("Help")
+            .is_a(menu)
+            .set(Title{ "Help" })
+            .set(Priority{ kMenuHelp });
+
+        enum {
+            eAbout,
+            eSearchMenus,
+            eDemo,
+            eDearImGuiDemo,
+            eImPlotDemo,
+        };
+
+        ecs.entity("About")
+            .set(Title{ "About" })
+            .set(Priority{ eAbout })
+            .is_a(item)
+            .child_of(help);
+
+        ecs.entity("Search Menus")
+            .set(Title{ "Search Menus" })
+            .set(Priority{ eSearchMenus })
+            .is_a(item)
+            .child_of(help);
+
+        {
+            auto demo = ecs.entity("Demo")
+                .add<Separator>()
+                .set(Title{ "Demo" })
+                .set(Priority{ eDemo })
+                .is_a(section)
+                .child_of(help);
+
+            ecs.entity("Dear ImGui Demo")
+                .set(Title{ "Dear ImGui Demo" })
+                .set(Priority{ eDearImGuiDemo })
+                .is_a(item)
+                .child_of(demo);
+
+            ecs.entity("ImPlot Demo")
+                .set(Title{ "ImPlot Demo" })
+                .set(Priority{ eImPlotDemo })
+                .is_a(item)
+                .child_of(demo);
+        }
+    }
+}
+
+static flecs::query<> get_children(flecs::entity e)
+{
+    if (const Children *it = e.get<Children>())
+    {
+        return it->query;
+    }
+
+    flecs::query<> query = e.world().query_builder<const Priority>()
+        .order_by<Priority>([](flecs::entity_t, const Priority *lp, flecs::entity_t, const Priority *rp) -> int {
+            return cmp(*lp, *rp);
+        })
+        .term(flecs::ChildOf, e)
+        .build();
+
+    e.set<Children>({ query });
+
+    return query;
+}
+
+static void draw_menuitem(const flecs::entity e)
+{
+    const Title* title = e.get<Title>();
+    if (e.has<Separator>())
+    {
+        if (title != nullptr)
+        {
+            ImGui::SeparatorText(title->c_str());
+        }
+        else
+        {
+            ImGui::Separator();
+        }
+    }
+
+    if (e.has<MenuSection>())
+    {
+        get_children(e).each(draw_menuitem);
+    }
+    else if (e.has<MenuItem>())
+    {
+        const ShortCut* shortcut = e.get<ShortCut>();
+        const char *str = (shortcut != nullptr) ? shortcut->c_str() : nullptr;
+
+        ImGui::MenuItem(title->c_str(), str, false);
+    }
+}
+
+static void draw_menu(const flecs::entity e)
+{
+    const Title* title = e.get<Title>();
+    if (ImGui::BeginMenu(title->c_str()))
+    {
+        get_children(e).each(draw_menuitem);
+        ImGui::EndMenu();
+    }
+}
+
+static void draw_mainmenu(const flecs::world& ecs)
+{
+    const MainMenu *mm = ecs.get<MainMenu>();
+
+    ImGui::Text("Cthulhu");
+    ImGui::Separator();
+
+    get_children(mm->entity).each(draw_menu);
 }
 
 int main(int argc, const char **argv)
@@ -575,7 +919,6 @@ int main(int argc, const char **argv)
 
     setup_global();
     install_trace_arenas();
-    init_menus();
 
     draw::config_t config = {
         .title = L"Editor",
@@ -587,20 +930,49 @@ int main(int argc, const char **argv)
         return 1;
     }
 
-    while (draw::begin_frame())
-    {
-        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+    flecs::world ecs;
+    ecs.import<flecs::monitor>();
 
-        if (ImGui::BeginMainMenuBar())
-        {
-            ImGui::Text("Cthulhu");
-            ImGui::Separator();
+    init_menu(ecs);
 
-            ImGui::EndMainMenuBar();
-        }
+    EditorUi ui;
 
-        draw::end_frame();
-    }
+    ecs.system("NewFrame")
+        .kind(flecs::PreFrame)
+        .iter([&](flecs::iter& it) {
+            bool begin = draw::begin_frame();
+            if (!begin)
+                it.world().quit();
+            else
+                ui.dockspace();
+        });
+
+    ecs.system("MainMenu")
+        .no_readonly()
+        .kind(flecs::OnUpdate)
+        .iter([](flecs::iter& it) {
+            if (it.world().should_quit())
+                return;
+
+            if (ImGui::BeginMainMenuBar())
+            {
+                draw_mainmenu(it.world());
+                ImGui::EndMainMenuBar();
+            }
+        });
+
+    ecs.system("EndFrame")
+        .kind(flecs::PostFrame)
+        .iter([](flecs::iter& it) {
+            if (it.world().should_quit())
+                return;
+
+            draw::end_frame();
+        });
+
+    int ret = ecs.app().enable_rest().run();
 
     draw::destroy();
+
+    return ret;
 }
