@@ -9,7 +9,6 @@
 
 #include "editor/compile.hpp"
 #include "editor/editor.hpp"
-#include "editor/panels/theme.hpp"
 #include "editor/panels/info.hpp"
 #include "editor/panels/arena.hpp"
 
@@ -19,8 +18,8 @@
 
 // cthulhu includes
 
+#include "json/json.hpp"
 #include "backtrace/backtrace.h"
-
 #include "setup/setup.h"
 
 #include "support/loader.h"
@@ -48,29 +47,32 @@ static const frontend_t kFrontendGui = {
     },
 };
 
-Editor g{};
+static TraceArena gGlobalArena{"Global Arena", TraceArena::eCollectStackTrace};
+static TraceArena gGmpArena{"GMP Arena", TraceArena::eCollectStackTrace};
+static TraceArena gGuiArena{"Dear ImGui Arena", TraceArena::eCollectNone};
 
-static ed::TraceArena gGlobalArena{"Global Arena", ed::TraceArena::eDrawTree, true};
-static ed::TraceArena gGmpArena{"GMP Arena", ed::TraceArena::eDrawFlat, true};
-static ed::TraceArena gGuiArena{"Dear ImGui Arena", ed::TraceArena::eDrawTree, false};
-
-static void *imgui_malloc(size_t size, void *user)
-{
-    arena_t *arena = reinterpret_cast<arena_t*>(user);
-    return ARENA_OPT_MALLOC(size, "ImGui::MemAlloc", NULL, arena);
-}
-
-static void imgui_free(void *ptr, void *user)
-{
-    arena_t *arena = reinterpret_cast<arena_t*>(user);
-    arena_opt_free(ptr, CT_ALLOC_SIZE_UNKNOWN, arena);
-}
+static std::vector<TraceArenaWidget> gTraceWidgets = {
+    { gGlobalArena, TraceArenaWidget::eDrawTree },
+    { gGmpArena, TraceArenaWidget::eDrawFlat },
+    { gGuiArena, TraceArenaWidget::eDrawFlat },
+};
 
 static void install_trace_arenas()
 {
     init_global_arena(gGlobalArena.get_arena());
     init_gmp_arena(gGmpArena.get_arena());
-    ImGui::SetAllocatorFunctions(imgui_malloc, imgui_free, gGuiArena.get_arena());
+
+    ImGui::SetAllocatorFunctions(
+        /*alloc_func=*/ [](size_t size, void *user) {
+            arena_t *arena = static_cast<arena_t*>(user);
+            return ARENA_OPT_MALLOC(size, "ImGui::MemAlloc", nullptr, arena);
+        },
+        /*free_func=*/ [](void *ptr, void *user) {
+            arena_t *arena = static_cast<arena_t*>(user);
+            arena_opt_free(ptr, CT_ALLOC_SIZE_UNKNOWN, arena);
+        },
+        /*user_data=*/ gGuiArena.get_arena()
+    );
 }
 
 class EditorModulePanel : public ed::IEditorPanel
@@ -298,6 +300,43 @@ static void seperator_opt(const std::string& str)
     }
 }
 
+struct Compiler
+{
+    std::string name;
+    TraceArena& arena;
+    loader_t *loader;
+    broker_t *broker;
+    support_t *support;
+
+    Compiler(TraceArena& trace, std::string_view title)
+        : name(title)
+        , arena(trace)
+        , loader(loader_new(arena.get_arena()))
+        , broker(broker_new(&kFrontendGui, arena.get_arena()))
+        , support(support_new(broker, loader, arena.get_arena()))
+    {
+        support_load_default_modules(support);
+
+        gTraceWidgets.push_back({ arena, TraceArenaWidget::eDrawTree });
+    }
+
+    bool visible = false;
+
+    void draw_window()
+    {
+        if (!visible)
+            return;
+
+        if (ImGui::Begin(name.c_str(), &visible))
+        {
+
+        }
+        ImGui::End();
+    }
+};
+
+static std::vector<Compiler> gCompilers;
+
 class EditorUi
 {
     static constexpr size_t kMaxPanels = 1024;
@@ -328,71 +367,6 @@ class EditorUi
         menus.push_back(menu);
     }
 
-    void init()
-    {
-        ed::menu_t windows_menu = {
-            .name = "Windows",
-            .header = { &version_info_panel, &module_panel },
-            .sections = {
-                ed::menu_section_t {
-                    .name = "Memory",
-                    .panels = { &gGlobalArena, &gGmpArena, &gGuiArena }
-                },
-                ed::menu_section_t {
-                    .name = "Demo",
-                    .panels = { ed::create_imgui_demo_panel(), ed::create_implot_demo_panel() }
-                }
-            }
-        };
-
-        ed::menu_t styles_menu = {
-            .name = "Styles",
-            .header = {
-                ed::dark_theme(),
-                ed::light_theme(),
-                ed::classic_theme(),
-            }
-        };
-
-        add_menu(windows_menu);
-        add_menu(styles_menu);
-    }
-
-    void draw_menubar()
-    {
-        for (auto &menu : menus)
-        {
-            if (ImGui::BeginMenu(menu.name.c_str()))
-            {
-                for (auto &item : menu.header)
-                {
-                    item->menu_item();
-                }
-
-                for (auto &section : menu.sections)
-                {
-                    if (section.panels.empty())
-                        continue;
-
-                    if (section.seperator)
-                    {
-                        seperator_opt(section.name);
-                        draw_menu_items(section);
-                        continue;
-                    }
-
-                    if (ImGui::BeginMenu(section.name.c_str()))
-                    {
-                        draw_menu_items(section);
-                        ImGui::EndMenu();
-                    }
-                }
-
-                ImGui::EndMenu();
-            }
-        }
-    }
-
     std::vector<std::unique_ptr<ed::SourceView>> sources;
 
     void draw_source_files()
@@ -410,8 +384,6 @@ public:
         , support(support_new(broker, loader, get_global_arena()))
     {
         file_browser.SetTitle("Open Source Files");
-
-        init();
     }
 
     void draw_windows()
@@ -441,38 +413,6 @@ public:
         auto& loader_panel = get_loader_panel();
         if (!module_panel.is_empty())
             loader_panel.draw_window();
-    }
-
-    static const ImGuiDockNodeFlags kDockFlags
-        = ImGuiDockNodeFlags_PassthruCentralNode;
-
-    static const ImGuiWindowFlags kDockWindowFlags
-        = ImGuiWindowFlags_MenuBar
-        | ImGuiWindowFlags_NoCollapse
-        | ImGuiWindowFlags_NoMove
-        | ImGuiWindowFlags_NoResize
-        | ImGuiWindowFlags_NoTitleBar
-        | ImGuiWindowFlags_NoBackground
-        | ImGuiWindowFlags_NoBringToFrontOnFocus
-        | ImGuiWindowFlags_NoNavFocus
-        | ImGuiWindowFlags_NoDocking;
-
-    void dockspace()
-    {
-        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
-    }
-
-    void mainmenu()
-    {
-        if (ImGui::BeginMainMenuBar())
-        {
-            ImGui::Text("Cthulhu");
-            ImGui::Separator();
-
-            draw_menubar();
-
-            ImGui::EndMainMenuBar();
-        }
     }
 
 private:
@@ -561,9 +501,260 @@ private:
     }
 };
 
-static void init_menu()
-{
+static ImGui::FileBrowser gOpenFile { ImGuiFileBrowserFlags_MultipleSelection | ImGuiFileBrowserFlags_ConfirmOnEnter | ImGuiFileBrowserFlags_CloseOnEsc };
 
+struct JsonFile
+{
+    fs::path path;
+    std::string basename;
+    io_t *io;
+    std::string_view source;
+    ctu::json::Json value;
+
+    JsonFile(const fs::path& path, ctu::json::JsonParser& parser, arena_t *arena)
+        : path(path)
+        , basename(path.filename().string())
+        , io(io_file(path.string().c_str(), eOsAccessRead, arena))
+    {
+        const void *data = io_map(io, eOsProtectRead);
+        size_t size = io_size(io);
+        source = std::string_view(static_cast<const char*>(data), size);
+        value = parser.parse(io);
+    }
+};
+
+struct JsonEditor
+{
+    TraceArena arena{"JSON", TraceArena::eCollectStackTrace};
+    ctu::json::JsonParser parser{arena.get_arena()};
+    bool visible = false;
+    std::vector<JsonFile> documents;
+
+    JsonEditor() { }
+
+    void draw_json_document(const ctu::json::Json&)
+    {
+        if (ImGui::BeginTable("Document", 4))
+        {
+            ImGui::TableSetupColumn("Key");
+            ImGui::TableSetupColumn("Type");
+            ImGui::TableSetupColumn("Value");
+            ImGui::TableSetupColumn("Location");
+            ImGui::TableSetupScrollFreeze(0, 1);
+            ImGui::TableHeadersRow();
+
+            ImGui::EndTable();
+        }
+    }
+
+    void draw_window()
+    {
+        if (!visible)
+            return;
+
+        if (ImGui::Begin("JSON Editor", &visible))
+        {
+            if (ImGui::BeginTabBar("JsonTabs"))
+            {
+                for (auto &doc : documents)
+                {
+                    if (ImGui::BeginTabItem(doc.basename.c_str()))
+                    {
+                        ImGui::TextUnformatted(doc.source.data(), doc.source.data() + doc.source.size());
+                        ImGui::EndTabItem();
+                    }
+                }
+                ImGui::EndTabBar();
+            }
+        }
+        ImGui::End();
+    }
+
+    void add(const fs::path &path)
+    {
+        documents.push_back({ path, parser, arena.get_arena() });
+    }
+};
+
+static JsonEditor gJsonEditor;
+
+static bool gImGuiDemoWindow = false;
+static bool gImPlotDemoWindow = false;
+
+static void DrawEditorWidgets()
+{
+    if (gImGuiDemoWindow)
+    {
+        ImGui::ShowDemoWindow(&gImGuiDemoWindow);
+    }
+
+    if (gImPlotDemoWindow)
+    {
+        ImPlot::ShowDemoWindow(&gImPlotDemoWindow);
+    }
+
+    for (auto &widget : gTraceWidgets)
+    {
+        widget.draw_window();
+    }
+
+    for (Compiler& instance : gCompilers)
+    {
+        instance.draw_window();
+    }
+
+    gOpenFile.Display();
+
+    if (gOpenFile.HasSelected())
+    {
+        for (const fs::path &file : gOpenFile.GetMultiSelected())
+        {
+            gJsonEditor.add(file);
+        }
+
+        gOpenFile.ClearSelected();
+
+        gJsonEditor.visible = true;
+    }
+
+    gJsonEditor.draw_window();
+}
+
+static void DrawFileMenu()
+{
+    if (ImGui::MenuItem("New File"))
+    {
+
+    }
+
+    ImGui::Separator();
+
+    if (ImGui::MenuItem("Open File"))
+    {
+        gOpenFile.Open();
+    }
+
+    if (ImGui::MenuItem("Open Folder"))
+    {
+
+    }
+
+    ImGui::Separator();
+    if (ImGui::MenuItem("Exit"))
+    {
+        draw::close();
+    }
+}
+
+static void DrawEditMenu()
+{
+    ImGui::MenuItem("Undo", "Ctrl+Z");
+    ImGui::MenuItem("Redo", "Ctrl+Y");
+    ImGui::Separator();
+    ImGui::MenuItem("Cut", "Ctrl+X");
+    ImGui::MenuItem("Copy", "Ctrl+C");
+    ImGui::MenuItem("Paste", "Ctrl+V");
+    ImGui::Separator();
+    ImGui::MenuItem("Find", "Ctrl+F");
+    ImGui::MenuItem("Replace", "Ctrl+H");
+}
+
+enum EditorStyle
+{
+    eStyleDark,
+    eStyleLight,
+    eStyleClassic,
+};
+
+static EditorStyle gStyle = eStyleDark;
+
+static void DrawViewMenu()
+{
+    if (ImGui::BeginMenu("Memory Statistics", CTU_TRACE_MEMORY))
+    {
+        for (auto &widget : gTraceWidgets)
+        {
+            ImGui::MenuItem(widget.get_title(), nullptr, &widget.visible);
+        }
+        ImGui::EndMenu();
+    }
+
+    if constexpr (!CTU_TRACE_MEMORY)
+    {
+        ImGui::SetItemTooltip("reconfigure with -DCTU_TRACE_MEMORY=enabled");
+    }
+
+    ImGui::Separator();
+    ImGui::MenuItem("ImGui Demo", nullptr, &gImGuiDemoWindow);
+    ImGui::MenuItem("ImPlot Demo", nullptr, &gImPlotDemoWindow);
+
+    ImGui::SeparatorText("Theme");
+    if (ImGui::MenuItem("Dark", nullptr, gStyle == eStyleDark))
+    {
+        ImGui::StyleColorsDark();
+        ImPlot::StyleColorsDark();
+        gStyle = eStyleDark;
+    }
+
+    if (ImGui::MenuItem("Light", nullptr, gStyle == eStyleLight))
+    {
+        ImGui::StyleColorsLight();
+        ImPlot::StyleColorsLight();
+        gStyle = eStyleLight;
+    }
+
+    if (ImGui::MenuItem("Classic", nullptr, gStyle == eStyleClassic))
+    {
+        ImGui::StyleColorsClassic();
+        ImPlot::StyleColorsClassic();
+        gStyle = eStyleClassic;
+    }
+}
+
+static void DrawHelpMenu()
+{
+    ImGui::MenuItem("About");
+    ImGui::MenuItem("Documentation");
+    ImGui::Separator();
+    ImGui::MenuItem("Search menus");
+    ImGui::Separator();
+    ImGui::MenuItem("Report Issue");
+    ImGui::MenuItem("Check for Updates");
+}
+
+static void DrawMainMenuBar()
+{
+    if (ImGui::BeginMainMenuBar())
+    {
+        ImGui::TextUnformatted(g.name.c_str());
+        ImGui::Separator();
+
+        if (ImGui::BeginMenu("File"))
+        {
+            DrawFileMenu();
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Edit"))
+        {
+            DrawEditMenu();
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("View"))
+        {
+            DrawViewMenu();
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Help"))
+        {
+            DrawHelpMenu();
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMainMenuBar();
+    }
 }
 
 int main(int argc, const char **argv)
@@ -574,9 +765,15 @@ int main(int argc, const char **argv)
     setup_global();
     install_trace_arenas();
 
+    TraceArena trace{"Compiler", TraceArena::eCollectStackTrace};
+    gCompilers.emplace_back(Compiler(trace, "Compiler"));
+
+    gOpenFile.SetTitle("Open File");
+    gOpenFile.SetTypeFilters({ ".json" });
+
     draw::config_t config = {
         .title = L"Editor",
-        .hardware_acceleration = false,
+        .hwaccel = false,
     };
 
     if (!draw::create(config))
@@ -584,11 +781,11 @@ int main(int argc, const char **argv)
         return 1;
     }
 
-    EditorUi ui;
-
     while (draw::begin_frame())
     {
-        ui.draw_windows();
+        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+        DrawMainMenuBar();
+        DrawEditorWidgets();
         draw::end_frame();
     }
 

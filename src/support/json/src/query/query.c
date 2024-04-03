@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
+#include "json/query.h"
 #include "json/json.h"
 
 #include "arena/arena.h"
@@ -73,15 +74,13 @@ static json_t *eval_query(json_t *json, const query_ast_t *query, arena_t *arena
 }
 
 USE_DECL
-json_t *json_query(json_t *json, const char *query, arena_t *arena)
+json_t *json_query(json_t *json, const char *query, logger_t *logger, arena_t *arena)
 {
     CTASSERT(json != NULL);
     CTASSERT(query != NULL);
     CTASSERT(arena != NULL);
 
     io_t *io = io_string("query", query, arena);
-
-    logger_t *logger = logger_new(arena);
 
     query_scan_t ctx = {
         .reports = logger,

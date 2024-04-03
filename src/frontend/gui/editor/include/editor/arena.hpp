@@ -3,30 +3,33 @@
 
 #include "arena/arena.h"
 
-#define CTX_UNUSED [[maybe_unused]]
+#include "editor/utils/utils.hpp"
 
-namespace ed
+class TraceArena;
+
+class IArena
 {
-    class IArena : arena_t
-    {
-        static void *wrap_malloc(size_t size, void *user);
-        static void *wrap_realloc(void *ptr, size_t new_size, size_t old_size, void *user);
-        static void wrap_free(void *ptr, size_t size, void *user);
-        static void wrap_rename(const void *ptr, const char *name, void *user);
-        static void wrap_reparent(const void *ptr, const void *parent, void *user);
+    arena_t impl;
 
-        virtual void *malloc(size_t size) = 0;
-        virtual void *realloc(void *ptr, size_t new_size, size_t old_size) = 0;
-        virtual void free(void *ptr, size_t size) = 0;
+    static void *wrap_malloc(size_t size, void *user);
+    static void *wrap_realloc(void *ptr, size_t new_size, size_t old_size, void *user);
+    static void wrap_free(void *ptr, size_t size, void *user);
+    static void wrap_rename(const void *ptr, const char *name, void *user);
+    static void wrap_reparent(const void *ptr, const void *parent, void *user);
 
-        virtual void set_name(CTX_UNUSED const void *ptr, CTX_UNUSED const char *new_name) { }
-        virtual void set_parent(CTX_UNUSED const void *ptr, CTX_UNUSED const void *new_parent) { }
+protected:
+    IArena(const char *id);
 
-    protected:
-        IArena(const char *id);
+public:
+    virtual ~IArena() = default;
 
-    public:
-        arena_t *get_arena() { return this; }
-        const char *get_name() const { return name; }
-    };
-} // namespace ed
+    arena_t *get_arena() { return &impl; }
+    const char *get_name() const { return impl.name; }
+
+    virtual void *malloc(size_t size) = 0;
+    virtual void *realloc(void *ptr, size_t new_size, size_t old_size) = 0;
+    virtual void free(void *ptr, size_t size) = 0;
+
+    virtual void rename(CTX_UNUSED const void *ptr, CTX_UNUSED const char *new_name) { }
+    virtual void reparent(CTX_UNUSED const void *ptr, CTX_UNUSED const void *new_parent) { }
+};

@@ -3,6 +3,7 @@ src = [
     'src/config.cpp',
     'src/panic.cpp',
     'src/compile.cpp',
+    'src/memory.cpp',
     'src/editor.cpp',
 
     'src/panels/panel.cpp',
@@ -17,8 +18,6 @@ src = [
 
     'src/main.cpp'
 ]
-
-flecs = subproject('flecs').get_variable('flecs_dep')
 
 deps = [
     # render backend
@@ -35,10 +34,7 @@ deps = [
     setup, memory, broker, support, ssa, tree,
 
     # extra utilities
-    json,
-
-    # ecs
-    flecs
+    json
 ]
 
 executable('gui', src,

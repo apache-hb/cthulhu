@@ -31,11 +31,6 @@ void MenuSection::draw()
     {
         ImGui::Separator();
     }
-
-    for (auto &item : items)
-    {
-        item->draw();
-    }
 }
 
 std::string_view MenuFlyout::get_title() const
@@ -54,3 +49,25 @@ void MenuFlyout::draw()
         ImGui::EndMenu();
     }
 }
+
+Menu& Menu::hotkey(ImGuiKeyChord chord)
+{
+    g.shortcuts[chord] = items.back();
+    return *this;
+}
+
+Menu& Editor::menu(std::string_view name)
+{
+    auto it = std::find_if(menus.begin(), menus.end(), [&](const auto &menu) {
+        return menu.name == name;
+    });
+
+    if (it != menus.end())
+    {
+        return *it;
+    }
+
+    return menus.emplace_back(Menu(name));
+}
+
+Editor g{};

@@ -92,16 +92,6 @@ CT_JSON_API json_t *json_map_get(IN_NOTNULL const json_t *json, IN_NOTNULL const
 RET_INSPECT
 CT_JSON_API json_t *json_array_get(IN_NOTNULL const json_t *json, size_t index);
 
-/// @brief query a json object
-///
-/// @param json the object to query
-/// @param query the query to perform
-/// @param arena the arena to use
-///
-/// @return the result of the query
-RET_INSPECT
-CT_JSON_API json_t *json_query(IN_NOTNULL json_t *json, IN_NOTNULL const char *query, IN_NOTNULL arena_t *arena);
-
 /// @brief scan an io into a json value
 /// scan the contents of an io object into a json value
 /// @note if the scan fails, the logger will contain error information

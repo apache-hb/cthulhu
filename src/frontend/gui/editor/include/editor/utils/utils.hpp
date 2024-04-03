@@ -1,9 +1,11 @@
 #pragma once
 
-#define CTU_NOMOVE(x) \
+#define CTX_UNUSED [[maybe_unused]]
+
+#define CTX_NOMOVE(x) \
     x(x&&) = delete; \
     x& operator=(x&&) = delete;
 
-#define CTU_NOCOPY(x) \
+#define CTX_NOCOPY(x) \
     x(const x&) = delete; \
     x& operator=(const x&) = delete;

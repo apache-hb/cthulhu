@@ -11,8 +11,8 @@ namespace ed
 {
     class ScopeID
     {
-        CTU_NOCOPY(ScopeID);
-        CTU_NOMOVE(ScopeID);
+        CTX_NOCOPY(ScopeID);
+        CTX_NOMOVE(ScopeID);
     public:
         ScopeID(const void *ptr) { ImGui::PushID(ptr); }
         ScopeID(int i) { ImGui::PushID(i); }

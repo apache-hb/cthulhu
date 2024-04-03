@@ -2,6 +2,7 @@
 
 #include "imgui.h"
 #include "imgui_internal.h"
+#include <functional>
 
 struct IMenuItem;
 struct MenuSection;
@@ -49,10 +50,13 @@ struct IMenuItem
 struct MenuSection final : IMenuItem
 {
     std::string title;
-    std::vector<std::shared_ptr<IMenuItem>> items;
 
     std::string_view get_title() const override;
     void draw() override;
+
+    MenuSection(std::string_view it = "")
+        : title(it)
+    { }
 };
 
 struct MenuFlyout final : IMenuItem
@@ -64,36 +68,55 @@ struct MenuFlyout final : IMenuItem
     void draw() override;
 };
 
-struct IMenuEntry : IMenuItem
+struct MenuAction final : IMenuItem
 {
-    ImGuiKeyChord shortcut = ImGuiKey_None;
+    std::string title;
+    std::function<void()> action;
 
-    virtual void activate() = 0;
+    std::string_view get_title() const override;
+    void draw() override;
+
+    MenuAction(std::string_view it, std::function<void()> act)
+        : title(it)
+        , action(act)
+    { }
 };
 
 struct Menu
 {
     std::string name;
     std::vector<std::shared_ptr<IMenuItem>> items;
+
+    Menu(std::string_view it)
+        : name(it)
+    { }
+
+    Menu& action(std::string_view it, auto&& fn)
+    {
+        items.push_back(std::make_shared<MenuAction>(it, std::forward<decltype(fn)>(fn)));
+        return *this;
+    }
+
+    Menu& hotkey(ImGuiKeyChord chord);
+    Menu& separator();
 };
 
 struct Editor
 {
-    std::string name;
+    std::string name = "Cthulhu";
     std::vector<std::shared_ptr<IEditorWidget>> widgets;
-    std::vector<std::shared_ptr<IMenuEntry>> entries;
+    std::unordered_map<ImGuiKeyChord, std::shared_ptr<IMenuItem>> shortcuts;
     std::vector<Menu> menus;
 
     template<std::derived_from<IEditorWidget> T>
-    std::shared_ptr<T> add_widget(auto&&... args)
+    std::shared_ptr<T> widget(auto&&... args)
     {
         auto widget = std::make_shared<T>(std::forward<decltype(args)>(args)...);
         widgets.push_back(widget);
         return widget;
     }
 
-    template<std::derived_from<IMenuItem> T>
-    std::shared_ptr<T> add_menu_entry();
+    Menu& menu(std::string_view it);
 };
 
 extern Editor g;

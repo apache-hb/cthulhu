@@ -28,6 +28,7 @@
 !*.md
 !*.build
 !meson_options.txt
+!*.wrap
 
 # dont ignore config files
 !Doxyfile.in

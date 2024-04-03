@@ -6,6 +6,7 @@
 #include "unit/ct-test.h"
 
 #include "setup/memory.h"
+#include "json/query.h"
 
 #include "json/json.h"
 
@@ -66,12 +67,12 @@ int main(void)
 
         GROUP_EXPECT_PASS(group, "json", json != NULL);
 
-        json_t *name = json_query(json, "root.name", arena);
+        json_t *name = json_query(json, "root.name", logger, arena);
         GROUP_EXPECT_PASS(group, "name", name != NULL);
         GROUP_EXPECT_PASS(group, "name_kind", name->kind == eJsonString);
         GROUP_EXPECT_PASS(group, "name_value", ctu_strncmp(name->string.text, "ctu", name->string.length) == 0);
 
-        json_t *dep1 = json_query(json, "root.dependencies[1]", arena);
+        json_t *dep1 = json_query(json, "root.dependencies[1]", logger, arena);
         GROUP_EXPECT_PASS(group, "dep1", dep1 != NULL);
         GROUP_EXPECT_PASS(group, "dep_kind", dep1->kind == eJsonString);
         GROUP_EXPECT_PASS(group, "dep_value", ctu_strncmp(dep1->string.text, "std", dep1->string.length) == 0);

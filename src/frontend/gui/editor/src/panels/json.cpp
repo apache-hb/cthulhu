@@ -27,7 +27,7 @@ struct JsonInfo
 class JsonPanel : public ed::IEditorPanel
 {
 public:
-    ed::TraceArena arena{"json", ed::TraceArena::eDrawTree, true};
+    TraceArena arena{"json", TraceArena::eCollectStackTrace};
     json::JsonParser parser{arena.get_arena()};
 
     ImGui::FileBrowser dialog { ImGuiFileBrowserFlags_ConfirmOnEnter | ImGuiFileBrowserFlags_MultipleSelection | ImGuiFileBrowserFlags_CloseOnEsc };

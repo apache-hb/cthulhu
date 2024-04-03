@@ -323,7 +323,7 @@ bool draw::create(const config_t& config)
     SetWindowPos(hwnd, 0, xPos, yPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 
     // Initialize Direct3D
-    if (!CreateDeviceD3D(hwnd, !config.hardware_acceleration))
+    if (!CreateDeviceD3D(hwnd, !config.hwaccel))
     {
         CleanupDeviceD3D();
         ::UnregisterClassW(wc.lpszClassName, wc.hInstance);
@@ -423,6 +423,11 @@ bool draw::begin_frame()
     ImGui::NewFrame();
 
     return true;
+}
+
+void draw::close()
+{
+    ::PostMessage(hwnd, WM_CLOSE, 0, 0);
 }
 
 void draw::end_frame()
