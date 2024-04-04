@@ -61,6 +61,8 @@ namespace ctu::json {
         ///
         /// @return the end of the iteration
         ObjectIterator end() const;
+
+        ObjectIterator iter() const;
     };
 
     /// @brief a json array value
@@ -295,7 +297,7 @@ namespace ctu::json {
     /// @brief a member of a json object
     struct CT_JSON_API member_t {
         /// @brief the key of the member
-        const char *key;
+        std::string_view key;
 
         /// @brief the value of the member
         Json value;
@@ -320,6 +322,9 @@ namespace ctu::json {
         bool operator!=(const ObjectIterator& other) const;
         ObjectIterator &operator++();
         member_t operator*() const;
+
+        bool has_next() const;
+        member_t next();
     };
 
     /// @brief an iterator over the values of a json array

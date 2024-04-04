@@ -612,9 +612,9 @@ struct JsonFile
         | ImGuiTreeNodeFlags_Bullet
         | ImGuiTreeNodeFlags_NoTreePushOnOpen;
 
-    static void draw_json_array(const char *key, const ctu::json::Json& value)
+    static void draw_json_array(const std::string& key, const ctu::json::Json& value)
     {
-        bool is_open = ImGui::TreeNodeEx(key, kGroupNodeFlags, "%s", key);
+        bool is_open = ImGui::TreeNodeEx(key.c_str(), kGroupNodeFlags, "%s", key.c_str());
 
         ImGui::TableNextColumn();
         ImGui::TextUnformatted("Array");
@@ -624,15 +624,15 @@ struct JsonFile
         {
             for (size_t i = 0; i < value.length(); i++)
             {
-                draw_json_item(std::to_string(i).c_str(), value.get(i));
+                draw_json_item(std::format("[{}]", i).c_str(), value.get(i));
             }
             ImGui::TreePop();
         }
     }
 
-    static void draw_json_object(const char *key, const ctu::json::Json& object)
+    static void draw_json_object(const std::string& key, const ctu::json::Json& object)
     {
-        bool is_open = ImGui::TreeNodeEx(key, kGroupNodeFlags, "%s", key);
+        bool is_open = ImGui::TreeNodeEx(key.c_str(), kGroupNodeFlags, "%s", key.c_str());
 
         ImGui::TableNextColumn();
         ImGui::TextUnformatted("Object");
@@ -640,17 +640,20 @@ struct JsonFile
         ImGui::TableNextColumn();
         if (is_open)
         {
-            for (auto [entry, value] : object.as_object())
+            // TODO: make iterators work
+            auto iter = object.as_object().iter();
+            while (iter.has_next())
             {
-                draw_json_item(entry, value);
+                auto [entry, value] = iter.next();
+                draw_json_item(std::string{entry}, value);
             }
             ImGui::TreePop();
         }
     }
 
-    static void draw_json_value(const char *key, const ctu::json::Json& value)
+    static void draw_json_value(const std::string& key, const ctu::json::Json& value)
     {
-        ImGui::TreeNodeEx(key, kValueNodeFlags, "%s", key);
+        ImGui::TreeNodeEx(key.c_str(), kValueNodeFlags, "%s", key.c_str());
 
         ImGui::TableNextColumn();
         ImGui::TextUnformatted(get_kind_name(value.get_kind()));
@@ -681,7 +684,7 @@ struct JsonFile
         }
     }
 
-    static void draw_json_item(const char *key, const ctu::json::Json& value)
+    static void draw_json_item(const std::string& key, const ctu::json::Json& value)
     {
         ImGui::TableNextRow();
         ImGui::TableNextColumn();

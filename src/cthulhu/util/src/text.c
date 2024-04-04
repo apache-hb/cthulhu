@@ -35,6 +35,8 @@ static escape_t consume_escape(logger_t *reports, const node_t *node, const char
     case 'r': return escape_new(2, '\r');
     case '0': return escape_new(2, '\0');
     case '\\': return escape_new(2, '\\');
+    case '"': return escape_new(2, '"');
+    case '\'': return escape_new(2, '\'');
 
     default:
         msg_notify(reports, &kEvent_InvalidStringEscape, node, "unknown escape sequence '\\%c'", *text);

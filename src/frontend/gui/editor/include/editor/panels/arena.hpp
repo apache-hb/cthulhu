@@ -13,7 +13,7 @@ struct AllocInfo
     size_t id; ///< the id of the allocation
     Memory size; ///< the size of the allocation
     std::chrono::steady_clock::time_point timestamp; ///< the time of the allocation
-    std::stacktrace trace; ///< the stack trace of the allocation
+    size_t trace; ///< hash of the stack trace
 
     std::string name; ///< the name of the allocation
     const void *parent; ///< the parent of the allocation
@@ -45,6 +45,12 @@ public:
 
     // all currently live allocations
     std::unordered_set<void *> live_allocs;
+
+    // TODO: this is a little silly, but its an easy way to avoid having to
+    // deal with iterator invalidation
+    std::unordered_map<size_t, std::stacktrace> stacktraces;
+
+    size_t add_stacktrace(const std::stacktrace& trace);
 
     int collect;
 

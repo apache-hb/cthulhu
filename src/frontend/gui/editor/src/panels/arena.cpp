@@ -112,6 +112,14 @@ void TraceArena::reset()
     allocs.clear();
 }
 
+size_t TraceArena::add_stacktrace(const std::stacktrace& trace)
+{
+    // TODO: lets hope these dont collide
+    size_t hash = std::hash<std::stacktrace>{}(trace);
+    stacktraces[hash] = trace;
+    return hash;
+}
+
 void TraceArena::create_alloc(void *ptr, size_t size)
 {
     peak_memory_usage += size;
@@ -123,7 +131,7 @@ void TraceArena::create_alloc(void *ptr, size_t size)
         allocs[ptr].timestamp = std::chrono::high_resolution_clock::now();
 
     if (collect & eCollectStackTrace)
-        allocs[ptr].trace = std::stacktrace::current();
+        allocs[ptr].trace = add_stacktrace(std::stacktrace::current());
 
     live_allocs.insert(ptr);
 }
@@ -269,9 +277,10 @@ void TraceArenaWidget::draw_name(const AllocInfo& alloc) const
 
     if (ImGui::BeginPopupContextItem("TracePopup"))
     {
-        if (!alloc.trace.empty())
+        const auto& trace = arena.stacktraces[alloc.trace];
+        if (!trace.empty())
         {
-            draw_backtrace(alloc.trace);
+            draw_backtrace(trace);
         }
         else
         {

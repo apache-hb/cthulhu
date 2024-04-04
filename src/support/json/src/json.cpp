@@ -17,9 +17,38 @@ Json Object::operator[](const char *key) const { return get(key); }
 ObjectIterator Object::begin() const { return map_iter(m_object); }
 ObjectIterator Object::end() const { return {}; }
 
-bool ObjectIterator::operator!=(const ObjectIterator&) const { return map_has_next(&m_iter); }
-ObjectIterator &ObjectIterator::operator++() { m_entry = map_next(&m_iter); return *this; }
-member_t ObjectIterator::operator*() const { return { (const char*)m_entry.key, (json_t*)m_entry.value }; }
+ObjectIterator Object::iter() const { return begin(); }
+
+bool ObjectIterator::operator!=(const ObjectIterator&) const
+{
+    return map_has_next(&m_iter);
+}
+
+ObjectIterator &ObjectIterator::operator++()
+{
+    m_entry = map_next(&m_iter);
+    return *this;
+}
+
+member_t ObjectIterator::operator*() const
+{
+    const text_view_t *key = (const text_view_t*)m_entry.key;
+    std::string_view view { key->text, key->length };
+    return { view, (json_t*)m_entry.value };
+}
+
+bool ObjectIterator::has_next() const
+{
+    return map_has_next(&m_iter);
+}
+
+member_t ObjectIterator::next()
+{
+    m_entry = map_next(&m_iter);
+    const text_view_t *key = (const text_view_t*)m_entry.key;
+    std::string_view view { key->text, key->length };
+    return { view, (json_t*)m_entry.value };
+}
 
 Json Array::get(size_t index) const { return (json_t*)typevec_offset(&m_array, index); }
 Json Array::operator[](size_t index) const { return get(index); }
