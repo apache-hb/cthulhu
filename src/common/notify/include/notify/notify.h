@@ -7,6 +7,8 @@
 #include "core/analyze.h"
 #include "core/compiler.h"
 
+#include "scan/node.h"
+
 #include "notify/diagnostic.h"
 
 #include <stdarg.h>
@@ -36,7 +38,7 @@ typedef struct event_t
     const diagnostic_t *diagnostic;
 
     /// @brief the primary node that this event is attached to
-    const node_t *node;
+    node_t node;
 
     /// @brief the primary message
     FIELD_STRING char *message;
@@ -54,7 +56,7 @@ typedef struct event_t
 typedef struct segment_t
 {
     /// @brief the related node
-    const node_t *node;
+    node_t node;
 
     /// @brief the message associated with this segment
     FIELD_STRING char *message;

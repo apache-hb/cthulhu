@@ -6,6 +6,8 @@
 
 #include "core/analyze.h"
 #include "core/text.h"
+#include "core/where.h"
+#include "std/typed/vector.h"
 
 #include <gmp.h>
 
@@ -42,12 +44,14 @@ typedef struct json_t
     json_kind_t kind;
 
     /// @brief the source location of the json value
-    const node_t *node;
+    /// @note this is only the position of the span, and does not include the
+    ///       source file. it is the user's responsibility to track the file.
+    where_t where;
 
     union {
         /// @brief the string value of this node
         /// @warning only valid if @a kind is @a eJsonString
-        text_t string;
+        text_view_t string;
 
         /// @brief the integer value of this node
         /// @warning only valid if @a kind is @a eJsonInteger
@@ -63,7 +67,7 @@ typedef struct json_t
 
         /// @brief the array value of this node
         /// @warning only valid if @a kind is @a eJsonArray
-        const vector_t *array;
+        typevec_t array;
 
         /// @brief the object value of this node
         /// @warning only valid if @a kind is @a eJsonObject

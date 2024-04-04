@@ -10,23 +10,7 @@
 
 #include <stdlib.h>
 
-/// @brief A vector with a fixed type size.
-typedef struct typevec_t
-{
-    arena_t *arena;
-
-    /// @brief The number of elements allocated.
-    size_t size;
-
-    /// @brief The number of elements used.
-    size_t used;
-
-    /// @brief The size of each element.
-    size_t type_size;
-
-    /// @brief The data of the vector.
-    FIELD_SIZE(size) void *data;
-} typevec_t;
+const typevec_t kEmptyTypevec = { 0 };
 
 // seperate from typevec_offset because we want to be able to get offsets
 // outside of the vector
@@ -60,19 +44,32 @@ static void typevec_ensure(typevec_t *vec, size_t extra)
 
 static typevec_t *typevec_create(size_t type_size, size_t len, arena_t *arena)
 {
+    typevec_t *vec = ARENA_MALLOC(sizeof(typevec_t), "typevec", NULL, arena);
+    typevec_init(vec, type_size, len, arena);
+    return vec;
+}
+
+USE_DECL
+void typevec_init(typevec_t *vec, size_t type_size, size_t len, arena_t *arena)
+{
+    CTASSERT(vec != NULL);
     CTASSERT(arena != NULL);
     CTASSERT(type_size > 0);
 
     size_t size = CT_MAX(len, 1);
 
-    typevec_t *vec = ARENA_MALLOC(sizeof(typevec_t), "typevec", NULL, arena);
     vec->arena = arena;
     vec->size = size;
     vec->used = 0;
     vec->type_size = type_size;
-    vec->data = ARENA_MALLOC(type_size * (size + 1), "typevec_data", vec, arena);
-    ARENA_IDENTIFY(vec->data, "data", vec, arena);
+    vec->data = ARENA_MALLOC(type_size * (size + 1), "data", vec, arena);
+}
 
+USE_DECL
+typevec_t typevec_make(size_t type_size, size_t len, arena_t *arena)
+{
+    typevec_t vec = { 0 };
+    typevec_init(&vec, type_size, len, arena);
     return vec;
 }
 

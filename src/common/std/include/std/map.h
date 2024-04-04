@@ -6,7 +6,7 @@
 
 #include "core/analyze.h"
 
-#include "base/typeinfo.h"
+#include "std/typeinfo.h"
 
 CT_BEGIN_API
 
@@ -29,13 +29,41 @@ typedef struct vector_t vector_t;
 ///
 /// @{
 
-/// @brief an unordered hash map
-typedef struct map_t map_t;
-
 /// @brief a single node in a map
 typedef struct bucket_t bucket_t;
 
-/// @brief create a new map
+/// @brief an unordered hash map
+/// @warning this is an opaque type, do not access its members directly aside from 0-initializing it.
+typedef struct map_t
+{
+    /// @brief the arena this map allocates from
+    arena_t *arena;
+
+    /// @brief the hash function for this map
+    hash_info_t info;
+
+    /// @brief the number of top level buckets
+    size_t size;
+
+    /// @brief the number of buckets used
+    size_t used;
+
+    /// @brief bucket data
+    FIELD_SIZE(size) bucket_t *data;
+} map_t;
+
+/// @brief an empty map
+extern const map_t kEmptyMap;
+
+/// @brief initialize a map
+///
+/// @param map the map to initialize
+/// @param size the initial size of the map
+/// @param info the type info for the key type
+/// @param arena the arena to allocate from
+CT_STD_API void map_init(OUT_NOTNULL map_t *map, IN_RANGE(>, 0) size_t size, hash_info_t info, IN_NOTNULL arena_t *arena);
+
+/// @brief create a new map on the stack
 ///
 /// @param size the initial size of the map
 /// @param info the type info for the key type
@@ -43,7 +71,17 @@ typedef struct bucket_t bucket_t;
 ///
 /// @return the new map
 CT_NODISCARD
-CT_STD_API map_t *map_new(IN_RANGE(>, 0) size_t size, typeinfo_t info, IN_NOTNULL arena_t *arena);
+CT_STD_API map_t map_make(IN_RANGE(>, 0) size_t size, hash_info_t info, IN_NOTNULL arena_t *arena);
+
+/// @brief create a new map on the heap
+///
+/// @param size the initial size of the map
+/// @param info the type info for the key type
+/// @param arena the arena to allocate from
+///
+/// @return the new map
+CT_NODISCARD
+CT_STD_API map_t *map_new(IN_RANGE(>, 0) size_t size, hash_info_t info, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new map with an optimal size
 ///
@@ -53,7 +91,7 @@ CT_STD_API map_t *map_new(IN_RANGE(>, 0) size_t size, typeinfo_t info, IN_NOTNUL
 ///
 /// @return the new map
 CT_NODISCARD
-CT_STD_API map_t *map_optimal(IN_RANGE(>, 0) size_t size, typeinfo_t info, IN_NOTNULL arena_t *arena);
+CT_STD_API map_t *map_optimal(IN_RANGE(>, 0) size_t size, hash_info_t info, IN_NOTNULL arena_t *arena);
 
 /// @brief set a key-value pair in a map
 /// @pre @p key is not NULL

@@ -11,13 +11,13 @@ libnotify = library('notify', src,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_NOTIFY_BUILD=1' ],
-    dependencies : [ std, arena ],
+    dependencies : [ std, arena, scan ],
     include_directories : inc
 )
 
 notify = declare_dependency(
     link_with : libnotify,
-    dependencies : base,
+    dependencies : [ base, scan ],
     include_directories : inc
 )
 

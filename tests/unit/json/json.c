@@ -7,6 +7,7 @@
 
 #include "setup/memory.h"
 #include "json/query.h"
+#include <stdio.h>
 
 #include "json/json.h"
 
@@ -39,20 +40,22 @@ int main(void)
         GROUP_EXPECT_PASS(group, "json", json != NULL);
 
         GROUP_EXPECT_PASS(group, "is_object", json->kind == eJsonObject);
-        GROUP_EXPECT_PASS(group, "is_name_string", json_map_get(json, "name")->kind == eJsonString);
+
+        json_t *name = json_map_get(json, "name");
+        GROUP_EXPECT_PASS(group, "has name", name != NULL);
+        GROUP_EXPECT_PASS(group, "is_name_string", name->kind == eJsonString);
         GROUP_EXPECT_PASS(group, "is_version_float", json_map_get(json, "version")->kind == eJsonFloat);
         GROUP_EXPECT_PASS(group, "is_dependencies_array", json_map_get(json, "dependencies")->kind == eJsonArray);
 
-        text_t name = json_map_get(json, "name")->string;
-        GROUP_EXPECT_PASS(group, "name", name.length == 4);
-
-        GROUP_EXPECT_PASS(group, "name", ctu_strncmp(name.text, "ctu", name.length) == 0);
+        text_view_t text = name->string;
+        GROUP_EXPECT_PASS(group, "name", text.length == 3);
+        GROUP_EXPECT_PASS(group, "name", ctu_strncmp(text.text, "ctu", text.length) == 0);
 
         float version = json_map_get(json, "version")->real;
         GROUP_EXPECT_PASS(group, "version", version == 1.0f);
 
         json_t *dependencies = json_map_get(json, "dependencies");
-        GROUP_EXPECT_PASS(group, "dependencies", vector_len(dependencies->array) == 3);
+        GROUP_EXPECT_PASS(group, "dependencies", typevec_len(&dependencies->array) == 3);
 
         GROUP_EXPECT_PASS(group, "dependency_0", json_array_get(dependencies, 0)->kind == eJsonString);
         GROUP_EXPECT_PASS(group, "dependency_1", json_array_get(dependencies, 1)->kind == eJsonString);

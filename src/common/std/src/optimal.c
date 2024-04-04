@@ -82,7 +82,7 @@ static size_t select_best_size(size_t size)
 }
 
 USE_DECL
-map_t *map_optimal(size_t size, typeinfo_t info, arena_t *arena)
+map_t *map_optimal(size_t size, hash_info_t info, arena_t *arena)
 {
     size_t bucket = select_best_size(size);
     return map_new(bucket, info, arena);

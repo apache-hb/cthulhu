@@ -26,6 +26,8 @@ static const char *attrib_name(const vector_t *path, arena_t *arena)
 
 static ctu_attrib_t *get_attrib(tree_t *sema, const vector_t *path, arena_t *arena)
 {
+    CT_UNUSED(arena);
+
     CTASSERTF(vector_len(path) == 1, "expected 1 path element but got `%s`", attrib_name(path, arena));
     const char *name = vector_tail(path);
 

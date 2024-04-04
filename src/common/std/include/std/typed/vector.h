@@ -18,10 +18,45 @@ CT_BEGIN_API
 /// @brief Generic vector of typed values
 /// @{
 
-/// @brief a vector of typed values
-typedef struct typevec_t typevec_t;
+/// @brief A vector with a fixed type size.
+/// @warning this is an opaque type, do not access its members directly aside from 0-initializing it.
+typedef struct typevec_t
+{
+    arena_t *arena;
 
-/// @brief create a new typed vector
+    /// @brief The number of elements allocated.
+    size_t size;
+
+    /// @brief The number of elements used.
+    size_t used;
+
+    /// @brief The size of each element.
+    size_t type_size;
+
+    /// @brief The data of the vector.
+    FIELD_SIZE(size) void *data;
+} typevec_t;
+
+extern const typevec_t kEmptyTypevec;
+
+/// @brief initialize a typed vector
+///
+/// @param vec the vector to initialize
+/// @param type_size the size of the type
+/// @param len the initial length of the vector
+/// @param arena the arena to allocate from
+CT_STD_API void typevec_init(IN_NOTNULL typevec_t *vec, size_t type_size, size_t len, IN_NOTNULL arena_t *arena);
+
+/// @brief create a new typed vector on the stack
+///
+/// @param type_size the size of the type
+/// @param len the initial length of the vector
+/// @param arena the arena to allocate from
+///
+/// @return the new vector
+CT_STD_API typevec_t typevec_make(size_t type_size, size_t len, IN_NOTNULL arena_t *arena);
+
+/// @brief create a new typed vector on the heap
 ///
 /// @param type_size the size of the type
 /// @param len the initial length of the vector

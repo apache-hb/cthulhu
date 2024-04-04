@@ -10,8 +10,7 @@ src = [
     'src/util.c',
     'src/panic.c',
     'src/log.c',
-    'src/bitset.c',
-    'src/typeinfo.c'
+    'src/bitset.c'
 ]
 
 deps = [ core ]

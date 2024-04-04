@@ -6,6 +6,8 @@
 
 #include "base/panic.h"
 
+#include <string_view>
+
 typedef struct logger_t logger_t;
 typedef struct io_t io_t;
 
@@ -65,9 +67,9 @@ namespace ctu::json {
     class CT_JSON_API Array {
         friend class Json;
 
-        const vector_t *m_array;
+        const typevec_t m_array;
 
-        constexpr Array(const vector_t *array)
+        constexpr Array(typevec_t array)
             : m_array(array)
         { }
 
@@ -196,7 +198,7 @@ namespace ctu::json {
         /// returns a text view as string values may have embedded nulls
         ///
         /// @return the string value
-        text_view_t as_string() const;
+        std::string_view as_string() const;
 
         /// @brief get the integer value
         /// @pre #ctu::json::Json::is_integer() is true
@@ -324,10 +326,10 @@ namespace ctu::json {
     class CT_JSON_API ArrayIterator {
         friend class Array;
 
-        const vector_t *m_array;
+        typevec_t m_array;
         size_t m_index;
 
-        constexpr ArrayIterator(const vector_t *array, size_t index)
+        constexpr ArrayIterator(typevec_t array, size_t index)
             : m_array(array)
             , m_index(index)
         { }

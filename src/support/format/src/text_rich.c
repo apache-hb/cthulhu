@@ -77,10 +77,10 @@ static where_t get_first_line(const typevec_t *segments)
         const segment_t *segment = typevec_offset(segments, i);
         CTASSERT(segment != NULL);
 
-        if (!node_has_line(segment->node))
+        if (!node_has_line(&segment->node))
             continue;
 
-        where_t where = node_get_location(segment->node);
+        where_t where = node_get_location(&segment->node);
         first_line = CT_MIN(first_line, where.first_line);
         break;
     }
@@ -259,9 +259,9 @@ static void print_file_segments(rich_t *rich, const typevec_t *segments)
         const segment_t *segment = typevec_offset(segments, i);
         CTASSERT(segment != NULL);
 
-        if (node_has_line(segment->node))
+        if (node_has_line(&segment->node))
         {
-            print_file_segment(rich, segment->node, segment->message);
+            print_file_segment(rich, &segment->node, segment->message);
         }
         else
         {
@@ -311,7 +311,7 @@ static typevec_t *collect_segments(rich_t *rich, const typevec_t *all, const sca
         const segment_t *segment = typevec_offset(all, i);
         CTASSERT(segment != NULL);
 
-        const node_t *other = segment->node;
+        const node_t *other = &segment->node;
         if (node_get_scan(other) != scan)
             continue;
 
@@ -339,7 +339,7 @@ static join_result_t join_node_messages(rich_t *rich, const segment_t *segment, 
     CTASSERT(segment != NULL);
     CTASSERT(other != NULL);
 
-    if (!nodes_overlap(segment->node, other->node))
+    if (!nodes_overlap(&segment->node, &other->node))
     {
         join_result_t result = {
             .joined_nodes = false,
@@ -423,7 +423,7 @@ static typevec_t *collect_primary_segments(rich_t *rich, const typevec_t *all, c
     CTASSERT(rich != NULL);
     CTASSERT(event != NULL);
 
-    const scan_t *scan = node_get_scan(event->node);
+    const scan_t *scan = node_get_scan(&event->node);
     typevec_t *primary = collect_segments(rich, all, scan);
 
     segment_t event_segment = {
@@ -451,10 +451,10 @@ static size_t longest_segment_line(const typevec_t *segments)
         const segment_t *segment = typevec_offset(segments, i);
         CTASSERT(segment != NULL);
 
-        if (!node_has_line(segment->node))
+        if (!node_has_line(&segment->node))
             continue;
 
-        where_t where = node_get_location(segment->node);
+        where_t where = node_get_location(&segment->node);
         longest = CT_MAX(longest, where.first_line);
     }
 
@@ -477,11 +477,11 @@ static void print_extra_files(rich_t *rich)
         const segment_t *segment = typevec_offset(event->segments, i);
         CTASSERT(segment != NULL);
 
-        const scan_t *scan = node_get_scan(segment->node);
+        const scan_t *scan = node_get_scan(&segment->node);
         set_add(scans, scan);
     }
 
-    const scan_t *root = node_get_scan(event->node);
+    const scan_t *root = node_get_scan(&event->node);
 
     set_iter_t iter = set_iter(scans);
     while (set_has_next(&iter))
@@ -554,7 +554,7 @@ void text_report_rich(text_config_t config, const event_t *event)
     size_t count = typevec_len(primary);
     CT_UNUSED(count);
 
-    print_file_header(&ctx, event->node);
+    print_file_header(&ctx, &event->node);
     print_file_segments(&ctx, primary);
 
     print_extra_files(&ctx);

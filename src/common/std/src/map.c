@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-
 #include "std/map.h"
 #include "base/panic.h"
+
+#include "common.h"
 
 #include "arena/arena.h"
 #include "std/str.h"
@@ -23,21 +24,22 @@ typedef struct bucket_t
     struct bucket_t *next; ///< the next bucket in the chain
 } bucket_t;
 
-/**
- * a hashmap
- *
- * freeing the map will not free the keys or the values.
- * these need to be freed beforehand by the owner of the container.
- */
-typedef struct map_t
-{
-    arena_t *arena;                   ///< the arena this map is allocated in
-    typeinfo_t info;                  ///< the key info for this map
+static bucket_t gEmptyBucket = {0};
 
-    size_t size;                      ///< the number of buckets in the toplevel
-    size_t used;                      ///< the number of buckets in use
-    FIELD_SIZE(size) bucket_t *data; ///< the buckets
-} map_t;
+// TODO: this is a bit of a bodge, but using extern const values
+// in a static initializer isn't possible in C
+
+const map_t kEmptyMap = {
+    .arena = NULL,
+    .info = {
+        .size = sizeof(void *),
+        .hash = info_ptr_hash,
+        .equals = info_ptr_equal,
+    },
+    .size = 1,
+    .used = 0,
+    .data = &gEmptyBucket,
+};
 
 // generic map functions
 
@@ -74,22 +76,43 @@ static void clear_keys(bucket_t *buckets, size_t size)
 }
 
 USE_DECL
-map_t *map_new(size_t size, typeinfo_t info, arena_t *arena)
+void map_init(map_t *map, size_t size, hash_info_t info, arena_t *arena)
 {
+    CTASSERT(map != NULL);
+    CTASSERT(arena != NULL);
     CTASSERT(size > 0);
 
+    CTASSERT(info.size > 0);
     CTASSERT(info.equals != NULL);
     CTASSERT(info.hash != NULL);
 
+    map_t tmp = {
+        .arena = arena,
+        .info = info,
+        .size = size,
+        .used = 0,
+        .data = ARENA_MALLOC(sizeof(bucket_t) * size, "buckets", NULL, arena),
+    };
+
+    clear_keys(tmp.data, size);
+
+    *map = tmp;
+}
+
+USE_DECL
+map_t map_make(size_t size, hash_info_t info, arena_t *arena)
+{
+    map_t map;
+    map_init(&map, size, info, arena);
+    return map;
+}
+
+USE_DECL
+map_t *map_new(size_t size, hash_info_t info, arena_t *arena)
+{
     map_t *map = ARENA_MALLOC(sizeof(map_t), "map", NULL, arena);
-
-    map->arena = arena;
-    map->info = info;
-    map->size = size;
-    map->used = 0;
-    map->data = ARENA_MALLOC(sizeof(bucket_t) * size, "buckets", map, arena);
-
-    clear_keys(map->data, size);
+    map_init(map, size, info, arena);
+    ARENA_IDENTIFY(map->data, "buckets", map, arena);
 
     return map;
 }
@@ -161,14 +184,14 @@ size_t map_count(const map_t *map)
 CT_HOTFN
 static size_t impl_key_hash(const map_t *map, const void *key)
 {
-    const typeinfo_t *info = &map->info;
+    const hash_info_t *info = &map->info;
     return info->hash(key);
 }
 
 CT_HOTFN
 static bool impl_key_equal(const map_t *map, const void *lhs, const void *rhs)
 {
-    const typeinfo_t *info = &map->info;
+    const hash_info_t *info = &map->info;
     return info->equals(lhs, rhs);
 }
 

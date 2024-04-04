@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-
 #pragma once
 
 #include <ctu_base_api.h>
@@ -33,8 +32,8 @@ typedef size_t (*hash_fn_t)(const void *key);
 /// @retval false otherwise
 typedef bool (*equals_fn_t)(const void *lhs, const void *rhs);
 
-/// @brief type information for a type
-typedef struct typeinfo_t
+/// @brief information for using a type in a hashset or hashmap
+typedef struct hash_info_t
 {
     /// @brief the size of the type
     FIELD_RANGE(>, 0) size_t size;
@@ -44,17 +43,17 @@ typedef struct typeinfo_t
 
     /// @brief the equality function for the type
     equals_fn_t equals;
-} typeinfo_t;
+} hash_info_t;
 
 /// @brief type information for a c style string
-CT_BASE_API extern const typeinfo_t kTypeInfoString;
+CT_BASE_API extern const hash_info_t kTypeInfoString;
 
 /// @brief type information for a generic pointer
 /// this operates on the pointer itself and not the data it points to
-CT_BASE_API extern const typeinfo_t kTypeInfoPtr;
+CT_BASE_API extern const hash_info_t kTypeInfoPtr;
 
 /// @brief type information for a text_view_t
-CT_BASE_API extern const typeinfo_t kTypeInfoText;
+CT_BASE_API extern const hash_info_t kTypeInfoText;
 
 /// @}
 

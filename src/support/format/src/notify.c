@@ -34,7 +34,7 @@ static void print_notify_segment_simple(notify_config_t *config, const segment_t
         .zero_indexed_lines = options.zero_indexed_lines,
     };
 
-    char *path = fmt_node_location(source_config, segment->node);
+    char *path = fmt_node_location(source_config, &segment->node);
 
     io_printf(base.io, "%s: %s\n", path, segment->message);
 }
@@ -68,7 +68,7 @@ static void print_notify_simple(notify_config_t *config, const event_t *event)
     const char *severity_name = get_severity_name(severity);
     colour_t severity_colour = get_severity_colour(severity);
 
-    char *path = fmt_node_location(source_config, event->node);
+    char *path = fmt_node_location(source_config, &event->node);
 
     char *level = colour_format(format_context, severity_colour, "%s %s:", severity_name, id);
 

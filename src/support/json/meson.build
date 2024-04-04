@@ -8,10 +8,17 @@ json_include = include_directories('.', 'include')
 json_impl_include = include_directories('src', 'src/query')
 json_args = [ '-DCT_JSON_BUILD=1', generated_args ]
 
+headers = [
+    'include/json/json.h',
+    'include/json/query.h',
+    'include/json/json.inc',
+]
+
 src = [
     'src/json.c',
     'src/ast.c',
     'src/scan.c',
+    'src/actions.c',
     lex.process('src/json.l'),
     parse.process('src/json.y'),
 
@@ -23,6 +30,7 @@ src = [
 ]
 
 if has_cpp
+    headers += [ 'include/json/json.hpp' ]
     src += [ 'src/json.cpp' ]
 endif
 
@@ -33,6 +41,7 @@ libjson = library('json', src,
     cpp_args : json_args,
     dependencies : [ core, base, scan, interop, gmp, std, notify, events, util, io ],
     include_directories : [ json_include, json_impl_include ],
+    extra_files : headers,
     override_options : [ 'unity=off' ]
 )
 

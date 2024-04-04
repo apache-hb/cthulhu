@@ -66,11 +66,11 @@ bool str_equal(const char *lhs, const char *rhs)
 }
 
 USE_DECL
-size_t ctu_strlen(const char *text)
+size_t ctu_strlen(const char *str)
 {
-    CTASSERT(text != NULL);
+    CTASSERT(str != NULL);
 
-    return strlen(text);
+    return strlen(str);
 }
 
 USE_DECL
@@ -146,9 +146,9 @@ text_t text_make(char *text, size_t length)
 }
 
 USE_DECL
-text_t text_from(char *str)
+text_t text_from(char *text)
 {
-    return text_make(str, ctu_strlen(str));
+    return text_make(text, ctu_strlen(text));
 }
 
 USE_DECL
@@ -162,9 +162,9 @@ text_view_t text_view_make(const char *text, size_t length)
 }
 
 USE_DECL
-text_view_t text_view_from(const char *str)
+text_view_t text_view_from(const char *text)
 {
-    return text_view_make(str, ctu_strlen(str));
+    return text_view_make(text, ctu_strlen(text));
 }
 
 bool text_equal(text_view_t lhs, text_view_t rhs)

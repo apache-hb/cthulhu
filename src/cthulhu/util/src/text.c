@@ -59,18 +59,34 @@ text_t util_text_escape(logger_t *reports, const node_t *node, const char *text,
     CTASSERT(text != NULL);
     CTASSERT(arena != NULL);
 
-    typevec_t *vec = typevec_new(sizeof(char), length, arena);
-    ARENA_IDENTIFY(vec, "text", reports, arena);
+    typevec_t vec = typevec_make(sizeof(char), length, arena);
+    ARENA_IDENTIFY(typevec_data(&vec), "text", reports, arena);
 
     for (size_t i = 0; i < length;)
     {
         escape_t escape = consume_text(reports, node, text + i);
-        typevec_push(vec, &escape.code);
+        typevec_push(&vec, &escape.code);
         i += escape.length;
     }
 
     char zero = '\0';
-    typevec_push(vec, &zero);
+    typevec_push(&vec, &zero);
 
-    return text_make(typevec_data(vec), typevec_len(vec));
+    return text_make(typevec_data(&vec), typevec_len(&vec));
+}
+
+USE_DECL
+bool util_text_has_escapes(const char *text, size_t length)
+{
+    CTASSERT(text != NULL);
+
+    for (size_t i = 0; i < length; i++)
+    {
+        if (text[i] == '\\')
+        {
+            return true;
+        }
+    }
+
+    return false;
 }

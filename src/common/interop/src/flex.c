@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
+#include "interop/actions.h"
+
 #include "base/panic.h"
 
+#include "core/where.h"
 #include "scan/scan.h"
-
-#include "interop/flex.h"
 
 #include <limits.h>
 
@@ -14,21 +15,24 @@ void flex_action(where_t *where, const char *text)
     CTASSERT(where != NULL);
     CTASSERT(text != NULL);
 
-    where->first_line = where->last_line;
-    where->first_column = where->last_column;
+    where_t tmp = *where;
+    tmp.first_line = tmp.last_line;
+    tmp.first_column = tmp.last_column;
 
     for (int i = 0; text[i]; i++)
     {
         if (text[i] == '\n')
         {
-            where->last_line += 1;
-            where->last_column = 0;
+            tmp.last_line += 1;
+            tmp.last_column = 0;
         }
         else
         {
-            where->last_column += 1;
+            tmp.last_column += 1;
         }
     }
+
+    *where = tmp;
 }
 
 USE_DECL
@@ -46,10 +50,8 @@ void flex_init(where_t *where)
 {
     CTASSERT(where != NULL);
 
-    where->first_line = 0;
-    where->first_column = 0;
-    where->last_line = 0;
-    where->last_column = 0;
+    where_t zero = { 0 };
+    *where = zero;
 }
 
 USE_DECL
@@ -63,14 +65,19 @@ void flex_update(where_t *where, const where_t *offsets, int steps)
         where_t rhs1 = offsets[1];
         where_t rhsn = offsets[steps];
 
-        where->first_line = rhs1.first_line;
-        where->first_column = rhs1.first_column;
-        where->last_line = rhsn.last_line;
-        where->last_column = rhsn.last_column;
+        where_t tmp = {
+            .first_line = rhs1.first_line,
+            .first_column = rhs1.first_column,
+            .last_line = rhsn.last_line,
+            .last_column = rhsn.last_column,
+        };
+
+        *where = tmp;
     }
     else
     {
-        where->last_line = offsets[0].last_line;
-        where->last_column = offsets[0].last_column;
+        where_t rhs = offsets[0];
+        where->last_line = rhs.last_line;
+        where->last_column = rhs.last_column;
     }
 }

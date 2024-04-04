@@ -7,6 +7,7 @@ std_api = configure_file(
 inc = include_directories('.', 'include')
 
 src = [
+    'src/typeinfo.c',
     'src/map.c',
     'src/optimal.c',
     'src/set.c',

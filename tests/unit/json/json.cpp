@@ -52,10 +52,10 @@ int main(void)
         GROUP_EXPECT_PASS(group, "is_version_float", json["version"].is_float());
         GROUP_EXPECT_PASS(group, "is_dependencies_array", json["dependencies"].is_array());
 
-        text_view_t name = json["name"].as_string();
-        GROUP_EXPECT_PASS(group, "name", name.length == 4);
+        std::string_view name = json["name"].as_string();
+        GROUP_EXPECT_PASS(group, "name", name.length() == 3);
 
-        GROUP_EXPECT_PASS(group, "name", ctu_strncmp(name.text, "ctu", name.length) == 0);
+        GROUP_EXPECT_PASS(group, "name", name == "ctu");
 
         float version = json["version"].as_float();
         GROUP_EXPECT_PASS(group, "version", version == 1.0f);

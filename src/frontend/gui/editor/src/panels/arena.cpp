@@ -257,7 +257,7 @@ void TraceArenaWidget::draw_backtrace(const std::stacktrace& trace) const
 
 void TraceArenaWidget::draw_name(const AllocInfo& alloc) const
 {
-    ed::ScopeID scope(alloc.id);
+    ed::ScopeID scope((int)alloc.id);
     if (!alloc.name.empty())
     {
         ImGui::Text("%s", alloc.name.c_str());

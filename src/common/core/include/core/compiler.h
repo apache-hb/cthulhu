@@ -4,10 +4,20 @@
 
 #include <ctu_config.h>
 
+#ifdef __cpp_lib_unreachable
+#   include <utility>
+#endif
+
 /// @defgroup compiler Compiler specific macros
 /// @brief Compiler detection macros and compiler specific functionality
 /// @ingroup core
 /// @{
+
+#if defined(__has_cpp_attribute)
+#   define CT_HAS_CPP_ATTRIBUTE(x) __has_cpp_attribute(x)
+#else
+#   define CT_HAS_CPP_ATTRIBUTE(x) 0
+#endif
 
 // always detect clang first because it pretends to be gcc and msvc
 // note: i hate that clang does this
@@ -67,7 +77,7 @@
 #   elif CT_CC_MSVC
 #      define CT_NORETURN __declspec(noreturn) void
 #   else
-#      define CT_NORETURN void
+#      define CT_NORETURN _Noreturn void
 #   endif
 #endif
 
@@ -79,27 +89,34 @@
 #   define CT_PATH_SEPERATORS "/"
 #endif
 
+/// @def CT_UNREACHABLE()
+/// @brief mark a point in code as unreachable
+
+#if __cpp_lib_unreachable
+#   define CT_UNREACHABLE() std::unreachable()
+#elif defined(CT_CC_MSVC)
+#   define CT_UNREACHABLE() __assume(0)
+#elif defined(CT_CC_GNU) || defined(CT_CC_CLANG)
+#   define CT_UNREACHABLE() __builtin_unreachable()
+#else
+#   define CT_UNREACHABLE() ((void)0)
+#endif
+
 /// @def CT_ASSUME(expr)
 /// @brief assume that @a expr is true
 /// @warning this is a compiler hint that can be used to optimize code
 ///       use with caution
 
-#ifdef CT_CC_MSVC
-#   define CT_UNREACHABLE() __assume(0)
+#if CT_HAS_CPP_ATTRIBUTE(assume)
+#   define CT_ASSUME(expr) [[assume(expr)]]
+#elif defined(CT_CC_MSVC)
 #   define CT_ASSUME(expr) __assume(expr)
-#elif CT_CC_GNU || CT_CC_CLANG
-#   define CT_UNREACHABLE() __builtin_unreachable()
-#   define CT_ASSUME(expr)                                                                                            \
-        do                                                                                                              \
-        {                                                                                                               \
-            if (!(expr))                                                                                                \
-            {                                                                                                           \
-                __builtin_unreachable();                                                                                \
-            }                                                                                                           \
-        } while (0)
+#elif defined(CT_CC_CLANG)
+#   define CT_ASSUME(expr) __builtin_assume(expr)
+#elif defined(CT_CC_GNU)
+#   define CT_ASSUME(expr) __attribute__((assume(expr)))
 #else
-#   define CT_UNREACHABLE() ((void)0)
-#   define CT_ASSUME(expr) ((void)0)
+#   define CT_ASSUME(expr) do { if (!(expr)) { CT_UNREACHABLE(); } } while (0)
 #endif
 
 // clang-format off

@@ -27,14 +27,29 @@ bool node_is_builtin(const node_t *node)
 }
 
 USE_DECL
-node_t *node_new(const scan_t *scan, where_t where)
+void node_init(node_t *node, const scan_t *scan, where_t where)
 {
+    CTASSERT(node != NULL);
     CTASSERT(scan != NULL);
 
-    node_t *node = ARENA_MALLOC(sizeof(node_t), "node", scan, scan->nodes);
     node->scan = scan;
     node->where = where;
+}
 
+USE_DECL
+node_t *node_new(const scan_t *scan, where_t where)
+{
+    node_t *node = ARENA_MALLOC(sizeof(node_t), "node", scan, scan->nodes);
+    node_init(node, scan, where);
+
+    return node;
+}
+
+USE_DECL
+node_t node_make(const scan_t *scan, where_t where)
+{
+    node_t node;
+    node_init(&node, scan, where);
     return node;
 }
 

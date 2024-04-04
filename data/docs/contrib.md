@@ -138,7 +138,7 @@ In order of importance:
 1. When an object is heap allocated its constructor must be named `<type>_new` and need a @ref arena_t as the last parameter.
   - `map_new`, `vector_new`, `set_new` etc
 
-2. When an object is stack allocated a `<type>_make` function should be provided when construction requires logic
+2. When an object is stack allocated a `<type>_init` function should be provided when construction requires logic
 
 ```c
 typedef struct text_t
@@ -147,11 +147,11 @@ typedef struct text_t
   size_t length; // must be equal to `strlen(string)`
 } text_t;
 
-inline text_t text_make(const char *string)
+void text_init(text_t *text, const char *string)
 {
   size_t length = strlen(string);
-  text_t text = { .string = string, .length = length };
-  return text;
+  text->string = string;
+  text->length = length;
 }
 ```
 

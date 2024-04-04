@@ -11,10 +11,12 @@ namespace ctu
     class OsError
     {
         os_error_t error;
-        mutable std::string msg;
+        std::string msg;
+
+        void get_message();
 
     public:
-        OsError(os_error_t error) : error(error) {}
+        OsError(os_error_t error);
 
         operator os_error_t() const { return error; }
 

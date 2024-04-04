@@ -47,14 +47,30 @@ CT_SCAN_API const scan_t *node_get_scan(IN_NOTNULL const node_t *node);
 CT_NODISCARD CT_PUREFN
 CT_SCAN_API where_t node_get_location(IN_NOTNULL const node_t *node);
 
-/// @brief create a new node in a given file at a given location
+/// @brief initialize a source node
+///
+/// @param node the node to initialize
+/// @param scan the scanner that this node is in
+/// @param where the location of this node
+CT_SCAN_API void node_init(OUT_NOTNULL node_t *node, IN_NOTNULL const scan_t *scan, where_t where);
+
+/// @brief create a new node on the heap
 ///
 /// @param scan the scanner that this node is in
 /// @param where the location of this node
 ///
 /// @return the created node
 CT_NODISCARD
-CT_SCAN_API node_t *node_new(const scan_t *scan, where_t where);
+CT_SCAN_API node_t *node_new(IN_NOTNULL const scan_t *scan, where_t where);
+
+/// @brief create a new node on the stack
+///
+/// @param scan the scanner that this node is in
+/// @param where the location of this node
+///
+/// @return the created node
+CT_NODISCARD
+CT_SCAN_API node_t node_make(IN_NOTNULL const scan_t *scan, where_t where);
 
 /// @brief get the builtin node
 /// node used for drivers that declare builtin symbols

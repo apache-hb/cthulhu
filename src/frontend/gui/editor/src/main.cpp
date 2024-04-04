@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
+#include "notify/notify.h"
+#include "scan/node.h"
+#include "std/vector.h"
 #include "stdafx.hpp"
 
 // drawing library
@@ -8,7 +11,6 @@
 // editor functionality
 
 #include "editor/compile.hpp"
-#include "editor/editor.hpp"
 #include "editor/panels/info.hpp"
 #include "editor/panels/arena.hpp"
 
@@ -288,18 +290,6 @@ void draw_menu_items(ed::menu_section_t& section)
     }
 }
 
-static void seperator_opt(const std::string& str)
-{
-    if (str.empty())
-    {
-        ImGui::Separator();
-    }
-    else
-    {
-        ImGui::SeparatorText(str.c_str());
-    }
-}
-
 struct Compiler
 {
     std::string name;
@@ -501,25 +491,268 @@ private:
     }
 };
 
+static void draw_log_event(const event_t *event)
+{
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
+
+    ImGui::TextUnformatted(event->diagnostic->id);
+
+    ImGui::TableNextColumn();
+    where_t where = node_get_location(&event->node);
+    const scan_t *scan = node_get_scan(&event->node);
+    ImGui::Text("%s:%" PRI_LINE ":%" PRI_COLUMN, scan_path(scan), where.first_line, where.first_column);
+
+    ImGui::TableNextColumn();
+    ImGui::TextUnformatted(event->message);
+
+    ImGui::TableNextColumn();
+    if (event->notes)
+        ImGui::Text("%zu notes", vector_len(event->notes));
+    else
+        ImGui::TextUnformatted("None");
+}
+
+static const ImGuiTableFlags kLogTableFlags
+    = ImGuiTableFlags_BordersV
+    | ImGuiTableFlags_BordersOuterH
+    | ImGuiTableFlags_Resizable
+    | ImGuiTableFlags_RowBg
+    | ImGuiTableFlags_NoHostExtendX
+    | ImGuiTableFlags_NoBordersInBody
+    | ImGuiTableFlags_ScrollY;
+
+static void draw_log_content(logger_t *logger)
+{
+    typevec_t *events = logger_get_events(logger);
+    size_t len = typevec_len(events);
+    ImGui::Text("Events: %zu", len);
+
+    if (ImGui::BeginTable("Events", 4, kLogTableFlags))
+    {
+        ImGui::TableSetupColumn("Diagnostic");
+        ImGui::TableSetupColumn("Where");
+        ImGui::TableSetupColumn("Message");
+        ImGui::TableSetupColumn("Related");
+        ImGui::TableSetupScrollFreeze(0, 1);
+        ImGui::TableHeadersRow();
+
+        for (size_t i = 0; i < len; i++)
+            draw_log_event((event_t*)typevec_offset(events, i));
+
+        ImGui::EndTable();
+    }
+}
+
 static ImGui::FileBrowser gOpenFile { ImGuiFileBrowserFlags_MultipleSelection | ImGuiFileBrowserFlags_ConfirmOnEnter | ImGuiFileBrowserFlags_CloseOnEsc };
 
 struct JsonFile
 {
-    fs::path path;
+    std::string path;
     std::string basename;
+
     io_t *io;
+    ctu::OsError error;
     std::string_view source;
+
     ctu::json::Json value;
 
-    JsonFile(const fs::path& path, ctu::json::JsonParser& parser, arena_t *arena)
-        : path(path)
-        , basename(path.filename().string())
-        , io(io_file(path.string().c_str(), eOsAccessRead, arena))
+    JsonFile(const fs::path& fp, ctu::json::JsonParser& parser, arena_t *arena)
+        : path(fp.string())
+        , basename(fp.filename().string())
+        , io(io_file(path.c_str(), eOsAccessRead, arena))
+        , error(io_error(io))
     {
+        if (error.failed())
+            return;
+
         const void *data = io_map(io, eOsProtectRead);
         size_t size = io_size(io);
         source = std::string_view(static_cast<const char*>(data), size);
         value = parser.parse(io);
+    }
+
+    void draw_source()
+    {
+        ImGui::TextUnformatted(source.data(), source.data() + source.size());
+    }
+
+    static const char *get_kind_name(json_kind_t kind)
+    {
+        switch (kind)
+        {
+        case eJsonNull: return "Null";
+        case eJsonBoolean: return "Boolean";
+        case eJsonInteger: return "Integer";
+        case eJsonFloat: return "Float";
+        case eJsonString: return "String";
+        case eJsonArray: return "Array";
+        case eJsonObject: return "Object";
+        default: return "Unknown";
+        }
+    }
+
+    static void draw_json_number(const ctu::json::Json& value)
+    {
+        mpz_t digit;
+        value.as_integer(digit);
+        char buffer[1024];
+        mpz_get_str(buffer, 10, digit);
+        ImGui::TextUnformatted(buffer);
+        mpz_clear(digit);
+    }
+
+    static const ImGuiTreeNodeFlags kGroupNodeFlags
+        = ImGuiTreeNodeFlags_SpanAllColumns
+        | ImGuiTreeNodeFlags_AllowOverlap;
+
+    static const ImGuiTreeNodeFlags kValueNodeFlags
+        = kGroupNodeFlags
+        | ImGuiTreeNodeFlags_Leaf
+        | ImGuiTreeNodeFlags_Bullet
+        | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+
+    static void draw_json_array(const char *key, const ctu::json::Json& value)
+    {
+        bool is_open = ImGui::TreeNodeEx(key, kGroupNodeFlags, "%s", key);
+
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted("Array");
+
+        ImGui::TableNextColumn();
+        if (is_open)
+        {
+            for (size_t i = 0; i < value.length(); i++)
+            {
+                draw_json_item(std::to_string(i).c_str(), value.get(i));
+            }
+            ImGui::TreePop();
+        }
+    }
+
+    static void draw_json_object(const char *key, const ctu::json::Json& object)
+    {
+        bool is_open = ImGui::TreeNodeEx(key, kGroupNodeFlags, "%s", key);
+
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted("Object");
+
+        ImGui::TableNextColumn();
+        if (is_open)
+        {
+            for (auto [entry, value] : object.as_object())
+            {
+                draw_json_item(entry, value);
+            }
+            ImGui::TreePop();
+        }
+    }
+
+    static void draw_json_value(const char *key, const ctu::json::Json& value)
+    {
+        ImGui::TreeNodeEx(key, kValueNodeFlags, "%s", key);
+
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted(get_kind_name(value.get_kind()));
+
+        ImGui::TableNextColumn();
+        switch (value.get_kind())
+        {
+        case eJsonNull:
+            ImGui::TextUnformatted("null");
+            break;
+
+        case eJsonBoolean:
+            ImGui::TextUnformatted(value.as_bool() ? "true" : "false");
+            break;
+
+        case eJsonInteger:
+        case eJsonFloat:
+            draw_json_number(value);
+            break;
+
+        case eJsonString: {
+            std::string_view text = value.as_string();
+            ImGui::TextUnformatted(text.data(), text.data() + text.size());
+            break;
+        }
+        default:
+            break;
+        }
+    }
+
+    static void draw_json_item(const char *key, const ctu::json::Json& value)
+    {
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+
+        if (value.is_object())
+        {
+            draw_json_object(key, value);
+        }
+        else if (value.is_array())
+        {
+            draw_json_array(key, value);
+        }
+        else
+        {
+            draw_json_value(key, value);
+        }
+    }
+
+    static const ImGuiTableFlags kTreeTableFlags
+        = ImGuiTableFlags_BordersV
+        | ImGuiTableFlags_BordersOuterH
+        | ImGuiTableFlags_Resizable
+        | ImGuiTableFlags_RowBg
+        | ImGuiTableFlags_NoHostExtendX
+        | ImGuiTableFlags_NoBordersInBody
+        | ImGuiTableFlags_ScrollY;
+
+    void draw_json_document()
+    {
+        if (ImGui::BeginTable("Document", 3, kTreeTableFlags))
+        {
+            ImGui::TableSetupColumn("Key");
+            ImGui::TableSetupColumn("Type");
+            ImGui::TableSetupColumn("Value");
+            ImGui::TableSetupScrollFreeze(0, 1);
+            ImGui::TableHeadersRow();
+
+            draw_json_item("$", value);
+
+            ImGui::EndTable();
+        }
+    }
+
+    void draw_content()
+    {
+        if (error.failed())
+        {
+            ImGui::Text("Failed to open file: %s", error.what());
+            return;
+        }
+
+        if (value.is_valid())
+        {
+            if (ImGui::BeginChild("JsonSource", ImVec2(200, 0), ImGuiChildFlags_Border | ImGuiChildFlags_ResizeX))
+            {
+                draw_source();
+            }
+            ImGui::EndChild();
+            ImGui::SameLine();
+
+            if (ImGui::BeginChild("JsonDocument", ImVec2(0, 0), ImGuiChildFlags_Border))
+            {
+                draw_json_document();
+            }
+            ImGui::EndChild();
+        }
+        else
+        {
+            ImGui::Text("Failed to parse JSON");
+            draw_source();
+        }
     }
 };
 
@@ -532,21 +765,6 @@ struct JsonEditor
 
     JsonEditor() { }
 
-    void draw_json_document(const ctu::json::Json&)
-    {
-        if (ImGui::BeginTable("Document", 4))
-        {
-            ImGui::TableSetupColumn("Key");
-            ImGui::TableSetupColumn("Type");
-            ImGui::TableSetupColumn("Value");
-            ImGui::TableSetupColumn("Location");
-            ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableHeadersRow();
-
-            ImGui::EndTable();
-        }
-    }
-
     void draw_window()
     {
         if (!visible)
@@ -556,11 +774,17 @@ struct JsonEditor
         {
             if (ImGui::BeginTabBar("JsonTabs"))
             {
+                if (ImGui::BeginTabItem("Logs"))
+                {
+                    draw_log_content(parser.get_logger());
+                    ImGui::EndTabItem();
+                }
+
                 for (auto &doc : documents)
                 {
                     if (ImGui::BeginTabItem(doc.basename.c_str()))
                     {
-                        ImGui::TextUnformatted(doc.source.data(), doc.source.data() + doc.source.size());
+                        doc.draw_content();
                         ImGui::EndTabItem();
                     }
                 }
@@ -577,6 +801,7 @@ struct JsonEditor
 };
 
 static JsonEditor gJsonEditor;
+static TraceArenaWidget gJsonWidget{gJsonEditor.arena, TraceArenaWidget::eDrawTree};
 
 static bool gImGuiDemoWindow = false;
 static bool gImPlotDemoWindow = false;
@@ -618,6 +843,7 @@ static void DrawEditorWidgets()
     }
 
     gJsonEditor.draw_window();
+    gJsonWidget.draw_window();
 }
 
 static void DrawFileMenu()
@@ -676,6 +902,13 @@ static void DrawViewMenu()
         {
             ImGui::MenuItem(widget.get_title(), nullptr, &widget.visible);
         }
+
+        ImGui::MenuItem("JSON Editor", nullptr, &gJsonWidget.visible, !gJsonEditor.documents.empty());
+        if (gJsonEditor.documents.empty())
+        {
+            ImGui::SetItemTooltip("Open a JSON file to enable this widget");
+        }
+
         ImGui::EndMenu();
     }
 
@@ -722,11 +955,11 @@ static void DrawHelpMenu()
     ImGui::MenuItem("Check for Updates");
 }
 
-static void DrawMainMenuBar()
+static void DrawMainMenuBar(const char *title)
 {
     if (ImGui::BeginMainMenuBar())
     {
-        ImGui::TextUnformatted(g.name.c_str());
+        ImGui::TextUnformatted(title);
         ImGui::Separator();
 
         if (ImGui::BeginMenu("File"))
@@ -784,7 +1017,7 @@ int main(int argc, const char **argv)
     while (draw::begin_frame())
     {
         ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
-        DrawMainMenuBar();
+        DrawMainMenuBar("Cthulhu");
         DrawEditorWidgets();
         draw::end_frame();
     }

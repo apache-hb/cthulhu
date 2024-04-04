@@ -125,7 +125,7 @@ event_builder_t msg_vnotify(logger_t *logs, const diagnostic_t *diagnostic, cons
 
     event_t event = {
         .diagnostic = diagnostic,
-        .node = node,
+        .node = *node,
         .message = msg,
         .segments = NULL,
         .notes = NULL,
@@ -171,7 +171,7 @@ void msg_vappend(event_builder_t builder, const node_t *node, const char *fmt, v
     char *msg = str_vformat(builder.arena, fmt, args);
 
     segment_t segment = {
-        .node = node,
+        .node = *node,
         .message = msg
     };
 

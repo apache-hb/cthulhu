@@ -125,8 +125,8 @@ int main(int argc, const char **argv)
     {
         fs_iter_t *iter;
         fs_inode_t *inode;
-        os_error_t err = fs_iter_begin(dst, fs_root_inode(dst), &iter);
-        CTASSERTF(err == eOsSuccess, "failed to begin iteration");
+        os_error_t error = fs_iter_begin(dst, fs_root_inode(dst), &iter);
+        CTASSERTF(error == eOsSuccess, "failed to begin iteration");
 
         while (fs_iter_next(iter, &inode) == eOsSuccess)
         {

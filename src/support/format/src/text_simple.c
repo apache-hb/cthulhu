@@ -75,7 +75,7 @@ static void print_segment(simple_t *simple, const segment_t *segment, size_t sca
         .zero_indexed_lines = simple->file.zeroth_line,
     };
 
-    const char *path = fmt_node_location(source_config, segment->node);
+    const char *path = fmt_node_location(source_config, &segment->node);
 
     const char *msg = segment->message;
 
@@ -109,16 +109,16 @@ static void print_segments(simple_t *simple, const event_t *event)
     // map_t<scan_t*, typevec_t<segment_t>>
     map_t *scans = map_optimal(len, kTypeInfoPtr, simple->arena);
     typevec_t *none = typevec_new(sizeof(segment_t), 4, simple->arena);
-    typevec_t *primary = all_segments_in_scan(event->segments, event->node, simple->arena);
+    typevec_t *primary = all_segments_in_scan(event->segments, &event->node, simple->arena);
 
     for (size_t i = 0; i < len; i++)
     {
         segment_t *segment = typevec_offset(event->segments, i);
         CTASSERT(segment != NULL);
 
-        const scan_t *scan = node_get_scan(segment->node);
+        const scan_t *scan = node_get_scan(&segment->node);
 
-        if (scan == node_get_scan(event->node))
+        if (scan == node_get_scan(&event->node))
             continue;
 
         if (scan == NULL)
@@ -194,7 +194,7 @@ void text_report_simple(text_config_t config, const event_t *event)
         .zero_indexed_lines = cfg.zeroth_line,
     };
 
-    const char *path = fmt_node_location(source_config, event->node);
+    const char *path = fmt_node_location(source_config, &event->node);
     const char *lvl = colour_format(fmt, col, "%s: %s:", sev, diagnostic->id);
 
     io_printf(io, "%s %s %s:\n", path, lvl, event->message);

@@ -69,14 +69,14 @@ static int segment_cmp(const void *lhs, const void *rhs)
     const segment_t *seg_lhs = lhs;
     const segment_t *seg_rhs = rhs;
 
-    const scan_t *scan_lhs = node_get_scan(seg_lhs->node);
-    const scan_t *scan_rhs = node_get_scan(seg_rhs->node);
+    const scan_t *scan_lhs = node_get_scan(&seg_lhs->node);
+    const scan_t *scan_rhs = node_get_scan(&seg_rhs->node);
 
     CTASSERTF(scan_lhs == scan_rhs, "segments must be in the same scan (%s and %s)",
               scan_path(scan_lhs), scan_path(scan_rhs));
 
-    where_t where_lhs = node_get_location(seg_lhs->node);
-    where_t where_rhs = node_get_location(seg_rhs->node);
+    where_t where_lhs = node_get_location(&seg_lhs->node);
+    where_t where_rhs = node_get_location(&seg_rhs->node);
 
     if (where_lhs.first_line < where_rhs.first_line) return -1;
     if (where_lhs.first_line > where_rhs.first_line) return 1;
@@ -107,7 +107,7 @@ typevec_t *all_segments_in_scan(const typevec_t *segments, const node_t *node, a
         segment_t *segment = typevec_offset(segments, i);
         CTASSERT(segment != NULL);
 
-        const scan_t *other = node_get_scan(segment->node);
+        const scan_t *other = node_get_scan(&segment->node);
         if (other != scan) continue;
 
         typevec_push(result, segment);

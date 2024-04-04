@@ -6,7 +6,7 @@
 
 #include "core/analyze.h"
 
-#include "base/typeinfo.h"
+#include "std/typeinfo.h"
 
 CT_BEGIN_API
 
@@ -31,7 +31,7 @@ typedef struct item_t item_t;
 ///
 /// @return the new set
 CT_NODISCARD
-CT_STD_API set_t *set_new(IN_RANGE(>, 0) size_t size, typeinfo_t info, IN_NOTNULL arena_t *arena);
+CT_STD_API set_t *set_new(IN_RANGE(>, 0) size_t size, hash_info_t info, IN_NOTNULL arena_t *arena);
 
 /// @brief add a key to a set
 /// @pre @p key is not NULL

@@ -6,6 +6,21 @@
 
 using namespace ctu;
 
+void OsError::get_message()
+{
+    size_t size = os_error_get_string(error, nullptr, 0);
+    msg.resize(size);
+
+    size_t written = os_error_get_string(error, msg.data(), size);
+    msg.resize(written);
+}
+
+OsError::OsError(os_error_t err)
+    : error(err)
+{
+    get_message();
+}
+
 bool OsError::success() const
 {
     return error == eOsSuccess;
@@ -18,15 +33,6 @@ bool OsError::failed() const
 
 const char *OsError::what() const
 {
-    if (failed() && msg.empty())
-    {
-        size_t size = os_error_get_string(error, nullptr, 0);
-        msg.resize(size);
-
-        size_t written = os_error_get_string(error, msg.data(), size);
-        msg.resize(written);
-    }
-
     return msg.c_str();
 }
 

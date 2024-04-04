@@ -13,17 +13,17 @@ typedef struct typevec_t typevec_t;
 
 typedef struct json_member_t
 {
-    text_t key;
-    json_t *value;
+    text_view_t key;
+    json_t value;
 } json_member_t;
 
-json_member_t json_member(text_t key, json_t *value);
+CT_LOCAL json_member_t json_member(text_view_t key, json_t value);
 
-json_t *json_ast_string(scan_t *scan, where_t where, text_t string);
-json_t *json_ast_integer(scan_t *scan, where_t where, mpz_t integer);
-json_t *json_ast_float(scan_t *scan, where_t where, float real);
-json_t *json_ast_boolean(scan_t *scan, where_t where, bool boolean);
-json_t *json_ast_array(scan_t *scan, where_t where, const vector_t *array);
-json_t *json_ast_object(scan_t *scan, where_t where, const typevec_t *members);
-json_t *json_ast_empty_object(scan_t *scan, where_t where);
-json_t *json_ast_null(scan_t *scan, where_t where);
+CT_LOCAL json_t json_ast_string(where_t where, text_view_t string);
+CT_LOCAL json_t json_ast_integer(where_t where, mpz_t integer);
+CT_LOCAL json_t json_ast_float(where_t where, float real);
+CT_LOCAL json_t json_ast_boolean(where_t where, bool boolean);
+CT_LOCAL json_t json_ast_array(where_t where, typevec_t array);
+CT_LOCAL json_t json_ast_object(scan_t *scan, where_t where, const typevec_t *members);
+CT_LOCAL json_t json_ast_empty_object(where_t where);
+CT_LOCAL json_t json_ast_null(where_t where);

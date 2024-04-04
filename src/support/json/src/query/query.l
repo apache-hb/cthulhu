@@ -24,9 +24,9 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 "]" { return RBRACKET; }
 "." { return DOT; }
 
-[-]"0"[0-7]* { query_parse_integer(yylval->integer, yyextra, *yylloc, yytext, 8); return INTEGER; }
-[-]"0"[bB][01]+ { query_parse_integer(yylval->integer, yyextra, *yylloc, yytext + 2, 2); return INTEGER; }
-[-]"0"[xX][0-9a-fA-F]+ { query_parse_integer(yylval->integer, yyextra, *yylloc, yytext + 2, 16); return INTEGER; }
+[-]?"0"[0-7]* { query_parse_integer(yylval->integer, yyextra, *yylloc, yytext, 8); return INTEGER; }
+[-]?"0"[bB][01]+ { query_parse_integer(yylval->integer, yyextra, *yylloc, yytext + 2, 2); return INTEGER; }
+[-]?"0"[xX][0-9a-fA-F]+ { query_parse_integer(yylval->integer, yyextra, *yylloc, yytext + 2, 16); return INTEGER; }
 [-]?[0-9]+ { query_parse_integer(yylval->integer, yyextra, *yylloc, yytext, 10); return INTEGER; }
 
 [a-zA-Z_][a-zA-Z0-9_]* { query_parse_string(&yylval->string, yyextra, *yylloc, yytext, yyleng); return IDENT; }

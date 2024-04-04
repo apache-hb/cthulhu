@@ -67,7 +67,7 @@ text_t text_vformat(arena_t *arena, const char *fmt, va_list args)
 
     CTASSERTF(len > 0, "text_vformat failed to format string: %s", fmt);
 
-    char *out = ARENA_MALLOC(len + 1, "text_vformat", fmt, arena);
+    char *out = ARENA_MALLOC(len + 1, "text_vformat", NULL, arena);
 
     size_t result = str_vsprintf(out, len + 1, fmt, again);
     CTASSERTF(result == len, "text_vformat failed to format string: %s expected (%zu == %zu)", fmt, result, len);

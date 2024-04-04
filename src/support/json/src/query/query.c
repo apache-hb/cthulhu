@@ -51,10 +51,10 @@ static json_t *eval_query(json_t *json, const query_ast_t *query, arena_t *arena
         if (idx < 0)
             return NULL;
 
-        if (idx >= vector_len(object->array))
+        if (idx >= typevec_len(&object->array))
             return NULL;
 
-        return vector_get(object->array, idx);
+        return typevec_offset(&object->array, idx);
     }
     case eQueryMap:
     {

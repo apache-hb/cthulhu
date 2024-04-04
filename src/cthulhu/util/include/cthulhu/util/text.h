@@ -9,6 +9,7 @@
 #include "core/text.h"
 
 #include <stddef.h>
+#include <stdbool.h>
 
 typedef struct logger_t logger_t;
 typedef struct node_t node_t;
@@ -29,6 +30,8 @@ CT_BEGIN_API
 ///
 /// @return the escaped text
 CT_UTIL_API text_t util_text_escape(IN_NOTNULL logger_t *reports, IN_NOTNULL const node_t *node, IN_READS(length) const char *text, size_t length, IN_NOTNULL arena_t *arena);
+
+CT_UTIL_API bool util_text_has_escapes(IN_READS(length) const char *text, size_t length);
 
 /// @}
 
