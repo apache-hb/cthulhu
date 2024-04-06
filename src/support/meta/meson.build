@@ -1,9 +1,13 @@
 src = [
-    'src/main.c'
+    'src/main.c',
+
+    'src/emit/emit.c',
+    'src/emit/cmdline.c'
 ]
 
 deps = [
-
+    memory, events, io, config, setup,
+    argparse, broker, arena
 ]
 
 meta = executable('meta', src,

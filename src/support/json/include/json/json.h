@@ -109,6 +109,14 @@ CT_JSON_API json_t *json_array_get(IN_NOTNULL const json_t *json, size_t index);
 RET_INSPECT
 CT_JSON_API json_t *json_scan(IN_NOTNULL io_t *io, IN_NOTNULL logger_t *logger, IN_NOTNULL arena_t *arena);
 
+/// @brief pretty print a json value to an io
+///
+/// @param json the json value to print
+/// @param io the io to print to
+/// @param indent the number of spaces to indent, or 0 for compact printing
+/// @param tabs if true, use tabs instead of spaces
+CT_JSON_API void json_print(IN_NOTNULL const json_t *json, IN_NOTNULL io_t *io, size_t indent, bool tabs);
+
 /// @brief get the name of a json kind
 ///
 /// @param kind the kind to get the name of
@@ -116,6 +124,7 @@ CT_JSON_API json_t *json_scan(IN_NOTNULL io_t *io, IN_NOTNULL logger_t *logger, 
 /// @return the name of the kind
 RET_NOTNULL
 CT_JSON_API const char *json_kind_name(IN_RANGE(<, eJsonCount) json_kind_t kind);
+
 
 /// @}
 

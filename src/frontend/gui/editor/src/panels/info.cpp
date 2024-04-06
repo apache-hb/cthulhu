@@ -77,7 +77,7 @@ static void draw_diagnostics(diagnostic_list_t list)
             ImGui::TextUnformatted(diag->id);
 
             ImGui::TableNextColumn();
-            ImGui::TextUnformatted(severity_name(diag->severity));
+            ImGui::TextUnformatted(severity_string(diag->severity));
 
             ImGui::TableNextColumn();
             ImGui::TextUnformatted(diag->brief ? diag->brief : "no brief");

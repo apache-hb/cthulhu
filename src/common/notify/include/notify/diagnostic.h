@@ -60,7 +60,7 @@ typedef struct diagnostic_list_t
 ///
 /// @return the name of @p severity
 RET_STRING
-CT_NOTIFY_API const char *severity_name(IN_RANGE(<, eSeverityTotal) severity_t severity);
+CT_NOTIFY_API const char *severity_string(IN_RANGE(<, eSeverityTotal) severity_t severity);
 
 /// @}
 

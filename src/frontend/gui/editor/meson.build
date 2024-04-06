@@ -37,6 +37,8 @@ src = [
     'src/main.cpp'
 ]
 
+# concurrentqueue = dependency('concurrentqueue')
+
 deps = [
     # render backend
     draw,
@@ -52,7 +54,10 @@ deps = [
     setup, memory, broker, support, ssa, tree,
 
     # extra utilities
-    json
+    json,
+
+    # concurrent queue
+    # concurrentqueue
 ]
 
 executable('gui', src,

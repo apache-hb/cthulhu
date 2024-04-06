@@ -315,8 +315,8 @@ static void default_error_next(bt_address_t frame, void *user)
 {
     io_t *io = user;
 
-    char name_buffer[256] = { 0 };
-    char path_buffer[512] = { 0 };
+    char name_buffer[256];
+    char path_buffer[512];
 
     bt_symbol_t symbol = {
         .name = text_make(name_buffer, sizeof(name_buffer)),

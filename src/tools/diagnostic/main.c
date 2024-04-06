@@ -79,7 +79,7 @@ typedef struct tool_t
     cfg_field_t *print_all_diags;
     cfg_field_t *print_one_diag;
 
-    default_options_t m_options;
+    default_options_t options;
 } tool_t;
 
 static tool_t make_config(typevec_t *langs, arena_t *arena)
@@ -131,7 +131,7 @@ static tool_t make_config(typevec_t *langs, arena_t *arena)
         .print_all_diags = print_all_diags,
         .print_one_diag = print_one_diag,
 
-        .m_options = options,
+        .options = options,
     };
 
     return config;
@@ -209,31 +209,9 @@ static void print_all_langs(io_t *io, typevec_t *langs)
     }
 }
 
-static const char *severity_to_string(severity_t severity)
-{
-    // TODO: this should be part of notify
-    switch (severity)
-    {
-    case eSeveritySorry:
-        return "sorry";
-    case eSeverityInternal:
-        return "ice";
-    case eSeverityFatal:
-        return "fatal";
-    case eSeverityWarn:
-        return "warn";
-    case eSeverityInfo:
-        return "info";
-    case eSeverityDebug:
-        return "debug";
-    default:
-        CT_NEVER("unknown severity %d", severity);
-    }
-}
-
 static void print_diagnostic(io_t *io, const diagnostic_t *diag)
 {
-    io_printf(io, "%s: %s\n", diag->id, severity_to_string(diag->severity));
+    io_printf(io, "%s: %s\n", diag->id, severity_string(diag->severity));
     io_printf(io, "brief: %s\n", diag->brief);
     io_printf(io, "description: %s\n", diag->description);
 }
@@ -277,7 +255,7 @@ int main(int argc, const char **argv)
 
     ap_t *ap = ap_new(config.group, config.arena);
 
-    int err = parse_argparse(ap, tool.m_options, config);
+    int err = parse_argparse(ap, tool.options, config);
     if (err == CT_EXIT_SHOULD_EXIT)
     {
         return CT_EXIT_OK;

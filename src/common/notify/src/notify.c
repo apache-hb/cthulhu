@@ -102,12 +102,12 @@ arena_t *logger_get_arena(const logger_t *logs)
 }
 
 USE_DECL
-event_builder_t msg_notify(logger_t *reports, const diagnostic_t *diagnostic, const node_t *node, const char *fmt, ...)
+event_builder_t msg_notify(logger_t *logs, const diagnostic_t *diagnostic, const node_t *node, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
 
-    event_builder_t event = msg_vnotify(reports, diagnostic, node, fmt, args);
+    event_builder_t event = msg_vnotify(logs, diagnostic, node, fmt, args);
 
     va_end(args);
 
@@ -213,9 +213,9 @@ static const char *const kSeverityNames[eSeverityTotal] = {
 };
 
 USE_DECL
-const char *severity_name(severity_t severity)
+const char *severity_string(severity_t severity)
 {
-    CTASSERTF(severity < eSeverityTotal && severity >= 0, "severity %d is out of range", severity);
+    CT_ASSERT_RANGE(severity, 0, eSeverityTotal - 1);
 
     return kSeverityNames[severity];
 }

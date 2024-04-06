@@ -29,7 +29,7 @@ typedef struct tool_t
     cfg_field_t *heading_style;
     cfg_field_t *zero_indexed;
 
-    default_options_t m_options;
+    default_options_t options;
 } tool_t;
 
 static const version_info_t kToolVersion = {
@@ -123,7 +123,7 @@ static tool_t make_config(arena_t *arena)
         .heading_style = heading,
         .zero_indexed = zero_indexed,
 
-        .m_options = defaults,
+        .options = defaults,
     };
 
     return tool;
@@ -449,7 +449,7 @@ int main(int argc, const char **argv)
         .argv = argv,
     };
 
-    int err = parse_commands(tool.m_options, config);
+    int err = parse_commands(tool.options, config);
     if (err == CT_EXIT_SHOULD_EXIT)
     {
         return CT_EXIT_OK;
@@ -460,7 +460,7 @@ int main(int argc, const char **argv)
     notify_style_t style = cfg_enum_value(tool.notify_style);
     heading_style_t heading = cfg_enum_value(tool.heading_style);
     bool zero_indexed = cfg_bool_value(tool.zero_indexed);
-    bool colour = cfg_bool_value(tool.m_options.colour_output);
+    bool colour = cfg_bool_value(tool.options.colour_output);
 
     logger_t *logs = logger_new(arena);
 

@@ -51,24 +51,28 @@ arena_t *ctu_default_alloc(void)
 static void *ef_malloc(size_t size, void *self)
 {
     CT_UNUSED(self);
+    CT_UNUSED(size);
 
-    CT_NEVER("bzzt! electric fence hit with malloc of size %zu", size);
+    CT_NEVER("attempted to allocate memory with electric fence");
 }
 
 static void *ef_realloc(void *ptr, size_t new_size, size_t old_size, void *self)
 {
     CT_UNUSED(ptr);
+    CT_UNUSED(new_size);
+    CT_UNUSED(old_size);
     CT_UNUSED(self);
 
-    CT_NEVER("bzzt! electric fence hit with realloc of size %zu old %zu", new_size, old_size);
+    CT_NEVER("attempted to reallocate memory with electric fence");
 }
 
 static void ef_free(void *ptr, size_t size, void *self)
 {
     CT_UNUSED(ptr);
+    CT_UNUSED(size);
     CT_UNUSED(self);
 
-    CT_NEVER("bzzt! electric fence hit with free of size %zu", size);
+    CT_NEVER("attempted to free memory with electric fence");
 }
 
 static arena_t gElectricFence = {

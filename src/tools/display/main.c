@@ -23,7 +23,7 @@ typedef struct tool_t
     cfg_field_t *enum_argument;
     cfg_field_t *flag_argument;
 
-    default_options_t m_options;
+    default_options_t options;
 } tool_t;
 
 static const cfg_info_t kToolInfo = {
@@ -102,7 +102,7 @@ static tool_t make_config(arena_t *arena)
         .enum_argument = enum_argument,
         .flag_argument = flag_argument,
 
-        .m_options = options,
+        .options = options,
     };
 
     return tool;
@@ -128,7 +128,7 @@ int main(int argc, const char **argv)
         .argv = argv,
     };
 
-    int err = parse_commands(tool.m_options, config);
+    int err = parse_commands(tool.options, config);
     if (err == CT_EXIT_SHOULD_EXIT)
     {
         return CT_EXIT_OK;

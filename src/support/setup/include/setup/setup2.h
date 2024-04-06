@@ -52,7 +52,7 @@ typedef struct setup_init_t
 } setup_init_t;
 
 /// @brief initialise the runtime with default options
-CT_SETUP_API void setup_global(void);
+CT_SETUP_API void setup_default(arena_t *arena);
 
 CT_SETUP_API arena_t *electric_fence_arena(void);
 
