@@ -98,9 +98,35 @@ static const char *const kConfigTypeNames[eConfigCount] = {
 USE_DECL
 const char *cfg_type_string(cfg_type_t type)
 {
-    CTASSERTF(type < eConfigCount, "invalid type %d", type);
+    CT_ASSERT_RANGE(type, 0, eConfigCount - 1);
 
     return kConfigTypeNames[type];
+}
+
+static const char *const kConfigArgNames[eArgCount] = {
+#define CFG_ARG(id, name, prefix) [id] = (name),
+#include "config/config.inc"
+};
+
+USE_DECL
+const char *cfg_arg_string(arg_style_t style)
+{
+    CT_ASSERT_RANGE(style, 0, eArgCount - 1);
+
+    return kConfigArgNames[style];
+}
+
+static const char *const kConfigArgPrefixes[eArgCount] = {
+#define CFG_ARG(id, name, prefix) [id] = (prefix),
+#include "config/config.inc"
+};
+
+USE_DECL
+const char *cfg_arg_prefix(arg_style_t style)
+{
+    CT_ASSERT_RANGE(style, 0, eArgCount - 1);
+
+    return kConfigArgPrefixes[style];
 }
 
 /// access

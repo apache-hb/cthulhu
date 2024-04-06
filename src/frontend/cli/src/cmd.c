@@ -18,62 +18,52 @@ static const cfg_info_t kConfigInfo = {
     .brief = "Cthulhu CLI configuration options",
 };
 
-static const char *const kLangShortArgs[] = CT_ARGS("l");
-static const char *const kLangLongArgs[] = CT_ARGS("lang");
+static const cfg_arg_t kLangArgs[] = { ARG_SHORT("l"), ARG_LONG("lang") };
 
 static const cfg_info_t kLang = {
     .name = "lang",
     .brief = "Load a language driver",
-    .short_args = kLangShortArgs,
-    .long_args = kLangLongArgs,
+    .args = CT_ARGS(kLangArgs),
 };
 
-static const char *const kPluginShortArgs[] = CT_ARGS("p");
-static const char *const kPluginLongArgs[] = CT_ARGS("plugin");
+static const cfg_arg_t kPluginArgs[] = { ARG_SHORT("p"), ARG_LONG("plugin") };
 
 static const cfg_info_t kPlugin = {
     .name = "plugin",
     .brief = "Load a plugin",
-    .short_args = kPluginShortArgs,
-    .long_args = kPluginLongArgs,
+    .args = CT_ARGS(kPluginArgs),
 };
 
-static const char *const kTargetShortArgs[] = CT_ARGS("t");
-static const char *const kTargetLongArgs[] = CT_ARGS("target");
+static const cfg_arg_t kTargetArgs[] = { ARG_SHORT("t"), ARG_LONG("target") };
 
 static const cfg_info_t kTarget = {
     .name = "target",
     .brief = "Load a target",
-    .short_args = kTargetShortArgs,
-    .long_args = kTargetLongArgs,
+    .args = CT_ARGS(kTargetArgs),
 };
 
-static const char *const kIrShortArgs[] = CT_ARGS("ir");
-static const char *const kIrLongArgs[] = CT_ARGS("emit-ssa");
+static const cfg_arg_t kIrArgs[] = { ARG_SHORT("ir"), ARG_LONG("emit-ssa") };
 
 static const cfg_info_t kEmitIr = {
     .name = "emit-ssa",
     .brief = "Emit SSA IR to the output directory",
-    .short_args = kIrShortArgs,
-    .long_args = kIrLongArgs,
+    .args = CT_ARGS(kIrArgs),
 };
 
-static const char *const kTreeShortArgs[] = CT_ARGS("tree");
-static const char *const kTreeLongArgs[] = CT_ARGS("emit-tree");
+static const cfg_arg_t kTreeArgs[] = { ARG_SHORT("tree"), ARG_LONG("emit-tree") };
 
 static const cfg_info_t kEmitTree = {
     .name = "emit-tree",
     .brief = "Emit the parse tree to the output directory",
-    .short_args = kTreeShortArgs,
-    .long_args = kTreeLongArgs,
+    .args = CT_ARGS(kTreeArgs),
 };
 
-static const char *const kFileLayoutArgs[] = CT_ARGS("file-layout");
+static const cfg_arg_t kFileLayoutArgs[] = { ARG_LONG("file-layout") };
 
 static const cfg_info_t kFileLayout = {
     .name = "file-layout",
     .brief = "File layout to use",
-    .short_args = kFileLayoutArgs,
+    .args = CT_ARGS(kFileLayoutArgs),
 };
 
 static const cfg_choice_t kFileLayoutChoices[] = {
@@ -83,48 +73,44 @@ static const cfg_choice_t kFileLayoutChoices[] = {
     { "flat", eFileLayoutFlat },
 };
 
-static const char *const kTargetOutputArgs[] = CT_ARGS("target-output");
+static const cfg_arg_t kTargetOutputArgs[] = { ARG_LONG("target-output") };
 
 static const cfg_info_t kTargetOutput = {
     .name = "target-output",
     .brief = "Target to use for output generation",
-    .short_args = kTargetOutputArgs,
+    .args = CT_ARGS(kTargetOutputArgs),
 };
 
-static const char *const kWarnAsErrorShortArgs[] = CT_ARGS("Werror", "WX");
+static const cfg_arg_t kWarnAsErrorArgs[] = { ARG_SHORT("Werror"), ARG_SHORT("WX") };
 
 static const cfg_info_t kWarnAsError = {
     .name = "warn-as-error",
     .brief = "Treat warnings as errors",
-    .short_args = kWarnAsErrorShortArgs
+    .args = CT_ARGS(kWarnAsErrorArgs),
 };
 
-static const char *const kReportLimitShortArgs[] = CT_ARGS("fmax-errors");
+static const cfg_arg_t kReportLimitArgs[] = { ARG_SHORT("ferror-limit"), ARG_SHORT("fmax-errors") };
 
 static const cfg_info_t kReportLimit = {
     .name = "max-errors",
     .brief = "Limit the number of reports",
-    .short_args = kReportLimitShortArgs
+    .args = CT_ARGS(kReportLimitArgs),
 };
 
-static const char *const kOutputDirShortArgs[] = CT_ARGS("o");
-static const char *const kOutputDirLongArgs[] = CT_ARGS("output-dir");
+static const cfg_arg_t kOutputDirArgs[] = { ARG_SHORT("o"), ARG_LONG("output-dir") };
 
 static const cfg_info_t kOutputDir = {
     .name = "output-dir",
     .brief = "Output directory for generated files",
-    .short_args = kOutputDirShortArgs,
-    .long_args = kOutputDirLongArgs,
+    .args = CT_ARGS(kOutputDirArgs),
 };
 
-static const char *const kReportStyleShortArgs[] = CT_ARGS("report");
-static const char *const kReportStyleLongArgs[] = CT_ARGS("report-style");
+static const cfg_arg_t kReportStyleArgs[] = { ARG_SHORT("report"), ARG_LONG("report-style") };
 
 static const cfg_info_t kReportStyle = {
     .name = "report-style",
     .brief = "Report style to use",
-    .short_args = kReportStyleShortArgs,
-    .long_args = kReportStyleLongArgs,
+    .args = CT_ARGS(kReportStyleArgs),
 };
 
 static const cfg_choice_t kReportStyleChoices[] = {

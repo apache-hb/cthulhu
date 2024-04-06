@@ -137,7 +137,7 @@ void *arena_malloc_info(size_t size, const char *name, const void *parent, arena
     CTASSERT(size > 0);
 
     void *ptr = arena_opt_malloc_info(size, name, parent, arena);
-    CTASSERT(ptr != NULL);
+    CTASSERTF(ptr != NULL, "failed to allocate %zu bytes in %s", size, arena->name);
     return ptr;
 }
 

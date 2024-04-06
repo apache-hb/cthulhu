@@ -37,16 +37,13 @@ static void options_validate(const cfg_choice_t *options, size_t count)
     }
 }
 
-static bool has_any_element(const char *const *list)
-{
-    return list != NULL && *list != NULL;
-}
-
 static void info_validate(const cfg_info_t *info)
 {
     CTASSERT(info != NULL);
     CTASSERT(info->name != NULL);
-    CTASSERT(has_any_element(info->short_args) || has_any_element(info->long_args));
+    cfg_arg_array_t args = info->args;
+    CTASSERT(args.count > 0);
+    CTASSERT(args.args != NULL);
 }
 #endif
 
@@ -116,8 +113,7 @@ cfg_field_t *config_int(cfg_group_t *group, const cfg_info_t *info, cfg_int_t cf
     int max = cfg.max;
 
     CTASSERTF(min <= max, "invalid range %d-%d", min, max);
-    CTASSERTF(cfg.initial >= min && cfg.initial <= max, "initial value %d out of range %d-%d",
-              cfg.initial, min, max);
+    CT_ASSERT_RANGE(cfg.initial, min, max);
 
     cfg_field_t *field = add_field(group, info, eConfigInt);
     field->int_config = cfg;

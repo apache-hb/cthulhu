@@ -37,36 +37,36 @@ static const cfg_info_t kGroupInfo = {
     .brief = "Diagnostic query options"
 };
 
-static const char *const kPrintLangsArgs[] = CT_ARGS("langs");
+static const cfg_arg_t kPrintLangsArgs[] = { ARG_LONG("all-langs") };
 
 static const cfg_info_t kPrintLangsInfo = {
     .name = "langs",
     .brief = "Print info about all available languages",
-    .short_args = kPrintLangsArgs
+    .args = CT_ARGS(kPrintLangsArgs),
 };
 
-static const char *const kPrintSingleLangArgs[] = CT_ARGS("lang");
+static const cfg_arg_t kPrintSingleLangArgs[] = { ARG_LONG("single-lang"), ARG_LONG("lang") };
 
 static const cfg_info_t kPrintSingleLangInfo = {
     .name = "lang",
     .brief = "Print information about a specific language",
-    .short_args = kPrintSingleLangArgs
+    .args = CT_ARGS(kPrintSingleLangArgs),
 };
 
-static const char *const kPrintDiagInfoArgs[] = CT_ARGS("all-diags");
+static const cfg_arg_t kPrintDiagInfoArgs[] = { ARG_LONG("all") };
 
 static const cfg_info_t kPrintDiagsInfo = {
     .name = "diags",
     .brief = "Print all available diagnostics for all languages",
-    .short_args = kPrintDiagInfoArgs
+    .args = CT_ARGS(kPrintDiagInfoArgs),
 };
 
-static const char *const kPrintSingleDiagInfoArgs[] = CT_ARGS("lang-diag");
+static const cfg_arg_t kPrintSingleDiagInfoArgs[] = { ARG_LONG("diag") };
 
 static const cfg_info_t kPrintSingleDiagInfo = {
     .name = "lang-diag",
     .brief = "Print all available diagnostics for a specific language",
-    .short_args = kPrintSingleDiagInfoArgs
+    .args = CT_ARGS(kPrintSingleDiagInfoArgs)
 };
 
 typedef struct tool_t

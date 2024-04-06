@@ -74,6 +74,9 @@ CT_OS_API void os_init(void);
 /// @param code the exit code
 CT_NORETURN CT_OS_API os_exit(os_exit_t code);
 
+/// @brief abort the program
+CT_NORETURN CT_OS_API os_abort(void);
+
 /// @brief convert an os error code to a string
 /// writes to a buffer rather than allocating.
 /// if @p size is 0, the function will return the number of characters needed to write the string.

@@ -33,24 +33,33 @@ typedef enum cfg_type_t
 typedef struct cfg_field_t cfg_field_t;
 typedef struct cfg_group_t cfg_group_t;
 
-// TODO: use spellings rather than long/short arg fields
-
-typedef enum cfg_spelling_t
+typedef enum arg_style_t
 {
-#define CFG_SPELLING(ID, V, NAME, PREFIX) ID = (V),
+#define CFG_ARG(id, name, prefix) id,
 #include "config.inc"
-
-    eSpellAll = eSpellShort | eSpellLong | eSpellMicrosoft,
-    eSpellUnix = eSpellShort | eSpellLong,
-} cfg_spelling_t;
+    eArgCount
+} arg_style_t;
 
 typedef struct cfg_arg_t
 {
-    cfg_spelling_t spelling;
-    const char *name;
+    arg_style_t style;
+    const char *arg;
 } cfg_arg_t;
 
-#define CT_ARGS(...) { __VA_ARGS__, NULL }
+// short args are turned into dos args when needed
+// long args are discarded on windows
+// dos args are discarded on unix
+
+#define ARG_SHORT(name) { .style = eArgShort, .arg = (name) }
+#define ARG_LONG(name) { .style = eArgLong, .arg = (name) }
+#define ARG_DOS(name) { .style = eArgDOS, .arg = (name) }
+#define CT_ARGS(it) { .args = (it), .count = sizeof(it) / sizeof(cfg_arg_t) }
+
+typedef struct cfg_arg_array_t
+{
+    const cfg_arg_t *args;
+    size_t count;
+} cfg_arg_array_t;
 
 /// @brief information about a configuration field
 /// @note either @a short_args or @a long_args must have at least
@@ -63,11 +72,8 @@ typedef struct cfg_info_t
     /// @brief a brief description of this field
     FIELD_STRING const char *brief;
 
-    /// @brief a null terminated list of short argument names
-    const char *const *short_args;
-
-    /// @brief a null terminated list of long argument names
-    const char *const *long_args;
+    /// @brief the spellings to use for this field
+    cfg_arg_array_t args;
 } cfg_info_t;
 
 /// @brief an integer field
@@ -286,6 +292,22 @@ CT_CONFIG_API const cfg_flags_t *cfg_flags_info(IN_NOTNULL const cfg_field_t *fi
 /// @return the name of @p type
 CT_CONSTFN RET_NOTNULL
 CT_CONFIG_API const char *cfg_type_string(IN_RANGE(<, eConfigCount) cfg_type_t type);
+
+/// @brief get the name of an argument style
+///
+/// @param style the style to get the name of
+///
+/// @return the name of @p style
+CT_CONSTFN RET_NOTNULL
+CT_CONFIG_API const char *cfg_arg_string(IN_RANGE(<, eArgCount) arg_style_t style);
+
+/// @brief get the prefix for an argument style
+///
+/// @param style the style to get the prefix for
+///
+/// @return the prefix for @p style
+CT_CONSTFN RET_NOTNULL
+CT_CONFIG_API const char *cfg_arg_prefix(IN_RANGE(<, eArgCount) arg_style_t style);
 
 /// @brief get all subgroups in a configuration group
 ///

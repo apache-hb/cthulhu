@@ -32,60 +32,57 @@ static const cfg_info_t kRootInfo = {
     .brief = "Test config",
 };
 
-static const char *const kBoolInfoShortArgs[] = {"b", NULL};
+static const cfg_arg_t kBoolInfoArgs[] = {ARG_SHORT("b")};
 
 static const cfg_info_t kBoolInfo = {
     .name = "bool",
     .brief = "A boolean field",
-    .short_args = kBoolInfoShortArgs,
+    .args = CT_ARGS(kBoolInfoArgs),
 };
 
-static const char *const kBoolInfo2ShortArgs[] = {"b2", NULL};
+static const cfg_arg_t kBoolInfo2Args[] = {ARG_SHORT("b2")};
 
 static const cfg_info_t kBoolInfo2 = {
     .name = "bool2",
     .brief = "A boolean field",
-    .short_args = kBoolInfo2ShortArgs,
+    .args = CT_ARGS(kBoolInfo2Args),
 };
 
-static const char *const kIntInfoShortArgs[] = {"i", NULL};
+static const cfg_arg_t kIntInfoArgs[] = {ARG_SHORT("i")};
 
 static const cfg_info_t kIntInfo = {
     .name = "int",
     .brief = "An integer field",
-    .short_args = kIntInfoShortArgs,
+    .args = CT_ARGS(kIntInfoArgs),
 };
 
-static const char *const kStringInfoShortArgs[] = {"s", NULL};
+static const cfg_arg_t kStringInfoArgs[] = {ARG_SHORT("s")};
 
 static const cfg_info_t kStringInfo = {
     .name = "string",
     .brief = "A string field",
-    .short_args = kStringInfoShortArgs,
+    .args = CT_ARGS(kStringInfoArgs),
 };
 
-static const char *const kEnumInfoShortArgs[] = {"e", NULL};
-
+static const cfg_arg_t kEnumInfoArgs[] = {ARG_SHORT("e")};
 static const cfg_info_t kEnumInfo = {
     .name = "enum",
     .brief = "An enum field",
-    .short_args = kEnumInfoShortArgs,
+    .args = CT_ARGS(kEnumInfoArgs),
 };
 
-static const char *const kIncludeDirShortArgs[] = {"I", NULL};
-
+static const cfg_arg_t kIncludeDirArgs[] = {ARG_SHORT("I")};
 static const cfg_info_t kIncludeDirInfo = {
     .name = "include-dir",
     .brief = "Add an include directory",
-    .short_args = kIncludeDirShortArgs,
+    .args = CT_ARGS(kIncludeDirArgs),
 };
 
-static const char *const kFlagInfoShortArgs[] = {"f", NULL};
-
+static const cfg_arg_t kFlagInfoArgs[] = {ARG_SHORT("f")};
 static const cfg_info_t kFlagInfo = {
     .name = "flag",
     .brief = "A flag field",
-    .short_args = kFlagInfoShortArgs,
+    .args = CT_ARGS(kFlagInfoArgs),
 };
 
 enum test_enum_t

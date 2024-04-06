@@ -54,26 +54,30 @@ static size_t longest_line(const char *str)
     return CT_MAX(longest, current);
 }
 
-static size_t get_arg_length(const cfg_info_t *info, size_t long_arg_stride)
+static const char *get_arg_prefix(bool win_style, arg_style_t style)
+{
+    if (win_style)
+        return "/";
+
+    return cfg_arg_prefix(style);
+}
+
+static bool should_skip_arg(bool win_style, arg_style_t style)
+{
+    return (!win_style && style == eArgDOS);
+}
+
+static size_t get_arg_length(const cfg_info_t *info, bool win_style)
 {
     size_t len = 0;
-    if (info->short_args)
+    cfg_arg_array_t args = info->args;
+    for (size_t i = 0; i < args.count; i++)
     {
-        for (size_t i = 0; info->short_args[i]; i++)
-        {
-            // +1 for the dash or slash
-            // +1 for the space
-            len += ctu_strlen(info->short_args[i]) + 2;
-        }
-    }
+        cfg_arg_t arg = args.args[i];
+        if (should_skip_arg(false, arg.style))
+            continue;
 
-    if (info->long_args)
-    {
-        for (size_t i = 0; info->long_args[i]; i++)
-        {
-            // +1 for the space
-            len += ctu_strlen(info->long_args[i]) + 1 + long_arg_stride;
-        }
+        len += ctu_strlen(args.args[i].arg) + 1 + ctu_strlen(get_arg_prefix(win_style, arg.style));
     }
 
     return len;
@@ -81,8 +85,6 @@ static size_t get_arg_length(const cfg_info_t *info, size_t long_arg_stride)
 
 static alignment_info_t get_group_alignment(const cfg_group_t *config, bool win_style)
 {
-    // +1 for a forward slash, otherwise +2 for 2 dashes
-    size_t long_arg_stride = win_style ? 1 : 2;
     size_t longest_brief = 0;
 
     size_t largest = 0;
@@ -92,7 +94,7 @@ static alignment_info_t get_group_alignment(const cfg_group_t *config, bool win_
     {
         const cfg_field_t *field = vector_get(fields, i);
         const cfg_info_t *info = cfg_get_info(field);
-        size_t len = get_arg_length(info, long_arg_stride);
+        size_t len = get_arg_length(info, win_style);
         largest = CT_MAX(largest, len);
 
         size_t brief_len = longest_line(info->brief);
@@ -112,29 +114,19 @@ static alignment_info_t get_group_alignment(const cfg_group_t *config, bool win_
 // returns the number of characters printed
 static size_t print_field_args(format_config_t config, const cfg_info_t *info, bool win_style)
 {
-    const char *short_sep = win_style ? "/" : "-";
-    const char *long_sep = win_style ? "/" : "--";
-
     size_t len = 0;
 
-    if (info->short_args)
+    cfg_arg_array_t args = info->args;
+    for (size_t i = 0; i < args.count; i++)
     {
-        for (size_t i = 0; info->short_args[i]; i++)
-        {
-            char *coloured = colour_format(config.context, COLOUR_ARG, "%s%s", short_sep, info->short_args[i]);
-            io_printf(config.io, "%s ", coloured);
-            len += ctu_strlen(info->short_args[i]) + 2;
-        }
-    }
+        cfg_arg_t arg = args.args[i];
+        if (should_skip_arg(win_style, arg.style))
+            continue;
 
-    if (info->long_args)
-    {
-        for (size_t i = 0; info->long_args[i]; i++)
-        {
-            char *coloured = colour_format(config.context, COLOUR_ARG, "%s%s", long_sep, info->long_args[i]);
-            io_printf(config.io, "%s ", coloured);
-            len += ctu_strlen(info->long_args[i]) + 1 + ctu_strlen(long_sep);
-        }
+        const char *prefix = get_arg_prefix(win_style, arg.style);
+        char *coloured = colour_format(config.context, COLOUR_ARG, "%s%s", prefix, arg.arg);
+        io_printf(config.io, "%s ", coloured);
+        len += ctu_strlen(arg.arg) + 1 + ctu_strlen(prefix);
     }
 
     return len;

@@ -44,14 +44,12 @@ static const cfg_info_t kToolInfo = {
     .brief = "Notification testing options",
 };
 
-static const char *const kBacktraceArgsShort[] = CT_ARGS("bt");
-static const char *const kBacktraceArgsLong[] = CT_ARGS("backtrace");
+static const cfg_arg_t kBacktraceArgs[] = { ARG_SHORT("bt"), ARG_LONG("backtrace") };
 
 static const cfg_info_t kBacktraceInfo = {
     .name = "backtrace",
     .brief = "Print a backtrace",
-    .short_args = kBacktraceArgsShort,
-    .long_args = kBacktraceArgsLong,
+    .args = CT_ARGS(kBacktraceArgs),
 };
 
 static const cfg_choice_t kNotifyOptions[] = {
@@ -61,12 +59,12 @@ static const cfg_choice_t kNotifyOptions[] = {
 };
 #define NOTIFY_OPTION_COUNT (sizeof(kNotifyOptions) / sizeof(cfg_choice_t))
 
-static const char *const kNotifyArgsShort[] = CT_ARGS("notify");
+static const cfg_arg_t kNotifyArgs[] = { ARG_SHORT("n"), ARG_LONG("notify") };
 
 static const cfg_info_t kNotifyInfo = {
     .name = "notify",
     .brief = "Notification style",
-    .short_args = kNotifyArgsShort,
+    .args = CT_ARGS(kNotifyArgs),
 };
 
 static const cfg_choice_t kHeadingOptions[] = {
@@ -75,20 +73,20 @@ static const cfg_choice_t kHeadingOptions[] = {
 };
 #define HEADING_OPTION_COUNT (sizeof(kHeadingOptions) / sizeof(cfg_choice_t))
 
-static const char *const kHeadingArgsShort[] = CT_ARGS("heading");
+static const cfg_arg_t kHeadingArgs[] = { ARG_LONG("heading") };
 
 static const cfg_info_t kHeadingInfo = {
     .name = "heading",
     .brief = "Heading style",
-    .short_args = kHeadingArgsShort,
+    .args = CT_ARGS(kHeadingArgs),
 };
 
-static const char *const kZeroIndexedArgsShort[] = CT_ARGS("zl");
+static const cfg_arg_t kZeroIndexedArgs[] = { ARG_SHORT("zi"), ARG_LONG("zero-indexed") };
 
 static const cfg_info_t kZeroIndexedInfo = {
     .name = "zero_indexed",
     .brief = "Print zero indexed line numbers",
-    .short_args = kZeroIndexedArgsShort,
+    .args = CT_ARGS(kZeroIndexedArgs),
 };
 
 static tool_t make_config(arena_t *arena)

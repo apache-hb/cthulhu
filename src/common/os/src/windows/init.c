@@ -29,3 +29,9 @@ CT_NORETURN os_exit(os_exit_t code)
     TerminateProcess(GetCurrentProcess(), code);
     CT_UNREACHABLE();
 }
+
+CT_NORETURN os_abort(void)
+{
+    abort();
+    CT_UNREACHABLE();
+}

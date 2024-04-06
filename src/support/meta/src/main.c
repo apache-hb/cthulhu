@@ -18,9 +18,7 @@
 ///   - vim/textmate/emacs syntax highlighting definitions
 
 #include "config/config.h"
-#include "core/macros.h"
 #include "core/version_def.h"
-#include "io/console.h"
 #include "memory/memory.h"
 #include "setup/setup.h"
 
@@ -46,24 +44,20 @@ static const cfg_info_t kRootInfo = {
     .brief = "meta code generation tool",
 };
 
-static const char *const kHeaderOutputLongArgs[] = CT_ARGS("header");
-static const char *const kHeaderOutputShortArgs[] = CT_ARGS("h");
+static const cfg_arg_t kHeaderOutputArgs[] = { ARG_LONG("header") };
 
 static const cfg_info_t kHeaderOutputInfo = {
     .name = "header",
     .brief = "output header file",
-    .long_args = kHeaderOutputLongArgs,
-    .short_args = kHeaderOutputShortArgs,
+    .args = CT_ARGS(kHeaderOutputArgs),
 };
 
-static const char *const kSourceOutputLongArgs[] = CT_ARGS("source");
-static const char *const kSourceOutputShortArgs[] = CT_ARGS("s");
+static const cfg_arg_t kSourceOutputArgs[] = { ARG_LONG("source"), ARG_SHORT("s") };
 
 static const cfg_info_t kSourceOutputInfo = {
     .name = "source",
     .brief = "output source file",
-    .long_args = kSourceOutputLongArgs,
-    .short_args = kSourceOutputShortArgs,
+    .args = CT_ARGS(kSourceOutputArgs),
 };
 
 static tool_t make_tool(void)

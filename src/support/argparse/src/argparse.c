@@ -65,21 +65,11 @@ static void add_single_field(ap_t *ap, cfg_field_t *field)
 
     const cfg_info_t *info = cfg_get_info(field);
 
-    // TODO: take the union of all the args when adding them
-    if (info->short_args)
+    cfg_arg_array_t args = info->args;
+    for (size_t i = 0; i < args.count; i++)
     {
-        for (size_t i = 0; info->short_args[i]; i++)
-        {
-            add_arg(ap, info->short_args[i], field);
-        }
-    }
-
-    if (info->long_args)
-    {
-        for (size_t i = 0; info->long_args[i]; i++)
-        {
-            add_arg(ap, info->long_args[i], field);
-        }
+        cfg_arg_t arg = args.args[i];
+        add_arg(ap, arg.arg, field);
     }
 }
 

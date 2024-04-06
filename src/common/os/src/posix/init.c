@@ -49,3 +49,8 @@ CT_NORETURN os_exit(os_exit_t code)
 {
     exit(code); // NOLINT(concurrency-mt-unsafe)
 }
+
+CT_NORETURN os_abort(void)
+{
+    abort(); // NOLINT(concurrency-mt-unsafe)
+}

@@ -40,14 +40,12 @@ static const cfg_choice_t kArgChoices[] = {
     {"three", eOptionThree},
 };
 
-static const char *const kEnumInfoShortArgs[] = {"e", NULL};
-static const char *const kEnumInfoLongArgs[] = {"enum", NULL};
+static const cfg_arg_t kEnumInfoArgs[] = {ARG_SHORT("e"), ARG_LONG("enum")};
 
 static const cfg_info_t kEnumInfo = {
     .name = "enum",
     .brief = "An enum argument",
-    .short_args = kEnumInfoShortArgs,
-    .long_args = kEnumInfoLongArgs
+    .args = CT_ARGS(kEnumInfoArgs)
 };
 
 enum flag_option_t
@@ -63,14 +61,12 @@ static const cfg_choice_t kFlagChoices[] = {
     {"three", eFlagThree},
 };
 
-static const char *const kFlagInfoShortArgs[] = {"f", NULL};
-static const char *const kFlagInfoLongArgs[] = {"flag", NULL};
+static const cfg_arg_t kFlagInfoArgs[] = {ARG_SHORT("f"), ARG_LONG("flag")};
 
 static const cfg_info_t kFlagInfo = {
     .name = "flag",
     .brief = "A flag argument",
-    .short_args = kFlagInfoShortArgs,
-    .long_args = kFlagInfoLongArgs
+    .args = CT_ARGS(kFlagInfoArgs)
 };
 
 static tool_t make_config(arena_t *arena)

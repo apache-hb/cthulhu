@@ -13,12 +13,12 @@ CFG_TYPE(eConfigVector,  "list")
 
 #undef CFG_TYPE
 
-#ifndef CFG_SPELLING
-#   define CFG_SPELLING(id, v, name, prefix)
+#ifndef CFG_ARG
+#   define CFG_ARG(id, name, prefix)
 #endif
 
-CFG_SPELLING(eSpellShort, (1 << 0), "short", "-")
-CFG_SPELLING(eSpellLong,  (1 << 1), "long", "--")
-CFG_SPELLING(eSpellMicrosoft,    (1 << 2), "microsoft", "/")
+CFG_ARG(eArgShort,     "short", "-")
+CFG_ARG(eArgLong,      "long",  "--")
+CFG_ARG(eArgDOS,       "dos",   "/")
 
-#undef CFG_SPELLING
+#undef CFG_ARG

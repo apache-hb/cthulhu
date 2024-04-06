@@ -38,24 +38,22 @@ static const cfg_info_t kGeneralGroupInfo = {
     .brief = "General options",
 };
 
-static const char *const kHelpInfoShortArgs[] = CT_ARGS("h", "?");
-static const char *const kHelpInfoLongArgs[] = CT_ARGS("help");
+static const cfg_arg_t kHelpArgs[] = { ARG_SHORT("h"), ARG_DOS("?"), ARG_LONG("help") };
 
 static const cfg_info_t kHelpInfo = {
     .name = "help",
     .brief = "Print this help message and exit",
-    .short_args = kHelpInfoShortArgs,
-    .long_args = kHelpInfoLongArgs,
+
+    .args = CT_ARGS(kHelpArgs),
 };
 
-static const char *const kVersionInfoShortArgs[] = CT_ARGS("V");
-static const char *const kVersionInfoLongArgs[] = CT_ARGS("version");
+static const cfg_arg_t kVersionArgs[] = { ARG_SHORT("V"), ARG_LONG("version") };
 
 static const cfg_info_t kVersionInfo = {
     .name = "version",
     .brief = "Print version information and exit",
-    .short_args = kVersionInfoShortArgs,
-    .long_args = kVersionInfoLongArgs,
+
+    .args = CT_ARGS(kVersionArgs),
 };
 
 static const cfg_info_t kReportGroupInfo = {
@@ -69,20 +67,22 @@ static const cfg_choice_t kHeadingOptions[] = {
 };
 #define HEADING_OPTION_COUNT (sizeof(kHeadingOptions) / sizeof(cfg_choice_t))
 
-static const char *const kHeadingArgsShort[] = CT_ARGS("heading");
+static const cfg_arg_t kHeadingArgs[] = { ARG_SHORT("heading") };
 
 static const cfg_info_t kHeadingInfo = {
     .name = "heading",
     .brief = "Diagnostic heading style.",
-    .short_args = kHeadingArgsShort,
+
+    .args = CT_ARGS(kHeadingArgs),
 };
 
-static const char *const kColourInfoShortArgs[] = CT_ARGS("fcolour-diagnostics");
+static const cfg_arg_t kColourArgs[] = { ARG_SHORT("fcolour-diagnostics") };
 
 static const cfg_info_t kColourInfo = {
     .name = "colour",
     .brief = "Enable colour output",
-    .short_args = kColourInfoShortArgs,
+
+    .args = CT_ARGS(kColourArgs),
 };
 
 static const cfg_info_t kDebugGroupInfo = {
@@ -90,14 +90,13 @@ static const cfg_info_t kDebugGroupInfo = {
     .brief = "Internal debugging options",
 };
 
-static const char *const kVerboseLoggingInfoShortArgs[] = CT_ARGS("v");
-static const char *const kVerboseLoggingInfoLongArgs[] = CT_ARGS("verbose");
+static const cfg_arg_t kVerboseArgs[] = { ARG_SHORT("v"), ARG_LONG("verbose") };
 
 static const cfg_info_t kVerboseLoggingInfo = {
     .name = "verbose",
     .brief = "Enable verbose logging",
-    .short_args = kVerboseLoggingInfoShortArgs,
-    .long_args = kVerboseLoggingInfoLongArgs,
+
+    .args = CT_ARGS(kVerboseArgs),
 };
 
 /// system error handler
@@ -166,6 +165,7 @@ static void pretty_panic_handler(source_info_t location, const char *fmt, va_lis
     io_printf(io, "[panic][%s:%" CT_PRI_LINE "] => %s: %s\n", location.file, location.line, location.function, msg);
 
     print_backtrace(backtrace_config, report);
+    os_abort();
     os_exit(CT_EXIT_INTERNAL);
 }
 
