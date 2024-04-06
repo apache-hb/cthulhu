@@ -79,7 +79,7 @@ typedef struct setup_init_t
 CT_SETUP_API void setup_default(arena_t *arena);
 
 /// @brief setup default options
-/// @note this should be called after all you've added all your options
+/// @note this should be called before you've added all your options
 ///
 /// @param info the version information
 /// @param root the root config group

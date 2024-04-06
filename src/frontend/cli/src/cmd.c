@@ -18,11 +18,6 @@ static const cfg_info_t kConfigInfo = {
     .brief = "Cthulhu CLI configuration options",
 };
 
-static const cfg_info_t kReportInfo = {
-    .name = "reports",
-    .brief = "Reporting options"
-};
-
 static const char *const kLangShortArgs[] = CT_ARGS("l");
 static const char *const kLangLongArgs[] = CT_ARGS("lang");
 
@@ -141,6 +136,8 @@ tool_t make_tool(version_info_t version, arena_t *arena)
 {
     cfg_group_t *config = config_root(&kConfigInfo, arena);
 
+    setup_options_t options = setup_options(version, config);
+
     cfg_field_t *add_language_field = config_vector(config, &kLang, NULL);
 
     cfg_field_t *add_plugin_field = config_vector(config, &kPlugin, NULL);
@@ -160,20 +157,17 @@ tool_t make_tool(version_info_t version, arena_t *arena)
 
     cfg_field_t *output_target_field = config_string(config, &kTargetOutput, NULL);
 
-    cfg_group_t *report_group = config_group(config, &kReportInfo);
-    cfg_field_t *warn_as_error_field = config_bool(report_group, &kWarnAsError, false);
+    cfg_field_t *warn_as_error_field = config_bool(options.report.group, &kWarnAsError, false);
 
     cfg_int_t report_limit_options = {.initial = 20, .min = 0, .max = 1000};
-    cfg_field_t *report_limit_field = config_int(report_group, &kReportLimit, report_limit_options);
+    cfg_field_t *report_limit_field = config_int(options.report.group, &kReportLimit, report_limit_options);
 
     cfg_enum_t report_style_options = {
         .options = kReportStyleChoices,
         .count = (sizeof(kReportStyleChoices) / sizeof(cfg_choice_t)),
         .initial = eTextSimple,
     };
-    cfg_field_t *report_style_field = config_enum(report_group, &kReportStyle, report_style_options);
-
-    setup_options_t options = setup_options(version, config);
+    cfg_field_t *report_style_field = config_enum(options.report.group, &kReportStyle, report_style_options);
 
     tool_t tool = {
         .config = config,

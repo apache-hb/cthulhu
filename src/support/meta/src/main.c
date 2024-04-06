@@ -71,11 +71,10 @@ static tool_t make_tool(void)
     arena_t *arena = get_global_arena();
 
     cfg_group_t *root = config_root(&kRootInfo, arena);
+    setup_options_t options = setup_options(kToolVersion, root);
 
     cfg_field_t *header = config_string(root, &kHeaderOutputInfo, "out.h");
     cfg_field_t *source = config_string(root, &kSourceOutputInfo, "out.c");
-
-    setup_options_t options = setup_options(kToolVersion, root);
 
     tool_t tool = {
         .root = root,

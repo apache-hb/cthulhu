@@ -95,6 +95,8 @@ static tool_t make_config(arena_t *arena)
 {
     cfg_group_t *config = config_root(&kToolInfo, arena);
 
+    setup_options_t defaults = setup_options(kToolVersion, config);
+
     cfg_field_t *test_backtrace = config_bool(config, &kBacktraceInfo, false);
     cfg_enum_t notify_info = {
         .options = kNotifyOptions,
@@ -113,8 +115,6 @@ static tool_t make_config(arena_t *arena)
     cfg_field_t *heading = config_enum(config, &kHeadingInfo, heading_info);
 
     cfg_field_t *zero_indexed = config_bool(config, &kZeroIndexedInfo, false);
-
-    setup_options_t defaults = setup_options(kToolVersion, config);
 
     tool_t tool = {
         .m_config = config,

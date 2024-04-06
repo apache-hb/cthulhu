@@ -27,6 +27,9 @@ typedef struct ap_t
     /// @brief allocation arena
     arena_t *arena;
 
+    /// @brief the root config group
+    cfg_group_t *config;
+
     /// @brief a mapping of names to parameters
     // map_t<const char*, cfg_field_t*>
     map_t *name_lookup;

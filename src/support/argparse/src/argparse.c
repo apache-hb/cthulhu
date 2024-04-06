@@ -111,6 +111,7 @@ ap_t *ap_new(cfg_group_t *config, arena_t *arena)
     ap_t *self = ARENA_MALLOC(sizeof(ap_t), "argparse", config, arena);
 
     self->arena = arena;
+    self->config = config;
 
     self->name_lookup = map_optimal(256, kTypeInfoString, arena);
     self->event_lookup = map_optimal(256, kTypeInfoPtr, arena);
@@ -132,6 +133,17 @@ ap_t *ap_new(cfg_group_t *config, arena_t *arena)
     add_config_fields(self, config);
 
     return self;
+}
+
+void ap_update(ap_t *self)
+{
+    CTASSERT(self != NULL);
+
+    // TODO: this is a bit aggressive
+    map_reset(self->name_lookup);
+    map_reset(self->event_lookup);
+
+    add_config_fields(self, self->config);
 }
 
 void ap_event(ap_t *self, const cfg_field_t *param, ap_event_t callback, void *data)

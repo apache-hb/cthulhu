@@ -359,6 +359,8 @@ setup_init_t setup_parse(int argc, const char **argv, setup_options_t setup)
     arena_t *arena = get_global_arena();
     io_t *io = io_stderr();
 
+    ap_update(setup.ap);
+
     int err = ap_parse_args(setup.ap, argc, argv);
 
     vector_t *errors = ap_get_errors(setup.ap);

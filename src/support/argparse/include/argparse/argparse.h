@@ -53,6 +53,11 @@ typedef bool (*ap_event_t)(ap_t *ap, const cfg_field_t *param, const void *value
 /// @return the created parser instance
 CT_ARGPARSE_API ap_t *ap_new(cfg_group_t *config, arena_t *arena);
 
+/// @brief update the parser with the latest config
+///
+/// @param self the parser instance
+CT_ARGPARSE_API void ap_update(ap_t *self);
+
 /// @brief add a callback event to a parameter
 ///
 /// @param self the parser instance

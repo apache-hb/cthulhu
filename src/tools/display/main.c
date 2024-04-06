@@ -77,6 +77,8 @@ static tool_t make_config(arena_t *arena)
 {
     cfg_group_t *config = config_root(&kToolInfo, arena);
 
+    setup_options_t options = setup_options(kToolVersion, config);
+
     cfg_enum_t enum_init = {
         .options = kArgChoices,
         .count = (sizeof(kArgChoices) / sizeof(cfg_choice_t)),
@@ -90,8 +92,6 @@ static tool_t make_config(arena_t *arena)
         .initial = eFlagOne
     };
     cfg_field_t *flag_argument = config_flags(config, &kFlagInfo, flag_init);
-
-    setup_options_t options = setup_options(kToolVersion, config);
 
     tool_t tool = {
         .m_config = config,

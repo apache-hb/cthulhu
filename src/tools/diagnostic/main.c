@@ -113,6 +113,8 @@ static tool_t make_config(typevec_t *langs, arena_t *arena)
         .initial = 0
     };
 
+    setup_options_t options = setup_options(kFrontendInfo.info.version, root);
+
     cfg_field_t *print_all_langs = config_bool(root, &kPrintLangsInfo, false);
 
     cfg_field_t *print_one_lang = config_enum(root, &kPrintSingleLangInfo, lang_options);
@@ -120,8 +122,6 @@ static tool_t make_config(typevec_t *langs, arena_t *arena)
     cfg_field_t *print_all_diags = config_bool(root, &kPrintDiagsInfo, false);
 
     cfg_field_t *print_one_diag = config_enum(root, &kPrintSingleDiagInfo, lang_options);
-
-    setup_options_t options = setup_options(kFrontendInfo.info.version, root);
 
     tool_t config = {
         .root = root,
