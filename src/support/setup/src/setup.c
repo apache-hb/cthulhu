@@ -1,29 +1,39 @@
-// SPDX-License-Identifier: LGPL-3.0-only
-
-#include "argparse/argparse.h"
-#include "base/util.h"
-#include "setup/memory.h"
+// SPDX-License-Identifier: LGPL-3.0-or-later
 #include "setup/setup.h"
-#include "format/backtrace.h"
-#include "format/colour.h"
+
+#include "arena/arena.h"
+#include "argparse/argparse.h"
+#include "backtrace/backtrace.h"
 #include "base/log.h"
 #include "base/panic.h"
+#include "base/util.h"
+#include "config/config.h"
 #include "core/macros.h"
+#include "format/backtrace.h"
+#include "format/colour.h"
 #include "format/config.h"
 #include "format/version.h"
 #include "io/console.h"
 #include "io/io.h"
 #include "memory/memory.h"
 #include "notify/notify.h"
-#include "format/notify.h"
 #include "os/core.h"
-#include "backtrace/backtrace.h"
-
-#include "config/config.h"
+#include "setup/memory.h"
 #include "std/str.h"
 #include "std/vector.h"
 
-static const cfg_info_t kGroupInfo = {
+#include <limits.h>
+
+/// consts
+
+#define NAME_BUFFER_SIZE 256
+#define PATH_BUFFER_SIZE 512
+
+/// the top bit is reserved for the exit flag
+#define INT_BIT (sizeof(int) * CHAR_BIT)
+#define SHOULD_EXIT (1 << (INT_BIT - 1))
+
+static const cfg_info_t kGeneralGroupInfo = {
     .name = "general",
     .brief = "General options",
 };
@@ -38,7 +48,7 @@ static const cfg_info_t kHelpInfo = {
     .long_args = kHelpInfoLongArgs,
 };
 
-static const char *const kVersionInfoShortArgs[] = CT_ARGS("v");
+static const char *const kVersionInfoShortArgs[] = CT_ARGS("V");
 static const char *const kVersionInfoLongArgs[] = CT_ARGS("version");
 
 static const cfg_info_t kVersionInfo = {
@@ -48,14 +58,9 @@ static const cfg_info_t kVersionInfo = {
     .long_args = kVersionInfoLongArgs,
 };
 
-static const char *const kArgparseUsageInfoShortArgs[] = CT_ARGS("u");
-static const char *const kArgparseUsageInfoLongArgs[] = CT_ARGS("usage");
-
-static const cfg_info_t kArgparseUsageInfo = {
-    .name = "argparse-usage",
-    .brief = "Print argparse usage information",
-    .short_args = kArgparseUsageInfoShortArgs,
-    .long_args = kArgparseUsageInfoLongArgs,
+static const cfg_info_t kReportGroupInfo = {
+    .name = "report",
+    .brief = "Diangostic reporting options",
 };
 
 static const cfg_choice_t kHeadingOptions[] = {
@@ -68,18 +73,16 @@ static const char *const kHeadingArgsShort[] = CT_ARGS("heading");
 
 static const cfg_info_t kHeadingInfo = {
     .name = "heading",
-    .brief = "Heading style. Windows style /flags or unix style -flags",
+    .brief = "Diagnostic heading style.",
     .short_args = kHeadingArgsShort,
 };
 
-static const char *const kColourInfoShortArgs[] = CT_ARGS("c");
-static const char *const kColourInfoLongArgs[] = CT_ARGS("colour");
+static const char *const kColourInfoShortArgs[] = CT_ARGS("fcolour-diagnostics");
 
 static const cfg_info_t kColourInfo = {
     .name = "colour",
     .brief = "Enable colour output",
     .short_args = kColourInfoShortArgs,
-    .long_args = kColourInfoLongArgs,
 };
 
 static const cfg_info_t kDebugGroupInfo = {
@@ -87,7 +90,7 @@ static const cfg_info_t kDebugGroupInfo = {
     .brief = "Internal debugging options",
 };
 
-static const char *const kVerboseLoggingInfoShortArgs[] = CT_ARGS("V");
+static const char *const kVerboseLoggingInfoShortArgs[] = CT_ARGS("v");
 static const char *const kVerboseLoggingInfoLongArgs[] = CT_ARGS("verbose");
 
 static const cfg_info_t kVerboseLoggingInfo = {
@@ -97,214 +100,7 @@ static const cfg_info_t kVerboseLoggingInfo = {
     .long_args = kVerboseLoggingInfoLongArgs,
 };
 
-default_options_t get_default_options(cfg_group_t *group)
-{
-    CTASSERT(group != NULL);
-
-    cfg_group_t *general = config_group(group, &kGroupInfo);
-
-    cfg_field_t *help = config_bool(general, &kHelpInfo, false);
-
-    cfg_field_t *version = config_bool(general, &kVersionInfo, false);
-
-    cfg_field_t *argparse_usage = config_bool(general, &kArgparseUsageInfo, false);
-
-    cfg_enum_t heading_info = {
-        .options = kHeadingOptions,
-        .count = HEADING_OPTION_COUNT,
-        .initial = CT_DEFAULT_HEADER_STYLE,
-    };
-
-    cfg_field_t *heading = config_enum(general, &kHeadingInfo, heading_info);
-
-    cfg_field_t *colour = config_bool(general, &kColourInfo, false);
-
-    cfg_group_t *debug = config_group(group, &kDebugGroupInfo);
-
-    cfg_field_t *verbose = config_bool(debug, &kVerboseLoggingInfo, false);
-
-    default_options_t options = {
-        .general_group = general,
-        .print_help = help,
-        .print_version = version,
-        .enable_usage = argparse_usage,
-        .heading_style = heading,
-        .colour_output = colour,
-
-        .debug_group = debug,
-        .log_verbose = verbose
-    };
-
-    return options;
-}
-
-int process_default_options(default_options_t options, tool_config_t config)
-{
-    const char *name = config.argv[0];
-
-    bool log_verbose = cfg_bool_value(options.log_verbose);
-    ctu_log_update(log_verbose);
-    ctu_log("verbose logging enabled");
-
-    bool colour = cfg_bool_value(options.colour_output);
-
-    print_options_t base = {
-        .arena = config.arena,
-        .io = config.io,
-        .pallete = colour ? &kColourDefault : &kColourNone,
-    };
-
-    bool show_help = cfg_bool_value(options.print_help);
-    if (show_help)
-    {
-        print_config_t config_display = {
-            .options = base,
-            .print_usage = cfg_bool_value(options.enable_usage),
-            .win_style = cfg_enum_value(options.heading_style) == eHeadingMicrosoft,
-            .name = name
-        };
-
-        print_config(config_display, config.group);
-        return CT_EXIT_SHOULD_EXIT;
-    }
-
-    bool show_version = cfg_bool_value(options.print_version);
-    if (show_version)
-    {
-        print_version_t version_display = {
-            .options = base,
-        };
-
-        print_version(version_display, config.version, name);
-        return CT_EXIT_SHOULD_EXIT;
-    }
-
-    return CT_EXIT_OK;
-}
-
-static void report_argparse_errors(io_t *io, format_context_t ctx, vector_t *args)
-{
-    size_t count = vector_len(args);
-    if (count == 0) return;
-
-    char *err = colour_text(ctx, eColourRed, "error");
-
-    for (size_t i = 0; i < count; i++)
-    {
-        const char *arg = vector_get(args, i);
-        io_printf(io, "%s: %s\n", err, arg);
-    }
-}
-
-static void report_unknown_args(io_t *io, format_context_t ctx, vector_t *args)
-{
-    size_t count = vector_len(args);
-    if (count == 0) return;
-
-    char *unk = colour_text(ctx, eColourYellow, "unknown argument");
-
-    for (size_t i = 0; i < count; i++)
-    {
-        const char *arg = vector_get(args, i);
-        io_printf(io, "%s: %s\n", unk, arg);
-    }
-}
-
-static int process_argparse_result(default_options_t options, tool_config_t config, ap_t *ap)
-{
-    int err = ap_parse_args(ap, config.argc, config.argv);
-
-    bool colour = cfg_bool_value(options.colour_output);
-    const colour_pallete_t *pallete = colour ? &kColourDefault : &kColourNone;
-
-    vector_t *errors = ap_get_errors(ap);
-
-    vector_t *unknown = ap_get_unknown(ap);
-    size_t unknown_count = vector_len(unknown);
-
-    format_context_t ctx = {
-        .pallete = pallete,
-        .arena = config.arena,
-    };
-
-    report_argparse_errors(config.io, ctx, errors);
-    report_unknown_args(config.io, ctx, unknown);
-
-    size_t count = ap_count_params(ap);
-    vector_t *posargs = ap_get_posargs(ap);
-    size_t posarg_count = vector_len(posargs);
-
-    bool has_no_args = count == 0 && posarg_count == 0;
-
-    if (!has_no_args && err == CT_EXIT_OK)
-    {
-        return CT_EXIT_OK;
-    }
-
-    if (has_no_args && unknown_count == 0)
-    {
-        io_printf(config.io, "no arguments provided\n");
-    }
-
-    print_options_t base = {
-        .arena = config.arena,
-        .io = config.io,
-        .pallete = colour ? &kColourDefault : &kColourNone,
-    };
-
-    print_config_t display = {
-        .options = base,
-        .print_usage = cfg_bool_value(options.enable_usage),
-        .win_style = cfg_enum_value(options.heading_style) == eHeadingMicrosoft,
-        .name = config.argv[0]
-    };
-
-    print_config(display, config.group);
-    return CT_EXIT_SHOULD_EXIT;
-}
-
-int parse_commands(default_options_t options, tool_config_t config)
-{
-    ap_t *ap = ap_new(config.group, config.arena);
-    return parse_argparse(ap, options, config);
-}
-
-int parse_argparse(ap_t *ap, default_options_t options, tool_config_t config)
-{
-    int err = process_argparse_result(options, config, ap);
-    if (err != CT_EXIT_OK)
-    {
-        return err;
-    }
-
-    return process_default_options(options, config);
-}
-
-static void pretty_panic_handler(source_info_t location, const char *fmt, va_list args)
-{
-    arena_t *arena = get_global_arena();
-    bt_report_t *report = bt_report_collect(arena);
-    io_t *io = io_stderr();
-
-    print_options_t print_options = {
-        .arena = arena,
-        .io = io,
-        .pallete = &kColourDefault, // TODO: some of these should be globals
-    };
-
-    print_backtrace_t backtrace_config = {
-        .options = print_options,
-        .header = eHeadingGeneric,
-        .zero_indexed_lines = false,
-    };
-
-    char *msg = str_vformat(arena, fmt, args);
-
-    io_printf(io, "[panic][%s:%" CT_PRI_LINE "] => %s: %s\n", location.file, location.line, location.function, msg);
-
-    print_backtrace(backtrace_config, report);
-    os_exit(CT_EXIT_INTERNAL);
-}
+/// system error handler
 
 static void default_error_begin(size_t error, void *user)
 {
@@ -315,8 +111,8 @@ static void default_error_next(bt_address_t frame, void *user)
 {
     io_t *io = user;
 
-    char name_buffer[256];
-    char path_buffer[512];
+    char name_buffer[NAME_BUFFER_SIZE];
+    char path_buffer[PATH_BUFFER_SIZE];
 
     bt_symbol_t symbol = {
         .name = text_make(name_buffer, sizeof(name_buffer)),
@@ -345,6 +141,36 @@ static void default_error_end(void *user)
     os_exit(CT_EXIT_INTERNAL);
 }
 
+/// panic handler
+
+static void pretty_panic_handler(source_info_t location, const char *fmt, va_list args)
+{
+    arena_t *arena = get_global_arena();
+    bt_report_t *report = bt_report_collect(arena);
+    io_t *io = io_stderr();
+
+    print_options_t print_options = {
+        .arena = arena,
+        .io = io,
+        .pallete = &kColourDefault, // TODO: some of these should be globals
+    };
+
+    print_backtrace_t backtrace_config = {
+        .options = print_options,
+        .header = eHeadingGeneric,
+        .zero_indexed_lines = false,
+    };
+
+    char *msg = str_vformat(arena, fmt, args);
+
+    io_printf(io, "[panic][%s:%" CT_PRI_LINE "] => %s: %s\n", location.file, location.line, location.function, msg);
+
+    print_backtrace(backtrace_config, report);
+    os_exit(CT_EXIT_INTERNAL);
+}
+
+/// verbose callback
+
 static void default_verbose(const char *fmt, va_list args)
 {
     io_t *io = io_stdout();
@@ -352,23 +178,251 @@ static void default_verbose(const char *fmt, va_list args)
     io_printf(io, "\n");
 }
 
-void setup_global(void)
+/// public api
+
+void setup_default(arena_t *arena)
 {
+    arena_t *mem = arena ? arena : ctu_default_alloc();
     bt_init();
     os_init();
 
-    arena_t *arena = ctu_default_alloc();
-    init_global_arena(arena);
-    init_gmp_arena(arena);
+    init_global_arena(mem);
+    init_gmp_arena(mem);
 
     bt_error_t error = {
         .begin = default_error_begin,
         .end = default_error_end,
         .next = default_error_next,
-        .user = io_stderr()
+        .user = io_stderr(),
     };
 
     gSystemError = error;
     gPanicHandler = pretty_panic_handler;
     gVerboseCallback = default_verbose;
+}
+
+setup_options_t setup_options(version_info_t info, cfg_group_t *root)
+{
+    CTASSERT(root != NULL);
+
+    // general options
+
+    cfg_group_t *general = config_group(root, &kGeneralGroupInfo);
+
+    cfg_field_t *help = config_bool(general, &kHelpInfo, false);
+
+    cfg_field_t *version = config_bool(general, &kVersionInfo, false);
+
+    // report options
+
+    cfg_group_t *report = config_group(general, &kReportGroupInfo);
+
+    cfg_enum_t heading_info = {
+        .options = kHeadingOptions,
+        .count = HEADING_OPTION_COUNT,
+        .initial = CT_DEFAULT_HEADER_STYLE,
+    };
+
+    cfg_field_t *header = config_enum(report, &kHeadingInfo, heading_info);
+
+    cfg_field_t *colour = config_bool(report, &kColourInfo, false);
+
+    // debug options
+
+    cfg_group_t *debug = config_group(root, &kDebugGroupInfo);
+
+    cfg_field_t *verbose = config_bool(debug, &kVerboseLoggingInfo, false);
+
+    // argparse setup
+
+    ap_t *ap = ap_new(root, ctu_default_alloc());
+
+    setup_options_t options = {
+        .version = info,
+        .root = root,
+        .ap = ap,
+
+        .general = {
+            .group = general,
+            .help = help,
+            .version = version,
+        },
+        .report = {
+            .group = report,
+            .header = header,
+            .colour = colour,
+        },
+        .debug = {
+            .group = debug,
+            .verbose = verbose,
+        }
+    };
+
+    return options;
+}
+
+/// setup parsing
+
+static void report_ap_errors(io_t *io, format_context_t ctx, const vector_t *args)
+{
+    size_t len = vector_len(args);
+    if (len == 0) return;
+
+    char *err = colour_text(ctx, eColourRed, "error:");
+
+    for (size_t i = 0; i < len; i++)
+    {
+        const char *arg = vector_get(args, i);
+        io_printf(io, "%s: %s\n", err, arg);
+    }
+}
+
+static void report_ap_unknown(io_t *io, format_context_t ctx, vector_t *args)
+{
+    size_t count = vector_len(args);
+    if (count == 0) return;
+
+    char *unk = colour_text(ctx, eColourYellow, "unknown argument");
+
+    for (size_t i = 0; i < count; i++)
+    {
+        const char *arg = vector_get(args, i);
+        io_printf(io, "%s: %s\n", unk, arg);
+    }
+}
+
+static heading_style_t get_heading_style(const setup_options_t *setup)
+{
+    CTASSERT(setup != NULL);
+
+    size_t style = cfg_enum_value(setup->report.header);
+    return (style == eHeadingMicrosoft) ? eHeadingMicrosoft : eHeadingGeneric;
+}
+
+static setup_init_t setup_exit(int code)
+{
+    setup_init_t result = { 0 };
+    result.exitcode = code | SHOULD_EXIT;
+    return result;
+}
+
+static setup_init_t setup_help(
+    const char *name,
+    const colour_pallete_t *pallete,
+    bool usage,
+    heading_style_t style,
+    const cfg_group_t *config)
+{
+    print_options_t base = {
+        .arena = get_global_arena(),
+        .io = io_stdout(),
+        .pallete = pallete,
+    };
+
+    print_config_t print = {
+        .options = base,
+        .print_usage = usage,
+        .win_style = (style == eHeadingMicrosoft),
+        .name = name,
+    };
+
+    print_config(print, config);
+
+    return setup_exit(CT_EXIT_OK);
+}
+
+static setup_init_t setup_version(
+    const char *name,
+    const colour_pallete_t *pallete,
+    version_info_t version)
+{
+    print_options_t base = {
+        .arena = get_global_arena(),
+        .io = io_stdout(),
+        .pallete = pallete,
+    };
+
+    print_version_t print = {
+        .options = base,
+    };
+
+    print_version(print, version, name);
+
+    return setup_exit(CT_EXIT_OK);
+}
+
+setup_init_t setup_parse(int argc, const char **argv, setup_options_t setup)
+{
+    CTASSERT(argc > 0);
+    CTASSERT(argv != NULL);
+
+    arena_t *arena = get_global_arena();
+    io_t *io = io_stderr();
+
+    ap_update(setup.ap);
+
+    int err = ap_parse_args(setup.ap, argc, argv);
+
+    vector_t *errors = ap_get_errors(setup.ap);
+    vector_t *unknown = ap_get_unknown(setup.ap);
+
+    const colour_pallete_t *pallete = (cfg_bool_value(setup.report.colour) ? &kColourDefault : &kColourNone);
+    heading_style_t heading = get_heading_style(&setup);
+
+    format_context_t fmt = {
+        .pallete = pallete,
+        .arena = arena,
+    };
+
+    report_ap_errors(io, fmt, errors);
+    report_ap_unknown(io, fmt, unknown);
+
+    // if there was an error parsing the arguments, exit
+    // errors have already been printed
+    if (err != CT_EXIT_OK)
+        return setup_exit(err);
+
+    vector_t *posargs = ap_get_posargs(setup.ap);
+    size_t pos = vector_len(posargs);
+    size_t unknowns = vector_len(unknown);
+    size_t params = ap_count_params(setup.ap);
+
+    // no valid arguments were provided, print help and exit
+    if (pos == 0 && (unknowns == 0 || params == 0))
+        return setup_help(argv[0], pallete, false, heading, setup.root);
+
+    // if the help flag was provided, print help and exit
+    bool help = cfg_bool_value(setup.general.help);
+    if (help)
+        return setup_help(argv[0], pallete, true, heading, setup.root);
+
+    // if the version flag was provided, print version and exit
+    bool version = cfg_bool_value(setup.general.version);
+    if (version)
+        return setup_version(argv[0], pallete, setup.version);
+
+    setup_init_t result = {
+        .exitcode = CT_EXIT_OK,
+        .posargs = posargs,
+        .pallete = pallete,
+        .heading = heading,
+    };
+
+    return result;
+}
+
+/// public accessor api
+
+bool setup_should_exit(const setup_init_t *init)
+{
+    CTASSERT(init != NULL);
+
+    return init->exitcode & SHOULD_EXIT;
+}
+
+int setup_exit_code(const setup_init_t *init)
+{
+    CTASSERT(setup_should_exit(init));
+
+    return init->exitcode & ~SHOULD_EXIT;
 }

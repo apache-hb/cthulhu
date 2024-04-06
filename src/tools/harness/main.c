@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 #include "base/util.h"
-#include "setup/setup2.h"
+#include "setup/setup.h"
 #include "format/colour.h"
 #include "base/log.h"
 #include "cthulhu/events/events.h"

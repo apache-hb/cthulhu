@@ -2,117 +2,114 @@
 
 #pragma once
 
-#include <ctu_setup_api.h>
-
-#include "core/compiler.h"
+#include "core/analyze.h"
 #include "core/version_def.h"
+#include "format/format.h"
+#include <ctu_setup_api.h>
 
 #include <stdbool.h>
 
-CT_BEGIN_API
+typedef struct arena_t arena_t;
+typedef struct io_t io_t;
+typedef struct ap_t ap_t;
+typedef struct vector_t vector_t;
+typedef struct colour_pallete_t colour_pallete_t;
 
 typedef struct cfg_group_t cfg_group_t;
 typedef struct cfg_field_t cfg_field_t;
-typedef struct io_t io_t;
-typedef struct arena_t arena_t;
-typedef struct ap_t ap_t;
 
-/// @defgroup setup Default options
-/// @brief Default command line options and behaviour
-/// @ingroup support
-/// @{
+CT_BEGIN_API
 
-/// @brief tool config
-typedef struct tool_config_t
+/// @brief default options shared by all tools
+typedef struct setup_options_t
 {
-    /// @brief the arena to use
-    arena_t *arena;
-
-    /// @brief the io buffer to use
-    io_t *io;
-
-    /// @brief the root config group
-    cfg_group_t *group;
-
-    /// @brief this tools version
     version_info_t version;
+    cfg_group_t *root;
+    ap_t *ap;
 
-    /// @brief the number of arguments
-    int argc;
+    /// @brief general options
+    struct {
+        cfg_group_t *group;
 
-    /// @brief the arguments
-    const char **argv;
-} tool_config_t;
+        /// @brief print help and quit
+        cfg_field_t *help;
 
-/// @brief default options
-typedef struct default_options_t
+        /// @brief print version and quit
+        cfg_field_t *version;
+    } general;
+
+    /// @brief diagnostic reporting options
+    struct {
+        cfg_group_t *group;
+
+        /// @brief report header style
+        cfg_field_t *header;
+
+        /// @brief enable colour output
+        cfg_field_t *colour;
+    } report;
+
+    /// @brief debug options. these are for debugging the compiler itself, not the user code
+    struct {
+        cfg_group_t *group;
+
+        /// @brief enable verbose logging
+        cfg_field_t *verbose;
+    } debug;
+} setup_options_t;
+
+/// @brief the result of parsing the command line
+typedef struct setup_init_t
 {
-    // default config group
-    cfg_group_t *general_group;
+    /// @brief the exitcode
+    /// @warning dont use this directly, use setup_should_exit() and setup_exit_code()
+    int exitcode;
 
-    // print help and quit
-    cfg_field_t *print_help;
+    /// @brief the parsed position arguments
+    vector_t *posargs;
 
-    // print version and quit
-    cfg_field_t *print_version;
+    /// @brief the chosen colour pallete
+    const colour_pallete_t *pallete;
 
-    // print help with usage and quit
-    cfg_field_t *enable_usage;
-
-    // print help with windows style options
-    cfg_field_t *heading_style;
-
-    // enable colour output
-    cfg_field_t *colour_output;
-
-    // debug config group
-    cfg_group_t *debug_group;
-
-    // enable debug verbosity
-    cfg_field_t *log_verbose;
-} default_options_t;
-
-/// @brief get the default options
-///
-/// @param group the config group to use
-///
-/// @return the default options
-CT_SETUP_API default_options_t get_default_options(cfg_group_t *group);
-
-/// @brief process the default options
-/// @note if this function does not return @a CT_EXIT_OK, the program should exit
-///       with the returned error code
-///
-/// @param options the default options
-/// @param config the tool config
-///
-/// @return @a CT_EXIT_OK on success or an error code
-CT_SETUP_API int process_default_options(default_options_t options, tool_config_t config);
-
-/// @brief parse the default commands
-/// @note if this function does not return @a CT_EXIT_OK, the program should exit
-///       with the returned error code
-///
-/// @param options the default options
-/// @param config the tool config
-///
-/// @return @a CT_EXIT_OK on success or an error code
-CT_SETUP_API int parse_commands(default_options_t options, tool_config_t config);
-
-/// @brief parse the default arguments
-/// @note this function is the same as @see parse_commands but allows
-///       the user to use their own @see ap_t instance
-///
-/// @param ap the parser instance
-/// @param options the default options
-/// @param config the tool config
-///
-/// @return @a CT_EXIT_OK on success or an error code
-CT_SETUP_API int parse_argparse(ap_t *ap, default_options_t options, tool_config_t config);
+    /// @brief the chosen heading style
+    heading_style_t heading;
+} setup_init_t;
 
 /// @brief initialise the runtime with default options
-CT_SETUP_API void setup_global(void);
+CT_SETUP_API void setup_default(arena_t *arena);
 
-/// @}
+/// @brief setup default options
+/// @note this should be called before you've added all your options
+///
+/// @param info the version information
+/// @param root the root config group
+///
+/// @return the setup options
+CT_SETUP_API setup_options_t setup_options(version_info_t info, cfg_group_t *root);
+
+/// @brief parse the command line
+///
+/// @param argc the number of arguments
+/// @param argv the arguments
+/// @param setup the setup options
+///
+/// @return the parsed command line
+CT_SETUP_API setup_init_t setup_parse(int argc, const char **argv, setup_options_t setup);
+
+/// accessor functions
+
+/// @brief check if the program should exit
+///
+/// @param init the setup init
+///
+/// @return true if the program should exit
+CT_SETUP_API bool setup_should_exit(IN_NOTNULL const setup_init_t *init);
+
+/// @brief get the exit code
+/// @note only call this if setup_should_exit() returns true
+/// @param init the setup init
+///
+/// @return the exit code
+CT_SETUP_API int setup_exit_code(IN_NOTNULL const setup_init_t *init);
 
 CT_END_API

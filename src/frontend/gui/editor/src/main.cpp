@@ -22,7 +22,7 @@
 
 #include "json/json.hpp"
 #include "backtrace/backtrace.h"
-#include "setup/setup2.h"
+#include "setup/setup.h"
 
 #include "support/loader.h"
 #include "support/support.h"

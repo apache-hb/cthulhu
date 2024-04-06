@@ -5,7 +5,7 @@
 #include "core/macros.h"
 #include "cthulhu/broker/broker.h"
 #include "cthulhu/events/events.h"
-#include "setup/setup2.h"
+#include "setup/setup.h"
 #include "io/console.h"
 #include "io/io.h"
 #include "std/map.h"

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
 #include "setup/memory.h"
-#include "setup/setup2.h"
+#include "setup/setup.h"
 
 #include "arena/arena.h"
 #include "base/panic.h"

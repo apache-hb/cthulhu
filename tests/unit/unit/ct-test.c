@@ -1,7 +1,7 @@
 #include "ct-test.h"
 
 #include "core/macros.h"
-#include "setup/setup2.h"
+#include "setup/setup.h"
 #include "setup/memory.h"
 #include "memory/memory.h"
 

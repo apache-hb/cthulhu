@@ -7,7 +7,7 @@
 #include "io/console.h"
 #include "io/io.h"
 #include "setup/memory.h"
-#include "setup/setup2.h"
+#include "setup/setup.h"
 
 #include "std/str.h"
 #include "tar/tar.h"

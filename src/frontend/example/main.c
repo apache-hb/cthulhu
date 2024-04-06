@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "setup/setup2.h"
+#include "setup/setup.h"
 #include "setup/memory.h"
 #include "format/colour.h"
 #include "format/notify.h"

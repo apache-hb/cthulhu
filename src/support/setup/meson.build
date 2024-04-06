@@ -8,7 +8,6 @@ setup_include = include_directories('.', 'include')
 
 src = [
     'src/setup.c',
-    'src/setup2.c',
     'src/memory.c'
 ]
 

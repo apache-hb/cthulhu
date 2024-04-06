@@ -22,7 +22,7 @@
 #include "core/version_def.h"
 #include "io/console.h"
 #include "memory/memory.h"
-#include "setup/setup2.h"
+#include "setup/setup.h"
 
 static const version_info_t kToolVersion = {
     .license = "LGPLv3",

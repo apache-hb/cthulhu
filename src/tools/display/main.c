@@ -3,7 +3,7 @@
 #include "config/config.h"
 
 #include "setup/memory.h"
-#include "setup/setup2.h"
+#include "setup/setup.h"
 
 static const version_info_t kToolVersion = {
     .license = "GPLv3",

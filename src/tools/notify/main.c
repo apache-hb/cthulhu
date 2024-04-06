@@ -5,7 +5,7 @@
 #include "format/colour.h"
 #include "config/config.h"
 #include "core/macros.h"
-#include "setup/setup2.h"
+#include "setup/setup.h"
 #include "format/config.h"
 #include "format/notify2.h"
 #include "io/console.h"
