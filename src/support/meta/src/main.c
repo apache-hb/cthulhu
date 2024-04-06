@@ -22,7 +22,7 @@
 #include "core/version_def.h"
 #include "io/console.h"
 #include "memory/memory.h"
-#include "setup/setup.h"
+#include "setup/setup2.h"
 
 static const version_info_t kToolVersion = {
     .license = "LGPLv3",
@@ -38,7 +38,7 @@ typedef struct tool_t
     cfg_field_t *header_output;
     cfg_field_t *source_output;
 
-    default_options_t options;
+    setup_options_t options;
 } tool_t;
 
 static const cfg_info_t kRootInfo = {
@@ -75,7 +75,7 @@ static tool_t make_tool(void)
     cfg_field_t *header = config_string(root, &kHeaderOutputInfo, "out.h");
     cfg_field_t *source = config_string(root, &kSourceOutputInfo, "out.c");
 
-    default_options_t options = get_default_options(root);
+    setup_options_t options = setup_options(kToolVersion, root);
 
     tool_t tool = {
         .root = root,
@@ -89,23 +89,10 @@ static tool_t make_tool(void)
 
 int main(int argc, const char **argv)
 {
-    setup_global();
+    setup_default(NULL);
     tool_t tool = make_tool();
 
-    tool_config_t config = {
-        .arena = get_global_arena(),
-        .io = io_stdout(),
-
-        .group = tool.root,
-        .version = kToolVersion,
-
-        .argc = argc,
-        .argv = argv,
-    };
-
-    int err = parse_commands(tool.options, config);
-    if (err == CT_EXIT_SHOULD_EXIT)
-    {
-        return CT_EXIT_OK;
-    }
+    setup_init_t init = setup_parse(argc, argv, tool.options);
+    if (setup_should_exit(&init))
+        return setup_exit_code(&init);
 }

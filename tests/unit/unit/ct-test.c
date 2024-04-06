@@ -52,6 +52,47 @@ typedef struct test_result_t
     test_exception_t ex;
 } test_result_t;
 
+/// electric fence allocator
+
+static void *ef_malloc(size_t size, void *self)
+{
+    CT_UNUSED(self);
+    CT_UNUSED(size);
+
+    CT_NEVER("attempted to allocate memory with electric fence");
+}
+
+static void *ef_realloc(void *ptr, size_t new_size, size_t old_size, void *self)
+{
+    CT_UNUSED(ptr);
+    CT_UNUSED(new_size);
+    CT_UNUSED(old_size);
+    CT_UNUSED(self);
+
+    CT_NEVER("attempted to reallocate memory with electric fence");
+}
+
+static void ef_free(void *ptr, size_t size, void *self)
+{
+    CT_UNUSED(ptr);
+    CT_UNUSED(size);
+    CT_UNUSED(self);
+
+    CT_NEVER("attempted to free memory with electric fence");
+}
+
+static arena_t gElectricFence = {
+    .name = "electric fence",
+    .fn_malloc = ef_malloc,
+    .fn_realloc = ef_realloc,
+    .fn_free = ef_free,
+};
+
+static arena_t *electric_fence_arena(void)
+{
+    return &gElectricFence;
+}
+
 static const char *get_test_result_id(test_error_t result)
 {
     switch (result)
@@ -115,7 +156,7 @@ static void test_panic_handler(source_info_t location, const char *fmt, va_list 
     {
         io_t *io = io_stdout();
 
-        io_printf(io, "unexpected panic [%s:%zu] => %s: ", location.file, location.line, location.function);
+        io_printf(io, "unexpected panic [%s:%" CT_PRI_LINE "] => %s: ", location.file, location.line, location.function);
         io_vprintf(io, fmt, args);
         io_printf(io, "\n");
 

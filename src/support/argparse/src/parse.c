@@ -50,20 +50,20 @@ static void push_single_arg(typevec_t *vec, const char *arg)
             typevec_append(vec, " \"", 2);
             typevec_append(vec, arg + idx, len - idx);
             typevec_push(vec, "\"");
-            return;
         }
         else
         {
             // otherwise just paste it in
             typevec_append(vec, arg, len);
-            return;
         }
     }
-
-    // if its not a flag then we just need to wrap it in quotes
-    typevec_push(vec, "\"");
-    typevec_append(vec, arg, len);
-    typevec_push(vec, "\"");
+    else
+    {
+        // if its not a flag then we just need to wrap it in quotes
+        typevec_push(vec, "\"");
+        typevec_append(vec, arg, len);
+        typevec_push(vec, "\"");
+    }
 }
 
 static char *join_args(int argc, const char **argv, arena_t *arena)

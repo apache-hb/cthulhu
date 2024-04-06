@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "setup/setup.h"
+#include "setup/setup2.h"
 
 typedef struct logger_t logger_t;
 typedef struct map_t map_t;
@@ -27,7 +27,7 @@ typedef struct tool_t
     cfg_field_t *report_limit;
     cfg_field_t *report_style;
 
-    default_options_t options;
+    setup_options_t options;
 } tool_t;
 
-tool_t make_tool(arena_t *arena);
+tool_t make_tool(version_info_t version, arena_t *arena);

@@ -22,7 +22,7 @@
 
 #include "json/json.hpp"
 #include "backtrace/backtrace.h"
-#include "setup/setup.h"
+#include "setup/setup2.h"
 
 #include "support/loader.h"
 #include "support/support.h"
@@ -998,7 +998,7 @@ int main(int argc, const char **argv)
     CT_UNUSED(argc);
     CT_UNUSED(argv);
 
-    setup_global();
+    setup_default(nullptr);
     install_trace_arenas();
 
     TraceArena trace{"Compiler", TraceArena::eCollectStackTrace};

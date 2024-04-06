@@ -168,11 +168,9 @@ static size_t collapse_frame(const typevec_t *entries, size_t start, arena_t *ar
                 // otherwise break out and push just the single entry
                 break;
             }
-            else
-            {
-                // we dont have a match, so we push the entry and start again
-                typevec_push(buffer, entry);
-            }
+
+            // we dont have a match, so we push the entry and start again
+            typevec_push(buffer, entry);
         }
     }
 
@@ -322,7 +320,7 @@ static const char *fmt_entry_location(backtrace_t *pass, const entry_t *entry)
         return file;
     }
 
-    return colour_format(pass->format_context, COLOUR_ADDR, "0x%" PRI_ADDRESS, entry->address);
+    return colour_format(pass->format_context, COLOUR_ADDR, "0x%" BT_PRI_ADDRESS, entry->address);
 }
 
 static char *fmt_entry(backtrace_t *pass, size_t symbol_align, const entry_t *entry)
@@ -341,13 +339,9 @@ static char *fmt_entry(backtrace_t *pass, size_t symbol_align, const entry_t *en
     char *coloured = colour_text(pass->format_context, COLOUR_SYMBOL, it);
 
     if (needs_seperator)
-    {
         return str_format(options.arena, "%s @ %s", coloured, where);
-    }
-    else
-    {
-        return str_format(options.arena, "%s %s", coloured, where);
-    }
+
+    return str_format(options.arena, "%s %s", coloured, where);
 }
 
 static char *fmt_index(backtrace_t *pass, size_t index)

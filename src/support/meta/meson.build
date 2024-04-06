@@ -7,7 +7,7 @@ src = [
 
 deps = [
     memory, events, io, config, setup,
-    argparse, broker, arena
+    argparse, broker, arena, format
 ]
 
 meta = executable('meta', src,

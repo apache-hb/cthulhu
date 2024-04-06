@@ -7,7 +7,7 @@
 #include "io/console.h"
 #include "io/io.h"
 #include "setup/memory.h"
-#include "setup/setup.h"
+#include "setup/setup2.h"
 
 #include "std/str.h"
 #include "tar/tar.h"
@@ -82,7 +82,7 @@ static void print_dirent(fs_t *fs, const fs_inode_t *inode, const char *dir)
 
 int main(int argc, const char **argv)
 {
-    setup_global();
+    setup_default(NULL);
     arena_t *arena = ctu_default_alloc();
 
     CTASSERTF(argc > 2, "usage: %s input.tar", argv[0]);

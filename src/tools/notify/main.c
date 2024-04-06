@@ -5,7 +5,7 @@
 #include "format/colour.h"
 #include "config/config.h"
 #include "core/macros.h"
-#include "setup/setup.h"
+#include "setup/setup2.h"
 #include "format/config.h"
 #include "format/notify2.h"
 #include "io/console.h"
@@ -29,7 +29,7 @@ typedef struct tool_t
     cfg_field_t *heading_style;
     cfg_field_t *zero_indexed;
 
-    default_options_t options;
+    setup_options_t options;
 } tool_t;
 
 static const version_info_t kToolVersion = {
@@ -114,7 +114,7 @@ static tool_t make_config(arena_t *arena)
 
     cfg_field_t *zero_indexed = config_bool(config, &kZeroIndexedInfo, false);
 
-    default_options_t defaults = get_default_options(config);
+    setup_options_t defaults = setup_options(kToolVersion, config);
 
     tool_t tool = {
         .m_config = config,
@@ -431,36 +431,23 @@ static void do_backtrace(io_t *io, arena_t *arena)
 
 int main(int argc, const char **argv)
 {
-    setup_global();
+    setup_default(NULL);
 
     arena_t *arena = get_global_arena();
     io_t *con = io_stdout();
     tool_t tool = make_config(arena);
     node_t *node = node_builtin("notify", arena);
 
-    tool_config_t config = {
-        .arena = arena,
-        .io = con,
+    setup_init_t setup = setup_parse(argc, argv, tool.options);
 
-        .group = tool.m_config,
-        .version = kToolVersion,
-
-        .argc = argc,
-        .argv = argv,
-    };
-
-    int err = parse_commands(tool.options, config);
-    if (err == CT_EXIT_SHOULD_EXIT)
-    {
-        return CT_EXIT_OK;
-    }
+    if (setup_should_exit(&setup))
+        return setup_exit_code(&setup);
 
     bool backtraces = cfg_bool_value(tool.test_backtrace);
 
     notify_style_t style = cfg_enum_value(tool.notify_style);
     heading_style_t heading = cfg_enum_value(tool.heading_style);
     bool zero_indexed = cfg_bool_value(tool.zero_indexed);
-    bool colour = cfg_bool_value(tool.options.colour_output);
 
     logger_t *logs = logger_new(arena);
 
@@ -478,7 +465,7 @@ int main(int argc, const char **argv)
         print_options_t options = {
             .arena = arena,
             .io = con,
-            .pallete = colour ? &kColourDefault : &kColourNone,
+            .pallete = setup.pallete
         };
 
         print_notify_t notify_options = {

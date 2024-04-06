@@ -3,11 +3,7 @@
 #include "config/config.h"
 
 #include "setup/memory.h"
-#include "setup/setup.h"
-
-#include "io/console.h"
-
-#include "core/macros.h"
+#include "setup/setup2.h"
 
 static const version_info_t kToolVersion = {
     .license = "GPLv3",
@@ -23,7 +19,7 @@ typedef struct tool_t
     cfg_field_t *enum_argument;
     cfg_field_t *flag_argument;
 
-    default_options_t options;
+    setup_options_t options;
 } tool_t;
 
 static const cfg_info_t kToolInfo = {
@@ -81,8 +77,6 @@ static tool_t make_config(arena_t *arena)
 {
     cfg_group_t *config = config_root(&kToolInfo, arena);
 
-    default_options_t options = get_default_options(config);
-
     cfg_enum_t enum_init = {
         .options = kArgChoices,
         .count = (sizeof(kArgChoices) / sizeof(cfg_choice_t)),
@@ -97,6 +91,8 @@ static tool_t make_config(arena_t *arena)
     };
     cfg_field_t *flag_argument = config_flags(config, &kFlagInfo, flag_init);
 
+    setup_options_t options = setup_options(kToolVersion, config);
+
     tool_t tool = {
         .m_config = config,
         .enum_argument = enum_argument,
@@ -110,27 +106,12 @@ static tool_t make_config(arena_t *arena)
 
 int main(int argc, const char **argv)
 {
-    setup_global();
+    setup_default(NULL);
     arena_t *arena = ctu_default_alloc();
-
-    io_t *io = io_stdout();
 
     tool_t tool = make_config(arena);
 
-    tool_config_t config = {
-        .arena = arena,
-        .io = io,
-
-        .group = tool.m_config,
-        .version = kToolVersion,
-
-        .argc = argc,
-        .argv = argv,
-    };
-
-    int err = parse_commands(tool.options, config);
-    if (err == CT_EXIT_SHOULD_EXIT)
-    {
-        return CT_EXIT_OK;
-    }
+    setup_init_t init = setup_parse(argc, argv, tool.options);
+    if (setup_should_exit(&init))
+        return setup_exit_code(&init);
 }

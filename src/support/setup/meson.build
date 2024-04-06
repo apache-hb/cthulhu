@@ -8,7 +8,14 @@ setup_include = include_directories('.', 'include')
 
 src = [
     'src/setup.c',
+    'src/setup2.c',
     'src/memory.c'
+]
+
+deps = [
+    config, format, argparse, os, io,
+    notify, backtrace, memory, arena,
+    events
 ]
 
 libsetup = library('setup', src,
@@ -16,7 +23,7 @@ libsetup = library('setup', src,
     install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_SETUP_BUILD=1' ],
     include_directories : setup_include,
-    dependencies : [ config, format, argparse, os, io, notify, backtrace, memory, arena ]
+    dependencies : deps
 )
 
 setup = declare_dependency(

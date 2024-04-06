@@ -23,12 +23,19 @@
 !*.ct
 !*.obr
 
+# ignore everything in subprojects except select files
+subprojects/*
+
 # dont ignore readme and build files
 !LICENSE
 !*.md
 !*.build
 !meson_options.txt
 !*.wrap
+
+# dont ignore subprojects
+!subprojects/mini_gmp/**/*
+!subprojects/stb_printf/**/*
 
 # dont ignore config files
 !Doxyfile.in
@@ -60,14 +67,14 @@ fuzz-*/
 genout*/
 out.c
 *out/
-
-# grammar files
-!driver/**/*
-node_modules/
-interface/gui/interface/imgui/examples/example_android_opengl3/android/app/src/main/AndroidManifest.xml
 out.h
 out.cpp
 DONT_COMMIT_THIS
+node_modules/
+
+# grammar files
+!driver/**/*
+interface/gui/interface/imgui/examples/example_android_opengl3/android/app/src/main/AndroidManifest.xml
 
 # we do want to commit the snippets
 !.vscode/cthulhu.code-snippets

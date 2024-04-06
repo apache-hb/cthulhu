@@ -5,7 +5,7 @@
 #include "core/macros.h"
 #include "cthulhu/broker/broker.h"
 #include "cthulhu/events/events.h"
-#include "setup/setup.h"
+#include "setup/setup2.h"
 #include "io/console.h"
 #include "io/io.h"
 #include "std/map.h"
@@ -79,7 +79,7 @@ typedef struct tool_t
     cfg_field_t *print_all_diags;
     cfg_field_t *print_one_diag;
 
-    default_options_t options;
+    setup_options_t options;
 } tool_t;
 
 static tool_t make_config(typevec_t *langs, arena_t *arena)
@@ -113,8 +113,6 @@ static tool_t make_config(typevec_t *langs, arena_t *arena)
         .initial = 0
     };
 
-    default_options_t options = get_default_options(root);
-
     cfg_field_t *print_all_langs = config_bool(root, &kPrintLangsInfo, false);
 
     cfg_field_t *print_one_lang = config_enum(root, &kPrintSingleLangInfo, lang_options);
@@ -122,6 +120,8 @@ static tool_t make_config(typevec_t *langs, arena_t *arena)
     cfg_field_t *print_all_diags = config_bool(root, &kPrintDiagsInfo, false);
 
     cfg_field_t *print_one_diag = config_enum(root, &kPrintSingleDiagInfo, lang_options);
+
+    setup_options_t options = setup_options(kFrontendInfo.info.version, root);
 
     tool_t config = {
         .root = root,
@@ -218,7 +218,7 @@ static void print_diagnostic(io_t *io, const diagnostic_t *diag)
 
 int main(int argc, const char **argv)
 {
-    setup_global();
+    setup_default(NULL);
     arena_t *arena = get_global_arena();
     io_t *io = io_stdout();
 
@@ -242,24 +242,10 @@ int main(int argc, const char **argv)
 
     tool_t tool = make_config(langs, arena);
 
-    tool_config_t config = {
-        .arena = arena,
-        .io = io,
+    setup_init_t init = setup_parse(argc, argv, tool.options);
 
-        .group = tool.root,
-        .version = kFrontendInfo.info.version,
-
-        .argc = argc,
-        .argv = argv,
-    };
-
-    ap_t *ap = ap_new(config.group, config.arena);
-
-    int err = parse_argparse(ap, tool.options, config);
-    if (err == CT_EXIT_SHOULD_EXIT)
-    {
-        return CT_EXIT_OK;
-    }
+    if (setup_should_exit(&init))
+        return setup_exit_code(&init);
 
     ///
     /// print all langs
@@ -357,7 +343,7 @@ int main(int argc, const char **argv)
     /// print info about specific diagnostics
     ///
 
-    vector_t *posargs = ap_get_posargs(ap);
+    vector_t *posargs = init.posargs;
     size_t posarg_count = vector_len(posargs);
     for (size_t i = 0; i < posarg_count; i++)
     {

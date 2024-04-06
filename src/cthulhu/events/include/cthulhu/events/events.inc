@@ -586,4 +586,12 @@ CTU_EVENT(Unimplemented, {
         "This feature has not yet been implemented.",
 })
 
+CTU_EVENT(CommandLineInvalid, {
+    .severity = eSeverityFatal,
+    .id = "M0080",
+    .brief = "Command line invalid",
+    .description =
+        "The command line arguments were invalid.",
+})
+
 #undef CTU_EVENT

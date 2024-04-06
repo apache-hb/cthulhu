@@ -6,6 +6,6 @@ executable('tool_diagnostic', src,
     dependencies : [
         support, memory,
         events, io, config, setup,
-        argparse, broker, arena
+        argparse, broker, arena, format
     ]
 )

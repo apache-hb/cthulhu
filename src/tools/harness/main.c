@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 #include "base/util.h"
-#include "setup/setup.h"
+#include "setup/setup2.h"
 #include "format/colour.h"
 #include "base/log.h"
 #include "cthulhu/events/events.h"
@@ -375,7 +375,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
 
 int main(int argc, const char **argv)
 {
-    setup_global();
+    setup_default(NULL);
 
     size_t size = (size_t)(1024U * 1024U * 64U);
     user_arena_t arena = new_user_arena(size);

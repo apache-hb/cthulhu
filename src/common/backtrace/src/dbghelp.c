@@ -80,9 +80,6 @@ frame_resolve_t bt_resolve_inner(bt_address_t frame, bt_symbol_t *symbol)
     text_t name = symbol->name;
     text_t path = symbol->path;
 
-    symbol->line = 0;
-    strcpy_s(name.text, name.length, "<unknown>");
-
     // cap the name size to a known maximum so we can put it on the stack rather than call malloc
     // we do this because this may be called in a signal handler and we don't want to allocate
     ULONG name_size = CT_MIN((ULONG)name.length, MAX_NAME_SIZE);

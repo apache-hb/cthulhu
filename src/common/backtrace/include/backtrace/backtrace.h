@@ -7,6 +7,7 @@
 #include "core/analyze.h"
 #include "core/compiler.h"
 
+#include "core/source_info.h"
 #include "core/text.h"
 
 #include <inttypes.h>
@@ -25,20 +26,19 @@ CT_BEGIN_API
 typedef uint_least64_t bt_address_t;
 
 /// @brief format specifier for @a bt_address_t
-#define PRI_ADDRESS PRIuLEAST64
+#define BT_PRI_ADDRESS PRIuLEAST64
 
 /// @brief a symbol
 typedef struct bt_symbol_t
 {
     /// @brief the line number
-    size_t line;
+    /// @brief when @a eResolveLine is not set this is initialized to @a CT_LINE_UNKNOWN
+    source_line_t line;
 
     /// @brief a buffer to hold the name
-    /// when neither @a eResolveName nor @a eResolveDemangledName is set this is set to 0
     text_t name;
 
     /// @brief a buffer to hold the path to the file
-    /// when @a eResolveFile is not set the first character is set to 0
     text_t path;
 } bt_symbol_t;
 
@@ -63,7 +63,8 @@ typedef enum frame_resolve_t
     /// @note this does not imply @a eResolveLine
     eResolveFile = (1 << 3),
 
-    eResolveCount
+    /// @brief all information was resolved
+    eResolveAll = eResolveLine | eResolveName | eResolveFile,
 } frame_resolve_t;
 
 /// @brief user callback for @a bt_read
@@ -137,4 +138,4 @@ CT_BACKTRACE_API frame_resolve_t bt_resolve_symbol(bt_address_t frame, IN_NOTNUL
 
 CT_END_API
 
-CT_ENUM_FLAGS(frame_resolve_t)
+CT_ENUM_FLAGS(frame_resolve_t, int)

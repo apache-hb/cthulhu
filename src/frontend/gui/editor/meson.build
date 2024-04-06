@@ -37,8 +37,6 @@ src = [
     'src/main.cpp'
 ]
 
-# concurrentqueue = dependency('concurrentqueue')
-
 deps = [
     # render backend
     draw,
@@ -48,7 +46,7 @@ deps = [
 
     # cthulhu common deps
     core, os, scan, io, arena, interop, backtrace,
-    notify, config,
+    notify, config, format,
 
     # cthulhu runtime deps
     setup, memory, broker, support, ssa, tree,
@@ -56,8 +54,8 @@ deps = [
     # extra utilities
     json,
 
-    # concurrent queue
-    # concurrentqueue
+    # threading
+    dependency('concurrentqueue')
 ]
 
 executable('gui', src,

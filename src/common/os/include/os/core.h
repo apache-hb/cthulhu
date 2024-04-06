@@ -194,5 +194,5 @@ CT_OS_API const char *os_protect_string(os_protect_t protect);
 
 CT_END_API
 
-CT_ENUM_FLAGS(os_access_t)
-CT_ENUM_FLAGS(os_protect_t)
+CT_ENUM_FLAGS(os_access_t, int)
+CT_ENUM_FLAGS(os_protect_t, int)

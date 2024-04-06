@@ -166,7 +166,7 @@ static bool on_add_language(ap_t *ap, const cfg_field_t *param, const void *valu
 
 int main(int argc, const char **argv)
 {
-    setup_global();
+    setup_default(NULL);
 
     arena_t *arena = ctu_default_alloc();
     broker_t *broker = broker_new(&kFrontendInfo, arena);
@@ -186,30 +186,17 @@ int main(int argc, const char **argv)
         .con = con
     };
 
-    tool_t tool = make_tool(arena);
+    tool_t tool = make_tool(kFrontendInfo.info.version, arena);
 
-    tool_config_t config = {
-        .arena = arena,
-        .io = con,
-
-        .group = tool.config,
-        .version = kFrontendInfo.info.version,
-
-        .argc = argc,
-        .argv = argv,
-    };
-
-    ap_t *ap = ap_new(tool.config, arena);
+    ap_t *ap = tool.options.ap;
 
     ap_event(ap, tool.add_language, on_add_language, &cli);
     ap_event(ap, tool.add_plugin, on_add_plugin, &cli);
     ap_event(ap, tool.add_target, on_add_target, &cli);
 
-    int parse_err = parse_argparse(ap, tool.options, config);
-    if (parse_err == CT_EXIT_SHOULD_EXIT)
-    {
-        return CT_EXIT_OK;
-    }
+    setup_init_t init = setup_parse(argc, argv, tool.options);
+    if (setup_should_exit(&init))
+        return setup_exit_code(&init);
 
     broker_init(broker);
 

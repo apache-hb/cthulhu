@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "setup/setup.h"
+#include "setup/setup2.h"
 #include "setup/memory.h"
 #include "format/colour.h"
 #include "format/notify.h"
@@ -83,7 +83,7 @@ static io_t *make_file(logger_t *reports, const char *path, os_access_t flags, a
 
 int main(int argc, const char **argv)
 {
-    setup_global();
+    setup_default(NULL);
 
     ctu_log_update(true);
     arena_t *arena = ctu_default_alloc();

@@ -137,11 +137,9 @@ static const cfg_choice_t kReportStyleChoices[] = {
     { "complex", eTextComplex },
 };
 
-tool_t make_tool(arena_t *arena)
+tool_t make_tool(version_info_t version, arena_t *arena)
 {
     cfg_group_t *config = config_root(&kConfigInfo, arena);
-
-    default_options_t options = get_default_options(config);
 
     cfg_field_t *add_language_field = config_vector(config, &kLang, NULL);
 
@@ -174,6 +172,8 @@ tool_t make_tool(arena_t *arena)
         .initial = eTextSimple,
     };
     cfg_field_t *report_style_field = config_enum(report_group, &kReportStyle, report_style_options);
+
+    setup_options_t options = setup_options(version, config);
 
     tool_t tool = {
         .config = config,

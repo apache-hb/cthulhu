@@ -300,7 +300,7 @@ static void pretty_panic_handler(source_info_t location, const char *fmt, va_lis
 
     char *msg = str_vformat(arena, fmt, args);
 
-    io_printf(io, "[panic][%s:%zu] => %s: %s\n", location.file, location.line, location.function, msg);
+    io_printf(io, "[panic][%s:%" CT_PRI_LINE "] => %s: %s\n", location.file, location.line, location.function, msg);
 
     print_backtrace(backtrace_config, report);
     os_exit(CT_EXIT_INTERNAL);
@@ -330,7 +330,7 @@ static void default_error_next(bt_address_t frame, void *user)
 
     if (resolve & (eResolveLine | eResolveFile))
     {
-        io_printf(io, "%s (%s:%zu)\n", name.text, path.text, symbol.line);
+        io_printf(io, "%s (%s:%" CT_PRI_LINE ")\n", name.text, path.text, symbol.line);
     }
     else
     {
