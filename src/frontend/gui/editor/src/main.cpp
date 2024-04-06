@@ -21,6 +21,7 @@
 // cthulhu includes
 
 #include "json/json.hpp"
+#include "json/query.h"
 #include "backtrace/backtrace.h"
 #include "setup/setup.h"
 
@@ -546,6 +547,158 @@ static void draw_log_content(logger_t *logger)
 
 static ImGui::FileBrowser gOpenFile { ImGuiFileBrowserFlags_MultipleSelection | ImGuiFileBrowserFlags_ConfirmOnEnter | ImGuiFileBrowserFlags_CloseOnEsc };
 
+static const char *get_kind_name(json_kind_t kind)
+{
+    switch (kind)
+    {
+    case eJsonNull: return "Null";
+    case eJsonBoolean: return "Boolean";
+    case eJsonInteger: return "Integer";
+    case eJsonFloat: return "Float";
+    case eJsonString: return "String";
+    case eJsonArray: return "Array";
+    case eJsonObject: return "Object";
+    default: return "Unknown";
+    }
+}
+
+static void draw_json_number(const ctu::json::Json& value)
+{
+    mpz_t digit;
+    value.as_integer(digit);
+    char buffer[1024];
+    mpz_get_str(buffer, 10, digit);
+    ImGui::TextUnformatted(buffer);
+    mpz_clear(digit);
+}
+
+static const ImGuiTreeNodeFlags kGroupNodeFlags
+    = ImGuiTreeNodeFlags_SpanAllColumns
+    | ImGuiTreeNodeFlags_AllowOverlap;
+
+static const ImGuiTreeNodeFlags kValueNodeFlags
+    = kGroupNodeFlags
+    | ImGuiTreeNodeFlags_Leaf
+    | ImGuiTreeNodeFlags_Bullet
+    | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+
+static void draw_json_item(const std::string& key, const ctu::json::Json& value);
+
+static void draw_json_array(const std::string& key, const ctu::json::Json& value)
+{
+    bool is_open = ImGui::TreeNodeEx(key.c_str(), kGroupNodeFlags, "%s", key.c_str());
+
+    ImGui::TableNextColumn();
+    ImGui::TextUnformatted("Array");
+
+    ImGui::TableNextColumn();
+    if (is_open)
+    {
+        for (size_t i = 0; i < value.length(); i++)
+        {
+            draw_json_item(std::format("[{}]", i).c_str(), value.get(i));
+        }
+        ImGui::TreePop();
+    }
+}
+
+static void draw_json_object(const std::string& key, const ctu::json::Json& object)
+{
+    bool is_open = ImGui::TreeNodeEx(key.c_str(), kGroupNodeFlags, "%s", key.c_str());
+
+    ImGui::TableNextColumn();
+    ImGui::TextUnformatted("Object");
+
+    ImGui::TableNextColumn();
+    if (is_open)
+    {
+        // TODO: make iterators work
+        auto iter = object.as_object().iter();
+        while (iter.has_next())
+        {
+            auto [entry, value] = iter.next();
+            draw_json_item(std::string{entry}, value);
+        }
+        ImGui::TreePop();
+    }
+}
+
+static void draw_json_value(const std::string& key, const ctu::json::Json& value)
+{
+    ImGui::TreeNodeEx(key.c_str(), kValueNodeFlags, "%s", key.c_str());
+
+    ImGui::TableNextColumn();
+    ImGui::TextUnformatted(get_kind_name(value.get_kind()));
+
+    ImGui::TableNextColumn();
+    switch (value.get_kind())
+    {
+    case eJsonNull:
+        ImGui::TextUnformatted("null");
+        break;
+
+    case eJsonBoolean:
+        ImGui::TextUnformatted(value.as_bool() ? "true" : "false");
+        break;
+
+    case eJsonInteger:
+    case eJsonFloat:
+        draw_json_number(value);
+        break;
+
+    case eJsonString: {
+        std::string_view text = value.as_string();
+        ImGui::TextUnformatted(text.data(), text.data() + text.size());
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+static void draw_json_item(const std::string& key, const ctu::json::Json& value)
+{
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
+
+    if (value.is_object())
+    {
+        draw_json_object(key, value);
+    }
+    else if (value.is_array())
+    {
+        draw_json_array(key, value);
+    }
+    else
+    {
+        draw_json_value(key, value);
+    }
+}
+
+static const ImGuiTableFlags kTreeTableFlags
+    = ImGuiTableFlags_BordersV
+    | ImGuiTableFlags_BordersOuterH
+    | ImGuiTableFlags_Resizable
+    | ImGuiTableFlags_RowBg
+    | ImGuiTableFlags_NoHostExtendX
+    | ImGuiTableFlags_NoBordersInBody
+    | ImGuiTableFlags_ScrollY;
+
+static void draw_json(const ctu::json::Json& value)
+{
+    if (ImGui::BeginTable("Document", 3, kTreeTableFlags))
+    {
+        ImGui::TableSetupColumn("Key");
+        ImGui::TableSetupColumn("Type");
+        ImGui::TableSetupColumn("Value");
+        ImGui::TableSetupScrollFreeze(0, 1);
+        ImGui::TableHeadersRow();
+
+        draw_json_item("$", value);
+
+        ImGui::EndTable();
+    }
+}
 struct JsonFile
 {
     std::string path;
@@ -577,155 +730,9 @@ struct JsonFile
         ImGui::TextUnformatted(source.data(), source.data() + source.size());
     }
 
-    static const char *get_kind_name(json_kind_t kind)
-    {
-        switch (kind)
-        {
-        case eJsonNull: return "Null";
-        case eJsonBoolean: return "Boolean";
-        case eJsonInteger: return "Integer";
-        case eJsonFloat: return "Float";
-        case eJsonString: return "String";
-        case eJsonArray: return "Array";
-        case eJsonObject: return "Object";
-        default: return "Unknown";
-        }
-    }
-
-    static void draw_json_number(const ctu::json::Json& value)
-    {
-        mpz_t digit;
-        value.as_integer(digit);
-        char buffer[1024];
-        mpz_get_str(buffer, 10, digit);
-        ImGui::TextUnformatted(buffer);
-        mpz_clear(digit);
-    }
-
-    static const ImGuiTreeNodeFlags kGroupNodeFlags
-        = ImGuiTreeNodeFlags_SpanAllColumns
-        | ImGuiTreeNodeFlags_AllowOverlap;
-
-    static const ImGuiTreeNodeFlags kValueNodeFlags
-        = kGroupNodeFlags
-        | ImGuiTreeNodeFlags_Leaf
-        | ImGuiTreeNodeFlags_Bullet
-        | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-
-    static void draw_json_array(const std::string& key, const ctu::json::Json& value)
-    {
-        bool is_open = ImGui::TreeNodeEx(key.c_str(), kGroupNodeFlags, "%s", key.c_str());
-
-        ImGui::TableNextColumn();
-        ImGui::TextUnformatted("Array");
-
-        ImGui::TableNextColumn();
-        if (is_open)
-        {
-            for (size_t i = 0; i < value.length(); i++)
-            {
-                draw_json_item(std::format("[{}]", i).c_str(), value.get(i));
-            }
-            ImGui::TreePop();
-        }
-    }
-
-    static void draw_json_object(const std::string& key, const ctu::json::Json& object)
-    {
-        bool is_open = ImGui::TreeNodeEx(key.c_str(), kGroupNodeFlags, "%s", key.c_str());
-
-        ImGui::TableNextColumn();
-        ImGui::TextUnformatted("Object");
-
-        ImGui::TableNextColumn();
-        if (is_open)
-        {
-            // TODO: make iterators work
-            auto iter = object.as_object().iter();
-            while (iter.has_next())
-            {
-                auto [entry, value] = iter.next();
-                draw_json_item(std::string{entry}, value);
-            }
-            ImGui::TreePop();
-        }
-    }
-
-    static void draw_json_value(const std::string& key, const ctu::json::Json& value)
-    {
-        ImGui::TreeNodeEx(key.c_str(), kValueNodeFlags, "%s", key.c_str());
-
-        ImGui::TableNextColumn();
-        ImGui::TextUnformatted(get_kind_name(value.get_kind()));
-
-        ImGui::TableNextColumn();
-        switch (value.get_kind())
-        {
-        case eJsonNull:
-            ImGui::TextUnformatted("null");
-            break;
-
-        case eJsonBoolean:
-            ImGui::TextUnformatted(value.as_bool() ? "true" : "false");
-            break;
-
-        case eJsonInteger:
-        case eJsonFloat:
-            draw_json_number(value);
-            break;
-
-        case eJsonString: {
-            std::string_view text = value.as_string();
-            ImGui::TextUnformatted(text.data(), text.data() + text.size());
-            break;
-        }
-        default:
-            break;
-        }
-    }
-
-    static void draw_json_item(const std::string& key, const ctu::json::Json& value)
-    {
-        ImGui::TableNextRow();
-        ImGui::TableNextColumn();
-
-        if (value.is_object())
-        {
-            draw_json_object(key, value);
-        }
-        else if (value.is_array())
-        {
-            draw_json_array(key, value);
-        }
-        else
-        {
-            draw_json_value(key, value);
-        }
-    }
-
-    static const ImGuiTableFlags kTreeTableFlags
-        = ImGuiTableFlags_BordersV
-        | ImGuiTableFlags_BordersOuterH
-        | ImGuiTableFlags_Resizable
-        | ImGuiTableFlags_RowBg
-        | ImGuiTableFlags_NoHostExtendX
-        | ImGuiTableFlags_NoBordersInBody
-        | ImGuiTableFlags_ScrollY;
-
     void draw_json_document()
     {
-        if (ImGui::BeginTable("Document", 3, kTreeTableFlags))
-        {
-            ImGui::TableSetupColumn("Key");
-            ImGui::TableSetupColumn("Type");
-            ImGui::TableSetupColumn("Value");
-            ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableHeadersRow();
-
-            draw_json_item("$", value);
-
-            ImGui::EndTable();
-        }
+        draw_json(value);
     }
 
     void draw_content()
@@ -766,15 +773,79 @@ struct JsonEditor
     bool visible = false;
     std::vector<JsonFile> documents;
 
-    JsonEditor() { }
+    struct {
+        bool visible;
+        std::string query = "$";
+        JsonFile *document = nullptr;
+        ctu::json::Json result;
 
-    void draw_window()
+        logger_t *logger;
+    } query;
+
+    JsonEditor() {
+        query.logger = logger_new(arena.get_arena());
+    }
+
+    void draw_query_window()
     {
-        if (!visible)
-            return;
-
-        if (ImGui::Begin("JSON Editor", &visible))
+        if (ImGui::Begin("JSON Query", &query.visible))
         {
+            auto *doc = query.document;
+            if (doc == nullptr)
+            {
+                ImGui::TextDisabled("No document selected");
+                ImGui::End();
+                return;
+            }
+
+            ImGui::InputTextMultiline("Query", &query.query);
+            if (ImGui::Button("Execute"))
+            {
+                query.result = json_query(doc->value.get_ast(), query.query.c_str(), query.logger, arena.get_arena());
+            }
+
+            if (!query.result.is_valid())
+            {
+                ImGui::TextUnformatted("Failed to execute query");
+                draw_log_content(query.logger);
+            }
+            else
+            {
+                ImGui::TextUnformatted("Query Result");
+                draw_json(query.result);
+            }
+        }
+        ImGui::End();
+    }
+
+    void draw_json_window()
+    {
+        if (ImGui::Begin("JSON Viewer", &visible, ImGuiWindowFlags_MenuBar))
+        {
+            if (ImGui::BeginMenuBar())
+            {
+                if (ImGui::BeginMenu("File"))
+                {
+                    if (ImGui::MenuItem("Open File"))
+                    {
+                        gOpenFile.Open();
+                    }
+
+                    ImGui::EndMenu();
+                }
+
+                if (ImGui::BeginMenu("Query"))
+                {
+                    if (ImGui::MenuItem("New Query"))
+                    {
+                        query.visible = true;
+                    }
+
+                    ImGui::EndMenu();
+                }
+                ImGui::EndMenuBar();
+            }
+
             if (ImGui::BeginTabBar("JsonTabs"))
             {
                 if (ImGui::BeginTabItem("Logs"))
@@ -787,6 +858,7 @@ struct JsonEditor
                 {
                     if (ImGui::BeginTabItem(doc.basename.c_str()))
                     {
+                        query.document = &doc;
                         doc.draw_content();
                         ImGui::EndTabItem();
                     }
@@ -794,7 +866,19 @@ struct JsonEditor
                 ImGui::EndTabBar();
             }
         }
+
         ImGui::End();
+    }
+
+    void draw_window()
+    {
+        if (!visible)
+            return;
+
+        draw_json_window();
+
+        if (query.visible)
+            draw_query_window();
     }
 
     void add(const fs::path &path)

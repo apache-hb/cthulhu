@@ -124,11 +124,11 @@ namespace ctu::json {
 
         json_t *m_ast;
 
+    public:
         constexpr Json(json_t *ast)
             : m_ast(ast)
         { }
 
-    public:
         constexpr Json()
             : m_ast(nullptr)
         { }
@@ -255,6 +255,11 @@ namespace ctu::json {
         ///
         /// @return the value at @p index
         Json get(size_t index) const;
+
+        /// @brief get the underlying ast node
+        ///
+        /// @return the ast node
+        json_t *get_ast() const { return m_ast; }
 
         /// @brief get a value from an object by key
         /// same as get(const char*)

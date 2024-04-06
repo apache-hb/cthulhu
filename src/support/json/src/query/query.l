@@ -29,7 +29,7 @@ ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 [-]?"0"[xX][0-9a-fA-F]+ { query_parse_integer(yylval->integer, yyextra, *yylloc, yytext + 2, 16); return INTEGER; }
 [-]?[0-9]+ { query_parse_integer(yylval->integer, yyextra, *yylloc, yytext, 10); return INTEGER; }
 
-[a-zA-Z_][a-zA-Z0-9_]* { query_parse_string(&yylval->string, yyextra, *yylloc, yytext, yyleng); return IDENT; }
+[a-zA-Z_$][a-zA-Z0-9_$]* { query_parse_string(&yylval->string, yyextra, *yylloc, yytext, yyleng); return IDENT; }
 \"([^"\\\n]|{ESCAPES})*\" { query_parse_string(&yylval->string, yyextra, *yylloc, yytext + 1, yyleng - 2); return STRING; }
 
 . {

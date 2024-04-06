@@ -22,8 +22,8 @@ struct AllocInfo
 class TraceArena final : public IArena
 {
 public:
-    using AllocMap = std::unordered_map<const void*, AllocInfo>;
-    using AllocTree = std::unordered_map<const void*, std::vector<const void*>>;
+    using AllocMap = std::map<const void*, AllocInfo>;
+    using AllocTree = std::map<const void*, std::vector<const void*>>;
     using AllocMapIter = AllocMap::iterator;
 
     // IArena

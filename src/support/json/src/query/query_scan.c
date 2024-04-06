@@ -16,7 +16,8 @@ void query_parse_integer(mpz_t integer, scan_t *scan, where_t where, const char 
     if (result != 0)
     {
         query_scan_t *ctx = query_scan_context(scan);
-        msg_notify(ctx->reports, &kEvent_InvalidIntegerLiteral, node_new(scan, where), "invalid integer literal");
+        node_t node = node_make(scan, where);
+        msg_notify(ctx->reports, &kEvent_InvalidIntegerLiteral, &node, "invalid integer literal");
     }
 }
 
@@ -24,7 +25,8 @@ void query_parse_string(text_t *string, scan_t *scan, where_t where, const char 
 {
     query_scan_t *ctx = query_scan_context(scan);
     arena_t *arena = scan_get_arena(scan);
-    *string = util_text_escape(ctx->reports, node_new(scan, where), text, length, arena);
+    node_t node = node_make(scan, where);
+    *string = util_text_escape(ctx->reports, &node, text, length, arena);
 }
 
 void queryerror(where_t *where, void *state, scan_t *scan, const char *msg)
@@ -33,5 +35,6 @@ void queryerror(where_t *where, void *state, scan_t *scan, const char *msg)
 
     query_scan_t *ctx = query_scan_context(scan);
 
-    evt_scan_error(ctx->reports, node_new(scan, *where), msg);
+    node_t node = node_make(scan, *where);
+    evt_scan_error(ctx->reports, &node, msg);
 }

@@ -154,7 +154,7 @@ void TraceArena::update_parent(const void *ptr, const void *new_parent)
     allocs[ptr].parent = new_parent;
 
     // try and figure out if this points into an existing allocation
-    auto it = allocs.find(new_parent);
+    auto it = allocs.upper_bound(new_parent);
     if (it == allocs.end() || it == allocs.begin())
     {
         // this is a new parent
@@ -162,19 +162,36 @@ void TraceArena::update_parent(const void *ptr, const void *new_parent)
     }
     else
     {
-        --it;
-        // this may be a child
-        const uint8_t *possible_parent = reinterpret_cast<const uint8_t*>(it->first);
-        AllocInfo parent_info = it->second;
-        if (possible_parent <= new_parent && possible_parent + parent_info.size.as_bytes() >= new_parent)
+        // find the best fit, this is the smallest parent that contains the new parent
+        const uint8_t *best = nullptr;
+        size_t smallest = SIZE_MAX;
+        while (it != allocs.begin())
         {
-            // this is a child
-            tree[possible_parent].push_back(ptr);
+            --it;
+
+            const uint8_t *value = reinterpret_cast<const uint8_t*>(it->first);
+            const AllocInfo& parent_info = it->second;
+
+            if (value <= new_parent && value + parent_info.size.as_bytes() >= new_parent)
+            {
+                size_t size = parent_info.size.as_bytes();
+                if (size < smallest)
+                {
+                    best = value;
+                    smallest = size;
+                }
+            }
         }
-        else
+
+        if (best == nullptr)
         {
             // this is a new parent
             tree[new_parent].push_back(ptr);
+        }
+        else
+        {
+            // this is a child
+            tree[best].push_back(ptr);
         }
     }
 }

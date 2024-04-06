@@ -20,6 +20,9 @@ query_ast_t *query_ast_object(scan_t *scan, text_t name)
 {
     query_ast_t *ast = query_ast_new(scan, eQueryObject);
     ast->name = name;
+
+    ARENA_IDENTIFY(ast->name.text, "name", ast, scan_get_arena(scan));
+
     return ast;
 }
 
@@ -28,6 +31,10 @@ query_ast_t *query_ast_field(scan_t *scan, query_ast_t *object, text_t field)
     query_ast_t *ast = query_ast_new(scan, eQueryField);
     ast->object = object;
     ast->field = field;
+
+    ARENA_IDENTIFY(ast->object, "object", ast, scan_get_arena(scan));
+    ARENA_IDENTIFY(ast->field.text, "field", ast, scan_get_arena(scan));
+
     return ast;
 }
 
@@ -44,5 +51,9 @@ query_ast_t *query_ast_map(scan_t *scan, query_ast_t *object, text_t field)
     query_ast_t *ast = query_ast_new(scan, eQueryMap);
     ast->object = object;
     ast->field = field;
+
+    ARENA_IDENTIFY(ast->object, "object", ast, scan_get_arena(scan));
+    ARENA_IDENTIFY(ast->field.text, "field", ast, scan_get_arena(scan));
+
     return ast;
 }

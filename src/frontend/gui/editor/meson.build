@@ -1,10 +1,8 @@
 headers = [
     'include/editor/panels/arena.hpp',
     'include/editor/panels/info.hpp',
-    'include/editor/panels/json.hpp',
     'include/editor/panels/panel.hpp',
     'include/editor/panels/sources.hpp',
-    'include/editor/panels/theme.hpp',
 
     'include/editor/utils/io.hpp',
     'include/editor/utils/utils.hpp',
@@ -28,9 +26,6 @@ src = [
     'src/panels/sources.cpp',
     'src/panels/info.cpp',
     'src/panels/arena.cpp',
-    'src/panels/demo.cpp',
-    'src/panels/theme.cpp',
-    'src/panels/json.cpp',
 
     'src/utils/io.cpp',
 

@@ -93,12 +93,6 @@ json_t *json_query(json_t *json, const char *query, logger_t *logger, arena_t *a
 
     if (result.result != eParseOk)
     {
-        typevec_t *messages = logger_get_events(logger);
-        for (size_t i = 0; i < typevec_len(messages); i++)
-        {
-            event_t *event = typevec_offset(messages, i);
-            printf("error: %s\n", event->message);
-        }
         return NULL;
     }
 
