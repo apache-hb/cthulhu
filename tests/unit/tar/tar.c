@@ -1,5 +1,6 @@
-#include "tar/tar.h"
 #include "ct-test.h"
+
+#include "tar/tar.h"
 
 #include "fs/fs.h"
 #include "io/io.h"

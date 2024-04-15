@@ -22,7 +22,7 @@ CT_BEGIN_API
 typedef struct bitset_t
 {
     /// @brief the number of bytes in @a data
-    FIELD_RANGE(>, 0) size_t words;
+    FIELD_RANGE(0, SIZE_MAX) size_t words;
 
     /// @brief the data for the bitset
     FIELD_SIZE(words) void *data;

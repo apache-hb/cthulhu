@@ -422,33 +422,38 @@ static size_t normstr(char *out, char c)
 }
 
 USE_DECL
-char *str_normalize(const char *input, arena_t *arena)
+char *str_normalize(const char *str, arena_t *arena)
 {
-    CTASSERT(input != NULL);
+    CTASSERT(str != NULL);
     CTASSERT(arena != NULL);
 
     size_t input_length = 0;
     size_t result_length = 0;
-    const char *length_iter = input;
-    while (*length_iter != '\0')
+
+    // compute the length of both the input string
+    // and the required length to allocate for the normalized string
     {
-        size_t inc = normlen(*length_iter++);
-        result_length += inc;
-        input_length += 1;
+        const char *iter = str;
+        while (*iter != '\0')
+        {
+            size_t inc = normlen(*iter++);
+            result_length += inc;
+            input_length += 1;
+        }
     }
 
     // if the string is already normalized, just return a copy
     if (input_length == result_length)
     {
-        return arena_strndup(input, input_length, arena);
+        return arena_strndup(str, input_length, arena);
     }
 
-    const char *repl_iter = input;
-    char *buf = ARENA_MALLOC(result_length + 1, "str_normalize", input, arena);
+    const char *iter = str;
+    char *buf = ARENA_MALLOC(result_length + 1, "str_normalize", str, arena);
     char *result = buf;
-    while (*repl_iter != '\0')
+    while (*iter != '\0')
     {
-        result += normstr(result, *repl_iter++);
+        result += normstr(result, *iter++);
     }
     *result = '\0';
 
@@ -495,7 +500,7 @@ vector_t *str_split(IN_STRING const char *str, IN_STRING const char *sep, arena_
     CTASSERT(sep != NULL);
     CTASSERT(arena != NULL);
 
-    if (ctu_strlen(sep) == 0)
+    if (ctu_string_empty(sep))
     {
         // split into individual characters
         vector_t *result = vector_new(ctu_strlen(str), arena);
@@ -554,7 +559,7 @@ char *str_replace(const char *str, const char *search, const char *repl, arena_t
     CTASSERT(search != NULL);
     CTASSERT(repl != NULL);
 
-    if (ctu_strlen(search) == 0)
+    if (ctu_string_empty(search))
     {
         return arena_strdup(str, arena);
     }

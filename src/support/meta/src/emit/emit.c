@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-#include "core/macros.h"
 #include "meta/meta.h"
 #include "common.h"
 
 #include "io/io.h"
 #include "base/panic.h"
 
-void emit_init(meta_emit_t *emit, io_t *io, unsigned indent)
+void emit_init(meta_emit_t *emit, io_t *io, int indent)
 {
     emit->io = io;
     emit->indent = indent;
     emit->depth = 0;
 }
 
-meta_emit_t emit_make(io_t *io, unsigned indent)
+meta_emit_t emit_make(io_t *io, int indent)
 {
     meta_emit_t emit;
     emit_init(&emit, io, indent);
@@ -29,9 +28,8 @@ void emit_comment(meta_emit_t *emit, const char *comment)
 
 static void emit_line_indent(meta_emit_t *emit)
 {
-    for (unsigned i = 0; i < emit->depth; i++) {
+    for (int i = 0; i < emit->depth; i++)
         io_printf(emit->io, " ");
-    }
 }
 
 void emit_printf(meta_emit_t *emit, const char *fmt, ...)

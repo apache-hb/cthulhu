@@ -79,6 +79,18 @@ CT_BASE_API char *ctu_strcpy(OUT_WRITES(size) char *dst, IN_STRING const char *s
 CT_NODISCARD CT_PUREFN
 CT_BASE_API size_t ctu_strlen(IN_STRING const char *str);
 
+/// @brief check if a string is empty
+/// equivalent to strlen(str) == 0
+///
+/// @pre @p str must not be null
+///
+/// @param str the string
+///
+/// @retval true if the string is empty
+/// @retval false otherwise
+CT_NODISCARD CT_PUREFN
+CT_BASE_API bool ctu_string_empty(IN_STRING const char *str);
+
 /// @brief compare two strings
 /// equivalent to strncmp but with safety checks
 ///

@@ -8,6 +8,7 @@ config_cdata.set('CTU_MINOR', parts[1].to_int())
 config_cdata.set('CTU_PATCH', parts[2].to_int())
 
 config_cdata.set10('CTU_DEBUG', is_debug)
+config_cdata.set10('CTU_ASSERTS', opt_asserts.allowed())
 config_cdata.set10('CTU_PARANOID', opt_paranoid.allowed())
 
 if default_library == 'shared'
@@ -15,11 +16,6 @@ if default_library == 'shared'
 else
     config_cdata.set('CTU_BUILDTYPE', 'CT_BUILDTYPE_STATIC')
 endif
-
-# we use `__attribute__((const|pure))` heavily, but during unit tests we
-# violate function preconditions to test assertions.
-# msvc and clang dont mind, but gcc does. so we disable the attributes for gcc
-config_cdata.set10('CTU_DISABLE_FN_PURITY', unit_tests.allowed() and cc.get_id() == 'gcc')
 
 config_cdata.set10('CTU_TRACE_MEMORY', trace_memory.allowed())
 config_cdata.set10('CTU_STB_SPRINTF', opt_stb_sprintf.allowed())

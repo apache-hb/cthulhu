@@ -90,7 +90,7 @@ CT_NORETURN CT_BASE_API ctu_vpanic(source_info_t location, CT_FMT_STRING const c
 /// @param expr the condition to assert
 /// @param ... the format string and optional arguments to format
 
-#if CTU_DEBUG
+#if CTU_ASSERTS
 #   define CTASSERTF(expr, ...) CTASSERTF_ALWAYS(expr, __VA_ARGS__)
 #else
 #   define CTASSERTF(expr, ...) CT_ASSUME(expr)

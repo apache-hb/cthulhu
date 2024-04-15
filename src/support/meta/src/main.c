@@ -44,7 +44,7 @@ static const cfg_info_t kRootInfo = {
     .brief = "meta code generation tool",
 };
 
-static const cfg_arg_t kHeaderOutputArgs[] = { ARG_LONG("header") };
+static const cfg_arg_t kHeaderOutputArgs[] = { CT_ARG_LONG("header") };
 
 static const cfg_info_t kHeaderOutputInfo = {
     .name = "header",
@@ -52,7 +52,7 @@ static const cfg_info_t kHeaderOutputInfo = {
     .args = CT_ARGS(kHeaderOutputArgs),
 };
 
-static const cfg_arg_t kSourceOutputArgs[] = { ARG_LONG("source"), ARG_SHORT("s") };
+static const cfg_arg_t kSourceOutputArgs[] = { CT_ARG_LONG("source"), CT_ARG_SHORT("s") };
 
 static const cfg_info_t kSourceOutputInfo = {
     .name = "source",

@@ -1,5 +1,16 @@
 #pragma once
 
+// put at the top of this header to ensure test files dont see
+// purity definitions. this is because we violate preconditions
+// to test the panic handler. and if clang/gcc can figure out
+// that a "pure" function will panic, it will optimize out the
+// call to the panic handler
+#define CT_DISABLE_FN_PURITY 1
+
+#ifdef CTU_MAJOR
+#   error "this header must be included before any other headers"
+#endif
+
 #include <ctu_unit_api.h>
 
 #include "base/panic.h"

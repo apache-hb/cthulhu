@@ -36,6 +36,7 @@ if default_library == 'both'
     error('cthulhu does not support building both static and shared libraries in a single build')
 endif
 
+opt_asserts = get_option('asserts').disable_auto_if(is_release)
 opt_paranoid = get_option('paranoid').disable_auto_if(is_release)
 opt_analyze = get_option('analyze').disable_auto_if(meson.is_subproject())
 trace_time = get_option('trace_time').disable_auto_if(meson.is_subproject())

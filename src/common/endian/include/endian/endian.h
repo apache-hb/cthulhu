@@ -78,7 +78,7 @@ CT_ENDIAN_API uint64_t endian_swap64(uint64_t value);
 ///
 /// @return the converted value
 CT_NODISCARD CT_CONSTFN
-CT_ENDIAN_API uint16_t native_order16(uint16_t value, IN_RANGE(<, eEndianCount) endian_t order);
+CT_ENDIAN_API uint16_t native_order16(uint16_t value, IN_DOMAIN(<, eEndianCount) endian_t order);
 
 /// @brief convert a 32-bit value of a given endianess to the native endianess
 ///
@@ -87,7 +87,7 @@ CT_ENDIAN_API uint16_t native_order16(uint16_t value, IN_RANGE(<, eEndianCount) 
 ///
 /// @return the converted value
 CT_NODISCARD CT_CONSTFN
-CT_ENDIAN_API uint32_t native_order32(uint32_t value, IN_RANGE(<, eEndianCount) endian_t order);
+CT_ENDIAN_API uint32_t native_order32(uint32_t value, IN_DOMAIN(<, eEndianCount) endian_t order);
 
 /// @brief convert a 64-bit value of a given endianess to the native endianess
 ///
@@ -96,7 +96,7 @@ CT_ENDIAN_API uint32_t native_order32(uint32_t value, IN_RANGE(<, eEndianCount) 
 ///
 /// @return the converted value
 CT_NODISCARD CT_CONSTFN
-CT_ENDIAN_API uint64_t native_order64(uint64_t value, IN_RANGE(<, eEndianCount) endian_t order);
+CT_ENDIAN_API uint64_t native_order64(uint64_t value, IN_DOMAIN(<, eEndianCount) endian_t order);
 
 /// @}
 

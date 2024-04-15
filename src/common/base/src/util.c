@@ -74,6 +74,14 @@ size_t ctu_strlen(const char *str)
 }
 
 USE_DECL
+bool ctu_string_empty(const char *str)
+{
+    CTASSERT(str != NULL);
+
+    return *str == '\0';
+}
+
+USE_DECL
 int ctu_strncmp(const char *lhs, const char *rhs, size_t length)
 {
     CTASSERT(lhs != NULL);

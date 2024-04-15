@@ -236,9 +236,9 @@ struct MemoryEditor
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 
         // We are not really using the clipper API correctly here, because we rely on visible_start_addr/visible_end_addr for our scrolling function.
-        const int line_total_count = (int)((mem_size + Cols - 1) / Cols);
+        const int ctu_line_total_count = (int)((mem_size + Cols - 1) / Cols);
         ImGuiListClipper clipper;
-        clipper.Begin(line_total_count, s.LineHeight);
+        clipper.Begin(ctu_line_total_count, s.LineHeight);
 
         bool data_next = false;
 

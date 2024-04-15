@@ -40,7 +40,7 @@ static const cfg_choice_t kArgChoices[] = {
     {"three", eOptionThree},
 };
 
-static const cfg_arg_t kEnumInfoArgs[] = {ARG_SHORT("e"), ARG_LONG("enum")};
+static const cfg_arg_t kEnumInfoArgs[] = {CT_ARG_SHORT("e"), CT_ARG_LONG("enum")};
 
 static const cfg_info_t kEnumInfo = {
     .name = "enum",
@@ -61,7 +61,7 @@ static const cfg_choice_t kFlagChoices[] = {
     {"three", eFlagThree},
 };
 
-static const cfg_arg_t kFlagInfoArgs[] = {ARG_SHORT("f"), ARG_LONG("flag")};
+static const cfg_arg_t kFlagInfoArgs[] = {CT_ARG_SHORT("f"), CT_ARG_LONG("flag")};
 
 static const cfg_info_t kFlagInfo = {
     .name = "flag",

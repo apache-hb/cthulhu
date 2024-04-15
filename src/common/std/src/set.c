@@ -19,7 +19,7 @@ typedef struct set_t
 {
     arena_t *arena; ///< the arena this set is allocated in
     hash_info_t info;
-    FIELD_RANGE(>, 0) size_t size;   ///< the number of buckets
+    FIELD_RANGE(0, SIZE_MAX) size_t size;   ///< the number of buckets
     FIELD_SIZE(size) item_t *items; ///< the buckets
 } set_t;
 

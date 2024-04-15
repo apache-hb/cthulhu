@@ -84,14 +84,14 @@ static const char *const kFormatBuiltinHeading[eHeadingCount] = {
     [eHeadingMicrosoft] = SCAN_BUILTIN_NAME "(%" PRI_LINE ")",
 };
 
-static line_t calc_line_number(bool zero_indexed_lines, line_t line)
+static ctu_line_t calc_line_number(bool zero_indexed_lines, ctu_line_t line)
 {
     if (zero_indexed_lines) return line;
 
     return line + 1;
 }
 
-static char *fmt_any_location(source_config_t config, const char *path, line_t line, column_t column)
+static char *fmt_any_location(source_config_t config, const char *path, ctu_line_t line, ctu_column_t column)
 {
     if (path == NULL)
     {
@@ -123,7 +123,7 @@ format_context_t format_context_make(print_options_t options)
 
 char *fmt_source_location(source_config_t config, const char *path, where_t where)
 {
-    line_t first_line = calc_line_number(config.zero_indexed_lines, where.first_line);
+    ctu_line_t first_line = calc_line_number(config.zero_indexed_lines, where.first_line);
 
     return fmt_any_location(config, path, first_line, where.first_column);
 }

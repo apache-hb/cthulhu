@@ -50,9 +50,9 @@ typedef struct cfg_arg_t
 // long args are discarded on windows
 // dos args are discarded on unix
 
-#define ARG_SHORT(name) { .style = eArgShort, .arg = (name) }
-#define ARG_LONG(name) { .style = eArgLong, .arg = (name) }
-#define ARG_DOS(name) { .style = eArgDOS, .arg = (name) }
+#define CT_ARG_SHORT(name) { .style = eArgShort, .arg = (name) }
+#define CT_ARG_LONG(name) { .style = eArgLong, .arg = (name) }
+#define CT_ARG_DOS(name) { .style = eArgDOS, .arg = (name) }
 #define CT_ARGS(it) { .args = (it), .count = sizeof(it) / sizeof(cfg_arg_t) }
 
 typedef struct cfg_arg_array_t
@@ -80,17 +80,15 @@ typedef struct cfg_info_t
 typedef struct cfg_int_t
 {
     /// @brief default value
-    FIELD_RANGE(>, min)
-    FIELD_RANGE(<, max)
-    int initial;
+    FIELD_RANGE(min, max) int initial;
 
     /// @brief minimum value
     /// @note if min == INT_MIN, there is no minimum
-    FIELD_RANGE(<, max) int min;
+    FIELD_RANGE(INT_MIN, max) int min;
 
     /// @brief maximum value
     /// @note if max == INT_MAX, there is no maximum
-    FIELD_RANGE(>, min) int max;
+    FIELD_RANGE(min, INT_MAX) int max;
 } cfg_int_t;
 
 /// @brief a choice in a set of options
@@ -291,7 +289,7 @@ CT_CONFIG_API const cfg_flags_t *cfg_flags_info(IN_NOTNULL const cfg_field_t *fi
 ///
 /// @return the name of @p type
 CT_CONSTFN RET_NOTNULL
-CT_CONFIG_API const char *cfg_type_string(IN_RANGE(<, eConfigCount) cfg_type_t type);
+CT_CONFIG_API const char *cfg_type_string(IN_DOMAIN(<, eConfigCount) cfg_type_t type);
 
 /// @brief get the name of an argument style
 ///
@@ -299,7 +297,7 @@ CT_CONFIG_API const char *cfg_type_string(IN_RANGE(<, eConfigCount) cfg_type_t t
 ///
 /// @return the name of @p style
 CT_CONSTFN RET_NOTNULL
-CT_CONFIG_API const char *cfg_arg_string(IN_RANGE(<, eArgCount) arg_style_t style);
+CT_CONFIG_API const char *cfg_arg_string(IN_DOMAIN(<, eArgCount) arg_style_t style);
 
 /// @brief get the prefix for an argument style
 ///
@@ -307,7 +305,7 @@ CT_CONFIG_API const char *cfg_arg_string(IN_RANGE(<, eArgCount) arg_style_t styl
 ///
 /// @return the prefix for @p style
 CT_CONSTFN RET_NOTNULL
-CT_CONFIG_API const char *cfg_arg_prefix(IN_RANGE(<, eArgCount) arg_style_t style);
+CT_CONFIG_API const char *cfg_arg_prefix(IN_DOMAIN(<, eArgCount) arg_style_t style);
 
 /// @brief get all subgroups in a configuration group
 ///

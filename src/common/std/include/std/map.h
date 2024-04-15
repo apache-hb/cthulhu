@@ -61,7 +61,7 @@ extern const map_t kEmptyMap;
 /// @param size the initial size of the map
 /// @param info the type info for the key type
 /// @param arena the arena to allocate from
-CT_STD_API void map_init(OUT_NOTNULL map_t *map, IN_RANGE(>, 0) size_t size, hash_info_t info, IN_NOTNULL arena_t *arena);
+CT_STD_API void map_init(OUT_NOTNULL map_t *map, IN_DOMAIN(>, 0) size_t size, hash_info_t info, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new map on the stack
 ///
@@ -71,7 +71,7 @@ CT_STD_API void map_init(OUT_NOTNULL map_t *map, IN_RANGE(>, 0) size_t size, has
 ///
 /// @return the new map
 CT_NODISCARD
-CT_STD_API map_t map_make(IN_RANGE(>, 0) size_t size, hash_info_t info, IN_NOTNULL arena_t *arena);
+CT_STD_API map_t map_make(IN_DOMAIN(>, 0) size_t size, hash_info_t info, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new map on the heap
 ///
@@ -81,7 +81,7 @@ CT_STD_API map_t map_make(IN_RANGE(>, 0) size_t size, hash_info_t info, IN_NOTNU
 ///
 /// @return the new map
 CT_NODISCARD
-CT_STD_API map_t *map_new(IN_RANGE(>, 0) size_t size, hash_info_t info, IN_NOTNULL arena_t *arena);
+CT_STD_API map_t *map_new(IN_DOMAIN(>, 0) size_t size, hash_info_t info, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new map with an optimal size
 ///
@@ -91,7 +91,7 @@ CT_STD_API map_t *map_new(IN_RANGE(>, 0) size_t size, hash_info_t info, IN_NOTNU
 ///
 /// @return the new map
 CT_NODISCARD
-CT_STD_API map_t *map_optimal(IN_RANGE(>, 0) size_t size, hash_info_t info, IN_NOTNULL arena_t *arena);
+CT_STD_API map_t *map_optimal(IN_DOMAIN(>, 0) size_t size, hash_info_t info, IN_NOTNULL arena_t *arena);
 
 /// @brief set a key-value pair in a map
 /// @pre @p key is not NULL

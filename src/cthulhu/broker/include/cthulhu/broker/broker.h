@@ -130,7 +130,7 @@ typedef struct language_builtins_t
     FIELD_SIZE(length) const char * const *names;
 
     /// @brief size of decls
-    FIELD_RANGE(>=, eSemaTotal) size_t length;
+    FIELD_RANGE(eSemaTotal, SIZE_MAX) size_t length;
 } language_info_t;
 
 /// @brief convert a tree node to a string
@@ -354,10 +354,10 @@ CT_BROKER_API void target_emit_ssa(IN_NOTNULL target_runtime_t *runtime, IN_NOTN
 /// extra stuff
 
 RET_NOTNULL
-CT_BROKER_API const char *broker_pass_name(IN_RANGE(<, ePassCount) broker_pass_t pass);
+CT_BROKER_API const char *broker_pass_name(IN_DOMAIN(<, ePassCount) broker_pass_t pass);
 
 CT_CONSTFN
-CT_BROKER_API const char *file_layout_name(IN_RANGE(<, eFileLayoutCount) file_layout_t layout);
+CT_BROKER_API const char *file_layout_name(IN_DOMAIN(<, eFileLayoutCount) file_layout_t layout);
 
 /// @}
 

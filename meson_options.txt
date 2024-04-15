@@ -74,6 +74,11 @@ option('trace_memory', type : 'feature',
     value : 'auto'
 )
 
+option('asserts', type : 'feature',
+    description : 'enable assertions, enabled by default in debug builds',
+    value : 'auto'
+)
+
 option('paranoid', type : 'feature',
     description : 'enable paranoid assertions',
     value : 'auto'

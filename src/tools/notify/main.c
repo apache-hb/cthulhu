@@ -44,7 +44,7 @@ static const cfg_info_t kToolInfo = {
     .brief = "Notification testing options",
 };
 
-static const cfg_arg_t kBacktraceArgs[] = { ARG_SHORT("bt"), ARG_LONG("backtrace") };
+static const cfg_arg_t kBacktraceArgs[] = { CT_ARG_SHORT("bt"), CT_ARG_LONG("backtrace") };
 
 static const cfg_info_t kBacktraceInfo = {
     .name = "backtrace",
@@ -59,7 +59,7 @@ static const cfg_choice_t kNotifyOptions[] = {
 };
 #define NOTIFY_OPTION_COUNT (sizeof(kNotifyOptions) / sizeof(cfg_choice_t))
 
-static const cfg_arg_t kNotifyArgs[] = { ARG_SHORT("n"), ARG_LONG("notify") };
+static const cfg_arg_t kNotifyArgs[] = { CT_ARG_SHORT("n"), CT_ARG_LONG("notify") };
 
 static const cfg_info_t kNotifyInfo = {
     .name = "notify",
@@ -73,7 +73,7 @@ static const cfg_choice_t kHeadingOptions[] = {
 };
 #define HEADING_OPTION_COUNT (sizeof(kHeadingOptions) / sizeof(cfg_choice_t))
 
-static const cfg_arg_t kHeadingArgs[] = { ARG_LONG("heading") };
+static const cfg_arg_t kHeadingArgs[] = { CT_ARG_LONG("heading") };
 
 static const cfg_info_t kHeadingInfo = {
     .name = "heading",
@@ -81,7 +81,7 @@ static const cfg_info_t kHeadingInfo = {
     .args = CT_ARGS(kHeadingArgs),
 };
 
-static const cfg_arg_t kZeroIndexedArgs[] = { ARG_SHORT("zi"), ARG_LONG("zero-indexed") };
+static const cfg_arg_t kZeroIndexedArgs[] = { CT_ARG_SHORT("zi"), CT_ARG_LONG("zero-indexed") };
 
 static const cfg_info_t kZeroIndexedInfo = {
     .name = "zero_indexed",

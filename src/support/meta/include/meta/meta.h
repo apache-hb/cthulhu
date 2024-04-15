@@ -2,10 +2,29 @@
 #pragma once
 
 #include "core/analyze.h"
+#include "core/compiler.h"
+
+#include <stdbool.h>
 
 typedef struct meta_ast_t meta_ast_t;
 typedef struct io_t io_t;
 
-void meta_emit_common(IN_NOTNULL io_t *header, IN_NOTNULL io_t *source);
+#define META_ARGS(...) __VA_ARGS__, NULL
 
-void meta_emit_cmdline(IN_NOTNULL const meta_ast_t *ast, IN_NOTNULL io_t *header, IN_NOTNULL io_t *source);
+#define META_INIT(argc, argv, name)       \
+    do                                    \
+    {                                     \
+        if (!meta_init(argc, argv, name)) \
+        {                                 \
+            return meta_get_exit_code();  \
+        }                                 \
+    } while (0)
+
+CT_BEGIN_API
+
+bool meta_init(int argc, const char **argv, const char *name);
+int meta_get_exit_code(void);
+
+void meta_cmdline_arg(const char *name, const char *id, const char *brief, ...);
+
+CT_END_API

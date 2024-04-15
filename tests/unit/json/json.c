@@ -1,9 +1,10 @@
+#include "unit/ct-test.h"
+
 #include "base/util.h"
 #include "io/io.h"
 #include "notify/notify.h"
 #include "std/map.h"
 #include "std/vector.h"
-#include "unit/ct-test.h"
 
 #include "setup/memory.h"
 #include "json/query.h"

@@ -32,7 +32,7 @@ typedef struct print_backtrace_t
     print_options_t options;
 
     /// @brief the line heading style
-    FIELD_RANGE(<, eHeadingCount) heading_style_t header;
+    FIELD_RANGE(0, eHeadingCount) heading_style_t header;
 
     /// @brief is the first line of the file line 0 or line 1
     bool zero_indexed_lines;

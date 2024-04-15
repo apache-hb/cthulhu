@@ -4,16 +4,18 @@
 
 #include <ctu_config.h>
 
+#include "core/compiler.h"
+
 /// @defgroup analyze Static analysis decorators
 /// @brief Decorators for static analysis tools
 /// @ingroup core
 /// @{
 
-#if __cplusplus >= 201703L
+#if CT_HAS_CPP_ATTRIBUTE(nodiscard) || CT_HAS_C_ATTRIBUTE(nodiscard)
 #   define CT_NODISCARD [[nodiscard]]
 #endif
 
-#if __has_include(<sal.h>)
+#if CT_HAS_INCLUDE(<sal.h>)
 #   include <sal.h>
 #   define CT_FMT_STRING _Printf_format_string_
 #   define USE_DECL _Use_decl_annotations_
@@ -24,18 +26,18 @@
 #   define OUT_WRITES(expr) _Out_writes_(expr)
 #   define OUT_PTR_INVALID _Post_ptr_invalid_
 
-#   define RET_RANGE(cmp, it) _Ret_range_(cmp, it)
+#   define RET_DOMAIN(cmp, it) _Ret_range_(cmp, it)
 #   define RET_NOTNULL _Ret_notnull_
 #   define RET_STRING _Ret_z_
 #   define RET_INSPECT _Must_inspect_result_
 
 #   define FIELD_SIZE(of) _Field_size_(of)
 #   define FIELD_STRING _Field_z_
-#   define FIELD_RANGE(cmp, it) _Field_range_(cmp, it)
+#   define FIELD_RANGE(lo, hi) _Field_range_(lo, hi)
 
 #   define IN_NOTNULL _In_
 #   define IN_STRING _In_z_
-#   define IN_RANGE(cmp, it) _In_range_(cmp, it)
+#   define IN_DOMAIN(cmp, it) _In_range_(cmp, it)
 
 #   define OUT_NOTNULL _Out_
 #   define OUT_STRING _Out_z_
@@ -49,15 +51,15 @@
 #   define OUT_WRITES(expr)
 #   define OUT_PTR_INVALID
 
-#   define RET_RANGE(cmp, it)
+#   define RET_DOMAIN(cmp, it)
 #   define RET_STRING
 #   define RET_INSPECT
 
 #   define FIELD_STRING
-#   define FIELD_RANGE(cmp, it)
+#   define FIELD_RANGE(lo, hi)
 
 #   define IN_STRING
-#   define IN_RANGE(cmp, it)
+#   define IN_DOMAIN(cmp, it)
 
 #   define OUT_NOTNULL
 #   define OUT_STRING
@@ -66,12 +68,19 @@
 #   define INOUT_NOTNULL
 #endif
 
+#ifndef RET_RANGE
+#   define RET_RANGE(lo, hi) RET_DOMAIN(>=, lo) RET_DOMAIN(<=, hi)
+#endif
+
+#ifndef IN_RANGE
+#   define IN_RANGE(lo, hi) IN_DOMAIN(>=, lo) IN_DOMAIN(<=, hi)
+#endif
+
 /// @def CT_PRINTF(a, b)
 /// @brief mark a function as a printf style function
 ///
 /// @param a the index of the format string parameter
 /// @param b the index of the first variadic parameter
-
 
 #if __clang_major__ >= 3
 #   define CT_PRINTF(a, b) __attribute__((__format__(__printf__, a, b)))
@@ -85,7 +94,7 @@
 #   define CT_GNU_ATTRIB(...) __attribute__((__VA_ARGS__))
 #   define CT_CLANG_ATTRIB(...)
 #   define CT_ATTRIB(...) __attribute__((__VA_ARGS__))
-#elif __clang__ >= 10
+#elif __clang_major__ >= 10
 #   define CT_GNU_ATTRIB(...)
 #   define CT_CLANG_ATTRIB(...) __attribute__((__VA_ARGS__))
 #   define CT_ATTRIB(...) __attribute__((__VA_ARGS__))
@@ -95,7 +104,7 @@
 #   define CT_CLANG_ATTRIB(...)
 #endif
 
-#if CT_CC_MSVC
+#if defined(_MSC_VER)
 #   define CT_DECLSPEC(...) __declspec(__VA_ARGS__)
 #else
 #   define CT_DECLSPEC(...)
@@ -129,7 +138,7 @@
 /// @warning must not depend on mutable global state or have side effects
 /// @note thats a lie actually, gcc says it may have calls to it optimized away via CSE
 
-#if CTU_DISABLE_FN_PURITY
+#if CT_DISABLE_FN_PURITY
 #   define CT_NOALIAS
 #   define CT_CONSTFN
 #   define CT_PUREFN
@@ -144,10 +153,15 @@
 /// @def CT_ALLOC_SIZE
 /// @brief mark a function as allocating memory with a specific size
 
-#if CT_CC_MSVC
-#   define CT_ALLOC(...) CT_DECLSPEC(restrict) CT_DECLSPEC(allocator)
+// clang doesnt support passing a deallocate function to attribute((malloc))
+#if defined(__clang__)
+#   define CT_ALLOC(...) __attribute__((malloc))
+#elif defined(__GNUC__)
+#   define CT_ALLOC(...) __attribute__((malloc(__VA_ARGS__)))
+#elif defined(_MSC_VER)
+#   define CT_ALLOC(...) __declspec(restrict) __declspec(allocator)
 #else
-#   define CT_ALLOC(...) CT_ATTRIB(malloc(__VA_ARGS__))
+#   define CT_ALLOC(...)
 #endif
 
 #define CT_ALLOC_SIZE(...) CT_ATTRIB(alloc_size(__VA_ARGS__))
@@ -215,9 +229,9 @@
 /// @def OUT_PTR_INVALID
 /// @brief annotate a pointer as invalid after the function returns
 
-/// @def RET_RANGE(cmp, it)
+/// @def RET_DOMAIN(cmp, it)
 /// @brief annotate the return value as being bounded by the expression of @p cmp and @p it
-/// RET_RANGE(!=, 0) means the returned value will never be 0
+/// RET_DOMAIN(!=, 0) means the returned value will never be 0
 ///
 /// @param cmp the comparison operator
 /// @param it the expression to compare against
@@ -254,7 +268,7 @@
 /// @def IN_STRING
 /// @brief annotate a parameter as being a null terminated string
 
-/// @def IN_RANGE(cmp, it)
+/// @def IN_DOMAIN(cmp, it)
 /// @brief annotate a parameter as being bounded by the expression of @p cmp and @p it
 
 /// @}

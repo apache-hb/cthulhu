@@ -34,18 +34,16 @@ os_error_t os_file_exists(const char *path)
 {
     CTASSERT(path != NULL);
 
-    DWORD attr = GetFileAttributes(path);
+    DWORD attr = GetFileAttributesA(path);
     if (attr == INVALID_FILE_ATTRIBUTES)
     {
         DWORD error = GetLastError();
-        if (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND)
-        {
-            return eOsNotFound;
-        }
-        else
-        {
-            return error;
-        }
+
+        // remap file and path not found to not found
+        // TODO: do we want to handle these errors differently?
+        return (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND)
+            ? eOsNotFound
+            : error;
     }
 
     return eOsExists;

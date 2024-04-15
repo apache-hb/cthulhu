@@ -64,7 +64,7 @@ CT_STD_API typevec_t typevec_make(size_t type_size, size_t len, IN_NOTNULL arena
 ///
 /// @return the new vector
 CT_NODISCARD
-CT_STD_API typevec_t *typevec_new(IN_RANGE(>, 0) size_t type_size, size_t len, IN_NOTNULL arena_t *arena);
+CT_STD_API typevec_t *typevec_new(IN_DOMAIN(>, 0) size_t type_size, size_t len, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new typed vector with an initial size and length
 /// @note it is expected that the user will fill the vector up to @p len using @a typevec_set
@@ -76,7 +76,7 @@ CT_STD_API typevec_t *typevec_new(IN_RANGE(>, 0) size_t type_size, size_t len, I
 ///
 /// @return the new vector
 CT_NODISCARD
-CT_STD_API typevec_t *typevec_of(IN_RANGE(>, 0) size_t type_size, size_t len, IN_NOTNULL arena_t *arena);
+CT_STD_API typevec_t *typevec_of(IN_DOMAIN(>, 0) size_t type_size, size_t len, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new typed vector from an array
 /// this copies @p count * @a type_size bytes from @p src to the vector
@@ -89,7 +89,7 @@ CT_STD_API typevec_t *typevec_of(IN_RANGE(>, 0) size_t type_size, size_t len, IN
 /// @return the new vector
 CT_NODISCARD
 CT_STD_API typevec_t *typevec_of_array(
-    IN_RANGE(>, 0) size_t type_size,
+    IN_DOMAIN(>, 0) size_t type_size,
     IN_READS(count * type_size) const void *src,
     size_t count,
     IN_NOTNULL arena_t *arena);
@@ -105,8 +105,8 @@ CT_STD_API typevec_t *typevec_of_array(
 CT_NODISCARD
 CT_STD_API typevec_t *typevec_slice(
     IN_NOTNULL const typevec_t *vec,
-    IN_RANGE(<, end) size_t start,
-    IN_RANGE(>, start) size_t end);
+    IN_DOMAIN(<, end) size_t start,
+    IN_DOMAIN(>, start) size_t end);
 
 /// @brief get the length of a vector
 ///

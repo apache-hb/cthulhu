@@ -1,8 +1,9 @@
+#include "unit/ct-test.h"
+
 #include "config/config.h"
 #include "core/macros.h"
 #include "base/util.h"
 #include "arena/arena.h"
-#include "unit/ct-test.h"
 #include "setup/memory.h"
 
 #include "argparse/argparse.h"
@@ -32,7 +33,7 @@ static const cfg_info_t kRootInfo = {
     .brief = "Test config",
 };
 
-static const cfg_arg_t kBoolInfoArgs[] = {ARG_SHORT("b")};
+static const cfg_arg_t kBoolInfoArgs[] = {CT_ARG_SHORT("b")};
 
 static const cfg_info_t kBoolInfo = {
     .name = "bool",
@@ -40,7 +41,7 @@ static const cfg_info_t kBoolInfo = {
     .args = CT_ARGS(kBoolInfoArgs),
 };
 
-static const cfg_arg_t kBoolInfo2Args[] = {ARG_SHORT("b2")};
+static const cfg_arg_t kBoolInfo2Args[] = {CT_ARG_SHORT("b2")};
 
 static const cfg_info_t kBoolInfo2 = {
     .name = "bool2",
@@ -48,7 +49,7 @@ static const cfg_info_t kBoolInfo2 = {
     .args = CT_ARGS(kBoolInfo2Args),
 };
 
-static const cfg_arg_t kIntInfoArgs[] = {ARG_SHORT("i")};
+static const cfg_arg_t kIntInfoArgs[] = {CT_ARG_SHORT("i")};
 
 static const cfg_info_t kIntInfo = {
     .name = "int",
@@ -56,7 +57,7 @@ static const cfg_info_t kIntInfo = {
     .args = CT_ARGS(kIntInfoArgs),
 };
 
-static const cfg_arg_t kStringInfoArgs[] = {ARG_SHORT("s")};
+static const cfg_arg_t kStringInfoArgs[] = {CT_ARG_SHORT("s")};
 
 static const cfg_info_t kStringInfo = {
     .name = "string",
@@ -64,21 +65,21 @@ static const cfg_info_t kStringInfo = {
     .args = CT_ARGS(kStringInfoArgs),
 };
 
-static const cfg_arg_t kEnumInfoArgs[] = {ARG_SHORT("e")};
+static const cfg_arg_t kEnumInfoArgs[] = {CT_ARG_SHORT("e")};
 static const cfg_info_t kEnumInfo = {
     .name = "enum",
     .brief = "An enum field",
     .args = CT_ARGS(kEnumInfoArgs),
 };
 
-static const cfg_arg_t kIncludeDirArgs[] = {ARG_SHORT("I")};
+static const cfg_arg_t kIncludeDirArgs[] = {CT_ARG_SHORT("I")};
 static const cfg_info_t kIncludeDirInfo = {
     .name = "include-dir",
     .brief = "Add an include directory",
     .args = CT_ARGS(kIncludeDirArgs),
 };
 
-static const cfg_arg_t kFlagInfoArgs[] = {ARG_SHORT("f")};
+static const cfg_arg_t kFlagInfoArgs[] = {CT_ARG_SHORT("f")};
 static const cfg_info_t kFlagInfo = {
     .name = "flag",
     .brief = "A flag field",

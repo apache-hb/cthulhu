@@ -2131,7 +2131,7 @@ PREDEFINED = OS_RESULT(X)=X \
              IN_READS()= \
              OUT_WRITES()= \
              OUT_PTR_INVALID= \
-             RET_RANGE()= \
+             RET_DOMAIN()= \
              RET_NOTNULL= \
              RET_STRING= \
              RET_INSPECT= \
@@ -2140,7 +2140,7 @@ PREDEFINED = OS_RESULT(X)=X \
              FIELD_RANGE()= \
              IN_NOTNULL= \
              IN_STRING= \
-             IN_RANGE()= \
+             IN_DOMAIN()= \
              CT_PRINTF()= \
              CONSTFN= \
              PUREFN= \

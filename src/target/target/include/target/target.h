@@ -48,7 +48,7 @@ typedef struct emit_t
 } emit_t;
 
 CT_CONSTFN
-CT_TARGET_API const char *file_layout_str(IN_RANGE(0, eFileLayoutCount - 1) file_layout_t layout);
+CT_TARGET_API const char *file_layout_str(IN_DOMAIN(<, eFileLayoutCount) file_layout_t layout);
 
 /// @}
 

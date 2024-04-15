@@ -40,7 +40,7 @@ typedef struct print_notify_t
     print_options_t options;
 
     /// @brief the style of heading to use
-    FIELD_RANGE(<, eHeadingCount) heading_style_t heading_style;
+    FIELD_RANGE(0, eHeadingCount) heading_style_t heading_style;
 
     /// @brief the style of notification to use
     notify_style_t notify_style;

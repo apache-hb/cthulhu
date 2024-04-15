@@ -18,7 +18,7 @@ static const cfg_info_t kConfigInfo = {
     .brief = "Cthulhu CLI configuration options",
 };
 
-static const cfg_arg_t kLangArgs[] = { ARG_SHORT("l"), ARG_LONG("lang") };
+static const cfg_arg_t kLangArgs[] = { CT_ARG_SHORT("l"), CT_ARG_LONG("lang") };
 
 static const cfg_info_t kLang = {
     .name = "lang",
@@ -26,7 +26,7 @@ static const cfg_info_t kLang = {
     .args = CT_ARGS(kLangArgs),
 };
 
-static const cfg_arg_t kPluginArgs[] = { ARG_SHORT("p"), ARG_LONG("plugin") };
+static const cfg_arg_t kPluginArgs[] = { CT_ARG_SHORT("p"), CT_ARG_LONG("plugin") };
 
 static const cfg_info_t kPlugin = {
     .name = "plugin",
@@ -34,7 +34,7 @@ static const cfg_info_t kPlugin = {
     .args = CT_ARGS(kPluginArgs),
 };
 
-static const cfg_arg_t kTargetArgs[] = { ARG_SHORT("t"), ARG_LONG("target") };
+static const cfg_arg_t kTargetArgs[] = { CT_ARG_SHORT("t"), CT_ARG_LONG("target") };
 
 static const cfg_info_t kTarget = {
     .name = "target",
@@ -42,7 +42,7 @@ static const cfg_info_t kTarget = {
     .args = CT_ARGS(kTargetArgs),
 };
 
-static const cfg_arg_t kIrArgs[] = { ARG_SHORT("ir"), ARG_LONG("emit-ssa") };
+static const cfg_arg_t kIrArgs[] = { CT_ARG_SHORT("ir"), CT_ARG_LONG("emit-ssa") };
 
 static const cfg_info_t kEmitIr = {
     .name = "emit-ssa",
@@ -50,7 +50,7 @@ static const cfg_info_t kEmitIr = {
     .args = CT_ARGS(kIrArgs),
 };
 
-static const cfg_arg_t kTreeArgs[] = { ARG_SHORT("tree"), ARG_LONG("emit-tree") };
+static const cfg_arg_t kTreeArgs[] = { CT_ARG_SHORT("tree"), CT_ARG_LONG("emit-tree") };
 
 static const cfg_info_t kEmitTree = {
     .name = "emit-tree",
@@ -58,7 +58,7 @@ static const cfg_info_t kEmitTree = {
     .args = CT_ARGS(kTreeArgs),
 };
 
-static const cfg_arg_t kFileLayoutArgs[] = { ARG_LONG("file-layout") };
+static const cfg_arg_t kFileLayoutArgs[] = { CT_ARG_LONG("file-layout") };
 
 static const cfg_info_t kFileLayout = {
     .name = "file-layout",
@@ -73,7 +73,7 @@ static const cfg_choice_t kFileLayoutChoices[] = {
     { "flat", eFileLayoutFlat },
 };
 
-static const cfg_arg_t kTargetOutputArgs[] = { ARG_LONG("target-output") };
+static const cfg_arg_t kTargetOutputArgs[] = { CT_ARG_LONG("target-output") };
 
 static const cfg_info_t kTargetOutput = {
     .name = "target-output",
@@ -81,7 +81,7 @@ static const cfg_info_t kTargetOutput = {
     .args = CT_ARGS(kTargetOutputArgs),
 };
 
-static const cfg_arg_t kWarnAsErrorArgs[] = { ARG_SHORT("Werror"), ARG_SHORT("WX") };
+static const cfg_arg_t kWarnAsErrorArgs[] = { CT_ARG_SHORT("Werror"), CT_ARG_SHORT("WX") };
 
 static const cfg_info_t kWarnAsError = {
     .name = "warn-as-error",
@@ -89,7 +89,7 @@ static const cfg_info_t kWarnAsError = {
     .args = CT_ARGS(kWarnAsErrorArgs),
 };
 
-static const cfg_arg_t kReportLimitArgs[] = { ARG_SHORT("ferror-limit"), ARG_SHORT("fmax-errors") };
+static const cfg_arg_t kReportLimitArgs[] = { CT_ARG_SHORT("ferror-limit"), CT_ARG_SHORT("fmax-errors") };
 
 static const cfg_info_t kReportLimit = {
     .name = "max-errors",
@@ -97,7 +97,7 @@ static const cfg_info_t kReportLimit = {
     .args = CT_ARGS(kReportLimitArgs),
 };
 
-static const cfg_arg_t kOutputDirArgs[] = { ARG_SHORT("o"), ARG_LONG("output-dir") };
+static const cfg_arg_t kOutputDirArgs[] = { CT_ARG_SHORT("o"), CT_ARG_LONG("output-dir") };
 
 static const cfg_info_t kOutputDir = {
     .name = "output-dir",
@@ -105,7 +105,7 @@ static const cfg_info_t kOutputDir = {
     .args = CT_ARGS(kOutputDirArgs),
 };
 
-static const cfg_arg_t kReportStyleArgs[] = { ARG_SHORT("report"), ARG_LONG("report-style") };
+static const cfg_arg_t kReportStyleArgs[] = { CT_ARG_SHORT("report"), CT_ARG_LONG("report-style") };
 
 static const cfg_info_t kReportStyle = {
     .name = "report-style",

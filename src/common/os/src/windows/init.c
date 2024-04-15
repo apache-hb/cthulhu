@@ -24,7 +24,7 @@ void os_init(void)
     _set_abort_behavior(0, _WRITE_ABORT_MSG);
 }
 
-CT_NORETURN os_exit(os_exit_t code)
+CT_NORETURN os_exit(os_exitcode_t code)
 {
     TerminateProcess(GetCurrentProcess(), code);
     CT_UNREACHABLE();

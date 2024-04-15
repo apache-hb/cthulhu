@@ -58,14 +58,10 @@ os_dirent_t os_dirent_type(const char *path)
 
     if (attributes != INVALID_FILE_ATTRIBUTES)
     {
-        if (attributes & FILE_ATTRIBUTE_DIRECTORY)
-        {
-            return eOsNodeDir;
-        }
-        else
-        {
-            return eOsNodeFile;
-        }
+        // TODO: this doesnt handle pipes, sockets, etc.
+        return (attributes & FILE_ATTRIBUTE_DIRECTORY)
+            ? eOsNodeDir
+            : eOsNodeFile;
     }
 
     DWORD error = GetLastError();

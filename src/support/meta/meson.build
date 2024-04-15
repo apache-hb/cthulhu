@@ -1,5 +1,5 @@
 src = [
-    'src/main.c',
+    'src/meta.c',
 
     'src/emit/emit.c',
     'src/emit/cmdline.c'
@@ -10,14 +10,16 @@ deps = [
     argparse, broker, arena, format
 ]
 
-meta = executable('meta', src,
+inc = include_directories('include')
+
+libmeta = library('meta', src,
     c_args : generated_args,
     build_by_default : not meson.is_subproject(),
-    include_directories : 'include',
+    include_directories : inc,
     dependencies : deps
 )
 
-ast = generator(meta,
-    output : [ '@BASENAME@_ast.h', '@BASENAME@_ast.c' ],
-    arguments : [ '/header:@OUTPUT0@', '/source:@OUTPUT1@', '@INPUT@', '/mode:ast' ],
+meta = declare_dependency(
+    link_with : libmeta,
+    include_directories : inc
 )

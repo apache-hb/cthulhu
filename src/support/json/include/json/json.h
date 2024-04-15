@@ -123,7 +123,7 @@ CT_JSON_API void json_print(IN_NOTNULL const json_t *json, IN_NOTNULL io_t *io, 
 ///
 /// @return the name of the kind
 RET_NOTNULL
-CT_JSON_API const char *json_kind_name(IN_RANGE(<, eJsonCount) json_kind_t kind);
+CT_JSON_API const char *json_kind_name(IN_DOMAIN(<, eJsonCount) json_kind_t kind);
 
 
 /// @}

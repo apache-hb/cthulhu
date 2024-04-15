@@ -6,12 +6,12 @@ typedef struct io_t io_t;
 typedef struct meta_emit_t {
     io_t *io;
 
-    unsigned indent;
-    unsigned depth;
+    int indent;
+    int depth;
 } meta_emit_t;
 
-void emit_init(meta_emit_t *emit, io_t *io, unsigned indent);
-meta_emit_t emit_make(io_t *io, unsigned indent);
+void emit_init(meta_emit_t *emit, io_t *io, int indent);
+meta_emit_t emit_make(io_t *io, int indent);
 
 void emit_comment(meta_emit_t *emit, const char *comment);
 

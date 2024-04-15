@@ -2884,7 +2884,7 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
         // Convert our ranges in the format stb_truetype wants
         ImFontConfig& cfg = atlas->ConfigData[src_i];
         src_tmp.PackRange.font_size = cfg.SizePixels * cfg.RasterizerDensity;
-        src_tmp.PackRange.first_unicode_codepoint_in_range = 0;
+        src_tmp.PackRange.first_unicode_codepoint_IN_DOMAIN = 0;
         src_tmp.PackRange.array_of_unicode_codepoints = src_tmp.GlyphsList.Data;
         src_tmp.PackRange.num_chars = src_tmp.GlyphsList.Size;
         src_tmp.PackRange.chardata_for_range = src_tmp.PackedChars;

@@ -1,6 +1,6 @@
+#include "unit/ct-test.h"
 #include "arena/arena.h"
 #include "base/util.h"
-#include "unit/ct-test.h"
 
 #include "setup/memory.h"
 
@@ -93,10 +93,10 @@ int main(void)
         GROUP_EXPECT_PASS(group, "match", str_rfind("hello world!", "world") == 6);
         GROUP_EXPECT_PASS(group, "match last", str_rfind("hello hello hello", "hello") == 12);
         GROUP_EXPECT_PASS(group, "find last with bits", str_rfind("hello hello world", "hello") == 6);
-        GROUP_EXPECT_PANIC(group, "empty search", str_rfind("hello", ""));
-        GROUP_EXPECT_PANIC(group, "null search", str_rfind("hello", NULL));
-        GROUP_EXPECT_PANIC(group, "null str", str_rfind(NULL, "hello"));
-        GROUP_EXPECT_PANIC(group, "null all", str_rfind(NULL, NULL));
+        GROUP_EXPECT_PANIC(group, "empty search", (void)str_rfind("hello", ""));
+        GROUP_EXPECT_PANIC(group, "null search", (void)str_rfind("hello", NULL));
+        GROUP_EXPECT_PANIC(group, "null str", (void)str_rfind(NULL, "hello"));
+        GROUP_EXPECT_PANIC(group, "null all", (void)str_rfind(NULL, NULL));
     }
     {
         test_group_t group = test_group(&suite, "str_replace");

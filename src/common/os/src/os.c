@@ -4,7 +4,6 @@
 #include "os_common.h"
 
 #include "base/util.h"
-#include "core/macros.h"
 
 #include "arena/arena.h"
 #include "base/panic.h"
@@ -64,47 +63,6 @@ os_error_t os_getcwd(text_t *text, arena_t *arena)
     }
 
     return eOsSuccess;
-}
-
-USE_DECL
-char *os_dir_string(const os_inode_t *dir, arena_t *arena)
-{
-    CTASSERT(dir != NULL);
-    CTASSERT(arena != NULL);
-
-    size_t size = os_dir_get_string(dir, NULL, 0);
-    CTASSERT(size > 0);
-
-    char *buffer = ARENA_MALLOC(size + 1, "os_dir_name", NULL, arena);
-
-    size_t written = os_dir_get_string(dir, buffer, size + 1);
-    buffer[written] = '\0';
-
-    return buffer;
-}
-
-///
-/// directory iteration operations
-///
-
-USE_DECL
-size_t os_dir_get_string(const os_inode_t *dir, char *buffer, size_t size)
-{
-    CTASSERT(dir != NULL);
-
-    if (size == 0)
-    {
-        CTASSERT(buffer == NULL);
-        return impl_maxname();
-    }
-
-    CTASSERT(buffer != NULL);
-    const char *name = os_inode_name(dir);
-    size_t len = ctu_strlen(name);
-    size_t copy = CT_MIN(len, size - 1);
-    ctu_strcpy(buffer, name, copy);
-
-    return len;
 }
 
 ///

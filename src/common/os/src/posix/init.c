@@ -45,7 +45,7 @@ void os_init(void)
     }
 }
 
-CT_NORETURN os_exit(os_exit_t code)
+CT_NORETURN os_exit(os_exitcode_t code)
 {
     exit(code); // NOLINT(concurrency-mt-unsafe)
 }

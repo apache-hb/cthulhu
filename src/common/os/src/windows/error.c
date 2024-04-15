@@ -18,7 +18,7 @@ os_error_t impl_last_error(void)
 
 static DWORD format_inner(os_error_t error, char *buffer, size_t size)
 {
-    return FormatMessage(
+    return FormatMessageA(
         /* dwFlags = */ FORMAT_FLAGS,
         /* lpSource = */ NULL,
         /* dwMessageId = */ (DWORD)error,

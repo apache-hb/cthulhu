@@ -38,7 +38,7 @@ static const cfg_info_t kGeneralGroupInfo = {
     .brief = "General options",
 };
 
-static const cfg_arg_t kHelpArgs[] = { ARG_SHORT("h"), ARG_DOS("?"), ARG_LONG("help") };
+static const cfg_arg_t kHelpArgs[] = { CT_ARG_SHORT("h"), CT_ARG_DOS("?"), CT_ARG_LONG("help") };
 
 static const cfg_info_t kHelpInfo = {
     .name = "help",
@@ -47,7 +47,7 @@ static const cfg_info_t kHelpInfo = {
     .args = CT_ARGS(kHelpArgs),
 };
 
-static const cfg_arg_t kVersionArgs[] = { ARG_SHORT("V"), ARG_LONG("version") };
+static const cfg_arg_t kVersionArgs[] = { CT_ARG_SHORT("V"), CT_ARG_LONG("version") };
 
 static const cfg_info_t kVersionInfo = {
     .name = "version",
@@ -67,7 +67,7 @@ static const cfg_choice_t kHeadingOptions[] = {
 };
 #define HEADING_OPTION_COUNT (sizeof(kHeadingOptions) / sizeof(cfg_choice_t))
 
-static const cfg_arg_t kHeadingArgs[] = { ARG_SHORT("heading") };
+static const cfg_arg_t kHeadingArgs[] = { CT_ARG_SHORT("heading") };
 
 static const cfg_info_t kHeadingInfo = {
     .name = "heading",
@@ -76,7 +76,7 @@ static const cfg_info_t kHeadingInfo = {
     .args = CT_ARGS(kHeadingArgs),
 };
 
-static const cfg_arg_t kColourArgs[] = { ARG_SHORT("fcolour-diagnostics") };
+static const cfg_arg_t kColourArgs[] = { CT_ARG_SHORT("fcolour-diagnostics") };
 
 static const cfg_info_t kColourInfo = {
     .name = "colour",
@@ -90,7 +90,7 @@ static const cfg_info_t kDebugGroupInfo = {
     .brief = "Internal debugging options",
 };
 
-static const cfg_arg_t kVerboseArgs[] = { ARG_SHORT("v"), ARG_LONG("verbose") };
+static const cfg_arg_t kVerboseArgs[] = { CT_ARG_SHORT("v"), CT_ARG_LONG("verbose") };
 
 static const cfg_info_t kVerboseLoggingInfo = {
     .name = "verbose",

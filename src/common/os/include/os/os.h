@@ -249,7 +249,7 @@ RET_INSPECT
 CT_OS_API os_error_t os_file_read(
         INOUT_NOTNULL os_file_t *file,
         OUT_WRITES(size) void *buffer,
-        IN_RANGE(>, 0) size_t size,
+        IN_DOMAIN(>, 0) size_t size,
         OUT_NOTNULL size_t *actual);
 
 /// @brief write to a file
@@ -265,7 +265,7 @@ RET_INSPECT
 CT_OS_API os_error_t os_file_write(
         INOUT_NOTNULL os_file_t *file,
         IN_READS(size) const void *buffer,
-        IN_RANGE(>, 0) size_t size,
+        IN_DOMAIN(>, 0) size_t size,
         OUT_NOTNULL size_t *actual);
 
 /// @brief get the size of a file

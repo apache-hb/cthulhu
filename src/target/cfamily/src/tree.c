@@ -45,7 +45,7 @@ static void forward_decl(cfamily_emit_t *emit, const tree_t *tree)
         map_iter_t iter = map_iter(vars);
         while (map_has_next(&iter))
         {
-            map_next(&iter);
+            (void)map_next(&iter);
         }
 
         pop_namespace(emit);
