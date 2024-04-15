@@ -33,7 +33,7 @@ typedef struct scan_t
     arena_t *nodes;
 
     /// @brief the name of the language this file contains
-    const char *language;
+    FIELD_STRING const char *language;
 
     /// @brief the path to this file
     FIELD_STRING const char *path;

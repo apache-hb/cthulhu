@@ -44,7 +44,7 @@ typedef size_t (*io_write_t)(io_t *self, const void *src, size_t size);
 /// @param args the format arguments
 ///
 /// @return the total number of bytes copied into the io object
-typedef size_t (*io_write_format_t)(io_t *self, const char *fmt, va_list args);
+typedef size_t (*io_fwrite_t)(io_t *self, const char *fmt, va_list args);
 
 /// @brief io size callback
 /// get the total size of an io objects backing data
@@ -92,7 +92,7 @@ typedef struct io_callbacks_t
     /// @brief write format callback
     /// may be NULL on non-writable objects
     /// @note if this is NULL, @a fn_write will be used instead
-    io_write_format_t fn_fwrite;
+    io_fwrite_t fn_fwrite;
 
     /// @brief total size callback
     /// must always be provided

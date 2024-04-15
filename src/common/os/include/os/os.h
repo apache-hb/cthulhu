@@ -104,6 +104,31 @@ CT_OS_API os_error_t os_library_symbol(
 CT_NODISCARD
 CT_OS_API const char *os_library_name(IN_NOTNULL const os_library_t *library);
 
+/// console api
+
+/// @brief write to the default output stream
+/// stdout or equivalent
+///
+/// @param text the text to write
+///
+/// @return an error if the text could not be written
+CT_OS_API os_error_t os_console_write(IN_STRING const char *text);
+
+/// @brief write to the default error stream
+/// stderr or equivalent
+///
+/// @param text the text to write
+///
+/// @return an error if the text could not be written
+CT_OS_API os_error_t os_console_error(IN_STRING const char *text);
+
+/// @brief write to the debug stream
+///
+/// @param text the text to write
+///
+/// @return an error if the text could not be written
+CT_OS_API os_error_t os_console_debug(IN_STRING const char *text);
+
 /// filesytem api
 
 /// @brief copy a file from one location to another
@@ -234,6 +259,7 @@ CT_OS_API os_error_t os_tmpfile_open(OUT_NOTNULL os_file_t *file);
 /// @brief close a file
 ///
 /// @param file the file to close
+RET_INSPECT
 CT_OS_API os_error_t os_file_close(OUT_PTR_INVALID os_file_t *file);
 
 /// @brief read from a file

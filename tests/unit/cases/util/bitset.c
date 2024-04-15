@@ -48,4 +48,3 @@ int main(void)
 
     return test_suite_finish(&suite);
 }
-

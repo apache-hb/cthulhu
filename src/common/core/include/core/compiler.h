@@ -199,13 +199,4 @@
 #   define CT_ENUM_FLAGS(X, T)
 #endif
 
-/// @brief the container length type
-/// seperately defined as some compilers have support
-/// for unsigned types with undefined overflow behaviour.
-/// we can use these to get more effective ubsan checks.
-/// @note i think it can also help with optimization but i'm not sure
-typedef size_t ctu_length_t;
-
-typedef size_t ctu_hash_t;
-
 /// @}

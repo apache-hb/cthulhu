@@ -5,7 +5,7 @@
 #include "std/typeinfo.h"
 #include "base/util.h"
 
-size_t info_ptr_hash(const void *key) { return ptrhash(key); }
+size_t info_ptr_hash(const void *key) { return ctu_ptrhash(key); }
 bool info_ptr_equal(const void *lhs, const void *rhs) { return lhs == rhs; }
 
 size_t info_str_hash(const void *key) { return str_hash(key); }

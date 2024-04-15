@@ -17,58 +17,38 @@ const char *os_dirent_string(os_dirent_t type)
     return kDirentNames[type];
 }
 
+static const char *const kAccessNames[] = {
+    [eOsAccessNone] = "none",
+    [eOsAccessRead] = "read",
+    [eOsAccessWrite] = "write",
+    [eOsAccessRead | eOsAccessWrite] = "read/write",
+    [eOsAccessTruncate] = "truncate",
+    [eOsAccessRead | eOsAccessTruncate] = "read (truncate)",
+    [eOsAccessWrite | eOsAccessTruncate] = "write (truncate)",
+    [eOsAccessRead | eOsAccessWrite | eOsAccessTruncate] = "read/write (truncate)",
+};
+
 USE_DECL
 const char *os_access_string(os_access_t access)
 {
-    switch (access)
-    {
-    case (eOsAccessRead | eOsAccessWrite | eOsAccessTruncate):
-        return "read/write (truncate)";
-    case (eOsAccessWrite | eOsAccessTruncate):
-        return "write (truncate)";
-    case (eOsAccessRead | eOsAccessTruncate):
-        return "read (truncate)";
-
-    case (eOsAccessRead | eOsAccessWrite):
-        return "read/write";
-    case eOsAccessRead:
-        return "read";
-    case eOsAccessWrite:
-        return "write";
-
-    case eOsAccessNone:
-        return "none";
-
-    default:
-        CT_NEVER("invalid access flags 0x%x", access);
-    }
+    CTASSERTF(!(access & ~eOsAccessMask), "invalid access flags 0x%x", access);
+    return kAccessNames[access];
 }
+
+static const char *const kProtectNames[] = {
+    [eOsProtectNone] = "none",
+    [eOsProtectRead] = "read",
+    [eOsProtectWrite] = "write",
+    [eOsProtectExecute] = "execute",
+    [eOsProtectRead | eOsProtectWrite] = "read/write",
+    [eOsProtectRead | eOsProtectExecute] = "read/execute",
+    [eOsProtectWrite | eOsProtectExecute] = "write/execute",
+    [eOsProtectRead | eOsProtectWrite | eOsProtectExecute] = "read/write/execute",
+};
 
 USE_DECL
 const char *os_protect_string(os_protect_t protect)
 {
-    switch (protect)
-    {
-    case (eOsProtectRead | eOsProtectWrite | eOsProtectExecute):
-        return "read/write/execute";
-    case (eOsProtectRead | eOsProtectExecute):
-        return "read/execute";
-    case (eOsProtectWrite | eOsProtectExecute):
-        return "write/execute";
-    case (eOsProtectRead | eOsProtectWrite):
-        return "read/write";
-
-    case eOsProtectRead:
-        return "read";
-    case eOsProtectWrite:
-        return "write";
-    case eOsProtectExecute:
-        return "execute";
-
-    case eOsProtectNone:
-        return "none";
-
-    default:
-        CT_NEVER("invalid protect flags 0x%x", protect);
-    }
+    CTASSERTF(!(protect & ~eOsProtectMask), "invalid protect flags 0x%x", protect);
+    return kProtectNames[protect];
 }

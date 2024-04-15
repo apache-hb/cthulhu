@@ -607,10 +607,10 @@ STBTT_DEF void stbtt_PackEnd  (stbtt_pack_context *spc);
 #define STBTT_POINT_SIZE(x)   (-(x))
 
 STBTT_DEF int  stbtt_PackFontRange(stbtt_pack_context *spc, const unsigned char *fontdata, int font_index, float font_size,
-                                int first_unicode_char_IN_DOMAIN, int num_chars_IN_DOMAIN, stbtt_packedchar *chardata_for_range);
+                                int first_unicode_char_in_range, int num_chars_in_range, stbtt_packedchar *chardata_for_range);
 // Creates character bitmaps from the font_index'th font found in fontdata (use
-// font_index=0 if you don't know what that is). It creates num_chars_IN_DOMAIN
-// bitmaps for characters with unicode values starting at first_unicode_char_IN_DOMAIN
+// font_index=0 if you don't know what that is). It creates num_chars_in_range
+// bitmaps for characters with unicode values starting at first_unicode_char_in_range
 // and increasing. Data for how to render them is stored in chardata_for_range;
 // pass these to stbtt_GetPackedQuad to get back renderable quads.
 //
@@ -624,7 +624,7 @@ STBTT_DEF int  stbtt_PackFontRange(stbtt_pack_context *spc, const unsigned char 
 typedef struct
 {
    float font_size;
-   int first_unicode_codepoint_IN_DOMAIN;  // if non-zero, then the chars are continuous, and this is the first codepoint
+   int first_unicode_codepoint_in_range;  // if non-zero, then the chars are continuous, and this is the first codepoint
    int *array_of_unicode_codepoints;       // if non-zero, then this is an array of unicode codepoints
    int num_chars;
    stbtt_packedchar *chardata_for_range; // output
@@ -4167,7 +4167,7 @@ STBTT_DEF int stbtt_PackFontRangesGatherRects(stbtt_pack_context *spc, const stb
       ranges[i].v_oversample = (unsigned char) spc->v_oversample;
       for (j=0; j < ranges[i].num_chars; ++j) {
          int x0,y0,x1,y1;
-         int codepoint = ranges[i].array_of_unicode_codepoints == NULL ? ranges[i].first_unicode_codepoint_IN_DOMAIN + j : ranges[i].array_of_unicode_codepoints[j];
+         int codepoint = ranges[i].array_of_unicode_codepoints == NULL ? ranges[i].first_unicode_codepoint_in_range + j : ranges[i].array_of_unicode_codepoints[j];
          int glyph = stbtt_FindGlyphIndex(info, codepoint);
          if (glyph == 0 && (spc->skip_missing || missing_glyph_added)) {
             rects[k].w = rects[k].h = 0;
@@ -4237,7 +4237,7 @@ STBTT_DEF int stbtt_PackFontRangesRenderIntoRects(stbtt_pack_context *spc, const
          if (r->was_packed && r->w != 0 && r->h != 0) {
             stbtt_packedchar *bc = &ranges[i].chardata_for_range[j];
             int advance, lsb, x0,y0,x1,y1;
-            int codepoint = ranges[i].array_of_unicode_codepoints == NULL ? ranges[i].first_unicode_codepoint_IN_DOMAIN + j : ranges[i].array_of_unicode_codepoints[j];
+            int codepoint = ranges[i].array_of_unicode_codepoints == NULL ? ranges[i].first_unicode_codepoint_in_range + j : ranges[i].array_of_unicode_codepoints[j];
             int glyph = stbtt_FindGlyphIndex(info, codepoint);
             stbrp_coord pad = (stbrp_coord) spc->padding;
 
@@ -4344,12 +4344,12 @@ STBTT_DEF int stbtt_PackFontRanges(stbtt_pack_context *spc, const unsigned char 
 }
 
 STBTT_DEF int stbtt_PackFontRange(stbtt_pack_context *spc, const unsigned char *fontdata, int font_index, float font_size,
-            int first_unicode_codepoint_IN_DOMAIN, int num_chars_IN_DOMAIN, stbtt_packedchar *chardata_for_range)
+            int first_unicode_codepoint_in_range, int num_chars_in_range, stbtt_packedchar *chardata_for_range)
 {
    stbtt_pack_range range;
-   range.first_unicode_codepoint_IN_DOMAIN = first_unicode_codepoint_IN_DOMAIN;
+   range.first_unicode_codepoint_in_range = first_unicode_codepoint_in_range;
    range.array_of_unicode_codepoints = NULL;
-   range.num_chars                   = num_chars_IN_DOMAIN;
+   range.num_chars                   = num_chars_in_range;
    range.chardata_for_range          = chardata_for_range;
    range.font_size                   = font_size;
    return stbtt_PackFontRanges(spc, fontdata, font_index, &range, 1);

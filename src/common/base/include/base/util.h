@@ -16,6 +16,12 @@ CT_BEGIN_API
 /// @ingroup base
 /// @{
 
+/// @brief check if a path is special
+/// special paths are paths such as "." and ".." that are not valid for most operations
+///
+/// @param path the path to check
+///
+/// @retval true if the path is special
 CT_NODISCARD CT_CONSTFN
 CT_BASE_API bool is_path_special(IN_STRING const char *path);
 
@@ -25,7 +31,7 @@ CT_BASE_API bool is_path_special(IN_STRING const char *path);
 ///
 /// @return the hash of the pointer
 CT_NODISCARD CT_CONSTFN
-CT_BASE_API size_t ptrhash(const void *ptr);
+CT_BASE_API size_t ctu_ptrhash(const void *ptr);
 
 /// @brief hash a string
 ///

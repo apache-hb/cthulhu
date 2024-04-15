@@ -165,7 +165,6 @@ static void pretty_panic_handler(source_info_t location, const char *fmt, va_lis
     io_printf(io, "[panic][%s:%" CT_PRI_LINE "] => %s: %s\n", location.file, location.line, location.function, msg);
 
     print_backtrace(backtrace_config, report);
-    os_abort();
     os_exit(CT_EXIT_INTERNAL);
 }
 

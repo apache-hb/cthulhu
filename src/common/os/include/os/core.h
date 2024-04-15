@@ -36,6 +36,8 @@ typedef enum os_access_t
 {
 #define OS_ACCESS(ID, STR, BIT) ID = (BIT),
 #include "os.inc"
+
+    eOsAccessMask = eOsAccessRead | eOsAccessWrite | eOsAccessTruncate,
 } os_access_t;
 
 /// @brief file mapping memory protection
@@ -43,6 +45,8 @@ typedef enum os_protect_t
 {
 #define OS_PROTECT(ID, STR, BIT) ID = (BIT),
 #include "os.inc"
+
+    eOsProtectMask = eOsProtectRead | eOsProtectWrite | eOsProtectExecute,
 } os_protect_t;
 
 /// @brief directory entry type

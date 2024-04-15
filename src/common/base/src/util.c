@@ -13,7 +13,7 @@ bool is_path_special(const char *path)
 }
 
 USE_DECL
-size_t ptrhash(const void *ptr)
+size_t ctu_ptrhash(const void *ptr)
 {
     uintptr_t key = (uintptr_t)ptr;
     key = (~key) + (key << 18);
