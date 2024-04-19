@@ -415,11 +415,10 @@ static void sema_proc(tree_t *sema, tree_t *tree, pl0_t *node)
         tree_add_local(tree, it);
     }
 
-    tree_t *ret = tree_stmt_return(node->node, tree_expr_unit(node->node, gVoidType));
-
     vector_t *inner = sema_stmt_vector(nest, node->body);
 
-    vector_push(&inner, inner);
+    // make sure we always have a return statement
+    tree_t *ret = tree_stmt_return(node->node, tree_expr_unit(node->node, gVoidType));
     vector_push(&inner, ret);
 
     // make sure we have a return statement

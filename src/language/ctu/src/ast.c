@@ -322,7 +322,7 @@ ctu_t *ctu_decl_struct(scan_t *scan, where_t where, bool exported, char *name, v
     return ast;
 }
 
-ctu_t *ctu_decl_variant(scan_t *scan, where_t where, bool exported, char *name, ctu_t *underlying, vector_t *cases)
+ctu_t *ctu_decl_variant(scan_t *scan, where_t where, bool exported, char *name, ctu_t *underlying, const vector_t *cases)
 {
     ctu_t *ast = ctu_decl(scan, where, eCtuDeclVariant, name, exported);
     ast->underlying = underlying;

@@ -643,7 +643,8 @@ static tree_t *sema_local(ctu_sema_t *sema, const ctu_t *stmt)
         return tree_stmt_assign(stmt->node, self, value);
     }
 
-    return tree_stmt_block(stmt->node, &gEmptyVector); // TODO: good enough
+    // TODO: maybe a nop node would be better
+    return tree_stmt_block(stmt->node, &kEmptyVector);
 }
 
 static tree_t *sema_stmts(ctu_sema_t *sema, const ctu_t *stmt)
@@ -685,7 +686,7 @@ static tree_t *sema_while(ctu_sema_t *sema, const ctu_t *stmt)
     tree_t *save = ctu_current_loop(sema);
 
     tree_t *cond = ctu_sema_rvalue(sema, stmt->cond, ctu_get_bool_type());
-    tree_t *loop = tree_stmt_loop(stmt->node, cond, tree_stmt_block(stmt->node, &gEmptyVector),
+    tree_t *loop = tree_stmt_loop(stmt->node, cond, tree_stmt_block(stmt->node, &kEmptyVector),
                                   NULL);
 
     if (stmt->name != NULL)

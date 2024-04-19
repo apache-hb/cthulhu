@@ -136,12 +136,12 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     attrib_args
     expr_list
     type_list
-    variant_field_list opt_variant_field_list
+    variant_field_list
     initList
     attribs attrib attrib_body attrib_list
 
 %type<cvector>
-    modspec imports opt_type_list opt_expr_list decls
+    modspec imports opt_type_list opt_expr_list decls opt_variant_field_list
 
 /**
  * order of operations, tightest first
@@ -268,7 +268,7 @@ underlying: %empty { $$ = NULL; }
     | COLON type { $$ = $2; }
     ;
 
-opt_variant_field_list: %empty { $$ = &gEmptyVector; }
+opt_variant_field_list: %empty { $$ = &kEmptyVector; }
     | variant_field_list { $$ = $1; }
     ;
 

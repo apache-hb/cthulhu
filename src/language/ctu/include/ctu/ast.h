@@ -124,7 +124,7 @@ typedef struct ctu_t {
                 /* eCtuDeclVariant */
                 struct {
                     ctu_t *underlying;
-                    vector_t *cases;
+                    const vector_t *cases;
                 };
 
                 /* eCtuVariantCase */
@@ -308,7 +308,7 @@ ctu_t *ctu_decl_typealias(scan_t *scan, where_t where, bool exported, char *name
 ctu_t *ctu_decl_union(scan_t *scan, where_t where, bool exported, char *name, vector_t *fields);
 ctu_t *ctu_decl_struct(scan_t *scan, where_t where, bool exported, char *name, vector_t *fields);
 
-ctu_t *ctu_decl_variant(scan_t *scan, where_t where, bool exported, char *name, ctu_t *underlying, vector_t *cases);
+ctu_t *ctu_decl_variant(scan_t *scan, where_t where, bool exported, char *name, ctu_t *underlying, const vector_t *cases);
 
 ///
 /// internal components
