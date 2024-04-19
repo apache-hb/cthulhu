@@ -13,7 +13,7 @@ bool is_path_special(const char *path)
 }
 
 USE_DECL
-size_t ctu_ptrhash(const void *ptr)
+ctu_hash_t ctu_ptrhash(const void *ptr)
 {
     uintptr_t key = (uintptr_t)ptr;
     key = (~key) + (key << 18);
@@ -26,7 +26,7 @@ size_t ctu_ptrhash(const void *ptr)
 }
 
 USE_DECL
-size_t str_hash(const char *str)
+ctu_hash_t str_hash(const char *str)
 {
     CTASSERT(str != NULL);
 
@@ -41,11 +41,11 @@ size_t str_hash(const char *str)
 }
 
 USE_DECL
-size_t text_hash(text_view_t text)
+ctu_hash_t text_hash(text_view_t text)
 {
     CTASSERT(text.text != NULL);
 
-    size_t hash = 0;
+    ctu_hash_t hash = 0;
     for (size_t i = 0; i < text.length; i++)
     {
         hash = (hash << 5) - hash + text.text[i];

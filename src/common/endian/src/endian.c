@@ -5,7 +5,7 @@
 #include "base/panic.h"
 
 // _byteswap_ushort, _byteswap_ulong, _byteswap_uint64
-#if CT_CC_MSVC || CT_CC_CLANGCL
+#if defined(_MSC_VER)
 #   include <stdlib.h> // IWYU pragma: keep
 #endif
 

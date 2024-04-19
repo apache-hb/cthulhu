@@ -4,7 +4,30 @@
 
 #include <ctu_config.h>
 
-#ifdef __cpp_lib_unreachable
+/// @def CT_HAS_INCLUDE(x)
+/// @brief check if the compiler has a header
+#if defined(__has_include)
+#   define CT_HAS_INCLUDE(x) __has_include(x)
+#else
+#   define CT_HAS_INCLUDE(x) 0
+#endif
+
+// use _MSVC_LANG to detect c++ version on msvc
+// dont want to force other projects consuming this header
+// to specify /Zc:__cplusplus
+#if defined(_MSVC_LANG)
+#   define CT_CPLUSPLUS _MSVC_LANG
+#elif defined(__cplusplus)
+#   define CT_CPLUSPLUS __cplusplus
+#else
+#   define CT_CPLUSPLUS 0
+#endif
+
+#if CT_CPLUSPLUS >= 202002L
+#   include <version>
+#endif
+
+#if __cpp_lib_unreachable >= 202202L
 #   include <utility>
 #endif
 
@@ -13,22 +36,32 @@
 /// @ingroup core
 /// @{
 
+/// @def CT_HAS_CPP_ATTRIBUTE(x)
+/// @brief check if the compiler supports a c++ attribute
 #if defined(__has_cpp_attribute)
 #   define CT_HAS_CPP_ATTRIBUTE(x) __has_cpp_attribute(x)
 #else
 #   define CT_HAS_CPP_ATTRIBUTE(x) 0
 #endif
 
+/// @def CT_HAS_C_ATTRIBUTE(x)
+/// @brief check if the compiler supports a c attribute
 #if defined(__has_c_attribute)
 #   define CT_HAS_C_ATTRIBUTE(x) __has_c_attribute(x)
 #else
 #   define CT_HAS_C_ATTRIBUTE(x) 0
 #endif
 
-#if defined(__has_include)
-#   define CT_HAS_INCLUDE(x) __has_include(x)
+/// @def CT_HAS_ATTRIBUTE(x)
+/// @brief check if the compiler supports an attribute (c or c++)
+#define CT_HAS_ATTRIBUTE(x) (CT_HAS_CPP_ATTRIBUTE(x) || CT_HAS_C_ATTRIBUTE(x))
+
+/// @def CT_HAS_BUILTIN(x)
+/// @brief check if the compiler has a builtin
+#if defined(__has_builtin)
+#   define CT_HAS_BUILTIN(x) __has_builtin(x)
 #else
-#   define CT_HAS_INCLUDE(x) 0
+#   define CT_HAS_BUILTIN(x) 0
 #endif
 
 // always detect clang first because it pretends to be gcc and msvc
@@ -43,28 +76,12 @@
 #   error "unknown compiler"
 #endif
 
-#if defined(__clang__) && defined(_MSC_VER)
-#   define CT_CC_CLANGCL 1
-#endif
-
-#if CT_CC_CLANG
-#   define CT_CLANG_PRAGMA(x) _Pragma(#x)
-#elif CT_CC_GNU
-#   define CT_GNU_PRAGMA(x) _Pragma(#x)
-#elif CT_CC_MSVC
-#   define CT_MSVC_PRAGMA(x) __pragma(x)
-#endif
-
-#ifndef CT_CLANG_PRAGMA
-#   define CT_CLANG_PRAGMA(x)
-#endif
-
-#ifndef CT_GNU_PRAGMA
-#   define CT_GNU_PRAGMA(x)
-#endif
-
-#ifndef CT_MSVC_PRAGMA
-#   define CT_MSVC_PRAGMA(x)
+#if defined(_MSC_VER)
+#   define CT_PRAGMA(x) __pragma(x)
+#elif defined(__GNUC__)
+#   define CT_PRAGMA(x) _Pragma(#x)
+#else
+#   define CT_PRAGMA(x)
 #endif
 
 #if defined(__linux__)
@@ -79,18 +96,14 @@
 #   error "unknown platform"
 #endif
 
-#ifdef __cplusplus
-#   define CT_NORETURN [[noreturn]] void
-#endif
-
-#ifndef CT_NORETURN
-#   if CT_CC_CLANG || CT_CC_GNU
-#      define CT_NORETURN __attribute__((noreturn)) void
-#   elif CT_CC_MSVC
-#      define CT_NORETURN __declspec(noreturn) void
-#   else
-#      define CT_NORETURN _Noreturn void
-#   endif
+#if defined(__GNUC__)
+#   define CT_NORETURN __attribute__((noreturn)) void
+#elif CT_HAS_ATTRIBUTE(noreturn)
+#   define CT_NORETURN __attribute__((noreturn)) void
+#elif defined(_MSC_VER)
+#   define CT_NORETURN __declspec(noreturn) void
+#else
+#   define CT_NORETURN _Noreturn void
 #endif
 
 #ifdef CT_OS_WINDOWS
@@ -104,12 +117,12 @@
 /// @def CT_UNREACHABLE()
 /// @brief mark a point in code as unreachable
 
-#if __cpp_lib_unreachable
+#if __cpp_lib_unreachable >= 202202L
 #   define CT_UNREACHABLE() std::unreachable()
-#elif defined(CT_CC_MSVC)
-#   define CT_UNREACHABLE() __assume(0)
-#elif defined(CT_CC_GNU) || defined(CT_CC_CLANG)
+#elif CT_HAS_BUILTIN(__builtin_unreachable)
 #   define CT_UNREACHABLE() __builtin_unreachable()
+#elif defined(_MSC_VER)
+#   define CT_UNREACHABLE() __assume(0)
 #else
 #   define CT_UNREACHABLE() ((void)0)
 #endif
@@ -121,40 +134,40 @@
 
 #if CT_HAS_CPP_ATTRIBUTE(assume)
 #   define CT_ASSUME(expr) [[assume(expr)]]
-#elif defined(CT_CC_MSVC)
-#   define CT_ASSUME(expr) __assume(expr)
-#elif defined(CT_CC_CLANG)
+#elif CT_HAS_BUILTIN(__builtin_assume)
 #   define CT_ASSUME(expr) __builtin_assume(expr)
-#elif defined(CT_CC_GNU)
-#   define CT_ASSUME(expr) __attribute__((assume(expr)))
+#elif CT_HAS_ATTRIBUTE(__assume__)
+#   define CT_ASSUME(expr) __attribute__((__assume__(expr)))
+#elif defined(_MSC_VER)
+#   define CT_ASSUME(expr) __assume(expr)
 #else
 #   define CT_ASSUME(expr) do { if (!(expr)) { CT_UNREACHABLE(); } } while (0)
 #endif
 
 // clang-format off
-#ifdef __cplusplus
-#    define CT_BEGIN_API extern "C"  {
-#    define CT_END_API }
+#if CT_CPLUSPLUS
+#   define CT_LINKAGE_C extern "C"
+#   define CT_BEGIN_API extern "C" {
+#   define CT_END_API }
 #else
-#    define CT_BEGIN_API
-#    define CT_END_API
+#   define CT_LINKAGE_C
+#   define CT_BEGIN_API
+#   define CT_END_API
 #endif
 // clang-format on
 
-/// @def CT_FUNCNAME
+/// @def CT_FUNCTION_NAME
 /// @brief the name of the current function
 /// @warning the format of the string is compiler dependant, please dont try and parse it
 
-#if CT_CC_GNU && CTU_HAS_PRETTY_FUNCTION
-#   define CT_FUNCNAME __PRETTY_FUNCTION__
-#endif
-
-#ifndef CT_FUNCNAME
-#   define CT_FUNCNAME __func__
+#if defined(__PRETTY_FUNCTION__)
+#   define CT_FUNCTION_NAME __PRETTY_FUNCTION__
+#else
+#   define CT_FUNCTION_NAME __func__
 #endif
 
 // byteswapping
-#if CT_CC_MSVC
+#if defined(_MSC_VER) && !defined(__clang__)
 #   define CT_BSWAP_U16(x) _byteswap_ushort(x)
 #   define CT_BSWAP_U32(x) _byteswap_ulong(x)
 #   define CT_BSWAP_U64(x) _byteswap_uint64(x)
@@ -164,15 +177,7 @@
 #   define CT_BSWAP_U64(x) __builtin_bswap64(x)
 #endif
 
-#ifdef __cplusplus
-#   define CT_LINKAGE_C extern "C"
-#else
-#   define CT_LINKAGE_C
-#endif
-
-// we use _MSC_VER rather than CT_CC_MSVC because both clang-cl and msvc define it
-// and we want to detect both
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
 #   define CT_EXPORT __declspec(dllexport)
 #   define CT_IMPORT __declspec(dllimport)
 #   define CT_LOCAL
@@ -186,7 +191,7 @@
 #   define CT_LOCAL
 #endif
 
-#ifdef __cplusplus
+#if CT_CPLUSPLUS >= 202002L
 #   define CT_ENUM_FLAGS(X, T) \
     constexpr X operator|(X lhs, X rhs) { return X((T)rhs | (T)lhs); } \
     constexpr X operator&(X lhs, X rhs) { return X((T)rhs & (T)lhs); } \

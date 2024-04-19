@@ -6,7 +6,7 @@
 #include "core/win32.h" // IWYU pragma: keep
 #include <dbghelp.h>
 
-#define MAX_NAME_SIZE 512
+#define MAX_NAME_SIZE 0x1000
 
 union disp_t {
     DWORD disp;
@@ -72,7 +72,7 @@ void bt_read_inner(bt_trace_t callback, void *user)
     read_context_stack(&ctx, callback, user);
 }
 
-frame_resolve_t bt_resolve_inner(bt_address_t frame, bt_symbol_t *symbol)
+bt_resolve_t bt_resolve_inner(bt_address_t frame, bt_symbol_t *symbol)
 {
     union disp_t disp = { 0 };
     IMAGEHLP_LINE64 line = { 0 };
@@ -90,7 +90,7 @@ frame_resolve_t bt_resolve_inner(bt_address_t frame, bt_symbol_t *symbol)
     info->SizeOfStruct = sizeof(SYMBOL_INFO);
     info->MaxNameLen = name_size;
 
-    frame_resolve_t resolve = eResolveNothing;
+    bt_resolve_t resolve = eResolveNothing;
 
     if (SymFromAddr(process, frame, &disp.disp64, info))
     {

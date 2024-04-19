@@ -62,6 +62,7 @@ CT_EVENTS_API event_builder_t evt_symbol_shadowed(
 /// @brief signal that an os error has occurred
 ///
 /// @param logger the logger to report to
+/// @param diagnostic the diagnostic to report
 /// @param error the os error
 /// @param msg the error message
 ///

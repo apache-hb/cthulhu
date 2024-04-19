@@ -19,7 +19,7 @@ bool impl_library_close(os_library_impl_t lib)
 
 // casting a object pointer to a function pointer is unspecified behavior.
 // gnu warns on it, but this is a posix platform, so its well defined.
-#if CT_CC_GNU
+#if defined(__GNUC__) && !defined(__clang__)
 #   pragma GCC diagnostic push
 #   pragma GCC diagnostic ignored "-Wpedantic"
 #endif
@@ -40,6 +40,6 @@ void *impl_library_symbol(os_library_impl_t lib, const char *name)
     return addr;
 }
 
-#if CT_CC_GNU
+#if defined(__GNUC__) && !defined(__clang__)
 #   pragma GCC diagnostic pop
 #endif

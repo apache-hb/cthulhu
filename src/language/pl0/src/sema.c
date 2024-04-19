@@ -250,7 +250,7 @@ static tree_t *sema_expr(tree_t *sema, pl0_t *node)
     }
 }
 
-static tree_t *sema_vector(tree_t *sema, const node_t *node, vector_t *body)
+static vector_t *sema_stmt_vector(tree_t *sema, vector_t *body)
 {
     size_t len = vector_len(body);
     arena_t *arena = get_global_arena();
@@ -263,12 +263,16 @@ static tree_t *sema_vector(tree_t *sema, const node_t *node, vector_t *body)
         vector_set(result, i, temp);
     }
 
-    return tree_stmt_block(node, result);
+    return result;
 }
 
 static tree_t *sema_stmts(tree_t *sema, pl0_t *node)
 {
-    return sema_vector(sema, node->node, node->stmts);
+    CTASSERTF(node->type == ePl0Stmts, "expected stmts, got %d", node->type);
+
+    vector_t *stmts = sema_stmt_vector(sema, node->stmts);
+
+    return tree_stmt_block(node->node, stmts);
 }
 
 static tree_t *sema_call(tree_t *sema, pl0_t *node)
@@ -354,10 +358,8 @@ static tree_t *sema_global(tree_t *sema, pl0_t *node)
         mpz_init_set_ui(zero, 0);
         return tree_expr_digit(node->node, gIntType, zero);
     }
-    else
-    {
-        return sema_expr(sema, val);
-    }
+
+    return sema_expr(sema, val);
 }
 
 static tree_t *sema_odd(tree_t *sema, pl0_t *node)
@@ -415,15 +417,13 @@ static void sema_proc(tree_t *sema, tree_t *tree, pl0_t *node)
 
     tree_t *ret = tree_stmt_return(node->node, tree_expr_unit(node->node, gVoidType));
 
-    tree_t *inner = sema_vector(nest, node->node, node->body);
+    vector_t *inner = sema_stmt_vector(nest, node->body);
 
-    arena_t *arena = get_global_arena();
-    vector_t *body = vector_new(2, arena);
-    vector_push(&body, inner);
-    vector_push(&body, ret);
+    vector_push(&inner, inner);
+    vector_push(&inner, ret);
 
     // make sure we have a return statement
-    tree_t *stmts = tree_stmt_block(node->node, body);
+    tree_t *stmts = tree_stmt_block(node->node, inner);
 
     tree_close_function(tree, stmts);
 }
@@ -461,16 +461,16 @@ static void insert_module(tree_t *sema, tree_t *other)
     }
 }
 
-void pl0_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
+void pl0_forward_decls(language_runtime_t *runtime, compile_unit_t *context)
 {
     CT_UNUSED(runtime);
 
-    pl0_t *ast = unit_get_ast(unit);
+    pl0_t *ast = unit_get_ast(context);
     size_t const_count = vector_len(ast->consts);
     size_t global_count = vector_len(ast->globals);
     size_t proc_count = vector_len(ast->procs);
 
-    tree_t *root = unit->tree;
+    tree_t *root = context->tree;
     const tree_storage_t const_storage = get_const_storage(gIntType);
 
     // forward declare everything
@@ -525,14 +525,14 @@ void pl0_forward_decls(language_runtime_t *runtime, compile_unit_t *unit)
         set_proc(root, ePl0TagProcs, it->name, tree);
     }
 
-    unit_update(unit, ast, root);
+    unit_update(context, ast, root);
 }
 
-void pl0_process_imports(language_runtime_t *runtime, compile_unit_t *unit)
+void pl0_process_imports(language_runtime_t *runtime, compile_unit_t *context)
 {
-    pl0_t *ast = unit_get_ast(unit);
+    pl0_t *ast = unit_get_ast(context);
     arena_t *arena = runtime->arena;
-    tree_t *root = unit->tree;
+    tree_t *root = context->tree;
 
     size_t import_count = vector_len(ast->imports);
     for (size_t i = 0; i < import_count; i++)
@@ -559,19 +559,22 @@ void pl0_process_imports(language_runtime_t *runtime, compile_unit_t *unit)
     }
 }
 
-void pl0_compile_module(language_runtime_t *runtime, compile_unit_t *unit)
+void pl0_compile_module(language_runtime_t *runtime, compile_unit_t *context)
 {
     CT_UNUSED(runtime);
 
-    pl0_t *ast = unit_get_ast(unit);
+    pl0_t *ast = unit_get_ast(context);
 
     if (ast->entry != NULL)
     {
-        tree_t *mod = unit->tree;
+        tree_t *mod = context->tree;
         const char *name = tree_get_name(mod);
 
-        tree_t *body = sema_stmt(mod, ast->entry);
-        vector_push(&body->stmts, tree_stmt_return(ast->node, tree_expr_unit(ast->node, gVoidType)));
+        CTASSERTF(ast->entry->type == ePl0Stmts, "expected stmts, got %d", ast->entry->type);
+        vector_t *stmts = sema_stmt_vector(mod, ast->entry->stmts);
+        vector_push(&stmts, tree_stmt_return(ast->node, tree_expr_unit(ast->node, gVoidType)));
+
+        tree_t *body = tree_stmt_block(ast->node, stmts);
 
         // this is the entry point, we only support cli entry points in pl/0 for now
         tree_t *signature = tree_type_closure(ast->node, name, gVoidType, &gEmptyVector, eArityFixed);

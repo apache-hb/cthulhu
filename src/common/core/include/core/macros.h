@@ -9,18 +9,18 @@
 /// @ingroup core
 /// @{
 
-#ifdef __cplusplus
+#if __cpp_static_assert >= 200410L
 #   define CT_STATIC_ASSERT(expr, msg) static_assert(expr, msg)
 #else
 #   define CT_STATIC_ASSERT(expr, msg) _Static_assert(expr, msg)
 #endif
 
-#if __cplusplus >= 201402L
+#if CT_HAS_ATTRIBUTE(deprecated)
 #   define CT_DEPRECATED(msg) [[deprecated(msg)]]
-#elif CT_CC_MSVC || CT_CC_CLANGCL
+#elif defined(_MSC_VER)
 #   define CT_DEPRECATED(msg) __declspec(deprecated(msg))
-#elif CT_CC_CLANG || CT_CC_GNU
-#   define CT_DEPRECATED(msg) __attribute__((deprecated(msg)))
+#elif CT_HAS_ATTRIBUTE(__deprecated__)
+#   define CT_DEPRECATED(msg) __attribute__((__deprecated__(msg)))
 #else
 #   define CT_DEPRECATED(msg)
 #endif
@@ -45,10 +45,14 @@
 /// @brief mark a variable as unused
 #define CT_UNUSED(x) ((void)(x))
 
+/// @def CT_STR(x)
+/// @brief converts a macro to a string
 #define CT_INNER_STR(x) #x
 #define CT_STR(x) CT_INNER_STR(x)
 
-#define CT_VERSION CT_STR(CTU_MAJOR) "." CT_STR(CTU_MINOR) "." CT_STR(CTU_PATCH)
+/// @def CT_VERSION_STR
+/// @brief the version of the project as a string
+#define CT_VERSION_STR CT_STR(CTU_VERSION_MAJOR) "." CT_STR(CTU_VERSION_MINOR) "." CT_STR(CTU_VERSION_PATCH)
 
 /// @defgroup ansi_colour ANSI Colour macros
 /// @brief ANSI escape string colour macros

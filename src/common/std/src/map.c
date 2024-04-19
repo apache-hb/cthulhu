@@ -53,14 +53,14 @@ static bucket_t *impl_bucket_new(const void *key, void *value, arena_t *arena)
 }
 
 CT_HOTFN
-static bucket_t *map_get_bucket(map_t *map, size_t hash)
+static bucket_t *map_get_bucket(map_t *map, ctu_hash_t hash)
 {
     size_t index = hash % map->size;
     return &map->data[index];
 }
 
 CT_HOTFN
-static const bucket_t *map_get_bucket_const(const map_t *map, size_t hash)
+static const bucket_t *map_get_bucket_const(const map_t *map, ctu_hash_t hash)
 {
     size_t index = hash % map->size;
     return &map->data[index];
@@ -182,7 +182,7 @@ size_t map_count(const map_t *map)
 // info functions
 
 CT_HOTFN
-static size_t impl_key_hash(const map_t *map, const void *key)
+static ctu_hash_t impl_key_hash(const map_t *map, const void *key)
 {
     const hash_info_t *info = &map->info;
     return info->hash(key);
@@ -198,14 +198,14 @@ static bool impl_key_equal(const map_t *map, const void *lhs, const void *rhs)
 CT_HOTFN
 static const bucket_t *impl_bucket_get_const(const map_t *map, const void *key)
 {
-    size_t hash = impl_key_hash(map, key);
+    ctu_hash_t hash = impl_key_hash(map, key);
     return map_get_bucket_const(map, hash);
 }
 
 CT_HOTFN
 static bucket_t *impl_bucket_get(map_t *map, const void *key)
 {
-    size_t hash = impl_key_hash(map, key);
+    ctu_hash_t hash = impl_key_hash(map, key);
     return map_get_bucket(map, hash);
 }
 

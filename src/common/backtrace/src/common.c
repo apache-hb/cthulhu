@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
+#ifndef _CRT_SECURE_NO_WARNINGS
+#   define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include "common.h"
+
 #include <string.h>
 
 bt_error_t gSystemError = { 0 };
 
 USE_DECL
-frame_resolve_t bt_resolve_symbol(bt_address_t frame, bt_symbol_t *symbol)
+bt_resolve_t bt_resolve_symbol(bt_address_t frame, bt_symbol_t *symbol)
 {
     // inside this function we cant assert
     // because we might be called from inside an assert
@@ -20,8 +25,8 @@ frame_resolve_t bt_resolve_symbol(bt_address_t frame, bt_symbol_t *symbol)
         return eResolveNothing;
 
     symbol->line = CT_LINE_UNKNOWN;
-    strcpy_s(name.text, name.length, "<unknown>");
-    strcpy_s(path.text, path.length, "<unknown>");
+    strncpy(name.text, "<unknown>", name.length);
+    strncpy(path.text, "<unknown>", path.length);
 
     return bt_resolve_inner(frame, symbol);
 }

@@ -14,7 +14,7 @@ typedef enum pl0_tag_t
     ePl0TagTotal
 } pl0_tag_t;
 
-void pl0_init(language_runtime_t *handle, tree_t *root);
+void pl0_init(language_runtime_t *runtime, tree_t *root);
 
 void pl0_forward_decls(language_runtime_t *runtime, compile_unit_t *context);
 void pl0_process_imports(language_runtime_t *runtime, compile_unit_t *context);

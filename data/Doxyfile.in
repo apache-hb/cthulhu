@@ -38,7 +38,7 @@ PROJECT_NAME           = "Cthulhu"
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
-PROJECT_NUMBER         = "@CTU_MAJOR@.@CTU_MINOR@.@CTU_PATCH@"
+PROJECT_NUMBER         = "@CTU_VERSION_MAJOR@.@CTU_VERSION_MINOR@.@CTU_VERSION_PATCH@"
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewer a
@@ -920,9 +920,7 @@ EXCLUDE_SYMLINKS       = NO
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       = */imgui/*
-EXCLUDE_PATTERNS      += */imnodes/*
-EXCLUDE_PATTERNS      += */file-dialog/*
+EXCLUDE_PATTERNS       = */vendor/*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the

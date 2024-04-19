@@ -3,9 +3,9 @@ parts = version.split('.')
 
 config_cdata = configuration_data()
 
-config_cdata.set('CTU_MAJOR', parts[0].to_int())
-config_cdata.set('CTU_MINOR', parts[1].to_int())
-config_cdata.set('CTU_PATCH', parts[2].to_int())
+config_cdata.set('CTU_VERSION_MAJOR', parts[0].to_int())
+config_cdata.set('CTU_VERSION_MINOR', parts[1].to_int())
+config_cdata.set('CTU_VERSION_PATCH', parts[2].to_int())
 
 config_cdata.set10('CTU_DEBUG', is_debug)
 config_cdata.set10('CTU_ASSERTS', opt_asserts.allowed())

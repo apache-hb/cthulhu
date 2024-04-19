@@ -361,7 +361,7 @@ tree_t *tree_expr_call(const node_t *node, const tree_t *callee, vector_t *args)
 /// statements
 ///
 
-tree_t *tree_stmt_block(const node_t *node, vector_t *stmts)
+tree_t *tree_stmt_block(const node_t *node, const vector_t *stmts)
 {
     CTASSERT(stmts != NULL);
 

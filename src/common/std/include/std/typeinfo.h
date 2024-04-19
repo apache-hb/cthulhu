@@ -5,6 +5,7 @@
 
 #include "core/compiler.h"
 #include "core/analyze.h"
+#include "core/types.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -21,7 +22,7 @@ CT_BEGIN_API
 /// @param key the object to hash
 ///
 /// @return the hash of @p key
-typedef size_t (*hash_fn_t)(const void *key);
+typedef ctu_hash_t (*hash_fn_t)(const void *key);
 
 /// @brief compare two objects pointed to by @p lhs and @p rhs
 ///

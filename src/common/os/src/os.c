@@ -224,12 +224,12 @@ os_error_t os_file_open(const char *path, os_access_t access, os_file_t *file)
 }
 
 USE_DECL
-os_error_t os_file_close(os_file_t *fd)
+os_error_t os_file_close(os_file_t *file)
 {
-    CTASSERT(fd != NULL);
-    CTASSERTF(fd->impl != CT_OS_INVALID_FILE, "invalid file handle (%s)", fd->path);
+    CTASSERT(file != NULL);
+    CTASSERTF(file->impl != CT_OS_INVALID_FILE, "invalid file handle (%s)", file->path);
 
-    if (!impl_file_close(fd->impl))
+    if (!impl_file_close(file->impl))
     {
         return impl_last_error();
     }
@@ -262,7 +262,7 @@ os_error_t os_file_create(const char *path)
 USE_DECL
 os_error_t os_file_copy(const char *dst, const char *src)
 {
-#if CTU_OS_COPYFILE
+#if CTU_OS_HAS_COPYFILE
     return impl_copyfile(dst, src);
 #else
     os_file_t dstf = { 0 };
@@ -337,19 +337,19 @@ static bool iter_next(os_iter_t *iter, os_inode_impl_t *result)
 }
 
 USE_DECL
-os_error_t os_iter_begin(const char *path, os_iter_t *result)
+os_error_t os_iter_begin(const char *path, os_iter_t *iter)
 {
     CTASSERT(path != NULL);
-    CTASSERT(result != NULL);
+    CTASSERT(iter != NULL);
 
-    result->error = eOsSuccess;
-    result->impl = impl_iter_open(path, &result->current);
-    if (result->impl == CT_OS_INVALID_ITER)
+    iter->error = eOsSuccess;
+    iter->impl = impl_iter_open(path, &iter->current);
+    if (iter->impl == CT_OS_INVALID_ITER)
     {
-        result->error = impl_last_error();
+        iter->error = impl_last_error();
     }
 
-    return result->error;
+    return iter->error;
 }
 
 USE_DECL

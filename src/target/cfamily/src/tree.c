@@ -41,12 +41,12 @@ static void forward_decl(cfamily_emit_t *emit, const tree_t *tree)
     {
         push_namespace(emit, tree);
 
-        map_t *vars = tree_module_tag(tree, eSemaTypes);
-        map_iter_t iter = map_iter(vars);
-        while (map_has_next(&iter))
-        {
-            (void)map_next(&iter);
-        }
+        // map_t *vars = tree_module_tag(tree, eSemaTypes);
+        // map_iter_t iter = map_iter(vars);
+        // while (map_has_next(&iter))
+        // {
+        //     (void)map_next(&iter);
+        // }
 
         pop_namespace(emit);
         break;

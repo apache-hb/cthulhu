@@ -118,7 +118,7 @@ static void default_error_next(bt_address_t frame, void *user)
         .path = text_make(path_buffer, sizeof(path_buffer))
     };
 
-    frame_resolve_t resolve = bt_resolve_symbol(frame, &symbol);
+    bt_resolve_t resolve = bt_resolve_symbol(frame, &symbol);
 
     text_t name = symbol.name;
     text_t path = symbol.path;

@@ -38,7 +38,7 @@ typedef struct bt_report_t
 typedef struct entry_t
 {
     /// @brief what symbol info has been resolved by the backend?
-    frame_resolve_t info;
+    bt_resolve_t info;
 
     /// @brief the file name
     /// @note dont use this if @a info does not have @a eResolveFile
@@ -294,7 +294,7 @@ static const char *fmt_entry_location(backtrace_t *pass, const entry_t *entry)
 {
     print_backtrace_t config = pass->options;
 
-    frame_resolve_t resolved = entry->info;
+    bt_resolve_t resolved = entry->info;
 
     if (resolved & eResolveFile)
     {
@@ -328,7 +328,7 @@ static char *fmt_entry(backtrace_t *pass, size_t symbol_align, const entry_t *en
     print_backtrace_t config = pass->options;
     print_options_t options = config.options;
 
-    frame_resolve_t resolved = entry->info;
+    bt_resolve_t resolved = entry->info;
 
     // we only need the @ seperator if we only have the address
     bool needs_seperator = !((resolved & eResolveFile) && (resolved & eResolveLine));
@@ -500,7 +500,7 @@ void bt_report_add(bt_report_t *report, bt_address_t frame)
         .name = text_make(name, sizeof(name)),
         .path = text_make(path, sizeof(path)),
     };
-    frame_resolve_t info = bt_resolve_symbol(frame, &symbol);
+    bt_resolve_t info = bt_resolve_symbol(frame, &symbol);
 
     entry_t entry = {
         .info = info,

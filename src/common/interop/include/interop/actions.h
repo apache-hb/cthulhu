@@ -42,4 +42,6 @@ CT_INTEROP_API void flex_init(OUT_NOTNULL where_t *where);
 /// @param steps the number of steps to update by
 CT_INTEROP_API void flex_update(INOUT_NOTNULL where_t *where, IN_READS(steps) const where_t *offsets, int steps);
 
+/// @}
+
 CT_END_API

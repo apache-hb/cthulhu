@@ -149,14 +149,13 @@ CT_PUREFN
 CT_IO_API void *io_data(IN_NOTNULL io_t *io);
 
 /// @brief create a new IO object for a given interface
-/// @pre @p data must point to a valid memory region of @p size bytes
 /// @pre @p cb must point to a valid callback set
+/// @pre @p data must point to a valid memory region of @p cb->size bytes. if @p cb->size is 0, @p data may be NULL
 ///
 /// @param cb the callback set
 /// @param flags the access flags for this object
 /// @param name the name of the object
 /// @param data the user data, this is copied into the io object
-/// @param size the size of the user data
 /// @param arena the arena to allocate the io object from
 ///
 /// @return a new IO interface

@@ -31,12 +31,12 @@ typedef struct source_info_t
     source_ctu_line_t line;
 
     /// @brief the function the panic occurred in
-    /// @note this could also be the name of a variable in some uses in c++
+    /// @note this could also be the name of a variable in c++ depending on context
     FIELD_STRING const char *function;
 } source_info_t;
 
 /// @def CT_SOURCE_CURRENT
 /// @brief the source location of the current line
-#define CT_SOURCE_CURRENT {__FILE__, __LINE__, CT_FUNCNAME}
+#define CT_SOURCE_CURRENT {__FILE__, __LINE__, CT_FUNCTION_NAME}
 
 /// @}

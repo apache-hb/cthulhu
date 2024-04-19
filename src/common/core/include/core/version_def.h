@@ -11,13 +11,13 @@
 /// @{
 
 /// @def CT_NEW_VERSION(major, minor, patch)
-/// @brief creates a new version_t from @p major, @p minor and @p patch
+/// @brief creates a new ctu_version_t from @p major, @p minor and @p patch
 /// @param major the major version
 /// @param minor the minor version
 /// @param patch the patch version
-/// @return the new version_t
+/// @return the new ctu_version_t
 
-#define CT_NEW_VERSION(major, minor, patch) (((major) << 24) | ((minor) << 16) | (patch))
+#define CT_NEW_VERSION(major, minor, patch) (((major & 0xFF) << 24) | ((minor & 0xFF) << 16) | (patch & 0xFFFF))
 
 /// @def CT_VERSION_MAJOR(version)
 /// @brief returns the major version of @p version
@@ -36,10 +36,10 @@
 
 #define CT_VERSION_MAJOR(version) (((version) >> 24) & 0xFF)
 #define CT_VERSION_MINOR(version) (((version) >> 16) & 0xFF)
-#define CT_VERSION_PATCH(version) ((version)&0xFFFF)
+#define CT_VERSION_PATCH(version) ((version) & 0xFFFF)
 
-/// @brief underlying type for version_t
-typedef uint_fast32_t version_t;
+/// @brief underlying type for ctu_version_t
+typedef uint_fast32_t ctu_version_t;
 
 #define PRI_VERSION PRIuFAST32
 
@@ -49,7 +49,7 @@ typedef struct version_info_t
     const char *license; ///< the license of this component
     const char *desc;    ///< a short description of this component
     const char *author;  ///< the author of this component
-    version_t version;   ///< the version info for this component
+    ctu_version_t version;   ///< the version info for this component
 } version_info_t;
 
 /// @}

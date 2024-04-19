@@ -119,7 +119,7 @@ typedef struct tree_t {
         };
 
         /* eTreeStmtBlock */
-        vector_t *stmts;
+        const vector_t *stmts;
 
         /* eTreeStmtReturn */
         const tree_t *value;
@@ -394,7 +394,7 @@ CT_TREE_API tree_t *tree_expr_call(const node_t *node, const tree_t *callee, vec
  * @param stmts the statements in the block
  * @return the block statement
  */
-CT_TREE_API tree_t *tree_stmt_block(const node_t *node, vector_t *stmts);
+CT_TREE_API tree_t *tree_stmt_block(const node_t *node, const vector_t *stmts);
 
 /**
  * @brief create a return statement

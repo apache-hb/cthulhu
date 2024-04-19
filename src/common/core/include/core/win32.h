@@ -9,11 +9,21 @@
 /// @ingroup core
 /// @{
 
-// undefine stuff first for unity builds
-#undef WIN32_LEAN_AND_MEAN
-#undef NOMINMAX
-#undef STRICT
-#undef VC_EXTRALEAN
+#ifndef WIN32_LEAN_AND_MEAN
+#   define WIN32_LEAN_AND_MEAN
+#endif
+
+#ifndef NOMINMAX
+#   define NOMINMAX
+#endif
+
+#ifndef STRICT
+#   define STRICT
+#endif
+
+#ifndef VC_EXTRALEAN
+#   define VC_EXTRALEAN
+#endif
 
 #include <windows.h> // IWYU pragma: export
 

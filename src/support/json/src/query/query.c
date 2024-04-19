@@ -2,19 +2,22 @@
 #include "json/query.h"
 #include "json/json.h"
 
+#include "base/panic.h"
 #include "arena/arena.h"
-#include "interop/compile.h"
+#include "std/typed/vector.h"
+#include "std/vector.h"
 
 #include "io/io.h"
+#include "interop/compile.h"
+
 #include "notify/notify.h"
-#include "base/panic.h"
+
+#include "cthulhu/events/events.h"
 
 #include "query_scan.h"
 
 #include "query_bison.h" // IWYU pragma: keep
 #include "query_flex.h" // IWYU pragma: keep
-#include "std/typed/vector.h"
-#include "std/vector.h"
 
 CT_CALLBACKS(kQueryCallbacks, query);
 
@@ -73,11 +76,11 @@ static json_t *eval_query(json_t *json, const query_ast_t *query, arena_t *arena
     }
 }
 
-USE_DECL
-json_t *json_query(json_t *json, const char *query, logger_t *logger, arena_t *arena)
+static json_t *query_internal(json_t *json, const char *query, logger_t *logger, scan_t **scanout, arena_t *arena)
 {
     CTASSERT(json != NULL);
     CTASSERT(query != NULL);
+    CTASSERT(logger != NULL);
     CTASSERT(arena != NULL);
 
     io_t *io = io_string("query", query, arena);
@@ -89,6 +92,9 @@ json_t *json_query(json_t *json, const char *query, logger_t *logger, arena_t *a
     scan_t *scan = scan_io("json query", io, arena);
     scan_set_context(scan, &ctx);
 
+    if (scanout)
+        *scanout = scan;
+
     parse_result_t result = scan_buffer(scan, &kQueryCallbacks);
 
     if (result.result != eParseOk)
@@ -97,4 +103,31 @@ json_t *json_query(json_t *json, const char *query, logger_t *logger, arena_t *a
     }
 
     return eval_query(json, result.tree, arena);
+}
+
+USE_DECL
+json_t *json_query(json_t *json, const char *query, logger_t *logger, arena_t *arena)
+{
+    return query_internal(json, query, logger, NULL, arena);
+}
+
+USE_DECL
+json_t *json_query_type(json_t *json, const char *query, json_kind_t kind, logger_t *logger, arena_t *arena)
+{
+    CT_ASSERT_RANGE(kind, 0, eJsonCount);
+
+    scan_t *scan;
+
+    json_t *result = query_internal(json, query, logger, &scan, arena);
+    if (!result)
+        return NULL;
+
+    if (result->kind == kind)
+        return result;
+
+    node_t node = node_make(scan, result->where);
+
+    msg_notify(logger, &kEvent_ReturnTypeMismatch, &node, "expected %s, got %s", json_kind_name(kind), json_kind_name(result->kind));
+
+    return NULL;
 }

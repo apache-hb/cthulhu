@@ -43,7 +43,7 @@ typedef struct bt_symbol_t
 } bt_symbol_t;
 
 /// @brief how much of a frame was reconstructed
-typedef enum frame_resolve_t
+typedef enum bt_resolve_t
 {
     /// @brief nothing was resolved
     eResolveNothing = (0),
@@ -65,7 +65,7 @@ typedef enum frame_resolve_t
 
     /// @brief all information was resolved
     eResolveAll = eResolveLine | eResolveName | eResolveFile,
-} frame_resolve_t;
+} bt_resolve_t;
 
 /// @brief user callback for @a bt_read
 ///
@@ -132,10 +132,28 @@ CT_BACKTRACE_API void bt_read(IN_NOTNULL bt_trace_t callback, void *user);
 ///
 /// @param frame the frame to resolve
 /// @param symbol the symbol to fill
-CT_BACKTRACE_API frame_resolve_t bt_resolve_symbol(bt_address_t frame, IN_NOTNULL bt_symbol_t *symbol);
+CT_BACKTRACE_API bt_resolve_t bt_resolve_symbol(bt_address_t frame, IN_NOTNULL bt_symbol_t *symbol);
 
 /// @}
 
 CT_END_API
 
-CT_ENUM_FLAGS(frame_resolve_t, int)
+CT_ENUM_FLAGS(bt_resolve_t, int)
+
+#if CT_CPLUSPLUS >= 202002L
+namespace ctu::bt {
+    template<typename T>
+    concept AddressCallback = requires (T it) {
+        { it(bt_address_t{}) };
+    };
+
+    void read(AddressCallback auto& fn) {
+        using FnType = decltype(fn);
+
+        bt_read([](bt_address_t address, void *user) {
+            auto& fn = *static_cast<FnType*>(user);
+            fn(address);
+        }, static_cast<void*>(&fn));
+    }
+}
+#endif

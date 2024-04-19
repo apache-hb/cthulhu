@@ -1,0 +1,14 @@
+{
+    "nodes": [
+        {
+            "name": "digit",
+            "enum": "Digit",
+            "fields": [
+                { "name": "digit", "type": "mpz" }
+            ]
+        },
+        {
+
+        }
+    ]
+}

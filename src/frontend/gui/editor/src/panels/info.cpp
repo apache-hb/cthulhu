@@ -27,7 +27,7 @@ static std::string_view from_text_view(const text_view_t& view)
     return std::string_view(view.text, view.length);
 }
 
-static void draw_version(const char *id, version_t version)
+static void draw_version(const char *id, ctu_version_t version)
 {
     int major = CT_VERSION_MAJOR(version);
     int minor = CT_VERSION_MINOR(version);

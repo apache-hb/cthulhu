@@ -26,6 +26,10 @@ CT_BEGIN_API
 /// @brief a compile time flag to enable memory tracing
 /// @note this is enabled by default in debug builds, see [The build guide](@ref building) for more information
 
+#ifdef WITH_DOXYGEN
+#   define CTU_TRACE_MEMORY 0
+#endif
+
 /// @def CT_ALLOC_SIZE_UNKNOWN
 /// @brief unknown allocation size constant
 /// when freeing or reallocating memory, this can be used as the size

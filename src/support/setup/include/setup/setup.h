@@ -20,6 +20,11 @@ typedef struct cfg_field_t cfg_field_t;
 
 CT_BEGIN_API
 
+/// @defgroup setup setup
+/// @ingroup support
+/// @brief command line parsing and setup
+/// @{
+
 /// @brief default options shared by all tools
 typedef struct setup_options_t
 {
@@ -111,5 +116,7 @@ CT_SETUP_API bool setup_should_exit(IN_NOTNULL const setup_init_t *init);
 ///
 /// @return the exit code
 CT_SETUP_API int setup_exit_code(IN_NOTNULL const setup_init_t *init);
+
+/// @}
 
 CT_END_API

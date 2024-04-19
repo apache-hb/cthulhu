@@ -7,6 +7,7 @@
 #include "core/analyze.h"
 #include "core/compiler.h"
 #include "core/text.h"
+#include "core/types.h"
 
 #include <stddef.h>
 #include <stdbool.h>
@@ -31,7 +32,7 @@ CT_BASE_API bool is_path_special(IN_STRING const char *path);
 ///
 /// @return the hash of the pointer
 CT_NODISCARD CT_CONSTFN
-CT_BASE_API size_t ctu_ptrhash(const void *ptr);
+CT_BASE_API ctu_hash_t ctu_ptrhash(const void *ptr);
 
 /// @brief hash a string
 ///
@@ -39,7 +40,7 @@ CT_BASE_API size_t ctu_ptrhash(const void *ptr);
 ///
 /// @return the hash
 CT_NODISCARD CT_PUREFN
-CT_BASE_API size_t str_hash(IN_STRING const char *str);
+CT_BASE_API ctu_hash_t str_hash(IN_STRING const char *str);
 
 /// @brief hash a string with a provided length
 ///
@@ -47,7 +48,7 @@ CT_BASE_API size_t str_hash(IN_STRING const char *str);
 ///
 /// @return the hash
 CT_NODISCARD CT_PUREFN
-CT_BASE_API size_t text_hash(text_view_t text);
+CT_BASE_API ctu_hash_t text_hash(text_view_t text);
 
 // stdlib wrappers
 

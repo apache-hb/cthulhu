@@ -11,7 +11,9 @@
 /// @ingroup core
 /// @{
 
-#if CT_HAS_CPP_ATTRIBUTE(nodiscard) || CT_HAS_C_ATTRIBUTE(nodiscard)
+// work around gcc bug where attributes are reported as available in C11 mode
+// but are not actually available.
+#if CT_HAS_ATTRIBUTE(nodiscard) && CT_CPLUSPLUS && !defined(__GNUC__)
 #   define CT_NODISCARD [[nodiscard]]
 #endif
 
@@ -68,7 +70,9 @@
 #   define INOUT_NOTNULL
 #endif
 
-#ifndef RET_RANGE
+#ifdef WITH_DOXYGEN
+#   define RET_RANGE(lo, hi)
+#else
 #   define RET_RANGE(lo, hi) RET_DOMAIN(>=, lo) RET_DOMAIN(<=, hi)
 #endif
 
@@ -138,6 +142,11 @@
 /// @warning must not depend on mutable global state or have side effects
 /// @note thats a lie actually, gcc says it may have calls to it optimized away via CSE
 
+// TODO: this is a bit of a hack to make tests work properly
+// both gcc and clang will optimize away calls to pure/const functions
+// if they can statically prove that the function will cause an assertion.
+// In our test suite we test assertion cases so we need to have a way to disable
+// this optimization. This may technically be UB.
 #if CT_DISABLE_FN_PURITY
 #   define CT_NOALIAS
 #   define CT_CONSTFN
@@ -166,13 +175,13 @@
 
 #define CT_ALLOC_SIZE(...) CT_ATTRIB(alloc_size(__VA_ARGS__))
 
-#ifdef __cplusplus
-#   ifdef _MSC_VER
+#if CT_CPLUSPLUS
+#   if defined(_MSC_VER)
 #      define CT_RESTRICT __restrict
-#   elif CT_CC_GNU
+#   elif defined(__clang__)
+#      define CT_RESTRICT __restrict
+#   elif defined(__GNUC__)
 #      define CT_RESTRICT __restrict__
-#   elif CT_CC_CLANG
-#      define CT_RESTRICT __restrict
 #   else
 #      define CT_RESTRICT
 #   endif

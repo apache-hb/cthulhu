@@ -4,9 +4,6 @@
 
 #include "core/win32.h" // IWYU pragma: export
 
-#include <windef.h>
-#include <minwinbase.h>
-
 typedef HMODULE os_library_impl_t;
 typedef HANDLE os_file_impl_t;
 typedef WIN32_FIND_DATA os_inode_impl_t;
