@@ -907,3 +907,14 @@ char str_toupper(char c)
 
     return c;
 }
+
+USE_DECL
+bool text_view_equal(text_view_t lhs, text_view_t rhs)
+{
+    if (lhs.length != rhs.length)
+    {
+        return false;
+    }
+
+    return ctu_strncmp(lhs.text, rhs.text, lhs.length) == 0;
+}

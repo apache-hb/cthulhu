@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 #pragma once
 
-#include "json/json.h"
 #include "core/analyze.h"
-#include "core/text.h"
+
+#include "json/json.h"
 
 #include <stdbool.h>
 

@@ -18,9 +18,20 @@
 ///   - vim/textmate/emacs syntax highlighting definitions
 
 #include "config/config.h"
+#include "core/macros.h"
+#include "core/types.h"
 #include "core/version_def.h"
+#include "format/config.h"
+#include "format/notify2.h"
+#include "io/console.h"
+#include "io/io.h"
 #include "memory/memory.h"
+#include "meta.h"
+#include "notify/notify.h"
+#include "os/os.h"
 #include "setup/setup.h"
+#include "std/vector.h"
+#include "json/json.h"
 
 static const version_info_t kToolVersion = {
     .license = "LGPLv3",
@@ -52,7 +63,7 @@ static const cfg_info_t kHeaderOutputInfo = {
     .args = CT_ARGS(kHeaderOutputArgs),
 };
 
-static const cfg_arg_t kSourceOutputArgs[] = { CT_ARG_LONG("source"), CT_ARG_SHORT("s") };
+static const cfg_arg_t kSourceOutputArgs[] = { CT_ARG_LONG("source") };
 
 static const cfg_info_t kSourceOutputInfo = {
     .name = "source",
@@ -67,8 +78,8 @@ static tool_t make_tool(void)
     cfg_group_t *root = config_root(&kRootInfo, arena);
     setup_options_t options = setup_options(kToolVersion, root);
 
-    cfg_field_t *header = config_string(root, &kHeaderOutputInfo, "out.h");
-    cfg_field_t *source = config_string(root, &kSourceOutputInfo, "out.c");
+    cfg_field_t *header = config_string(root, &kHeaderOutputInfo, NULL);
+    cfg_field_t *source = config_string(root, &kSourceOutputInfo, NULL);
 
     tool_t tool = {
         .root = root,
@@ -80,12 +91,81 @@ static tool_t make_tool(void)
     return tool;
 }
 
+static void print_errors(io_t *io, setup_init_t setup, logger_t *logger, arena_t *arena)
+{
+    print_notify_t config = {
+        .options = {
+            .arena = arena,
+            .io = io,
+            .pallete = setup.pallete,
+        },
+        .heading = setup.heading,
+        .style = eNotifyFull,
+        .zero_indexed_lines = false,
+    };
+
+    print_notify_many(config, logger_get_events(logger));
+}
+
 int main(int argc, const char **argv)
 {
     setup_default(NULL);
+    arena_t *arena = get_global_arena();
     tool_t tool = make_tool();
 
     setup_init_t init = setup_parse(argc, argv, tool.options);
     if (setup_should_exit(&init))
         return setup_exit_code(&init);
+
+    ctu_length_t len = vector_len(init.posargs);
+    if (len != 1)
+        return setup_exit_help(tool.options, &init);
+
+    const char *input = vector_get(init.posargs, 0);
+
+    io_t *err = io_stderr();
+    io_t *con = io_stdout();
+
+    io_t *io = io_file(input, eOsAccessRead, arena);
+    io_error_t error = io_error(io);
+    if (error != eOsSuccess)
+    {
+        io_printf(err, "failed to open file %s: %s\n", input, os_error_string(error, arena));
+        return CT_EXIT_ERROR;
+    }
+
+    logger_t *logger = logger_new(arena);
+
+    json_parse_t parse = json_parse(io, logger, arena);
+    if (parse.root == NULL)
+    {
+        print_errors(err, init, logger, arena);
+        return CT_EXIT_ERROR;
+    }
+
+    meta_info_t *info = meta_info_parse(parse.root, parse.scanner, logger, arena);
+    if (info == NULL)
+    {
+        print_errors(err, init, logger, arena);
+        return CT_EXIT_ERROR;
+    }
+
+    text_view_t prefix = info->prefix;
+    io_printf(con, "prefix: %.*s\n", (int)prefix.length, prefix.text);
+
+    ctu_length_t nodes = typevec_len(info->nodes);
+    for (ctu_length_t i = 0; i < nodes; i++)
+    {
+        meta_ast_t *ast = typevec_offset(info->nodes, i);
+        text_view_t ast_name = ast->name;
+        io_printf(con, "node: %.*s\n", (int)ast_name.length, ast_name.text);
+
+        ctu_length_t fields = typevec_len(ast->fields);
+        for (ctu_length_t j = 0; j < fields; j++)
+        {
+            meta_field_t *field = typevec_offset(ast->fields, j);
+            text_view_t field_name = field->name;
+            io_printf(con, "field: %.*s\n", (int)field_name.length, field_name.text);
+        }
+    }
 }

@@ -14,26 +14,10 @@ typedef struct vector_t vector_t;
 
 typedef enum pl0_type_t
 {
-    ePl0Digit,
-    ePl0Ident,
+#define PL0_TYPE(id, name) id,
+#include "pl0/pl0.inc"
 
-    ePl0Odd,
-    ePl0Unary,
-    ePl0Binary,
-    ePl0Compare,
-
-    ePl0Assign,
-    ePl0Call,
-    ePl0Branch,
-    ePl0Loop,
-    ePl0Print,
-    ePl0Stmts,
-
-    ePl0Value,
-    ePl0Procedure,
-
-    ePl0Import,
-    ePl0Module
+    ePl0Count
 } pl0_type_t;
 
 typedef struct pl0_t

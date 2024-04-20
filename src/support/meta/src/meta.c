@@ -1,93 +1,135 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-#include "meta/meta.h"
+#include "meta.h"
+#include "arena/arena.h"
+#include "cthulhu/events/events.h"
+#include "std/str.h"
 
-#include "core/version_def.h"
-#include "config/config.h"
-#include "memory/memory.h"
-#include "setup/setup.h"
+#include "json/query.h"
 
-/// meta command line tool to generate repetitive data
-/// output types:
-/// * diagnostic and error message listings for a component
-///   - in structured format (json/xml/html) for generating docs
-///   - in C for use inside the component
-/// * command line flags for a component
-///   - both structured and C output
-/// * ast node definitions for a language
-///   - in C for use in the compiler
-///   - maybe generate pretty printers or metadata for the ast
-///   - some sort of serialized format for fuzzing and object files
-///     - maybe protobuf for fuzzing
-///     - a custom format for object files?
-/// * lexer and parser definitions for a language
-///   - flex/bison output for use in the compiler
-///   - vim/textmate/emacs syntax highlighting definitions
-
-static const version_info_t kToolVersion = {
-    .license = "LGPLv3",
-    .author = "Elliot Haisley",
-    .desc = "Meta code generation tool",
-    .version = CT_NEW_VERSION(0, 0, 1),
-};
-
-static const cfg_info_t kRootInfo = {
-    .name = "meta",
-    .brief = "meta code generation tool",
-};
-
-static const cfg_arg_t kModeArgs[] = { CT_ARG_LONG("mode") };
-
-static const cfg_info_t kModeInfo = {
-    .name = "mode",
-    .brief = "output mode",
-    .args = CT_ARGS(kModeArgs),
-};
-
-static const cfg_choice_t kModeOptions[] = {
-
-};
-
-static const cfg_arg_t kHeaderOutputArgs[] = { CT_ARG_LONG("header") };
-
-static const cfg_info_t kHeaderOutputInfo = {
-    .name = "header",
-    .brief = "output header file",
-    .args = CT_ARGS(kHeaderOutputArgs),
-};
-
-static const cfg_arg_t kSourceOutputArgs[] = { CT_ARG_LONG("source"), CT_ARG_SHORT("s") };
-
-static const cfg_info_t kSourceOutputInfo = {
-    .name = "source",
-    .brief = "output source file",
-    .args = CT_ARGS(kSourceOutputArgs),
-};
-
-static arena_t *gArena;
-static setup_options_t gOptions;
-static setup_init_t gSetupInfo;
-
-bool meta_init(int argc, const char **argv, const char *name)
+typedef struct json_context_t
 {
-    setup_default(NULL);
+    logger_t *logger;
+    arena_t *arena;
+    scan_t *scan;
+} json_context_t;
 
-    gArena = get_global_arena();
-    cfg_group_t *root = config_root(&kRootInfo, gArena);
-    gOptions = setup_options(kToolVersion, root);
+static json_t *inner_query_type(json_context_t *context, json_t *json, const char *expr, json_kind_t kind)
+{
+    return json_query_type(json, expr, kind, context->logger, context->arena);
+}
 
-    cfg_enum_t mode_info = {
+static meta_type_t get_meta_type(text_view_t id)
+{
+    if (text_view_equal(id, CT_TEXT_VIEW("mpz")))
+    {
+        return eMetaMpz;
+    }
 
+    if (text_view_equal(id, CT_TEXT_VIEW("ast")))
+    {
+        return eMetaAst;
+    }
+
+    if (text_view_equal(id, CT_TEXT_VIEW("string")))
+    {
+        return eMetaString;
+    }
+
+    return eMetaUnknown;
+}
+
+static bool parse_ast_field(json_context_t *ctx, json_t *json, typevec_t *fields)
+{
+    json_t *name = inner_query_type(ctx, json, "$.name", eJsonString);
+    if (name == NULL)
+    {
+        return false;
+    }
+
+    json_t *type = json_map_get(json, "type");
+    if (type == NULL)
+    {
+        msg_notify(ctx->logger, &kEvent_SymbolNotFound, node_new(ctx->scan, json->where), "no field type");
+        return false;
+    }
+
+    meta_field_t field = {
+        .name = name->string,
+        .type = get_meta_type(type->string),
     };
 
-    cfg_field_t *mode = config_enum(root, &kModeInfo, mode_info);
+    typevec_push(fields, &field);
+
+    return true;
 }
 
-int meta_get_exit_code(void)
+static bool parse_ast_node(json_context_t *ctx, json_t *json, typevec_t *nodes)
 {
+    json_t *name = inner_query_type(ctx, json, "$.name", eJsonString);
+    if (name == NULL)
+    {
+        return false;
+    }
 
+    json_t *fields = inner_query_type(ctx, json, "$.fields", eJsonArray);
+    if (fields == NULL)
+    {
+        return false;
+    }
+
+    meta_ast_t ast = {
+        .name = name->string,
+        .fields = typevec_new(sizeof(meta_field_t), typevec_len(&fields->array), ctx->arena),
+    };
+
+    for (ctu_length_t i = 0; i < typevec_len(&fields->array); i++)
+    {
+        json_t *field = json_array_get(fields, i);
+        if (!parse_ast_field(ctx, field, ast.fields))
+        {
+            return false;
+        }
+    }
+
+    typevec_push(nodes, &ast);
+
+    return true;
 }
 
-void meta_cmdline_arg(const char *name, const char *id, const char *brief, ...)
+meta_info_t *meta_info_parse(json_t *json, scan_t *scan, logger_t *logger, arena_t *arena)
 {
+    json_context_t ctx = {
+        .logger = logger,
+        .arena = arena,
+        .scan = scan,
+    };
 
+    json_t *prefix = json_query_type(json, "$.prefix", eJsonString, logger, arena);
+    if (prefix == NULL)
+    {
+        return NULL;
+    }
+
+    json_t *nodes = json_query_type(json, "$.nodes", eJsonArray, logger, arena);
+    if (nodes == NULL)
+    {
+        return NULL;
+    }
+
+    meta_info_t *info = ARENA_MALLOC(sizeof(meta_info_t), "meta_info_parse", NULL, arena);
+    info->prefix = prefix->string;
+
+    ctu_length_t len = typevec_len(&nodes->array);
+    info->nodes = typevec_new(sizeof(meta_ast_t), len, arena);
+
+    for (ctu_length_t i = 0; i < len; i++)
+    {
+        json_t *node = json_array_get(nodes, i);
+        if (!parse_ast_node(&ctx, node, info->nodes))
+        {
+            return NULL;
+        }
+    }
+
+    return info;
 }

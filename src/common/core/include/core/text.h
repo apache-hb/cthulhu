@@ -36,6 +36,6 @@ typedef struct text_view_t
 /// @param text the string literal to create a view of
 /// @note this does not include the null terminator
 /// @warning this does not work with string variables
-#define CT_TEXT_VIEW(text) { text, sizeof(text) - 1 }
+#define CT_TEXT_VIEW(text) (text_view_t){ text, sizeof(text) - 1 }
 
 /// @}

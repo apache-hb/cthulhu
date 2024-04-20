@@ -66,7 +66,7 @@ static const bucket_t *map_get_bucket_const(const map_t *map, ctu_hash_t hash)
     return &map->data[index];
 }
 
-static void clear_keys(bucket_t *buckets, size_t size)
+static void clear_keys(bucket_t *buckets, ctu_length_t size)
 {
     for (size_t i = 0; i < size; i++)
     {
@@ -76,7 +76,7 @@ static void clear_keys(bucket_t *buckets, size_t size)
 }
 
 USE_DECL
-void map_init(map_t *map, size_t size, hash_info_t info, arena_t *arena)
+void map_init(map_t *map, ctu_length_t size, hash_info_t info, arena_t *arena)
 {
     CTASSERT(map != NULL);
     CTASSERT(arena != NULL);
@@ -100,7 +100,7 @@ void map_init(map_t *map, size_t size, hash_info_t info, arena_t *arena)
 }
 
 USE_DECL
-map_t map_make(size_t size, hash_info_t info, arena_t *arena)
+map_t map_make(ctu_length_t size, hash_info_t info, arena_t *arena)
 {
     map_t map;
     map_init(&map, size, info, arena);
@@ -108,7 +108,7 @@ map_t map_make(size_t size, hash_info_t info, arena_t *arena)
 }
 
 USE_DECL
-map_t *map_new(size_t size, hash_info_t info, arena_t *arena)
+map_t *map_new(ctu_length_t size, hash_info_t info, arena_t *arena)
 {
     map_t *map = ARENA_MALLOC(sizeof(map_t), "map", NULL, arena);
     map_init(map, size, info, arena);
@@ -120,7 +120,7 @@ map_t *map_new(size_t size, hash_info_t info, arena_t *arena)
 #define MAP_FOREACH_APPLY(self, item, ...)      \
     do                                          \
     {                                           \
-        for (size_t i = 0; i < self->size; i++) \
+        for (ctu_length_t i = 0; i < self->size; i++) \
         {                                       \
             bucket_t *item = &self->data[i];    \
             while (item && item->key)           \
@@ -138,7 +138,9 @@ vector_t *map_values(map_t *map)
 
     vector_t *result = vector_new(map->size, map->arena);
 
-    MAP_FOREACH_APPLY(map, entry, { vector_push(&result, entry->value); });
+    MAP_FOREACH_APPLY(map, entry, {
+        vector_push(&result, entry->value);
+    });
 
     return result;
 }
@@ -173,7 +175,7 @@ size_t map_count(const map_t *map)
 {
     CTASSERT(map != NULL);
 
-    size_t count = 0;
+    ctu_length_t count = 0;
     MAP_FOREACH_APPLY(map, entry, { count++; });
 
     return count;
@@ -418,7 +420,7 @@ static bucket_t *map_next_in_chain(bucket_t *entry)
  * @return bucket_t* the next bucket or NULL if there are no more buckets
  */
 CT_PUREFN
-static bucket_t *set_find_next_bucket(const map_t *map, size_t *index, bucket_t *previous)
+static bucket_t *set_find_next_bucket(const map_t *map, ctu_length_t *index, bucket_t *previous)
 {
     bucket_t *entry = map_next_in_chain(previous);
     if (entry != NULL)
@@ -426,7 +428,7 @@ static bucket_t *set_find_next_bucket(const map_t *map, size_t *index, bucket_t 
         return entry;
     }
 
-    size_t i = *index;
+    ctu_length_t i = *index;
 
     while (i < map->size)
     {
@@ -453,7 +455,7 @@ map_iter_t map_iter(const map_t *map)
 {
     CTASSERT(map != NULL);
 
-    size_t index = 0;
+    ctu_length_t index = 0;
 
     bucket_t *bucket = set_find_next_bucket(map, &index, NULL);
     bucket_t *next = set_find_next_bucket(map, &index, bucket);
@@ -485,7 +487,7 @@ map_entry_t map_next(map_iter_t *iter)
 }
 
 USE_DECL
-bool map_next_ex(map_iter_t *iter, const void **key, void **value)
+bool map_next_pair(map_iter_t *iter, const void **key, void **value)
 {
     CTASSERT(iter != NULL);
     CTASSERT(key != NULL);

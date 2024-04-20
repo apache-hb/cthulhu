@@ -40,10 +40,10 @@ typedef struct print_notify_t
     print_options_t options;
 
     /// @brief the style of heading to use
-    FIELD_RANGE(0, eHeadingCount) heading_style_t heading_style;
+    FIELD_RANGE(0, eHeadingCount) heading_style_t heading;
 
     /// @brief the style of notification to use
-    notify_style_t notify_style;
+    notify_style_t style;
 
     /// @brief is the first line in a file 0 or 1
     bool zero_indexed_lines;

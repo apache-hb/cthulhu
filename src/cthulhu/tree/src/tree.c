@@ -162,7 +162,7 @@ tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sig
     return self;
 }
 
-tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *result, vector_t *params, arity_t arity)
+tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *result, const vector_t *params, arity_t arity)
 {
     EXPECT_TYPE(result);
     CTASSERT(params != NULL);
@@ -346,7 +346,7 @@ tree_t *tree_expr_offset(const node_t *node, const tree_t *type, tree_t *object,
     return self;
 }
 
-tree_t *tree_expr_call(const node_t *node, const tree_t *callee, vector_t *args)
+tree_t *tree_expr_call(const node_t *node, const tree_t *callee, const vector_t *args)
 {
     CTASSERT(callee != NULL);
     CTASSERT(args != NULL);

@@ -109,7 +109,7 @@ typedef struct tree_t {
         /* eTreeExprCall */
         struct {
             const tree_t *callee;
-            vector_t *args;
+            const vector_t *args;
         };
 
         /* eTreeError */
@@ -190,7 +190,7 @@ typedef struct tree_t {
                 tree_t *case_value;
 
                 struct {
-                    vector_t *params;
+                    const vector_t *params;
 
                     union {
                         /* eTreeDeclFunction */
@@ -300,7 +300,7 @@ CT_TREE_API tree_t *tree_type_digit(const node_t *node, const char *name, digit_
  * @param arity does this function have variadic arguments
  * @return tree_t* the function pointer type
  */
-CT_TREE_API tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *result, vector_t *params, arity_t arity);
+CT_TREE_API tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *result, const vector_t *params, arity_t arity);
 
 /**
  * @brief create a pointer type
@@ -381,7 +381,7 @@ CT_TREE_API tree_t *tree_expr_field(const node_t *node, const tree_t *type, tree
 
 CT_TREE_API tree_t *tree_expr_offset(const node_t *node, const tree_t *type, tree_t *object, tree_t *offset);
 
-CT_TREE_API tree_t *tree_expr_call(const node_t *node, const tree_t *callee, vector_t *args);
+CT_TREE_API tree_t *tree_expr_call(const node_t *node, const tree_t *callee, const vector_t *args);
 
 ///
 /// tree statement interface
@@ -445,7 +445,7 @@ CT_TREE_API void tree_close_global(tree_t *self, tree_t *value);
 
 CT_TREE_API tree_t *tree_decl_function(
     const node_t *node, const char *name, const tree_t *signature,
-    vector_t *params, vector_t *locals, tree_t *body
+    const vector_t *params, vector_t *locals, tree_t *body
 );
 
 CT_TREE_API tree_t *tree_open_function(
@@ -493,7 +493,6 @@ CT_TREE_API tree_t *tree_decl_case(const node_t *node, const char *name, tree_t 
 ///
 
 CT_TREE_API void tree_add_local(tree_t *self, tree_t *decl);
-CT_TREE_API void tree_add_param(tree_t *self, tree_t *decl);
 CT_TREE_API void tree_add_enum(tree_t *self, tree_t *decl);
 CT_TREE_API void tree_set_attrib(tree_t *self, const tree_attribs_t *attrib);
 CT_TREE_API void tree_set_type(tree_t *self, const tree_t *type);

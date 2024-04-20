@@ -30,7 +30,7 @@ static void print_notify_segment_simple(notify_config_t *config, const segment_t
     source_config_t source_config = {
         .context = format_context,
         .colour = COLOUR_PATH,
-        .heading_style = options.heading_style,
+        .heading_style = options.heading,
         .zero_indexed_lines = options.zero_indexed_lines,
     };
 
@@ -57,7 +57,7 @@ static void print_notify_simple(notify_config_t *config, const event_t *event)
     source_config_t source_config = {
         .context = format_context,
         .colour = COLOUR_PATH,
-        .heading_style = options.heading_style,
+        .heading_style = options.heading,
         .zero_indexed_lines = options.zero_indexed_lines,
     };
 

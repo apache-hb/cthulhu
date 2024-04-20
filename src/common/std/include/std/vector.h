@@ -6,8 +6,7 @@
 
 #include "core/analyze.h"
 #include "core/compiler.h"
-
-#include <stddef.h>
+#include "core/types.h"
 
 CT_BEGIN_API
 
@@ -103,7 +102,7 @@ CT_STD_API void vector_drop(IN_NOTNULL vector_t *vector);
 /// @param value the value to set
 CT_STD_API void vector_set(
     IN_NOTNULL vector_t *vector,
-    size_t index,
+    ctu_length_t index,
     void *value
 );
 
@@ -117,7 +116,7 @@ CT_STD_API void vector_set(
 CT_NODISCARD CT_PUREFN
 CT_STD_API void *vector_get(
     IN_NOTNULL const vector_t *vector,
-    size_t index
+    ctu_length_t index
 );
 
 /// @brief get the last element of a vector
@@ -135,7 +134,7 @@ CT_STD_API void *vector_tail(IN_NOTNULL const vector_t *vector);
 ///
 /// @return the length of @p vector
 CT_NODISCARD CT_PUREFN
-CT_STD_API size_t vector_len(IN_NOTNULL const vector_t *vector);
+CT_STD_API ctu_length_t vector_len(IN_NOTNULL const vector_t *vector);
 
 /// @brief append the contents of one vector to another
 /// this copies the contents of @p other into @p vector
@@ -152,7 +151,7 @@ CT_STD_API void vector_append(IN_NOTNULL vector_t **vector, IN_NOTNULL const vec
 ///
 /// @return the index of @p element in @p vector or @a SIZE_MAX if not found
 RET_INSPECT CT_PUREFN
-CT_STD_API size_t vector_find(IN_NOTNULL vector_t *vector, const void *element);
+CT_STD_API ctu_length_t vector_find(IN_NOTNULL vector_t *vector, const void *element);
 
 /// @brief reset the contents of a vector
 /// @warning this does not free the data the vector references

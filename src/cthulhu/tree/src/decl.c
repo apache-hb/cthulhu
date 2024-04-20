@@ -189,7 +189,7 @@ void tree_close_decl(tree_t *self, const tree_t *other)
 
 tree_t *tree_decl_function(
     const node_t *node, const char *name, const tree_t *signature,
-    vector_t *params, vector_t *locals, tree_t *body
+    const vector_t *params, vector_t *locals, tree_t *body
 )
 {
     tree_t *self = decl_open(node, name, signature, eTreeDeclFunction, NULL);
@@ -205,14 +205,6 @@ tree_t *tree_decl_attrib(const node_t *node, const char *name, vector_t *params,
     self->params = params;
     self->mask = mask;
     return self;
-}
-
-void tree_add_param(tree_t *self, tree_t *decl)
-{
-    CTASSERTF(tree_is(self, eTreeDeclFunction), "cannot add params to a declaration %s", tree_to_string(self));
-    CTASSERTF(tree_is(decl, eTreeDeclParam), "cannot add a non-param %s to a function as a param", tree_to_string(decl));
-
-    vector_push(&self->params, decl);
 }
 
 void tree_add_local(tree_t *self, tree_t *decl)

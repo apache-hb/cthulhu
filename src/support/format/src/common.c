@@ -105,10 +105,8 @@ static char *fmt_any_location(source_config_t config, const char *path, ctu_line
         return colour_format(config.context, config.colour, "%s:%" PRI_LINE ":%" PRI_COLUMN "",
                                 path, line, column);
     }
-    else
-    {
-        return colour_format(config.context, config.colour, "%s(%" PRI_LINE ")", path, line);
-    }
+
+    return colour_format(config.context, config.colour, "%s(%" PRI_LINE ")", path, line);
 }
 
 format_context_t format_context_make(print_options_t options)

@@ -66,6 +66,10 @@ typedef struct setup_options_t
 /// @brief the result of parsing the command line
 typedef struct setup_init_t
 {
+    /// @brief the arguments
+    int argc;
+    const char **argv;
+
     /// @brief the exitcode
     /// @warning dont use this directly, use setup_should_exit() and setup_exit_code()
     int exitcode;
@@ -116,6 +120,13 @@ CT_SETUP_API bool setup_should_exit(IN_NOTNULL const setup_init_t *init);
 ///
 /// @return the exit code
 CT_SETUP_API int setup_exit_code(IN_NOTNULL const setup_init_t *init);
+
+/// @brief print the help message and exit
+///
+/// @param init the setup init
+///
+/// @return the exit code
+CT_SETUP_API int setup_exit_help(setup_options_t setup, IN_NOTNULL const setup_init_t *init);
 
 /// @}
 

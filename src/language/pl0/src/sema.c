@@ -511,7 +511,7 @@ void pl0_forward_decls(language_runtime_t *runtime, compile_unit_t *context)
     {
         pl0_t *it = vector_get(ast->procs, i);
 
-        tree_t *signature = tree_type_closure(it->node, it->name, gVoidType, &gEmptyVector, eArityFixed);
+        tree_t *signature = tree_type_closure(it->node, it->name, gVoidType, &kEmptyVector, eArityFixed);
         tree_resolve_info_t resolve = {
             .sema = root,
             .user = it,
@@ -576,8 +576,8 @@ void pl0_compile_module(language_runtime_t *runtime, compile_unit_t *context)
         tree_t *body = tree_stmt_block(ast->node, stmts);
 
         // this is the entry point, we only support cli entry points in pl/0 for now
-        tree_t *signature = tree_type_closure(ast->node, name, gVoidType, &gEmptyVector, eArityFixed);
-        tree_t *entry = tree_decl_function(ast->node, name, signature, &gEmptyVector, &gEmptyVector, body);
+        tree_t *signature = tree_type_closure(ast->node, name, gVoidType, &kEmptyVector, eArityFixed);
+        tree_t *entry = tree_decl_function(ast->node, name, signature, &kEmptyVector, &gEmptyVector, body);
         tree_set_attrib(entry, &kEntryAttrib);
 
         // TODO: this is a hack until we support anonymous declarations

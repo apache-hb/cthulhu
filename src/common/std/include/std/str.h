@@ -355,6 +355,15 @@ CT_STD_API char str_tolower(char c);
 CT_NODISCARD CT_CONSTFN
 CT_STD_API char str_toupper(char c);
 
+/// @brief check if two strings are equal
+///
+/// @param lhs the left hand side of the comparison
+/// @param rhs the right hand side of the comparison
+///
+/// @return if the strings are equal
+CT_NODISCARD
+CT_STD_API bool text_view_equal(text_view_t lhs, text_view_t rhs);
+
 #define STR_WHITESPACE " \t\r\v\n\f" ///< all whitespace charaters
 
 /// @}

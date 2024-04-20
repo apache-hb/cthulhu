@@ -308,7 +308,7 @@ tree_t *obr_add_init(tree_t *sema, obr_t *mod)
         .fn_resolve = obr_resolve_init
     };
 
-    tree_t *signature = tree_type_closure(mod->node, mod->name, obr_get_void_type(), &gEmptyVector, eArityFixed);
+    tree_t *signature = tree_type_closure(mod->node, mod->name, obr_get_void_type(), &kEmptyVector, eArityFixed);
     tree_t *init = tree_open_function(mod->node, mod->name, signature, resolve);
     tree_set_attrib(init, &kEntryPoint);
     return init;

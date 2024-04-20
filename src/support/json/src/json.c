@@ -32,7 +32,15 @@ json_t *json_array_get(const json_t *json, size_t index)
     return typevec_offset(&json->array, index);
 }
 
+USE_DECL
 json_t *json_scan(io_t *io, logger_t *logger, arena_t *arena)
+{
+    json_parse_t parse = json_parse(io, logger, arena);
+    return parse.root;
+}
+
+USE_DECL
+json_parse_t json_parse(io_t *io, logger_t *logger, arena_t *arena)
 {
     CTASSERT(io != NULL);
     CTASSERT(logger != NULL);
@@ -46,8 +54,12 @@ json_t *json_scan(io_t *io, logger_t *logger, arena_t *arena)
 
     parse_result_t result = scan_buffer(scan, &kCallbacks);
 
-    if (result.result == eParseOk)
-        return result.tree;
+    json_t *root = (result.result == eParseOk) ? result.tree : NULL;
 
-    return NULL;
+    json_parse_t parse = {
+        .scanner = scan,
+        .root = root,
+    };
+
+    return parse;
 }

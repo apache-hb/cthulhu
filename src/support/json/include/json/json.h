@@ -18,6 +18,7 @@ typedef struct logger_t logger_t;
 typedef struct arena_t arena_t;
 typedef struct json_t json_t;
 typedef struct node_t node_t;
+typedef struct scan_t scan_t;
 typedef struct map_t map_t;
 typedef struct vector_t vector_t;
 
@@ -78,6 +79,12 @@ typedef struct json_t
     };
 } json_t;
 
+typedef struct json_parse_t
+{
+    scan_t *scanner;
+    json_t *root;
+} json_parse_t;
+
 /// @brief get a json value from an object by key
 ///
 /// @param json the object to get the value from
@@ -108,6 +115,18 @@ CT_JSON_API json_t *json_array_get(IN_NOTNULL const json_t *json, size_t index);
 /// @retval json_t* the scanned json value
 RET_INSPECT
 CT_JSON_API json_t *json_scan(IN_NOTNULL io_t *io, IN_NOTNULL logger_t *logger, IN_NOTNULL arena_t *arena);
+
+/// @brief parse an io into a json value
+/// parse the contents of an io object into a json value
+/// @note if the parse fails, the logger will contain error information
+///
+/// @param io the io to parse
+/// @param logger the logger to report errors to
+/// @param arena the arena to use
+///
+/// @return the parse result
+RET_INSPECT
+CT_JSON_API json_parse_t json_parse(IN_NOTNULL io_t *io, IN_NOTNULL logger_t *logger, IN_NOTNULL arena_t *arena);
 
 /// @brief pretty print a json value to an io
 ///

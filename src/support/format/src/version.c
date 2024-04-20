@@ -6,11 +6,11 @@
 #include "io/io.h"
 
 USE_DECL
-void print_version(print_version_t options, version_info_t version, const char *name)
+void print_version(print_version_t config, version_info_t version, const char *name)
 {
     CTASSERT(name != NULL);
 
-    print_options_t base = options.options;
+    print_options_t base = config.options;
 
     int major = CT_VERSION_MAJOR(version.version);
     int minor = CT_VERSION_MINOR(version.version);

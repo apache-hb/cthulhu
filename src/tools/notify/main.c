@@ -468,8 +468,8 @@ int main(int argc, const char **argv)
 
         print_notify_t notify_options = {
             .options = options,
-            .heading_style = heading,
-            .notify_style = style,
+            .heading = heading,
+            .style = style,
             .zero_indexed_lines = zero_indexed,
         };
 
