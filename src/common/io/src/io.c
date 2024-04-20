@@ -8,6 +8,21 @@
 #include "std/str.h"
 #include "arena/arena.h"
 
+USE_DECL
+io_error_t io_free(io_t *io)
+{
+    CTASSERT(io != NULL);
+
+    io_error_t err = io_close(io);
+    if (err != eOsSuccess)
+        return err;
+
+    arena_free(io, sizeof(io_t) + io->cb->size, io->arena);
+
+    return eOsSuccess;
+}
+
+USE_DECL
 io_error_t io_close(io_t *io)
 {
     CTASSERT(io != NULL);
@@ -18,8 +33,6 @@ io_error_t io_close(io_t *io)
 
     if (io->cb->fn_close != NULL)
         return io->cb->fn_close(io);
-
-    arena_free(io, sizeof(io_t) + io->cb->size, io->arena);
 
     return eOsSuccess;
 }

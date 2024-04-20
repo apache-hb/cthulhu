@@ -72,6 +72,18 @@ test('fs', fs_exe,
     suite : 'unit'
 )
 
+# io
+
+io_exe = executable('io', 'cases/io/io.c',
+    include_directories : '.',
+    dependencies : [ unit, memory, base, std, config, io, setup, arena ]
+)
+
+test('io', io_exe,
+    workdir : meson.project_source_root(),
+    suite : 'unit'
+)
+
 # argparse
 
 argparse_exe = executable('argparse.argparse', 'cases/argparse/argparse.c',

@@ -127,6 +127,10 @@ When adding a new module consider how much of the compiler needs access to it. T
   - Breaking source and ABI compatibility every commit is fine
   - Once plugins are implemented maybe i'll rethink this
 
+- If implementation details need to be leaked into headers suffix them with `_impl` and namespace them
+  * `io_buffer_impl_t` instead of `buffer_t`
+  * `os_read_impl` instead of `inner_read`
+
 ## Memory management strategy
 
 Cthulhu aims to be usable as a library in embedded systems (read as: places without global malloc).

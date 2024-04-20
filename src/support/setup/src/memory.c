@@ -4,7 +4,6 @@
 #include "setup/setup.h"
 
 #include "arena/arena.h"
-#include "base/panic.h"
 #include "core/macros.h"
 
 #include <stdlib.h>

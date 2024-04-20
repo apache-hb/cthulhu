@@ -11,6 +11,9 @@
 
 CT_BEGIN_API
 
+/// @defgroup io_impl io implementation details
+/// @brief internal io implementation details
+/// @warning these are internal structures and should not be used directly
 /// @ingroup io
 /// @{
 
@@ -136,9 +139,6 @@ typedef struct io_t
     char data[];
 } io_t;
 
-// TODO: io_data and io_new should be private to the io module
-// currently not due to the fs module
-
 /// @brief get the user data from an io object
 /// @warning does not perform any validation on the type of the user data
 ///
@@ -151,6 +151,8 @@ CT_IO_API void *io_data(IN_NOTNULL io_t *io);
 /// @brief create a new IO object for a given interface
 /// @pre @p cb must point to a valid callback set
 /// @pre @p data must point to a valid memory region of @p cb->size bytes. if @p cb->size is 0, @p data may be NULL
+/// @pre @p name must be a valid string
+/// @pre @p arena must be a valid arena
 ///
 /// @param cb the callback set
 /// @param flags the access flags for this object
@@ -165,6 +167,30 @@ CT_IO_API io_t *io_new(
     IN_STRING const char *name,
     IN_READS(size) const void *data,
     IN_NOTNULL arena_t *arena);
+
+/// @brief initialize an IO object for a given interface
+/// @note this initializes the object in place
+/// @note if the io object does not require allocation, @p arena may be NULL
+///
+/// @pre @p buffer must point to a valid memory region of at least @c sizeof(io_t) + @p cb->size bytes
+/// @pre @p cb must point to a valid callback set
+/// @pre @p data must point to a valid memory region of @p cb->size bytes. if @p cb->size is 0, @p data may be NULL
+///
+/// @param buffer the buffer to initialize the io object in
+/// @param cb the callback set
+/// @param flags the access flags for this object
+/// @param name the name of the object
+/// @param data the user data, this is copied into the io object
+/// @param arena the arena to allocate the io object from
+///
+/// @return the initialized IO interface
+CT_IO_API io_t *io_init(
+    OUT_WRITES(sizeof(io_t) + cb->size) void *buffer,
+    IN_NOTNULL const io_callbacks_t *cb,
+    os_access_t flags,
+    IN_STRING const char *name,
+    IN_READS(size) const void *data,
+    arena_t *arena);
 
 /// @}
 

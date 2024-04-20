@@ -33,7 +33,6 @@
 
 #include "argparse/argparse.h"
 #include "support/support.h"
-#include "support/loader.h"
 
 #include <stddef.h>
 #include <stdlib.h> // for malloc, free, system

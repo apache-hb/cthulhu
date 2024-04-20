@@ -21,9 +21,21 @@ typedef struct io_t io_t;
 /// @brief an io error code
 typedef os_error_t io_error_t;
 
-/// @brief destroy an IO object
+/// @brief destroy an IO object and free its memory
 ///
 /// @param io the io object
+///
+/// @return an error code if the io object could not be closed
+CT_IO_API io_error_t io_free(OUT_PTR_INVALID io_t *io);
+
+/// @brief destroy an IO object
+/// @warning this does not free the memory of the object itself
+/// This should only be used when the io object is allocated on the stack and initialized
+/// with an io_*_init function.
+///
+/// @param io the io object
+///
+/// @return an error code if the object could not be destroyed
 CT_IO_API io_error_t io_close(OUT_PTR_INVALID io_t *io);
 
 /// @brief create an IO object from a file
@@ -33,7 +45,7 @@ CT_IO_API io_error_t io_close(OUT_PTR_INVALID io_t *io);
 /// @param arena the arena to allocate from
 ///
 /// @return the io object, or NULL on error
-CT_NODISCARD CT_ALLOC(io_close)
+CT_NODISCARD CT_ALLOC(io_free)
 CT_IO_API io_t *io_file(IN_STRING const char *path, os_access_t mode, IN_NOTNULL arena_t *arena);
 
 /// @brief create an IO object from an initial view of memory
@@ -46,7 +58,7 @@ CT_IO_API io_t *io_file(IN_STRING const char *path, os_access_t mode, IN_NOTNULL
 /// @param arena the arena to allocate from
 ///
 /// @return the io object
-CT_NODISCARD CT_ALLOC(io_close)
+CT_NODISCARD CT_ALLOC(io_free)
 CT_IO_API io_t *io_memory(IN_STRING const char *name, const void *data, size_t size, os_access_t flags, IN_NOTNULL arena_t *arena);
 
 /// @brief create an IO object in memory of a given size
@@ -58,7 +70,7 @@ CT_IO_API io_t *io_memory(IN_STRING const char *name, const void *data, size_t s
 /// @param arena the arena to allocate from
 ///
 /// @return the io object
-CT_NODISCARD CT_ALLOC(io_close)
+CT_NODISCARD CT_ALLOC(io_free)
 CT_IO_API io_t *io_blob(IN_STRING const char *name, size_t size, os_access_t flags, IN_NOTNULL arena_t *arena);
 
 /// @brief create a readonly IO object for a given view of memory
@@ -70,7 +82,7 @@ CT_IO_API io_t *io_blob(IN_STRING const char *name, size_t size, os_access_t fla
 /// @param arena the arena to allocate from
 ///
 /// @return the IO view
-CT_NODISCARD CT_ALLOC(io_close)
+CT_NODISCARD CT_ALLOC(io_free)
 CT_IO_API io_t *io_view(IN_STRING const char *name, IN_NOTNULL const void *data, size_t size, IN_NOTNULL arena_t *arena);
 
 /// @brief create an IO view of a string
@@ -81,8 +93,94 @@ CT_IO_API io_t *io_view(IN_STRING const char *name, IN_NOTNULL const void *data,
 /// @param arena the arena to allocate from
 ///
 /// @return the io object
-CT_NODISCARD CT_ALLOC(io_close)
+CT_NODISCARD CT_ALLOC(io_free)
 CT_IO_API io_t *io_string(IN_STRING const char *name, IN_STRING const char *string, IN_NOTNULL arena_t *arena);
+
+/// @brief create an io object from a file
+/// initializes an io object using a preallocated buffer.
+/// @note the buffer must be available for the lifetime of the io object.
+///       ending the lifetime of the buffer before the io object will result in undefined behavior.
+///
+/// @pre @p buffer must be at least @ref IO_FILE_SIZE bytes large
+/// @pre @p buffer must be aligned to @c alignof(io_t)
+///
+/// @param buffer the buffer to use for the io object
+/// @param path the path to the file
+/// @param mode the access mode of the file
+///
+/// @return the initialized io object
+CT_NODISCARD CT_ALLOC(io_close)
+CT_IO_API io_t *io_file_init(OUT_WRITES(IO_FILE_SIZE) void *buffer, IN_STRING const char *path, os_access_t mode);
+
+/// @brief create an io object from a memory buffer
+/// initializes an io object using a preallocated buffer.
+/// @note the buffer must be available for the lifetime of the io object.
+///       ending the lifetime of the buffer before the io object will result in undefined behavior.
+///
+/// @pre @p buffer must be at least @ref IO_MEMORY_SIZE bytes large
+/// @pre @p buffer must be aligned to @c alignof(io_t)
+///
+/// @param buffer the buffer to use for the io object
+/// @param name the name of the io block
+/// @param data the data to copy into the initial buffer
+/// @param size the size of the data
+/// @param flags the access mode of the file
+/// @param arena the arena to allocate from
+///
+/// @return the initialized io object
+CT_NODISCARD CT_ALLOC(io_close)
+CT_IO_API io_t *io_memory_init(OUT_WRITES(IO_MEMORY_SIZE) void *buffer, IN_STRING const char *name, const void *data, size_t size, os_access_t flags, IN_NOTNULL arena_t *arena);
+
+/// @brief create an io object from a memory buffer
+/// initializes an io object using a preallocated buffer.
+/// @note the buffer must be available for the lifetime of the io object.
+///       ending the lifetime of the buffer before the io object will result in undefined behavior.
+///
+/// @pre @p buffer must be at least @ref IO_MEMORY_SIZE bytes large
+/// @pre @p buffer must be aligned to @c alignof(io_t)
+///
+/// @param buffer the buffer to use for the io object
+/// @param name the name of the io object
+/// @param size the starting size of the buffer
+/// @param flags the access mode
+/// @param arena the arena to allocate from
+///
+/// @return the initialized io object
+CT_NODISCARD CT_ALLOC(io_close)
+CT_IO_API io_t *io_blob_init(OUT_WRITES(IO_MEMORY_SIZE) void *buffer, IN_STRING const char *name, size_t size, os_access_t flags, IN_NOTNULL arena_t *arena);
+
+/// @brief create an io object from a memory buffer
+/// initializes an io object using a preallocated buffer.
+/// @note the buffer must be available for the lifetime of the io object.
+///       ending the lifetime of the buffer before the io object will result in undefined behavior.
+///
+/// @pre @p buffer must be at least @ref IO_VIEW_SIZE bytes large
+/// @pre @p buffer must be aligned to @c alignof(io_t)
+///
+/// @param buffer the buffer to use for the io object
+/// @param name the name of the IO view
+/// @param data the data to provide in the view
+/// @param size the size of the data
+///
+/// @return the initialized io object
+CT_NODISCARD CT_ALLOC(io_close)
+CT_IO_API io_t *io_view_init(OUT_WRITES(IO_VIEW_SIZE) void *buffer, IN_STRING const char *name, IN_NOTNULL const void *data, size_t size);
+
+/// @brief create an io object from a memory buffer
+/// initializes an io object using a preallocated buffer.
+/// @note the buffer must be available for the lifetime of the io object.
+///       ending the lifetime of the buffer before the io object will result in undefined behavior.
+///
+/// @pre @p buffer must be at least @ref IO_VIEW_SIZE bytes large
+/// @pre @p buffer must be aligned to @c alignof(io_t)
+///
+/// @param buffer the buffer to use for the io object
+/// @param name the name of the IO view
+/// @param string the backing string view
+///
+/// @return the initialized io object
+CT_NODISCARD CT_ALLOC(io_close)
+CT_IO_API io_t *io_string_init(OUT_WRITES(IO_VIEW_SIZE) void *buffer, IN_STRING const char *name, IN_STRING const char *string);
 
 /// @brief read from an io object
 /// @pre the io object must have been created with the @a eOsAccessRead flag

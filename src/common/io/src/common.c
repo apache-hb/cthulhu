@@ -19,9 +19,15 @@ void *io_data(io_t *io)
 
 io_t *io_new(const io_callbacks_t *cb, os_access_t flags, const char *name, const void *data, arena_t *arena)
 {
+    void *buffer = ARENA_MALLOC(sizeof(io_t) + cb->size, name, NULL, arena);
+    return io_init(buffer, cb, flags, name, data, arena);
+}
+
+io_t *io_init(void *buffer, const io_callbacks_t *cb, os_access_t flags, const char *name, const void *data, arena_t *arena)
+{
+    CTASSERT(buffer != NULL);
     CTASSERT(cb != NULL);
     CTASSERT(name != NULL);
-    CTASSERT(arena != NULL);
 
     if (flags & eOsAccessWrite)
         CTASSERTF(cb->fn_write != NULL, "%s provided no `fn_write` function for a writable object",
@@ -30,7 +36,7 @@ io_t *io_new(const io_callbacks_t *cb, os_access_t flags, const char *name, cons
     if (flags & eOsAccessRead)
         CTASSERTF(cb->fn_read != NULL, "%s provided no `fn_read` for a readable object", name);
 
-    io_t *io = ARENA_MALLOC(sizeof(io_t) + cb->size, name, NULL, arena);
+    io_t *io = buffer;
 
     if (cb->size > 0)
     {
