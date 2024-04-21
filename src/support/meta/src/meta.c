@@ -20,17 +20,17 @@ static json_t *inner_query_type(json_context_t *context, json_t *json, const cha
 
 static meta_type_t get_meta_type(text_view_t id)
 {
-    if (text_view_equal(id, CT_TEXT_VIEW("mpz")))
+    if (text_view_equal(id, (text_view_t)CT_TEXT_VIEW("mpz")))
     {
         return eMetaMpz;
     }
 
-    if (text_view_equal(id, CT_TEXT_VIEW("ast")))
+    if (text_view_equal(id, (text_view_t)CT_TEXT_VIEW("ast")))
     {
         return eMetaAst;
     }
 
-    if (text_view_equal(id, CT_TEXT_VIEW("string")))
+    if (text_view_equal(id, (text_view_t)CT_TEXT_VIEW("string")))
     {
         return eMetaString;
     }

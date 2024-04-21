@@ -99,7 +99,7 @@
 #if defined(__GNUC__)
 #   define CT_NORETURN __attribute__((noreturn)) void
 #elif CT_HAS_ATTRIBUTE(noreturn)
-#   define CT_NORETURN __attribute__((noreturn)) void
+#   define CT_NORETURN [[noreturn]] void
 #elif defined(_MSC_VER)
 #   define CT_NORETURN __declspec(noreturn) void
 #else
