@@ -82,7 +82,7 @@ static bool parse_ast_node(json_context_t *ctx, json_t *json, typevec_t *nodes)
         .fields = typevec_new(sizeof(meta_field_t), typevec_len(&fields->array), ctx->arena),
     };
 
-    for (ctu_length_t i = 0; i < typevec_len(&fields->array); i++)
+    for (size_t i = 0; i < typevec_len(&fields->array); i++)
     {
         json_t *field = json_array_get(fields, i);
         if (!parse_ast_field(ctx, field, ast.fields))
@@ -119,10 +119,10 @@ meta_info_t *meta_info_parse(json_t *json, scan_t *scan, logger_t *logger, arena
     meta_info_t *info = ARENA_MALLOC(sizeof(meta_info_t), "meta_info_parse", NULL, arena);
     info->prefix = prefix->string;
 
-    ctu_length_t len = typevec_len(&nodes->array);
+    size_t len = typevec_len(&nodes->array);
     info->nodes = typevec_new(sizeof(meta_ast_t), len, arena);
 
-    for (ctu_length_t i = 0; i < len; i++)
+    for (size_t i = 0; i < len; i++)
     {
         json_t *node = json_array_get(nodes, i);
         if (!parse_ast_node(&ctx, node, info->nodes))

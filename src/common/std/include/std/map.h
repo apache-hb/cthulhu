@@ -43,10 +43,10 @@ typedef struct map_t
     hash_info_t info;
 
     /// @brief the number of top level buckets
-    ctu_length_t size;
+    size_t size;
 
     /// @brief the number of buckets used
-    ctu_length_t used;
+    size_t used;
 
     /// @brief bucket data
     FIELD_SIZE(size) bucket_t *data;
@@ -61,7 +61,7 @@ extern const map_t kEmptyMap;
 /// @param size the initial size of the map
 /// @param info the type info for the key type
 /// @param arena the arena to allocate from
-CT_STD_API void map_init(OUT_NOTNULL map_t *map, IN_DOMAIN(>, 0) ctu_length_t size, hash_info_t info, IN_NOTNULL arena_t *arena);
+CT_STD_API void map_init(OUT_NOTNULL map_t *map, IN_DOMAIN(>, 0) size_t size, hash_info_t info, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new map on the stack
 ///
@@ -71,7 +71,7 @@ CT_STD_API void map_init(OUT_NOTNULL map_t *map, IN_DOMAIN(>, 0) ctu_length_t si
 ///
 /// @return the new map
 CT_NODISCARD
-CT_STD_API map_t map_make(IN_DOMAIN(>, 0) ctu_length_t size, hash_info_t info, IN_NOTNULL arena_t *arena);
+CT_STD_API map_t map_make(IN_DOMAIN(>, 0) size_t size, hash_info_t info, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new map on the heap
 ///
@@ -81,7 +81,7 @@ CT_STD_API map_t map_make(IN_DOMAIN(>, 0) ctu_length_t size, hash_info_t info, I
 ///
 /// @return the new map
 CT_NODISCARD
-CT_STD_API map_t *map_new(IN_DOMAIN(>, 0) ctu_length_t size, hash_info_t info, IN_NOTNULL arena_t *arena);
+CT_STD_API map_t *map_new(IN_DOMAIN(>, 0) size_t size, hash_info_t info, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new map with an optimal size
 ///
@@ -91,7 +91,7 @@ CT_STD_API map_t *map_new(IN_DOMAIN(>, 0) ctu_length_t size, hash_info_t info, I
 ///
 /// @return the new map
 CT_NODISCARD
-CT_STD_API map_t *map_optimal(IN_DOMAIN(>, 0) ctu_length_t size, hash_info_t info, IN_NOTNULL arena_t *arena);
+CT_STD_API map_t *map_optimal(IN_DOMAIN(>, 0) size_t size, hash_info_t info, IN_NOTNULL arena_t *arena);
 
 /// @brief set a key-value pair in a map
 /// @pre @p key is not NULL
@@ -161,7 +161,7 @@ CT_STD_API typevec_t *map_entries(IN_NOTNULL map_t *map);
 ///
 /// @return the number of key-value pairs in the map
 CT_NODISCARD CT_PUREFN
-CT_STD_API ctu_length_t map_count(IN_NOTNULL const map_t *map);
+CT_STD_API size_t map_count(IN_NOTNULL const map_t *map);
 
 /// @brief clear all key-value pairs from a map
 /// @note this does no memory management, it only removes all key-value pairs from the map
@@ -182,7 +182,7 @@ typedef struct map_entry_t
 typedef struct map_iter_t
 {
     const map_t *map;   ///< the map being iterated over
-    ctu_length_t index; ///< current top level bucket index
+    size_t index; ///< current top level bucket index
 
     bucket_t *bucket; ///< the current bucket
     bucket_t *next;   ///< the next bucket in the chain

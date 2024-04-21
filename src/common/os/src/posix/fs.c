@@ -106,5 +106,5 @@ size_t os_cwd_get_string(char *buffer, size_t size)
         return 0;
     }
 
-    return strlen(buffer);
+    return ctu_strlen(buffer);
 }

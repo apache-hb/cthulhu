@@ -5,6 +5,7 @@
 #include "os/core.h"
 #include "os_common.h"
 
+#include "base/util.h"
 #include "std/str.h"
 
 #include <string.h>
@@ -30,5 +31,5 @@ size_t os_error_get_string(os_error_t error, char *buffer, size_t size)
         return str_sprintf(buffer, size, "errno: %d", err);
     }
 
-    return strlen(buffer);
+    return ctu_strlen(buffer);
 }

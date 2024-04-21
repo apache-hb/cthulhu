@@ -117,7 +117,7 @@ int main(int argc, const char **argv)
     if (setup_should_exit(&init))
         return setup_exit_code(&init);
 
-    ctu_length_t len = vector_len(init.posargs);
+    size_t len = vector_len(init.posargs);
     if (len != 1)
         return setup_exit_help(tool.options, &init);
 
@@ -153,15 +153,15 @@ int main(int argc, const char **argv)
     text_view_t prefix = info->prefix;
     io_printf(con, "prefix: %.*s\n", (int)prefix.length, prefix.text);
 
-    ctu_length_t nodes = typevec_len(info->nodes);
-    for (ctu_length_t i = 0; i < nodes; i++)
+    size_t nodes = typevec_len(info->nodes);
+    for (size_t i = 0; i < nodes; i++)
     {
         meta_ast_t *ast = typevec_offset(info->nodes, i);
         text_view_t ast_name = ast->name;
         io_printf(con, "node: %.*s\n", (int)ast_name.length, ast_name.text);
 
-        ctu_length_t fields = typevec_len(ast->fields);
-        for (ctu_length_t j = 0; j < fields; j++)
+        size_t fields = typevec_len(ast->fields);
+        for (size_t j = 0; j < fields; j++)
         {
             meta_field_t *field = typevec_offset(ast->fields, j);
             text_view_t field_name = field->name;

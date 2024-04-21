@@ -26,10 +26,10 @@ typedef struct typevec_t
     arena_t *arena;
 
     /// @brief The number of elements allocated.
-    ctu_length_t size;
+    size_t size;
 
     /// @brief The number of elements used.
-    ctu_length_t used;
+    size_t used;
 
     /// @brief The size of each element.
     size_t type_size;
@@ -46,7 +46,7 @@ extern const typevec_t kEmptyTypevec;
 /// @param type_size the size of the type
 /// @param len the initial length of the vector
 /// @param arena the arena to allocate from
-CT_STD_API void typevec_init(IN_NOTNULL typevec_t *vec, size_t type_size, ctu_length_t len, IN_NOTNULL arena_t *arena);
+CT_STD_API void typevec_init(IN_NOTNULL typevec_t *vec, size_t type_size, size_t len, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new typed vector on the stack
 ///
@@ -55,7 +55,7 @@ CT_STD_API void typevec_init(IN_NOTNULL typevec_t *vec, size_t type_size, ctu_le
 /// @param arena the arena to allocate from
 ///
 /// @return the new vector
-CT_STD_API typevec_t typevec_make(size_t type_size, ctu_length_t len, IN_NOTNULL arena_t *arena);
+CT_STD_API typevec_t typevec_make(size_t type_size, size_t len, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new typed vector on the heap
 ///
@@ -65,7 +65,7 @@ CT_STD_API typevec_t typevec_make(size_t type_size, ctu_length_t len, IN_NOTNULL
 ///
 /// @return the new vector
 CT_NODISCARD
-CT_STD_API typevec_t *typevec_new(IN_DOMAIN(>, 0) size_t type_size, ctu_length_t len, IN_NOTNULL arena_t *arena);
+CT_STD_API typevec_t *typevec_new(IN_DOMAIN(>, 0) size_t type_size, size_t len, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new typed vector with an initial size and length
 /// @note it is expected that the user will fill the vector up to @p len using @a typevec_set
@@ -77,7 +77,7 @@ CT_STD_API typevec_t *typevec_new(IN_DOMAIN(>, 0) size_t type_size, ctu_length_t
 ///
 /// @return the new vector
 CT_NODISCARD
-CT_STD_API typevec_t *typevec_of(IN_DOMAIN(>, 0) size_t type_size, ctu_length_t len, IN_NOTNULL arena_t *arena);
+CT_STD_API typevec_t *typevec_of(IN_DOMAIN(>, 0) size_t type_size, size_t len, IN_NOTNULL arena_t *arena);
 
 /// @brief create a new typed vector from an array
 /// this copies @p count * @a type_size bytes from @p src to the vector
@@ -92,7 +92,7 @@ CT_NODISCARD
 CT_STD_API typevec_t *typevec_of_array(
     IN_DOMAIN(>, 0) size_t type_size,
     IN_READS(count * type_size) const void *src,
-    ctu_length_t count,
+    size_t count,
     IN_NOTNULL arena_t *arena);
 
 /// @brief create a new typevec from an existing typevec
@@ -106,15 +106,15 @@ CT_STD_API typevec_t *typevec_of_array(
 CT_NODISCARD
 CT_STD_API typevec_t *typevec_slice(
     IN_NOTNULL const typevec_t *vec,
-    IN_DOMAIN(<, end) ctu_length_t start,
-    IN_DOMAIN(>, start) ctu_length_t end);
+    IN_DOMAIN(<, end) size_t start,
+    IN_DOMAIN(>, start) size_t end);
 
 /// @brief get the length of a vector
 ///
 /// @param vec the vector to get the length of
 /// @return the length of the vector
 CT_NODISCARD
-CT_STD_API ctu_length_t typevec_len(IN_NOTNULL const typevec_t *vec);
+CT_STD_API size_t typevec_len(IN_NOTNULL const typevec_t *vec);
 
 /// @brief set an element in the vector
 ///
@@ -124,7 +124,7 @@ CT_STD_API ctu_length_t typevec_len(IN_NOTNULL const typevec_t *vec);
 /// @param vec the vector to set the value in
 /// @param index the index to set the value at
 /// @param src the value to set
-CT_STD_API void typevec_set(IN_NOTNULL typevec_t *vec, ctu_length_t index, IN_NOTNULL const void *src);
+CT_STD_API void typevec_set(IN_NOTNULL typevec_t *vec, size_t index, IN_NOTNULL const void *src);
 
 /// @brief get an element from the vector
 ///
@@ -134,7 +134,7 @@ CT_STD_API void typevec_set(IN_NOTNULL typevec_t *vec, ctu_length_t index, IN_NO
 /// @param vec the vector to get the value from
 /// @param index the index to get the value from
 /// @param dst the destination to copy the value to
-CT_STD_API void typevec_get(IN_NOTNULL const typevec_t *vec, ctu_length_t index, IN_NOTNULL void *dst);
+CT_STD_API void typevec_get(IN_NOTNULL const typevec_t *vec, size_t index, IN_NOTNULL void *dst);
 
 /// @brief get the last element from the vector
 ///
@@ -154,7 +154,7 @@ CT_STD_API void *typevec_push(IN_NOTNULL typevec_t *vec, IN_NOTNULL const void *
 /// @param vec the vector to append the values onto
 /// @param src the values to append
 /// @param len the number of values to append
-CT_STD_API void typevec_append(IN_NOTNULL typevec_t *vec, IN_NOTNULL const void *src, ctu_length_t len);
+CT_STD_API void typevec_append(IN_NOTNULL typevec_t *vec, IN_NOTNULL const void *src, size_t len);
 
 /// @brief pop a value from the vector
 ///
@@ -170,7 +170,7 @@ CT_STD_API void typevec_pop(IN_NOTNULL typevec_t *vec, IN_NOTNULL void *dst);
 /// @param index the index to get the value from
 /// @return void* a pointer to the value
 CT_NODISCARD
-CT_STD_API void *typevec_offset(IN_NOTNULL const typevec_t *vec, ctu_length_t index);
+CT_STD_API void *typevec_offset(IN_NOTNULL const typevec_t *vec, size_t index);
 
 /// @brief get a pointer to the underlying data
 ///
