@@ -17,6 +17,7 @@ static const tree_tags_t kTreeTags[eTreeTotal] = {
 #include "cthulhu/tree/tree.inc"
 };
 
+CT_PUREFN
 static bool kind_has_tag(tree_kind_t kind, tree_tags_t tags)
 {
     CTASSERTF(kind < eTreeTotal, "invalid tree kind %d", kind);
@@ -24,6 +25,7 @@ static bool kind_has_tag(tree_kind_t kind, tree_tags_t tags)
     return kTreeTags[kind] & tags;
 }
 
+CT_PUREFN
 static bool tree_has_tag(const tree_t *tree, tree_tags_t tags)
 {
     CTASSERT(tree != NULL);
@@ -34,10 +36,12 @@ static bool tree_has_tag(const tree_t *tree, tree_tags_t tags)
 /// getters and setters
 ///
 
+#if CTU_ASSERTS
 static const char *tree_kind_string(const tree_t *tree)
 {
     return tree_kind_to_string(tree_get_kind(tree));
 }
+#endif
 
 USE_DECL
 void tree_set_qualifiers(tree_t *tree, tree_quals_t qualifiers)
@@ -114,6 +118,14 @@ const tree_t *tree_get_type(const tree_t *tree)
     if (tree_is(tree, eTreeError)) return tree;
 
     return tree->type;
+}
+
+USE_DECL
+tree_kind_t tree_get_kind(const tree_t *tree)
+{
+    CTASSERT(tree != NULL);
+
+    return tree->kind;
 }
 
 void tree_set_type(tree_t *self, const tree_t *type)

@@ -7,6 +7,7 @@
 #include "core/analyze.h"
 
 #include <stddef.h>
+#include <stdbool.h>
 
 CT_BEGIN_API
 
@@ -43,9 +44,20 @@ CT_TREE_API tree_storage_t tree_get_storage(IN_NOTNULL const tree_t *tree);
 CT_TREE_API void tree_set_eval(IN_NOTNULL tree_t *tree, eval_model_t model);
 CT_TREE_API eval_model_t tree_get_eval(IN_NOTNULL const tree_t *tree);
 
+CT_PUREFN
 CT_TREE_API const node_t *tree_get_node(IN_NOTNULL const tree_t *tree);
+
+CT_PUREFN
 CT_TREE_API const char *tree_get_name(IN_NOTNULL const tree_t *tree);
+
+CT_PUREFN
 CT_TREE_API const tree_t *tree_get_type(IN_NOTNULL const tree_t *tree);
+
+CT_PUREFN
+CT_TREE_API tree_kind_t tree_get_kind(IN_NOTNULL const tree_t *tree);
+
+CT_PUREFN
+CT_TREE_API bool tree_is(const tree_t *self, tree_kind_t kind);
 
 ///
 /// declarations

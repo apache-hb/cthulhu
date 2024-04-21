@@ -374,7 +374,7 @@ CT_OS_API size_t os_mapping_size(IN_NOTNULL const os_mapping_t *mapping);
 /// @param mapping the mapping to check
 ///
 /// @return true if the mapping is valid
-CT_NODISCARD
+CT_NODISCARD CT_PUREFN
 CT_OS_API bool os_mapping_active(IN_NOTNULL const os_mapping_t *mapping);
 
 /// @brief get the name of a file
@@ -382,7 +382,7 @@ CT_OS_API bool os_mapping_active(IN_NOTNULL const os_mapping_t *mapping);
 /// @param file the file to get the name of
 ///
 /// @return the name of the file
-CT_NODISCARD
+CT_NODISCARD CT_PUREFN
 CT_OS_API const char *os_file_name(IN_NOTNULL const os_file_t *file);
 
 /// @}

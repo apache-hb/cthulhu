@@ -136,56 +136,56 @@ namespace ctu::json {
         /// @brief check if the value is a string
         /// @retval true if the value is a string
         /// @retval false if the value is not a string
-        bool is_string() const;
+        CT_PUREFN bool is_string() const;
 
         /// @brief check if the value is an integer
         /// @retval true if the value is an integer
         /// @retval false if the value is not an integer
-        bool is_integer() const;
+        CT_PUREFN bool is_integer() const;
 
         /// @brief check if the value is a float
         /// @retval true if the value is a float
         /// @retval false if the value is not a float
-        bool is_float() const;
+        CT_PUREFN bool is_float() const;
 
         /// @brief check if the value is a boolean
         /// @retval true if the value is a boolean
         /// @retval false if the value is not a boolean
-        bool is_bool() const;
+        CT_PUREFN bool is_bool() const;
 
         /// @brief check if the value is an array
         /// @retval true if the value is an array
         /// @retval false if the value is not an array
-        bool is_array() const;
+        CT_PUREFN bool is_array() const;
 
         /// @brief check if the value is an object
         /// @retval true if the value is an object
         /// @retval false if the value is not an object
-        bool is_object() const;
+        CT_PUREFN bool is_object() const;
 
         /// @brief check if the value is null
         /// @retval true if the value is null
         /// @retval false if the value is not null
-        bool is_null() const;
+        CT_PUREFN bool is_null() const;
 
         /// @brief check if the value is valid
         /// this should always be checked before using any other methods
         ///
         /// @retval true if the value is valid
         /// @retval false if the value is not valid
-        bool is_valid() const { return m_ast != nullptr; }
+        CT_PUREFN constexpr bool is_valid() const { return m_ast != nullptr; }
 
         /// @brief check if the value is valid
         /// @pre #ctu::json::Json::is_valid() is true
         ///
         /// @retval true if the value is valid
         /// @retval false if the value is not valid
-        operator bool() const { return is_valid(); }
+        constexpr operator bool() const { return is_valid(); }
 
         /// @brief get the kind of the value
         ///
         /// @return the kind of the value
-        json_kind_t get_kind() const;
+        CT_PUREFN json_kind_t get_kind() const;
 
         /// @brief check if the value is a specific kind
         ///
@@ -193,14 +193,14 @@ namespace ctu::json {
         ///
         /// @retval true if the value is of kind @p kind
         /// @retval false if the value is not of kind @p kind
-        bool is_kind(json_kind_t kind) const;
+        CT_PUREFN bool is_kind(json_kind_t kind) const;
 
         /// @brief get the string value
         /// @pre #ctu::json::Json::is_string() is true
         /// returns a text view as string values may have embedded nulls
         ///
         /// @return the string value
-        std::string_view as_string() const;
+        CT_PUREFN std::string_view as_string() const;
 
         /// @brief get the integer value
         /// @pre #ctu::json::Json::is_integer() is true
@@ -212,33 +212,33 @@ namespace ctu::json {
         /// @pre #ctu::json::Json::is_float() is true
         ///
         /// @return the float value
-        float as_float() const;
+        CT_PUREFN float as_float() const;
 
         /// @brief get the boolean value
         /// @pre #ctu::json::Json::is_bool() is true
         ///
         /// @return the boolean value
-        bool as_bool() const;
+        CT_PUREFN bool as_bool() const;
 
         /// @brief get the array value
         /// @pre #ctu::json::Json::is_array() is true
         /// mostly useful for iterating over the array
         ///
         /// @return the array value
-        Array as_array() const;
+        CT_PUREFN Array as_array() const;
 
         /// @brief get the object value
         /// @pre #ctu::json::Json::is_object() is true
         /// mostly useful for iterating over the object
         ///
         /// @return the object value
-        Object as_object() const;
+        CT_PUREFN Object as_object() const;
 
         /// @brief get the length of an array
         /// @pre #ctu::json::Json::is_array() is true
         ///
         /// @return the length of the array
-        size_t length() const;
+        CT_PUREFN size_t length() const;
 
         /// @brief get a value from an object by key
         /// @pre #ctu::json::Json::is_object() is true
@@ -259,7 +259,7 @@ namespace ctu::json {
         /// @brief get the underlying ast node
         ///
         /// @return the ast node
-        json_t *get_ast() const { return m_ast; }
+        constexpr json_t *get_ast() const { return m_ast; }
 
         /// @brief get a value from an object by key
         /// same as get(const char*)

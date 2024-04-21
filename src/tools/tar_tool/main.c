@@ -14,6 +14,13 @@
 
 #include "os/os.h"
 
+// we do a few assumes that have side effects
+// they dont *actually* have side effects, but they arent pure either
+#if defined(__clang__)
+CT_PRAGMA(clang diagnostic push)
+CT_PRAGMA(clang diagnostic ignored "-Wassume")
+#endif
+
 static void print_dirent(fs_t *fs, const fs_inode_t *inode, const char *dir);
 
 static void print_folder(fs_t *fs, const fs_inode_t *inode, const char *dir)
@@ -136,3 +143,7 @@ int main(int argc, const char **argv)
         fs_iter_end(iter);
     }
 }
+
+#if defined(__clang__)
+CT_PRAGMA(clang diagnostic pop)
+#endif

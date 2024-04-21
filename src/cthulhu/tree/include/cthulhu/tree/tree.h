@@ -499,8 +499,6 @@ CT_TREE_API void tree_set_type(tree_t *self, const tree_t *type);
 
 CT_TREE_API tree_t *tree_alias(const tree_t *tree, const char *name);
 
-CT_TREE_API void tree_set_storage(tree_t *self, tree_storage_t storage);
-
 ///
 /// tree sema interface
 ///

@@ -131,6 +131,7 @@ CT_FS_API sync_result_t fs_sync(fs_t *dst, fs_t *src);
 /// @param inode the inode to get the type of
 ///
 /// @return the type of the inode
+CT_PUREFN
 CT_FS_API os_dirent_t fs_inode_type(IN_NOTNULL const fs_inode_t *inode);
 
 /// @brief check if a given inode is of a certain type
@@ -139,6 +140,7 @@ CT_FS_API os_dirent_t fs_inode_type(IN_NOTNULL const fs_inode_t *inode);
 /// @param type the type to check against
 ///
 /// @return true if the inode is of the given type, false otherwise
+CT_PUREFN
 CT_FS_API bool fs_inode_is(IN_NOTNULL const fs_inode_t *inode, os_dirent_t type);
 
 /// @brief get the name of an inode
@@ -147,6 +149,7 @@ CT_FS_API bool fs_inode_is(IN_NOTNULL const fs_inode_t *inode, os_dirent_t type)
 /// @param inode the inode to get the name of
 ///
 /// @return the name of the inode
+CT_PUREFN
 CT_FS_API const char *fs_inode_name(IN_NOTNULL const fs_inode_t *inode);
 
 /// @brief find an inode in a filesystem
@@ -155,6 +158,7 @@ CT_FS_API const char *fs_inode_name(IN_NOTNULL const fs_inode_t *inode);
 /// @param path the path to the inode
 ///
 /// @return the inode if it exists, NULL otherwise
+CT_PUREFN
 CT_FS_API fs_inode_t *fs_find_inode(IN_NOTNULL fs_t *fs, IN_STRING const char *path);
 
 /// @brief get the root inode of a filesystem
@@ -162,6 +166,7 @@ CT_FS_API fs_inode_t *fs_find_inode(IN_NOTNULL fs_t *fs, IN_STRING const char *p
 /// @param fs the filesystem to get the root inode of
 ///
 /// @return the root inode of the filesystem
+CT_PUREFN
 CT_FS_API fs_inode_t *fs_root_inode(IN_NOTNULL fs_t *fs);
 
 /// @brief begin iterating over a directory

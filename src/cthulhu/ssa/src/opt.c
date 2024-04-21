@@ -105,6 +105,7 @@ static const ssa_value_t *ssa_opt_return(ssa_scope_t *vm, ssa_return_t step)
     return value;
 }
 
+CT_PUREFN
 static bool value_is(const ssa_value_t *value, ssa_kind_t type)
 {
     CTASSERT(value != NULL);

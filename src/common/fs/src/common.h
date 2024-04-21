@@ -86,8 +86,8 @@ CT_LOCAL fs_inode_t *inode_dir(fs_t *fs, const char *name, const void *data);
 CT_LOCAL fs_inode_t *inode_new(fs_t *fs, os_dirent_t type, const char *name, const void *data);
 
 CT_LOCAL void *inode_data(fs_inode_t *inode);
-CT_LOCAL bool inode_is(fs_inode_t *inode, os_dirent_t type);
-CT_LOCAL const char *inode_name(fs_inode_t *inode);
+CT_LOCAL CT_CONSTFN bool inode_is(const fs_inode_t *inode, os_dirent_t type);
+CT_LOCAL CT_CONSTFN const char *inode_name(const fs_inode_t *inode);
 
 CT_LOCAL void *iter_data(fs_iter_t *iter);
 

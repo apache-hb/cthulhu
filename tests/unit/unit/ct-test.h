@@ -114,7 +114,7 @@ CT_UNIT_API int test_suite_finish(test_suite_t *suite);
 #define GROUP_EXPECT_PASS(GROUP, ID, ...)                                                                              \
     do                                                                                                                 \
     {                                                                                                                  \
-        GROUP_EXPECT_PASS2(GROUP, ID, CTASSERT(__VA_ARGS__));                                                      \
+        GROUP_EXPECT_PASS2(GROUP, ID, CTASSERT_ALWAYS(__VA_ARGS__));                                                      \
     } while (0)
 
 #define GROUP_EXPECT_FAIL(GROUP, ID, ...)                                                                              \

@@ -91,6 +91,7 @@ tree_t *tree_raise(const node_t *node, logger_t *reports, const diagnostic_t *di
 /// types
 ///
 
+CT_CONSTFN
 static bool is_type(tree_kind_t kind)
 {
     switch (kind)
@@ -115,6 +116,7 @@ static bool is_type(tree_kind_t kind)
     }
 }
 
+CT_CONSTFN
 static bool is_load_type(tree_kind_t kind)
 {
     switch (kind)

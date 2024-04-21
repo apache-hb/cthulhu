@@ -102,13 +102,6 @@ char *tree_to_string_arena(const tree_t *self, arena_t *arena)
     return arena_strdup(it, arena);
 }
 
-tree_kind_t tree_get_kind(const tree_t *self)
-{
-    CTASSERT(self != NULL);
-
-    return self->kind;
-}
-
 const tree_attribs_t *tree_get_attrib(const tree_t *self)
 {
     CTASSERT(self != NULL);

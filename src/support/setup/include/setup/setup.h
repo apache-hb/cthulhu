@@ -112,6 +112,7 @@ CT_SETUP_API setup_init_t setup_parse(int argc, const char **argv, setup_options
 /// @param init the setup init
 ///
 /// @return true if the program should exit
+CT_PUREFN
 CT_SETUP_API bool setup_should_exit(IN_NOTNULL const setup_init_t *init);
 
 /// @brief get the exit code
@@ -119,6 +120,7 @@ CT_SETUP_API bool setup_should_exit(IN_NOTNULL const setup_init_t *init);
 /// @param init the setup init
 ///
 /// @return the exit code
+CT_PUREFN
 CT_SETUP_API int setup_exit_code(IN_NOTNULL const setup_init_t *init);
 
 /// @brief print the help message and exit

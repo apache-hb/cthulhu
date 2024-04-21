@@ -52,7 +52,7 @@ void *iter_data(fs_iter_t *iter)
     return iter->data;
 }
 
-bool inode_is(fs_inode_t *inode, os_dirent_t type)
+bool inode_is(const fs_inode_t *inode, os_dirent_t type)
 {
     CTASSERT(inode != NULL);
     CTASSERT(type < eOsNodeCount);
@@ -60,7 +60,7 @@ bool inode_is(fs_inode_t *inode, os_dirent_t type)
     return inode->type == type;
 }
 
-const char *inode_name(fs_inode_t *inode)
+const char *inode_name(const fs_inode_t *inode)
 {
     CTASSERT(inode != NULL);
 

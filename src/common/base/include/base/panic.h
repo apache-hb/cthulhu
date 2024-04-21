@@ -91,6 +91,9 @@ CT_NORETURN CT_BASE_API ctu_vpanic(source_info_t location, CT_FMT_STRING const c
         }                                \
     } while (0)
 
+#define CTASSERT_ALWAYS(expr) CTASSERTF_ALWAYS(expr, "assertion failed: %s", #expr)
+#define CTASSERTM_ALWAYS(expr, msg) CTASSERTF_ALWAYS(expr, "%s", msg)
+
 /// @def CTASSERTF(expr, ...)
 /// @brief assert a condition with a message and optional format arguments
 /// @note in release builds this expands to @a CT_ASSUME

@@ -56,6 +56,7 @@ CT_BASE_API size_t bitset_set_first(bitset_t set, size_t start);
 /// @param mask the mask to test
 ///
 /// @return true if any bits in the mask are set
+CT_PUREFN
 CT_BASE_API bool bitset_any(bitset_t set, bitset_t mask);
 
 /// @brief test if all bits in a given mask are set
@@ -64,6 +65,7 @@ CT_BASE_API bool bitset_any(bitset_t set, bitset_t mask);
 /// @param mask the mask to test
 ///
 /// @return true if all bits in the mask are set
+CT_PUREFN
 CT_BASE_API bool bitset_all(bitset_t set, bitset_t mask);
 
 /// @brief test if a bit is set
@@ -72,6 +74,7 @@ CT_BASE_API bool bitset_all(bitset_t set, bitset_t mask);
 /// @param index the index of the bit to test
 ///
 /// @return true if the bit is set
+CT_PUREFN
 CT_BASE_API bool bitset_test(bitset_t set, size_t index);
 
 /// @brief set a bit
@@ -96,6 +99,7 @@ CT_BASE_API void bitset_reset(bitset_t set);
 /// @param set the bitset to get the length of
 ///
 /// @return the number of bits in the bitset
+CT_PUREFN
 CT_BASE_API size_t bitset_len(bitset_t set);
 
 /// @}

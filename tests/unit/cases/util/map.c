@@ -67,7 +67,7 @@ int main(void)
             char world[] = "world";
 
             /* pointer equality is on purpose */
-            CTASSERT(map_get_default(map, "hello", world) == world);
+            CTASSERT_ALWAYS(map_get_default(map, "hello", world) == world);
         });
     }
 
