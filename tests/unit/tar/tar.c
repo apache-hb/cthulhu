@@ -54,7 +54,7 @@ int main(void)
 
         io_t *tmp = io_file("test.tar", eOsAccessWrite | eOsAccessTruncate, arena);
         io_write(tmp, data, size);
-        io_close(tmp);
+        io_free(tmp);
 
         fs_t *result = fs_virtual("result", arena);
 

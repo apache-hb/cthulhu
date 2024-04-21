@@ -15,15 +15,15 @@ libunit = library('unit', 'unit/ct-test.c',
 
 unit_args = generated_args
 
-if has_cpp
-    unit_args += cpp.get_supported_arguments(
-        # we use setjmp/longjmp in the unit tests
-        '/wd4611',
+unit_args += cpp.get_supported_arguments(
+    # we use setjmp/longjmp in the unit tests
+    '/wd4611',
 
-        # the results arent actually ignored
-        '-Wno-unused-result'
-    )
-endif
+    # the results arent actually ignored
+    '-Wno-unused-result',
+
+    '-Wno-clobbered'
+)
 
 unit = declare_dependency(
     compile_args : unit_args,

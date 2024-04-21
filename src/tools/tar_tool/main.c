@@ -126,7 +126,7 @@ int main(int argc, const char **argv)
         break;
     }
 
-    io_close(io);
+    io_free(io);
 
     if (str_equal(argv[2], "--list"))
     {

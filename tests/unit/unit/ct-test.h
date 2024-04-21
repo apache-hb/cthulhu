@@ -68,6 +68,12 @@ CT_UNIT_API void group_notify_success(test_group_t *group, const char *msg);
 /// @param msg the message to display
 CT_UNIT_API void group_notify_failure(test_group_t *group, const char *msg);
 
+/// @brief notify that a test was skipped
+///
+/// @param group the test group
+/// @param msg the message to display
+CT_UNIT_API void group_notify_skipped(test_group_t *group, const char *msg);
+
 /// @brief notify that an exception occurred
 ///
 /// @param group the test group
@@ -130,6 +136,7 @@ CT_UNIT_API int test_suite_finish(test_suite_t *suite);
         group_notify_result(&GROUP, !test_result, ID);                                                                      \
     } while (0)
 
+#if CTU_ASSERTS
 #define GROUP_EXPECT_PANIC(GROUP, ID, ...)                                                                             \
     do                                                                                                                 \
     {                                                                                                                  \
@@ -142,5 +149,11 @@ CT_UNIT_API int test_suite_finish(test_suite_t *suite);
         __VA_ARGS__;                                                                                                   \
         group_notify_failure(&GROUP, ID);                                                                              \
     } while (0)
+#else
+#define GROUP_EXPECT_PANIC(GROUP, ID, ...) \
+    do { \
+        group_notify_skipped(&GROUP, ID " (asserts are disabled)"); \
+    } while (0)
+#endif
 
 CT_END_API

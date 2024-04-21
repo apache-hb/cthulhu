@@ -158,7 +158,6 @@ CT_FS_API const char *fs_inode_name(IN_NOTNULL const fs_inode_t *inode);
 /// @param path the path to the inode
 ///
 /// @return the inode if it exists, NULL otherwise
-CT_PUREFN
 CT_FS_API fs_inode_t *fs_find_inode(IN_NOTNULL fs_t *fs, IN_STRING const char *path);
 
 /// @brief get the root inode of a filesystem

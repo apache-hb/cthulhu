@@ -284,6 +284,12 @@ void group_notify_failure(test_group_t *group, const char *msg)
     add_test_result(group, result);
 }
 
+void group_notify_skipped(test_group_t *group, const char *msg)
+{
+    test_result_t result = test_result_status(group->name, msg, eTestSkipped);
+    add_test_result(group, result);
+}
+
 void group_notify_exception(test_group_t *group, const char *msg)
 {
     test_result_t result = test_result_exception(group->name, msg, gPanicException);

@@ -146,7 +146,7 @@ CT_SCAN_API scan_t *scan_io(
 /// @param arena the allocator to use
 ///
 /// @return the builtin scanner
-CT_NODISCARD CT_CONSTFN
+CT_NODISCARD
 CT_SCAN_API scan_t *scan_builtin(IN_STRING const char *language, IN_NOTNULL arena_t *arena);
 
 /// @brief check if a scanner is the builtin scanner
@@ -154,7 +154,7 @@ CT_SCAN_API scan_t *scan_builtin(IN_STRING const char *language, IN_NOTNULL aren
 /// @param scan the scanner to check
 ///
 /// @return true if @p scan is the builtin scanner
-CT_NODISCARD CT_CONSTFN
+CT_NODISCARD CT_PUREFN
 CT_SCAN_API bool scan_is_builtin(IN_NOTNULL const scan_t *scan);
 
 /// @}

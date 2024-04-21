@@ -23,7 +23,7 @@ CT_BEGIN_API
 /// @param path the path to check
 ///
 /// @retval true if the path is special
-CT_NODISCARD CT_CONSTFN
+CT_NODISCARD CT_PUREFN
 CT_BASE_API bool is_path_special(IN_STRING const char *path);
 
 /// @brief hash a pointer value

@@ -52,14 +52,14 @@ static bucket_t *impl_bucket_new(const void *key, void *value, arena_t *arena)
     return entry;
 }
 
-CT_HOTFN
+CT_HOTFN CT_PUREFN
 static bucket_t *map_get_bucket(map_t *map, ctu_hash_t hash)
 {
     size_t index = hash % map->size;
     return &map->data[index];
 }
 
-CT_HOTFN
+CT_HOTFN CT_PUREFN
 static const bucket_t *map_get_bucket_const(const map_t *map, ctu_hash_t hash)
 {
     size_t index = hash % map->size;
@@ -368,6 +368,7 @@ bool map_delete(map_t *map, const void *key)
     {
         if (entry->key != NULL && impl_key_equal(map, entry->key, key))
         {
+            map->used -= 1;
             impl_delete_bucket(previous, entry);
             return true;
         }
@@ -419,8 +420,7 @@ static bucket_t *map_next_in_chain(bucket_t *entry)
  * @param previous the previous bucket that was returned
  * @return bucket_t* the next bucket or NULL if there are no more buckets
  */
-CT_PUREFN
-static bucket_t *set_find_next_bucket(const map_t *map, size_t *index, bucket_t *previous)
+static bucket_t *map_find_next_bucket(const map_t *map, size_t *index, bucket_t *previous)
 {
     bucket_t *entry = map_next_in_chain(previous);
     if (entry != NULL)
@@ -457,8 +457,8 @@ map_iter_t map_iter(const map_t *map)
 
     size_t index = 0;
 
-    bucket_t *bucket = set_find_next_bucket(map, &index, NULL);
-    bucket_t *next = set_find_next_bucket(map, &index, bucket);
+    bucket_t *bucket = map_find_next_bucket(map, &index, NULL);
+    bucket_t *next = map_find_next_bucket(map, &index, bucket);
 
     map_iter_t iter = {
         .map = map,
@@ -481,7 +481,7 @@ map_entry_t map_next(map_iter_t *iter)
     };
 
     iter->bucket = iter->next;
-    iter->next = set_find_next_bucket(iter->map, &iter->index, iter->bucket);
+    iter->next = map_find_next_bucket(iter->map, &iter->index, iter->next);
 
     return entry;
 }
@@ -503,7 +503,7 @@ bool map_next_pair(map_iter_t *iter, const void **key, void **value)
     return true;
 }
 
-USE_DECL
+USE_DECL CT_PUREFN
 bool map_has_next(const map_iter_t *iter)
 {
     CTASSERT(iter != NULL);

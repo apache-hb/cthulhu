@@ -79,7 +79,7 @@ CT_SCAN_API node_t node_make(IN_NOTNULL const scan_t *scan, where_t where);
 /// @param arena the arena to allocate from
 ///
 /// @return the builtin node
-CT_NODISCARD CT_PUREFN
+CT_NODISCARD
 CT_SCAN_API node_t *node_builtin(
     IN_STRING const char *name,
     IN_NOTNULL arena_t *arena);
