@@ -34,6 +34,8 @@ subprojects/*
 !*.wrap
 
 # dont ignore subprojects
+!subprojects/packagefiles
+!subprojects/packagefiles/**/*
 !subprojects/mini_gmp/**/*
 !subprojects/stb_printf/**/*
 

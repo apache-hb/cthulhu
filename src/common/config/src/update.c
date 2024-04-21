@@ -114,7 +114,7 @@ bool cfg_set_flag(cfg_field_t *field, const char *choice, bool set)
     ASSERT_FIELD_TYPE(field, eConfigFlags);
     CTASSERT(choice != NULL);
 
-    cfg_flags_t cfg = field->flags_config;
+    cfg_enum_t cfg = field->enum_config;
 
     for (size_t i = 0; i < cfg.count; i++)
     {
@@ -130,7 +130,7 @@ bool cfg_set_flag(cfg_field_t *field, const char *choice, bool set)
 }
 
 #if CTU_PARANOID
-static bool is_valid_flag(const cfg_flags_t *options, size_t value)
+static bool is_valid_flag(const cfg_enum_t *options, size_t value)
 {
     if (value == 0) return true;
 
@@ -155,7 +155,7 @@ USE_DECL
 void cfg_set_flag_value(cfg_field_t *field, size_t value)
 {
     ASSERT_FIELD_TYPE(field, eConfigFlags);
-    CT_PARANOID_ASSERTF(is_valid_flag(&field->flags_config, value), "invalid flag value %zu for field %s", value, field->info->name);
+    CT_PARANOID_ASSERTF(is_valid_flag(&field->enum_config, value), "invalid flag value %zu for field %s", value, field->info->name);
 
     field->flags_value = value;
 }

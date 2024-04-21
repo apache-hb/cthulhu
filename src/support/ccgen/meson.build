@@ -1,0 +1,1 @@
+ccgen_script = find_program('ccgen.py')

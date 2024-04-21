@@ -19,7 +19,6 @@ typedef struct cfg_field_t
         const char *string_config;
         vector_t *vec_config;
         cfg_enum_t enum_config;
-        cfg_flags_t flags_config;
     };
 
     union {

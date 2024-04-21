@@ -198,7 +198,7 @@ static void print_enum(format_config_t options, alignment_info_t alignment, cons
 
 static void print_flags_default(format_config_t options, const cfg_field_t *field)
 {
-    const cfg_flags_t *info = cfg_flags_info(field);
+    const cfg_enum_t *info = cfg_flags_info(field);
     io_printf(options.io, "flags (default: ");
 
     bool first = true;
@@ -222,7 +222,7 @@ static void print_flags_default(format_config_t options, const cfg_field_t *fiel
 
 static void print_flags(format_config_t options, alignment_info_t alignment, const cfg_field_t *field)
 {
-    const cfg_flags_t *info = cfg_flags_info(field);
+    const cfg_enum_t *info = cfg_flags_info(field);
 
     char *padding = str_repeat(" ", alignment.arg_alignment, options.arena);
     io_printf(options.io, "%soptions: ", padding);

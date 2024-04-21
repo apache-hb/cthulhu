@@ -19,7 +19,6 @@
 
 #include "config/config.h"
 #include "core/macros.h"
-#include "core/types.h"
 #include "core/version_def.h"
 #include "format/config.h"
 #include "format/notify2.h"

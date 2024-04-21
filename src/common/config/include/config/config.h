@@ -115,20 +115,6 @@ typedef struct cfg_enum_t
     size_t initial;
 } cfg_enum_t;
 
-/// @brief a set of choices
-typedef struct cfg_flags_t
-{
-    /// @brief the choices in this set
-    FIELD_SIZE(count) const cfg_choice_t *options;
-
-    /// @brief the number of choices in this set
-    size_t count;
-
-    /// @brief the initial set of flags
-    /// initial is treated as a bitfield
-    size_t initial;
-} cfg_flags_t;
-
 /// @brief create a new configuration group
 ///
 /// @param info the information about this group
@@ -202,7 +188,7 @@ CT_CONFIG_API cfg_field_t *config_enum(IN_NOTNULL cfg_group_t *group, IN_NOTNULL
 /// @param cfg the configuration information for this field
 ///
 /// @return the new configuration field
-CT_CONFIG_API cfg_field_t *config_flags(IN_NOTNULL cfg_group_t *group, IN_NOTNULL const cfg_info_t *info, cfg_flags_t cfg);
+CT_CONFIG_API cfg_field_t *config_flags(IN_NOTNULL cfg_group_t *group, IN_NOTNULL const cfg_info_t *info, cfg_enum_t cfg);
 
 /// @} // ConfigAdd
 
@@ -281,7 +267,7 @@ CT_CONFIG_API const cfg_enum_t *cfg_enum_info(IN_NOTNULL const cfg_field_t *fiel
 ///
 /// @return the information about @p field
 CT_PUREFN RET_NOTNULL
-CT_CONFIG_API const cfg_flags_t *cfg_flags_info(IN_NOTNULL const cfg_field_t *field);
+CT_CONFIG_API const cfg_enum_t *cfg_flags_info(IN_NOTNULL const cfg_field_t *field);
 
 /// @brief get the name of a configuration type
 ///

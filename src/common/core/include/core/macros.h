@@ -54,6 +54,10 @@
 /// @brief the version of the project as a string
 #define CT_VERSION_STR CT_STR(CTU_VERSION_MAJOR) "." CT_STR(CTU_VERSION_MINOR) "." CT_STR(CTU_VERSION_PATCH)
 
+/// @def CT_ARRAY_LEN(arr)
+/// @brief returns the length of an array
+#define CT_ARRAY_LEN(arr) (sizeof(arr) / sizeof(*arr))
+
 /// @defgroup ansi_colour ANSI Colour macros
 /// @brief ANSI escape string colour macros
 /// @ingroup core

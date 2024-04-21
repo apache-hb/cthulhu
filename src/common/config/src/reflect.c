@@ -83,11 +83,11 @@ const cfg_enum_t *cfg_enum_info(const cfg_field_t *field)
 }
 
 USE_DECL
-const cfg_flags_t *cfg_flags_info(const cfg_field_t *field)
+const cfg_enum_t *cfg_flags_info(const cfg_field_t *field)
 {
     ASSERT_FIELD_TYPE(field, eConfigFlags);
 
-    return &field->flags_config;
+    return &field->enum_config;
 }
 
 static const char *const kConfigTypeNames[eConfigCount] = {

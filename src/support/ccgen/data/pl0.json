@@ -1,0 +1,125 @@
+{
+    "info": {
+        "id": "pl0",
+        "name": "PL/0",
+        "version": { "major": 1, "minor": 1, "patch": 0 },
+        "license": "GPL-3.0-only",
+        "author": "Elliot Haisley",
+        "description": "PL/0 language frontend"
+    },
+    "commandline": {
+        "use_setup_options": false,
+        "options": {
+            "limits": {
+                "brief": "Control language implementation limits",
+                "children": {
+                    "int_width": {
+                        "brief": "The width of the number type in bits, must be a power of 2",
+                        "args": [
+                            { "long": "pl0-int-width" }
+                        ],
+                        "int": {
+                            "min": "8",
+                            "max": "64",
+                            "default": "32"
+                        }
+                    }
+                }
+            },
+            "print_format": {
+                "brief": "Control the format string used for printing integers",
+                "args": [
+                    { "long": "pl0-print-format" }
+                ],
+                "string": {
+                    "default": "%d"
+                }
+            },
+            "extensions": {
+                "brief": "Enable or disable language extensions",
+                "args": [
+                    { "long": "pl0-lang-extensions" },
+                    { "short": "pl0-exts" }
+                ],
+                "flags": {
+                    "modules": true,
+                    "nested_procedures": true
+                }
+            },
+            "combo_enum": {
+                "brief": "Control the behavior of the combo enum",
+                "args": [
+                    { "long": "pl0-combo-enum" }
+                ],
+                "choices": [
+                    "none",
+                    "left",
+                    "right"
+                ],
+                "default": "none"
+            }
+        }
+    },
+    "nodes": [
+        {
+            "name": "stmt"
+        },
+        {
+            "name": "expr",
+            "parent": "stmt"
+        },
+        {
+            "name": "int",
+            "parent": "expr",
+            "fields": [
+                { "name": "digit", "type": "mpz" }
+            ]
+        },
+        {
+            "name": "ident",
+            "parent": "expr",
+            "fields": [
+                { "name": "name", "type": "string" }
+            ]
+        },
+        {
+            "name": "call",
+            "parent": "stmt",
+            "fields": [
+                { "name": "procedure", "type": "string" }
+            ]
+        },
+        {
+            "name": "print",
+            "parent": "stmt",
+            "fields": [
+                { "name": "expression", "type": { "ast": "expr" } }
+            ]
+        },
+        {
+            "name": "unary",
+            "parent": "expr",
+            "fields": [
+                { "name": "unary", "type": { "enum": "unary" } },
+                { "name": "operand", "type": { "ast": "expr" } }
+            ]
+        },
+        {
+            "name": "binary",
+            "parent": "expr",
+            "fields": [
+                { "name": "binary", "type": { "enum": "binary" } },
+                { "name": "lhs", "type": { "ast": "expr" } },
+                { "name": "rhs", "type": { "ast": "expr" } }
+            ]
+        }
+    ],
+    "grammar": {
+        "tokens": {
+
+        },
+        "rules": {
+
+        }
+    }
+}

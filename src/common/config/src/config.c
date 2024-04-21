@@ -172,13 +172,13 @@ cfg_field_t *config_enum(cfg_group_t *group, const cfg_info_t *info, cfg_enum_t 
 }
 
 USE_DECL
-cfg_field_t *config_flags(cfg_group_t *group, const cfg_info_t *info, cfg_flags_t cfg)
+cfg_field_t *config_flags(cfg_group_t *group, const cfg_info_t *info, cfg_enum_t cfg)
 {
     ASSERT_CONFIG_VALID(group, info);
     ASSERT_OPTIONS_VALID(cfg.options, cfg.count);
 
     cfg_field_t *field = add_field(group, info, eConfigFlags);
-    field->flags_config = cfg;
+    field->enum_config = cfg;
     field->flags_value = cfg.initial;
 
     return field;

@@ -167,7 +167,7 @@ void draw_flags(cfg_field_t *field)
 {
     const char *edit_flags_popup = "Edit Flags";
 
-    const cfg_flags_t *cfg = cfg_flags_info(field);
+    const cfg_enum_t *cfg = cfg_flags_info(field);
     ImU64 value = cfg_flags_value(field);
 
     if (ImGui::Button("Edit"))

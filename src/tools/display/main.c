@@ -82,7 +82,7 @@ static tool_t make_config(arena_t *arena)
     };
     cfg_field_t *enum_argument = config_enum(config, &kEnumInfo, enum_init);
 
-    cfg_flags_t flag_init = {
+    cfg_enum_t flag_init = {
         .options = kFlagChoices,
         .count = (sizeof(kFlagChoices) / sizeof(cfg_choice_t)),
         .initial = eFlagOne

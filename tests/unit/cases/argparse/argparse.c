@@ -137,7 +137,7 @@ static test_config_t make_config(arena_t *arena)
     };
     config.enum_field = config_enum(config.root, &kEnumInfo, enum_initial);
 
-    cfg_flags_t flag_initial = {
+    cfg_enum_t flag_initial = {
         .initial = eTestFlagNone,
         .options = kFlagChoices,
         .count = (sizeof(kFlagChoices) / sizeof(cfg_choice_t))
