@@ -106,7 +106,7 @@ typedef struct cfg_choice_t
 typedef struct cfg_enum_t
 {
     /// @brief the choices in this set
-    FIELD_SIZE(count) const cfg_choice_t *options;
+    STA_FIELD_SIZE(count) const cfg_choice_t *options;
 
     /// @brief the number of choices in this set
     size_t count;
@@ -124,9 +124,9 @@ typedef struct cfg_enum_t
 /// @return the new configuration group
 CT_CONFIG_API cfg_group_t *config_root(IN_NOTNULL const cfg_info_t *info, IN_NOTNULL arena_t *arena);
 
-/// @defgroup ConfigAdd Construction
+/// @defgroup config_init Construction
 /// @brief Configuration construction API
-/// @ingroup Config
+/// @ingroup config
 /// @{
 
 /// @brief add a new configuration group to a configuration group
@@ -193,9 +193,9 @@ CT_CONFIG_API cfg_field_t *config_flags(IN_NOTNULL cfg_group_t *group, IN_NOTNUL
 
 /// @} // ConfigAdd
 
-/// @defgroup ConfigReflect Reflection
+/// @defgroup config_reflect Reflection
 /// @brief Reflection API for configuration
-/// @ingroup Config
+/// @ingroup config
 /// @{
 
 /// @brief get the type of a configuration field
@@ -312,9 +312,9 @@ CT_CONFIG_API vector_t *cfg_get_fields(IN_NOTNULL const cfg_group_t *config);
 
 /// @} // ConfigReflect
 
-/// @defgroup ConfigRead Reading
+/// @defgroup config_read Reading
 /// @brief Reading API for configuration
-/// @ingroup Config
+/// @ingroup config
 /// @{
 
 /// @brief get the current integer value of a configuration field
@@ -367,9 +367,9 @@ CT_CONFIG_API size_t cfg_flags_value(IN_NOTNULL const cfg_field_t *field);
 
 /// @} // ConfigRead
 
-/// @defgroup ConfigWrite Writing
+/// @defgroup config_write Writing
 /// @brief Writing API for configuration
-/// @ingroup Config
+/// @ingroup config
 /// @{
 
 /// @brief set the current value of an int field

@@ -34,7 +34,7 @@ typedef struct typevec_t
     size_t width;
 
     /// @brief The data of the vector.
-    FIELD_SIZE(size) void *data;
+    STA_FIELD_SIZE(size) void *data;
 } typevec_t;
 
 extern const typevec_t kEmptyTypevec;

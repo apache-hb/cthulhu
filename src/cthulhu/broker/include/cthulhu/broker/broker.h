@@ -126,10 +126,10 @@ typedef struct language_builtins_t
     unit_id_t name;
 
     /// @brief passthrough decl sizes for the builtin module
-    FIELD_SIZE(length) const size_t *decls;
+    STA_FIELD_SIZE(length) const size_t *decls;
 
     /// @brief name of each decl tag
-    FIELD_SIZE(length) const char * const *names;
+    STA_FIELD_SIZE(length) const char * const *names;
 
     /// @brief size of decls
     // FIELD_RANGE(eSemaCount, SIZE_MAX)

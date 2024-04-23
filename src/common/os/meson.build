@@ -39,15 +39,20 @@ os_common = declare_dependency(
 
 # get the backend data
 
+# the os backend is expected to provide a map called `os_config`
+# with the following fields:
+# - name: str. the name of the backend
+# - copyfile: bool. true if the backend has an optimized copyfile function
+# - dynamic: bool. true if the backend has dynamic loading support
+# - threads: bool. true if the backend has a threading implementation
 subdir('src' / os_platform)
 
 os_cdata = configuration_data()
 
-# is there an optimized way to copy a file?
 os_cdata.set10('CTU_OS_HAS_COPYFILE', os_config['copyfile'])
-
-# is dynamic loading supported?
 os_cdata.set10('CTU_OS_HAS_DYNLOAD', os_config['dynamic'])
+os_cdata.set10('CTU_OS_HAS_THREADS', os_config['threads'])
+
 os_config = configure_file(
     output : 'os_config.h',
     configuration : os_cdata
@@ -58,7 +63,7 @@ osnative_inc = include_directories('.')
 lib_osnative = static_library('os_' + os_platform,
     build_by_default : false,
     c_args : user_args + os_args + [ os_api_build ],
-    dependencies : [ base, std, os_common, os_native ],
+    dependencies : [ base, std, os_common, os_native, dependency('threads') ],
     include_directories : [ os_include, os_impl_include, osnative_inc ]
 )
 

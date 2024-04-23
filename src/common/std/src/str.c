@@ -655,6 +655,26 @@ void str_trim_back_inplace(text_t *text, const char *chars)
 }
 
 USE_DECL
+void str_sort_inplace(char *str, size_t len)
+{
+    CTASSERT(str != NULL);
+
+    // TODO: something better than bubblesort :^)
+    for (size_t i = 0; i < len; i++)
+    {
+        for (size_t j = i + 1; j < len; j++)
+        {
+            if (str[i] > str[j])
+            {
+                char temp = str[i];
+                str[i] = str[j];
+                str[j] = temp;
+            }
+        }
+    }
+}
+
+USE_DECL
 char *str_replace_many(const char *str, const map_t *repl, arena_t *arena)
 {
     CTASSERT(str != NULL);

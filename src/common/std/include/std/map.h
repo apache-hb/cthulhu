@@ -49,7 +49,7 @@ typedef struct map_t
     FIELD_RANGE(<, size) size_t used;
 
     /// @brief bucket data
-    FIELD_SIZE(size) bucket_t *data;
+    STA_FIELD_SIZE(size) bucket_t *data;
 } map_t;
 
 /// @brief an empty map

@@ -30,6 +30,12 @@ CT_NORETURN os_exit(os_exitcode_t code)
     CT_UNREACHABLE();
 }
 
+CT_NORETURN os_thread_exit(os_status_t status)
+{
+    ExitThread(status);
+    CT_UNREACHABLE();
+}
+
 CT_NORETURN os_abort(void)
 {
     abort();

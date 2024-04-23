@@ -66,6 +66,14 @@ typedef STA_SUCCESS_TYPE(return == eOsSuccess) size_t os_error_t;
 /// @brief program exit code
 typedef int os_exitcode_t;
 
+/// @ingroup os_thread
+/// @brief thread return code
+typedef unsigned os_status_t;
+
+/// @ingroup os_thread
+/// @brief thread id
+typedef size_t os_thread_id_t;
+
 /// @brief function pointer
 /// used for shared library symbols rather than void*
 /// because casting a function pointer to void* is undefined behavior
@@ -79,6 +87,18 @@ CT_OS_API void os_init(void);
 ///
 /// @param code the exit code
 CT_NORETURN CT_OS_API os_exit(os_exitcode_t code);
+
+/// @ingroup os_thread
+/// @brief exit the current thread of execution
+///
+/// @param status the status code
+CT_NORETURN CT_OS_API os_thread_exit(os_status_t status);
+
+/// @ingroup os_thread
+/// @brief get the current thread id
+///
+/// @return the current thread id
+CT_OS_API os_thread_id_t os_get_thread_id(void);
 
 /// @brief abort the program
 CT_NORETURN CT_OS_API os_abort(void);
@@ -114,7 +134,7 @@ CT_OS_API size_t os_cwd_get_string(OUT_WRITES(size) char *buffer, size_t size);
 /// @param arena the arena to allocate from
 ///
 /// @return the string representation of the error code
-CT_NODISCARD RET_STRING
+CT_NODISCARD STA_RET_STRING
 CT_OS_API char *os_error_string(os_error_t error, IN_NOTNULL arena_t *arena);
 
 /// @brief get the current working directory
@@ -139,7 +159,7 @@ CT_OS_API os_error_t os_getcwd(OUT_NOTNULL text_t *text, IN_NOTNULL arena_t *are
 /// @param node the inode to get the type of
 ///
 /// @return the type of the inode
-CT_NODISCARD
+CT_NODISCARD CT_PUREFN
 CT_OS_API os_dirent_t os_inode_type(IN_NOTNULL const os_inode_t *node);
 
 /// @brief get the name of an inode
@@ -148,7 +168,7 @@ CT_OS_API os_dirent_t os_inode_type(IN_NOTNULL const os_inode_t *node);
 /// @param node the inode to get the name of
 ///
 /// @return the name of the inode
-CT_NODISCARD
+CT_NODISCARD STA_RET_STRING CT_PUREFN
 CT_OS_API const char *os_inode_name(IN_NOTNULL const os_inode_t *node);
 
 /// @brief get the string representation of a directory entry type
@@ -156,7 +176,7 @@ CT_OS_API const char *os_inode_name(IN_NOTNULL const os_inode_t *node);
 /// @param type the directory entry type
 ///
 /// @return the string representation
-CT_CONSTFN RET_STRING
+CT_NODISCARD CT_CONSTFN STA_RET_STRING
 CT_OS_API const char *os_dirent_string(os_dirent_t type);
 
 /// @brief get the string representation of a file access mode
@@ -164,7 +184,7 @@ CT_OS_API const char *os_dirent_string(os_dirent_t type);
 /// @param access the file access mode
 ///
 /// @return the string representation
-CT_CONSTFN RET_STRING
+CT_NODISCARD CT_CONSTFN STA_RET_STRING
 CT_OS_API const char *os_access_string(os_access_t access);
 
 /// @brief get the string representation of a file mapping memory protection
@@ -172,7 +192,7 @@ CT_OS_API const char *os_access_string(os_access_t access);
 /// @param protect the file mapping memory protection
 ///
 /// @return the string representation
-CT_CONSTFN RET_STRING
+CT_NODISCARD CT_CONSTFN STA_RET_STRING
 CT_OS_API const char *os_protect_string(os_protect_t protect);
 
 /// @}

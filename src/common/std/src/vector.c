@@ -18,7 +18,7 @@ typedef struct vector_t
 
     size_t size;                   ///< the total number of allocated elements
     size_t used;                   ///< the number of elements in use
-    FIELD_SIZE(size) void *data[]; ///< the data
+    STA_FIELD_SIZE(size) void *data[]; ///< the data
 } vector_t;
 
 vector_t gEmptyVector = { NULL, 0, 0 };

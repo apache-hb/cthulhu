@@ -115,7 +115,7 @@ CT_BACKTRACE_API void bt_update(void);
 /// @brief get the backtrace backend name
 ///
 /// @return the backtrace backend name
-RET_STRING CT_CONSTFN
+STA_RET_STRING CT_CONSTFN
 CT_BACKTRACE_API const char *bt_backend(void);
 
 /// @brief get a backtrace from the current location using a callback

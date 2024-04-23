@@ -2,10 +2,11 @@
 
 #pragma once
 
+#include <ctu_setup_api.h>
+
 #include "core/analyze.h"
 #include "core/version_def.h"
 #include "format/format.h"
-#include <ctu_setup_api.h>
 
 #include <stdbool.h>
 

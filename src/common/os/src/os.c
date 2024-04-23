@@ -419,3 +419,23 @@ const char *os_inode_name(const os_inode_t *node)
 
     return node->name;
 }
+
+///
+/// thread operations
+///
+
+USE_DECL
+const char *os_thread_name(const os_thread_t *thread)
+{
+    CTASSERT(thread != NULL);
+
+    return thread->name;
+}
+
+USE_DECL
+bool os_thread_cmpid(const os_thread_t *thread, os_thread_id_t id)
+{
+    CTASSERT(thread != NULL);
+
+    return thread->id == id;
+}

@@ -28,5 +28,5 @@ libsetup = library('setup', src,
 setup = declare_dependency(
     link_with : libsetup,
     include_directories : setup_include,
-    dependencies : [ core ]
+    dependencies : [ format ]
 )

@@ -5,11 +5,14 @@
 #include <errno.h>
 #include <stdio.h>
 #include <dirent.h>
+#include <pthread.h>
 
 typedef void *os_library_impl_t;
 typedef FILE *os_file_impl_t;
 typedef struct dirent *os_inode_impl_t;
 typedef DIR *os_iter_impl_t;
+typedef pthread_t os_thread_impl_t;
+typedef pthread_mutex_t os_mutex_impl_t;
 
 typedef struct os_mapping_t
 {
@@ -30,6 +33,7 @@ enum {
 // TODO: this may actually be UINTPTR_MAX
 #define CT_OS_INVALID_MAPPING NULL
 #define CT_OS_INVALID_ITER NULL
+#define CT_OS_THREAD_INVALID NULL
 
 // TODO: this is wrong, im not sure how i might go about fixing it
 #ifdef _DIRENT_HAVE_D_NAMLEN

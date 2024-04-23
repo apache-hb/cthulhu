@@ -13,7 +13,7 @@
 typedef struct text_t
 {
     /// @brief text data
-    FIELD_SIZE(length) char *text;
+    STA_FIELD_SIZE(length) char *text;
     /// @brief the number of characters in the text
     /// @note this does not include the null terminator
     size_t length;
@@ -23,7 +23,7 @@ typedef struct text_t
 typedef struct text_view_t
 {
     /// @brief the text itself
-    FIELD_SIZE(length) const char *text;
+    STA_FIELD_SIZE(length) const char *text;
 
     /// @brief the number of characters in the text
     /// @note this does not include the null terminator

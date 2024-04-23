@@ -354,14 +354,14 @@ CT_SSA_API ssa_type_t *ssa_type_pointer(const char *name, tree_quals_t quals, ss
 /// names
 ///
 
-RET_NOTNULL
-CT_SSA_API const char *ssa_type_name(IN_RANGE(0, eTypeCount - 1) ssa_kind_t kind);
+RET_NOTNULL CT_CONSTFN CT_NODISCARD
+CT_SSA_API const char *ssa_type_name(STA_IN_RANGE(0, eTypeCount - 1) ssa_kind_t kind);
 
-RET_NOTNULL
-CT_SSA_API const char *ssa_opkind_name(IN_RANGE(0, eOperandCount - 1) ssa_opkind_t kind);
+RET_NOTNULL CT_CONSTFN CT_NODISCARD
+CT_SSA_API const char *ssa_opkind_name(STA_IN_RANGE(0, eOperandCount - 1) ssa_opkind_t kind);
 
-RET_NOTNULL
-CT_SSA_API const char *ssa_opcode_name(IN_RANGE(0, eOpCount - 1) ssa_opcode_t opcode);
+RET_NOTNULL CT_CONSTFN CT_NODISCARD
+CT_SSA_API const char *ssa_opcode_name(STA_IN_RANGE(0, eOpCount - 1) ssa_opcode_t opcode);
 
 /// @}
 

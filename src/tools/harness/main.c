@@ -75,7 +75,7 @@ typedef struct user_ptr_t
     uint32_t pad1;
     uint32_t pad2;
 
-    FIELD_SIZE(size) char data[];
+    STA_FIELD_SIZE(size) char data[];
 } user_ptr_t;
 
 CT_STATIC_ASSERT(sizeof(user_ptr_t) == 16, "user_ptr_t must be 16 byte aligned");

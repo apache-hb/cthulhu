@@ -46,7 +46,7 @@ CT_TAR_API tar_error_t tar_archive(io_t *dst, IN_NOTNULL fs_t *src, IN_NOTNULL a
 RET_INSPECT
 CT_TAR_API tar_result_t tar_extract(fs_t *dst, IN_NOTNULL io_t *tar);
 
-CT_NODISCARD RET_STRING CT_CONSTFN
+CT_NODISCARD STA_RET_STRING CT_CONSTFN
 CT_TAR_API const char *tar_error_string(tar_error_t err);
 
 CT_END_API

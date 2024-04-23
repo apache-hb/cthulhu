@@ -12,6 +12,16 @@ CT_BEGIN_API
 /// @ingroup os
 /// @{
 
+/// @defgroup os_dl Dynamic Loading
+/// @ingroup os
+
+/// @defgroup os_file Filesystem handling
+/// @ingroup os
+
+/// @defgroup os_thread Threading
+/// @ingroup os
+
+/// @ingroup os_dl
 /// @brief a shared library handle
 /// @warning do not access the library handle directly, it is platform specific
 typedef struct os_library_t
@@ -23,6 +33,7 @@ typedef struct os_library_t
     os_library_impl_t impl;
 } os_library_t;
 
+/// @ingroup os_file
 /// @brief a file handle
 /// @warning do not access the file handle directly, it is platform specific
 typedef struct os_file_t
@@ -34,6 +45,7 @@ typedef struct os_file_t
     os_file_impl_t impl;
 } os_file_t;
 
+/// @ingroup os_file
 /// @brief an inode entry
 /// @warning do not access the inode entry directly, it is platform specific
 typedef struct os_inode_t
@@ -43,6 +55,7 @@ typedef struct os_inode_t
     char name[CT_OS_NAME_MAX];
 } os_inode_t;
 
+/// @ingroup os_file
 /// @brief a directory iterator
 /// @warning do not access the iterator directly, it is platform specific
 typedef struct os_iter_t
@@ -56,7 +69,39 @@ typedef struct os_iter_t
     os_inode_impl_t current;
 } os_iter_t;
 
-/// shared library api
+/// @ingroup os_thread
+typedef os_exitcode_t (*os_thread_fn_t)(void *arg);
+
+/// @ingroup os_thread
+/// @brief a thread handle
+/// @warning do not access the thread handle directly, it is platform specific
+typedef struct os_thread_t
+{
+    // used by os_common
+    const char *name;
+
+    os_thread_fn_t fn;
+    void *arg;
+
+    // used by os_native
+    os_thread_impl_t impl;
+    os_thread_id_t id;
+} os_thread_t;
+
+/// @ingroup os_thread
+/// @brief a mutex handle
+/// @warning do not access the mutex handle directly, it is platform specific
+typedef struct os_mutex_t
+{
+    // used by os_common
+    const char *name;
+
+    // used by os_native
+    os_mutex_impl_t impl;
+} os_mutex_t;
+
+/// @ingroup os_dl
+/// @{
 
 /// @brief open a shared library from disk
 ///
@@ -97,32 +142,10 @@ CT_OS_API os_error_t os_library_symbol(
 CT_NODISCARD
 CT_OS_API const char *os_library_name(IN_NOTNULL const os_library_t *library);
 
-/// console api
+/// @}
 
-/// @brief write to the default output stream
-/// stdout or equivalent
-///
-/// @param text the text to write
-///
-/// @return an error if the text could not be written
-CT_OS_API os_error_t os_console_write(IN_STRING const char *text);
-
-/// @brief write to the default error stream
-/// stderr or equivalent
-///
-/// @param text the text to write
-///
-/// @return an error if the text could not be written
-CT_OS_API os_error_t os_console_error(IN_STRING const char *text);
-
-/// @brief write to the debug stream
-///
-/// @param text the text to write
-///
-/// @return an error if the text could not be written
-CT_OS_API os_error_t os_console_debug(IN_STRING const char *text);
-
-/// filesytem api
+/// @ingroup os_file
+/// @{
 
 /// @brief copy a file from one location to another
 ///
@@ -377,6 +400,30 @@ CT_OS_API bool os_mapping_active(IN_NOTNULL const os_mapping_t *mapping);
 /// @return the name of the file
 CT_NODISCARD CT_PUREFN
 CT_OS_API const char *os_file_name(IN_NOTNULL const os_file_t *file);
+
+/// @}
+
+/// @ingroup os_thread
+/// @{
+
+CT_OS_API os_error_t os_thread_init(
+    OUT_NOTNULL os_thread_t *thread,
+    IN_STRING const char *name,
+    IN_NOTNULL os_thread_fn_t fn,
+    void *arg);
+
+CT_OS_API os_error_t os_thread_join(
+    IN_NOTNULL os_thread_t *thread,
+    OUT_NOTNULL os_status_t *status);
+
+CT_OS_API const char *os_thread_name(
+    IN_NOTNULL const os_thread_t *thread);
+
+CT_OS_API bool os_thread_cmpid(
+    IN_NOTNULL const os_thread_t *thread,
+    os_thread_id_t id);
+
+/// @}
 
 /// @}
 

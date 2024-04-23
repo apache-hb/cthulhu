@@ -4,12 +4,23 @@
 
 #include <ctu_config.h>
 
-#include "core/compiler.h"
+#include "core/macros.h"
 
 /// @defgroup analyze Static analysis decorators
 /// @brief Decorators for static analysis tools
 /// @ingroup core
 /// @{
+
+///
+/// static analysis macros
+/// old macros not prefixed with STA_ are deprecated
+///
+
+#if defined(_PREFAST_)
+#   define CT_STA_PRESENT 1
+#elif defined(__ctu_analyzer)
+#   define CTU_ANALYZER_PRESENT 1
+#endif
 
 // work around gcc bug where attributes are reported as available in C11 mode
 // but are not actually available.
@@ -17,7 +28,7 @@
 #   define CT_NODISCARD [[nodiscard]]
 #endif
 
-#if CT_HAS_INCLUDE(<sal.h>)
+#if 1 || CT_STA_PRESENT
 #   include <sal.h>
 #   define CT_FMT_STRING _Printf_format_string_
 #   define USE_DECL _Use_decl_annotations_
@@ -31,19 +42,11 @@
 
 #   define RET_DOMAIN(cmp, it) _Ret_range_(cmp, it)
 #   define RET_NOTNULL _Ret_notnull_
-#   define RET_STRING _Ret_z_
 #   define RET_INSPECT _Must_inspect_result_
 
-#   define STA_NORETURN _Analysis_noreturn_
-#   define STA_SUCCESS(expr) _Success_(expr)
-#   define STA_SUCCESS_TYPE(expr) _Return_type_success_(expr)
-#   define STA_LAST_ERROR _Post_equals_last_error_
-
-#   define FIELD_SIZE(of) _Field_size_(of)
 #   define FIELD_STRING _Field_z_
 #   define FIELD_RANGE(lo, hi) _Field_range_(lo, hi)
 
-#   define STA_NOTNULL _Notnull_
 #   define IN_NOTNULL _In_
 #   define IN_STRING _In_z_
 #   define IN_DOMAIN(cmp, it) _In_range_(cmp, it)
@@ -53,6 +56,59 @@
 
 #   define INOUT_NOTNULL _Inout_
 #   define INOUT_STRING _Inout_z_
+
+    // other annotations
+#   define STA_DECL _Use_decl_annotations_
+
+    // return value annotations
+#   define STA_RET_NEVER _Analysis_noreturn_
+#   define STA_RET_RANGE(lo, hi) _Ret_range_(lo, hi)
+#   define STA_RET_NOTNULL _Ret_notnull_
+#   define STA_RET_STRING _Ret_z_
+
+    // success/failure annotations
+#   define STA_SUCCESS(expr) _Success_(expr)
+#   define STA_SUCCESS_TYPE(expr) _Return_type_success_(expr)
+#   define STA_LAST_ERROR _Post_equals_last_error_
+
+    // struct annotations
+#   define STA_FIELD_SIZE(of) _Field_size_(of)
+#   define STA_FIELD_CSTRING _Field_z_
+#   define STA_FIELD_RANGE(lo, hi) _Field_range_(lo, hi)
+
+    // nullability annotations
+#   define STA_NOTNULL _Notnull_
+#   define STA_NULLABLE _Maybenull_
+
+    // array parameter annotations
+#   define STA_UPDATES(size) _Inout_updates_(size)
+#   define STA_READS(size) _In_reads_(size)
+#   define STA_WRITES(size) _Out_writes_(size)
+
+    // string parameter annotations
+#   define STA_UPDATES_CSTRING(size) _Inout_updates_z_(size)
+#   define STA_READS_CSTRING(size) _In_reads_z_(size)
+#   define STA_WRITES_CSTRING(size) _Out_writes_z_(size)
+
+    // format string parameter annotations
+#   define STA_FORMAT_STRING _Printf_format_string_
+
+    // out parameter annotations
+#   define STA_OUT _Out_
+#   define STA_OUT_OPT _Out_opt_
+#   define STA_OUT_CSTRING _Out_z_
+#   define STA_OUT_RANGE(lo, hi) _Out_range_(lo, hi)
+
+    // in parameter annotations
+#   define STA_IN _In_
+#   define STA_IN_OPT _In_opt_
+#   define STA_IN_CSTRING _In_z_
+#   define STA_IN_RANGE(lo, hi) _In_range_(lo, hi)
+
+    // inout parameter annotations
+#   define STA_INOUT _Inout_
+#   define STA_INOUT_OPT _Inout_opt_
+#   define STA_INOUT_CSTRING _Inout_z_
 #else
 #   define CT_FMT_STRING
 #   define USE_DECL
@@ -62,45 +118,79 @@
 #   define OUT_PTR_INVALID
 
 #   define RET_DOMAIN(cmp, it)
-#   define RET_STRING
+#   define RET_NOTNULL
 #   define RET_INSPECT
-
-#   define STA_NORETURN
-#   define STA_SUCCESS(expr)
-#   define STA_SUCCESS_TYPE(expr)
-#   define STA_LAST_ERROR
 
 #   define FIELD_STRING
 #   define FIELD_RANGE(lo, hi)
 
-#   define STA_NOTNULL
+#   define IN_NOTNULL
 #   define IN_STRING
 #   define IN_DOMAIN(cmp, it)
 
 #   define OUT_NOTNULL
 #   define OUT_STRING
 
-#   define INOUT_STRING
 #   define INOUT_NOTNULL
+#   define INOUT_STRING
+
+    // other annotations
+#   define STA_DECL
+
+    // return value annotations
+#   define STA_RET_NEVER
+#   define STA_RET_RANGE(lo, hi)
+#   define STA_RET_NOTNULL
+#   define STA_RET_STRING
+
+    // success/failure annotations
+#   define STA_SUCCESS(expr)
+#   define STA_SUCCESS_TYPE(expr)
+#   define STA_LAST_ERROR
+
+    // struct annotations
+#   define STA_FIELD_SIZE(of)
+#   define STA_FIELD_CSTRING
+#   define STA_FIELD_RANGE(lo, hi)
+
+    // nullability annotations
+#   define STA_NOTNULL
+#   define STA_NULLABLE
+
+    // array parameter annotations
+#   define STA_UPDATES(size)
+#   define STA_READS(size)
+#   define STA_WRITES(size)
+
+    // string parameter annotations
+#   define STA_UPDATES_CSTRING(size)
+#   define STA_READS_CSTRING(size)
+#   define STA_WRITES_CSTRING(size)
+
+    // format string parameter annotations
+#   define STA_FORMAT_STRING
+
+    // out parameter annotations
+#   define STA_OUT
+#   define STA_OUT_OPT
+#   define STA_OUT_CSTRING
+#   define STA_OUT_RANGE(lo, hi)
+
+    // in parameter annotations
+#   define STA_IN
+#   define STA_IN_OPT
+#   define STA_IN_CSTRING
+#   define STA_IN_RANGE(lo, hi)
+
+    // inout parameter annotations
+#   define STA_INOUT
+#   define STA_INOUT_OPT
+#   define STA_INOUT_CSTRING
 #endif
 
-#ifdef WITH_DOXYGEN
-#   define RET_RANGE(lo, hi)
-#else
-#   define RET_RANGE(lo, hi) RET_DOMAIN(>=, lo) RET_DOMAIN(<=, hi)
-#endif
+#define RET_RANGE(lo, hi) STA_RET_RANGE(lo, hi)
 
-#ifndef IN_RANGE
-#   define IN_RANGE(lo, hi) IN_DOMAIN(>=, lo) IN_DOMAIN(<=, hi)
-#endif
-
-#define CT_NORETURN STA_NORETURN CT_NORETURN_IMPL
-
-#ifdef _PREFAST_
-#   define CT_STA_PRESENT 1
-#else
-#   define CT_STA_PRESENT 0
-#endif
+#define CT_NORETURN STA_RET_NEVER CT_NORETURN_IMPL
 
 /// @def CT_PRINTF(a, b)
 /// @brief mark a function as a printf style function
@@ -223,8 +313,8 @@
 #   define RET_NOTNULL CT_ATTRIB(returns_nonnull)
 #endif
 
-#ifndef FIELD_SIZE
-#   define FIELD_SIZE(of) CT_CLANG_ATTRIB(counted_by(of))
+#if !defined(STA_FIELD_SIZE) && CT_HAS_ATTRIBUTE(counted_by)
+#   define STA_FIELD_SIZE(of) __attribute__((counted_by(of)))
 #endif
 
 #ifndef CT_NODISCARD
@@ -234,7 +324,6 @@
 #ifdef WITH_DOXYGEN
 #   define CT_NODISCARD 0
 #   define RET_NOTNULL 0
-#   define FIELD_SIZE(of) 0
 #   define IN_NOTNULL 0
 #endif
 
@@ -270,7 +359,7 @@
 /// @def RET_NOTNULL
 /// @brief annotate the return value as not being null
 
-/// @def RET_STRING
+/// @def STA_RET_STRING
 /// @brief annotate the return value as a null terminated string
 
 /// @def RET_INSPECT
@@ -278,7 +367,7 @@
 /// this is the same as CT_NODISCARD but implies that the return value must be checked
 /// for errors
 
-/// @def FIELD_SIZE(of)
+/// @def STA_FIELD_SIZE(of)
 /// @brief annotate a field as being an array of @p of elements
 ///
 /// @param of the number of elements in the array

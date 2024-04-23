@@ -168,6 +168,9 @@ CT_STD_API char *str_normalize(IN_STRING const char *str, IN_NOTNULL arena_t *ar
 CT_NODISCARD
 CT_STD_API char *str_normalizen(text_view_t text, IN_NOTNULL arena_t *arena);
 
+CT_NODISCARD
+CT_STD_API size_t str_normalize_info(STA_READS(len) const char *str, size_t len);
+
 /// @brief split a string into a vector by a separator
 ///
 /// @note the seperator is not included in the resulting substrings.
@@ -254,6 +257,12 @@ CT_STD_API void str_replace_inplace(INOUT_NOTNULL text_t *text, IN_STRING const 
 /// @param text the text to trim
 /// @param chars the characters to trim
 CT_STD_API void str_trim_back_inplace(INOUT_NOTNULL text_t *text, IN_STRING const char *chars);
+
+/// @brief sort a strings contents in place
+///
+/// @param str the string to sort
+/// @param len the length of the string
+CT_STD_API void str_sort_inplace(STA_UPDATES(len) char *str, size_t len);
 
 /// @brief replace all instances of a each substring in a string with provided replacement
 ///

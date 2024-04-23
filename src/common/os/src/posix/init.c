@@ -50,6 +50,11 @@ CT_NORETURN os_exit(os_exitcode_t code)
     exit(code); // NOLINT(concurrency-mt-unsafe)
 }
 
+CT_NORETURN os_thread_exit(os_status_t status)
+{
+    pthread_exit(status);
+}
+
 CT_NORETURN os_abort(void)
 {
     abort(); // NOLINT(concurrency-mt-unsafe)

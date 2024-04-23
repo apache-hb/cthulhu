@@ -47,7 +47,7 @@ typedef struct diagnostic_t
 typedef struct diagnostic_list_t
 {
     /// @brief the list of diagnostics
-    FIELD_SIZE(count)
+    STA_FIELD_SIZE(count)
     const diagnostic_t * const *diagnostics;
 
     /// @brief the number of diagnostics in the list
@@ -59,7 +59,7 @@ typedef struct diagnostic_list_t
 /// @param severity the severity to get the name of
 ///
 /// @return the name of @p severity
-RET_STRING
+STA_RET_STRING CT_CONSTFN
 CT_NOTIFY_API const char *severity_string(IN_DOMAIN(<, eSeverityTotal) severity_t severity);
 
 /// @}
