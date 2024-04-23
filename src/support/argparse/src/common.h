@@ -73,7 +73,7 @@ CT_ARGPARSE_API void ap_on_int(scan_t *scan, cfg_field_t *param, mpz_t value);
 
 CT_ARGPARSE_API void ap_on_posarg(scan_t *scan, char *value);
 
-CT_PRINTF(2, 3)
+STA_PRINTF(2, 3)
 CT_ARGPARSE_API void ap_add_error(ap_t *self, const char *fmt, ...);
 
 CT_ARGPARSE_API void ap_on_invalid(scan_t *scan, char *value);

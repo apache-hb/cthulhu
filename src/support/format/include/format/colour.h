@@ -92,11 +92,11 @@ CT_FORMAT_API char *colour_text(
 /// @param ... the format arguments
 ///
 /// @return the coloured string
-STA_RET_STRING CT_PRINTF(3, 4)
+STA_RET_STRING STA_PRINTF(3, 4)
 CT_FORMAT_API char *colour_format(
     format_context_t context,
     IN_DOMAIN(<, eColourCount) colour_t idx,
-    CT_FMT_STRING const char *fmt, ...);
+    STA_FORMAT_STRING const char *fmt, ...);
 
 /// @brief format a string and add colour to it
 ///

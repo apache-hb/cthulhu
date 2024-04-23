@@ -121,10 +121,10 @@ CT_SCAN_API arena_t *scan_get_arena(IN_NOTNULL const scan_t *scan);
 /// @param size the number of bytes to read
 ///
 /// @return the number of bytes read
-CT_NODISCARD RET_RANGE(0, size) CT_NOALIAS
+CT_NODISCARD STA_RET_RANGE(0, size) CT_NOALIAS
 CT_SCAN_API size_t scan_read(
-    IN_NOTNULL scan_t *scan,
-    OUT_WRITES(size) void *dst,
+    STA_IN scan_t *scan,
+    STA_WRITES(size) void *dst,
     size_t size);
 
 /// @brief create a scanner from an io source

@@ -5,7 +5,8 @@
 #include <ctu_std_api.h>
 
 #include "core/analyze.h"
-#include "core/compiler.h"
+
+#include <stddef.h>
 
 CT_BEGIN_API
 
@@ -36,7 +37,7 @@ CT_STD_API extern const vector_t kEmptyVector;
 /// @note this only frees the vector itself, not the data it references
 ///
 /// @param vector the vector to destroy
-CT_STD_API void vector_delete(OUT_PTR_INVALID vector_t *vector);
+CT_STD_API void vector_delete(STA_RELEASE vector_t *vector);
 
 /// @brief create a new vector with an initial capacity
 ///

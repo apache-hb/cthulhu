@@ -6,7 +6,7 @@
 
 #include "core/analyze.h"
 
-#if CT_STA_PRESENT
+#if STA_PRESENT
 #   include "os/impl/impl.h"
 #endif
 

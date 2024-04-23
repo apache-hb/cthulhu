@@ -128,12 +128,12 @@ CT_NOTIFY_API arena_t *logger_get_arena(IN_NOTNULL const logger_t *logs);
 /// @param ... the format arguments
 ///
 /// @return the new event builder
-CT_PRINTF(4, 5)
+STA_PRINTF(4, 5)
 CT_NOTIFY_API event_builder_t msg_notify(
     INOUT_NOTNULL logger_t *logs,
     IN_NOTNULL const diagnostic_t *diagnostic,
     const node_t *node,
-    CT_FMT_STRING const char *fmt, ...);
+    STA_FORMAT_STRING const char *fmt, ...);
 
 /// @brief notify the logger of a new message
 ///
@@ -156,11 +156,11 @@ CT_NOTIFY_API event_builder_t msg_vnotify(
 /// @param node the node to attach to the message
 /// @param fmt the format string
 /// @param ... the format arguments
-CT_PRINTF(3, 4)
+STA_PRINTF(3, 4)
 CT_NOTIFY_API void msg_append(
     event_builder_t builder,
     const node_t *node,
-    CT_FMT_STRING const char *fmt, ...);
+    STA_FORMAT_STRING const char *fmt, ...);
 
 /// @brief append additional information to a message
 ///
@@ -178,10 +178,10 @@ CT_NOTIFY_API void msg_vappend(
 /// @param builder the event builder to append to
 /// @param fmt the format string
 /// @param ... the format arguments
-CT_PRINTF(2, 3)
+STA_PRINTF(2, 3)
 CT_NOTIFY_API void msg_note(
     event_builder_t builder,
-    CT_FMT_STRING const char *fmt, ...);
+    STA_FORMAT_STRING const char *fmt, ...);
 
 /// @brief add a note to an existing message
 ///

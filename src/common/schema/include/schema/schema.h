@@ -3,6 +3,8 @@
 
 #include <ctu_schema_api.h>
 
+#include <stddef.h>
+
 CT_BEGIN_API
 
 typedef struct schema_field_info_t schema_field_info_t;

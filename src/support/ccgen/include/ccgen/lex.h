@@ -3,6 +3,8 @@
 
 #include "core/compiler.h"
 
+#include <stddef.h>
+
 typedef struct arena_t arena_t;
 typedef struct io_t io_t;
 

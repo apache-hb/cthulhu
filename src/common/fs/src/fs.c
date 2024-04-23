@@ -354,7 +354,7 @@ os_error_t fs_dir_create(fs_t *fs, const char *path)
         }
     }
 
-    return true;
+    return eOsSuccess;
 }
 
 USE_DECL
@@ -467,7 +467,7 @@ static sync_result_t sync_dir(fs_t *dst, fs_t *src, fs_inode_t *dst_node, fs_ino
     }
 
     fs_inode_t *child;
-    while (fs_iter_next(iter, &child) != eOsNotFound)
+    while (fs_iter_next(iter, &child) == eOsSuccess)
     {
         fs_inode_t *other = get_inode_for(dst, dst_node, child->name, child->type);
         if (other == NULL)
@@ -482,7 +482,7 @@ static sync_result_t sync_dir(fs_t *dst, fs_t *src, fs_inode_t *dst_node, fs_ino
         }
         else if (child->type == eOsNodeFile)
         {
-            if ((err = sync_file(dst, src, other, child)) != eOsSuccess)
+            if (sync_file(dst, src, other, child) != eOsSuccess)
             {
                 sync_result_t result = { .path = child->name };
                 return result;

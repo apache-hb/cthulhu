@@ -26,7 +26,7 @@ typedef struct fs_iter_t fs_iter_t;
 /// @brief delete a filesystem handle
 ///
 /// @param fs the filesystem to delete
-CT_FS_API void fs_delete(OUT_PTR_INVALID fs_t *fs);
+CT_FS_API void fs_delete(STA_RELEASE fs_t *fs);
 
 /// @brief create a filesystem interface to a physical location on disk
 ///

@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <pthread.h>
 
 static long gMaxNameLength = 0;
 static long gMaxPathLength = 0;
@@ -52,7 +53,7 @@ CT_NORETURN os_exit(os_exitcode_t code)
 
 CT_NORETURN os_thread_exit(os_status_t status)
 {
-    pthread_exit(status);
+    pthread_exit((void*)(intptr_t)status);
 }
 
 CT_NORETURN os_abort(void)

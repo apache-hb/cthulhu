@@ -10,7 +10,7 @@
 
 // include the implementation headers when doing analysis
 // for the size macros
-#if CT_STA_PRESENT
+#if STA_PRESENT
 #   include "io/impl/buffer.h"
 #   include "io/impl/file.h"
 #   include "io/impl/view.h"
@@ -31,7 +31,7 @@ typedef struct io_t io_t;
 /// @param io the io object
 ///
 /// @return an error code if the io object could not be closed
-CT_IO_API os_error_t io_free(IN_NOTNULL OUT_PTR_INVALID io_t *io);
+CT_IO_API os_error_t io_free(STA_RELEASE io_t *io);
 
 /// @brief destroy an IO object
 /// @warning this does not free the memory of the object itself
@@ -215,7 +215,8 @@ CT_IO_API size_t io_write(IN_NOTNULL io_t *io, IN_READS(size) const void *src, s
 /// @param ... the format arguments
 ///
 /// @return the number of bytes actually written
-CT_IO_API size_t io_printf(IN_NOTNULL io_t *io, CT_FMT_STRING const char *fmt, ...) CT_PRINTF(2, 3);
+STA_PRINTF(2, 3)
+CT_IO_API size_t io_printf(STA_IN io_t *io, STA_FORMAT_STRING const char *fmt, ...);
 
 /// @brief vprintf to an io object
 /// @pre the io object must have been created with the @a eOsAccessWrite flag

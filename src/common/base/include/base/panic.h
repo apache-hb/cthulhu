@@ -37,7 +37,7 @@ CT_BEGIN_API
 ///
 /// @note this function should not allocate memory using a compiler arena
 /// @note this function should not return
-typedef void (*panic_handler_t)(source_info_t location, const char *fmt, va_list args);
+typedef void (*panic_handler_t)(source_info_t location, STA_FORMAT_STRING const char *fmt, va_list args);
 
 /// @brief the global panic handler.
 ///
@@ -50,15 +50,15 @@ CT_BASE_API extern panic_handler_t gPanicHandler;
 /// @param location the source location of the panic
 /// @param msg the message to panic with
 /// @param ... the arguments to format
-CT_BASE_API CT_NORETURN ctu_panic(source_info_t location, CT_FMT_STRING const char *msg, ...)
-    CT_PRINTF(2, 3);
+STA_PRINTF(2, 3)
+CT_BASE_API CT_NORETURN ctu_panic(source_info_t location, STA_FORMAT_STRING const char *msg, ...);
 
 /// @brief panic with a message, file, and line
 ///
 /// @param location the source location of the panic
 /// @param msg the message to panic with
 /// @param args the arguments to format
-CT_BASE_API CT_NORETURN ctu_vpanic(source_info_t location, CT_FMT_STRING const char *msg,
+CT_BASE_API CT_NORETURN ctu_vpanic(source_info_t location, STA_FORMAT_STRING const char *msg,
                                    va_list args);
 
 #define CT_PANIC_INNER(...)                         \

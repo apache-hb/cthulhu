@@ -119,7 +119,7 @@ CT_OS_API os_error_t os_library_open(
 /// @param library the library to close
 RET_INSPECT
 CT_OS_API os_error_t os_library_close(
-        OUT_PTR_INVALID os_library_t *library);
+        STA_RELEASE os_library_t *library);
 
 /// @brief get a symbol from a shared library
 ///
@@ -233,7 +233,7 @@ CT_OS_API os_error_t os_iter_begin(IN_STRING const char *path, OUT_NOTNULL os_it
 /// @brief close a directory iterator
 ///
 /// @param iter iterator to close
-CT_OS_API os_error_t os_iter_end(IN_NOTNULL OUT_PTR_INVALID os_iter_t *iter);
+CT_OS_API os_error_t os_iter_end(STA_RELEASE os_iter_t *iter);
 
 /// @brief get the next directory entry
 ///
@@ -276,7 +276,7 @@ CT_OS_API os_error_t os_tmpfile_open(OUT_NOTNULL os_file_t *file);
 ///
 /// @param file the file to close
 RET_INSPECT
-CT_OS_API os_error_t os_file_close(IN_NOTNULL OUT_PTR_INVALID os_file_t *file);
+CT_OS_API os_error_t os_file_close(STA_RELEASE os_file_t *file);
 
 /// @brief read from a file
 ///

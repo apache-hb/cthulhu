@@ -51,8 +51,8 @@ CT_STD_API size_t str_vsprintf(OUT_WRITES(len) char *str, size_t len, IN_STRING 
 /// @param ... the arguments to format
 ///
 /// @return the number of characters written
-CT_PRINTF(3, 4)
-CT_STD_API size_t str_sprintf(OUT_WRITES(len) char *str, size_t len, CT_FMT_STRING const char *fmt, ...);
+STA_PRINTF(3, 4)
+CT_STD_API size_t str_sprintf(OUT_WRITES(len) char *str, size_t len, STA_FORMAT_STRING const char *fmt, ...);
 
 /// @brief format a string
 ///
@@ -64,8 +64,8 @@ CT_STD_API size_t str_sprintf(OUT_WRITES(len) char *str, size_t len, CT_FMT_STRI
 /// @param ... the arguments to format
 ///
 /// @return the formatted string
-CT_NODISCARD CT_PRINTF(2, 3)
-CT_STD_API text_t text_format(IN_NOTNULL arena_t *arena, CT_FMT_STRING const char *fmt, ...);
+CT_NODISCARD STA_PRINTF(2, 3)
+CT_STD_API text_t text_format(IN_NOTNULL arena_t *arena, STA_FORMAT_STRING const char *fmt, ...);
 
 /// @brief format a string
 ///
@@ -89,8 +89,8 @@ CT_STD_API text_t text_vformat(IN_NOTNULL arena_t *arena, IN_STRING const char *
 /// @param ... the arguments to format
 ///
 /// @return the formatted string
-CT_NODISCARD CT_PRINTF(2, 3)
-CT_STD_API char *str_format(IN_NOTNULL arena_t *arena, CT_FMT_STRING const char *fmt, ...);
+CT_NODISCARD STA_PRINTF(2, 3)
+CT_STD_API char *str_format(IN_NOTNULL arena_t *arena, STA_FORMAT_STRING const char *fmt, ...);
 
 /// @brief format a string
 ///

@@ -16,7 +16,7 @@ void ctu_panic(source_info_t location, const char *msg, ...)
 }
 
 USE_DECL
-void ctu_vpanic(source_info_t location, CT_FMT_STRING const char *msg, va_list args)
+void ctu_vpanic(source_info_t location, const char *msg, va_list args)
 {
     gPanicHandler(location, msg, args);
     CT_ASSUME(0);

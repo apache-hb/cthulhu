@@ -33,7 +33,7 @@ typedef struct bt_symbol_t
 {
     /// @brief the line number
     /// @brief when @a eResolveLine is not set this is initialized to @a CT_LINE_UNKNOWN
-    source_ctu_line_t line;
+    source_line_t line;
 
     /// @brief a buffer to hold the name
     text_t name;

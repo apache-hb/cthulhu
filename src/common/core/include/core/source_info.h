@@ -13,9 +13,9 @@
 /// @{
 
 /// @brief the line number in the source file
-typedef uint_fast32_t source_ctu_line_t;
+typedef uint_fast32_t source_line_t;
 
-/// @brief format specifier for @a source_ctu_line_t
+/// @brief format specifier for @a source_line_t
 #define CT_PRI_LINE PRIuFAST32
 
 /// @brief a line number that is unknown
@@ -28,7 +28,7 @@ typedef struct source_info_t
     FIELD_STRING const char *file;
 
     /// @brief the line the panic occurred on
-    source_ctu_line_t line;
+    source_line_t line;
 
     /// @brief the function the panic occurred in
     /// @note this could also be the name of a variable in c++ depending on context

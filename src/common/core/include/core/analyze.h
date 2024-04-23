@@ -4,7 +4,7 @@
 
 #include <ctu_config.h>
 
-#include "core/macros.h"
+#include "core/compiler.h"
 
 /// @defgroup analyze Static analysis decorators
 /// @brief Decorators for static analysis tools
@@ -16,21 +16,14 @@
 /// old macros not prefixed with STA_ are deprecated
 ///
 
-#if defined(_PREFAST_)
-#   define CT_STA_PRESENT 1
-#elif defined(__ctu_analyzer)
-#   define CTU_ANALYZER_PRESENT 1
-#endif
-
 // work around gcc bug where attributes are reported as available in C11 mode
 // but are not actually available.
 #if CT_HAS_ATTRIBUTE(nodiscard) && CT_CPLUSPLUS && !defined(__GNUC__)
 #   define CT_NODISCARD [[nodiscard]]
 #endif
 
-#if 1 || CT_STA_PRESENT
+#if defined(_PREFAST_)
 #   include <sal.h>
-#   define CT_FMT_STRING _Printf_format_string_
 #   define USE_DECL _Use_decl_annotations_
 #   ifndef CT_NODISCARD
 #      define CT_NODISCARD _Check_return_
@@ -38,7 +31,6 @@
 #   define IN_READS(expr) _In_reads_(expr)
 #   define IN_READS_OPT(expr) _In_reads_opt_(expr)
 #   define OUT_WRITES(expr) _Out_writes_(expr)
-#   define OUT_PTR_INVALID _Post_ptr_invalid_
 
 #   define RET_DOMAIN(cmp, it) _Ret_range_(cmp, it)
 #   define RET_NOTNULL _Ret_notnull_
@@ -56,6 +48,8 @@
 
 #   define INOUT_NOTNULL _Inout_
 #   define INOUT_STRING _Inout_z_
+
+#   define STA_PRESENT 1
 
     // other annotations
 #   define STA_DECL _Use_decl_annotations_
@@ -98,6 +92,7 @@
 #   define STA_OUT_OPT _Out_opt_
 #   define STA_OUT_CSTRING _Out_z_
 #   define STA_OUT_RANGE(lo, hi) _Out_range_(lo, hi)
+#   define STA_OUT_INVALID _Post_ptr_invalid_
 
     // in parameter annotations
 #   define STA_IN _In_
@@ -110,12 +105,10 @@
 #   define STA_INOUT_OPT _Inout_opt_
 #   define STA_INOUT_CSTRING _Inout_z_
 #else
-#   define CT_FMT_STRING
 #   define USE_DECL
 #   define IN_READS(expr)
 #   define IN_READS_OPT(expr)
 #   define OUT_WRITES(expr)
-#   define OUT_PTR_INVALID
 
 #   define RET_DOMAIN(cmp, it)
 #   define RET_NOTNULL
@@ -175,6 +168,7 @@
 #   define STA_OUT_OPT
 #   define STA_OUT_CSTRING
 #   define STA_OUT_RANGE(lo, hi)
+#   define STA_OUT_INVALID
 
     // in parameter annotations
 #   define STA_IN
@@ -188,22 +182,22 @@
 #   define STA_INOUT_CSTRING
 #endif
 
-#define RET_RANGE(lo, hi) STA_RET_RANGE(lo, hi)
-
 #define CT_NORETURN STA_RET_NEVER CT_NORETURN_IMPL
 
-/// @def CT_PRINTF(a, b)
+#define STA_RELEASE STA_IN STA_OUT_INVALID
+
+/// @def STA_PRINTF(a, b)
 /// @brief mark a function as a printf style function
 ///
 /// @param a the index of the format string parameter
 /// @param b the index of the first variadic parameter
 
 #if __clang_major__ >= 3
-#   define CT_PRINTF(a, b) __attribute__((__format__(__printf__, a, b)))
+#   define STA_PRINTF(a, b) __attribute__((__format__(__printf__, a, b)))
 #elif __GNUC__ >= 4
-#   define CT_PRINTF(a, b) __attribute__((format(printf, a, b)))
+#   define STA_PRINTF(a, b) __attribute__((format(printf, a, b)))
 #else
-#  define CT_PRINTF(a, b)
+#  define STA_PRINTF(a, b)
 #endif
 
 #if __GNUC__ >= 11
@@ -330,7 +324,7 @@
 /// @def CT_NODISCARD
 /// @brief mark a function as returning a value that must be used
 
-/// @def CT_FMT_STRING
+/// @def STA_FORMAT_STRING
 /// @brief mark a function parameter as a printf format string
 
 /// @def USE_DECL
@@ -346,7 +340,7 @@
 ///
 /// @param expr the number of elements written
 
-/// @def OUT_PTR_INVALID
+/// @def STA_RELEASE
 /// @brief annotate a pointer as invalid after the function returns
 
 /// @def RET_DOMAIN(cmp, it)
