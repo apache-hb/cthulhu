@@ -669,7 +669,7 @@ static void check_module_valid(check_t *check, const tree_t *mod)
     }
 }
 
-USE_DECL
+STA_DECL
 void check_tree(logger_t *reports, vector_t *mods, arena_t *arena)
 {
     CTASSERT(arena != NULL);

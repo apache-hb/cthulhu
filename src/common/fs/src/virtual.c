@@ -269,7 +269,7 @@ static const fs_callbacks_t kVirtualInterface = {
     .inode_size = sizeof(virtual_inode_t)
 };
 
-USE_DECL
+STA_DECL
 fs_t *fs_virtual(const char *name, arena_t *arena)
 {
     CTASSERT(name != NULL);

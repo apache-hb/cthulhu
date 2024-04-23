@@ -11,7 +11,7 @@
 
 #define FORMAT_FLAGS (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS)
 
-USE_DECL
+STA_DECL
 os_error_t impl_last_error(void)
 {
     return (os_error_t)GetLastError();
@@ -29,7 +29,7 @@ static DWORD format_inner(os_error_t error, char *buffer, size_t size)
         /* Arguments = */ NULL);
 }
 
-USE_DECL
+STA_DECL
 size_t os_error_get_string(os_error_t error, char *buffer, size_t size)
 {
     if (size == 0)

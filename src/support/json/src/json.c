@@ -13,7 +13,7 @@
 
 CT_CALLBACKS(kCallbacks, json);
 
-USE_DECL
+STA_DECL
 json_t *json_map_get(const json_t *json, const char *key)
 {
     CTASSERT(json != NULL);
@@ -24,7 +24,7 @@ json_t *json_map_get(const json_t *json, const char *key)
     return map_get(json->object, &view);
 }
 
-USE_DECL
+STA_DECL
 json_t *json_array_get(const json_t *json, size_t index)
 {
     CTASSERT(json != NULL);
@@ -32,14 +32,14 @@ json_t *json_array_get(const json_t *json, size_t index)
     return typevec_offset(&json->array, index);
 }
 
-USE_DECL
+STA_DECL
 json_t *json_scan(io_t *io, logger_t *logger, arena_t *arena)
 {
     json_parse_t parse = json_parse(io, logger, arena);
     return parse.root;
 }
 
-USE_DECL
+STA_DECL
 json_parse_t json_parse(io_t *io, logger_t *logger, arena_t *arena)
 {
     CTASSERT(io != NULL);

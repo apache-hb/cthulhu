@@ -47,7 +47,7 @@ static void clear_items(set_t *set)
     }
 }
 
-USE_DECL
+STA_DECL
 set_t *set_new(size_t size, hash_info_t info, arena_t *arena)
 {
     CTASSERT(size > 0);
@@ -81,7 +81,7 @@ static bool impl_keys_equal(const set_t *set, const void *lhs, const void *rhs)
     return info.equals(lhs, rhs);
 }
 
-USE_DECL
+STA_DECL
 const void *set_add(set_t *set, const void *key)
 {
     item_t *item = impl_get_bucket(set, key);
@@ -114,7 +114,7 @@ const void *set_add(set_t *set, const void *key)
     CT_NEVER("unreachable");
 }
 
-USE_DECL
+STA_DECL
 bool set_contains(const set_t *set, const void *key)
 {
     item_t *item = impl_get_bucket((set_t*)set, key);
@@ -144,7 +144,7 @@ bool set_contains(const set_t *set, const void *key)
     CT_NEVER("unreachable");
 }
 
-USE_DECL
+STA_DECL
 void set_delete(set_t *set, const void *key)
 {
     item_t *item = impl_get_bucket(set, key);
@@ -175,7 +175,7 @@ void set_delete(set_t *set, const void *key)
     CT_NEVER("unreachable");
 }
 
-USE_DECL
+STA_DECL
 bool set_empty(set_t *set)
 {
     set_iter_t iter = set_iter(set);
@@ -191,7 +191,7 @@ bool set_empty(set_t *set)
     return true;
 }
 
-USE_DECL
+STA_DECL
 void set_reset(set_t *set)
 {
     CTASSERT(set != NULL);
@@ -264,7 +264,7 @@ static item_t *set_find_next_item(set_t *set, size_t *index, item_t *previous)
     return NULL;
 }
 
-USE_DECL
+STA_DECL
 set_iter_t set_iter(set_t *set)
 {
     CTASSERT(set != NULL);
@@ -284,7 +284,7 @@ set_iter_t set_iter(set_t *set)
     return iter;
 }
 
-USE_DECL
+STA_DECL
 const void *set_next(set_iter_t *iter)
 {
     CTASSERT(iter != NULL);
@@ -297,7 +297,7 @@ const void *set_next(set_iter_t *iter)
     return entry;
 }
 
-USE_DECL
+STA_DECL
 bool set_has_next(set_iter_t *iter)
 {
     CTASSERT(iter != NULL);

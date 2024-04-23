@@ -33,7 +33,7 @@ static const char *get_access(os_access_t access)
     }
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_file_exists(const char *path)
 {
     CTASSERT(path != NULL);
@@ -51,7 +51,7 @@ os_file_impl_t impl_file_open(const char *path, os_access_t access)
     return fopen(path, get_access(access));
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_tmpfile_open(os_file_t *file)
 {
     CTASSERT(file != NULL);
@@ -77,7 +77,7 @@ bool impl_file_close(os_file_impl_t file)
     return fclose(file) == 0;
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_file_read(os_file_t *file, void *buffer, size_t size, size_t *actual)
 {
     CTASSERT(file != NULL);
@@ -99,7 +99,7 @@ os_error_t os_file_read(os_file_t *file, void *buffer, size_t size, size_t *actu
     return 0;
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_file_write(os_file_t *file, const void *buffer, size_t size, size_t *actual)
 {
     CTASSERT(file != NULL);
@@ -121,7 +121,7 @@ os_error_t os_file_write(os_file_t *file, const void *buffer, size_t size, size_
     return errno;
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_file_size(os_file_t *file, size_t *actual)
 {
     CTASSERT(file != NULL);
@@ -141,7 +141,7 @@ os_error_t os_file_size(os_file_t *file, size_t *actual)
     return 0;
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_file_resize(os_file_t *file, size_t size)
 {
     CTASSERT(file != NULL);
@@ -163,7 +163,7 @@ os_error_t os_file_resize(os_file_t *file, size_t size)
     return errno;
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_file_seek(os_file_t *file, size_t offset, size_t *actual)
 {
     CTASSERT(file != NULL);
@@ -180,7 +180,7 @@ os_error_t os_file_seek(os_file_t *file, size_t offset, size_t *actual)
     return errno;
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_file_tell(os_file_t *file, size_t *actual)
 {
     CTASSERT(file != NULL);

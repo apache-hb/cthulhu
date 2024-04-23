@@ -10,7 +10,7 @@
 
 bt_error_t gSystemError = { 0 };
 
-USE_DECL
+STA_DECL
 bt_resolve_t bt_resolve_symbol(bt_address_t frame, bt_symbol_t *symbol)
 {
     // inside this function we cant assert
@@ -31,7 +31,7 @@ bt_resolve_t bt_resolve_symbol(bt_address_t frame, bt_symbol_t *symbol)
     return bt_resolve_inner(frame, symbol);
 }
 
-USE_DECL
+STA_DECL
 void bt_read(bt_trace_t callback, void *user)
 {
     if (callback == NULL) return;

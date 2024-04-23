@@ -9,7 +9,7 @@
 
 // TODO: find a way to nicely dedup this logic
 
-USE_DECL
+STA_DECL
 loaded_module_t load_static_module(loader_t *loader, module_type_t mask, const char *name)
 {
     CTASSERT(loader != NULL);

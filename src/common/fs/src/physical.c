@@ -211,7 +211,7 @@ static const fs_callbacks_t kPhysicalInterface = {
     .inode_size = sizeof(physical_inode_t),
 };
 
-USE_DECL
+STA_DECL
 fs_t *fs_physical(const char *root, arena_t *arena)
 {
     CTASSERT(root != NULL);

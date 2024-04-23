@@ -126,7 +126,7 @@ static compile_unit_t *compile_unit_new(language_runtime_t *lang, arena_t *arena
 /// broker api
 ///
 
-USE_DECL
+STA_DECL
 broker_t *broker_new(const frontend_t *frontend, arena_t *arena)
 {
     CTASSERT(frontend != NULL);
@@ -170,7 +170,7 @@ broker_t *broker_new(const frontend_t *frontend, arena_t *arena)
     return broker;
 }
 
-USE_DECL
+STA_DECL
 language_runtime_t *broker_add_language(broker_t *broker, const language_t *lang)
 {
     CTASSERT(broker != NULL);
@@ -215,7 +215,7 @@ language_runtime_t *broker_add_language(broker_t *broker, const language_t *lang
     return runtime;
 }
 
-USE_DECL
+STA_DECL
 plugin_runtime_t *broker_add_plugin(broker_t *broker, const plugin_t *plugin)
 {
     CTASSERT(broker != NULL);
@@ -236,7 +236,7 @@ plugin_runtime_t *broker_add_plugin(broker_t *broker, const plugin_t *plugin)
     return runtime;
 }
 
-USE_DECL
+STA_DECL
 target_runtime_t *broker_add_target(broker_t *broker, const target_t *target)
 {
     CTASSERT(broker != NULL);
@@ -260,7 +260,7 @@ target_runtime_t *broker_add_target(broker_t *broker, const target_t *target)
     return runtime;
 }
 
-USE_DECL
+STA_DECL
 void broker_init(broker_t *broker)
 {
     CTASSERT(broker != NULL);
@@ -290,7 +290,7 @@ void broker_init(broker_t *broker)
     }
 }
 
-USE_DECL
+STA_DECL
 void broker_deinit(broker_t *broker)
 {
     CTASSERT(broker != NULL);
@@ -320,7 +320,7 @@ void broker_deinit(broker_t *broker)
     }
 }
 
-USE_DECL
+STA_DECL
 logger_t *broker_get_logger(broker_t *broker)
 {
     CTASSERT(broker != NULL);
@@ -328,7 +328,7 @@ logger_t *broker_get_logger(broker_t *broker)
     return broker->logger;
 }
 
-USE_DECL
+STA_DECL
 const node_t *broker_get_node(broker_t *broker)
 {
     CTASSERT(broker != NULL);
@@ -336,7 +336,7 @@ const node_t *broker_get_node(broker_t *broker)
     return broker->builtin;
 }
 
-USE_DECL
+STA_DECL
 arena_t *broker_get_arena(broker_t *broker)
 {
     CTASSERT(broker != NULL);
@@ -357,7 +357,7 @@ static void collect_units(vector_t **vec, map_t *map)
     }
 }
 
-USE_DECL
+STA_DECL
 vector_t *broker_get_modules(broker_t *broker)
 {
     CTASSERT(broker != NULL);
@@ -371,7 +371,7 @@ vector_t *broker_get_modules(broker_t *broker)
     return modules;
 }
 
-USE_DECL
+STA_DECL
 void broker_parse(language_runtime_t *runtime, io_t *io)
 {
     CTASSERT(runtime != NULL);
@@ -414,7 +414,7 @@ void broker_parse(language_runtime_t *runtime, io_t *io)
     lang->fn_postparse(runtime, scan, result.tree);
 }
 
-USE_DECL
+STA_DECL
 void broker_run_pass(broker_t *broker, broker_pass_t pass)
 {
     CTASSERT(broker != NULL);
@@ -445,7 +445,7 @@ void broker_run_pass(broker_t *broker, broker_pass_t pass)
     }
 }
 
-USE_DECL
+STA_DECL
 void broker_resolve(broker_t *broker)
 {
     CTASSERT(broker != NULL);
@@ -457,7 +457,7 @@ void broker_resolve(broker_t *broker)
 /// translation unit api
 ///
 
-USE_DECL
+STA_DECL
 void lang_add_unit(language_runtime_t *runtime, unit_id_t id, const node_t *node, void *ast, const size_t *decls, size_t length)
 {
     CTASSERT(runtime != NULL);
@@ -506,7 +506,7 @@ compile_unit_t *lang_get_unit(language_runtime_t *runtime, unit_id_t id)
     return map_get(broker->units, &id);
 }
 
-USE_DECL
+STA_DECL
 void *unit_get_ast(compile_unit_t *unit)
 {
     CTASSERT(unit != NULL);
@@ -514,7 +514,7 @@ void *unit_get_ast(compile_unit_t *unit)
     return unit->ast;
 }
 
-USE_DECL
+STA_DECL
 void unit_update(compile_unit_t *unit, void *ast, tree_t *tree)
 {
     CTASSERT(unit != NULL);
@@ -527,7 +527,7 @@ void unit_update(compile_unit_t *unit, void *ast, tree_t *tree)
     unit->tree = tree;
 }
 
-USE_DECL
+STA_DECL
 text_view_t build_unit_id(const vector_t *parts, arena_t *arena)
 {
     CTASSERT(parts != NULL);
@@ -561,7 +561,7 @@ text_view_t build_unit_id(const vector_t *parts, arena_t *arena)
     return text_view_make(buf, size);
 }
 
-USE_DECL
+STA_DECL
 void target_emit_tree(target_runtime_t *runtime, const tree_t *tree, target_emit_t *emit)
 {
     CTASSERT(runtime != NULL);
@@ -574,7 +574,7 @@ void target_emit_tree(target_runtime_t *runtime, const tree_t *tree, target_emit
     target->fn_tree(runtime, tree, emit);
 }
 
-USE_DECL
+STA_DECL
 void target_emit_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *emit)
 {
     CTASSERT(runtime != NULL);
@@ -592,7 +592,7 @@ static const char *const kPassNames[ePassCount] = {
 #include "cthulhu/broker/broker.inc"
 };
 
-USE_DECL
+STA_DECL
 const char *broker_pass_name(broker_pass_t pass)
 {
     CT_ASSERT_RANGE(pass, 0, ePassCount - 1);
@@ -605,7 +605,7 @@ static const char *const kFileLayoutNames[eFileLayoutCount] = {
 #include "cthulhu/broker/broker.inc"
 };
 
-USE_DECL
+STA_DECL
 const char *file_layout_name(file_layout_t layout)
 {
     CT_ASSERT_RANGE(layout, 0, eFileLayoutCount - 1);

@@ -154,7 +154,7 @@ void ap_event(ap_t *self, const cfg_field_t *param, ap_event_t callback, void *d
     }
 }
 
-USE_DECL
+STA_DECL
 vector_t *ap_get_posargs(ap_t *self)
 {
     CTASSERT(self != NULL);
@@ -162,7 +162,7 @@ vector_t *ap_get_posargs(ap_t *self)
     return self->posargs;
 }
 
-USE_DECL
+STA_DECL
 vector_t *ap_get_unknown(ap_t *self)
 {
     CTASSERT(self != NULL);
@@ -170,7 +170,7 @@ vector_t *ap_get_unknown(ap_t *self)
     return self->unknown;
 }
 
-USE_DECL
+STA_DECL
 vector_t *ap_get_errors(ap_t *self)
 {
     CTASSERT(self != NULL);

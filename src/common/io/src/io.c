@@ -8,7 +8,7 @@
 #include "std/str.h"
 #include "arena/arena.h"
 
-USE_DECL
+STA_DECL
 os_error_t io_free(io_t *io)
 {
     CTASSERT(io != NULL);
@@ -22,7 +22,7 @@ os_error_t io_free(io_t *io)
     return eOsSuccess;
 }
 
-USE_DECL
+STA_DECL
 os_error_t io_close(io_t *io)
 {
     CTASSERT(io != NULL);
@@ -37,7 +37,7 @@ os_error_t io_close(io_t *io)
     return eOsSuccess;
 }
 
-USE_DECL
+STA_DECL
 size_t io_read(io_t *io, void *dst, size_t size)
 {
     CTASSERT(io != NULL);
@@ -47,7 +47,7 @@ size_t io_read(io_t *io, void *dst, size_t size)
     return io->cb->fn_read(io, dst, size);
 }
 
-USE_DECL
+STA_DECL
 size_t io_write(io_t *io, const void *src, size_t size)
 {
     CTASSERT(io != NULL);
@@ -57,7 +57,7 @@ size_t io_write(io_t *io, const void *src, size_t size)
     return io->cb->fn_write(io, src, size);
 }
 
-USE_DECL
+STA_DECL
 size_t io_printf(io_t *io, const char *fmt, ...)
 {
     CTASSERT(io != NULL);
@@ -72,7 +72,7 @@ size_t io_printf(io_t *io, const char *fmt, ...)
     return size;
 }
 
-USE_DECL
+STA_DECL
 size_t io_vprintf(io_t *io, const char *fmt, va_list args)
 {
     CTASSERT(io != NULL);
@@ -87,7 +87,7 @@ size_t io_vprintf(io_t *io, const char *fmt, va_list args)
     return io_write(io, text.text, text.length);
 }
 
-USE_DECL
+STA_DECL
 size_t io_size(io_t *io)
 {
     CTASSERT(io != NULL);
@@ -96,7 +96,7 @@ size_t io_size(io_t *io)
     return io->cb->fn_get_size(io);
 }
 
-USE_DECL
+STA_DECL
 size_t io_seek(io_t *io, size_t offset)
 {
     CTASSERT(io != NULL);
@@ -105,7 +105,7 @@ size_t io_seek(io_t *io, size_t offset)
     return io->cb->fn_seek(io, offset);
 }
 
-USE_DECL
+STA_DECL
 const char *io_name(const io_t *io)
 {
     CTASSERT(io != NULL);
@@ -113,7 +113,7 @@ const char *io_name(const io_t *io)
     return io->name;
 }
 
-USE_DECL
+STA_DECL
 void *io_map(io_t *io, os_protect_t protect)
 {
     CTASSERT(io != NULL);
@@ -137,7 +137,7 @@ void *io_map(io_t *io, os_protect_t protect)
     return io->cb->fn_map(io, protect);
 }
 
-USE_DECL
+STA_DECL
 os_error_t io_error(const io_t *io)
 {
     CTASSERT(io != NULL);

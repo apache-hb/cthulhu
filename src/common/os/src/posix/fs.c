@@ -12,7 +12,7 @@
 #include <errno.h>
 #include <string.h>
 
-USE_DECL
+STA_DECL
 os_error_t os_file_delete(const char *path)
 {
     CTASSERT(path != NULL);
@@ -25,7 +25,7 @@ os_error_t os_file_delete(const char *path)
     return 0;
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_dir_create(const char *path)
 {
     CTASSERT(path != NULL);
@@ -48,7 +48,7 @@ os_error_t os_dir_create(const char *path)
     return errno;
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_dir_delete(const char *path)
 {
     CTASSERT(path != NULL);
@@ -61,7 +61,7 @@ os_error_t os_dir_delete(const char *path)
     return errno;
 }
 
-USE_DECL
+STA_DECL
 os_dirent_t os_dirent_type(const char *path)
 {
     CTASSERT(path != NULL);
@@ -89,7 +89,7 @@ os_dirent_t os_dirent_type(const char *path)
     return eOsNodeNone;
 }
 
-USE_DECL
+STA_DECL
 size_t os_cwd_get_string(char *buffer, size_t size)
 {
     if (size == 0)

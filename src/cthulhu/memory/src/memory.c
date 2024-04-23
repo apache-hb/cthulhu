@@ -48,7 +48,7 @@ static void ctu_gmp_free(void *ptr, size_t size)
     arena_free(ptr, old, gGmpArena);
 }
 
-USE_DECL
+STA_DECL
 void init_gmp_arena(arena_t *arena)
 {
     CTASSERT(arena != NULL);

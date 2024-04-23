@@ -37,7 +37,7 @@ loader_config_t loader_config(void)
     return kConfig;
 }
 
-USE_DECL
+STA_DECL
 loader_t *loader_new(arena_t *arena)
 {
     CTASSERT(arena != NULL);
@@ -48,7 +48,7 @@ loader_t *loader_new(arena_t *arena)
     return loader;
 }
 
-USE_DECL
+STA_DECL
 typevec_t *load_default_modules(loader_t *loader)
 {
     CTASSERT(loader != NULL);
@@ -100,7 +100,7 @@ typevec_t *load_default_modules(loader_t *loader)
 #endif
 }
 
-USE_DECL
+STA_DECL
 loaded_module_t load_module(loader_t *loader, module_type_t mask, const char *name)
 {
     CTASSERT(loader != NULL);

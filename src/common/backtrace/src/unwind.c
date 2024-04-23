@@ -18,7 +18,7 @@ void bt_update(void)
 
 }
 
-USE_DECL
+STA_DECL
 const char *bt_backend(void)
 {
     return "libunwind";

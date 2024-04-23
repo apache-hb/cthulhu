@@ -5,7 +5,7 @@
 
 #include "std/vector.h"
 
-USE_DECL
+STA_DECL
 bool cfg_set_int(cfg_field_t *field, int value)
 {
     ASSERT_FIELD_TYPE(field, eConfigInt);
@@ -23,7 +23,7 @@ bool cfg_set_int(cfg_field_t *field, int value)
     return true;
 }
 
-USE_DECL
+STA_DECL
 void cfg_set_bool(cfg_field_t *field, bool value)
 {
     ASSERT_FIELD_TYPE(field, eConfigBool);
@@ -31,7 +31,7 @@ void cfg_set_bool(cfg_field_t *field, bool value)
     field->bool_value = value;
 }
 
-USE_DECL
+STA_DECL
 void cfg_set_string(cfg_field_t *field, char *value)
 {
     ASSERT_FIELD_TYPE(field, eConfigString);
@@ -39,7 +39,7 @@ void cfg_set_string(cfg_field_t *field, char *value)
     field->string_value = value;
 }
 
-USE_DECL
+STA_DECL
 void cfg_vector_push(cfg_field_t *field, char *value)
 {
     ASSERT_FIELD_TYPE(field, eConfigVector);
@@ -47,7 +47,7 @@ void cfg_vector_push(cfg_field_t *field, char *value)
     vector_push(&field->vec_value, value);
 }
 
-USE_DECL
+STA_DECL
 bool cfg_set_enum(cfg_field_t *field, const char *choice)
 {
     ASSERT_FIELD_TYPE(field, eConfigEnum);
@@ -87,7 +87,7 @@ static bool is_valid_choice(const cfg_enum_t *options, size_t value)
 }
 #endif
 
-USE_DECL
+STA_DECL
 void cfg_set_enum_value(cfg_field_t *field, size_t value)
 {
     ASSERT_FIELD_TYPE(field, eConfigEnum);
@@ -108,7 +108,7 @@ static void set_flag(cfg_field_t *field, size_t value, bool set)
     }
 }
 
-USE_DECL
+STA_DECL
 bool cfg_set_flag(cfg_field_t *field, const char *choice, bool set)
 {
     ASSERT_FIELD_TYPE(field, eConfigFlags);
@@ -151,7 +151,7 @@ static bool is_valid_flag(const cfg_enum_t *options, size_t value)
 }
 #endif
 
-USE_DECL
+STA_DECL
 void cfg_set_flag_value(cfg_field_t *field, size_t value)
 {
     ASSERT_FIELD_TYPE(field, eConfigFlags);

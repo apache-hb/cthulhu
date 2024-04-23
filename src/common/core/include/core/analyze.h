@@ -24,7 +24,6 @@
 
 #if defined(_PREFAST_)
 #   include <sal.h>
-#   define USE_DECL _Use_decl_annotations_
 #   ifndef CT_NODISCARD
 #      define CT_NODISCARD _Check_return_
 #   endif
@@ -105,7 +104,6 @@
 #   define STA_INOUT_OPT _Inout_opt_
 #   define STA_INOUT_CSTRING _Inout_z_
 #else
-#   define USE_DECL
 #   define IN_READS(expr)
 #   define IN_READS_OPT(expr)
 #   define OUT_WRITES(expr)
@@ -327,7 +325,7 @@
 /// @def STA_FORMAT_STRING
 /// @brief mark a function parameter as a printf format string
 
-/// @def USE_DECL
+/// @def STA_DECL
 /// @brief sal2 annotation on function implementations to copy annotations from the declaration
 
 /// @def IN_READS(expr)

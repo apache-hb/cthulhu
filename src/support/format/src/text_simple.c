@@ -158,7 +158,7 @@ static void print_segments(simple_t *simple, const event_t *event)
     print_segment_list(simple, none, entry_count + 1);
 }
 
-USE_DECL
+STA_DECL
 void text_report_simple(text_config_t config, const event_t *event)
 {
     CTASSERT(config.io != NULL);

@@ -524,7 +524,7 @@ static void print_rich_notes(rich_t *rich)
     }
 }
 
-USE_DECL
+STA_DECL
 void text_report_rich(text_config_t config, const event_t *event)
 {
     CTASSERT(config.io != NULL);

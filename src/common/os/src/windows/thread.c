@@ -12,7 +12,7 @@ static DWORD WINAPI thread_fn(LPVOID param)
     return thread->fn(thread->arg);
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_thread_init(
     os_thread_t *thread,
     const char *name,
@@ -43,7 +43,7 @@ os_error_t os_thread_init(
     return eOsSuccess;
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_thread_join(os_thread_t *thread, os_status_t *status)
 {
     CTASSERT(thread != NULL);

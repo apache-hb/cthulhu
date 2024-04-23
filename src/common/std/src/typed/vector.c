@@ -49,7 +49,7 @@ static typevec_t *typevec_create(size_t width, size_t len, arena_t *arena)
     return vec;
 }
 
-USE_DECL
+STA_DECL
 void typevec_init(typevec_t *vec, size_t width, size_t len, arena_t *arena)
 {
     CTASSERT(vec != NULL);
@@ -65,7 +65,7 @@ void typevec_init(typevec_t *vec, size_t width, size_t len, arena_t *arena)
     vec->data = ARENA_MALLOC(width * (size + 1), "data", vec, arena);
 }
 
-USE_DECL
+STA_DECL
 typevec_t typevec_make(size_t width, size_t len, arena_t *arena)
 {
     typevec_t vec = { 0 };
@@ -73,13 +73,13 @@ typevec_t typevec_make(size_t width, size_t len, arena_t *arena)
     return vec;
 }
 
-USE_DECL
+STA_DECL
 typevec_t *typevec_new(size_t width, size_t len, arena_t *arena)
 {
     return typevec_create(width, len, arena);
 }
 
-USE_DECL
+STA_DECL
 typevec_t *typevec_of(size_t width, size_t len, arena_t *arena)
 {
     typevec_t *self = typevec_create(width, len, arena);
@@ -87,7 +87,7 @@ typevec_t *typevec_of(size_t width, size_t len, arena_t *arena)
     return self;
 }
 
-USE_DECL
+STA_DECL
 typevec_t *typevec_of_array(size_t width, const void *src, size_t count, arena_t *arena)
 {
     CTASSERT(src != NULL);
@@ -100,7 +100,7 @@ typevec_t *typevec_of_array(size_t width, const void *src, size_t count, arena_t
     return self;
 }
 
-USE_DECL
+STA_DECL
 typevec_t *typevec_slice(const typevec_t *vec, size_t start, size_t end)
 {
     CTASSERT(vec != NULL);
@@ -116,7 +116,7 @@ typevec_t *typevec_slice(const typevec_t *vec, size_t start, size_t end)
     return self;
 }
 
-USE_DECL
+STA_DECL
 size_t typevec_len(const typevec_t *vec)
 {
     CTASSERT(vec != NULL);
@@ -124,7 +124,7 @@ size_t typevec_len(const typevec_t *vec)
     return vec->used;
 }
 
-USE_DECL
+STA_DECL
 void typevec_set(typevec_t *vec, size_t index, const void *src)
 {
     CTASSERT(vec != NULL);
@@ -134,7 +134,7 @@ void typevec_set(typevec_t *vec, size_t index, const void *src)
     copy_elements(vec, dst, src, 1);
 }
 
-USE_DECL
+STA_DECL
 void typevec_get(const typevec_t *vec, size_t index, void *dst)
 {
     CTASSERT(vec != NULL);
@@ -144,7 +144,7 @@ void typevec_get(const typevec_t *vec, size_t index, void *dst)
     copy_elements(vec, dst, src, 1);
 }
 
-USE_DECL
+STA_DECL
 void typevec_tail(const typevec_t *vec, void *dst)
 {
     CTASSERT(typevec_len(vec) > 0);
@@ -152,7 +152,7 @@ void typevec_tail(const typevec_t *vec, void *dst)
     typevec_get(vec, vec->used - 1, dst);
 }
 
-USE_DECL
+STA_DECL
 void *typevec_push(typevec_t *vec, const void *src)
 {
     CTASSERT(vec != NULL);
@@ -165,7 +165,7 @@ void *typevec_push(typevec_t *vec, const void *src)
     return dst;
 }
 
-USE_DECL
+STA_DECL
 void typevec_append(typevec_t *vec, const void *src, size_t len)
 {
     CTASSERT(vec != NULL);
@@ -178,7 +178,7 @@ void typevec_append(typevec_t *vec, const void *src, size_t len)
     vec->used += len;
 }
 
-USE_DECL
+STA_DECL
 void typevec_pop(typevec_t *vec, void *dst)
 {
     CTASSERT(typevec_len(vec) > 0);
@@ -187,7 +187,7 @@ void typevec_pop(typevec_t *vec, void *dst)
     copy_elements(vec, dst, src, 1);
 }
 
-USE_DECL
+STA_DECL
 void *typevec_offset(const typevec_t *vec, size_t index)
 {
     CTASSERTF(index < typevec_len(vec), "index %zu out of bounds %zu", index, typevec_len(vec));
@@ -195,7 +195,7 @@ void *typevec_offset(const typevec_t *vec, size_t index)
     return ((char*)vec->data) + (index * vec->width);
 }
 
-USE_DECL
+STA_DECL
 void *typevec_data(const typevec_t *vec)
 {
     CTASSERT(vec != NULL);
@@ -213,7 +213,7 @@ void typevec_sort(IN_NOTNULL typevec_t *vec, int (*cmp)(const void *, const void
     qsort(vec->data, vec->used, vec->width, cmp);
 }
 
-USE_DECL
+STA_DECL
 void typevec_reset(typevec_t *vec)
 {
     CTASSERT(vec != NULL);

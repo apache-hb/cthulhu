@@ -4,7 +4,7 @@
 
 panic_handler_t gPanicHandler = NULL;
 
-USE_DECL
+STA_DECL
 void ctu_panic(source_info_t location, const char *msg, ...)
 {
     // todo: figure out a nice way to handle assertions that assert themselves
@@ -15,7 +15,7 @@ void ctu_panic(source_info_t location, const char *msg, ...)
     ctu_vpanic(location, msg, args);
 }
 
-USE_DECL
+STA_DECL
 void ctu_vpanic(source_info_t location, const char *msg, va_list args)
 {
     gPanicHandler(location, msg, args);

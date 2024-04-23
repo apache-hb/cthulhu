@@ -9,7 +9,7 @@ static const char *const kFileLayoutNames[] = {
 #include "target/target.inc"
 };
 
-USE_DECL
+STA_DECL
 const char *file_layout_str(file_layout_t layout)
 {
     CTASSERTF(layout < eFileLayoutCount, "invalid file layout %d", layout);

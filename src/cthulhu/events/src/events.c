@@ -18,7 +18,7 @@ static const diagnostic_t * const kDiagnosticTable[] = {
 
 #define DIAGNOTSIC_COUNT (sizeof(kDiagnosticTable) / sizeof(diagnostic_t*))
 
-USE_DECL
+STA_DECL
 diagnostic_list_t get_common_diagnostics(void)
 {
     diagnostic_list_t list = {
@@ -29,13 +29,13 @@ diagnostic_list_t get_common_diagnostics(void)
     return list;
 }
 
-USE_DECL
+STA_DECL
 void evt_scan_error(logger_t *logger, const node_t *node, const char *msg)
 {
     msg_notify(logger, &kEvent_ParseFailed, node, "%s", msg);
 }
 
-USE_DECL
+STA_DECL
 void evt_scan_unknown(logger_t *logger, const node_t *node, const char *msg)
 {
     const scan_t *scan = node_get_scan(node);
@@ -43,7 +43,7 @@ void evt_scan_unknown(logger_t *logger, const node_t *node, const char *msg)
     msg_notify(logger, &kEvent_UnknownToken, node, "unknown symbol: `%s`", str_normalize(msg, arena));
 }
 
-USE_DECL
+STA_DECL
 event_builder_t evt_symbol_shadowed(
     logger_t *logger,
     const char *name,
@@ -55,7 +55,7 @@ event_builder_t evt_symbol_shadowed(
     return event;
 }
 
-USE_DECL
+STA_DECL
 event_builder_t evt_os_error(
     logger_t *logger,
     const diagnostic_t *diagnostic,

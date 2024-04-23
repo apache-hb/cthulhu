@@ -22,7 +22,7 @@ bool ctu_log_enabled(void)
     return gVerboseEnabled;
 }
 
-USE_DECL
+STA_DECL
 void ctu_log(const char *fmt, ...)
 {
     va_list args;
@@ -33,7 +33,7 @@ void ctu_log(const char *fmt, ...)
     va_end(args);
 }
 
-USE_DECL
+STA_DECL
 void ctu_vlog(const char *fmt, va_list args)
 {
     if (gVerboseEnabled)

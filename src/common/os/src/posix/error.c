@@ -11,13 +11,13 @@
 #include <string.h>
 #include <errno.h>
 
-USE_DECL
+STA_DECL
 os_error_t impl_last_error(void)
 {
     return (os_error_t)errno;
 }
 
-USE_DECL
+STA_DECL
 size_t os_error_get_string(os_error_t error, char *buffer, size_t size)
 {
     if (size == 0)

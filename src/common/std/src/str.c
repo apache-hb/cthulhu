@@ -30,7 +30,7 @@
 
 // TODO: is it worth using stbsp_vsprintfcb when its available?
 
-USE_DECL
+STA_DECL
 size_t str_sprintf(char *str, size_t len, const char *fmt, ...)
 {
     va_list args;
@@ -43,7 +43,7 @@ size_t str_sprintf(char *str, size_t len, const char *fmt, ...)
     return result;
 }
 
-USE_DECL
+STA_DECL
 size_t str_vsprintf(char *str, size_t len, const char *fmt, va_list args)
 {
     CTASSERT(fmt != NULL);
@@ -52,7 +52,7 @@ size_t str_vsprintf(char *str, size_t len, const char *fmt, va_list args)
     return CT_VSNPRINTF(str, (int)len, fmt, args);
 }
 
-USE_DECL
+STA_DECL
 text_t text_vformat(arena_t *arena, const char *fmt, va_list args)
 {
     CTASSERT(arena != NULL);
@@ -77,7 +77,7 @@ text_t text_vformat(arena_t *arena, const char *fmt, va_list args)
     return text_make(out, len);
 }
 
-USE_DECL
+STA_DECL
 text_t text_format(arena_t *arena, const char *fmt, ...)
 {
     CTASSERT(arena != NULL);
@@ -93,7 +93,7 @@ text_t text_format(arena_t *arena, const char *fmt, ...)
     return text;
 }
 
-USE_DECL
+STA_DECL
 char *str_format(arena_t *arena, const char *fmt, ...)
 {
     va_list args;
@@ -106,7 +106,7 @@ char *str_format(arena_t *arena, const char *fmt, ...)
     return str;
 }
 
-USE_DECL
+STA_DECL
 char *str_vformat(arena_t *arena, const char *fmt, va_list args)
 {
     CTASSERT(arena != NULL);
@@ -117,7 +117,7 @@ char *str_vformat(arena_t *arena, const char *fmt, va_list args)
     return text.text;
 }
 
-USE_DECL
+STA_DECL
 bool char_is_any_of(char c, const char *chars)
 {
     CTASSERT(chars != NULL);
@@ -151,7 +151,7 @@ static size_t str_rfind_any(const char *str, const char *letters)
     return SIZE_MAX;
 }
 
-USE_DECL
+STA_DECL
 char *str_noext(const char *path, arena_t *arena)
 {
     CTASSERT(path != NULL);
@@ -168,7 +168,7 @@ char *str_noext(const char *path, arena_t *arena)
     return base;
 }
 
-USE_DECL
+STA_DECL
 char *str_ext(const char *path, arena_t *arena)
 {
     CTASSERT(path != NULL);
@@ -183,7 +183,7 @@ char *str_ext(const char *path, arena_t *arena)
     return arena_strdup(path + idx + 1, arena);
 }
 
-USE_DECL
+STA_DECL
 char *str_directory(const char *path, arena_t *arena)
 {
     CTASSERT(path != NULL);
@@ -198,7 +198,7 @@ char *str_directory(const char *path, arena_t *arena)
     return arena_strndup(path, idx, arena);
 }
 
-USE_DECL
+STA_DECL
 char *str_basename(const char *path, arena_t *arena)
 {
     CTASSERT(path != NULL);
@@ -213,7 +213,7 @@ char *str_basename(const char *path, arena_t *arena)
     return str_noext(path + idx + 1, arena);
 }
 
-USE_DECL
+STA_DECL
 char *str_filename(const char *path, arena_t *arena)
 {
     CTASSERT(path != NULL);
@@ -228,7 +228,7 @@ char *str_filename(const char *path, arena_t *arena)
     return arena_strdup(path + idx + 1, arena);
 }
 
-USE_DECL
+STA_DECL
 bool str_startswith(const char *str, const char *prefix)
 {
     CTASSERT(str != NULL);
@@ -237,7 +237,7 @@ bool str_startswith(const char *str, const char *prefix)
     return ctu_strncmp(str, prefix, ctu_strlen(prefix)) == 0;
 }
 
-USE_DECL
+STA_DECL
 bool str_endswith(const char *str, const char *suffix)
 {
     CTASSERT(str != NULL);
@@ -253,7 +253,7 @@ bool str_endswith(const char *str, const char *suffix)
     return ctu_strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 }
 
-USE_DECL
+STA_DECL
 char *str_join(const char *sep, const vector_t *parts, arena_t *arena)
 {
     CTASSERT(sep != NULL);
@@ -315,7 +315,7 @@ char *str_join(const char *sep, const vector_t *parts, arena_t *arena)
     return out;
 }
 
-USE_DECL
+STA_DECL
 char *str_repeat(const char *str, size_t times, arena_t *arena)
 {
     CTASSERT(str != NULL);
@@ -423,7 +423,7 @@ static size_t normstr(char *out, char c)
     }
 }
 
-USE_DECL
+STA_DECL
 char *str_normalize(const char *str, arena_t *arena)
 {
     CTASSERT(str != NULL);
@@ -462,7 +462,7 @@ char *str_normalize(const char *str, arena_t *arena)
     return buf;
 }
 
-USE_DECL
+STA_DECL
 char *str_normalizen(text_view_t text, arena_t *arena)
 {
     CTASSERT(text.text != NULL);
@@ -495,7 +495,7 @@ char *str_normalizen(text_view_t text, arena_t *arena)
     return buf;
 }
 
-USE_DECL
+STA_DECL
 vector_t *str_split(IN_STRING const char *str, IN_STRING const char *sep, arena_t *arena)
 {
     CTASSERT(str != NULL);
@@ -545,7 +545,7 @@ vector_t *str_split(IN_STRING const char *str, IN_STRING const char *sep, arena_
     return result;
 }
 
-USE_DECL
+STA_DECL
 bool str_contains(const char *str, const char *search)
 {
     CTASSERT(str != NULL);
@@ -554,7 +554,7 @@ bool str_contains(const char *str, const char *search)
     return ctu_strstr(str, search) != NULL;
 }
 
-USE_DECL
+STA_DECL
 char *str_replace(const char *str, const char *search, const char *repl, arena_t *arena)
 {
     CTASSERT(str != NULL);
@@ -588,7 +588,7 @@ static const map_entry_t *find_matching_key(typevec_t *pairs, const char *str)
     return NULL;
 }
 
-USE_DECL
+STA_DECL
 void str_replace_inplace(text_t *text, const char *search, const char *repl)
 {
     CTASSERT(text != NULL);
@@ -635,7 +635,7 @@ void str_replace_inplace(text_t *text, const char *search, const char *repl)
     str[len] = '\0';
 }
 
-USE_DECL
+STA_DECL
 void str_trim_back_inplace(text_t *text, const char *chars)
 {
     CTASSERT(text != NULL);
@@ -654,7 +654,7 @@ void str_trim_back_inplace(text_t *text, const char *chars)
     str[len] = '\0';
 }
 
-USE_DECL
+STA_DECL
 void str_sort_inplace(char *str, size_t len)
 {
     CTASSERT(str != NULL);
@@ -674,7 +674,7 @@ void str_sort_inplace(char *str, size_t len)
     }
 }
 
-USE_DECL
+STA_DECL
 char *str_replace_many(const char *str, const map_t *repl, arena_t *arena)
 {
     CTASSERT(str != NULL);
@@ -728,7 +728,7 @@ char *str_replace_many(const char *str, const map_t *repl, arena_t *arena)
  *
  * expects a list of file paths
  */
-USE_DECL
+STA_DECL
 const char *str_common_prefix(const vector_t *args, arena_t *arena)
 {
     CTASSERT(args != NULL);
@@ -822,7 +822,7 @@ static size_t str_rfind_inner(const char *str, size_t len, const char *sub, size
     return SIZE_MAX;
 }
 
-USE_DECL
+STA_DECL
 size_t str_rfind(const char *str, const char *sub)
 {
     CTASSERT(str != NULL);
@@ -834,7 +834,7 @@ size_t str_rfind(const char *str, const char *sub)
     return str_rfind_inner(str, len, sub, sublen);
 }
 
-USE_DECL
+STA_DECL
 size_t str_find(const char *str, const char *sub)
 {
     CTASSERT(str != NULL);
@@ -844,7 +844,7 @@ size_t str_find(const char *str, const char *sub)
     return ptr == NULL ? SIZE_MAX : (size_t)(ptr - str);
 }
 
-USE_DECL CT_NOALIAS
+STA_DECL CT_NOALIAS
 char *str_erase(char *str, size_t len, const char *letters)
 {
     CTASSERT(str != NULL);
@@ -872,7 +872,7 @@ char *str_erase(char *str, size_t len, const char *letters)
     return str + offset;
 }
 
-USE_DECL
+STA_DECL
 char *str_upper(const char *str, arena_t *arena)
 {
     CTASSERT(str != NULL);
@@ -890,7 +890,7 @@ char *str_upper(const char *str, arena_t *arena)
     return result;
 }
 
-USE_DECL
+STA_DECL
 char *str_lower(const char *str, arena_t *arena)
 {
     CTASSERT(str != NULL);
@@ -908,7 +908,7 @@ char *str_lower(const char *str, arena_t *arena)
     return result;
 }
 
-USE_DECL
+STA_DECL
 char str_tolower(char c)
 {
     if (c >= 'A' && c <= 'Z')
@@ -919,7 +919,7 @@ char str_tolower(char c)
     return c;
 }
 
-USE_DECL
+STA_DECL
 char str_toupper(char c)
 {
     if (c >= 'a' && c <= 'z')
@@ -930,7 +930,7 @@ char str_toupper(char c)
     return c;
 }
 
-USE_DECL
+STA_DECL
 bool text_view_equal(text_view_t lhs, text_view_t rhs)
 {
     if (lhs.length != rhs.length)

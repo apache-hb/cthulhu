@@ -29,7 +29,7 @@ static scan_t *scan_new(const char *language, const char *path, io_t *io, arena_
     return self;
 }
 
-USE_DECL
+STA_DECL
 scan_t *scan_builtin(const char *language, arena_t *arena)
 {
     scan_t *scan = scan_new(language, CT_SCAN_BUILTIN_NAME, NULL, arena);
@@ -37,14 +37,14 @@ scan_t *scan_builtin(const char *language, arena_t *arena)
     return scan;
 }
 
-USE_DECL
+STA_DECL
 bool scan_is_builtin(const scan_t *scan)
 {
     CTASSERT(scan != NULL);
     return scan->io == NULL;
 }
 
-USE_DECL
+STA_DECL
 const char *scan_language(const scan_t *scan)
 {
     CTASSERT(scan != NULL);
@@ -52,7 +52,7 @@ const char *scan_language(const scan_t *scan)
     return scan->language;
 }
 
-USE_DECL
+STA_DECL
 const char *scan_path(const scan_t *scan)
 {
     CTASSERT(scan != NULL);
@@ -60,7 +60,7 @@ const char *scan_path(const scan_t *scan)
     return scan->path;
 }
 
-USE_DECL
+STA_DECL
 void scan_set(scan_t *scan, void *value)
 {
     CTASSERT(scan != NULL);
@@ -68,7 +68,7 @@ void scan_set(scan_t *scan, void *value)
     scan->tree = value;
 }
 
-USE_DECL
+STA_DECL
 void *scan_get(scan_t *scan)
 {
     CTASSERT(scan != NULL);
@@ -76,7 +76,7 @@ void *scan_get(scan_t *scan)
     return scan->tree;
 }
 
-USE_DECL
+STA_DECL
 void scan_set_context(scan_t *scan, void *value)
 {
     CTASSERT(scan != NULL);
@@ -84,7 +84,7 @@ void scan_set_context(scan_t *scan, void *value)
     scan->context = value;
 }
 
-USE_DECL
+STA_DECL
 void *scan_get_context(const scan_t *scan)
 {
     CTASSERT(scan != NULL);
@@ -92,7 +92,7 @@ void *scan_get_context(const scan_t *scan)
     return scan->context;
 }
 
-USE_DECL
+STA_DECL
 text_view_t scan_source(const scan_t *scan)
 {
     CTASSERT(scan != NULL);
@@ -100,7 +100,7 @@ text_view_t scan_source(const scan_t *scan)
     return scan->mapped;
 }
 
-USE_DECL CT_NOALIAS
+STA_DECL CT_NOALIAS
 size_t scan_read(scan_t *scan, void *dst, size_t size)
 {
     CTASSERT(scan != NULL);
@@ -109,7 +109,7 @@ size_t scan_read(scan_t *scan, void *dst, size_t size)
     return io_read(scan->io, dst, size);
 }
 
-USE_DECL
+STA_DECL
 arena_t *scan_get_arena(const scan_t *scan)
 {
     CTASSERT(scan != NULL);
@@ -117,7 +117,7 @@ arena_t *scan_get_arena(const scan_t *scan)
     return scan->arena;
 }
 
-USE_DECL
+STA_DECL
 scan_t *scan_io(const char *language, io_t *io, arena_t *arena)
 {
     CTASSERT(io != NULL);

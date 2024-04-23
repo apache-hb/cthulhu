@@ -6,7 +6,7 @@
 
 #include "os/os.h"
 
-USE_DECL
+STA_DECL
 os_error_t os_file_delete(const char *path)
 {
     BOOL result = DeleteFileA(path);
@@ -19,7 +19,7 @@ os_error_t os_file_delete(const char *path)
     return ERROR_SUCCESS;
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_dir_create(const char *path)
 {
     CTASSERT(path != NULL);
@@ -39,7 +39,7 @@ os_error_t os_dir_create(const char *path)
     return eOsSuccess;
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_dir_delete(const char *path)
 {
     BOOL result = RemoveDirectoryA(path);
@@ -51,7 +51,7 @@ os_error_t os_dir_delete(const char *path)
     return ERROR_SUCCESS;
 }
 
-USE_DECL
+STA_DECL
 os_dirent_t os_dirent_type(const char *path)
 {
     DWORD attributes = GetFileAttributesA(path);
@@ -73,7 +73,7 @@ os_dirent_t os_dirent_type(const char *path)
     return eOsNodeError;
 }
 
-USE_DECL
+STA_DECL
 size_t os_cwd_get_string(char *buffer, size_t size)
 {
     if (size == 0)

@@ -79,14 +79,14 @@ static io_t *impl_string_init(void *buffer, const char *name, const char *string
 /// public allocating api
 ///
 
-USE_DECL
+STA_DECL
 io_t *io_view(const char *name, const void *data, size_t size, arena_t *arena)
 {
     void *buffer = ARENA_MALLOC(IO_VIEW_SIZE, name, NULL, arena);
     return impl_view_init(buffer, name, data, size, arena);
 }
 
-USE_DECL
+STA_DECL
 io_t *io_string(const char *name, const char *string, arena_t *arena)
 {
     void *buffer = ARENA_MALLOC(IO_VIEW_SIZE, name, NULL, arena);
@@ -97,13 +97,13 @@ io_t *io_string(const char *name, const char *string, arena_t *arena)
 /// public in place api
 ///
 
-USE_DECL
+STA_DECL
 io_t *io_view_init(void *buffer, const char *name, const void *data, size_t size)
 {
     return impl_view_init(buffer, name, data, size, NULL);
 }
 
-USE_DECL
+STA_DECL
 io_t *io_string_init(void *buffer, const char *name, const char *string)
 {
     return impl_string_init(buffer, name, string, NULL);

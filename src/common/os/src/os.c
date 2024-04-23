@@ -12,7 +12,7 @@
 /// to string operations
 ///
 
-USE_DECL
+STA_DECL
 char *os_error_string(os_error_t error, arena_t *arena)
 {
     CTASSERT(arena != NULL);
@@ -28,7 +28,7 @@ char *os_error_string(os_error_t error, arena_t *arena)
     return buffer;
 }
 
-USE_DECL
+STA_DECL
 char *os_cwd_string(arena_t *arena)
 {
     CTASSERT(arena != NULL);
@@ -44,7 +44,7 @@ char *os_cwd_string(arena_t *arena)
     return buffer;
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_getcwd(text_t *text, arena_t *arena)
 {
     CTASSERT(text != NULL);
@@ -69,7 +69,7 @@ os_error_t os_getcwd(text_t *text, arena_t *arena)
 /// mapping operations
 ///
 
-USE_DECL
+STA_DECL
 os_error_t os_file_map(os_file_t *file, os_protect_t protect, size_t size, os_mapping_t *mapping)
 {
     CTASSERT(file != NULL);
@@ -105,7 +105,7 @@ os_error_t os_file_map(os_file_t *file, os_protect_t protect, size_t size, os_ma
     return err;
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_unmap(os_mapping_t *mapping)
 {
     CTASSERT(mapping != NULL);
@@ -113,7 +113,7 @@ os_error_t os_unmap(os_mapping_t *mapping)
     return impl_unmap(mapping);
 }
 
-USE_DECL
+STA_DECL
 size_t os_mapping_size(const os_mapping_t *mapping)
 {
     CTASSERT(mapping != NULL);
@@ -122,7 +122,7 @@ size_t os_mapping_size(const os_mapping_t *mapping)
     return mapping->size;
 }
 
-USE_DECL
+STA_DECL
 void *os_mapping_data(os_mapping_t *mapping)
 {
     CTASSERT(mapping != NULL);
@@ -131,7 +131,7 @@ void *os_mapping_data(os_mapping_t *mapping)
     return mapping->view;
 }
 
-USE_DECL
+STA_DECL
 bool os_mapping_active(const os_mapping_t *mapping)
 {
     CTASSERT(mapping != NULL);
@@ -143,7 +143,7 @@ bool os_mapping_active(const os_mapping_t *mapping)
 /// shared libraries
 ///
 
-USE_DECL
+STA_DECL
 os_error_t os_library_open(const char *path, os_library_t *library)
 {
     CTASSERT(path != NULL);
@@ -161,7 +161,7 @@ os_error_t os_library_open(const char *path, os_library_t *library)
     return eOsSuccess;
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_library_close(os_library_t *library)
 {
     CTASSERT(library != NULL);
@@ -174,7 +174,7 @@ os_error_t os_library_close(os_library_t *library)
     return eOsSuccess;
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_library_symbol(os_library_t *library, void **symbol, const char *name)
 {
     CTASSERT(library != NULL);
@@ -191,7 +191,7 @@ os_error_t os_library_symbol(os_library_t *library, void **symbol, const char *n
     return eOsSuccess;
 }
 
-USE_DECL
+STA_DECL
 const char *os_library_name(const os_library_t *library)
 {
     CTASSERT(library != NULL);
@@ -203,7 +203,7 @@ const char *os_library_name(const os_library_t *library)
 /// file operations
 ///
 
-USE_DECL
+STA_DECL
 os_error_t os_file_open(const char *path, os_access_t access, os_file_t *file)
 {
     CTASSERT(path != NULL);
@@ -223,7 +223,7 @@ os_error_t os_file_open(const char *path, os_access_t access, os_file_t *file)
     return eOsSuccess;
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_file_close(os_file_t *file)
 {
     CTASSERT(file != NULL);
@@ -237,7 +237,7 @@ os_error_t os_file_close(os_file_t *file)
     return eOsSuccess;
 }
 
-USE_DECL
+STA_DECL
 const char *os_file_name(const os_file_t *file)
 {
     CTASSERT(file != NULL);
@@ -245,7 +245,7 @@ const char *os_file_name(const os_file_t *file)
     return file->path;
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_file_create(const char *path)
 {
     CTASSERT(path != NULL);
@@ -259,7 +259,7 @@ os_error_t os_file_create(const char *path)
 
     return os_file_close(&fd);
 }
-USE_DECL
+STA_DECL
 os_error_t os_file_copy(const char *dst, const char *src)
 {
 #if CTU_OS_HAS_COPYFILE
@@ -308,7 +308,7 @@ cleanup:
 /// fs operations
 ///
 
-USE_DECL
+STA_DECL
 bool os_dir_exists(const char *path)
 {
     os_dirent_t type = os_dirent_type(path);
@@ -336,7 +336,7 @@ static bool iter_next(os_iter_t *iter, os_inode_impl_t *result)
     return ok;
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_iter_begin(const char *path, os_iter_t *iter)
 {
     CTASSERT(path != NULL);
@@ -352,7 +352,7 @@ os_error_t os_iter_begin(const char *path, os_iter_t *iter)
     return iter->error;
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_iter_end(os_iter_t *iter)
 {
     CTASSERT(iter != NULL);
@@ -365,7 +365,7 @@ os_error_t os_iter_end(os_iter_t *iter)
     return eOsSuccess;
 }
 
-USE_DECL
+STA_DECL
 bool os_iter_next(os_iter_t *iter, os_inode_t *result)
 {
     CTASSERT(iter != NULL);
@@ -392,7 +392,7 @@ bool os_iter_next(os_iter_t *iter, os_inode_t *result)
     return true;
 }
 
-USE_DECL
+STA_DECL
 os_error_t os_iter_error(const os_iter_t *iter)
 {
     CTASSERT(iter != NULL);
@@ -404,7 +404,7 @@ os_error_t os_iter_error(const os_iter_t *iter)
 /// inode operations
 ///
 
-USE_DECL
+STA_DECL
 os_dirent_t os_inode_type(const os_inode_t *node)
 {
     CTASSERT(node != NULL);
@@ -412,7 +412,7 @@ os_dirent_t os_inode_type(const os_inode_t *node)
     return node->type;
 }
 
-USE_DECL
+STA_DECL
 const char *os_inode_name(const os_inode_t *node)
 {
     CTASSERT(node != NULL);
@@ -424,7 +424,7 @@ const char *os_inode_name(const os_inode_t *node)
 /// thread operations
 ///
 
-USE_DECL
+STA_DECL
 const char *os_thread_name(const os_thread_t *thread)
 {
     CTASSERT(thread != NULL);
@@ -432,7 +432,7 @@ const char *os_thread_name(const os_thread_t *thread)
     return thread->name;
 }
 
-USE_DECL
+STA_DECL
 bool os_thread_cmpid(const os_thread_t *thread, os_thread_id_t id)
 {
     CTASSERT(thread != NULL);

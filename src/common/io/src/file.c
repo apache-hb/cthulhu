@@ -121,7 +121,7 @@ static io_t *impl_file_init(void *buffer, const char *path, os_access_t mode, ar
 /// public allocating api
 ///
 
-USE_DECL
+STA_DECL
 io_t *io_file(const char *path, os_access_t mode, arena_t *arena)
 {
     void *buffer = ARENA_MALLOC(IO_FILE_SIZE, path, NULL, arena);
@@ -132,7 +132,7 @@ io_t *io_file(const char *path, os_access_t mode, arena_t *arena)
 /// public in place api
 ///
 
-USE_DECL
+STA_DECL
 io_t *io_file_init(void *buffer, const char *path, os_access_t mode)
 {
     return impl_file_init(buffer, path, mode, NULL);

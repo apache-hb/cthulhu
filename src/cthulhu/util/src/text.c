@@ -53,7 +53,7 @@ static escape_t consume_text(logger_t *reports, const node_t *node, const char *
     }
 }
 
-USE_DECL
+STA_DECL
 text_t util_text_escape(logger_t *reports, const node_t *node, const char *text, size_t length, arena_t *arena)
 {
     CTASSERT(reports != NULL);
@@ -77,7 +77,7 @@ text_t util_text_escape(logger_t *reports, const node_t *node, const char *text,
     return text_make(typevec_data(&vec), typevec_len(&vec));
 }
 
-USE_DECL
+STA_DECL
 bool util_text_has_escapes(const char *text, size_t length)
 {
     CTASSERT(text != NULL);

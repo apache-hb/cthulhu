@@ -319,7 +319,7 @@ static void ssa_opt_global(ssa_vm_t *vm, ssa_symbol_t *global)
     global->value = scope.return_value;
 }
 
-USE_DECL
+STA_DECL
 void ssa_opt(logger_t *reports, ssa_result_t result, arena_t *arena)
 {
     CTASSERT(reports != NULL);

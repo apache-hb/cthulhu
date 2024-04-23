@@ -59,7 +59,7 @@ static vector_t *vector_init_inner(size_t size, size_t used, arena_t *arena)
 
 // vector public api
 
-USE_DECL
+STA_DECL
 vector_t *vector_new(size_t size, arena_t *arena)
 {
     CTASSERT(arena != NULL);
@@ -67,7 +67,7 @@ vector_t *vector_new(size_t size, arena_t *arena)
     return vector_init_inner(size, 0, arena);
 }
 
-USE_DECL
+STA_DECL
 vector_t *vector_of(size_t len, arena_t *arena)
 {
     CTASSERT(arena != NULL);
@@ -75,7 +75,7 @@ vector_t *vector_of(size_t len, arena_t *arena)
     return vector_init_inner(len, len, arena);
 }
 
-USE_DECL
+STA_DECL
 vector_t *vector_init(void *value, arena_t *arena)
 {
     CTASSERT(arena != NULL);
@@ -85,7 +85,7 @@ vector_t *vector_init(void *value, arena_t *arena)
     return vector;
 }
 
-USE_DECL
+STA_DECL
 vector_t *vector_clone(vector_t *vector)
 {
     CTASSERT(vector != NULL);
@@ -96,7 +96,7 @@ vector_t *vector_clone(vector_t *vector)
     return clone;
 }
 
-USE_DECL
+STA_DECL
 void vector_delete(vector_t *vector)
 {
     CTASSERT(vector != NULL);
@@ -104,7 +104,7 @@ void vector_delete(vector_t *vector)
     arena_free(vector, vector_typesize(vector->size), vector->arena);
 }
 
-USE_DECL
+STA_DECL
 void vector_push(vector_t **vector, void *value)
 {
     CHECK_VECTOR(vector);
@@ -113,7 +113,7 @@ void vector_push(vector_t **vector, void *value)
     VEC->data[VEC->used++] = value;
 }
 
-USE_DECL
+STA_DECL
 void vector_drop(vector_t *vector)
 {
     CTASSERT(vector != NULL);
@@ -121,7 +121,7 @@ void vector_drop(vector_t *vector)
     vector->used -= 1;
 }
 
-USE_DECL
+STA_DECL
 void vector_set(vector_t *vector, size_t index, void *value)
 {
     CTASSERT(vector != NULL);
@@ -130,7 +130,7 @@ void vector_set(vector_t *vector, size_t index, void *value)
     vector->data[index] = value;
 }
 
-USE_DECL
+STA_DECL
 void *vector_get(const vector_t *vector, size_t index)
 {
     CTASSERT(vector != NULL);
@@ -139,7 +139,7 @@ void *vector_get(const vector_t *vector, size_t index)
     return vector->data[index];
 }
 
-USE_DECL
+STA_DECL
 void *vector_tail(const vector_t *vector)
 {
     CTASSERT(vector != NULL);
@@ -148,7 +148,7 @@ void *vector_tail(const vector_t *vector)
     return vector->data[vector->used - 1];
 }
 
-USE_DECL
+STA_DECL
 size_t vector_len(const vector_t *vector)
 {
     CTASSERT(vector != NULL);
@@ -156,7 +156,7 @@ size_t vector_len(const vector_t *vector)
     return vector->used;
 }
 
-USE_DECL
+STA_DECL
 size_t vector_find(vector_t *vector, const void *element)
 {
     CTASSERT(vector != NULL);
@@ -172,7 +172,7 @@ size_t vector_find(vector_t *vector, const void *element)
     return SIZE_MAX;
 }
 
-USE_DECL
+STA_DECL
 void vector_append(vector_t **vector, const vector_t *other)
 {
     CHECK_VECTOR(vector);
@@ -184,7 +184,7 @@ void vector_append(vector_t **vector, const vector_t *other)
     VEC->used += len;
 }
 
-USE_DECL
+STA_DECL
 void vector_reset(vector_t *vec)
 {
     CTASSERT(vec != NULL);
@@ -192,7 +192,7 @@ void vector_reset(vector_t *vec)
     vec->used = 0;
 }
 
-USE_DECL
+STA_DECL
 void **vector_data(vector_t *vec)
 {
     CTASSERT(vec != NULL);

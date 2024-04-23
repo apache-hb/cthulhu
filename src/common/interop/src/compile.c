@@ -22,7 +22,7 @@ static parse_result_t parse_value(void *tree)
     return res;
 }
 
-USE_DECL
+STA_DECL
 parse_result_t scan_buffer(scan_t *scan, const scan_callbacks_t *callbacks)
 {
     CTASSERT(scan != NULL);

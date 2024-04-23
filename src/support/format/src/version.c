@@ -5,7 +5,7 @@
 
 #include "io/io.h"
 
-USE_DECL
+STA_DECL
 void print_version(print_version_t config, version_info_t version, const char *name)
 {
     CTASSERT(name != NULL);

@@ -105,13 +105,13 @@ static json_t *query_internal(json_t *json, const char *query, logger_t *logger,
     return eval_query(json, result.tree, arena);
 }
 
-USE_DECL
+STA_DECL
 json_t *json_query(json_t *json, const char *query, logger_t *logger, arena_t *arena)
 {
     return query_internal(json, query, logger, NULL, arena);
 }
 
-USE_DECL
+STA_DECL
 json_t *json_query_type(json_t *json, const char *query, json_kind_t kind, logger_t *logger, arena_t *arena)
 {
     CT_ASSERT_RANGE(kind, 0, eJsonCount);

@@ -323,7 +323,7 @@ static const char *const kErrorNames[eTarCount] = {
 #include "tar/tar.inc"
 };
 
-USE_DECL
+STA_DECL
 const char *tar_error_string(tar_error_t err)
 {
     CTASSERTF(err < eTarCount, "invalid error code %d", err);

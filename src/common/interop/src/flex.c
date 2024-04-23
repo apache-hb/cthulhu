@@ -9,7 +9,7 @@
 
 #include <limits.h>
 
-USE_DECL
+STA_DECL
 void flex_action(where_t *where, const char *text)
 {
     CTASSERT(where != NULL);
@@ -35,7 +35,7 @@ void flex_action(where_t *where, const char *text)
     *where = tmp;
 }
 
-USE_DECL
+STA_DECL
 int flex_input(scan_t *scan, char *out, int size)
 {
     CTASSERT(scan != NULL);
@@ -45,7 +45,7 @@ int flex_input(scan_t *scan, char *out, int size)
     return (int)scan_read(scan, out, size);
 }
 
-USE_DECL
+STA_DECL
 void flex_init(where_t *where)
 {
     CTASSERT(where != NULL);
@@ -54,7 +54,7 @@ void flex_init(where_t *where)
     *where = zero;
 }
 
-USE_DECL
+STA_DECL
 void flex_update(where_t *where, const where_t *offsets, int steps)
 {
     CTASSERT(where != NULL);

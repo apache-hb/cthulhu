@@ -9,7 +9,7 @@ static const char *const kDirentNames[eOsNodeCount] = {
 #include "os/os.inc"
 };
 
-USE_DECL
+STA_DECL
 const char *os_dirent_string(os_dirent_t type)
 {
     CT_ASSERT_RANGE(type, 0, eOsNodeCount - 1);
@@ -28,7 +28,7 @@ static const char *const kAccessNames[] = {
     [eOsAccessRead | eOsAccessWrite | eOsAccessTruncate] = "read/write (truncate)",
 };
 
-USE_DECL
+STA_DECL
 const char *os_access_string(os_access_t access)
 {
     CTASSERTF(!(access & ~eOsAccessMask), "invalid access flags 0x%x", access);
@@ -46,7 +46,7 @@ static const char *const kProtectNames[] = {
     [eOsProtectRead | eOsProtectWrite | eOsProtectExecute] = "read/write/execute",
 };
 
-USE_DECL
+STA_DECL
 const char *os_protect_string(os_protect_t protect)
 {
     CTASSERTF(!(protect & ~eOsProtectMask), "invalid protect flags 0x%x", protect);

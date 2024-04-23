@@ -95,7 +95,7 @@ static void print_notify_simple(notify_config_t *config, const event_t *event)
     }
 }
 
-USE_DECL
+STA_DECL
 void print_notify(print_notify_t config, const event_t *event)
 {
     CTASSERT(event != NULL);
@@ -107,7 +107,7 @@ void print_notify(print_notify_t config, const event_t *event)
     print_notify_simple(&notify_config, event);
 }
 
-USE_DECL
+STA_DECL
 void print_notify_many(print_notify_t config, const typevec_t *events)
 {
     CTASSERT(events != NULL);

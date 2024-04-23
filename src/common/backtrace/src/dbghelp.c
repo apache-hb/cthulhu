@@ -13,7 +13,7 @@ union disp_t {
     DWORD64 disp64;
 };
 
-USE_DECL
+STA_DECL
 const char *bt_backend(void)
 {
     return "dbghelp";

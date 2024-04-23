@@ -37,7 +37,7 @@ static bitset_word_t *word_at(bitset_t set, size_t index)
     return bitset_start(set) + index;
 }
 
-USE_DECL
+STA_DECL
 bitset_t bitset_of(void *data, size_t words)
 {
     CTASSERT(data != NULL);
@@ -51,7 +51,7 @@ bitset_t bitset_of(void *data, size_t words)
     return bitset;
 }
 
-USE_DECL
+STA_DECL
 size_t bitset_set_first(bitset_t set, size_t start)
 {
     bitset_word_t *data = bitset_start(set);

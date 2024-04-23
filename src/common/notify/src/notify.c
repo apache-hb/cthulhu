@@ -17,7 +17,7 @@ typedef struct logger_t
     typevec_t *messages;
 } logger_t;
 
-USE_DECL
+STA_DECL
 logger_t *logger_new(arena_t *arena)
 {
     CTASSERT(arena != NULL);
@@ -32,7 +32,7 @@ logger_t *logger_new(arena_t *arena)
     return logs;
 }
 
-USE_DECL
+STA_DECL
 typevec_t *logger_get_events(const logger_t *logs)
 {
     CTASSERT(logs != NULL);
@@ -40,7 +40,7 @@ typevec_t *logger_get_events(const logger_t *logs)
     return logs->messages;
 }
 
-USE_DECL
+STA_DECL
 bool logger_has_errors(const logger_t *logs, notify_rules_t rules)
 {
     CTASSERT(logs != NULL);
@@ -85,7 +85,7 @@ bool logger_has_errors(const logger_t *logs, notify_rules_t rules)
     return false;
 }
 
-USE_DECL
+STA_DECL
 void logger_reset(logger_t *logs)
 {
     CTASSERT(logs != NULL);
@@ -93,7 +93,7 @@ void logger_reset(logger_t *logs)
     typevec_reset(logs->messages);
 }
 
-USE_DECL
+STA_DECL
 arena_t *logger_get_arena(const logger_t *logs)
 {
     CTASSERT(logs != NULL);
@@ -101,7 +101,7 @@ arena_t *logger_get_arena(const logger_t *logs)
     return logs->arena;
 }
 
-USE_DECL
+STA_DECL
 event_builder_t msg_notify(logger_t *logs, const diagnostic_t *diagnostic, const node_t *node, const char *fmt, ...)
 {
     va_list args;
@@ -114,7 +114,7 @@ event_builder_t msg_notify(logger_t *logs, const diagnostic_t *diagnostic, const
     return event;
 }
 
-USE_DECL
+STA_DECL
 event_builder_t msg_vnotify(logger_t *logs, const diagnostic_t *diagnostic, const node_t *node, const char *fmt, va_list args)
 {
     CTASSERT(logs != NULL);
@@ -139,7 +139,7 @@ event_builder_t msg_vnotify(logger_t *logs, const diagnostic_t *diagnostic, cons
     return builder;
 }
 
-USE_DECL
+STA_DECL
 void msg_append(event_builder_t builder, const node_t *node, const char *fmt, ...)
 {
     va_list args;
@@ -154,7 +154,7 @@ void msg_append(event_builder_t builder, const node_t *node, const char *fmt, ..
     CTASSERT((bld).event != NULL); \
     CTASSERT((bld).arena != NULL);
 
-USE_DECL
+STA_DECL
 void msg_vappend(event_builder_t builder, const node_t *node, const char *fmt, va_list args)
 {
     CHECK_BUILDER(builder);
@@ -178,7 +178,7 @@ void msg_vappend(event_builder_t builder, const node_t *node, const char *fmt, v
     typevec_push(event->segments, &segment);
 }
 
-USE_DECL
+STA_DECL
 void msg_note(event_builder_t builder, const char *fmt, ...)
 {
     va_list args;
@@ -189,7 +189,7 @@ void msg_note(event_builder_t builder, const char *fmt, ...)
     va_end(args);
 }
 
-USE_DECL
+STA_DECL
 void msg_vnote(event_builder_t builder, const char *fmt, va_list args)
 {
     CHECK_BUILDER(builder);
@@ -212,7 +212,7 @@ static const char *const kSeverityNames[eSeverityTotal] = {
 #include "notify/notify.inc"
 };
 
-USE_DECL
+STA_DECL
 const char *severity_string(severity_t severity)
 {
     CT_ASSERT_RANGE(severity, 0, eSeverityTotal - 1);

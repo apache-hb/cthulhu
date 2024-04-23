@@ -863,7 +863,7 @@ ssa_map_sizes_t predict_maps(vector_t *mods)
     return sizes;
 }
 
-USE_DECL
+STA_DECL
 ssa_result_t ssa_compile(vector_t *mods, arena_t *arena)
 {
     CTASSERT(mods != NULL);
@@ -990,7 +990,7 @@ static const char *const kOpCodeNameTable[eOpCount] = {
 #include "cthulhu/ssa/ssa.inc"
 };
 
-USE_DECL
+STA_DECL
 const char *ssa_type_name(ssa_kind_t kind)
 {
     CT_ASSERT_RANGE(kind, 0, eTypeCount - 1);
@@ -998,7 +998,7 @@ const char *ssa_type_name(ssa_kind_t kind)
     return kTypeNameTable[kind];
 }
 
-USE_DECL
+STA_DECL
 const char *ssa_opkind_name(ssa_opkind_t kind)
 {
     CT_ASSERT_RANGE(kind, 0, eOpCount - 1);
@@ -1006,7 +1006,7 @@ const char *ssa_opkind_name(ssa_opkind_t kind)
     return kOperandNameTable[kind];
 }
 
-USE_DECL
+STA_DECL
 const char *ssa_opcode_name(ssa_opcode_t opcode)
 {
     CT_ASSERT_RANGE(opcode, 0, eOpCount - 1);

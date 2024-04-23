@@ -7,7 +7,7 @@
 
 const where_t kNowhere = { 0, 0, 0, 0 };
 
-USE_DECL
+STA_DECL
 node_t *node_builtin(const char *name, arena_t *arena)
 {
     CTASSERT(name != NULL);
@@ -19,14 +19,14 @@ node_t *node_builtin(const char *name, arena_t *arena)
     return node;
 }
 
-USE_DECL
+STA_DECL
 bool node_is_builtin(const node_t *node)
 {
     CTASSERTF(node != NULL, "node cannot be NULL");
     return scan_is_builtin(node->scan);
 }
 
-USE_DECL
+STA_DECL
 void node_init(node_t *node, const scan_t *scan, where_t where)
 {
     CTASSERT(node != NULL);
@@ -36,7 +36,7 @@ void node_init(node_t *node, const scan_t *scan, where_t where)
     node->where = where;
 }
 
-USE_DECL
+STA_DECL
 node_t *node_new(const scan_t *scan, where_t where)
 {
     node_t *node = ARENA_MALLOC(sizeof(node_t), "node", scan, scan->nodes);
@@ -45,7 +45,7 @@ node_t *node_new(const scan_t *scan, where_t where)
     return node;
 }
 
-USE_DECL
+STA_DECL
 node_t node_make(const scan_t *scan, where_t where)
 {
     node_t node;
@@ -53,7 +53,7 @@ node_t node_make(const scan_t *scan, where_t where)
     return node;
 }
 
-USE_DECL
+STA_DECL
 const scan_t *node_get_scan(const node_t *node)
 {
     CTASSERT(node != NULL);
@@ -61,7 +61,7 @@ const scan_t *node_get_scan(const node_t *node)
     return node->scan;
 }
 
-USE_DECL
+STA_DECL
 where_t node_get_location(const node_t *node)
 {
     CTASSERT(node != NULL);

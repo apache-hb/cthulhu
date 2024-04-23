@@ -12,7 +12,7 @@ static const char *const kUnaryNames[eUnaryTotal] = {
 #include "cthulhu/tree/tree.inc"
 };
 
-USE_DECL
+STA_DECL
 const char *unary_name(unary_t op)
 {
     CTASSERTF(op < eUnaryTotal, "invalid unary operator: %d", op);
@@ -24,7 +24,7 @@ static const char *const kUnarySymbols[eUnaryTotal] = {
 #include "cthulhu/tree/tree.inc"
 };
 
-USE_DECL
+STA_DECL
 const char *unary_symbol(unary_t op)
 {
     CTASSERTF(op < eUnaryTotal, "invalid unary operator: %d", op);
@@ -36,7 +36,7 @@ static const char *const kBinaryNames[eBinaryTotal] = {
 #include "cthulhu/tree/tree.inc"
 };
 
-USE_DECL
+STA_DECL
 const char *binary_name(binary_t op)
 {
     CTASSERTF(op < eBinaryTotal, "invalid binary operator: %d", op);
@@ -48,7 +48,7 @@ static const char *const kBinarySymbols[eBinaryTotal] = {
 #include "cthulhu/tree/tree.inc"
 };
 
-USE_DECL
+STA_DECL
 const char *binary_symbol(binary_t op)
 {
     CTASSERTF(op < eBinaryTotal, "invalid binary operator: %d", op);
@@ -60,7 +60,7 @@ static const char *const kCompareNames[eCompareTotal] = {
 #include "cthulhu/tree/tree.inc"
 };
 
-USE_DECL
+STA_DECL
 const char *compare_name(compare_t op)
 {
     CTASSERTF(op < eCompareTotal, "invalid compare operator: %d", op);
@@ -72,7 +72,7 @@ static const char *const kCompareSymbols[eCompareTotal] = {
 #include "cthulhu/tree/tree.inc"
 };
 
-USE_DECL
+STA_DECL
 const char *compare_symbol(compare_t op)
 {
     CTASSERTF(op < eCompareTotal, "invalid compare operator: %d", op);
@@ -84,7 +84,7 @@ static const char *const kSignNames[eSignTotal] = {
 #include "cthulhu/tree/tree.inc"
 };
 
-USE_DECL
+STA_DECL
 const char *sign_name(sign_t sign)
 {
     CTASSERTF(sign < eSignTotal, "invalid sign: %d", sign);
@@ -96,7 +96,7 @@ static const char *const kDigitNames[eDigitTotal] = {
 #include "cthulhu/tree/tree.inc"
 };
 
-USE_DECL
+STA_DECL
 const char *digit_name(digit_t digit)
 {
     CTASSERTF(digit < eDigitTotal, "invalid digit: %d", digit);
@@ -116,7 +116,7 @@ const char *digit_name(digit_t digit)
 // #include "cthulhu/tree/tree.inc"
 // );
 
-USE_DECL
+STA_DECL
 const char *quals_name(tree_quals_t quals)
 {
     arena_t *arena = get_global_arena();
@@ -131,7 +131,7 @@ static const char *const kLinkNames[eLinkTotal] = {
 #include "cthulhu/tree/tree.inc"
 };
 
-USE_DECL
+STA_DECL
 const char *link_name(tree_link_t link)
 {
     CTASSERTF(link < eLinkTotal, "invalid link: %d", link);
@@ -143,7 +143,7 @@ static const char *const kVisibilityNames[eVisibileTotal] = {
 #include "cthulhu/tree/tree.inc"
 };
 
-USE_DECL
+STA_DECL
 const char *vis_name(visibility_t vis)
 {
     CTASSERTF(vis < eVisibileTotal, "invalid visibility: %d", vis);

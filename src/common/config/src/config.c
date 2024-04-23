@@ -93,7 +93,7 @@ static void config_init(cfg_group_t *config, arena_t *arena, const cfg_info_t *i
     ARENA_IDENTIFY(config->fields, "fields", config, arena);
 }
 
-USE_DECL
+STA_DECL
 cfg_group_t *config_root(const cfg_info_t *info, arena_t *arena)
 {
     CTASSERT(info != NULL);
@@ -104,7 +104,7 @@ cfg_group_t *config_root(const cfg_info_t *info, arena_t *arena)
     return config;
 }
 
-USE_DECL
+STA_DECL
 cfg_field_t *config_int(cfg_group_t *group, const cfg_info_t *info, cfg_int_t cfg)
 {
     ASSERT_CONFIG_VALID(group, info);
@@ -122,7 +122,7 @@ cfg_field_t *config_int(cfg_group_t *group, const cfg_info_t *info, cfg_int_t cf
     return field;
 }
 
-USE_DECL
+STA_DECL
 cfg_field_t *config_bool(cfg_group_t *group, const cfg_info_t *info, bool initial)
 {
     ASSERT_CONFIG_VALID(group, info);
@@ -134,7 +134,7 @@ cfg_field_t *config_bool(cfg_group_t *group, const cfg_info_t *info, bool initia
     return field;
 }
 
-USE_DECL
+STA_DECL
 cfg_field_t *config_string(cfg_group_t *group, const cfg_info_t *info, const char *initial)
 {
     ASSERT_CONFIG_VALID(group, info);
@@ -146,7 +146,7 @@ cfg_field_t *config_string(cfg_group_t *group, const cfg_info_t *info, const cha
     return field;
 }
 
-USE_DECL
+STA_DECL
 cfg_field_t *config_vector(cfg_group_t *group, const cfg_info_t *info, vector_t *initial)
 {
     ASSERT_CONFIG_VALID(group, info);
@@ -158,7 +158,7 @@ cfg_field_t *config_vector(cfg_group_t *group, const cfg_info_t *info, vector_t 
     return field;
 }
 
-USE_DECL
+STA_DECL
 cfg_field_t *config_enum(cfg_group_t *group, const cfg_info_t *info, cfg_enum_t cfg)
 {
     ASSERT_CONFIG_VALID(group, info);
@@ -171,7 +171,7 @@ cfg_field_t *config_enum(cfg_group_t *group, const cfg_info_t *info, cfg_enum_t 
     return field;
 }
 
-USE_DECL
+STA_DECL
 cfg_field_t *config_flags(cfg_group_t *group, const cfg_info_t *info, cfg_enum_t cfg)
 {
     ASSERT_CONFIG_VALID(group, info);
@@ -184,7 +184,7 @@ cfg_field_t *config_flags(cfg_group_t *group, const cfg_info_t *info, cfg_enum_t
     return field;
 }
 
-USE_DECL
+STA_DECL
 cfg_group_t *config_group(cfg_group_t *group, const cfg_info_t *info)
 {
     CTASSERT(group != NULL);

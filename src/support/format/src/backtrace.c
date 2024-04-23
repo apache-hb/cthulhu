@@ -397,7 +397,7 @@ static void print_collapsed(backtrace_t *pass, size_t index, const collapsed_t *
     }
 }
 
-USE_DECL
+STA_DECL
 void print_backtrace(print_backtrace_t print, bt_report_t *report)
 {
     CTASSERT(report != NULL);
@@ -455,7 +455,7 @@ void print_backtrace(print_backtrace_t print, bt_report_t *report)
     }
 }
 
-USE_DECL
+STA_DECL
 bt_report_t *bt_report_new(arena_t *arena)
 {
     CTASSERT(arena != NULL);
@@ -478,7 +478,7 @@ static void read_stacktrace_frame(bt_address_t frame, void *user)
     bt_report_add(user, frame);
 }
 
-USE_DECL
+STA_DECL
 bt_report_t *bt_report_collect(arena_t *arena)
 {
     bt_report_t *report = bt_report_new(arena);
@@ -488,7 +488,7 @@ bt_report_t *bt_report_collect(arena_t *arena)
     return report;
 }
 
-USE_DECL
+STA_DECL
 void bt_report_add(bt_report_t *report, bt_address_t frame)
 {
     CTASSERT(report != NULL);

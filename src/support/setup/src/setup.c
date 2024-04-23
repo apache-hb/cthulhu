@@ -350,7 +350,7 @@ static setup_init_t setup_version(
     return setup_exit(CT_EXIT_OK);
 }
 
-USE_DECL
+STA_DECL
 setup_init_t setup_parse(int argc, const char **argv, setup_options_t setup)
 {
     CTASSERT(argc > 0);
@@ -415,7 +415,7 @@ setup_init_t setup_parse(int argc, const char **argv, setup_options_t setup)
 
 /// public accessor api
 
-USE_DECL
+STA_DECL
 bool setup_should_exit(const setup_init_t *init)
 {
     CTASSERT(init != NULL);
@@ -423,7 +423,7 @@ bool setup_should_exit(const setup_init_t *init)
     return init->exitcode & SHOULD_EXIT;
 }
 
-USE_DECL
+STA_DECL
 int setup_exit_code(const setup_init_t *init)
 {
     CTASSERT(setup_should_exit(init));
@@ -431,7 +431,7 @@ int setup_exit_code(const setup_init_t *init)
     return init->exitcode & ~SHOULD_EXIT;
 }
 
-USE_DECL
+STA_DECL
 int setup_exit_help(setup_options_t setup, const setup_init_t *init)
 {
     CTASSERT(!setup_should_exit(init));

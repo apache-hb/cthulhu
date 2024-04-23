@@ -115,14 +115,14 @@ static io_t *impl_blob_init(void *buffer, const char *name, size_t size, os_acce
 /// public allocating api
 ///
 
-USE_DECL
+STA_DECL
 io_t *io_memory(const char *name, const void *data, size_t size, os_access_t flags, arena_t *arena)
 {
     void *buffer = ARENA_MALLOC(IO_BUFFER_SIZE, name, NULL, arena);
     return impl_memory_init(buffer, name, data, size, flags, arena);
 }
 
-USE_DECL
+STA_DECL
 io_t *io_blob(const char *name, size_t size, os_access_t flags, arena_t *arena)
 {
     void *buffer = ARENA_MALLOC(IO_BUFFER_SIZE, name, NULL, arena);
@@ -133,13 +133,13 @@ io_t *io_blob(const char *name, size_t size, os_access_t flags, arena_t *arena)
 /// public in place api
 ///
 
-USE_DECL
+STA_DECL
 io_t *io_memory_init(void *buffer, const char *name, const void *data, size_t size, os_access_t flags, arena_t *arena)
 {
     return impl_memory_init(buffer, name, data, size, flags, arena);
 }
 
-USE_DECL
+STA_DECL
 io_t *io_blob_init(void *buffer, const char *name, size_t size, os_access_t flags, arena_t *arena)
 {
     return impl_blob_init(buffer, name, size, flags, arena);

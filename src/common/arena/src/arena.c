@@ -7,7 +7,7 @@
 
 /// these return NULL on failure
 
-USE_DECL
+STA_DECL
 char *arena_opt_strdup(const char *str, arena_t *arena)
 {
     CTASSERT(str != NULL);
@@ -22,7 +22,7 @@ char *arena_opt_strdup(const char *str, arena_t *arena)
     return out;
 }
 
-USE_DECL
+STA_DECL
 char *arena_opt_strndup(const char *str, size_t len, arena_t *arena)
 {
     CTASSERT(str != NULL);
@@ -36,7 +36,7 @@ char *arena_opt_strndup(const char *str, size_t len, arena_t *arena)
     return out;
 }
 
-USE_DECL
+STA_DECL
 void *arena_opt_memdup(const void *ptr, size_t size, arena_t *arena)
 {
     CTASSERT(ptr != NULL);
@@ -49,7 +49,7 @@ void *arena_opt_memdup(const void *ptr, size_t size, arena_t *arena)
     return out;
 }
 
-USE_DECL
+STA_DECL
 void *arena_opt_malloc(size_t size, arena_t *arena)
 {
     CTASSERT(arena != NULL);
@@ -58,7 +58,7 @@ void *arena_opt_malloc(size_t size, arena_t *arena)
     return arena->fn_malloc(size, arena_data(arena));
 }
 
-USE_DECL
+STA_DECL
 void *arena_opt_malloc_info(size_t size, const char *name, const void *parent, arena_t *arena)
 {
     void *ptr = arena_opt_malloc(size, arena);
@@ -77,7 +77,7 @@ void *arena_opt_malloc_info(size_t size, const char *name, const void *parent, a
     return ptr;
 }
 
-USE_DECL
+STA_DECL
 void *arena_opt_realloc(void *ptr, size_t new_size, size_t old_size, arena_t *arena)
 {
     CTASSERT(arena != NULL);
@@ -86,7 +86,7 @@ void *arena_opt_realloc(void *ptr, size_t new_size, size_t old_size, arena_t *ar
     return arena->fn_realloc(ptr, new_size, old_size, arena_data(arena));
 }
 
-USE_DECL
+STA_DECL
 void arena_opt_free(void *ptr, size_t size, arena_t *arena)
 {
     CTASSERT(arena != NULL);
@@ -97,7 +97,7 @@ void arena_opt_free(void *ptr, size_t size, arena_t *arena)
 
 /// strong oom handling
 
-USE_DECL
+STA_DECL
 char *arena_strdup(const char *str, arena_t *arena)
 {
     char *out = arena_opt_strdup(str, arena);
@@ -105,7 +105,7 @@ char *arena_strdup(const char *str, arena_t *arena)
     return out;
 }
 
-USE_DECL
+STA_DECL
 char *arena_strndup(const char *str, size_t len, arena_t *arena)
 {
     char *out = arena_opt_strndup(str, len, arena);
@@ -113,7 +113,7 @@ char *arena_strndup(const char *str, size_t len, arena_t *arena)
     return out;
 }
 
-USE_DECL
+STA_DECL
 void *arena_memdup(const void *ptr, size_t size, arena_t *arena)
 {
     void *out = arena_opt_memdup(ptr, size, arena);
@@ -121,7 +121,7 @@ void *arena_memdup(const void *ptr, size_t size, arena_t *arena)
     return out;
 }
 
-USE_DECL
+STA_DECL
 void *arena_malloc(size_t size, arena_t *arena)
 {
     CTASSERT(size > 0);
@@ -131,7 +131,7 @@ void *arena_malloc(size_t size, arena_t *arena)
     return ptr;
 }
 
-USE_DECL
+STA_DECL
 void *arena_malloc_info(size_t size, const char *name, const void *parent, arena_t *arena)
 {
     CTASSERT(size > 0);
@@ -141,7 +141,7 @@ void *arena_malloc_info(size_t size, const char *name, const void *parent, arena
     return ptr;
 }
 
-USE_DECL
+STA_DECL
 void *arena_realloc(void *ptr, size_t new_size, size_t old_size, arena_t *arena)
 {
     CTASSERT(ptr != NULL);
@@ -153,7 +153,7 @@ void *arena_realloc(void *ptr, size_t new_size, size_t old_size, arena_t *arena)
     return out;
 }
 
-USE_DECL
+STA_DECL
 void arena_free(void *ptr, size_t size, arena_t *arena)
 {
     CTASSERT(ptr != NULL);
@@ -162,7 +162,7 @@ void arena_free(void *ptr, size_t size, arena_t *arena)
     arena_opt_free(ptr, size, arena);
 }
 
-USE_DECL
+STA_DECL
 void arena_rename(const void *ptr, const char *name, arena_t *arena)
 {
     CTASSERT(arena != NULL);
@@ -175,7 +175,7 @@ void arena_rename(const void *ptr, const char *name, arena_t *arena)
     }
 }
 
-USE_DECL
+STA_DECL
 void arena_reparent(const void *ptr, const void *parent, arena_t *arena)
 {
     CTASSERT(arena != NULL);
@@ -188,7 +188,7 @@ void arena_reparent(const void *ptr, const void *parent, arena_t *arena)
     }
 }
 
-USE_DECL
+STA_DECL
 void *arena_data(arena_t *arena)
 {
     CTASSERT(arena != NULL);

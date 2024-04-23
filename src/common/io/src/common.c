@@ -6,7 +6,7 @@
 #include "base/panic.h"
 #include "arena/arena.h"
 
-USE_DECL
+STA_DECL
 void *io_data(io_t *io)
 {
     CTASSERT(io != NULL);
@@ -18,14 +18,14 @@ void *io_data(io_t *io)
     return io->data;
 }
 
-USE_DECL
+STA_DECL
 io_t *io_new(const io_callbacks_t *cb, os_access_t flags, const char *name, const void *data, arena_t *arena)
 {
     void *buffer = ARENA_MALLOC(sizeof(io_t) + cb->size, name, NULL, arena);
     return io_init(buffer, cb, flags, name, data, arena);
 }
 
-USE_DECL
+STA_DECL
 io_t *io_init(void *buffer, const io_callbacks_t *cb, os_access_t flags, const char *name, const void *data, arena_t *arena)
 {
     CTASSERT(buffer != NULL);

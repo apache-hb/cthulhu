@@ -6,13 +6,13 @@
 #include <stdint.h>
 #include <string.h>
 
-USE_DECL
+STA_DECL
 bool is_path_special(const char *path)
 {
     return path == NULL || str_equal(path, ".") || str_equal(path, "..");
 }
 
-USE_DECL
+STA_DECL
 ctu_hash_t ctu_ptrhash(const void *ptr)
 {
     uintptr_t key = (uintptr_t)ptr;
@@ -25,7 +25,7 @@ ctu_hash_t ctu_ptrhash(const void *ptr)
     return key & SIZE_MAX;
 }
 
-USE_DECL
+STA_DECL
 ctu_hash_t str_hash(const char *str)
 {
     CTASSERT(str != NULL);
@@ -40,7 +40,7 @@ ctu_hash_t str_hash(const char *str)
     return hash;
 }
 
-USE_DECL
+STA_DECL
 ctu_hash_t text_hash(text_view_t text)
 {
     CTASSERT(text.text != NULL);
@@ -54,7 +54,7 @@ ctu_hash_t text_hash(text_view_t text)
     return hash;
 }
 
-USE_DECL
+STA_DECL
 bool str_equal(const char *lhs, const char *rhs)
 {
     CTASSERT(lhs != NULL);
@@ -65,7 +65,7 @@ bool str_equal(const char *lhs, const char *rhs)
     return lhs == rhs || strcmp(lhs, rhs) == 0;
 }
 
-USE_DECL
+STA_DECL
 size_t ctu_strlen(const char *str)
 {
     CTASSERT(str != NULL);
@@ -73,7 +73,7 @@ size_t ctu_strlen(const char *str)
     return strlen(str);
 }
 
-USE_DECL
+STA_DECL
 bool ctu_string_empty(const char *str)
 {
     CTASSERT(str != NULL);
@@ -81,7 +81,7 @@ bool ctu_string_empty(const char *str)
     return *str == '\0';
 }
 
-USE_DECL
+STA_DECL
 int ctu_strncmp(const char *lhs, const char *rhs, size_t length)
 {
     CTASSERT(lhs != NULL);
@@ -90,7 +90,7 @@ int ctu_strncmp(const char *lhs, const char *rhs, size_t length)
     return strncmp(lhs, rhs, length);
 }
 
-USE_DECL
+STA_DECL
 int ctu_strcmp(const char *lhs, const char *rhs)
 {
     CTASSERT(lhs != NULL);
@@ -99,7 +99,7 @@ int ctu_strcmp(const char *lhs, const char *rhs)
     return strcmp(lhs, rhs);
 }
 
-USE_DECL
+STA_DECL
 char *ctu_strcpy(char *dst, const char *src, size_t size)
 {
     CTASSERT(dst != NULL);
@@ -108,7 +108,7 @@ char *ctu_strcpy(char *dst, const char *src, size_t size)
     return strncpy(dst, src, size);
 }
 
-USE_DECL CT_NOALIAS
+STA_DECL CT_NOALIAS
 void *ctu_memcpy(void *restrict dst, const void *restrict src, size_t size)
 {
     CTASSERT(dst != NULL);
@@ -117,7 +117,7 @@ void *ctu_memcpy(void *restrict dst, const void *restrict src, size_t size)
     return memcpy(dst, src, size);
 }
 
-USE_DECL
+STA_DECL
 void *ctu_memmove(void *dst, const void *src, size_t size)
 {
     CTASSERT(dst != NULL);
@@ -126,7 +126,7 @@ void *ctu_memmove(void *dst, const void *src, size_t size)
     return memmove(dst, src, size);
 }
 
-USE_DECL CT_NOALIAS
+STA_DECL CT_NOALIAS
 void ctu_memset(void *dst, int value, size_t size)
 {
     CTASSERT(dst != NULL);
@@ -134,7 +134,7 @@ void ctu_memset(void *dst, int value, size_t size)
     memset(dst, value, size);
 }
 
-USE_DECL
+STA_DECL
 char *ctu_strstr(IN_STRING const char *haystack, IN_STRING const char *needle)
 {
     CTASSERT(haystack != NULL);
@@ -143,7 +143,7 @@ char *ctu_strstr(IN_STRING const char *haystack, IN_STRING const char *needle)
     return strstr(haystack, needle);
 }
 
-USE_DECL
+STA_DECL
 text_t text_make(char *text, size_t length)
 {
     CTASSERT(text != NULL);
@@ -153,13 +153,13 @@ text_t text_make(char *text, size_t length)
     return result;
 }
 
-USE_DECL
+STA_DECL
 text_t text_from(char *text)
 {
     return text_make(text, ctu_strlen(text));
 }
 
-USE_DECL
+STA_DECL
 text_view_t text_view_make(const char *text, size_t length)
 {
     CTASSERT(text != NULL);
@@ -169,7 +169,7 @@ text_view_t text_view_make(const char *text, size_t length)
     return result;
 }
 
-USE_DECL
+STA_DECL
 text_view_t text_view_from(const char *text)
 {
     return text_view_make(text, ctu_strlen(text));

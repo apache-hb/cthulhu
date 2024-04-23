@@ -2,7 +2,7 @@
 
 #include "common.h"
 
-USE_DECL
+STA_DECL
 cfg_type_t cfg_get_type(const cfg_field_t *field)
 {
     CTASSERT(field != NULL);
@@ -10,7 +10,7 @@ cfg_type_t cfg_get_type(const cfg_field_t *field)
     return field->type;
 }
 
-USE_DECL
+STA_DECL
 const cfg_info_t *cfg_get_info(const cfg_field_t *field)
 {
     CTASSERT(field != NULL);
@@ -18,7 +18,7 @@ const cfg_info_t *cfg_get_info(const cfg_field_t *field)
     return field->info;
 }
 
-USE_DECL
+STA_DECL
 const cfg_info_t *cfg_group_info(const cfg_group_t *config)
 {
     CTASSERT(config != NULL);
@@ -26,7 +26,7 @@ const cfg_info_t *cfg_group_info(const cfg_group_t *config)
     return config->info;
 }
 
-USE_DECL
+STA_DECL
 typevec_t *cfg_get_groups(const cfg_group_t *config)
 {
     CTASSERT(config != NULL);
@@ -34,7 +34,7 @@ typevec_t *cfg_get_groups(const cfg_group_t *config)
     return config->groups;
 }
 
-USE_DECL
+STA_DECL
 vector_t *cfg_get_fields(const cfg_group_t *config)
 {
     CTASSERT(config != NULL);
@@ -42,7 +42,7 @@ vector_t *cfg_get_fields(const cfg_group_t *config)
     return config->fields;
 }
 
-USE_DECL
+STA_DECL
 const cfg_int_t *cfg_int_info(const cfg_field_t *field)
 {
     ASSERT_FIELD_TYPE(field, eConfigInt);
@@ -50,7 +50,7 @@ const cfg_int_t *cfg_int_info(const cfg_field_t *field)
     return &field->int_config;
 }
 
-USE_DECL
+STA_DECL
 bool cfg_bool_info(const cfg_field_t *field)
 {
     ASSERT_FIELD_TYPE(field, eConfigBool);
@@ -58,7 +58,7 @@ bool cfg_bool_info(const cfg_field_t *field)
     return field->bool_config;
 }
 
-USE_DECL
+STA_DECL
 const char *cfg_string_info(const cfg_field_t *field)
 {
     ASSERT_FIELD_TYPE(field, eConfigString);
@@ -66,7 +66,7 @@ const char *cfg_string_info(const cfg_field_t *field)
     return field->string_config;
 }
 
-USE_DECL
+STA_DECL
 const vector_t *cfg_vector_info(const cfg_field_t *field)
 {
     ASSERT_FIELD_TYPE(field, eConfigVector);
@@ -74,7 +74,7 @@ const vector_t *cfg_vector_info(const cfg_field_t *field)
     return field->vec_config;
 }
 
-USE_DECL
+STA_DECL
 const cfg_enum_t *cfg_enum_info(const cfg_field_t *field)
 {
     ASSERT_FIELD_TYPE(field, eConfigEnum);
@@ -82,7 +82,7 @@ const cfg_enum_t *cfg_enum_info(const cfg_field_t *field)
     return &field->enum_config;
 }
 
-USE_DECL
+STA_DECL
 const cfg_enum_t *cfg_flags_info(const cfg_field_t *field)
 {
     ASSERT_FIELD_TYPE(field, eConfigFlags);
@@ -95,7 +95,7 @@ static const char *const kConfigTypeNames[eConfigCount] = {
 #include "config/config.inc"
 };
 
-USE_DECL
+STA_DECL
 const char *cfg_type_string(cfg_type_t type)
 {
     CT_ASSERT_RANGE(type, 0, eConfigCount - 1);
@@ -108,7 +108,7 @@ static const char *const kConfigArgNames[eArgCount] = {
 #include "config/config.inc"
 };
 
-USE_DECL
+STA_DECL
 const char *cfg_arg_string(arg_style_t style)
 {
     CT_ASSERT_RANGE(style, 0, eArgCount - 1);
@@ -121,7 +121,7 @@ static const char *const kConfigArgPrefixes[eArgCount] = {
 #include "config/config.inc"
 };
 
-USE_DECL
+STA_DECL
 const char *cfg_arg_prefix(arg_style_t style)
 {
     CT_ASSERT_RANGE(style, 0, eArgCount - 1);
@@ -131,7 +131,7 @@ const char *cfg_arg_prefix(arg_style_t style)
 
 /// access
 
-USE_DECL
+STA_DECL
 int cfg_int_value(const cfg_field_t *field)
 {
     ASSERT_FIELD_TYPE(field, eConfigInt);
@@ -139,7 +139,7 @@ int cfg_int_value(const cfg_field_t *field)
     return field->int_value;
 }
 
-USE_DECL
+STA_DECL
 bool cfg_bool_value(const cfg_field_t *field)
 {
     ASSERT_FIELD_TYPE(field, eConfigBool);
@@ -147,7 +147,7 @@ bool cfg_bool_value(const cfg_field_t *field)
     return field->bool_value;
 }
 
-USE_DECL
+STA_DECL
 const char *cfg_string_value(const cfg_field_t *field)
 {
     ASSERT_FIELD_TYPE(field, eConfigString);
@@ -155,7 +155,7 @@ const char *cfg_string_value(const cfg_field_t *field)
     return field->string_value;
 }
 
-USE_DECL
+STA_DECL
 vector_t *cfg_vector_value(const cfg_field_t *field)
 {
     ASSERT_FIELD_TYPE(field, eConfigVector);
@@ -163,7 +163,7 @@ vector_t *cfg_vector_value(const cfg_field_t *field)
     return field->vec_value;
 }
 
-USE_DECL
+STA_DECL
 size_t cfg_enum_value(const cfg_field_t *field)
 {
     ASSERT_FIELD_TYPE(field, eConfigEnum);
@@ -171,7 +171,7 @@ size_t cfg_enum_value(const cfg_field_t *field)
     return field->enum_value;
 }
 
-USE_DECL
+STA_DECL
 size_t cfg_flags_value(const cfg_field_t *field)
 {
     ASSERT_FIELD_TYPE(field, eConfigFlags);

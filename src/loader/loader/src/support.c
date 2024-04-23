@@ -109,7 +109,7 @@ static void add_loaded_module(support_t *support, loaded_module_t mod)
     }
 }
 
-USE_DECL
+STA_DECL
 support_t *support_new(broker_t *broker, loader_t *loader, arena_t *arena)
 {
     CTASSERT(broker != NULL);
@@ -135,7 +135,7 @@ support_t *support_new(broker_t *broker, loader_t *loader, arena_t *arena)
     return support;
 }
 
-USE_DECL
+STA_DECL
 void support_load_default_modules(support_t *support)
 {
     CTASSERT(support != NULL);
@@ -149,7 +149,7 @@ void support_load_default_modules(support_t *support)
     }
 }
 
-USE_DECL
+STA_DECL
 bool support_load_module(support_t *support, module_type_t mask, const char *name, loaded_module_t *out)
 {
     CTASSERT(support != NULL);
@@ -164,7 +164,7 @@ bool support_load_module(support_t *support, module_type_t mask, const char *nam
     return mod.type != eModNone;
 }
 
-USE_DECL
+STA_DECL
 typevec_t *support_get_modules(support_t *support)
 {
     CTASSERT(support != NULL);
@@ -172,7 +172,7 @@ typevec_t *support_get_modules(support_t *support)
     return support->modules;
 }
 
-USE_DECL
+STA_DECL
 language_runtime_t *support_get_lang(support_t *support, const char *ext)
 {
     CTASSERT(support != NULL);
@@ -180,7 +180,7 @@ language_runtime_t *support_get_lang(support_t *support, const char *ext)
     return map_get(support->extmap, ext);
 }
 
-USE_DECL
+STA_DECL
 plugin_runtime_t *support_get_plugin(support_t *support, const char *name)
 {
     CTASSERT(support != NULL);
@@ -188,7 +188,7 @@ plugin_runtime_t *support_get_plugin(support_t *support, const char *name)
     return map_get(support->extmap, name);
 }
 
-USE_DECL
+STA_DECL
 target_runtime_t *support_get_target(support_t *support, const char *name)
 {
     CTASSERT(support != NULL);

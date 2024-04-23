@@ -412,7 +412,7 @@ static bool set_has_option(set_t *set, const diagnostic_t *diag)
     return set_contains(set, diag);
 }
 
-USE_DECL
+STA_DECL
 int text_report(typevec_t *events, report_config_t config, const char *title)
 {
     CTASSERT(events != NULL);
