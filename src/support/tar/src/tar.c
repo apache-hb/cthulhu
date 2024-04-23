@@ -113,7 +113,7 @@ static tar_error_t write_tar_file(const char *dir, const char *name, tar_context
         str_sprintf(header.name, sizeof(header.name), "%s/%s", dir, name);
 
     io_t *src = fs_open(ctx->fs, header.name, eOsAccessRead);
-    io_error_t err = io_error(src);
+    os_error_t err = io_error(src);
     CTASSERTF(err == 0, "failed to open file `%s` (%s)", header.name, os_error_string(err, ctx->arena));
 
     tar_error_t ret = ctx->error;

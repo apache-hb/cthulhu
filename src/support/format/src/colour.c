@@ -35,6 +35,7 @@ const colour_pallete_t kColourDefault = {
     .reset = CT_ANSI_RESET
 };
 
+USE_DECL
 const char *colour_get(const colour_pallete_t *colours, colour_t idx)
 {
     CTASSERT(colours != NULL);
@@ -43,6 +44,7 @@ const char *colour_get(const colour_pallete_t *colours, colour_t idx)
     return colours->colours[idx];
 }
 
+USE_DECL
 const char *colour_reset(const colour_pallete_t *colours)
 {
     CTASSERT(colours != NULL);
@@ -50,6 +52,7 @@ const char *colour_reset(const colour_pallete_t *colours)
     return colours->reset;
 }
 
+USE_DECL
 char *colour_text(format_context_t context, colour_t idx, const char *text)
 {
     const char *colour = colour_get(context.pallete, idx);
@@ -58,6 +61,7 @@ char *colour_text(format_context_t context, colour_t idx, const char *text)
     return str_format(context.arena, "%s%s%s", colour, text, reset);
 }
 
+USE_DECL
 char *colour_format(format_context_t context, colour_t idx, const char *fmt, ...)
 {
     va_list args;
@@ -68,6 +72,7 @@ char *colour_format(format_context_t context, colour_t idx, const char *fmt, ...
     return msg;
 }
 
+USE_DECL
 char *colour_vformat(format_context_t context, colour_t idx, const char *fmt, va_list args)
 {
     const char *colour = colour_get(context.pallete, idx);

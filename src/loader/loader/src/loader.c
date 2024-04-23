@@ -32,7 +32,6 @@ loaded_module_t load_error(load_error_t error, os_error_t os)
     return mod;
 }
 
-USE_DECL
 loader_config_t loader_config(void)
 {
     return kConfig;
@@ -59,6 +58,7 @@ typevec_t *load_default_modules(loader_t *loader)
 
     typevec_t *vec = typevec_new(sizeof(loaded_module_t), CT_LANG_COUNT + CT_PLUGIN_COUNT + CT_TARGET_COUNT, loader->arena);
 
+#if CT_LANG_COUNT > 0
     for (size_t i = 0; i < CT_LANG_COUNT; i++)
     {
         const language_t *lang = mods.langs[i];
@@ -68,7 +68,9 @@ typevec_t *load_default_modules(loader_t *loader)
         };
         typevec_push(vec, &mod);
     }
+#endif
 
+#if CT_PLUGIN_COUNT > 0
     for (size_t i = 0; i < CT_PLUGIN_COUNT; i++)
     {
         const plugin_t *plugin = mods.plugins[i];
@@ -78,7 +80,9 @@ typevec_t *load_default_modules(loader_t *loader)
         };
         typevec_push(vec, &mod);
     }
+#endif
 
+#if CT_TARGET_COUNT > 0
     for (size_t i = 0; i < CT_TARGET_COUNT; i++)
     {
         const target_t *target = mods.targets[i];
@@ -88,6 +92,7 @@ typevec_t *load_default_modules(loader_t *loader)
         };
         typevec_push(vec, &mod);
     }
+#endif
 
     return vec;
 #else

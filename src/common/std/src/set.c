@@ -47,6 +47,7 @@ static void clear_items(set_t *set)
     }
 }
 
+USE_DECL
 set_t *set_new(size_t size, hash_info_t info, arena_t *arena)
 {
     CTASSERT(size > 0);
@@ -80,6 +81,7 @@ static bool impl_keys_equal(const set_t *set, const void *lhs, const void *rhs)
     return info.equals(lhs, rhs);
 }
 
+USE_DECL
 const void *set_add(set_t *set, const void *key)
 {
     item_t *item = impl_get_bucket(set, key);
@@ -112,6 +114,7 @@ const void *set_add(set_t *set, const void *key)
     CT_NEVER("unreachable");
 }
 
+USE_DECL
 bool set_contains(const set_t *set, const void *key)
 {
     item_t *item = impl_get_bucket((set_t*)set, key);
@@ -141,6 +144,7 @@ bool set_contains(const set_t *set, const void *key)
     CT_NEVER("unreachable");
 }
 
+USE_DECL
 void set_delete(set_t *set, const void *key)
 {
     item_t *item = impl_get_bucket(set, key);

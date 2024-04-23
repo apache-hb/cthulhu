@@ -863,8 +863,12 @@ ssa_map_sizes_t predict_maps(vector_t *mods)
     return sizes;
 }
 
+USE_DECL
 ssa_result_t ssa_compile(vector_t *mods, arena_t *arena)
 {
+    CTASSERT(mods != NULL);
+    CTASSERT(arena != NULL);
+
     ssa_map_sizes_t sizes = predict_maps(mods);
 
     ssa_compile_t ssa = {
@@ -971,32 +975,41 @@ ssa_result_t ssa_compile(vector_t *mods, arena_t *arena)
     return result;
 }
 
+static const char *const kTypeNameTable[eTypeCount] = {
+#define SSA_KIND(ID, NAME) [ID] = (NAME),
+#include "cthulhu/ssa/ssa.inc"
+};
+
+static const char *const kOperandNameTable[eOperandCount] = {
+#define SSA_OPERAND(ID, NAME) [ID] = (NAME),
+#include "cthulhu/ssa/ssa.inc"
+};
+
+static const char *const kOpCodeNameTable[eOpCount] = {
+#define SSA_OPCODE(ID, NAME) [ID] = (NAME),
+#include "cthulhu/ssa/ssa.inc"
+};
+
+USE_DECL
 const char *ssa_type_name(ssa_kind_t kind)
 {
-    switch (kind)
-    {
-#define SSA_KIND(ID, NAME) case ID: return NAME;
-#include "cthulhu/ssa/ssa.inc"
-    default: CT_NEVER("unhandled ssa kind %d", kind);
-    }
+    CT_ASSERT_RANGE(kind, 0, eTypeCount - 1);
+
+    return kTypeNameTable[kind];
 }
 
+USE_DECL
 const char *ssa_opkind_name(ssa_opkind_t kind)
 {
-    switch (kind)
-    {
-#define SSA_OPKIND(ID, NAME) case ID: return NAME;
-#include "cthulhu/ssa/ssa.inc"
-    default: CT_NEVER("unhandled ssa opkind %d", kind);
-    }
+    CT_ASSERT_RANGE(kind, 0, eOpCount - 1);
+
+    return kOperandNameTable[kind];
 }
 
+USE_DECL
 const char *ssa_opcode_name(ssa_opcode_t opcode)
 {
-    switch (opcode)
-    {
-#define SSA_OPCODE(ID, NAME) case ID: return NAME;
-#include "cthulhu/ssa/ssa.inc"
-    default: CT_NEVER("unhandled ssa opcode %d", opcode);
-    }
+    CT_ASSERT_RANGE(opcode, 0, eOpCount - 1);
+
+    return kOpCodeNameTable[opcode];
 }

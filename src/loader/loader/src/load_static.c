@@ -19,6 +19,7 @@ loaded_module_t load_static_module(loader_t *loader, module_type_t mask, const c
 
     loaded_module_t mod = { .type = eModNone };
 
+#if CT_LANG_COUNT > 0
     if (mask & eModLanguage)
     {
         for (size_t i = 0; i < CT_LANG_COUNT; i++)
@@ -40,7 +41,9 @@ loaded_module_t load_static_module(loader_t *loader, module_type_t mask, const c
             mod.lang = lang;
         }
     }
+#endif
 
+#if CT_PLUGIN_COUNT > 0
     if (mask & eModPlugin)
     {
         for (size_t i = 0; i < CT_PLUGIN_COUNT; i++)
@@ -62,7 +65,9 @@ loaded_module_t load_static_module(loader_t *loader, module_type_t mask, const c
             mod.plugin = plugin;
         }
     }
+#endif
 
+#if CT_TARGET_COUNT > 0
     if (mask & eModTarget)
     {
         for (size_t i = 0; i < CT_TARGET_COUNT; i++)
@@ -83,6 +88,7 @@ loaded_module_t load_static_module(loader_t *loader, module_type_t mask, const c
             mod.target = target;
         }
     }
+#endif
 
     return mod;
 }

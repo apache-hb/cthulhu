@@ -118,7 +118,7 @@ typedef struct arena_t
 /// @param size the size of the allocation
 CT_ARENA_API void arena_free(
     OUT_PTR_INVALID void *ptr,
-    IN_DOMAIN(!=, 0) size_t size,
+    IN_DOMAIN(>, 0) size_t size,
     IN_NOTNULL arena_t *arena);
 
 /// @brief allocate memory from a custom allocator
@@ -132,7 +132,7 @@ CT_ARENA_API void arena_free(
 CT_NODISCARD CT_ALLOC(arena_free) CT_ALLOC_SIZE(1)
 RET_NOTNULL
 CT_ARENA_API void *arena_malloc(
-    IN_DOMAIN(!=, 0) size_t size,
+    IN_DOMAIN(>, 0) size_t size,
     IN_NOTNULL arena_t *arena);
 
 /// @brief allocate memory from a custom allocator
@@ -149,7 +149,7 @@ CT_ARENA_API void *arena_malloc(
 CT_NODISCARD CT_ALLOC(arena_free) CT_ALLOC_SIZE(1)
 RET_NOTNULL
 CT_ARENA_API void *arena_malloc_info(
-    IN_DOMAIN(!=, 0) size_t size,
+    IN_DOMAIN(>, 0) size_t size,
     const char *name,
     const void *parent,
     IN_NOTNULL arena_t *arena);
@@ -170,8 +170,8 @@ CT_NODISCARD CT_ALLOC(arena_free) CT_ALLOC_SIZE(2)
 RET_NOTNULL
 CT_ARENA_API void *arena_realloc(
     OUT_PTR_INVALID void *ptr,
-    IN_DOMAIN(!=, 0) size_t new_size,
-    IN_DOMAIN(!=, 0) size_t old_size,
+    IN_DOMAIN(>, 0) size_t new_size,
+    IN_DOMAIN(>, 0) size_t old_size,
     IN_NOTNULL arena_t *arena);
 
 /// @brief allocate a copy of a string from a custom allocator
@@ -201,7 +201,7 @@ CT_NODISCARD CT_ALLOC(arena_free)
 RET_NOTNULL
 CT_ARENA_API char *arena_strndup(
     IN_READS(len) const char *str,
-    IN_DOMAIN(>, 0) size_t len,
+    size_t len,
     IN_NOTNULL arena_t *arena);
 
 /// @brief duplicate a memory region from a custom allocator
@@ -237,7 +237,7 @@ CT_ARENA_API void *arena_memdup(
 /// @param size the size of the allocation
 CT_ARENA_API void arena_opt_free(
     OUT_PTR_INVALID void *ptr,
-    IN_DOMAIN(!=, 0) size_t size,
+    IN_DOMAIN(>, 0) size_t size,
     IN_NOTNULL arena_t *arena);
 
 /// @brief allocate memory from a custom allocator
@@ -249,7 +249,7 @@ CT_ARENA_API void arena_opt_free(
 /// @return the allocated pointer
 CT_NODISCARD CT_ALLOC(arena_opt_free) CT_ALLOC_SIZE(1)
 CT_ARENA_API void *arena_opt_malloc(
-    IN_DOMAIN(!=, 0) size_t size,
+    IN_DOMAIN(>, 0) size_t size,
     IN_NOTNULL arena_t *arena);
 
 /// @brief allocate memory from a custom allocator
@@ -264,7 +264,7 @@ CT_ARENA_API void *arena_opt_malloc(
 /// @return the allocated pointer
 CT_NODISCARD CT_ALLOC(arena_opt_free) CT_ALLOC_SIZE(1)
 CT_ARENA_API void *arena_opt_malloc_info(
-    IN_DOMAIN(!=, 0) size_t size,
+    IN_DOMAIN(>, 0) size_t size,
     const char *name,
     const void *parent,
     IN_NOTNULL arena_t *arena);
@@ -281,8 +281,8 @@ CT_ARENA_API void *arena_opt_malloc_info(
 CT_NODISCARD CT_ALLOC(arena_opt_free)
 CT_ARENA_API void *arena_opt_realloc(
     OUT_PTR_INVALID void *ptr,
-    IN_DOMAIN(!=, 0) size_t new_size,
-    IN_DOMAIN(!=, 0) size_t old_size,
+    IN_DOMAIN(>, 0) size_t new_size,
+    IN_DOMAIN(>, 0) size_t old_size,
     IN_NOTNULL arena_t *arena);
 
 /// @brief allocate a copy of a string from a custom allocator

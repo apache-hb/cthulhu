@@ -22,7 +22,7 @@ int main(void)
         io_t *io = io_string("test", "test text", arena);
         GROUP_EXPECT_PASS(group, "io_string() should return a valid io_t pointer", io != NULL);
         GROUP_EXPECT_PASS(group, "io_string() should have no error", io_error(io) == eOsSuccess);
-        io_error_t err = io_free(io);
+        os_error_t err = io_free(io);
         GROUP_EXPECT_PASS(group, "io_free() should have no error", err == eOsSuccess);
     }
 
@@ -33,7 +33,7 @@ int main(void)
         io_t *io = io_blob_init(buffer, "test", 1024, eOsAccessRead | eOsAccessWrite, arena);
         GROUP_EXPECT_PASS(group, "io_blob_init() should return a valid io_t pointer", io != NULL);
         GROUP_EXPECT_PASS(group, "io_blob_init() should have no error", io_error(io) == eOsSuccess);
-        io_error_t err = io_close(io);
+        os_error_t err = io_close(io);
         GROUP_EXPECT_PASS(group, "io_close() should have no error", err == eOsSuccess);
     }
 

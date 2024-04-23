@@ -126,7 +126,7 @@ int main(int argc, const char **argv)
     io_t *con = io_stdout();
 
     io_t *io = io_file(input, eOsAccessRead, arena);
-    io_error_t error = io_error(io);
+    os_error_t error = io_error(io);
     if (error != eOsSuccess)
     {
         io_printf(err, "failed to open file %s: %s\n", input, os_error_string(error, arena));

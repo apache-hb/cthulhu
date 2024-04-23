@@ -9,6 +9,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <limits.h>
 
 CT_BEGIN_API
 

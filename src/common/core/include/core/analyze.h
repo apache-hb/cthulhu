@@ -25,6 +25,7 @@
 #      define CT_NODISCARD _Check_return_
 #   endif
 #   define IN_READS(expr) _In_reads_(expr)
+#   define IN_READS_OPT(expr) _In_reads_opt_(expr)
 #   define OUT_WRITES(expr) _Out_writes_(expr)
 #   define OUT_PTR_INVALID _Post_ptr_invalid_
 
@@ -33,10 +34,16 @@
 #   define RET_STRING _Ret_z_
 #   define RET_INSPECT _Must_inspect_result_
 
+#   define STA_NORETURN _Analysis_noreturn_
+#   define STA_SUCCESS(expr) _Success_(expr)
+#   define STA_SUCCESS_TYPE(expr) _Return_type_success_(expr)
+#   define STA_LAST_ERROR _Post_equals_last_error_
+
 #   define FIELD_SIZE(of) _Field_size_(of)
 #   define FIELD_STRING _Field_z_
 #   define FIELD_RANGE(lo, hi) _Field_range_(lo, hi)
 
+#   define STA_NOTNULL _Notnull_
 #   define IN_NOTNULL _In_
 #   define IN_STRING _In_z_
 #   define IN_DOMAIN(cmp, it) _In_range_(cmp, it)
@@ -50,6 +57,7 @@
 #   define CT_FMT_STRING
 #   define USE_DECL
 #   define IN_READS(expr)
+#   define IN_READS_OPT(expr)
 #   define OUT_WRITES(expr)
 #   define OUT_PTR_INVALID
 
@@ -57,9 +65,15 @@
 #   define RET_STRING
 #   define RET_INSPECT
 
+#   define STA_NORETURN
+#   define STA_SUCCESS(expr)
+#   define STA_SUCCESS_TYPE(expr)
+#   define STA_LAST_ERROR
+
 #   define FIELD_STRING
 #   define FIELD_RANGE(lo, hi)
 
+#   define STA_NOTNULL
 #   define IN_STRING
 #   define IN_DOMAIN(cmp, it)
 
@@ -78,6 +92,14 @@
 
 #ifndef IN_RANGE
 #   define IN_RANGE(lo, hi) IN_DOMAIN(>=, lo) IN_DOMAIN(<=, hi)
+#endif
+
+#define CT_NORETURN STA_NORETURN CT_NORETURN_IMPL
+
+#ifdef _PREFAST_
+#   define CT_STA_PRESENT 1
+#else
+#   define CT_STA_PRESENT 0
 #endif
 
 /// @def CT_PRINTF(a, b)

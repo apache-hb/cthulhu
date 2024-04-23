@@ -97,13 +97,13 @@
 #endif
 
 #if defined(__GNUC__)
-#   define CT_NORETURN __attribute__((noreturn)) void
-#elif CT_HAS_ATTRIBUTE(noreturn)
-#   define CT_NORETURN [[noreturn]] void
+#   define CT_NORETURN_IMPL __attribute__((noreturn)) void
 #elif defined(_MSC_VER)
-#   define CT_NORETURN __declspec(noreturn) void
+#   define CT_NORETURN_IMPL __declspec(noreturn) void
+#elif CT_HAS_ATTRIBUTE(noreturn)
+#   define CT_NORETURN_IMPL [[noreturn]] void
 #else
-#   define CT_NORETURN _Noreturn void
+#   define CT_NORETURN_IMPL _Noreturn void
 #endif
 
 #ifdef CT_OS_WINDOWS

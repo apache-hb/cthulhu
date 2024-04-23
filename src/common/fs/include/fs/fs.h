@@ -124,7 +124,7 @@ typedef struct sync_result_t
 ///
 /// @param dst the destination filesystem
 /// @param src the source filesystem
-CT_FS_API sync_result_t fs_sync(fs_t *dst, fs_t *src);
+CT_FS_API sync_result_t fs_sync(IN_NOTNULL fs_t *dst, IN_NOTNULL fs_t *src);
 
 /// @brief get the type of an inode
 ///
@@ -171,13 +171,13 @@ CT_FS_API fs_inode_t *fs_root_inode(IN_NOTNULL fs_t *fs);
 /// @brief begin iterating over a directory
 ///
 /// @param fs the filesystem to iterate
-/// @param path the path to the directory
+/// @param node the path to the directory
 /// @param iter the iterator to create
 ///
 /// @return eOsSuccess on success, an error code otherwise
 CT_FS_API os_error_t fs_iter_begin(
     IN_NOTNULL fs_t *fs,
-    IN_STRING const fs_inode_t *path,
+    IN_NOTNULL const fs_inode_t *node,
     OUT_NOTNULL fs_iter_t **iter);
 
 /// @brief end an iteration

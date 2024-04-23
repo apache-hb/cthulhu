@@ -77,7 +77,7 @@ static void print_dirent(fs_t *fs, const fs_inode_t *inode, const char *dir)
     CTASSERTF(fs_file_exists(fs, path), "file `%s` does not exist", path);
 
     io_t *io = fs_open(fs, path, eOsAccessRead);
-    io_error_t err = io_error(io);
+    os_error_t err = io_error(io);
     CTASSERTF(err == 0, "failed to open file `%s` (%s)", path, os_error_string(err, arena));
 
     size_t size = io_size(io);
@@ -96,7 +96,7 @@ int main(int argc, const char **argv)
 
     const char *input = argv[1];
     io_t *io = io_file(input, eOsAccessRead, arena);
-    io_error_t err = io_error(io);
+    os_error_t err = io_error(io);
     CTASSERTF(err == 0, "failed to open file `%s` (%s)", input, os_error_string(err, arena));
 
     io_t *con = io_stdout();

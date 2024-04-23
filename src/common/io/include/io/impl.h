@@ -124,7 +124,7 @@ typedef struct io_t
     const io_callbacks_t *cb;
 
     /// @brief the last error set on this object
-    io_error_t error;
+    os_error_t error;
 
     /// @brief the access flags for this object
     os_access_t flags;
@@ -165,7 +165,7 @@ CT_IO_API io_t *io_new(
     IN_NOTNULL const io_callbacks_t *cb,
     os_access_t flags,
     IN_STRING const char *name,
-    IN_READS(size) const void *data,
+    IN_READS(cb->size) const void *data,
     IN_NOTNULL arena_t *arena);
 
 /// @brief initialize an IO object for a given interface
@@ -189,7 +189,7 @@ CT_IO_API io_t *io_init(
     IN_NOTNULL const io_callbacks_t *cb,
     os_access_t flags,
     IN_STRING const char *name,
-    IN_READS(size) const void *data,
+    IN_READS(cb->size) const void *data,
     arena_t *arena);
 
 /// @}

@@ -18,14 +18,14 @@ static void *get_element_offset(const typevec_t *vec, size_t index)
 {
     CTASSERT(vec != NULL);
 
-    return ((char*)vec->data) + (index * vec->type_size);
+    return ((char*)vec->data) + (index * vec->width);
 }
 
 static void copy_elements(const typevec_t *vec, void *dst, const void *src, size_t count)
 {
     CTASSERT(vec != NULL);
 
-    ctu_memcpy(dst, src, vec->type_size * count);
+    ctu_memcpy(dst, src, vec->width * count);
 }
 
 static void typevec_ensure(typevec_t *vec, size_t extra)
@@ -36,63 +36,63 @@ static void typevec_ensure(typevec_t *vec, size_t extra)
     {
         size_t new_size = CT_MAX(vec->size * 2, vec->used + extra);
 
-        vec->data = arena_realloc(vec->data, new_size * vec->type_size, vec->size * vec->type_size, vec->arena);
+        vec->data = arena_realloc(vec->data, new_size * vec->width, vec->size * vec->width, vec->arena);
 
         vec->size = new_size;
     }
 }
 
-static typevec_t *typevec_create(size_t type_size, size_t len, arena_t *arena)
+static typevec_t *typevec_create(size_t width, size_t len, arena_t *arena)
 {
     typevec_t *vec = ARENA_MALLOC(sizeof(typevec_t), "typevec", NULL, arena);
-    typevec_init(vec, type_size, len, arena);
+    typevec_init(vec, width, len, arena);
     return vec;
 }
 
 USE_DECL
-void typevec_init(typevec_t *vec, size_t type_size, size_t len, arena_t *arena)
+void typevec_init(typevec_t *vec, size_t width, size_t len, arena_t *arena)
 {
     CTASSERT(vec != NULL);
     CTASSERT(arena != NULL);
-    CTASSERT(type_size > 0);
+    CTASSERT(width > 0);
 
     size_t size = CT_MAX(len, 1);
 
     vec->arena = arena;
     vec->size = size;
     vec->used = 0;
-    vec->type_size = type_size;
-    vec->data = ARENA_MALLOC(type_size * (size + 1), "data", vec, arena);
+    vec->width = width;
+    vec->data = ARENA_MALLOC(width * (size + 1), "data", vec, arena);
 }
 
 USE_DECL
-typevec_t typevec_make(size_t type_size, size_t len, arena_t *arena)
+typevec_t typevec_make(size_t width, size_t len, arena_t *arena)
 {
     typevec_t vec = { 0 };
-    typevec_init(&vec, type_size, len, arena);
+    typevec_init(&vec, width, len, arena);
     return vec;
 }
 
 USE_DECL
-typevec_t *typevec_new(size_t type_size, size_t len, arena_t *arena)
+typevec_t *typevec_new(size_t width, size_t len, arena_t *arena)
 {
-    return typevec_create(type_size, len, arena);
+    return typevec_create(width, len, arena);
 }
 
 USE_DECL
-typevec_t *typevec_of(size_t type_size, size_t len, arena_t *arena)
+typevec_t *typevec_of(size_t width, size_t len, arena_t *arena)
 {
-    typevec_t *self = typevec_create(type_size, len, arena);
+    typevec_t *self = typevec_create(width, len, arena);
     self->used = len;
     return self;
 }
 
 USE_DECL
-typevec_t *typevec_of_array(size_t type_size, const void *src, size_t count, arena_t *arena)
+typevec_t *typevec_of_array(size_t width, const void *src, size_t count, arena_t *arena)
 {
     CTASSERT(src != NULL);
 
-    typevec_t *self = typevec_create(type_size, count, arena);
+    typevec_t *self = typevec_create(width, count, arena);
     self->used = count;
 
     copy_elements(self, self->data, src, count);
@@ -108,7 +108,7 @@ typevec_t *typevec_slice(const typevec_t *vec, size_t start, size_t end)
     CTASSERTF(end <= typevec_len(vec), "end %zu out of bounds %zu", end, typevec_len(vec));
 
     size_t len = end - start;
-    typevec_t *self = typevec_create(vec->type_size, len, vec->arena);
+    typevec_t *self = typevec_create(vec->width, len, vec->arena);
     self->used = len;
 
     copy_elements(self, self->data, typevec_offset(vec, start), len);
@@ -174,7 +174,7 @@ void typevec_append(typevec_t *vec, const void *src, size_t len)
     typevec_ensure(vec, len);
 
     void *dst = get_element_offset(vec, vec->used);
-    ctu_memcpy(dst, src, vec->type_size * len);
+    ctu_memcpy(dst, src, vec->width * len);
     vec->used += len;
 }
 
@@ -192,7 +192,7 @@ void *typevec_offset(const typevec_t *vec, size_t index)
 {
     CTASSERTF(index < typevec_len(vec), "index %zu out of bounds %zu", index, typevec_len(vec));
 
-    return ((char*)vec->data) + (index * vec->type_size);
+    return ((char*)vec->data) + (index * vec->width);
 }
 
 USE_DECL
@@ -210,7 +210,7 @@ void typevec_sort(IN_NOTNULL typevec_t *vec, int (*cmp)(const void *, const void
 
     // TODO: we cant do this, some platforms dont have qsort
 
-    qsort(vec->data, vec->used, vec->type_size, cmp);
+    qsort(vec->data, vec->used, vec->width, cmp);
 }
 
 USE_DECL

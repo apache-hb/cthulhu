@@ -9,7 +9,7 @@
 USE_DECL
 os_error_t os_file_delete(const char *path)
 {
-    bool result = DeleteFileA(path);
+    BOOL result = DeleteFileA(path);
 
     if (!result)
     {
@@ -24,7 +24,7 @@ os_error_t os_dir_create(const char *path)
 {
     CTASSERT(path != NULL);
 
-    bool result = CreateDirectoryA(path, NULL);
+    BOOL result = CreateDirectoryA(path, NULL);
     if (!result)
     {
         DWORD error = GetLastError();
@@ -42,7 +42,7 @@ os_error_t os_dir_create(const char *path)
 USE_DECL
 os_error_t os_dir_delete(const char *path)
 {
-    bool result = RemoveDirectoryA(path);
+    BOOL result = RemoveDirectoryA(path);
     if (!result)
     {
         return GetLastError();

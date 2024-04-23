@@ -15,6 +15,7 @@ CT_BEGIN_API
 ///
 
 // get the last error
+RET_INSPECT STA_LAST_ERROR
 CT_LOCAL os_error_t impl_last_error(void);
 
 // get the max length of a name or path

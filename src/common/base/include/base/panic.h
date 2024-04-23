@@ -50,7 +50,7 @@ CT_BASE_API extern panic_handler_t gPanicHandler;
 /// @param location the source location of the panic
 /// @param msg the message to panic with
 /// @param ... the arguments to format
-CT_NORETURN CT_BASE_API ctu_panic(source_info_t location, CT_FMT_STRING const char *msg, ...)
+CT_BASE_API CT_NORETURN ctu_panic(source_info_t location, CT_FMT_STRING const char *msg, ...)
     CT_PRINTF(2, 3);
 
 /// @brief panic with a message, file, and line
@@ -58,7 +58,7 @@ CT_NORETURN CT_BASE_API ctu_panic(source_info_t location, CT_FMT_STRING const ch
 /// @param location the source location of the panic
 /// @param msg the message to panic with
 /// @param args the arguments to format
-CT_NORETURN CT_BASE_API ctu_vpanic(source_info_t location, CT_FMT_STRING const char *msg,
+CT_BASE_API CT_NORETURN ctu_vpanic(source_info_t location, CT_FMT_STRING const char *msg,
                                    va_list args);
 
 #define CT_PANIC_INNER(...)                         \

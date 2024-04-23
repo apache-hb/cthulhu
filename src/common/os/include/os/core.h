@@ -2,11 +2,13 @@
 
 #pragma once
 
-#include <ctu_config.h>
 #include <ctu_os_api.h>
 
 #include "core/analyze.h"
-#include "core/compiler.h"
+
+#if CT_STA_PRESENT
+#   include "os/impl/impl.h"
+#endif
 
 #include <stddef.h>
 
@@ -59,7 +61,7 @@ typedef enum os_dirent_t
 } os_dirent_t;
 
 /// @brief error code
-typedef size_t os_error_t;
+typedef STA_SUCCESS_TYPE(return == eOsSuccess) size_t os_error_t;
 
 /// @brief program exit code
 typedef int os_exitcode_t;

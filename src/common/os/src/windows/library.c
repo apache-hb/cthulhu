@@ -9,7 +9,7 @@ os_library_impl_t impl_library_open(const char *path)
 
 bool impl_library_close(os_library_impl_t lib)
 {
-    return FreeLibrary(lib);
+    return FreeLibrary(lib) != 0;
 }
 
 void *impl_library_symbol(os_library_impl_t lib, const char *name)

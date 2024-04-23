@@ -40,7 +40,7 @@ static void ex_compile_symbols(language_runtime_t *context, compile_unit_t *unit
 
 static const char * const kLangNames[] = CT_LANG_EXTS("e", "example");
 
-static const size_t kDeclSizes[eSemaTotal] = {
+static const size_t kDeclSizes[eSemaCount] = {
     [eSemaValues] = 1,
     [eSemaTypes] = 1,
     [eSemaProcs] = 1,
@@ -62,7 +62,7 @@ CT_DRIVER_API const language_t kExampleModule = {
     .builtin = {
         .name = CT_TEXT_VIEW("example\0lang"),
         .decls = kDeclSizes,
-        .length = eSemaTotal,
+        .length = eSemaCount,
     },
 
     .exts = kLangNames,

@@ -17,23 +17,23 @@ SSA_KIND(eTypeUnion, "union")
 
 #undef SSA_KIND
 
-#ifndef SSA_OPKIND
-#   define SSA_OPKIND(ID, NAME)
+#ifndef SSA_OPERAND
+#   define SSA_OPERAND(ID, NAME)
 #endif
 
-SSA_OPKIND(eOperandEmpty, "empty")
-SSA_OPKIND(eOperandUnit, "unit")
+SSA_OPERAND(eOperandEmpty, "empty")
+SSA_OPERAND(eOperandUnit, "unit")
 
-SSA_OPKIND(eOperandBlock, "block")
-SSA_OPKIND(eOperandParam, "param")
-SSA_OPKIND(eOperandReg, "reg")
-SSA_OPKIND(eOperandImm, "imm")
+SSA_OPERAND(eOperandBlock, "block")
+SSA_OPERAND(eOperandParam, "param")
+SSA_OPERAND(eOperandReg, "reg")
+SSA_OPERAND(eOperandImm, "imm")
 
-SSA_OPKIND(eOperandLocal, "local")
-SSA_OPKIND(eOperandGlobal, "global")
-SSA_OPKIND(eOperandFunction, "function")
+SSA_OPERAND(eOperandLocal, "local")
+SSA_OPERAND(eOperandGlobal, "global")
+SSA_OPERAND(eOperandFunction, "function")
 
-#undef SSA_OPKIND
+#undef SSA_OPERAND
 
 #ifndef SSA_OPCODE
 #   define SSA_OPCODE(ID, NAME)

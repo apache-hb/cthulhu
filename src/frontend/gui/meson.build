@@ -1,4 +1,4 @@
-gui_args = user_args + cpp.get_supported_arguments([
+gui_args = cpp.get_supported_arguments([
     '/wd4611', '/wd4201', '/wd4702', '-D_HAS_EXCEPTIONS=0',
     '-Wno-deprecated-enum-enum-conversion', '-Wno-unused-function',
     '-Wno-assume'

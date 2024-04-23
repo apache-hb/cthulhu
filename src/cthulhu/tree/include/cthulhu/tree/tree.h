@@ -44,7 +44,7 @@ typedef enum sema_tags_t {
     // all the modules in this scope
     eSemaModules,
 
-    eSemaTotal
+    eSemaCount
 } sema_tags_t;
 
 typedef struct tree_attribs_t {

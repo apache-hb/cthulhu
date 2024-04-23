@@ -100,12 +100,12 @@ typedef struct parse_result_t
 /// @brief parse the contents of a scanner into a language specific ast
 /// @note callbacks should be generated via @a CT_CALLBACKS
 ///
-/// @param extra the sanner being used
+/// @param scan the sanner being used
 /// @param callbacks the flex/bison callbacks
 ///
 /// @return the parse result
 CT_INTEROP_API parse_result_t scan_buffer(
-    IN_NOTNULL scan_t *extra,
+    IN_NOTNULL scan_t *scan,
     IN_NOTNULL const scan_callbacks_t *callbacks);
 
 /// @}

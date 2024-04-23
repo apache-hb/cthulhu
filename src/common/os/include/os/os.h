@@ -3,14 +3,7 @@
 #pragma once
 
 #include "os/core.h"
-
-#if CT_OS_WINDOWS
-#   include "impl/win32.h" // IWYU pragma: export
-#elif CT_OS_LINUX || CT_OS_APPLE
-#   include "impl/posix.h" // IWYU pragma: export
-#else
-#   error "unsupported platform"
-#endif
+#include "os/impl/impl.h" // IWYU pragma: export
 
 #include <stdbool.h>
 
@@ -217,7 +210,7 @@ CT_OS_API os_error_t os_iter_begin(IN_STRING const char *path, OUT_NOTNULL os_it
 /// @brief close a directory iterator
 ///
 /// @param iter iterator to close
-CT_OS_API os_error_t os_iter_end(OUT_PTR_INVALID os_iter_t *iter);
+CT_OS_API os_error_t os_iter_end(IN_NOTNULL OUT_PTR_INVALID os_iter_t *iter);
 
 /// @brief get the next directory entry
 ///
@@ -225,7 +218,7 @@ CT_OS_API os_error_t os_iter_end(OUT_PTR_INVALID os_iter_t *iter);
 /// @param dir directory entry to fill
 ///
 /// @return true if there was a new directory entry
-CT_NODISCARD
+CT_NODISCARD STA_SUCCESS(return == true)
 CT_OS_API bool os_iter_next(IN_NOTNULL os_iter_t *iter, OUT_NOTNULL os_inode_t *dir);
 
 /// @brief get the error state of a directory iterator
@@ -260,7 +253,7 @@ CT_OS_API os_error_t os_tmpfile_open(OUT_NOTNULL os_file_t *file);
 ///
 /// @param file the file to close
 RET_INSPECT
-CT_OS_API os_error_t os_file_close(OUT_PTR_INVALID os_file_t *file);
+CT_OS_API os_error_t os_file_close(IN_NOTNULL OUT_PTR_INVALID os_file_t *file);
 
 /// @brief read from a file
 ///

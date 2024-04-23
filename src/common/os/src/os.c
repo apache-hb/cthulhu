@@ -319,7 +319,7 @@ bool os_dir_exists(const char *path)
 /// directory iteration operations
 ///
 
-static void inode_create(os_inode_t *dst, const os_inode_impl_t *src)
+static void inode_init(os_inode_t *dst, const os_inode_impl_t *src)
 {
     dst->type = impl_inode_type(src);
     ctu_strcpy(dst->name, impl_inode_name(src), CT_OS_NAME_MAX);
@@ -388,7 +388,7 @@ bool os_iter_next(os_iter_t *iter, os_inode_t *result)
     if (iter->error != eOsSuccess)
         return false;
 
-    inode_create(result, &data);
+    inode_init(result, &data);
     return true;
 }
 

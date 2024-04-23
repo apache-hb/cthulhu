@@ -16,7 +16,7 @@ os_iter_impl_t impl_iter_open(const char *path, os_inode_impl_t *inode)
 
 bool impl_iter_next(os_iter_impl_t impl, os_inode_impl_t *inode)
 {
-    return FindNextFileA(impl, inode);
+    return FindNextFileA(impl, inode) != 0;
 }
 
 bool impl_iter_close(os_iter_impl_t impl)

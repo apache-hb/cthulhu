@@ -459,6 +459,7 @@ static void print_usage(format_config_t options, const char *name)
     );
 }
 
+USE_DECL
 void print_config(print_config_t print, const cfg_group_t *config)
 {
     print_options_t options = print.options;

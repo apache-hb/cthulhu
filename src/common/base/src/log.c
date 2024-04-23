@@ -12,12 +12,6 @@ static void default_verbose(const char *fmt, va_list args)
 verbose_t gVerboseCallback = default_verbose;
 static bool gVerboseEnabled = false;
 
-USE_DECL
-verbose_t ctu_default_verbose(void)
-{
-    return default_verbose;
-}
-
 void ctu_log_update(bool enable)
 {
     gVerboseEnabled = enable;

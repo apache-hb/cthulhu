@@ -9,11 +9,11 @@
 #include "arena/arena.h"
 
 USE_DECL
-io_error_t io_free(io_t *io)
+os_error_t io_free(io_t *io)
 {
     CTASSERT(io != NULL);
 
-    io_error_t err = io_close(io);
+    os_error_t err = io_close(io);
     if (err != eOsSuccess)
         return err;
 
@@ -23,11 +23,11 @@ io_error_t io_free(io_t *io)
 }
 
 USE_DECL
-io_error_t io_close(io_t *io)
+os_error_t io_close(io_t *io)
 {
     CTASSERT(io != NULL);
 
-    io_error_t err = io_error(io);
+    os_error_t err = io_error(io);
     if (err != eOsSuccess)
         return err;
 
@@ -138,7 +138,7 @@ void *io_map(io_t *io, os_protect_t protect)
 }
 
 USE_DECL
-io_error_t io_error(const io_t *io)
+os_error_t io_error(const io_t *io)
 {
     CTASSERT(io != NULL);
 

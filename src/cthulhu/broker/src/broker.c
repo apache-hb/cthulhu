@@ -47,7 +47,7 @@ typedef struct broker_t
     map_t *builtins;
 } broker_t;
 
-static const size_t kDeclSizes[eSemaTotal] = {
+static const size_t kDeclSizes[eSemaCount] = {
     [eSemaValues] = 1,
     [eSemaTypes] = 1,
     [eSemaProcs] = 1,
@@ -151,7 +151,7 @@ broker_t *broker_new(const frontend_t *frontend, arena_t *arena)
     ARENA_REPARENT(cookie.stack, broker, arena);
 
     broker->cookie = cookie;
-    broker->root = tree_module_root(broker->logger, &broker->cookie, broker->builtin, info.name, eSemaTotal, kDeclSizes, arena);
+    broker->root = tree_module_root(broker->logger, &broker->cookie, broker->builtin, info.name, eSemaCount, kDeclSizes, arena);
 
     broker->langs = vector_new(8, arena);
     broker->targets = vector_new(8, arena);
@@ -184,7 +184,7 @@ language_runtime_t *broker_add_language(broker_t *broker, const language_t *lang
 
     language_info_t builtin = lang->builtin;
     CTASSERTF(builtin.name.text != NULL, "language '%s' did not specify a builtin name", info.name);
-    CTASSERTF(builtin.length >= eSemaTotal, "language '%s' did not specify builtin decls", info.name);
+    CTASSERTF(builtin.length >= eSemaCount, "language '%s' did not specify builtin decls", info.name);
     CTASSERTF(builtin.decls != NULL, "language '%s' did not specify builtin decls", info.name);
 
     language_runtime_t *runtime = ARENA_MALLOC(sizeof(language_runtime_t), info.name, broker, arena);
@@ -465,7 +465,7 @@ void lang_add_unit(language_runtime_t *runtime, unit_id_t id, const node_t *node
     CTASSERT(id.length > 0);
     CTASSERT(ast != NULL);
     CTASSERT(decls != NULL);
-    CTASSERT(length >= eSemaTotal);
+    CTASSERT(length >= eSemaCount);
 
     compile_unit_t *old = map_get(runtime->broker->units, &id);
     if (old != NULL)

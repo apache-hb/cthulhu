@@ -181,7 +181,7 @@ CT_BASE_API char *ctu_strstr(IN_STRING const char *haystack, IN_STRING const cha
 ///
 /// @return the text object
 CT_CONSTFN
-CT_BASE_API text_t text_make(IN_STRING char *text, size_t length);
+CT_BASE_API text_t text_make(STA_NOTNULL char *text, size_t length);
 
 /// @brief create a new owning text array
 /// this is a shortcut for
@@ -203,7 +203,7 @@ CT_BASE_API text_t text_from(IN_STRING char *text);
 ///
 /// @return the text object
 CT_CONSTFN
-CT_BASE_API text_view_t text_view_make(IN_STRING const char *text, size_t length);
+CT_BASE_API text_view_t text_view_make(STA_NOTNULL const char *text, size_t length);
 
 /// @brief create a new non-owning text array
 /// this is a shortcut for

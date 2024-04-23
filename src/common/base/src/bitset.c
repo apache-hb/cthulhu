@@ -79,7 +79,6 @@ size_t bitset_set_first(bitset_t set, size_t start)
     return SIZE_MAX;
 }
 
-USE_DECL
 bool bitset_any(bitset_t set, bitset_t mask)
 {
     size_t words = CT_MIN(set.words, mask.words);
@@ -98,7 +97,6 @@ bool bitset_any(bitset_t set, bitset_t mask)
     return false;
 }
 
-USE_DECL
 bool bitset_all(bitset_t set, bitset_t mask)
 {
     size_t words = CT_MIN(set.words, mask.words);
@@ -117,7 +115,6 @@ bool bitset_all(bitset_t set, bitset_t mask)
     return true;
 }
 
-USE_DECL
 bool bitset_test(bitset_t set, size_t index)
 {
     CTASSERTF(bitset_len(set) > index, "index %zu is out of range %zu", index, bitset_len(set));
@@ -128,7 +125,6 @@ bool bitset_test(bitset_t set, size_t index)
     return (*word_at(set, word) & (1 << offset)) != 0;
 }
 
-USE_DECL
 void bitset_set(bitset_t set, size_t index)
 {
     CTASSERTF(bitset_len(set) > index, "index %zu is out of range %zu", index, bitset_len(set));
@@ -139,7 +135,6 @@ void bitset_set(bitset_t set, size_t index)
     *word_at(set, word) |= (1 << offset);
 }
 
-USE_DECL
 void bitset_clear(bitset_t set, size_t index)
 {
     CTASSERTF(bitset_len(set) > index, "index %zu is out of range %zu", index, bitset_len(set));
@@ -150,14 +145,12 @@ void bitset_clear(bitset_t set, size_t index)
     *word_at(set, word) &= ~(1 << offset);
 }
 
-USE_DECL
 void bitset_reset(bitset_t set)
 {
     bitset_word_t *data = bitset_start(set);
     ctu_memset(data, 0, set.words);
 }
 
-USE_DECL
 size_t bitset_len(bitset_t set)
 {
     CTASSERT(set.data != NULL);

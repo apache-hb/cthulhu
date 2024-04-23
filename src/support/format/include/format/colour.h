@@ -60,6 +60,7 @@ CT_FORMAT_API extern const colour_pallete_t kColourDefault;
 /// @param idx the colour to get
 ///
 /// @return the colour string
+RET_STRING
 CT_FORMAT_API const char *colour_get(IN_NOTNULL const colour_pallete_t *colours, IN_DOMAIN(<, eColourCount) colour_t idx);
 
 /// @brief get a reset string from a pallete
@@ -67,6 +68,7 @@ CT_FORMAT_API const char *colour_get(IN_NOTNULL const colour_pallete_t *colours,
 /// @param colours the pallete to get the reset from
 ///
 /// @return the reset string
+RET_STRING
 CT_FORMAT_API const char *colour_reset(IN_NOTNULL const colour_pallete_t *colours);
 
 /// @brief add colour to a string
@@ -76,7 +78,11 @@ CT_FORMAT_API const char *colour_reset(IN_NOTNULL const colour_pallete_t *colour
 /// @param text the text to colour
 ///
 /// @return the coloured string
-CT_FORMAT_API char *colour_text(format_context_t context, IN_DOMAIN(<, eColourCount) colour_t idx, IN_STRING const char *text);
+RET_STRING
+CT_FORMAT_API char *colour_text(
+    format_context_t context,
+    IN_DOMAIN(<, eColourCount) colour_t idx,
+    IN_STRING const char *text);
 
 /// @brief format a string and add colour to it
 ///
@@ -86,8 +92,11 @@ CT_FORMAT_API char *colour_text(format_context_t context, IN_DOMAIN(<, eColourCo
 /// @param ... the format arguments
 ///
 /// @return the coloured string
-CT_PRINTF(3, 4)
-CT_FORMAT_API char *colour_format(format_context_t context, IN_DOMAIN(<, eColourCount) colour_t idx, CT_FMT_STRING const char *fmt, ...);
+RET_STRING CT_PRINTF(3, 4)
+CT_FORMAT_API char *colour_format(
+    format_context_t context,
+    IN_DOMAIN(<, eColourCount) colour_t idx,
+    CT_FMT_STRING const char *fmt, ...);
 
 /// @brief format a string and add colour to it
 ///
@@ -97,7 +106,11 @@ CT_FORMAT_API char *colour_format(format_context_t context, IN_DOMAIN(<, eColour
 /// @param args the format arguments
 ///
 /// @return the coloured string
-CT_FORMAT_API char *colour_vformat(format_context_t context, IN_DOMAIN(<, eColourCount) colour_t idx, IN_STRING const char *fmt, va_list args);
+RET_STRING
+CT_FORMAT_API char *colour_vformat(
+    format_context_t context,
+    IN_DOMAIN(<, eColourCount) colour_t idx,
+    IN_STRING const char *fmt, va_list args);
 
 /// @}
 

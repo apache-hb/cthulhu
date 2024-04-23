@@ -6,7 +6,6 @@
 
 #include "core/analyze.h"
 #include "core/compiler.h"
-#include "core/types.h"
 
 CT_BEGIN_API
 
@@ -116,8 +115,7 @@ CT_STD_API void vector_set(
 CT_NODISCARD CT_PUREFN
 CT_STD_API void *vector_get(
     IN_NOTNULL const vector_t *vector,
-    size_t index
-);
+    size_t index);
 
 /// @brief get the last element of a vector
 /// @pre @a vector_len(vector) > 0

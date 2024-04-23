@@ -4,9 +4,17 @@
 
 #include <ctu_io_api.h>
 
+#include "core/analyze.h"
+
 #include "os/core.h"
 
-#include "core/analyze.h"
+// include the implementation headers when doing analysis
+// for the size macros
+#if CT_STA_PRESENT
+#   include "io/impl/buffer.h"
+#   include "io/impl/file.h"
+#   include "io/impl/view.h"
+#endif
 
 #include <stddef.h>
 #include <stdarg.h>
@@ -18,15 +26,12 @@ CT_BEGIN_API
 
 typedef struct io_t io_t;
 
-/// @brief an io error code
-typedef os_error_t io_error_t;
-
 /// @brief destroy an IO object and free its memory
 ///
 /// @param io the io object
 ///
 /// @return an error code if the io object could not be closed
-CT_IO_API io_error_t io_free(OUT_PTR_INVALID io_t *io);
+CT_IO_API os_error_t io_free(IN_NOTNULL OUT_PTR_INVALID io_t *io);
 
 /// @brief destroy an IO object
 /// @warning this does not free the memory of the object itself
@@ -36,7 +41,7 @@ CT_IO_API io_error_t io_free(OUT_PTR_INVALID io_t *io);
 /// @param io the io object
 ///
 /// @return an error code if the object could not be destroyed
-CT_IO_API io_error_t io_close(OUT_PTR_INVALID io_t *io);
+CT_IO_API os_error_t io_close(INOUT_NOTNULL io_t *io);
 
 /// @brief create an IO object from a file
 ///
@@ -129,7 +134,7 @@ CT_IO_API io_t *io_file_init(OUT_WRITES(IO_FILE_SIZE) void *buffer, IN_STRING co
 ///
 /// @return the initialized io object
 CT_NODISCARD CT_ALLOC(io_close)
-CT_IO_API io_t *io_memory_init(OUT_WRITES(IO_MEMORY_SIZE) void *buffer, IN_STRING const char *name, const void *data, size_t size, os_access_t flags, IN_NOTNULL arena_t *arena);
+CT_IO_API io_t *io_memory_init(OUT_WRITES(IO_BUFFER_SIZE) void *buffer, IN_STRING const char *name, const void *data, size_t size, os_access_t flags, IN_NOTNULL arena_t *arena);
 
 /// @brief create an io object from a memory buffer
 /// initializes an io object using a preallocated buffer.
@@ -147,7 +152,7 @@ CT_IO_API io_t *io_memory_init(OUT_WRITES(IO_MEMORY_SIZE) void *buffer, IN_STRIN
 ///
 /// @return the initialized io object
 CT_NODISCARD CT_ALLOC(io_close)
-CT_IO_API io_t *io_blob_init(OUT_WRITES(IO_MEMORY_SIZE) void *buffer, IN_STRING const char *name, size_t size, os_access_t flags, IN_NOTNULL arena_t *arena);
+CT_IO_API io_t *io_blob_init(OUT_WRITES(IO_BUFFER_SIZE) void *buffer, IN_STRING const char *name, size_t size, os_access_t flags, IN_NOTNULL arena_t *arena);
 
 /// @brief create an io object from a memory buffer
 /// initializes an io object using a preallocated buffer.
@@ -267,7 +272,7 @@ CT_IO_API void *io_map(IN_NOTNULL io_t *io, os_protect_t protect);
 ///
 /// @return the last set error
 CT_NODISCARD RET_INSPECT
-CT_IO_API io_error_t io_error(IN_NOTNULL const io_t *io);
+CT_IO_API os_error_t io_error(IN_NOTNULL const io_t *io);
 
 /// @} // IO
 

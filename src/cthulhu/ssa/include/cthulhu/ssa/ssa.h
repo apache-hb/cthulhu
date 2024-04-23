@@ -41,21 +41,21 @@ typedef enum ssa_kind_t {
 #define SSA_KIND(ID, NAME) ID,
 #include "ssa.inc"
 
-    eTypeTotal
+    eTypeCount
 } ssa_kind_t;
 
 typedef enum ssa_opkind_t {
-#define SSA_OPKIND(ID, NAME) ID,
+#define SSA_OPERAND(ID, NAME) ID,
 #include "ssa.inc"
 
-    eOperandTotal
+    eOperandCount
 } ssa_opkind_t;
 
 typedef enum ssa_opcode_t {
 #define SSA_OPCODE(ID, NAME) ID,
 #include "ssa.inc"
 
-    eOpTotal
+    eOpCount
 } ssa_opcode_t;
 
 ///
@@ -329,7 +329,7 @@ typedef struct ssa_result_t {
 /// @param arena the arena to allocate in
 ///
 /// @return the compiled modules
-CT_SSA_API ssa_result_t ssa_compile(vector_t *mods, arena_t *arena);
+CT_SSA_API ssa_result_t ssa_compile(IN_NOTNULL vector_t *mods, IN_NOTNULL arena_t *arena);
 
 ///
 /// optimization api
@@ -340,7 +340,7 @@ CT_SSA_API ssa_result_t ssa_compile(vector_t *mods, arena_t *arena);
 /// @param reports report sink
 /// @param mod module to optimize
 /// @param arena arena to allocate in
-CT_SSA_API void ssa_opt(logger_t *reports, ssa_result_t mod, arena_t *arena);
+CT_SSA_API void ssa_opt(IN_NOTNULL logger_t *reports, ssa_result_t mod, IN_NOTNULL arena_t *arena);
 
 ///
 /// rewriting
@@ -354,9 +354,14 @@ CT_SSA_API ssa_type_t *ssa_type_pointer(const char *name, tree_quals_t quals, ss
 /// names
 ///
 
-CT_SSA_API const char *ssa_type_name(ssa_kind_t kind);
-CT_SSA_API const char *ssa_opkind_name(ssa_opkind_t kind);
-CT_SSA_API const char *ssa_opcode_name(ssa_opcode_t opcode);
+RET_NOTNULL
+CT_SSA_API const char *ssa_type_name(IN_RANGE(0, eTypeCount - 1) ssa_kind_t kind);
+
+RET_NOTNULL
+CT_SSA_API const char *ssa_opkind_name(IN_RANGE(0, eOperandCount - 1) ssa_opkind_t kind);
+
+RET_NOTNULL
+CT_SSA_API const char *ssa_opcode_name(IN_RANGE(0, eOpCount - 1) ssa_opcode_t opcode);
 
 /// @}
 

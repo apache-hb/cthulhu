@@ -115,8 +115,145 @@
         }
     ],
     "grammar": {
+        "comments": {
+            "lineComment": "//",
+            "blockComment": [
+                [ "/*", "*/" ]
+            ]
+        },
+        "pairs": [
+            [ "LPAREN", "RPAREN" ],
+            [ "START", "END" ]
+        ],
         "tokens": {
-
+            "START": {
+                "pattern": "(?i:begin)",
+                "group": "keywords"
+            },
+            "END": {
+                "pattern": "(?i:end)",
+                "group": "keywords"
+            },
+            "CONST": {
+                "pattern": "(?i:const)",
+                "group": "keywords"
+            },
+            "VAR": {
+                "pattern": "(?i:var)",
+                "group": "keywords"
+            },
+            "MODULE": {
+                "pattern": "(?i:module)",
+                "group": "keywords"
+            },
+            "IMPORT": {
+                "pattern": "(?i:import)",
+                "group": "keywords"
+            },
+            "PROCEDURE": {
+                "pattern": "(?i:procedure)",
+                "group": "keywords"
+            },
+            "IF": {
+                "pattern": "(?i:if)",
+                "group": "keywords"
+            },
+            "THEN": {
+                "pattern": "(?i:then)",
+                "group": "keywords"
+            },
+            "WHILE": {
+                "pattern": "(?i:while)",
+                "group": "keywords"
+            },
+            "DO": {
+                "pattern": "(?i:do)",
+                "group": "keywords"
+            },
+            "CALL": {
+                "pattern": "(?i:call)",
+                "group": "keywords"
+            },
+            "ODD": {
+                "pattern": "(?i:odd)",
+                "group": "keywords"
+            },
+            "IDENT": {
+                "pattern": "[a-zA-Z_][a-zA-Z0-9_]*",
+                "group": "identifiers"
+            },
+            "NUMBER": {
+                "pattern": "[0-9]+",
+                "group": "literals"
+            },
+            "SEMICOLON": {
+                "symbol": ";",
+                "group": "punctuation"
+            },
+            "DOT": {
+                "symbol": ".",
+                "group": "punctuation"
+            },
+            "COMMA": {
+                "symbol": ",",
+                "group": "punctuation"
+            },
+            "ASSIGN": {
+                "symbol": ":=",
+                "group": "operators"
+            },
+            "EQUALS": {
+                "symbol": "=",
+                "group": "operators"
+            },
+            "NOTEQUAL": {
+                "symbol": "!=",
+                "group": "operators"
+            },
+            "LESS": {
+                "symbol": "<",
+                "group": "operators"
+            },
+            "GREATER": {
+                "symbol": ">",
+                "group": "operators"
+            },
+            "LESSEQ": {
+                "symbol": "<=",
+                "group": "operators"
+            },
+            "GREATEQ": {
+                "symbol": ">=",
+                "group": "operators"
+            },
+            "LPAREN": {
+                "symbol": "(",
+                "group": "punctuation"
+            },
+            "RPAREN": {
+                "symbol": ")",
+                "group": "punctuation"
+            },
+            "ADD": {
+                "symbol": "+",
+                "group": "operators"
+            },
+            "SUB": {
+                "symbol": "-",
+                "group": "operators"
+            },
+            "MUL": {
+                "symbol": "*",
+                "group": "operators"
+            },
+            "DIV": {
+                "symbol": "/",
+                "group": "operators"
+            },
+            "PRINT": {
+                "pattern": "!",
+                "group": "operators"
+            }
         },
         "rules": {
 

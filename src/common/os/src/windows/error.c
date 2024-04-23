@@ -11,6 +11,7 @@
 
 #define FORMAT_FLAGS (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS)
 
+USE_DECL
 os_error_t impl_last_error(void)
 {
     return (os_error_t)GetLastError();

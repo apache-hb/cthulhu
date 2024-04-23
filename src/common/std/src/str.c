@@ -117,6 +117,7 @@ char *str_vformat(arena_t *arena, const char *fmt, va_list args)
     return text.text;
 }
 
+USE_DECL
 bool char_is_any_of(char c, const char *chars)
 {
     CTASSERT(chars != NULL);
@@ -265,7 +266,8 @@ char *str_join(const char *sep, const vector_t *parts, arena_t *arena)
     {
         return arena_strndup("", 0, arena);
     }
-    else if (all == 1)
+
+    if (all == 1)
     {
         char *it = vector_get(parts, 0);
         CTASSERT(it != NULL);

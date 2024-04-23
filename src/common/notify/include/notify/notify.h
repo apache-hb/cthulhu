@@ -148,7 +148,7 @@ CT_NOTIFY_API event_builder_t msg_vnotify(
     INOUT_NOTNULL logger_t *logs,
     IN_NOTNULL const diagnostic_t *diagnostic,
     const node_t *node,
-    const char *fmt, va_list args);
+    IN_STRING const char *fmt, va_list args);
 
 /// @brief append additional information to a message
 ///
@@ -171,7 +171,7 @@ CT_NOTIFY_API void msg_append(
 CT_NOTIFY_API void msg_vappend(
     event_builder_t builder,
     const node_t *node,
-    const char *fmt, va_list args);
+    IN_STRING const char *fmt, va_list args);
 
 /// @brief add a note to an existing message
 ///
@@ -190,7 +190,7 @@ CT_NOTIFY_API void msg_note(
 /// @param args the format arguments
 CT_NOTIFY_API void msg_vnote(
     event_builder_t builder,
-    const char *fmt, va_list args);
+    IN_STRING const char *fmt, va_list args);
 
 /// @}
 

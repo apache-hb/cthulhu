@@ -9,16 +9,19 @@
 #   include <stdlib.h> // IWYU pragma: keep
 #endif
 
+USE_DECL
 uint16_t endian_swap16(uint16_t value)
 {
     return CT_BSWAP_U16(value);
 }
 
+USE_DECL
 uint32_t endian_swap32(uint32_t value)
 {
     return CT_BSWAP_U32(value);
 }
 
+USE_DECL
 uint64_t endian_swap64(uint64_t value)
 {
     return CT_BSWAP_U64(value);
