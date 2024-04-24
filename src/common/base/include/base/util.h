@@ -61,7 +61,7 @@ CT_BASE_API ctu_hash_t text_hash(text_view_t text);
 ///
 /// @return if the strings are equal
 CT_NODISCARD CT_PUREFN
-CT_BASE_API bool str_equal(IN_STRING const char *lhs, IN_STRING const char *rhs);
+CT_BASE_API bool str_equal(STA_IN_CSTRING const char *lhs, STA_IN_CSTRING const char *rhs);
 
 /// @brief copy a string
 /// equivalent to strcpy but with safety checks

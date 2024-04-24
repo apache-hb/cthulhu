@@ -14,6 +14,7 @@ ccgen_deps = [
 inc = include_directories('include')
 
 libccgen = library('ccgen', src,
+    c_args : user_args,
     include_directories : inc,
     dependencies : ccgen_deps
 )

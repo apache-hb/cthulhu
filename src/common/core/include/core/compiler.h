@@ -4,6 +4,8 @@
 
 #include <ctu_config.h>
 
+#include "core/cxx_compat.h"
+
 /// @def CT_HAS_INCLUDE(x)
 /// @brief check if the compiler has a header
 #if defined(__has_include)
@@ -12,37 +14,10 @@
 #   define CT_HAS_INCLUDE(x) 0
 #endif
 
-// use _MSVC_LANG to detect c++ version on msvc
-// dont want to force other projects consuming this header
-// to specify /Zc:__cplusplus
-#if defined(_MSVC_LANG)
-#   define CT_CPLUSPLUS _MSVC_LANG
-#elif defined(__cplusplus)
-#   define CT_CPLUSPLUS __cplusplus
-#else
-#   define CT_CPLUSPLUS 0
-#endif
-
-#if CT_CPLUSPLUS >= 202002L
-#   include <version>
-#endif
-
-#if __cpp_lib_unreachable >= 202202L
-#   include <utility>
-#endif
-
 /// @defgroup compiler Compiler specific macros
 /// @brief Compiler detection macros and compiler specific functionality
 /// @ingroup core
 /// @{
-
-/// @def CT_HAS_CPP_ATTRIBUTE(x)
-/// @brief check if the compiler supports a c++ attribute
-#if defined(__has_cpp_attribute)
-#   define CT_HAS_CPP_ATTRIBUTE(x) __has_cpp_attribute(x)
-#else
-#   define CT_HAS_CPP_ATTRIBUTE(x) 0
-#endif
 
 /// @def CT_HAS_C_ATTRIBUTE(x)
 /// @brief check if the compiler supports a c attribute
@@ -54,7 +29,7 @@
 
 /// @def CT_HAS_ATTRIBUTE(x)
 /// @brief check if the compiler supports an attribute (c or c++)
-#define CT_HAS_ATTRIBUTE(x) (CT_HAS_CPP_ATTRIBUTE(x) || CT_HAS_C_ATTRIBUTE(x))
+#define CT_HAS_ATTRIBUTE(x) (CT_HAS_CXX_ATTRIBUTE(x) || CT_HAS_C_ATTRIBUTE(x))
 
 /// @def CT_HAS_BUILTIN(x)
 /// @brief check if the compiler has a builtin
@@ -132,7 +107,7 @@
 /// @warning this is a compiler hint that can be used to optimize code
 ///       use with caution
 
-#if CT_HAS_CPP_ATTRIBUTE(assume)
+#if CT_HAS_CXX_ATTRIBUTE(assume)
 #   define CT_ASSUME(expr) [[assume(expr)]]
 #elif CT_HAS_BUILTIN(__builtin_assume)
 #   define CT_ASSUME(expr) __builtin_assume(expr)
