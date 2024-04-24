@@ -10,6 +10,7 @@
 #include "std/typed/vector.h"
 
 #include <limits.h>
+#include <stdio.h>
 
 typedef struct tmlang_t
 {
@@ -19,37 +20,84 @@ typedef struct tmlang_t
 
 static char *emit_rule(tmlang_t *ctx, const lex_rule_t *rule);
 
-static char *emit_match_any(tmlang_t *ctx, const lex_rule_t *rule)
+static bool valid_for_range(char c)
+{
+    return ctu_isalnum(c) || c == '_';
+}
+
+static size_t write_range(char *buffer, const char *begin, const char *end)
+{
+    bool range = true;
+    for (const char *c = begin; c != end; c++)
+    {
+        if (!valid_for_range(*c))
+        {
+            range = false;
+            break;
+        }
+    }
+
+    // if we can't print all characters, we need to escape them
+    if (!range)
+    {
+        return str_normalize_into(buffer, SIZE_MAX, begin, end - begin);
+    }
+
+    // use a range if it makes sense
+    if (end - begin > 3)
+    {
+        // if this range is fully alphabetic or numeric, we can use a range
+        bool alpha = ctu_isalpha(*begin) && ctu_isalpha(*(end - 1));
+        if (alpha)
+            return str_sprintf(buffer, 4, "%c-%c", *begin, *(end - 1));
+
+        bool digit = ctu_isdigit(*begin) && ctu_isdigit(*(end - 1));
+        if (digit)
+            return str_sprintf(buffer, 4, "%c-%c", *begin, *(end - 1));
+    }
+
+    // otherwise, just write out the characters
+    for (const char *c = begin; c != end; c++)
+    {
+        *buffer++ = *c;
+    }
+
+    return end - begin;
+}
+
+static char *emit_match_range(tmlang_t *ctx, const lex_rule_t *rule)
 {
     CTASSERT(rule != NULL);
-    CTASSERT(rule->kind == eMatchAny);
+    CTASSERT(rule->kind == eMatchRange);
 
-    lex_match_any_t info = rule->any;
+    lex_match_range_t info = rule->range;
 
     // +1 for the null terminator
-    // +2 for the enclosing []
-    // *4 for the worst case of every character needing an escape sequence
-    char *sorted = ARENA_MALLOC((info.count * 4) + 1 + 2, "emit_match_any", NULL, ctx->arena);
-    sorted[0] = '[';
-    ctu_memcpy(sorted + 1, info.chars, info.count);
-    sorted[info.count + 1] = ']';
-    sorted[info.count + 2] = '\0';
+    char *sorted = ARENA_MALLOC(info.count + 1, "emit_match_any", NULL, ctx->arena);
+    ctu_memcpy(sorted, info.chars, info.count);
+    sorted[info.count] = '\0';
 
-    str_sort_inplace(sorted + 1, info.count);
+    str_sort_inplace(sorted, info.count);
 
     // shrink down ranges of consecutive characters
 
-    char *pos = sorted + 1; // current position
-    char *end = sorted + info.count + 1; // end of the string
+    size_t outlen = str_normalize_into(NULL, 0, sorted, info.count);
 
-    char *write = pos; // write position
-    char *start = pos; // start character of the current range
+    char *result = ARENA_MALLOC(outlen + 3, "emit_match_any", NULL, ctx->arena);
+
+    const char *read = sorted; // current position
+    const char *start = read; // start character of the current range
+    const char *end = start + info.count; // end of the string
+
+    char *write = result; // write position
     char last = *start; // the last character seen
 
+    *write++ = '[';
+
     // we know the string is sorted from smallest to largest
-    while (pos != end)
+    while (read != end)
     {
-        char cur = *pos;
+        char cur = *read;
 
         if (cur == last + 1)
         {
@@ -57,53 +105,66 @@ static char *emit_match_any(tmlang_t *ctx, const lex_rule_t *rule)
             // update last and continue
             last = cur;
         }
-        else if (last - *start > 3)
-        {
-            // this is a range of characters thats long enough
-            // to justify converting to a range
-            write += str_sprintf(write, (size_t)(end - write), "%c-%c", *start, last);
-
-            // update the start and last
-            start = pos;
-            last = *start;
-        }
         else
         {
-            // this is a range of characters that is too short
-            // to justify converting to a range
-            // write out the characters individually
-            for (char *c = start; c != pos; c++)
-            {
-                *write = *c;
-                write += 1;
-            }
+            write += write_range(write, start, read);
 
             // update the start and last
-            start = pos;
-            last = *start;
+            last = *read;
+            start = read;
         }
 
-        pos += 1;
+        read += 1;
     }
 
     // write out the last range
-    if (last - *start > 3)
-    {
-        write += str_sprintf(write, (size_t)(end - write), "%c-%c", *start, last);
-    }
-    else
-    {
-        for (char *c = start; c != pos; c++)
-        {
-            *write = *c;
-            write += 1;
-        }
-    }
+    write += write_range(write, start, read);
 
     *write++ = ']';
+    *write++ = '\0';
+
+    return result;
+}
+
+static char *emit_match_exact(tmlang_t *ctx, const lex_rule_t *rule)
+{
+    CTASSERT(rule != NULL);
+    CTASSERT(rule->kind == eMatchExact);
+
+    lex_match_exact_t info = rule->exact;
+
+    size_t len = str_normalize_into(NULL, 0, info.chars, info.count);
+    char *buffer = ARENA_MALLOC(len + 3, "emit_match_exact", NULL, ctx->arena);
+
+    char *write = buffer;
+    *write++ = '"';
+    write += str_normalize_into(write, len, info.chars, info.count);
+    *write++ = '"';
     *write = '\0';
 
-    return sorted;
+    return buffer;
+}
+
+static char *emit_match_choice(tmlang_t *ctx, const lex_rule_t *rule)
+{
+    CTASSERT(rule != NULL);
+    CTASSERT(rule->kind == eMatchChoice);
+
+    lex_match_choice_t info = rule->choice;
+    typevec_t *buffer = typevec_new(sizeof(char), 256, ctx->arena);
+
+    for (size_t i = 0; i < info.count; i++)
+    {
+        if (i != 0)
+            typevec_push(buffer, "|");
+
+        char *emit = emit_rule(ctx, info.rules[i]);
+        typevec_append(buffer, emit, ctu_strlen(emit));
+    }
+
+    typevec_push(buffer, "\0");
+
+    return typevec_data(buffer);
 }
 
 static char *emit_match_seq(tmlang_t *ctx, const lex_rule_t *rule)
@@ -160,8 +221,14 @@ static char *emit_rule(tmlang_t *ctx, const lex_rule_t *rule)
 
     switch (rule->kind)
     {
-    case eMatchAny:
-        return emit_match_any(ctx, rule);
+    case eMatchExact:
+        return emit_match_exact(ctx, rule);
+
+    case eMatchRange:
+        return emit_match_range(ctx, rule);
+
+    case eMatchChoice:
+        return emit_match_choice(ctx, rule);
 
     case eMatchSeq:
         return emit_match_seq(ctx, rule);
@@ -187,14 +254,14 @@ void emit_tmlanguage(const lex_grammar_t *grammar, arena_t *arena, io_t *io)
         .arena = arena,
     };
 
-    size_t count = grammar->rule_count;
-    const lex_rule_t *rules = grammar->rules;
+    size_t count = grammar->action_count;
+    const lex_action_t *actions = grammar->actions;
 
     for (size_t i = 0; i < count; i++)
     {
-        const lex_rule_t *rule = rules + i;
-        char *emit = emit_rule(&ctx, rule);
+        const lex_action_t *rule = actions + i;
+        char *emit = emit_rule(&ctx, rule->rule);
 
-        io_printf(io, "rule: \"%s\"\n", emit);
+        io_printf(io, "rule: `%s`\n", emit);
     }
 }

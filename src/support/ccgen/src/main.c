@@ -9,16 +9,31 @@
 
 #include <limits.h>
 
-static lex_rule_t lex_match_any(const char *chars)
+static lex_rule_t lex_exact(const char *chars)
 {
-    lex_match_any_t any = {
+    lex_match_exact_t exact = {
         .chars = chars,
         .count = ctu_strlen(chars)
     };
 
     lex_rule_t rule = {
-        .kind = eMatchAny,
-        .any = any
+        .kind = eMatchExact,
+        .exact = exact
+    };
+
+    return rule;
+}
+
+static lex_rule_t lex_range(const char *chars)
+{
+    lex_match_range_t range = {
+        .chars = chars,
+        .count = ctu_strlen(chars)
+    };
+
+    lex_rule_t rule = {
+        .kind = eMatchRange,
+        .range = range
     };
 
     return rule;
@@ -55,6 +70,21 @@ static lex_rule_t lex_seq(const lex_rule_t **rules, size_t count)
     return result;
 }
 
+static lex_rule_t lex_or(const lex_rule_t **rules, size_t count)
+{
+    lex_match_choice_t choice = {
+        .rules = rules,
+        .count = count
+    };
+
+    lex_rule_t result = {
+        .kind = eMatchChoice,
+        .choice = choice
+    };
+
+    return result;
+}
+
 int main(int argc, const char **argv)
 {
     CT_UNUSED(argc);
@@ -63,8 +93,13 @@ int main(int argc, const char **argv)
     setup_default(NULL);
 
     enum { eTokWS, eTokID, eTokCount };
-    enum { eRuleWS, eRuleIdHead, eRuleIdTail, eRuleIdBody, eRuleId, eRuleCount };
-    enum { eActionID, eActionWS, eActionCount };
+    enum {
+        eRuleWS,
+        eRuleLineComment, eRuleCommentHash, eRuleCommentC,
+        eRuleIdHead, eRuleIdTail, eRuleIdBody, eRuleId,
+        eRuleCount
+    };
+    enum { eActionID, eActionWS, eActionComment, eActionCount };
 
     const lex_token_t tokens[eTokCount] = {
         [eTokWS] = { .kind = eTokenWhiteSpace, .name = "whitespace" },
@@ -72,20 +107,26 @@ int main(int argc, const char **argv)
     };
 
     lex_rule_t rules[eRuleCount] = {
-        [eRuleWS] = lex_match_any(" \v\f\t\n\r"),
+        [eRuleWS] = lex_range(" \v\f\t\n\r"),
 
-        [eRuleIdHead] = lex_match_any("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"),
-        [eRuleIdTail] = lex_match_any("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789"),
+        [eRuleCommentHash] = lex_exact("#"),
+        [eRuleCommentC] = lex_exact("//"),
+
+        [eRuleIdHead] = lex_range("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"),
+        [eRuleIdTail] = lex_range("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789"),
         [eRuleIdBody] = lex_repeat(&rules[eRuleIdTail], 0, INT_MAX),
     };
 
-    const lex_rule_t *id[] = { &rules[eRuleIdHead], &rules[eRuleIdBody] };
+    const lex_rule_t *comment[] = { &rules[eRuleCommentHash], &rules[eRuleCommentC] };
+    rules[eRuleLineComment] = lex_or(comment, CT_ARRAY_LEN(comment));
 
+    const lex_rule_t *id[] = { &rules[eRuleIdHead], &rules[eRuleIdBody] };
     rules[eRuleId] = lex_seq(id, CT_ARRAY_LEN(id));
 
     const lex_action_t actions[eActionCount] = {
         [eActionID] = { .rule = &rules[eRuleId], .token = &tokens[eTokID] },
-        [eActionWS] = { .rule = &rules[eRuleWS], .token = &tokens[eTokWS] }
+        [eActionWS] = { .rule = &rules[eRuleWS], .token = &tokens[eTokWS] },
+        [eActionComment] = { .rule = &rules[eRuleLineComment], .token = &tokens[eTokWS] }
     };
 
     const lex_grammar_t grammar = {

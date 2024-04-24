@@ -3,26 +3,41 @@
 
 #include "base/panic.h"
 
+#include "core/macros.h"
 #include "io/io.h"
 #include "std/str.h"
 
 // yy_accept map of state id to action
 
-static size_t compute_stt_size(const lex_grammar_t *grammar)
+// compute number of possible states
+static size_t compute_state_count(const lex_grammar_t *grammar)
 {
     CTASSERT(grammar != NULL);
 
-    size_t size = 1; // 1 for initial state
-
-    for (size_t i = 0; i < grammar->rule_count; i++)
-    {
-        // +1 for entering the rule
-        // +1 for exiting the rule
-        size += 2;
-    }
-
-    return size;
+    // +1 for initial state
+    // +1 for final state
+    // +1 for error state
+    return grammar->rule_count + 3;
 }
+
+#if 0
+static size_t compute_initial_state(const lex_grammar_t *grammar)
+{
+    CT_UNUSED(grammar);
+
+    return 0;
+}
+
+static size_t compute_final_state(const lex_grammar_t *grammar)
+{
+    return grammar->rule_count + 1;
+}
+
+static size_t compute_error_state(const lex_grammar_t *grammar)
+{
+    return grammar->rule_count + 2;
+}
+#endif
 
 void emit_lexer(const lex_grammar_t *grammar, arena_t *arena, io_t *io)
 {
@@ -33,7 +48,7 @@ void emit_lexer(const lex_grammar_t *grammar, arena_t *arena, io_t *io)
     char *token = str_format(arena, "%s_token_t", grammar->name);
     char *stt = str_format(arena, "%s_state_transition_table", grammar->name);
 
-    size_t stt_size = compute_stt_size(grammar);
+    size_t stt_size = compute_state_count(grammar);
 
     io_printf(io, "const int %s[%zu] = {", stt, stt_size);
 

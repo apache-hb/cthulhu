@@ -415,12 +415,61 @@ static size_t normstr(char *out, char c)
         out[0] = '\\';
         out[1] = 'r';
         return 2;
+    case '\v':
+        out[0] = '\\';
+        out[1] = 'v';
+        return 2;
+    case '\f':
+        out[0] = '\\';
+        out[1] = 'f';
+        return 2;
     default: {
         int result = CT_SNPRINTF(out, 5, "\\x%02x", (c & 0xFF));
         CTASSERT(result > 0);
         return result;
     }
     }
+}
+
+STA_DECL
+size_t str_normalize_into(char *dst, size_t dstlen, const char *src, size_t srclen)
+{
+    // preconditions
+    CTASSERT(src != NULL);
+    CTASSERT(srclen > 0);
+    if (dstlen == 0) CTASSERT(dst == NULL);
+    if (dst == NULL) CTASSERT(dstlen == 0);
+
+
+    // calculate required length
+    size_t outlength = 0;
+    for (size_t i = 0; i < srclen; i++)
+        outlength += normlen(src[i]);
+
+    // if requested, return that length
+    if (dst == NULL)
+        return outlength;
+
+    size_t avail = CT_MIN(outlength, dstlen);
+
+    // if the string is already normalized, just copy it
+    if (outlength == srclen)
+    {
+        ctu_memcpy(dst, src, avail);
+        return avail;
+    }
+
+    char *result = dst;
+    const char *end = dst + avail;
+    while (*src != '\0' && result < end)
+    {
+        size_t inc = normstr(result, *src++);
+        result += inc;
+    }
+
+    *result = '\0';
+
+    return (result - dst) - 1;
 }
 
 STA_DECL

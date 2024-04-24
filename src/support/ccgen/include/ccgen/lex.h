@@ -35,12 +35,19 @@ typedef enum token_type_t
     eTokenCount
 } token_type_t;
 
-// match any character in this string
-typedef struct lex_match_any_t
+// match this exact string
+typedef struct lex_match_exact_t
 {
     const char *chars;
     size_t count;
-} lex_match_any_t;
+} lex_match_exact_t;
+
+// match any character in this string
+typedef struct lex_match_range_t
+{
+    const char *chars;
+    size_t count;
+} lex_match_range_t;
 
 // match these rules in sequence
 typedef struct lex_match_seq_t
@@ -48,6 +55,12 @@ typedef struct lex_match_seq_t
     const lex_rule_t **rules;
     size_t count;
 } lex_match_seq_t;
+
+typedef struct lex_match_or_t
+{
+    const lex_rule_t **rules;
+    size_t count;
+} lex_match_choice_t;
 
 typedef struct lex_match_repeat_t
 {
@@ -66,8 +79,10 @@ typedef struct lex_rule_t
     lex_match_t kind;
 
     union {
-        lex_match_any_t any;
+        lex_match_exact_t exact;
+        lex_match_range_t range;
         lex_match_seq_t seq;
+        lex_match_choice_t choice;
         lex_match_repeat_t repeat;
     };
 } lex_rule_t;

@@ -2,8 +2,10 @@
 #   define LEX_RULE_TYPE(id, str)
 #endif
 
-LEX_RULE_TYPE(eMatchAny, "any")
+LEX_RULE_TYPE(eMatchExact, "exact")
+LEX_RULE_TYPE(eMatchRange, "range")
 LEX_RULE_TYPE(eMatchSeq, "seq")
+LEX_RULE_TYPE(eMatchChoice, "choice")
 LEX_RULE_TYPE(eMatchRepeat, "repeat")
 
 #undef LEX_RULE_TYPE

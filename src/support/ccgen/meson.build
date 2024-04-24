@@ -8,7 +8,7 @@ src = [
 ]
 
 ccgen_deps = [
-    core, base, arena, io, std
+    core, base, arena, io, std, json
 ]
 
 inc = include_directories('include')

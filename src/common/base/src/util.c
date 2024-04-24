@@ -55,6 +55,24 @@ ctu_hash_t text_hash(text_view_t text)
 }
 
 STA_DECL
+bool ctu_isalpha(int c)
+{
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+}
+
+STA_DECL
+bool ctu_isdigit(int c)
+{
+    return c >= '0' && c <= '9';
+}
+
+STA_DECL
+bool ctu_isalnum(int c)
+{
+    return ctu_isalpha(c) || ctu_isdigit(c);
+}
+
+STA_DECL
 bool str_equal(const char *lhs, const char *rhs)
 {
     CTASSERT(lhs != NULL);

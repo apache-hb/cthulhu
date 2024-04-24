@@ -168,8 +168,22 @@ CT_STD_API char *str_normalize(IN_STRING const char *str, IN_NOTNULL arena_t *ar
 CT_NODISCARD
 CT_STD_API char *str_normalizen(text_view_t text, IN_NOTNULL arena_t *arena);
 
-CT_NODISCARD
-CT_STD_API size_t str_normalize_info(STA_READS(len) const char *str, size_t len);
+/// @brief normalize a string into a buffer
+///
+/// normalize a string into a buffer. if @p dst is NULL, the length of the
+/// normalized string is returned.
+///
+/// @param dst the buffer to write the normalized string into
+/// @param dstlen the length of the buffer
+/// @param src the string to normalize
+/// @param srclen the length of the string
+///
+/// @return the number of characters written
+CT_STD_API size_t str_normalize_into(
+    STA_WRITES(len) char *dst,
+    size_t dstlen,
+    STA_READS(srclen) const char *src,
+    size_t srclen);
 
 /// @brief split a string into a vector by a separator
 ///
