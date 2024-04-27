@@ -185,7 +185,7 @@ plugin_runtime_t *support_get_plugin(support_t *support, const char *name)
 {
     CTASSERT(support != NULL);
 
-    return map_get(support->extmap, name);
+    return map_get(support->plugins, name);
 }
 
 STA_DECL
@@ -193,5 +193,5 @@ target_runtime_t *support_get_target(support_t *support, const char *name)
 {
     CTASSERT(support != NULL);
 
-    return map_get(support->extmap, name);
+    return map_get(support->targets, name);
 }

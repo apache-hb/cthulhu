@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
+#include "cthulhu/broker/broker.h"
+
 #include "base/util.h"
 #include "c89.h"
 
@@ -18,7 +20,6 @@
 #include "base/panic.h"
 #include "core/macros.h"
 
-#if 0
 static c89_source_t *source_new(io_t *io, const char *path, arena_t *arena)
 {
     c89_source_t *source = ARENA_MALLOC(sizeof(c89_source_t), path, io, arena);
@@ -854,23 +855,19 @@ static void c89_define_module(c89_emit_t *emit, const ssa_module_t *mod)
     define_symbols(emit, mod, mod->globals, c89_define_global);
     define_symbols(emit, mod, mod->functions, c89_define_function);
 }
-#endif
 
-c89_emit_result_t emit_c89(const c89_emit_options_t *options)
+void cfamily_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *emit)
 {
-    CT_UNUSED(options);
-#if 0
-    emit_options_t opts = options->opts;
-    size_t len = vector_len(opts.modules);
-    c89_emit_result_t result = { 0 };
+    size_t len = vector_len(ssa->modules);
 
-    arena_t *arena = opts.arena;
+    arena_t *arena = runtime->arena;
+    vector_t *modules = ssa->modules;
 
-    c89_emit_t emit = {
+    c89_emit_t ctx = {
         .arena = arena,
         .emit = {
             .arena = arena,
-            .reports = opts.reports,
+            .reports = runtime->logger,
             .block_names = names_new(64, arena),
             .vreg_names = names_new(64, arena),
         },
@@ -881,32 +878,27 @@ c89_emit_result_t emit_c89(const c89_emit_options_t *options)
         .stepmap = map_optimal(64, kTypeInfoPtr, arena),
         .defined = set_new(64, kTypeInfoPtr, arena),
 
-        .fs = opts.fs,
-        .deps = opts.deps,
-        .sources = vector_new(32, opts.arena),
+        .fs = emit->fs,
+        .deps = ssa->deps,
+        .sources = vector_new(32, arena),
     };
 
     // simcoe: use the default module generator only when manual output is not specified
     for (size_t i = 0; i < len; i++)
     {
-        const ssa_module_t *mod = vector_get(opts.modules, i);
-        c89_begin_module(&emit, mod);
+        const ssa_module_t *mod = vector_get(modules, i);
+        c89_begin_module(&ctx, mod);
     }
 
     for (size_t i = 0; i < len; i++)
     {
-        const ssa_module_t *mod = vector_get(opts.modules, i);
-        c89_proto_module(&emit, mod);
+        const ssa_module_t *mod = vector_get(modules, i);
+        c89_proto_module(&ctx, mod);
     }
 
     for (size_t i = 0; i < len; i++)
     {
-        const ssa_module_t *mod = vector_get(opts.modules, i);
-        c89_define_module(&emit, mod);
+        const ssa_module_t *mod = vector_get(modules, i);
+        c89_define_module(&ctx, mod);
     }
-
-    result.sources = emit.sources;
-    return result;
-#endif
-    return (c89_emit_result_t){0};
 }

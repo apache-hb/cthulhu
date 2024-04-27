@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
+#include "base/panic.h"
 #include "config/config.h"
 #include "setup/memory.h"
 #include "format/colour.h"
@@ -34,6 +35,7 @@
 
 #include "backtrace/backtrace.h" // IWYU pragma: keep
 #include "base/log.h" // IWYU pragma: keep
+#include <stdio.h>
 
 static const frontend_t kFrontendInfo = {
     .info = {
@@ -256,8 +258,31 @@ int main(int argc, const char **argv)
     ssa_opt(reports, ssa, arena);
     CHECK_LOG(reports, "optimizing ssa");
 
-    fs_t *fs = fs_virtual("out", arena);
+    // fs_t *fs = fs_virtual("out", arena);
 
+    target_runtime_t *target = support_get_target(support, "cfamily");
+    CTASSERT(target != NULL);
+
+    CHECK_LOG(reports, "emitting target ssa");
+    const char *outpath = "out";
+
+    fs_t *out = fs_physical(outpath, arena);
+    if (out == NULL)
+    {
+        msg_notify(reports, &kEvent_FailedToCreateOutputDirectory, node,
+                   "failed to create output directory `%s`", outpath);
+    }
+
+    CHECK_LOG(reports, "creating output directory");
+
+    target_emit_t emit = {
+        .layout = eFileLayoutPair,
+        .fs = out,
+    };
+
+    target_emit_ssa(target, &ssa, &emit);
+
+#if 0
     emit_options_t base_emit_options = {
         .arena = arena,
         .reports = reports,
@@ -281,24 +306,14 @@ int main(int argc, const char **argv)
     c89_emit_result_t c89_emit_result = emit_c89(&c89_emit_options);
     CT_UNUSED(c89_emit_result); // TODO: check for errors
     CHECK_LOG(reports, "emitting c89");
+#endif
 
-    const char *outpath = "out";
+    // sync_result_t result = fs_sync(out, fs);
+    // if (result.path != NULL)
+    // {
+    //     msg_notify(reports, &kEvent_FailedToWriteOutputFile, node, "failed to sync %s",
+    //                result.path);
+    // }
 
-    fs_t *out = fs_physical(outpath, arena);
-    if (out == NULL)
-    {
-        msg_notify(reports, &kEvent_FailedToCreateOutputDirectory, node,
-                   "failed to create output directory `%s`", outpath);
-    }
-
-    CHECK_LOG(reports, "creating output directory");
-
-    sync_result_t result = fs_sync(out, fs);
-    if (result.path != NULL)
-    {
-        msg_notify(reports, &kEvent_FailedToWriteOutputFile, node, "failed to sync %s",
-                   result.path);
-    }
-
-    CHECK_LOG(reports, "writing output files");
+    // CHECK_LOG(reports, "writing output files");
 }

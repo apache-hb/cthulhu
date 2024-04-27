@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "cfamily-target/target.h"
+#include "llvm-target/target.h"
 
 #include "core/macros.h"
 #include "driver/driver.h"
@@ -15,6 +15,14 @@ static void cfamily_destroy(target_runtime_t *runtime)
 {
     // empty
     CT_UNUSED(runtime);
+}
+
+static void cfamily_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *emit)
+{
+    // empty
+    CT_UNUSED(runtime);
+    CT_UNUSED(ssa);
+    CT_UNUSED(emit);
 }
 
 CT_DRIVER_API const target_t kTargetC = {

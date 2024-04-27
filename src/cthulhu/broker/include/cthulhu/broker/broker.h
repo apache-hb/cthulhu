@@ -356,10 +356,10 @@ CT_BROKER_API void target_emit_ssa(IN_NOTNULL target_runtime_t *runtime, IN_NOTN
 
 /// extra stuff
 
-RET_NOTNULL
+RET_NOTNULL CT_CONSTFN
 CT_BROKER_API const char *broker_pass_name(IN_DOMAIN(<, ePassCount) broker_pass_t pass);
 
-CT_CONSTFN
+CT_CONSTFN CT_CONSTFN
 CT_BROKER_API const char *file_layout_name(IN_DOMAIN(<, eFileLayoutCount) file_layout_t layout);
 
 /// @}

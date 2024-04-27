@@ -141,7 +141,7 @@ tool_t make_tool(version_info_t version, arena_t *arena)
     };
     cfg_field_t *file_layout_field = config_enum(config, &kFileLayout, file_layout_options);
 
-    cfg_field_t *output_target_field = config_string(config, &kTargetOutput, NULL);
+    cfg_field_t *output_target_field = config_string(config, &kTargetOutput, "auto");
 
     cfg_field_t *warn_as_error_field = config_bool(options.report.group, &kWarnAsError, false);
 

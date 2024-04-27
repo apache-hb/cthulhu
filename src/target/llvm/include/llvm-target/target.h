@@ -11,6 +11,6 @@ typedef struct target_emit_t target_emit_t;
 
 CT_BEGIN_API
 
-CT_LOCAL void cfamily_tree(target_runtime_t *runtime, const tree_t *tree, target_emit_t *emit);
+CT_LOCAL void llvm_tree(target_runtime_t *runtime, const tree_t *tree, target_emit_t *emit);
 
 CT_END_API

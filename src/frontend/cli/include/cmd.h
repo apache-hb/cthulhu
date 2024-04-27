@@ -5,6 +5,7 @@
 #include "setup/setup.h"
 
 typedef struct logger_t logger_t;
+typedef struct support_t support_t;
 typedef struct map_t map_t;
 typedef struct ap_t ap_t;
 typedef struct vector_t vector_t;
