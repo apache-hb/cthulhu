@@ -101,41 +101,46 @@ static const cfg_info_t kVerboseLoggingInfo = {
 
 /// system error handler
 
+typedef struct error_context_t {
+    io_t *io;
+    bt_report_t *report;
+} error_context_t;
+
+static error_context_t gErrorContext;
+
 static void default_error_begin(size_t error, void *user)
 {
-    io_printf(user, "a fatal error has occured 0x%zX\n", error);
+    error_context_t *context = user;
+    context->report = bt_report_new(get_global_arena());
+
+    char buffer[1024];
+    size_t len = os_error_get_string(error, buffer, sizeof(buffer));
+    io_printf(context->io, "System error detected: %.*s\n", (int)len, buffer);
 }
 
 static void default_error_next(bt_address_t frame, void *user)
 {
-    io_t *io = user;
+    error_context_t *context = user;
 
-    char name_buffer[NAME_BUFFER_SIZE];
-    char path_buffer[PATH_BUFFER_SIZE];
-
-    bt_symbol_t symbol = {
-        .name = text_make(name_buffer, sizeof(name_buffer)),
-        .path = text_make(path_buffer, sizeof(path_buffer))
-    };
-
-    bt_resolve_t resolve = bt_resolve_symbol(frame, &symbol);
-
-    text_t name = symbol.name;
-    text_t path = symbol.path;
-
-    if (resolve & (eResolveLine | eResolveFile))
-    {
-        io_printf(io, "%s (%s:%" CT_PRI_LINE ")\n", name.text, path.text, symbol.line);
-    }
-    else
-    {
-        io_printf(io, "%s\n", name.text);
-    }
+    bt_report_add(context->report, frame);
 }
 
 static void default_error_end(void *user)
 {
-    CT_UNUSED(user);
+    error_context_t *context = user;
+
+    fmt_backtrace_t print = {
+        .options = {
+            .arena = get_global_arena(),
+            .io = context->io,
+            .pallete = &kColourDefault
+        },
+        .header = eHeadingGeneric,
+        .config = eBtZeroIndexedLines,
+        .project_source_path = CTU_SOURCE_ROOT,
+    };
+
+    fmt_backtrace(print, context->report);
 
     os_exit(CT_EXIT_INTERNAL);
 }
@@ -154,17 +159,18 @@ static void pretty_panic_handler(source_info_t location, const char *fmt, va_lis
         .pallete = &kColourDefault, // TODO: some of these should be globals
     };
 
-    print_backtrace_t backtrace_config = {
+    fmt_backtrace_t backtrace_config = {
         .options = print_options,
         .header = eHeadingGeneric,
-        .zero_indexed_lines = false,
+        .config = eBtZeroIndexedLines,
+        .project_source_path = CTU_SOURCE_ROOT,
     };
 
     char *msg = str_vformat(arena, fmt, args);
 
     io_printf(io, "[panic][%s:%" CT_PRI_LINE "] => %s: %s\n", location.file, location.line, location.function, msg);
 
-    print_backtrace(backtrace_config, report);
+    fmt_backtrace(backtrace_config, report);
     os_exit(CT_EXIT_INTERNAL);
 }
 
@@ -188,11 +194,17 @@ void setup_default(arena_t *arena)
     init_global_arena(mem);
     init_gmp_arena(mem);
 
+    error_context_t context = {
+        .io = io_stderr(),
+    };
+
+    gErrorContext = context;
+
     bt_error_t error = {
         .begin = default_error_begin,
         .end = default_error_end,
         .next = default_error_next,
-        .user = io_stderr(),
+        .user = &gErrorContext,
     };
 
     gSystemError = error;
@@ -388,8 +400,11 @@ setup_init_t setup_parse(int argc, const char **argv, setup_options_t setup)
     size_t params = ap_count_params(setup.ap);
 
     // no valid arguments were provided, print help and exit
-    if (pos == 0 && (unknowns == 0 || params == 0))
+    if (pos == 0 && unknowns == 0 && params == 0)
+    {
+        io_printf(io, "%s: no arguments provided\n", argv[0]);
         return setup_help(argv[0], pallete, false, heading, setup.root);
+    }
 
     // if the help flag was provided, print help and exit
     bool help = cfg_bool_value(setup.general.help);

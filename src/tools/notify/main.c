@@ -4,7 +4,6 @@
 #include "format/backtrace.h"
 #include "format/colour.h"
 #include "config/config.h"
-#include "core/macros.h"
 #include "setup/setup.h"
 #include "format/config.h"
 #include "format/notify2.h"
@@ -26,7 +25,6 @@ typedef struct tool_t
 
     cfg_field_t *test_backtrace;
     cfg_field_t *notify_style;
-    cfg_field_t *heading_style;
     cfg_field_t *zero_indexed;
 
     setup_options_t options;
@@ -67,20 +65,6 @@ static const cfg_info_t kNotifyInfo = {
     .args = CT_ARGS(kNotifyArgs),
 };
 
-static const cfg_choice_t kHeadingOptions[] = {
-    { .text = "generic", .value = eHeadingGeneric },
-    { .text = "microsoft", .value = eHeadingMicrosoft },
-};
-#define HEADING_OPTION_COUNT (sizeof(kHeadingOptions) / sizeof(cfg_choice_t))
-
-static const cfg_arg_t kHeadingArgs[] = { CT_ARG_LONG("heading") };
-
-static const cfg_info_t kHeadingInfo = {
-    .name = "heading",
-    .brief = "Heading style",
-    .args = CT_ARGS(kHeadingArgs),
-};
-
 static const cfg_arg_t kZeroIndexedArgs[] = { CT_ARG_SHORT("zi"), CT_ARG_LONG("zero-indexed") };
 
 static const cfg_info_t kZeroIndexedInfo = {
@@ -104,21 +88,12 @@ static tool_t make_config(arena_t *arena)
 
     cfg_field_t *notify_style = config_enum(config, &kNotifyInfo, notify_info);
 
-    cfg_enum_t heading_info = {
-        .options = kHeadingOptions,
-        .count = HEADING_OPTION_COUNT,
-        .initial = CT_DEFAULT_HEADER_STYLE,
-    };
-
-    cfg_field_t *heading = config_enum(config, &kHeadingInfo, heading_info);
-
     cfg_field_t *zero_indexed = config_bool(config, &kZeroIndexedInfo, false);
 
     tool_t tool = {
         .m_config = config,
         .test_backtrace = test_backtrace,
         .notify_style = notify_style,
-        .heading_style = heading,
         .zero_indexed = zero_indexed,
 
         .options = defaults,
@@ -309,14 +284,14 @@ static scan_t *scan_string(const char *name, const char *lang, const char *sourc
     return scan_io(lang, io, arena);
 }
 
-static void do_print_backtrace(print_backtrace_t config, arena_t *arena)
+static void do_print_backtrace(fmt_backtrace_t config, arena_t *arena)
 {
     bt_report_t *report = bt_report_collect(arena);
 
-    print_backtrace(config, report);
+    fmt_backtrace(config, report);
 }
 
-int recurse(int x, print_backtrace_t config, arena_t *arena)
+int recurse(int x, fmt_backtrace_t config, arena_t *arena)
 {
     if (x == 0)
     {
@@ -327,7 +302,7 @@ int recurse(int x, print_backtrace_t config, arena_t *arena)
     return recurse(x - 1, config, arena);
 }
 
-static int rec3(int x, print_backtrace_t config, arena_t *arena)
+static int rec3(int x, fmt_backtrace_t config, arena_t *arena)
 {
     if (x == 0)
     {
@@ -338,12 +313,12 @@ static int rec3(int x, print_backtrace_t config, arena_t *arena)
     return recurse(x - 1, config, arena);
 }
 
-static int inner(int x, print_backtrace_t config, arena_t *arena)
+static int inner(int x, fmt_backtrace_t config, arena_t *arena)
 {
     return rec3(x, config, arena);
 }
 
-static int rec2(int x, int y, print_backtrace_t config, arena_t *arena)
+static int rec2(int x, int y, fmt_backtrace_t config, arena_t *arena)
 {
     if (x == 0)
     {
@@ -353,11 +328,11 @@ static int rec2(int x, int y, print_backtrace_t config, arena_t *arena)
     return rec2(x - 1, y, config, arena);
 }
 
-static int recurse_head(int x, print_backtrace_t config, arena_t *arena);
-static int recurse_middle(int x, print_backtrace_t config, arena_t *arena);
-static int recurse_tail(int x, print_backtrace_t config, arena_t *arena);
+static int recurse_head(int x, fmt_backtrace_t config, arena_t *arena);
+static int recurse_middle(int x, fmt_backtrace_t config, arena_t *arena);
+static int recurse_tail(int x, fmt_backtrace_t config, arena_t *arena);
 
-static int recurse_head(int x, print_backtrace_t config, arena_t *arena)
+static int recurse_head(int x, fmt_backtrace_t config, arena_t *arena)
 {
     if (x == 0)
     {
@@ -368,7 +343,7 @@ static int recurse_head(int x, print_backtrace_t config, arena_t *arena)
     return recurse_middle(x - 1, config, arena);
 }
 
-static int recurse_middle(int x, print_backtrace_t config, arena_t *arena)
+static int recurse_middle(int x, fmt_backtrace_t config, arena_t *arena)
 {
     if (x == 0)
     {
@@ -379,7 +354,7 @@ static int recurse_middle(int x, print_backtrace_t config, arena_t *arena)
     return recurse_tail(x - 1, config, arena);
 }
 
-static int recurse_tail(int x, print_backtrace_t config, arena_t *arena)
+static int recurse_tail(int x, fmt_backtrace_t config, arena_t *arena)
 {
     if (x == 0)
     {
@@ -404,17 +379,17 @@ static void do_backtrace(io_t *io, arena_t *arena)
         .pallete = &kColourDefault,
     };
 
-    print_backtrace_t config1 = {
+    fmt_backtrace_t config1 = {
         .options = options,
         .header = eHeadingGeneric,
-        .zero_indexed_lines = false,
+        .config = eBtZeroIndexedLines,
         .project_source_path = source_root,
     };
 
-    print_backtrace_t config2 = {
+    fmt_backtrace_t config2 = {
         .options = options,
         .header = eHeadingMicrosoft,
-        .zero_indexed_lines = true,
+        .config = eBtZeroIndexedLines,
         .project_source_path = source_root,
     };
 
@@ -441,10 +416,11 @@ int main(int argc, const char **argv)
     if (setup_should_exit(&setup))
         return setup_exit_code(&setup);
 
+    io_printf(con, "notify tool\n");
+
     bool backtraces = cfg_bool_value(tool.test_backtrace);
 
     notify_style_t style = cfg_enum_value(tool.notify_style);
-    heading_style_t heading = cfg_enum_value(tool.heading_style);
     bool zero_indexed = cfg_bool_value(tool.zero_indexed);
 
     logger_t *logs = logger_new(arena);
@@ -468,7 +444,7 @@ int main(int argc, const char **argv)
 
         print_notify_t notify_options = {
             .options = options,
-            .heading = heading,
+            .heading = setup.heading,
             .style = style,
             .zero_indexed_lines = zero_indexed,
         };

@@ -18,15 +18,17 @@ size_t get_offset_line(bool zero_indexed_lines, size_t line)
     return line == 0 ? line : line - 1;
 }
 
-size_t get_num_width(size_t num)
+int get_num_width(size_t num)
 {
-    size_t width = 0;
+    int width = 0;
 
     while (num > 0)
     {
         num /= 10;
         width++;
     }
+
+    CTASSERTF(width <= FMT_BASE10_MAX_WIDTH, "number %zu is too large (%d)", num, width);
 
     return width;
 }

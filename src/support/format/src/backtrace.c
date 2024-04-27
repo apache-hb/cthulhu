@@ -31,7 +31,8 @@ typedef struct bt_report_t
     arena_t *arena;
 
     /// @brief all entries
-    typevec_t *entries;
+    /// @note typevec_t<entry_t>
+    typevec_t *frames;
 } bt_report_t;
 
 /// @brief a single backtrace entry
@@ -60,12 +61,17 @@ typedef struct entry_t
 typedef struct backtrace_t
 {
     /// the user provided options
-    print_backtrace_t options;
+    fmt_backtrace_t options;
 
     /// format context
     format_context_t format_context;
 
+    /// the collected entries from the report
+    /// @note typevec_t<entry_t>
+    typevec_t *entries;
+
     /// the collapsed frames
+    /// @note typevec_t<collapsed_t>
     typevec_t *frames;
 
     /// the alignment of the frame index numbers
@@ -82,19 +88,46 @@ typedef struct backtrace_t
 } backtrace_t;
 
 /// @brief a single possibly collapsed frame
+/// this is a span covering (first, last) * repeat frames
 typedef struct collapsed_t
 {
+    /// @brief index of the first frame in this sequence
+    unsigned first;
+
+    /// @brief index of the last frame in this sequence
+    unsigned last;
+
+    /// @brief how many times this sequence repeats
+    unsigned repeat;
+
     /// @brief the sequence of frames
     /// @note this is NULL if @a entry is not NULL
-    typevec_t *sequence;
-
-    /// @brief how many times @a sequence repeats
-    /// @note this is 0 if @a entry is not NULL
-    size_t repeat;
-
-    /// @brief a single entry if @a collapsed is NULL
-    entry_t *entry;
+    // typevec_t *sequence;
 } collapsed_t;
+
+static bool is_collapsed_range(collapsed_t collapsed)
+{
+    return collapsed.repeat != 0;
+}
+
+static const entry_t *get_collapsed_entry(const backtrace_t *self, collapsed_t range)
+{
+    CTASSERTF(!is_collapsed_range(range), "range is not a single frame");
+
+    return typevec_offset(self->entries, range.first);
+}
+
+#if 0
+static const entry_t *get_first_entry(const backtrace_t *self, collapsed_t range)
+{
+    return typevec_offset(self->entries, range.first);
+}
+
+static const entry_t *get_last_entry(const backtrace_t *self, collapsed_t range)
+{
+    return typevec_offset(self->entries, range.last);
+}
+#endif
 
 // stacktrace collapsing
 
@@ -106,18 +139,29 @@ typedef struct collapsed_t
 // we store the collapsed frames and unmatched frames in a new buffer
 // the final buffer is what we print
 
-static size_t match_sequence(typevec_t *sequence, const typevec_t *entries, size_t start, collapsed_t *collapsed)
+/// @brief try and match a sequence of frames
+/// scans frames starting at scan_start for the sequence of frames (seq_start, scan_start)
+/// returns the number of frames matched
+static unsigned match_sequence(
+    const typevec_t *sequence,
+    const typevec_t *frames,
+    unsigned scan_start,
+    unsigned seq_start,
+    collapsed_t *collapsed
+)
 {
+    CT_UNUSED(seq_start);
+
     size_t seq_len = typevec_len(sequence);
-    size_t ent_len = typevec_len(entries);
+    size_t ent_len = typevec_len(frames);
 
     // see how many times the sequence repeats
     // if it doesnt repeat then return false
     size_t count = 0;
     size_t j = 0;
-    for (size_t i = start; i < ent_len; i++)
+    for (size_t i = scan_start; i < ent_len; i++)
     {
-        const entry_t *a = typevec_offset(entries, i);
+        const entry_t *a = typevec_offset(frames, i);
         const entry_t *b = typevec_offset(sequence, j);
 
         if (a->address != b->address)
@@ -133,34 +177,36 @@ static size_t match_sequence(typevec_t *sequence, const typevec_t *entries, size
     }
 
     if (count == 0)
-        return 0;
+        return 0; // no match
 
     // we have a match
     // we need to store the sequence and the repeat count
-    collapsed->sequence = typevec_slice(sequence, 0, seq_len);
+
+    collapsed->first = scan_start;
+    collapsed->last = scan_start + seq_len - 1;
     collapsed->repeat = count;
     return count * seq_len;
 }
 
-static size_t collapse_frame(const typevec_t *entries, size_t start, arena_t *arena, collapsed_t *collapsed)
+static unsigned collapse_frame(const typevec_t *frames, unsigned start, arena_t *arena, collapsed_t *collapsed)
 {
-    size_t len = typevec_len(entries);
+    size_t len = typevec_len(frames);
     typevec_t *buffer = typevec_new(sizeof(entry_t), len, arena);
     if (start <= len)
     {
         // push the first entry
-        const entry_t *first = typevec_offset(entries, start);
-        typevec_push(buffer, first);
+        const entry_t *head = typevec_offset(frames, start);
+        typevec_push(buffer, head);
 
         for (size_t i = start + 1; i < len; i++)
         {
-            const entry_t *entry = typevec_offset(entries, i);
-            CTASSERTF(entry != NULL, "entry at %zu is NULL", i);
+            const entry_t *frame = typevec_offset(frames, i);
+            CTASSERTF(frame != NULL, "entry at %zu is NULL", i);
 
             // we might have a match
-            if (entry->address == first->address)
+            if (frame->address == head->address)
             {
-                size_t count = match_sequence(buffer, entries, i, collapsed);
+                unsigned count = match_sequence(buffer, frames, i, start, collapsed);
 
                 // if we matched more then we're done
                 if (count != 0) return count;
@@ -170,12 +216,16 @@ static size_t collapse_frame(const typevec_t *entries, size_t start, arena_t *ar
             }
 
             // we dont have a match, so we push the entry and start again
-            typevec_push(buffer, entry);
+            typevec_push(buffer, frame);
         }
     }
 
+    collapsed->first = start;
+    collapsed->last = start;
+    collapsed->repeat = 0;
+
     // if we get here then no match was found
-    collapsed->entry = typevec_offset(entries, start);
+    // collapsed->entry = typevec_offset(frames, start);
     return 1;
 }
 
@@ -187,7 +237,7 @@ static typevec_t *collapse_frames(const typevec_t *frames, arena_t *arena)
     for (size_t i = 0; i < len; i++)
     {
         collapsed_t collapsed = {0};
-        size_t count = collapse_frame(frames, i, arena, &collapsed);
+        unsigned count = collapse_frame(frames, i, arena, &collapsed);
 
         CTASSERTF(count > 0, "count of 0 at %zu", i);
 
@@ -217,14 +267,14 @@ static typevec_t *collapse_frames(const typevec_t *frames, arena_t *arena)
 #define PTR_TEXT_LEN (2 + 2 * sizeof(void*))
 
 // get the longest symbol in a sequence of entries
-static size_t get_longest_symbol(const typevec_t *entries)
+static size_t get_longest_symbol(const typevec_t *frames, collapsed_t range)
 {
-    size_t len = typevec_len(entries);
+    CTASSERTF(is_collapsed_range(range), "range is not a single frame");
     size_t largest = 0;
 
-    for (size_t i = 0; i < len; i++)
+    for (size_t i = range.first; i <= range.last; i++)
     {
-        const entry_t *entry = typevec_offset(entries, i);
+        const entry_t *entry = typevec_offset(frames, i);
         CTASSERTF(entry != NULL, "entry at %zu is NULL", i);
 
         size_t width = ctu_strlen(entry->symbol);
@@ -244,7 +294,7 @@ typedef struct symbol_match_info_t
     size_t count;
 } symbol_match_info_t;
 
-static symbol_match_info_t get_largest_collapsed_symbol(const collapsed_t *entries, size_t len)
+static symbol_match_info_t get_largest_collapsed_symbol(const typevec_t *frames, const collapsed_t *entries, size_t len)
 {
     CTASSERT(entries != NULL);
 
@@ -252,19 +302,22 @@ static symbol_match_info_t get_largest_collapsed_symbol(const collapsed_t *entri
 
     for (size_t i = 0; i < len; i++)
     {
-        const collapsed_t *entry = entries + i;
-        CTASSERTF(entry != NULL, "entry at %zu is NULL", i);
+        const collapsed_t *range = entries + i;
+        CTASSERTF(range != NULL, "entry at %zu is NULL", i);
 
-        if (entry->entry == NULL)
+        if (is_collapsed_range(*range))
         {
             symbol_match_info_t info = {
                 .largest_symbol = largest,
                 .count = i
             };
+
             return info;
         }
 
-        size_t width = ctu_strlen(entry->entry->symbol);
+        const entry_t *entry = typevec_offset(frames, range->first);
+
+        size_t width = ctu_strlen(entry->symbol);
         largest = CT_MAX(width, largest);
     }
 
@@ -277,7 +330,7 @@ static symbol_match_info_t get_largest_collapsed_symbol(const collapsed_t *entri
 
 static const char *get_file_path(backtrace_t *pass, const char *file)
 {
-    print_backtrace_t config = pass->options;
+    fmt_backtrace_t config = pass->options;
     const char *path = config.project_source_path;
     size_t len = pass->source_root_len;
 
@@ -292,7 +345,7 @@ static const char *get_file_path(backtrace_t *pass, const char *file)
 
 static const char *fmt_entry_location(backtrace_t *pass, const entry_t *entry)
 {
-    print_backtrace_t config = pass->options;
+    fmt_backtrace_t config = pass->options;
 
     bt_resolve_t resolved = entry->info;
 
@@ -310,7 +363,7 @@ static const char *fmt_entry_location(backtrace_t *pass, const entry_t *entry)
                 .context = pass->format_context,
                 .colour = eColourDefault,
                 .heading_style = config.header,
-                .zero_indexed_lines = config.zero_indexed_lines,
+                .zero_indexed_lines = config.config & eBtZeroIndexedLines,
             };
 
             char *out = fmt_source_location(source_config, file, where);
@@ -325,7 +378,7 @@ static const char *fmt_entry_location(backtrace_t *pass, const entry_t *entry)
 
 static char *fmt_entry(backtrace_t *pass, size_t symbol_align, const entry_t *entry)
 {
-    print_backtrace_t config = pass->options;
+    fmt_backtrace_t config = pass->options;
     print_options_t options = config.options;
 
     bt_resolve_t resolved = entry->info;
@@ -346,7 +399,7 @@ static char *fmt_entry(backtrace_t *pass, size_t symbol_align, const entry_t *en
 
 static char *fmt_index(backtrace_t *pass, size_t index)
 {
-    print_backtrace_t config = pass->options;
+    fmt_backtrace_t config = pass->options;
     print_options_t options = config.options;
 
     char *idx = fmt_left_align(options.arena, pass->index_align, "%zu", index);
@@ -355,28 +408,31 @@ static char *fmt_index(backtrace_t *pass, size_t index)
 
 static void print_single_frame(backtrace_t *pass, size_t index, const entry_t *entry)
 {
-    print_backtrace_t options = pass->options;
+    fmt_backtrace_t options = pass->options;
     print_options_t base = options.options;
     char *idx = fmt_index(pass, index);
     io_printf(base.io, "%s %s\n", idx, fmt_entry(pass, pass->symbol_align, entry));
 }
 
-static void print_frame_sequence(backtrace_t *pass, size_t index, const typevec_t *sequence, size_t repeat)
+static void print_frame_sequence(backtrace_t *pass, size_t index, collapsed_t collapsed)
 {
-    print_backtrace_t options = pass->options;
+    // typevec_t *sequence = collapsed.sequence;
+    unsigned repeat = collapsed.repeat;
+
+    fmt_backtrace_t options = pass->options;
     print_options_t base = options.options;
 
-    size_t len = typevec_len(sequence);
+    // size_t len = get_collapsed_count(collapsed);
 
-    size_t largest = get_longest_symbol(sequence);
+    size_t largest = get_longest_symbol(pass->entries, collapsed);
 
     char *idx = fmt_index(pass, index);
-    char *coloured = colour_format(pass->format_context, COLOUR_RECURSE, "%zu", repeat);
+    char *coloured = colour_format(pass->format_context, COLOUR_RECURSE, "%u", repeat);
     io_printf(base.io, "%s repeats %s times\n", idx, coloured);
 
-    for (size_t i = 0; i < len; i++)
+    for (size_t i = collapsed.first; i <= collapsed.last; i++)
     {
-        const entry_t *entry = typevec_offset(sequence, i);
+        const entry_t *entry = typevec_offset(pass->entries, i);
         CTASSERTF(entry != NULL, "entry at %zu is NULL", i);
 
         char *it = fmt_entry(pass, largest, entry);
@@ -385,43 +441,45 @@ static void print_frame_sequence(backtrace_t *pass, size_t index, const typevec_
     }
 }
 
-static void print_collapsed(backtrace_t *pass, size_t index, const collapsed_t *collapsed)
+static void print_collapsed(backtrace_t *pass, size_t index, collapsed_t collapsed)
 {
-    if (collapsed->entry != NULL)
+    if (is_collapsed_range(collapsed))
     {
-        print_single_frame(pass, index, collapsed->entry);
+        print_frame_sequence(pass, index, collapsed);
     }
     else
     {
-        print_frame_sequence(pass, index, collapsed->sequence, collapsed->repeat);
+        const entry_t *entry = get_collapsed_entry(pass, collapsed);
+        print_single_frame(pass, index, entry);
     }
 }
 
 STA_DECL
-void print_backtrace(print_backtrace_t print, bt_report_t *report)
+void fmt_backtrace(fmt_backtrace_t fmt, bt_report_t *report)
 {
     CTASSERT(report != NULL);
 
-    print_options_t options = print.options;
+    print_options_t options = fmt.options;
 
-    typevec_t *frames = collapse_frames(report->entries, options.arena);
+    typevec_t *entries = collapse_frames(report->frames, options.arena);
 
-    collapsed_t *collapsed = typevec_data(frames);
-    size_t frame_count = typevec_len(frames);
+    collapsed_t *collapsed = typevec_data(entries);
+    size_t frame_count = typevec_len(entries);
 
-    symbol_match_info_t symbol_align = get_largest_collapsed_symbol(collapsed, frame_count);
+    symbol_match_info_t symbol_align = get_largest_collapsed_symbol(report->frames, collapsed, frame_count);
     size_t align = get_num_width(frame_count);
 
     backtrace_t pass = {
-        .options = print,
+        .options = fmt,
         .format_context = format_context_make(options),
-        .frames = frames,
+        .entries = report->frames,
+        .frames = entries,
         .index_align = align,
         .symbol_align = symbol_align.largest_symbol,
         .arena = options.arena,
     };
 
-    const char *source_path = print.project_source_path;
+    const char *source_path = fmt.project_source_path;
     if (source_path)
     {
         size_t len = ctu_strlen(source_path);
@@ -432,7 +490,7 @@ void print_backtrace(print_backtrace_t print, bt_report_t *report)
 
     for (size_t i = 0; i < frame_count; i++)
     {
-        const collapsed_t *frame = typevec_offset(frames, i);
+        const collapsed_t *frame = typevec_offset(entries, i);
         CTASSERTF(frame != NULL, "collapsed at %zu is NULL", i);
 
         // this logic handles aligning symbol names on a per region basis
@@ -443,15 +501,15 @@ void print_backtrace(print_backtrace_t print, bt_report_t *report)
         }
         else
         {
-            if (frame->entry != NULL)
+            if (!is_collapsed_range(*frame))
             {
                 size_t remaining = frame_count - i;
-                symbol_align = get_largest_collapsed_symbol(frame, remaining);
+                symbol_align = get_largest_collapsed_symbol(report->frames, frame, remaining);
                 pass.symbol_align = symbol_align.largest_symbol;
             }
         }
 
-        print_collapsed(&pass, i, frame);
+        print_collapsed(&pass, i, *frame);
     }
 }
 
@@ -460,15 +518,11 @@ bt_report_t *bt_report_new(arena_t *arena)
 {
     CTASSERT(arena != NULL);
 
-    bt_report_t result = {
-        .arena = arena,
-        .entries = typevec_new(sizeof(entry_t), 4, arena),
-    };
-
     bt_report_t *report = ARENA_MALLOC(sizeof(bt_report_t), "bt_report", NULL, arena);
-    *report = result;
+    report->arena = arena;
+    report->frames = typevec_new(sizeof(entry_t), 4, arena);
 
-    ARENA_IDENTIFY(report->entries, "entries", report, arena);
+    ARENA_IDENTIFY(report->frames, "entries", report, arena);
 
     return report;
 }
@@ -510,5 +564,5 @@ void bt_report_add(bt_report_t *report, bt_address_t frame)
         .address = frame,
     };
 
-    typevec_push(report->entries, &entry);
+    typevec_push(report->frames, &entry);
 }

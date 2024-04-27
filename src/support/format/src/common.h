@@ -15,7 +15,9 @@
 size_t get_offset_line(bool zero_indexed_lines, size_t line);
 
 /// @brief get the width of a number if it were printed as base10
-size_t get_num_width(size_t num);
+int get_num_width(size_t num);
+
+#define FMT_BASE10_MAX_WIDTH 20
 
 char *fmt_left_align(arena_t *arena, size_t width, const char *fmt, ...);
 char *fmt_right_align(arena_t *arena, size_t width, const char *fmt, ...);

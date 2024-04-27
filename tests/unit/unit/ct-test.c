@@ -162,17 +162,17 @@ static void test_panic_handler(source_info_t location, const char *fmt, va_list 
 
         bt_report_t *report = bt_report_collect(gTestArena);
 
-        print_backtrace_t config = {
+        fmt_backtrace_t config = {
             .options = {
                 .arena = gTestArena,
                 .io = io,
                 .pallete = &kColourDefault,
             },
             .header = eHeadingGeneric,
-            .zero_indexed_lines = false,
+            .config = eBtZeroIndexedLines,
         };
 
-        print_backtrace(config, report);
+        fmt_backtrace(config, report);
 
         os_exit(CT_EXIT_INTERNAL);
     }

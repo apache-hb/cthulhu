@@ -14,18 +14,15 @@ typedef struct colour_pallete_t colour_pallete_t;
 /// @{
 
 /// @brief line heading style
-typedef enum heading_style_t
+typedef enum fmt_heading_t
 {
-    /// @brief generic style
-    /// ie: `file:line:col:`
-    eHeadingGeneric,
-
-    /// @brief microsoft msvc style
-    /// ie: `file(line:col):`
-    eHeadingMicrosoft,
+#define FMT_HEADING(id, name) id,
+#include "format/format.inc"
 
     eHeadingCount
-} heading_style_t;
+} fmt_heading_t;
+
+typedef fmt_heading_t heading_style_t;
 
 #if CT_OS_WINDOWS
 #   define CT_DEFAULT_HEADER_STYLE eHeadingMicrosoft
@@ -34,7 +31,7 @@ typedef enum heading_style_t
 #endif
 
 /// @brief generic print options
-typedef struct print_options_t
+typedef struct fmt_options_t
 {
     /// @brief temporary arena
     arena_t *arena;
@@ -44,7 +41,9 @@ typedef struct print_options_t
 
     /// @brief colour pallete to use
     const colour_pallete_t *pallete;
-} print_options_t;
+} fmt_options_t;
+
+typedef fmt_options_t print_options_t;
 
 /// @}
 

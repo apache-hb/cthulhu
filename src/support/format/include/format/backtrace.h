@@ -25,23 +25,29 @@ typedef struct typevec_t typevec_t;
 /// @brief a backtrace report context
 typedef struct bt_report_t bt_report_t;
 
-/// @brief printing options for a backtrace
-typedef struct print_backtrace_t
+typedef enum fmt_backtrace_options_t
+{
+#define FMT_BT_OPTION(ID, STR, VALUE) ID = (VALUE),
+#include "format/format.inc"
+} fmt_backtrace_options_t;
+
+/// @brief printing options for a stacktrace
+typedef struct fmt_backtrace_t
 {
     /// @brief basic print options
     print_options_t options;
 
     /// @brief the line heading style
-    FIELD_RANGE(0, eHeadingCount) heading_style_t header;
+    FIELD_RANGE(0, eHeadingCount) fmt_heading_t header;
 
-    /// @brief is the first line of the file line 0 or line 1
-    bool zero_indexed_lines;
+    /// @brief configuration flags
+    fmt_backtrace_options_t config;
 
     /// @brief path to the root of the projects source directory
     /// if this is set then paths that are under this directory will be trimmed
     /// to be relative to this directory. all other paths remain unchanged
     const char *project_source_path;
-} print_backtrace_t;
+} fmt_backtrace_t;
 
 /// @brief create a new backtrace report
 ///
@@ -62,9 +68,9 @@ CT_FORMAT_API void bt_report_add(IN_NOTNULL bt_report_t *report, bt_address_t fr
 
 /// @brief print a backtrace report
 ///
-/// @param print the configuration to use
+/// @param fmt the configuration to use
 /// @param report the report to print
-CT_FORMAT_API void print_backtrace(print_backtrace_t print, IN_NOTNULL bt_report_t *report);
+CT_FORMAT_API void fmt_backtrace(fmt_backtrace_t fmt, IN_NOTNULL bt_report_t *report);
 
 /// @}
 

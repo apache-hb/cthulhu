@@ -7,5 +7,7 @@ int main(void)
 {
     setup_default(NULL);
 
-    CT_NEVER("error");
+    volatile int *a = NULL;
+    *a = 0;
+    // CT_NEVER("error");
 }
