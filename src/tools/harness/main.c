@@ -294,6 +294,24 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
 
     fs_t *fs = fs_virtual("out", arena);
 
+    target_runtime_t *debug = support_get_target(support, "debug");
+    target_runtime_t *cfamily = support_get_target(support, "cfamily");
+
+    CTASSERT(debug != NULL);
+    CTASSERT(cfamily != NULL);
+
+    target_emit_t emit = {
+        .layout = eFileLayoutFlat,
+        .fs = fs,
+    };
+
+    target_emit_ssa(debug, &ssa, &emit);
+    CHECK_LOG(logger, "emitting debug ssa");
+
+    emit_result_t cfamily_result = target_emit_ssa(cfamily, &ssa, &emit);
+    CHECK_LOG(logger, "emitting cfamily ssa");
+
+#if 0
     emit_options_t base_options = {
         .arena = arena,
         .reports = logger,
@@ -309,11 +327,12 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     CHECK_LOG(logger, "emitting ssa");
     CT_UNUSED(ssa_emit_result); // TODO: check for errors
 
+
     c89_emit_options_t c89_emit_options = {.opts = base_options};
 
     c89_emit_result_t c89_emit_result = emit_c89(&c89_emit_options);
     CHECK_LOG(logger, "emitting c89");
-
+#endif
     const char *test_dir = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "test-out", cwd);
     const char *run_dir = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s", test_dir, name);
 
@@ -333,11 +352,11 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     }
     CHECK_LOG(logger, "syncing output directory");
 
-    size_t len = vector_len(c89_emit_result.sources);
+    size_t len = vector_len(cfamily_result.files);
     vector_t *sources = vector_of(len, arena);
     for (size_t i = 0; i < len; i++)
     {
-        const char *part = vector_get(c89_emit_result.sources, i);
+        const char *part = vector_get(cfamily_result.files, i);
         char *path = str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "%s", run_dir, part);
         vector_set(sources, i, path);
     }

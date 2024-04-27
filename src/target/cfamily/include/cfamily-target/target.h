@@ -3,6 +3,7 @@
 #pragma once
 
 #include "core/compiler.h"
+#include "cthulhu/broker/broker.h"
 
 typedef struct target_runtime_t target_runtime_t;
 typedef struct tree_t tree_t;
@@ -13,6 +14,6 @@ CT_BEGIN_API
 
 CT_LOCAL void cfamily_tree(target_runtime_t *runtime, const tree_t *tree, target_emit_t *emit);
 
-CT_LOCAL void cfamily_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *emit);
+CT_LOCAL emit_result_t cfamily_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *emit);
 
 CT_END_API

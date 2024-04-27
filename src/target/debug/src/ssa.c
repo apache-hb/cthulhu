@@ -325,6 +325,7 @@ static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
 
     char *file = str_format(base->arena, "%s/%s.ssa", path, mod->name);
     fs_file_create(fs, file);
+    vector_push(&base->files, file);
 
     io_t *io = fs_open(fs, file, eOsAccessWrite | eOsAccessTruncate);
     io_printf(io, "module {name=%s", mod->name);
@@ -374,7 +375,7 @@ static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
     }
 }
 
-void debug_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *config)
+emit_result_t debug_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *config)
 {
     CT_UNUSED(runtime);
     CT_UNUSED(ssa);
@@ -387,6 +388,7 @@ void debug_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t
             .reports = runtime->logger,
             .block_names = names_new(64, arena),
             .vreg_names = names_new(64, arena),
+            .files = vector_new(16, arena),
         },
         .fs = config->fs,
         .deps = ssa->deps,
@@ -398,4 +400,10 @@ void debug_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t
         const ssa_module_t *mod = vector_get(ssa->modules, i);
         emit_ssa_module(&emit, mod);
     }
+
+    emit_result_t result = {
+        .files = emit.emit.files
+    };
+
+    return result;
 }

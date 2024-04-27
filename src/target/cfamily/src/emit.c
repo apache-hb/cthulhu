@@ -856,7 +856,7 @@ static void c89_define_module(c89_emit_t *emit, const ssa_module_t *mod)
     define_symbols(emit, mod, mod->functions, c89_define_function);
 }
 
-void cfamily_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *emit)
+emit_result_t cfamily_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *emit)
 {
     size_t len = vector_len(ssa->modules);
 
@@ -901,4 +901,10 @@ void cfamily_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit
         const ssa_module_t *mod = vector_get(modules, i);
         c89_define_module(&ctx, mod);
     }
+
+    emit_result_t result = {
+        .files = ctx.sources,
+    };
+
+    return result;
 }

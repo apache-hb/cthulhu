@@ -575,7 +575,7 @@ void target_emit_tree(target_runtime_t *runtime, const tree_t *tree, target_emit
 }
 
 STA_DECL
-void target_emit_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *emit)
+emit_result_t target_emit_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *emit)
 {
     CTASSERT(runtime != NULL);
     CTASSERT(ssa != NULL);
@@ -584,7 +584,7 @@ void target_emit_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_
     const target_t *target = runtime->info;
     CTASSERTF(target->fn_ssa != NULL, "target '%s' does not implement ssa emission", target->info.name);
 
-    target->fn_ssa(runtime, ssa, emit);
+    return target->fn_ssa(runtime, ssa, emit);
 }
 
 static const char *const kPassNames[ePassCount] = {

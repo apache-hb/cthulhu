@@ -415,14 +415,6 @@ static size_t normstr(char *out, char c)
         out[0] = '\\';
         out[1] = 'r';
         return 2;
-    case '\v':
-        out[0] = '\\';
-        out[1] = 'v';
-        return 2;
-    case '\f':
-        out[0] = '\\';
-        out[1] = 'f';
-        return 2;
     default: {
         int result = CT_SNPRINTF(out, 5, "\\x%02x", (c & 0xFF));
         CTASSERT(result > 0);

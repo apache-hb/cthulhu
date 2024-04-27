@@ -12,13 +12,15 @@ typedef struct names_t
     map_t *names;
 } names_t;
 
-typedef struct visit_ast_t
+typedef struct emit_t
 {
     arena_t *arena;
     logger_t *reports;
 
     names_t block_names;
     names_t vreg_names;
+
+    vector_t *files;
 } emit_t;
 
 char *begin_module(emit_t *emit, fs_t *fs, const ssa_module_t *mod);

@@ -220,8 +220,13 @@ typedef void (*target_destroy_t)(target_runtime_t *runtime);
 /// @brief tree output generation
 typedef void (*target_tree_t)(target_runtime_t *runtime, const tree_t *tree, target_emit_t *emit);
 
+typedef struct emit_result_t
+{
+    vector_t *files;
+} emit_result_t;
+
 /// @brief ssa output generation
-typedef void (*target_ssa_t)(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *emit);
+typedef emit_result_t (*target_ssa_t)(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *emit);
 
 /// @brief a codegen target backend
 typedef struct target_t
@@ -352,7 +357,7 @@ CT_BROKER_API text_view_t build_unit_id(IN_NOTNULL const vector_t *parts, IN_NOT
 /// all target apis
 
 CT_BROKER_API void target_emit_tree(IN_NOTNULL target_runtime_t *runtime, IN_NOTNULL const tree_t *tree, IN_NOTNULL target_emit_t *emit);
-CT_BROKER_API void target_emit_ssa(IN_NOTNULL target_runtime_t *runtime, IN_NOTNULL const ssa_result_t *ssa, IN_NOTNULL target_emit_t *emit);
+CT_BROKER_API emit_result_t target_emit_ssa(IN_NOTNULL target_runtime_t *runtime, IN_NOTNULL const ssa_result_t *ssa, IN_NOTNULL target_emit_t *emit);
 
 /// extra stuff
 
