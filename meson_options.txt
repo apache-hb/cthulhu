@@ -54,6 +54,11 @@ option('target_hlsl', type : 'feature',
     value : 'auto'
 )
 
+option('target_llvm', type : 'feature',
+    description : 'Emits LLVM IR code from the ssa form',
+    value : 'auto'
+)
+
 option('default_target', type : 'combo',
     description : 'Control the default target of the compiler',
     choices : ['cfamily', 'debug', 'hlsl'],

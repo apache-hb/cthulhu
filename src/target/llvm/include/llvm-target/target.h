@@ -11,6 +11,10 @@ typedef struct target_emit_t target_emit_t;
 
 CT_BEGIN_API
 
+CT_LOCAL void llvm_create(target_runtime_t *runtime);
+CT_LOCAL void llvm_destroy(target_runtime_t *runtime);
+
 CT_LOCAL void llvm_tree(target_runtime_t *runtime, const tree_t *tree, target_emit_t *emit);
+CT_LOCAL void llvm_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *emit);
 
 CT_END_API

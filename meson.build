@@ -75,6 +75,7 @@ lang_example = get_option('lang_example').disable_auto_if(meson.is_subproject())
 target_cfamily = get_option('target_cfamily').disable_auto_if(meson.is_subproject())
 target_debug = get_option('target_debug').disable_auto_if(meson.is_subproject())
 target_hlsl = get_option('target_hlsl').disable_auto_if(meson.is_subproject())
+target_llvm = get_option('target_llvm').disable_auto_if(meson.is_subproject())
 default_target = get_option('default_target')
 
 # all compiler plugins
@@ -348,6 +349,7 @@ build_summary = {
         'C Family': target_cfamily.allowed(),
         'Debug': target_debug.allowed(),
         'HLSL': target_hlsl.allowed(),
+        'LLVM': target_llvm.allowed(),
         'Default': default_target
     },
     'Frontends': {
