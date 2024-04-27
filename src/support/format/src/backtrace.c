@@ -99,10 +99,6 @@ typedef struct collapsed_t
 
     /// @brief how many times this sequence repeats
     unsigned repeat;
-
-    /// @brief the sequence of frames
-    /// @note this is NULL if @a entry is not NULL
-    // typevec_t *sequence;
 } collapsed_t;
 
 static bool is_collapsed_range(collapsed_t collapsed)
