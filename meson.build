@@ -336,7 +336,7 @@ build_summary = {
         'Analyze': opt_analyze.enabled(),
         'Paranoid asserts': opt_paranoid.allowed(),
         'Flex': flex,
-        # 'Bison': bison,
+        'Bison': bison,
         'Compile time tracing': trace_time.enabled(),
         'Module loader': default_library,
         'Unit tests': unit_tests,

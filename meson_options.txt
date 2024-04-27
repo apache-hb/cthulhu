@@ -120,11 +120,6 @@ option('stb_sprintf', type : 'feature',
     value : 'auto'
 )
 
-option('monolithic', type : 'feature',
-    description : 'build components as a single monolithic library',
-    value : 'auto'
-)
-
 # tools
 
 option('tool_notify', type : 'feature',

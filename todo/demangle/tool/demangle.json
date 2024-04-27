@@ -1,0 +1,28 @@
+{
+    "info": {
+        "id": "demangle",
+        "name": "Demangle",
+        "version": { "major": 0, "minor": 1, "patch": 0 },
+        "license": "LGPL-3.0-or-later",
+        "author": "Elliot Haisley",
+        "description": "Demangler commandline tool"
+    },
+    "commandline": {
+        "use_setup_options": true,
+        "options": {
+            "demangle": {
+                "brief": "Override default demangler detection",
+                "args": [
+                    { "long": "demangler" },
+                    { "short": "d" }
+                ],
+                "choices": [
+                    "auto",
+                    "microsoft",
+                    "itanium"
+                ],
+                "default": "auto"
+            }
+        }
+    }
+}

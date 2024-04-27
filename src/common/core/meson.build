@@ -20,6 +20,8 @@ endif
 config_cdata.set10('CTU_TRACE_MEMORY', trace_memory.allowed())
 config_cdata.set10('CTU_STB_SPRINTF', opt_stb_sprintf.allowed())
 
+# config_cdata.set10('CTU_MONOLITHIC', monolithic)
+
 ctu_config_header = configure_file(
     output : 'ctu_core_config.h',
     configuration : config_cdata

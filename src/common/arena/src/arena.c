@@ -13,13 +13,7 @@ char *arena_opt_strdup(const char *str, arena_t *arena)
     CTASSERT(str != NULL);
 
     size_t len = ctu_strlen(str);
-    char *out = ARENA_OPT_MALLOC(len + 1, "strdup", NULL, arena);
-    if (out == NULL) return NULL;
-
-    ctu_memcpy(out, str, len);
-    out[len] = '\0';
-
-    return out;
+    return arena_opt_strndup(str, len, arena);
 }
 
 STA_DECL

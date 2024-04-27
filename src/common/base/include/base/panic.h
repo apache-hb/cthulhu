@@ -126,6 +126,9 @@ CT_BASE_API CT_NORETURN ctu_vpanic(source_info_t location, STA_FORMAT_STRING con
 /// @param ... the format string and optional arguments to format
 #define CT_NEVER(...) CT_PANIC(__VA_ARGS__)
 
+#define CT_ASSERT_RANGE_PRI(value, min, max, pri) \
+    CTASSERTF((value) >= (min) && (value) <= (max), "value " pri " not in range " pri "-" pri, (value), (min), (max))
+
 /// @def CT_ASSERT_RANGE(value, min, max)
 /// @brief assert that a value is in a range
 /// inclusive bounds check
@@ -134,8 +137,7 @@ CT_BASE_API CT_NORETURN ctu_vpanic(source_info_t location, STA_FORMAT_STRING con
 /// @param min the minimum value
 /// @param max the maximum value
 #define CT_ASSERT_RANGE(value, min, max)                                                           \
-    CTASSERTF((value) >= (min) && (value) <= (max), "value %d not in range %d-%d", (value), (min), \
-              (max))
+    CT_ASSERT_RANGE_PRI(value, min, max, "%d")
 
 #if CTU_PARANOID
 #   define CT_PARANOID(...) __VA_ARGS__
