@@ -127,7 +127,7 @@ static void print_file_header(rich_t *rich, const node_t *node)
 
     const scan_t *scan = node_get_scan(node);
     text_config_t config = rich->config;
-    size_t width = get_num_width(rich->largest_line);
+    int width = get_num_width(rich->largest_line);
     size_t line = get_line_number(config.config, node);
 
     if (node_has_line(node))
@@ -189,7 +189,7 @@ static void print_file_segment(rich_t *rich, const node_t *node, const char *mes
     size_t data_line = where.first_line;
 
     size_t display_line = get_line_number(config.config, node);
-    size_t width = get_num_width(CT_MAX(display_line, rich->largest_line));
+    int width = get_num_width(CT_MAX(display_line, rich->largest_line));
     char *padding = str_repeat(" ", width, rich->arena);
     char *line = fmt_left_align(rich->arena, width, "%zu", display_line);
 
@@ -219,11 +219,11 @@ static void print_file_segment(rich_t *rich, const node_t *node, const char *mes
     char *extra = str_repeat(" ", extra_padding, rich->arena);
 
     size_t len = vector_len(lines);
-    size_t align = get_num_width(len);
+    int align = get_num_width(len);
 
     for (size_t i = 1; i < len; i++)
     {
-        char *it = vector_get(lines, i);
+        const char *it = vector_get(lines, i);
         char *aligned = fmt_left_align(rich->arena, align, "(%zu)", i + 1);
         char *coloured = colour_text(rich->fmt, COLOUR_SEGMENT, aligned);
         io_printf(config.io, " %s |%s%s %s %s.\n", padding, pretext, extra, coloured, it);

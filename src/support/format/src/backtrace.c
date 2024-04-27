@@ -117,18 +117,6 @@ static const entry_t *get_collapsed_entry(const backtrace_t *self, collapsed_t r
     return typevec_offset(self->entries, range.first);
 }
 
-#if 0
-static const entry_t *get_first_entry(const backtrace_t *self, collapsed_t range)
-{
-    return typevec_offset(self->entries, range.first);
-}
-
-static const entry_t *get_last_entry(const backtrace_t *self, collapsed_t range)
-{
-    return typevec_offset(self->entries, range.last);
-}
-#endif
-
 // stacktrace collapsing
 
 // this approach is O(n^2) but it is simple
@@ -143,16 +131,13 @@ static const entry_t *get_last_entry(const backtrace_t *self, collapsed_t range)
 /// scans frames starting at scan_start for the sequence of frames (seq_start, scan_start)
 /// returns the number of frames matched
 static unsigned match_sequence(
-    const typevec_t *sequence,
     const typevec_t *frames,
     unsigned scan_start,
     unsigned seq_start,
     collapsed_t *collapsed
 )
 {
-    CT_UNUSED(seq_start);
-
-    size_t seq_len = typevec_len(sequence);
+    size_t seq_len = scan_start - seq_start;
     size_t ent_len = typevec_len(frames);
 
     // see how many times the sequence repeats
@@ -162,7 +147,7 @@ static unsigned match_sequence(
     for (size_t i = scan_start; i < ent_len; i++)
     {
         const entry_t *a = typevec_offset(frames, i);
-        const entry_t *b = typevec_offset(sequence, j);
+        const entry_t *b = typevec_offset(frames, j + seq_start);
 
         if (a->address != b->address)
             break;
@@ -188,15 +173,13 @@ static unsigned match_sequence(
     return count * seq_len;
 }
 
-static unsigned collapse_frame(const typevec_t *frames, unsigned start, arena_t *arena, collapsed_t *collapsed)
+static unsigned collapse_frame(const typevec_t *frames, unsigned start, collapsed_t *collapsed)
 {
     size_t len = typevec_len(frames);
-    typevec_t *buffer = typevec_new(sizeof(entry_t), len, arena);
     if (start <= len)
     {
         // push the first entry
         const entry_t *head = typevec_offset(frames, start);
-        typevec_push(buffer, head);
 
         for (size_t i = start + 1; i < len; i++)
         {
@@ -206,7 +189,7 @@ static unsigned collapse_frame(const typevec_t *frames, unsigned start, arena_t 
             // we might have a match
             if (frame->address == head->address)
             {
-                unsigned count = match_sequence(buffer, frames, i, start, collapsed);
+                unsigned count = match_sequence(frames, i, start, collapsed);
 
                 // if we matched more then we're done
                 if (count != 0) return count;
@@ -215,17 +198,14 @@ static unsigned collapse_frame(const typevec_t *frames, unsigned start, arena_t 
                 break;
             }
 
-            // we dont have a match, so we push the entry and start again
-            typevec_push(buffer, frame);
+            // we dont have a match, so start again
         }
     }
 
+    // if we get here then no repeating sequence was matched
     collapsed->first = start;
     collapsed->last = start;
     collapsed->repeat = 0;
-
-    // if we get here then no match was found
-    // collapsed->entry = typevec_offset(frames, start);
     return 1;
 }
 
@@ -237,7 +217,7 @@ static typevec_t *collapse_frames(const typevec_t *frames, arena_t *arena)
     for (size_t i = 0; i < len; i++)
     {
         collapsed_t collapsed = {0};
-        unsigned count = collapse_frame(frames, i, arena, &collapsed);
+        unsigned count = collapse_frame(frames, i, &collapsed);
 
         CTASSERTF(count > 0, "count of 0 at %zu", i);
 
@@ -338,7 +318,7 @@ static const char *get_file_path(backtrace_t *pass, const char *file)
         return file;
 
     if (str_startswith(file, path))
-        return str_format(pass->arena, "%s", file + len);
+        return file + len;
 
     return file;
 }
@@ -416,18 +396,13 @@ static void print_single_frame(backtrace_t *pass, size_t index, const entry_t *e
 
 static void print_frame_sequence(backtrace_t *pass, size_t index, collapsed_t collapsed)
 {
-    // typevec_t *sequence = collapsed.sequence;
-    unsigned repeat = collapsed.repeat;
-
     fmt_backtrace_t options = pass->options;
     print_options_t base = options.options;
-
-    // size_t len = get_collapsed_count(collapsed);
 
     size_t largest = get_longest_symbol(pass->entries, collapsed);
 
     char *idx = fmt_index(pass, index);
-    char *coloured = colour_format(pass->format_context, COLOUR_RECURSE, "%u", repeat);
+    char *coloured = colour_format(pass->format_context, COLOUR_RECURSE, "%u", collapsed.repeat);
     io_printf(base.io, "%s repeats %s times\n", idx, coloured);
 
     for (size_t i = collapsed.first; i <= collapsed.last; i++)
@@ -467,7 +442,7 @@ void fmt_backtrace(fmt_backtrace_t fmt, bt_report_t *report)
     size_t frame_count = typevec_len(entries);
 
     symbol_match_info_t symbol_align = get_largest_collapsed_symbol(report->frames, collapsed, frame_count);
-    size_t align = get_num_width(frame_count);
+    int align = get_num_width(frame_count);
 
     backtrace_t pass = {
         .options = fmt,
