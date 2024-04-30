@@ -194,6 +194,7 @@ DIGIT_KIND(eDigitLeast16, "least16")
 DIGIT_KIND(eDigitLeast32, "least32")
 DIGIT_KIND(eDigitLeast64, "least64")
 
+DIGIT_KIND(eDigitHalf, "half")
 DIGIT_KIND(eDigitFloat, "float")
 DIGIT_KIND(eDigitDouble, "double")
 

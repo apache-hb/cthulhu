@@ -27,8 +27,6 @@
 
 #include "cthulhu/ssa/ssa.h"
 
-#include "cthulhu/emit/emit.h"
-
 #include "core/macros.h"
 #include "support/loader.h"
 #include "support/support.h"
@@ -260,7 +258,11 @@ int main(int argc, const char **argv)
 
     // fs_t *fs = fs_virtual("out", arena);
 
-    target_runtime_t *target = support_get_target(support, "cfamily");
+    const char *target_output = cfg_string_value(tool.output_target);
+    if (target_output == NULL)
+        target_output = "cfamily";
+
+    target_runtime_t *target = support_get_target(support, target_output);
     CTASSERT(target != NULL);
 
     CHECK_LOG(reports, "emitting target ssa");

@@ -20,7 +20,7 @@ size_t impl_maxpath(void)
     return gMaxPathLength;
 }
 
-void os_init(void)
+void impl_init(void)
 {
     long path = pathconf(".", _PC_PATH_MAX);
     if (path < 0)
@@ -46,17 +46,17 @@ void os_init(void)
     }
 }
 
-CT_NORETURN os_exit(os_exitcode_t code)
+void impl_exit(os_exitcode_t code)
 {
     exit(code); // NOLINT(concurrency-mt-unsafe)
 }
 
-CT_NORETURN os_thread_exit(os_status_t status)
+void impl_thread_exit(os_status_t status)
 {
     pthread_exit((void*)(intptr_t)status);
 }
 
-CT_NORETURN os_abort(void)
+void impl_abort(void)
 {
     abort(); // NOLINT(concurrency-mt-unsafe)
 }

@@ -9,6 +9,33 @@
 #include "base/panic.h"
 
 ///
+/// init/exit functions
+///
+
+void os_init(void)
+{
+    impl_init();
+}
+
+CT_NORETURN os_exit(os_exitcode_t code)
+{
+    impl_exit(code);
+    CT_UNREACHABLE();
+}
+
+CT_NORETURN os_thread_exit(os_status_t status)
+{
+    impl_thread_exit(status);
+    CT_UNREACHABLE();
+}
+
+CT_NORETURN os_abort(void)
+{
+    impl_abort();
+    CT_UNREACHABLE();
+}
+
+///
 /// to string operations
 ///
 
@@ -366,10 +393,10 @@ os_error_t os_iter_end(os_iter_t *iter)
 }
 
 STA_DECL
-bool os_iter_next(os_iter_t *iter, os_inode_t *result)
+bool os_iter_next(os_iter_t *iter, os_inode_t *dir)
 {
     CTASSERT(iter != NULL);
-    CTASSERT(result != NULL);
+    CTASSERT(dir != NULL);
 
     if (iter->error != eOsSuccess)
         return false;
@@ -388,7 +415,7 @@ bool os_iter_next(os_iter_t *iter, os_inode_t *result)
     if (iter->error != eOsSuccess)
         return false;
 
-    inode_init(result, &data);
+    inode_init(dir, &data);
     return true;
 }
 

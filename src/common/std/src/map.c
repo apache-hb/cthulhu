@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 #include "std/map.h"
+
 #include "base/panic.h"
+#include "arena/arena.h"
+
+#include "std/str.h"
+#include "std/vector.h"
+
+#include "std/typed/vector.h"
 
 #include "common.h"
-
-#include "arena/arena.h"
-#include "std/str.h"
-#include "std/typed/vector.h"
-#include "std/vector.h"
 
 // TODO: add quadratic probing and robin hood hashing
 

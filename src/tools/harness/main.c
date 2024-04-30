@@ -17,7 +17,6 @@
 
 #include "cthulhu/check/check.h"
 
-#include "cthulhu/emit/emit.h"
 #include "cthulhu/ssa/ssa.h"
 
 #include "base/panic.h"

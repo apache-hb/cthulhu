@@ -35,11 +35,13 @@ int main(void)
         test_group_t group = test_group(&suite, "insert_str");
 
         map_t *map = map_new(64, kTypeInfoString, arena);
-        for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
+        for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
+        {
             map_set(map, kSetItems[i], (char*)kSetItems[i]);
         }
 
-        for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
+        for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
+        {
             char *name = str_format(arena, "%s in map", kSetItems[i]);
             GROUP_EXPECT_PASS(group, name, map_get(map, kSetItems[i]) != NULL);
         }
@@ -50,11 +52,13 @@ int main(void)
         test_group_t group = test_group(&suite, "insert_ptr");
         map_t *map = map_new(64, kTypeInfoPtr, arena);
 
-        for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
+        for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
+        {
             map_set(map, kSetItems[i], (char*)kSetItems[i]);
         }
 
-        for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
+        for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
+        {
             char *name = str_format(arena, "%s in map", kSetItems[i]);
             GROUP_EXPECT_PASS(group, name, map_get(map, kSetItems[i]) != NULL);
         }

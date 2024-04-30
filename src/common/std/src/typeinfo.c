@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
-#include "common.h"
-
 #include "std/typeinfo.h"
+
 #include "base/util.h"
+
+#include "common.h"
 
 size_t info_ptr_hash(const void *key) { return ctu_ptrhash(key); }
 bool info_ptr_equal(const void *lhs, const void *rhs) { return lhs == rhs; }

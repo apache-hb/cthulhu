@@ -13,5 +13,5 @@ if target_hlsl.allowed()
 endif
 
 if target_llvm.allowed()
-    #subdir('llvm')
+    subdir('llvm')
 endif

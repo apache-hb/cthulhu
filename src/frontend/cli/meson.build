@@ -7,7 +7,7 @@ cli = executable('cli', src,
     link_args : setargv,
     dependencies : [
         memory, broker, argparse, support,
-        tree, ssa, emit, io, fs,
+        tree, ssa, io, fs,
         scan, notify, config, events, setup, format,
         arena, check, backtrace
     ]

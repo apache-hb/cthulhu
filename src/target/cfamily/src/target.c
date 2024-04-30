@@ -2,7 +2,6 @@
 
 #include "cfamily-target/target.h"
 
-#include "core/macros.h"
 #include "driver/driver.h"
 
 CT_DRIVER_API const target_t kTargetC = {

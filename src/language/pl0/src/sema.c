@@ -180,12 +180,12 @@ void pl0_init(language_runtime_t *runtime, tree_t *root)
     vector_set(args, 1, param);
     tree_t *call = tree_expr_call(node, gRuntimePrint, args);
 
-    tree_t *putd_signature = tree_type_closure(node, "pl0_print", gVoidType, rt_print_params, eArityFixed);
-    gPrint = tree_decl_function(node, "pl0_print", putd_signature, rt_print_params, &gEmptyVector, call);
+    tree_t *putd_signature = tree_type_closure(node, "__builtin_pl0_print", gVoidType, rt_print_params, eArityFixed);
+    gPrint = tree_decl_function(node, "__builtin_pl0_print", putd_signature, rt_print_params, &gEmptyVector, call);
     tree_set_attrib(gPrint, &kExportAttrib);
 
     // populate builtins
-    set_proc(root, ePl0TagProcs, "pl0_print", gPrint);
+    set_proc(root, ePl0TagProcs, "__builtin_pl0_print", gPrint);
     set_proc(root, ePl0TagProcs, "printf", gRuntimePrint);
 }
 

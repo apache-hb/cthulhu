@@ -29,7 +29,8 @@ int main(void)
 
     set_t *dedup_set = set_new(3, kTypeInfoString, arena);
     const char *item = set_add(dedup_set, "duplicate");
-    for (size_t i = 0; i < 64; i++) {
+    for (size_t i = 0; i < 64; i++)
+    {
         char *element = arena_strdup("duplicate", arena);
         const char *it = set_add(dedup_set, element);
 
@@ -39,11 +40,13 @@ int main(void)
 
     test_group_t set_clash_group = test_group(&suite, "clashes");
     set_t *set = set_new(3, kTypeInfoString, arena);
-    for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
+    for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
+    {
         set_add(set, kSetItems[i]);
     }
 
-    for (size_t i = 0; i < SET_ITEMS_COUNT; i++) {
+    for (size_t i = 0; i < SET_ITEMS_COUNT; i++)
+    {
         char *name = str_format(arena, "%s in set", kSetItems[i]);
         GROUP_EXPECT_PASS(set_clash_group, name, set_contains(set, kSetItems[i]));
     }

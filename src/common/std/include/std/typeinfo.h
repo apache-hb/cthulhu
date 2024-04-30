@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 #pragma once
 
-#include <ctu_base_api.h>
+#include <ctu_std_api.h>
 
 #include "core/compiler.h"
 #include "core/analyze.h"
@@ -48,14 +48,14 @@ typedef struct hash_info_t
 } hash_info_t;
 
 /// @brief type information for a c style string
-CT_BASE_API extern const hash_info_t kTypeInfoString;
+CT_STD_API extern const hash_info_t kTypeInfoString;
 
 /// @brief type information for a generic pointer
 /// this operates on the pointer itself and not the data it points to
-CT_BASE_API extern const hash_info_t kTypeInfoPtr;
+CT_STD_API extern const hash_info_t kTypeInfoPtr;
 
 /// @brief type information for a text_view_t
-CT_BASE_API extern const hash_info_t kTypeInfoText;
+CT_STD_API extern const hash_info_t kTypeInfoText;
 
 /// @}
 

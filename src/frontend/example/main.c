@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
+#include "base/panic.h"
 #include "setup/setup.h"
 #include "setup/memory.h"
 #include "format/colour.h"
@@ -8,7 +9,6 @@
 #include "cthulhu/events/events.h"
 #include "cthulhu/broker/broker.h"
 
-#include "cthulhu/emit/emit.h"
 #include "cthulhu/ssa/ssa.h"
 #include "cthulhu/check/check.h"
 
@@ -157,30 +157,27 @@ int main(int argc, const char **argv)
 
     fs_t *fs = fs_virtual("out", arena);
 
-    emit_options_t base_options = {
-        .arena = arena,
-        .reports = logger,
+    target_emit_t emit = {
+        .layout = eFileLayoutFlat,
         .fs = fs,
-
-        .modules = ssa.modules,
-        .deps = ssa.deps,
     };
 
-    ssa_emit_options_t ssa_emit_options = {.opts = base_options};
+    target_runtime_t *debug = support_get_target(support, "debug");
+    target_runtime_t *cfamily = support_get_target(support, "cfamily");
 
-    ssa_emit_result_t ssa_emit_result = emit_ssa(&ssa_emit_options);
-    CHECK_LOG(logger, "emitting ssa");
-    CT_UNUSED(ssa_emit_result); // TODO: check for errors
+    CTASSERT(debug != NULL);
+    CTASSERT(cfamily != NULL);
 
-    c89_emit_options_t c89_emit_options = {.opts = base_options};
+    target_emit_ssa(debug, &ssa, &emit);
+    CHECK_LOG(logger, "emitting debug ssa");
 
-    c89_emit_result_t c89_emit_result = emit_c89(&c89_emit_options);
-    CHECK_LOG(logger, "emitting c89");
+    emit_result_t cfamily_result = target_emit_ssa(cfamily, &ssa, &emit);
+    CHECK_LOG(logger, "emitting cfamily ssa");
 
-    size_t len = vector_len(c89_emit_result.sources);
+    size_t len = vector_len(cfamily_result.files);
     for (size_t i = 0; i < len; i++)
     {
-        const char *path = vector_get(c89_emit_result.sources, i);
+        const char *path = vector_get(cfamily_result.files, i);
         io_printf(con, "%s\n", path);
     }
 

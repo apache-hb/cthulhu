@@ -12,7 +12,7 @@ typedef struct tree_t tree_t;
 
 CT_BEGIN_API
 
-CT_LOCAL emit_result_t debug_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *emit);
-CT_LOCAL void debug_tree(target_runtime_t *runtime, const tree_t *tree, target_emit_t *emit);
+CT_LOCAL emit_result_t debug_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *target);
+CT_LOCAL void debug_tree(target_runtime_t *runtime, const tree_t *tree, target_emit_t *target);
 
 CT_END_API

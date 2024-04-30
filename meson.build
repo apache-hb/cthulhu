@@ -21,7 +21,10 @@ project('cthulhu', 'c',
 
         # do static linking by default
         # shared linking is supported but slows down the test suite
-        'default_library=static'
+        'default_library=static',
+
+        # llvm c++ windows build issues
+        'b_vscrt=mt'
     ]
 )
 
@@ -106,7 +109,9 @@ all_args = cc.get_supported_arguments(
 
     # more free perf
     '-fstrict-aliasing',
-    '-fmerge-all-constants'
+    '-fmerge-all-constants',
+
+    '-D_ITERATOR_DEBUG_LEVEL=0'
 )
 
 has_time_trace = cc.has_argument('-ftime-trace')
@@ -186,7 +191,7 @@ if has_cpp
     add_project_arguments(extra_cpp_args + all_args, language : 'cpp')
 endif
 
-add_project_arguments(all_args, language : [ 'c' ])
+add_project_arguments(all_args, language : [ 'c', 'cpp' ])
 
 lexargs = []
 parseargs = []
@@ -297,7 +302,7 @@ common_deps = [
 
 runtime_deps = [
     memory, events, tree, ssa,
-    util, emit, broker, check
+    util, broker, check
 ]
 
 support_deps = [

@@ -53,7 +53,7 @@ typedef struct map_t
 } map_t;
 
 /// @brief an empty map
-extern const map_t kEmptyMap;
+CT_STD_API extern const map_t kEmptyMap;
 
 /// @brief initialize a map
 ///

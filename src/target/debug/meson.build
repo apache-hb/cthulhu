@@ -1,23 +1,44 @@
-src = [ 'src/target.c', 'src/ssa.c', 'src/tree.c', 'src/common.c' ]
+src = [ 'src/ssa.c', 'src/tree.c', 'src/common.c' ]
 
 deps = [ driver, events, std, broker, ssa, io, fs ]
 
-# TODO: once we can load targets as shared libraries
-# we need to do the same shared_module/static_library split
-# that languages do
-libtarget_debug = static_library('target_debug', src,
+dbg_target = static_library('target_debug', src,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     include_directories : 'include',
     dependencies : deps
 )
 
-targets += {
-    'debug': {
-        'dep': declare_dependency(link_with : libtarget_debug),
+dbg = { }
+
+if default_library == 'static'
+    dbg_static = static_library('debug_static', 'src/target.c',
+        link_with : dbg_target,
+        dependencies : deps,
+        c_args : user_args,
+        include_directories : [ 'src', 'include', dbg_target.private_dir_include() ]
+    )
+
+    dbg += {
+        'dep': declare_dependency(link_with : dbg_static),
         'mod': 'kTargetDebug',
 
-        'static': libtarget_debug,
+        'static': dbg_static,
         'module': 'kTargetDebug'
     }
+elif default_library == 'shared'
+    dbg_shared = shared_library('debug_shared', 'src/target.c',
+        link_with : dbg_target,
+        dependencies : deps,
+        c_args : user_args,
+        include_directories : [ 'src', 'include', dbg_target.private_dir_include() ]
+    )
+
+    dbg += {
+        'shared': dbg_shared,
+    }
+endif
+
+targets += {
+    'debug': dbg
 }

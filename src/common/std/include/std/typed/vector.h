@@ -37,7 +37,7 @@ typedef struct typevec_t
     STA_FIELD_SIZE(size) void *data;
 } typevec_t;
 
-extern const typevec_t kEmptyTypevec;
+CT_STD_API extern const typevec_t kEmptyTypevec;
 
 /// @brief initialize a typed vector
 ///

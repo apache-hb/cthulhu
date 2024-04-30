@@ -1,31 +1,50 @@
 llvm = dependency('llvm', components : ['core'], method : 'config-tool', static : true)
-llvm_libdir = llvm.get_variable(configtool: 'libdir')
 
 deps = [
-    target, fs, io, events, std, tree, ssa, base,
-
-    llvm
+    target, fs, io, events, std, tree, ssa, base
 ]
 
 src = [
-    'src/ssa.c',
-    'src/target.c'
+    'src/ssa.c'
 ]
 
-libtarget_llvm = static_library('target_llvm', src,
+llvm_target = static_library('target_llvm', src,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     include_directories : 'include',
-    dependencies : deps,
-    override_options : [ 'b_vscrt=mt' ],
+    dependencies : [ deps, llvm ]
 )
 
-targets += {
-    'llvm': {
-        'dep': declare_dependency(link_with : libtarget_llvm),
+llvm = { }
+
+if default_library == 'static'
+    llvm_static = static_library('llvm_static', 'src/target.c',
+        link_with : llvm_target,
+        dependencies : deps,
+        c_args : user_args,
+        include_directories : [ 'src', 'include', llvm_target.private_dir_include() ]
+    )
+
+    llvm += {
+        'dep': declare_dependency(link_with : llvm_static),
         'mod': 'kTargetLLVM',
 
-        'static': libtarget_llvm,
+        'static': llvm_static,
         'module': 'kTargetLLVM'
     }
+elif default_library == 'shared'
+    llvm_shared = shared_library('llvm_shared', 'src/target.c',
+        link_with : llvm_target,
+        dependencies : deps,
+        c_args : user_args,
+        include_directories : [ 'src', 'include', llvm_target.private_dir_include() ]
+    )
+
+    llvm += {
+        'shared': llvm_shared,
+    }
+endif
+
+targets += {
+    'llvm': llvm
 }

@@ -14,6 +14,11 @@ CT_BEGIN_API
 /// provided by the platform implementation
 ///
 
+CT_LOCAL void impl_init(void);
+CT_LOCAL void impl_abort(void);
+CT_LOCAL void impl_exit(os_exitcode_t code);
+CT_LOCAL void impl_thread_exit(os_status_t status);
+
 // get the last error
 RET_INSPECT STA_LAST_ERROR
 CT_LOCAL os_error_t impl_last_error(void);

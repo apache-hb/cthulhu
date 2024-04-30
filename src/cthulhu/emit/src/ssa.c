@@ -315,7 +315,7 @@ static void emit_symbol_deps(io_t *io, const ssa_symbol_t *symbol, map_t *deps)
     }
 }
 
-static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
+static void debug_emit_module(ssa_emit_t *emit, const ssa_module_t *mod)
 {
     fs_t *fs = emit->fs;
     emit_t *base = &emit->emit;
@@ -391,7 +391,7 @@ ssa_emit_result_t emit_ssa(const ssa_emit_options_t *options)
     for (size_t i = 0; i < len; i++)
     {
         const ssa_module_t *mod = vector_get(opts.modules, i);
-        emit_ssa_module(&emit, mod);
+        debug_emit_module(&emit, mod);
     }
 
     ssa_emit_result_t result = { NULL };
