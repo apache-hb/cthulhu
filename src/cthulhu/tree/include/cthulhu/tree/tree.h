@@ -49,7 +49,7 @@ typedef enum sema_tags_t {
 
 typedef struct tree_attribs_t {
     tree_link_t link; ///< the link type of the declaration
-    visibility_t visibility; ///< the visibility of the declaration
+    tree_visibility_t visibility; ///< the visibility of the declaration
 
     const char *mangle; ///< override the mangle of the declaration
     const char *section; ///< override the section of the declaration
@@ -202,7 +202,7 @@ typedef struct tree_t {
                         /* eTreeTypeClosure */
                         struct {
                             const tree_t *return_type;
-                            arity_t arity;
+                            tree_arity_t arity;
                         };
 
                         /* eTreeDeclAttrib */
@@ -300,7 +300,7 @@ CT_TREE_API tree_t *tree_type_digit(const node_t *node, const char *name, digit_
  * @param arity does this function have variadic arguments
  * @return tree_t* the function pointer type
  */
-CT_TREE_API tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *result, const vector_t *params, arity_t arity);
+CT_TREE_API tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *result, const vector_t *params, tree_arity_t arity);
 
 /**
  * @brief create a pointer type

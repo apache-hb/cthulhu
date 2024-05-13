@@ -117,7 +117,7 @@ bool tree_is(const tree_t *self, tree_kind_t kind)
     return self->kind == kind;
 }
 
-bool tree_has_vis(const tree_t *self, visibility_t visibility)
+bool tree_has_vis(const tree_t *self, tree_visibility_t visibility)
 {
     const tree_attribs_t *attrib = tree_get_attrib(self);
     return attrib->visibility == visibility;
@@ -201,7 +201,7 @@ const vector_t *tree_fn_get_params(const tree_t *self)
     }
 }
 
-arity_t tree_fn_get_arity(const tree_t *self)
+tree_arity_t tree_fn_get_arity(const tree_t *self)
 {
     switch (tree_get_kind(self))
     {

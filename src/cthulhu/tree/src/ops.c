@@ -144,7 +144,7 @@ static const char *const kVisibilityNames[eVisibileTotal] = {
 };
 
 STA_DECL
-const char *vis_name(visibility_t vis)
+const char *vis_name(tree_visibility_t vis)
 {
     CTASSERTF(vis < eVisibileTotal, "invalid visibility: %d", vis);
     return kVisibilityNames[vis];

@@ -140,7 +140,7 @@ void tree_close_function(tree_t *self, tree_t *body)
     self->body = body;
 
     const vector_t *params = tree_fn_get_params(self);
-    arity_t arity = tree_fn_get_arity(self);
+    tree_arity_t arity = tree_fn_get_arity(self);
 
     CT_UNUSED(arity);
 

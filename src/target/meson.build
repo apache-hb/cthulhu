@@ -12,6 +12,6 @@ if target_hlsl.allowed()
     subdir('hlsl')
 endif
 
-if target_llvm.allowed()
-    subdir('llvm')
-endif
+# if target_llvm.allowed()
+#     subdir('llvm')
+# endif

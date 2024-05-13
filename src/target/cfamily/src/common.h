@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "cfamily-target/target.h"
 #include "cthulhu/ssa/ssa.h"
 
 typedef struct fs_t fs_t;

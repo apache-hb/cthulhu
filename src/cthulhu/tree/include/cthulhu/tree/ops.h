@@ -52,12 +52,12 @@ typedef enum unary_t
 } unary_t;
 
 /// @brief all casts
-typedef enum cast_t
+typedef enum tree_cast_t
 {
 #define CAST_OP(ID, NAME) ID,
 #include "tree.inc"
     eCastTotal
-} cast_t;
+} tree_cast_t;
 
 /// @brief all builtins
 typedef enum builtin_t
@@ -68,12 +68,12 @@ typedef enum builtin_t
 } builtin_t;
 
 /// @brief all arities
-typedef enum arity_t
+typedef enum tree_arity_t
 {
 #define TREE_ARITY(ID, STR) ID,
 #include "tree.inc"
     eArityTotal
-} arity_t;
+} tree_arity_t;
 
 /// @brief the linkage of a declaration
 typedef enum tree_link_t
@@ -92,12 +92,12 @@ typedef enum tree_jump_t
 } tree_jump_t;
 
 /// @brief symbol visibility
-typedef enum visibility_t
+typedef enum tree_visibility_t
 {
 #define TREE_VISIBILITY(ID, STR) ID,
 #include "tree.inc"
     eVisibileTotal
-} visibility_t;
+} tree_visibility_t;
 
 /// @brief digit width
 typedef enum digit_t
@@ -208,7 +208,7 @@ CT_TREE_API const char *link_name(IN_DOMAIN(<, eLinkTotal) tree_link_t link);
 ///
 /// @return the name of @p vis
 RET_NOTNULL
-CT_TREE_API const char *vis_name(IN_DOMAIN(<, eVisibileTotal) visibility_t vis);
+CT_TREE_API const char *vis_name(IN_DOMAIN(<, eVisibileTotal) tree_visibility_t vis);
 
 /// @}
 

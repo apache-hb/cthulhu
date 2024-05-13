@@ -164,7 +164,7 @@ tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sig
     return self;
 }
 
-tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *result, const vector_t *params, arity_t arity)
+tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *result, const vector_t *params, tree_arity_t arity)
 {
     EXPECT_TYPE(result);
     CTASSERT(params != NULL);

@@ -30,6 +30,7 @@ static LLVMTargetRef gTarget = NULL;
 static LLVMTargetMachineRef gMachine = NULL;
 static LLVMTargetDataRef gDataLayout = NULL;
 
+// ^(?!(typedef|\*)).*LLVM.*([\S\s]|[,])\)
 
 static const diagnostic_t *get_diagnostic_level(LLVMDiagnosticSeverity severity)
 {

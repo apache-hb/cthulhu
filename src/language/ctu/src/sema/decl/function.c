@@ -106,7 +106,7 @@ void ctu_resolve_function_type(tree_t *sema, tree_t *self, void *user)
         vector_set(params, i, it);
     }
 
-    arity_t arity = (decl->variadic != NULL) ? eArityVariable : eArityFixed;
+    tree_arity_t arity = (decl->variadic != NULL) ? eArityVariable : eArityFixed;
     tree_t *return_type = decl->return_type == NULL
         ? ctu_get_void_type()
         : ctu_sema_type(&inner, decl->return_type);

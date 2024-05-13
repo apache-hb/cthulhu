@@ -273,7 +273,7 @@ static void check_call_arguments(check_t *check, const tree_t *expr)
     const tree_t *fn = expr->callee;
     const vector_t *fn_args = expr->args;
     const vector_t *fn_params = tree_fn_get_params(fn);
-    arity_t arity = tree_fn_get_arity(fn);
+    tree_arity_t arity = tree_fn_get_arity(fn);
 
     switch (arity)
     {

@@ -18,7 +18,7 @@
 
 #include "core/macros.h"
 
-static visibility_t remap_visibility(obr_visibility_t vis)
+static tree_visibility_t remap_visibility(obr_visibility_t vis)
 {
     switch (vis)
     {

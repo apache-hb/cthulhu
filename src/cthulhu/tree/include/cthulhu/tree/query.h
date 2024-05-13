@@ -16,7 +16,7 @@ CT_TREE_API char *tree_to_string_arena(const tree_t *self, arena_t *arena);
 
 CT_TREE_API const tree_attribs_t *tree_get_attrib(const tree_t *self);
 
-CT_TREE_API bool tree_has_vis(const tree_t *self, visibility_t visibility);
+CT_TREE_API bool tree_has_vis(const tree_t *self, tree_visibility_t visibility);
 
 ///
 /// storage decl queries
@@ -44,7 +44,7 @@ CT_PUREFN
 CT_TREE_API const vector_t *tree_fn_get_params(const tree_t *self);
 
 CT_PUREFN
-CT_TREE_API arity_t tree_fn_get_arity(const tree_t *self);
+CT_TREE_API tree_arity_t tree_fn_get_arity(const tree_t *self);
 
 ///
 /// type queries
