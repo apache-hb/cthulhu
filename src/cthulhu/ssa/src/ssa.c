@@ -103,7 +103,7 @@ static ssa_symbol_t *symbol_new(ssa_compile_t *ssa, const char *name, const tree
     ssa_symbol_t *symbol = ARENA_MALLOC(sizeof(ssa_symbol_t), name, ssa, ssa->arena);
     symbol->linkage = attribs.link;
     symbol->visibility = attribs.visibility;
-    symbol->link_name = attribs.mangle;
+    symbol->linkage_string = attribs.mangle;
     symbol->storage = storage;
 
     symbol->locals = NULL;
@@ -960,7 +960,7 @@ ssa_result_t ssa_compile(vector_t *mods, arena_t *arena)
         {
             CTASSERTF(symbol->linkage == eLinkImport,
                 "function `%s` has no implementation, but is not an imported symbol (linkage=%s)",
-                symbol->name, link_name(symbol->linkage)
+                symbol->name, linkage_string(symbol->linkage)
             );
         }
 

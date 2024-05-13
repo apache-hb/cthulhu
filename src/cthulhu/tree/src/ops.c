@@ -117,7 +117,7 @@ const char *digit_name(digit_t digit)
 // );
 
 STA_DECL
-const char *quals_name(tree_quals_t quals)
+const char *quals_string(tree_quals_t quals)
 {
     arena_t *arena = get_global_arena();
 #define TYPE_QUALIFIER(ID, STR, BIT) if (quals & (BIT)) { vector_push(&names, (char*)(STR)); }
@@ -132,7 +132,7 @@ static const char *const kLinkNames[eLinkTotal] = {
 };
 
 STA_DECL
-const char *link_name(tree_link_t link)
+const char *linkage_string(tree_linkage_t link)
 {
     CTASSERTF(link < eLinkTotal, "invalid link: %d", link);
     return kLinkNames[link];
@@ -144,7 +144,7 @@ static const char *const kVisibilityNames[eVisibileTotal] = {
 };
 
 STA_DECL
-const char *vis_name(tree_visibility_t vis)
+const char *visibility_string(tree_visibility_t vis)
 {
     CTASSERTF(vis < eVisibileTotal, "invalid visibility: %d", vis);
     return kVisibilityNames[vis];

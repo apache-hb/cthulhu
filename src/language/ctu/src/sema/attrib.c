@@ -65,7 +65,7 @@ static const char *get_first_string(tree_t *sema, tree_t *decl, const vector_t *
 
 #define MALFORMED_ENTRY(REPORTS, NODE) msg_notify(REPORTS, &kEvent_MalformedAttribute, NODE, "malformed entry point type, must be either `gui` or `cli`")
 
-static tree_link_t choose_linkage(tree_t *sema, const ctu_t *expr)
+static tree_linkage_t choose_linkage(tree_t *sema, const ctu_t *expr)
 {
     if (expr->kind != eCtuExprName)
     {
@@ -94,7 +94,7 @@ static tree_link_t choose_linkage(tree_t *sema, const ctu_t *expr)
     return eLinkEntryCli;
 }
 
-static tree_link_t get_linkage(tree_t *sema, tree_t *decl, const vector_t *args)
+static tree_linkage_t get_linkage(tree_t *sema, tree_t *decl, const vector_t *args)
 {
     switch (vector_len(args))
     {

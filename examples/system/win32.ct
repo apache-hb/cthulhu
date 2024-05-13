@@ -1,0 +1,6 @@
+export type LPSTR = str;
+export type DWORD = uint;
+export type BOOL = int;
+
+@extern("GetComputerNameA")
+export def GetComputerNameA(name: str, size: *DWORD): BOOL;

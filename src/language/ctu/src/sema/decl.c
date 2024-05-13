@@ -242,7 +242,8 @@ static tree_t *ctu_forward_type(tree_t *sema, ctu_t *decl)
     tree_resolve_info_t resolve = {
         .sema = sema,
         .user = decl,
-        .fn_resolve = ctu_resolve_type
+        .fn_resolve = ctu_resolve_type,
+        .fn_resolve_type = ctu_resolve_type
     };
 
     return tree_open_decl(decl->node, decl->name, resolve);

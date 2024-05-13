@@ -64,6 +64,9 @@ bool util_types_equal(const tree_t *lhs, const tree_t *rhs)
 
 bool util_types_comparable(const tree_t *lhs, const tree_t *rhs)
 {
+    lhs = tree_resolve_type(lhs);
+    rhs = tree_resolve_type(rhs);
+
     if (util_types_equal(lhs, rhs))
     {
         return true;

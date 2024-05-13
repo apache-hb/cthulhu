@@ -29,7 +29,7 @@ static tree_visibility_t remap_visibility(obr_visibility_t vis)
     }
 }
 
-static tree_link_t remap_linkage(obr_visibility_t vis)
+static tree_linkage_t remap_linkage(obr_visibility_t vis)
 {
     switch (vis)
     {
@@ -40,7 +40,7 @@ static tree_link_t remap_linkage(obr_visibility_t vis)
     }
 }
 
-static void set_attribs(tree_t *decl, obr_visibility_t vis, tree_link_t linkage)
+static void set_attribs(tree_t *decl, obr_visibility_t vis, tree_linkage_t linkage)
 {
     tree_attribs_t attrib = {
         .link = linkage,

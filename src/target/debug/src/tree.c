@@ -50,7 +50,7 @@ static void emit_storage(dbg_emit_t *dbg, tree_storage_t storage)
 {
     dbg_emit(dbg, "type: %s", tree_to_string(storage.storage));
     dbg_emit(dbg, "length: %zu", storage.length);
-    dbg_emit(dbg, "qualifiers: %s", quals_name(storage.quals));
+    dbg_emit(dbg, "qualifiers: %s", quals_string(storage.quals));
 }
 
 static void emit_section(dbg_emit_t *dbg, const char *name, map_t *section)

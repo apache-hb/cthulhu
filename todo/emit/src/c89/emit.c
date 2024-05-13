@@ -121,7 +121,7 @@ static void c89_begin_module(c89_emit_t *emit, const ssa_module_t *mod)
 
 // emit api
 
-static const char *format_c89_link(tree_link_t linkage)
+static const char *format_c89_link(tree_linkage_t linkage)
 {
     switch (linkage)
     {
@@ -189,11 +189,11 @@ static const char *mangle_symbol_name(const ssa_symbol_t *symbol)
     default: break;
     }
 
-    if (symbol->link_name != NULL) { return symbol->link_name; }
+    if (symbol->linkage_string != NULL) { return symbol->linkage_string; }
     return symbol->name;
 }
 
-static bool is_entry_point(tree_link_t link)
+static bool is_entry_point(tree_linkage_t link)
 {
     return link == eLinkEntryCli || link == eLinkEntryGui;
 }

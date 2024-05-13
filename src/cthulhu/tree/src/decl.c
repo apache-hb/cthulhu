@@ -73,6 +73,18 @@ tree_t *tree_resolve_type(const tree_t *decl)
 {
     tree_t *inner = (tree_t*)decl;
     if (tree_is(decl, eTreeError)) { return inner; }
+
+    if (tree_is(decl, eTreePartial))
+    {
+        const tree_resolve_info_t *res = decl->resolve;
+        CTASSERTF(res != NULL, "resolve info for %s is NULL", tree_to_string(decl));
+        CTASSERTF(res->fn_resolve_type != NULL, "resolve type function for %s is NULL", tree_to_string(decl));
+
+        res->fn_resolve_type(res->sema, inner, res->user);
+
+        return inner;
+    }
+
     if (!tree_is(decl, eTreeDeclFunction)) { return inner; }
 
     const tree_resolve_info_t *res = decl->resolve;

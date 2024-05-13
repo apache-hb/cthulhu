@@ -21,6 +21,7 @@
 #include "core/macros.h"
 
 #include <stdint.h>
+#include <stdio.h>
 
 typedef struct check_t
 {
@@ -270,7 +271,13 @@ static void check_call_args_variadic(check_t *check, const tree_t *expr, const v
 
 static void check_call_arguments(check_t *check, const tree_t *expr)
 {
+    // if this is an indirect call, we need to get the function type
     const tree_t *fn = expr->callee;
+    if (tree_is(fn, eTreeExprLoad))
+    {
+        fn = tree_get_type(fn);
+    }
+
     const vector_t *fn_args = expr->args;
     const vector_t *fn_params = tree_fn_get_params(fn);
     tree_arity_t arity = tree_fn_get_arity(fn);

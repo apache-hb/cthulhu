@@ -48,7 +48,7 @@ typedef enum sema_tags_t {
 } sema_tags_t;
 
 typedef struct tree_attribs_t {
-    tree_link_t link; ///< the link type of the declaration
+    tree_linkage_t link; ///< the link type of the declaration
     tree_visibility_t visibility; ///< the visibility of the declaration
 
     const char *mangle; ///< override the mangle of the declaration

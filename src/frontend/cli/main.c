@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 #include "base/panic.h"
+#include "base/util.h"
 #include "config/config.h"
 #include "setup/memory.h"
 #include "format/colour.h"
@@ -259,13 +260,17 @@ int main(int argc, const char **argv)
     // fs_t *fs = fs_virtual("out", arena);
 
     const char *target_output = cfg_string_value(tool.output_target);
-    if (target_output == NULL)
+    if (str_equal(target_output, "auto"))
         target_output = "cfamily";
 
     target_runtime_t *target = support_get_target(support, target_output);
-    CTASSERT(target != NULL);
+    if (target == NULL)
+    {
+        msg_notify(reports, &kEvent_InvalidTarget, node,
+                   "could not identify target `%s`", target_output);
+    }
+    CHECK_LOG(reports, "querying target");
 
-    CHECK_LOG(reports, "emitting target ssa");
     const char *outpath = "out";
 
     fs_t *out = fs_physical(outpath, arena);
@@ -283,6 +288,7 @@ int main(int argc, const char **argv)
     };
 
     target_emit_ssa(target, &ssa, &emit);
+    CHECK_LOG(reports, "emitting target ssa");
 
 #if 0
     emit_options_t base_emit_options = {

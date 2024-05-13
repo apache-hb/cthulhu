@@ -76,12 +76,12 @@ typedef enum tree_arity_t
 } tree_arity_t;
 
 /// @brief the linkage of a declaration
-typedef enum tree_link_t
+typedef enum tree_linkage_t
 {
 #define TREE_LINKAGE(ID, STR) ID,
 #include "tree.inc"
     eLinkTotal
-} tree_link_t;
+} tree_linkage_t;
 
 /// @brief the type of jump
 typedef enum tree_jump_t
@@ -192,7 +192,7 @@ CT_TREE_API const char *digit_name(IN_DOMAIN(<, eDigitTotal) digit_t digit);
 ///
 /// @return the name of @p quals
 RET_NOTNULL
-CT_TREE_API const char *quals_name(tree_quals_t quals);
+CT_TREE_API const char *quals_string(tree_quals_t quals);
 
 /// @brief get the name of a linkage
 ///
@@ -200,7 +200,7 @@ CT_TREE_API const char *quals_name(tree_quals_t quals);
 ///
 /// @return the name of @p link
 RET_NOTNULL
-CT_TREE_API const char *link_name(IN_DOMAIN(<, eLinkTotal) tree_link_t link);
+CT_TREE_API const char *linkage_string(IN_DOMAIN(<, eLinkTotal) tree_linkage_t link);
 
 /// @brief get the name of visibility
 ///
@@ -208,7 +208,7 @@ CT_TREE_API const char *link_name(IN_DOMAIN(<, eLinkTotal) tree_link_t link);
 ///
 /// @return the name of @p vis
 RET_NOTNULL
-CT_TREE_API const char *vis_name(IN_DOMAIN(<, eVisibileTotal) tree_visibility_t vis);
+CT_TREE_API const char *visibility_string(IN_DOMAIN(<, eVisibileTotal) tree_visibility_t vis);
 
 /// @}
 

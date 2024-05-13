@@ -44,13 +44,13 @@ static vector_t *join_attribs(const ssa_symbol_t *symbol, arena_t *arena)
 {
     vector_t *attribs = vector_new(2, arena);
 
-    if (symbol->link_name != NULL)
+    if (symbol->linkage_string != NULL)
     {
-        vector_push(&attribs, str_format(arena, "extern = `%s`", symbol->link_name));
+        vector_push(&attribs, str_format(arena, "extern = `%s`", symbol->linkage_string));
     }
 
-    vector_push(&attribs, str_format(arena, "linkage = %s", link_name(symbol->linkage)));
-    vector_push(&attribs, str_format(arena, "visibility = %s", vis_name(symbol->visibility)));
+    vector_push(&attribs, str_format(arena, "linkage = %s", linkage_string(symbol->linkage)));
+    vector_push(&attribs, str_format(arena, "visibility = %s", visibility_string(symbol->visibility)));
 
     return attribs;
 }
@@ -281,7 +281,7 @@ static void emit_ssa_blocks(ssa_emit_t *emit, io_t *io, vector_t *bbs)
 static const char *storage_to_string(ssa_storage_t storage, arena_t *arena)
 {
     const char *ty = type_to_string(storage.type, arena);
-    const char *quals = quals_name(storage.quals);
+    const char *quals = quals_string(storage.quals);
 
     return str_format(arena, "{type = %s, quals = %s, size = %zu}", ty, quals, storage.size);
 }

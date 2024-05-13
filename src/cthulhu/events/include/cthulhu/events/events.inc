@@ -594,4 +594,12 @@ CTU_EVENT(CommandLineInvalid, {
         "The command line arguments were invalid.",
 })
 
+CTU_EVENT(InvalidTarget, {
+    .severity = eSeverityFatal,
+    .id = "M0081",
+    .brief = "Invalid target",
+    .description =
+        "The target was invalid.",
+})
+
 #undef CTU_EVENT

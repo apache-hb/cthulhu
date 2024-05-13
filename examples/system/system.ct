@@ -1,6 +1,4 @@
-type LPSTR = str;
-type DWORD = uint;
-type BOOL = int;
+import win32;
 
 struct Arena {
     name: str;
@@ -36,9 +34,6 @@ def libcAlloc(size: usize): opaque;
 @extern("free")
 def libcRelease(ptr: opaque);
 
-@extern("GetComputerNameA")
-def win32GetComputerNameA(name: str, size: *DWORD): BOOL;
-
 def printMemory(mem: Memory) {
     printf("[%s] %zu bytes\n", mem.name, mem.bytes);
 }
@@ -68,9 +63,9 @@ def arenaRelease(mem: *Arena, ptr: opaque) {
 }
 
 def getComputerName(mem: *Arena): str {
-    var size: DWORD = 256;
+    var size: win32::DWORD = 256;
     var name: str = arenaAlloc(mem, size);
-    if win32GetComputerNameA(name, &size) == 0 {
+    if win32::GetComputerNameA(name, &size) == 0 {
         return "Unknown";
     }
 
