@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
+#include "base/util.h"
 #include "c89.h"
 
 #include "arena/arena.h"
@@ -74,11 +75,12 @@ static const char *format_c89_pointer(c89_emit_t *emit, ssa_type_pointer_t point
 
 static const char *format_c89_enum(c89_emit_t *emit, const ssa_type_t *type, const char *name, const char *quals)
 {
+    const char *padding = ctu_strlen(quals) > 0 ? " " : "";
     return (name != NULL)
         // TODO: this is a hack for abi stability
         // update define_enum when this is updated
-        ? str_format(emit->arena, "%s %s_underlying_t %s", quals, type->name, name)
-        : str_format(emit->arena, "%s %s_underlying_t", quals, type->name);
+        ? str_format(emit->arena, "%s%s%s_underlying_t %s", quals, padding, type->name, name)
+        : str_format(emit->arena, "%s%s%s_underlying_t",    quals, padding, type->name);
 }
 
 static const char *format_c89_struct(c89_emit_t *emit, const ssa_type_t *type, const char *name, const char *quals)

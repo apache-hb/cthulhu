@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "base/panic.h"
+#include "cmd.h"
+
 #include "base/util.h"
 #include "config/config.h"
 #include "setup/memory.h"
 #include "format/colour.h"
-#include "cmd.h"
 
 #include "cthulhu/broker/broker.h"
 #include "cthulhu/events/events.h"
