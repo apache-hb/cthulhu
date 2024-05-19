@@ -42,7 +42,7 @@ static bool is_public(const tree_t *decl)
     return attrib->visibility == eVisiblePublic;
 }
 
-// TODO: needsLoad is awful
+// TODO: needs_load is awful
 static tree_t *sema_decl_name(tree_t *sema, const node_t *node, const vector_t *path, bool *needs_load)
 {
     bool is_imported = false;
@@ -66,7 +66,8 @@ static tree_t *sema_decl_name(tree_t *sema, const node_t *node, const vector_t *
         return tree_raise(node, sema->reports, &kEvent_SymbolNotFound,
                           "enum case `%s` not found in `%s`", name, tree_to_string(ns));
     }
-    else if (tree_is(ns, eTreeDeclModule))
+
+    if (tree_is(ns, eTreeDeclModule))
     {
         tree_t *decl = util_select_decl(ns, kDeclTags, sizeof(kDeclTags) / sizeof(size_t), name);
         if (decl == NULL)
@@ -422,47 +423,47 @@ static tree_t *sema_index_lvalue(ctu_sema_t *sema, const ctu_t *expr)
 /// TODO: so much duplicated logic
 ///
 
-/// TODO: what the fuck
-
-static tree_t *sema_field_lvalue(ctu_sema_t *sema, const ctu_t *expr)
+static tree_t *sema_field_common(ctu_sema_t *sema, const ctu_t *expr, tree_t **object, tree_t **field)
 {
-    tree_t *object = ctu_sema_lvalue(sema, expr->expr);
-    const tree_t *ty = get_ptr_type(tree_get_type(object));
+    CTASSERT(object != NULL);
+    CTASSERT(field != NULL);
+
+    tree_t *object_tmp = ctu_sema_lvalue(sema, expr->expr);
+    const tree_t *ty = get_ptr_type(tree_get_type(object_tmp));
     if (!tree_is(ty, eTreeTypeStruct))
     {
         return tree_raise(expr->node, ctu_sema_reports(sema), &kEvent_InvalidIndirection,
                           "cannot access field of non-struct type `%s`", tree_to_string(ty));
     }
 
-    tree_t *field = tree_ty_get_field(ty, expr->field);
-    if (field == NULL)
+    tree_t *field_tmp = tree_ty_get_field(ty, expr->field);
+    if (field_tmp == NULL)
     {
         return tree_raise(expr->node, ctu_sema_reports(sema), &kEvent_SymbolNotFound,
                           "field `%s` not found in struct `%s`", expr->field, tree_to_string(ty));
     }
 
-    tree_t *ref = tree_type_reference(expr->node, "", tree_get_type(field));
+    *object = object_tmp;
+    *field = field_tmp;
+
+    return tree_type_reference(expr->node, "", tree_get_type(field_tmp));
+}
+
+static tree_t *sema_field_lvalue(ctu_sema_t *sema, const ctu_t *expr)
+{
+    tree_t *object;
+    tree_t *field;
+    tree_t *ref = sema_field_common(sema, expr, &object, &field);
+
     return tree_expr_field(expr->node, ref, object, field);
 }
 
 static tree_t *sema_field_rvalue(ctu_sema_t *sema, const ctu_t *expr)
 {
-    tree_t *object = ctu_sema_lvalue(sema, expr->expr);
-    const tree_t *ty = get_ptr_type(tree_get_type(object));
-    if (!tree_is(ty, eTreeTypeStruct))
-    {
-        return tree_raise(expr->node, ctu_sema_reports(sema), &kEvent_InvalidIndirection,
-                          "cannot access field of non-struct type `%s`", tree_to_string(ty));
-    }
+    tree_t *object;
+    tree_t *field;
+    tree_t *ref = sema_field_common(sema, expr, &object, &field);
 
-    tree_t *field = tree_ty_get_field(ty, expr->field);
-    if (field == NULL)
-    {
-        return tree_raise(expr->node, ctu_sema_reports(sema), &kEvent_SymbolNotFound,
-                          "field `%s` not found in struct `%s`", expr->field, tree_to_string(ty));
-    }
-
-    tree_t *ref = tree_type_reference(expr->node, "", tree_get_type(field));
     tree_t *access = tree_expr_field(expr->node, ref, object, field);
     return tree_expr_load(expr->node, access);
 }
@@ -471,7 +472,7 @@ static tree_t *sema_field_indirect_lvalue(ctu_sema_t *sema, const ctu_t *expr)
 {
     tree_t *object = ctu_sema_lvalue(sema, expr->expr);
     const tree_t *ptr = get_ptr_type(tree_get_type(object));
-    if (!tree_is(ptr, eTreeTypePointer) || !tree_is(ptr->ptr, eTreeTypeStruct))
+    if (!tree_is(ptr, eTreeTypePointer) || !util_type_is_aggregate(ptr->ptr))
     {
         return tree_raise(expr->node, ctu_sema_reports(sema), &kEvent_InvalidIndirection,
                           "cannot indirectly access field of non-pointer-to-struct type `%s`",
@@ -494,7 +495,7 @@ static tree_t *sema_field_indirect_rvalue(ctu_sema_t *sema, const ctu_t *expr)
 {
     tree_t *object = ctu_sema_lvalue(sema, expr->expr);
     const tree_t *ptr = get_ptr_type(tree_get_type(object));
-    if (!tree_is(ptr, eTreeTypePointer) || !tree_is(ptr->ptr, eTreeTypeStruct))
+    if (!tree_is(ptr, eTreeTypePointer) || !util_type_is_aggregate(ptr->ptr))
     {
         return tree_raise(expr->node, ctu_sema_reports(sema), &kEvent_InvalidIndirection,
                           "cannot indirectly access field of non-pointer-to-struct type `%s`",
@@ -622,12 +623,6 @@ static tree_t *sema_local(ctu_sema_t *sema, const ctu_t *stmt)
         ? tree_resolve(tree_get_cookie(sema->sema), type)
         : tree_get_type(value);
 
-    if (tree_is(actual_type, eTreeTypeUnit))
-    {
-        msg_notify(ctu_sema_reports(sema), &kEvent_InvalidVariableType, stmt->node,
-                   "cannot declare a variable of type `unit`");
-    }
-
     const tree_t *ref = tree_type_reference(stmt->node, stmt->name, actual_type);
     tree_storage_t storage = {
         .storage = actual_type,
@@ -652,7 +647,11 @@ static tree_t *sema_stmts(ctu_sema_t *sema, const ctu_t *stmt)
     tree_t *decl = sema->decl;
     size_t len = vector_len(stmt->stmts);
 
-    size_t sizes[eCtuTagTotal] = {[eCtuTagTypes] = 4, [eCtuTagValues] = 4, [eCtuTagFunctions] = 4,};
+    size_t sizes[eCtuTagTotal] = {
+        [eCtuTagTypes] = 4,
+        [eCtuTagValues] = 4,
+        [eCtuTagFunctions] = 4,
+    };
 
     tree_t *ctx = tree_module(sema->sema, stmt->node, decl->name, eCtuTagTotal, sizes);
     arena_t *arena = get_global_arena();

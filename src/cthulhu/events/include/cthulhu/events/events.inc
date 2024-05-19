@@ -602,4 +602,12 @@ CTU_EVENT(InvalidTarget, {
         "The target was invalid.",
 })
 
+CTU_EVENT(InvalidName, {
+    .severity = eSeverityInternal,
+    .id = "M0082",
+    .brief = "Invalid name",
+    .description =
+        "Non-anonymous symbol had an empty name.",
+})
+
 #undef CTU_EVENT

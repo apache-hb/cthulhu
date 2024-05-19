@@ -109,7 +109,7 @@ TREE_KIND(eTreeExprCast,    "expr_cast",    eTagHasType)
 TREE_KIND(eTreeExprLoad,    "expr_load",    eTagHasType)
 
 /// take the address of an object with storage
-TREE_KIND(eTreeExprAddress, "expr_address", eTagHasType)
+TREE_KIND(eTreeExprAddressOf, "expr_addressof", eTagHasType)
 
 /// unary operations
 TREE_KIND(eTreeExprUnary,   "expr_unary",   eTagHasType)
@@ -125,7 +125,7 @@ TREE_KIND(eTreeExprCompare, "expr_compare", eTagHasType)
 TREE_KIND(eTreeExprField,  "expr_field",  eTagHasType)
 
 /// get a reference to an index in an array
-/// equivalent to `arr[idx]` in C
+/// equivalent to `arr[idx]` in C (but arr must be a pointer type)
 TREE_KIND(eTreeExprOffset, "expr_offset", eTagHasType)
 
 /// call a function

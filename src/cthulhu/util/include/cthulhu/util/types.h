@@ -56,6 +56,8 @@ CT_UTIL_API bool util_length_bounded(size_t length);
 /// @return the name of the length
 CT_UTIL_API const char *util_length_name(size_t length);
 
+CT_UTIL_API bool util_type_is_aggregate(const tree_t *type);
+
 /// @}
 
 CT_END_API

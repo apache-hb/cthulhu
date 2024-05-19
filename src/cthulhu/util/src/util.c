@@ -279,3 +279,8 @@ const char *util_length_name(size_t length)
     arena_t *arena = get_global_arena();
     return util_length_bounded(length) ? str_format(arena, "%zu", length) : "unbounded";
 }
+
+bool util_type_is_aggregate(const tree_t *type)
+{
+    return tree_is(type, eTreeTypeUnion) || tree_is(type, eTreeTypeStruct);
+}

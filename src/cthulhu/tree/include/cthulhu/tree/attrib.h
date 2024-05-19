@@ -7,8 +7,6 @@
 #include "core/analyze.h"
 #include "core/compiler.h"
 
-#include "base/bitset.h"
-
 #include <stdint.h>
 
 typedef struct vector_t vector_t;
@@ -18,6 +16,8 @@ CT_BEGIN_API
 typedef struct tree_t tree_t;
 typedef struct node_t node_t;
 typedef struct tree_attrib_t tree_attrib_t;
+
+typedef struct tree_attrib_def_t tree_attrib_def_t;
 
 /// @brief an application of an attribute
 typedef struct tree_attrib_t
@@ -39,6 +39,6 @@ typedef struct tree_attrib_t
 
 CT_TREE_API tree_attrib_t *tree_attrib_add(tree_attrib_t *root, IN_NOTNULL const tree_t *schema, IN_NOTNULL const vector_t *args);
 
-CT_TREE_API tree_t *tree_decl_attrib(const node_t *node, const char *name, vector_t *params, bitset_t mask);
+CT_TREE_API tree_t *tree_decl_attrib(const node_t *node, const char *name, vector_t *params);
 
 CT_END_API

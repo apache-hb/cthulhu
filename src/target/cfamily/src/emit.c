@@ -103,7 +103,7 @@ static void c89_begin_module(c89_emit_t *emit, const ssa_module_t *mod)
     collect_deps(emit, mod, mod->functions);
 
     // create source and header files
-    char *path = begin_module(&emit->emit, emit->fs, mod); // lets not scuff the original path
+    char *path = begin_module(&emit->emit, emit->fs, mod); // lets not break the original path
 
     const char *src_file = format_path(path, mod->name, emit->arena);
     const char *hdr_file = format_path(path, mod->name, emit->arena);
@@ -181,7 +181,7 @@ static void emit_required_headers(c89_emit_t *emit, const ssa_module_t *mod)
     }
 }
 
-static const char *mangle_symbol_name(const ssa_symbol_t *symbol)
+static const char *mangle_symbol_name(c89_emit_t *emit, const ssa_symbol_t *symbol)
 {
     switch (symbol->linkage)
     {
@@ -191,6 +191,13 @@ static const char *mangle_symbol_name(const ssa_symbol_t *symbol)
     }
 
     if (symbol->linkage_string != NULL) { return symbol->linkage_string; }
+
+    if (symbol->name == NULL)
+    {
+        // this is an anonymous symbol, we need to generate a unique name
+        return get_anon_name(&emit->emit, symbol, "anon");
+    }
+
     return symbol->name;
 }
 
@@ -256,7 +263,7 @@ void c89_proto_type(c89_emit_t *emit, io_t *io, const ssa_type_t *type)
 
 static void write_global(c89_emit_t *emit, io_t *io, const ssa_symbol_t *global)
 {
-    const char *it = c89_format_storage(emit, global->storage, mangle_symbol_name(global));
+    const char *it = c89_format_storage(emit, global->storage, mangle_symbol_name(emit, global));
     const char *link = format_c89_link(global->linkage);
 
     io_printf(io, "%s%s", link, it);
@@ -293,7 +300,7 @@ void c89_proto_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_sym
 
     ssa_type_closure_t closure = type->closure;
     const char *params = c89_format_params(emit, closure.params, closure.variadic);
-    const char *result = format_symbol(emit, closure.result, mangle_symbol_name(func));
+    const char *result = format_symbol(emit, closure.result, mangle_symbol_name(emit, func));
 
     const char *link = format_c89_link(func->linkage);
 
@@ -471,10 +478,10 @@ static const char *c89_format_operand(c89_emit_t *emit, ssa_operand_t operand)
         return str_format(emit->arena, "vreg%s", get_step_from_block(&emit->emit, operand.vreg_context, operand.vreg_index));
 
     case eOperandGlobal:
-        return mangle_symbol_name(operand.global);
+        return mangle_symbol_name(emit, operand.global);
 
     case eOperandFunction:
-        return mangle_symbol_name(operand.function);
+        return mangle_symbol_name(emit, operand.function);
 
     case eOperandLocal:
         return c89_format_local(emit, operand.local);
@@ -784,7 +791,7 @@ void c89_define_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_sy
 
     ssa_type_closure_t closure = type->closure;
     const char *params = c89_format_params(emit, closure.params, closure.variadic);
-    const char *result = format_symbol(emit, closure.result, mangle_symbol_name(func));
+    const char *result = format_symbol(emit, closure.result, mangle_symbol_name(emit, func));
 
     const char *link = format_c89_link(func->linkage);
 
@@ -870,6 +877,7 @@ emit_result_t cfamily_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, ta
             .reports = runtime->logger,
             .block_names = names_new(64, arena),
             .vreg_names = names_new(64, arena),
+            .anon_names = names_new(64, arena),
         },
         .modmap = map_optimal(len * 2, kTypeInfoPtr, arena),
         .srcmap = map_optimal(len, kTypeInfoPtr, arena),

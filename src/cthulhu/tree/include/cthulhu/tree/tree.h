@@ -204,9 +204,6 @@ typedef struct tree_t {
                             const tree_t *return_type;
                             tree_arity_t arity;
                         };
-
-                        /* eTreeDeclAttrib */
-                        bitset_t mask;
                     };
                 };
 

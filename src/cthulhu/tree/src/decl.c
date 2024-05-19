@@ -211,11 +211,10 @@ tree_t *tree_decl_function(
     return self;
 }
 
-tree_t *tree_decl_attrib(const node_t *node, const char *name, vector_t *params, bitset_t mask)
+tree_t *tree_decl_attrib(const node_t *node, const char *name, vector_t *params)
 {
     tree_t *self = tree_decl(eTreeDeclAttrib, node, NULL, name, eQualNone);
     self->params = params;
-    self->mask = mask;
     return self;
 }
 

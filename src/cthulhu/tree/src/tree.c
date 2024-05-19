@@ -289,7 +289,7 @@ tree_t *tree_expr_address(const node_t *node, tree_t *expr)
 {
     const tree_t *type = tree_get_type(expr);
     tree_t *inner = tree_type_pointer(node, tree_get_name(type), get_ref_inner(type), 1);
-    tree_t *self = tree_new(eTreeExprAddress, node, inner);
+    tree_t *self = tree_new(eTreeExprAddressOf, node, inner);
     self->expr = expr;
     return self;
 }

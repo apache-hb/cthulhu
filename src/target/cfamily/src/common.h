@@ -19,6 +19,7 @@ typedef struct visit_ast_t
 
     names_t block_names;
     names_t vreg_names;
+    names_t anon_names;
 } emit_t;
 
 CT_LOCAL char *begin_module(emit_t *emit, fs_t *fs, const ssa_module_t *mod);
@@ -29,6 +30,7 @@ CT_LOCAL void counter_reset(emit_t *emit);
 
 CT_LOCAL char *get_step_name(emit_t *emit, const ssa_step_t *step);
 CT_LOCAL char *get_block_name(emit_t *emit, const ssa_block_t *block);
+CT_LOCAL char *get_anon_name(emit_t *emit, const ssa_symbol_t *symbol, const char *prefix);
 CT_LOCAL char *get_step_from_block(emit_t *emit, const ssa_block_t *block, size_t index);
 
 CT_LOCAL const char *type_to_string(const ssa_type_t *type, arena_t *arena);

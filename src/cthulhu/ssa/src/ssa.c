@@ -215,8 +215,7 @@ static ssa_symbol_t *intern_string(ssa_compile_t *ssa, const tree_t *tree)
     // we need the load type here because we're creating storage for this string
     const tree_t *inner = tree_ty_load_type(type);
     ssa_storage_t storage = create_new_storage(ssa->types, inner, view.length + 1, eQualConst);
-    char *name = str_format(ssa->arena, "ANON%zu_string", ssa->string_count++);
-    ssa_symbol_t *it = symbol_new(ssa, name, type, attribs, storage);
+    ssa_symbol_t *it = symbol_new(ssa, NULL, type, attribs, storage);
     it->value = ssa_value_string(it->type, view);
     text_view_t *ptr = arena_memdup(&view, sizeof(text_view_t), ssa->arena);
     map_set(ssa->strings, ptr, it);
@@ -584,7 +583,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
         return add_jump(ssa, target, tree->jump);
     }
 
-    case eTreeExprAddress: {
+    case eTreeExprAddressOf: {
         ssa_operand_t operand = compile_tree(ssa, tree->expr);
         ssa_step_t step = {
             .opcode = eOpAddress,

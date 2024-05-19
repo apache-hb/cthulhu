@@ -45,8 +45,27 @@ static bool check_simple(check_t *check, const tree_t *decl)
     if (tree_is(decl, eTreeError)) { return false; } // TODO: are errors always reported?
 
     const char *id = tree_get_name(decl);
-    CTASSERT(id != NULL);
-    CTASSERT(!str_equal(id, ""));
+    if (id != NULL)
+    {
+        if (str_equal(id, ""))
+        {
+            msg_notify(check->reports, &kEvent_InvalidName, tree_get_node(decl),
+                "declaration has an empty name"
+            );
+            return false;
+        }
+    }
+    else
+    {
+        const tree_attribs_t *attribs = tree_get_attrib(decl);
+        if (attribs->link != eLinkModule)
+        {
+            msg_notify(check->reports, &kEvent_InvalidName, tree_get_node(decl),
+                "externally visible declaration is anonymous"
+            );
+            return false;
+        }
+    }
 
     const tree_t *ty = tree_get_type(decl);
     CTASSERTF(ty != NULL, "decl `%s` has no type", id);
@@ -365,10 +384,37 @@ static bool will_always_return(const tree_t *stmt)
     }
 }
 
+static void check_func_locals(check_t *check, const vector_t *locals)
+{
+    size_t len = vector_len(locals);
+    for (size_t i = 0; i < len; i++)
+    {
+        const tree_t *local = vector_get(locals, i);
+        check_simple(check, local);
+
+        const tree_t *type = tree_get_type(local);
+        if (tree_is(type, eTreeTypeUnit))
+        {
+            msg_notify(check->reports, &kEvent_InvalidType, tree_get_node(local),
+                "local `%s` has type `unit`",
+                tree_get_name(local)
+            );
+        }
+        else if (tree_is(type, eTreeTypeEmpty))
+        {
+            msg_notify(check->reports, &kEvent_InvalidType, tree_get_node(local),
+                "local `%s` has type `empty`",
+                tree_get_name(local)
+            );
+        }
+    }
+}
+
 static void check_func_details(check_t *check, const tree_t *fn)
 {
     if (fn->body == NULL) { return; }
 
+    check_func_locals(check, fn->locals);
     const tree_t *return_type = tree_fn_get_return(fn);
 
     check_func_body(check, return_type, fn->body);
