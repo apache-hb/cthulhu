@@ -3,6 +3,7 @@
 #pragma once
 
 #include "common.h"
+#include "cthulhu/broker/broker.h"
 
 typedef struct io_t io_t;
 
@@ -32,6 +33,7 @@ typedef struct c89_emit_t
     fs_t *fs;
     map_t *deps;
     vector_t *sources;
+    file_layout_t layout;
 } c89_emit_t;
 
 ///

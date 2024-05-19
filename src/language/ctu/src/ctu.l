@@ -90,6 +90,7 @@ WS [ \t\r\v\n\f]
 
 "return" { return RETURN; }
 "while" { return WHILE; }
+"for" { return FOR; }
 "if" { return IF; }
 "else" { return ELSE; }
 

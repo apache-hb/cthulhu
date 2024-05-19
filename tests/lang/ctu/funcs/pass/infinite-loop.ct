@@ -1,3 +1,4 @@
+@entry(cli)
 def main: int {
     while true {
 

@@ -67,6 +67,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
     RETURN "`return`"
     WHILE "`while`"
+    FOR "`for`"
     IF "`if`"
     ELSE "`else`"
 

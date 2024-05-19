@@ -117,6 +117,12 @@ static void c89_begin_module(c89_emit_t *emit, const ssa_module_t *mod)
     io_printf(hdr->io, "#include <stdbool.h>\n");
     io_printf(hdr->io, "#include <stdint.h>\n");
 
+    io_printf(hdr->io,
+        "#ifdef __cplusplus\n"
+        "extern \"C\" {\n"
+        "#endif\n"
+    );
+
     io_printf(src->io, "#include \"%s.h\"\n", hdr_file);
 }
 
@@ -861,6 +867,12 @@ static void c89_define_module(c89_emit_t *emit, const ssa_module_t *mod)
     c89_define_types(emit, hdr, mod->types);
     define_symbols(emit, mod, mod->globals, c89_define_global);
     define_symbols(emit, mod, mod->functions, c89_define_function);
+
+    io_printf(hdr,
+        "#ifdef __cplusplus\n"
+        "}\n"
+        "#endif\n"
+    );
 }
 
 emit_result_t cfamily_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *emit)
@@ -889,6 +901,7 @@ emit_result_t cfamily_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, ta
         .fs = emit->fs,
         .deps = ssa->deps,
         .sources = vector_new(32, arena),
+        .layout = emit->layout,
     };
 
     // simcoe: use the default module generator only when manual output is not specified
