@@ -46,7 +46,7 @@ os_error_t os_file_exists(const char *path)
     return errno;
 }
 
-os_file_impl_t impl_file_open(const char *path, os_access_t access)
+CT_LOCAL os_file_impl_t impl_file_open(const char *path, os_access_t access)
 {
     return fopen(path, get_access(access));
 }
@@ -72,7 +72,7 @@ os_error_t os_tmpfile_open(os_file_t *file)
     return 0;
 }
 
-bool impl_file_close(os_file_impl_t file)
+CT_LOCAL bool impl_file_close(os_file_impl_t file)
 {
     return fclose(file) == 0;
 }
@@ -219,7 +219,7 @@ static int get_mmap_prot(os_protect_t protect)
     return result;
 }
 
-void *impl_file_map(os_file_t *file, os_protect_t protect, size_t size, os_mapping_t *mapping)
+CT_LOCAL void *impl_file_map(os_file_t *file, os_protect_t protect, size_t size, os_mapping_t *mapping)
 {
     CT_UNUSED(mapping);
 
@@ -229,7 +229,7 @@ void *impl_file_map(os_file_t *file, os_protect_t protect, size_t size, os_mappi
     return mmap(NULL, size, prot, MAP_PRIVATE, fd, 0);
 }
 
-os_error_t impl_unmap(os_mapping_t *map)
+CT_LOCAL os_error_t impl_unmap(os_mapping_t *map)
 {
     if (munmap(map->view, map->size) != 0)
     {

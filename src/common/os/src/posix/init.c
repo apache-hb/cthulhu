@@ -20,7 +20,7 @@ CT_LOCAL size_t impl_maxpath(void)
     return gMaxPathLength;
 }
 
-void impl_init(void)
+CT_LOCAL void impl_init(void)
 {
     long path = pathconf(".", _PC_PATH_MAX);
     if (path < 0)
@@ -46,17 +46,17 @@ void impl_init(void)
     }
 }
 
-void impl_exit(os_exitcode_t code)
+CT_LOCAL void impl_exit(os_exitcode_t code)
 {
     exit(code); // NOLINT(concurrency-mt-unsafe)
 }
 
-void impl_thread_exit(os_status_t status)
+CT_LOCAL void impl_thread_exit(os_status_t status)
 {
     pthread_exit((void*)(intptr_t)status);
 }
 
-void impl_abort(void)
+CT_LOCAL void impl_abort(void)
 {
     abort(); // NOLINT(concurrency-mt-unsafe)
 }

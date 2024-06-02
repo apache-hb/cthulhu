@@ -12,7 +12,7 @@
 #include <errno.h>
 
 STA_DECL
-os_error_t impl_last_error(void)
+CT_LOCAL os_error_t impl_last_error(void)
 {
     return (os_error_t)errno;
 }

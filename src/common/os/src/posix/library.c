@@ -7,12 +7,12 @@
 #include <dlfcn.h>
 #include <errno.h>
 
-os_library_impl_t impl_library_open(const char *path)
+CT_LOCAL os_library_impl_t impl_library_open(const char *path)
 {
     return dlopen(path, RTLD_NOW);
 }
 
-bool impl_library_close(os_library_impl_t lib)
+CT_LOCAL bool impl_library_close(os_library_impl_t lib)
 {
     return dlclose(lib);
 }
@@ -24,7 +24,7 @@ bool impl_library_close(os_library_impl_t lib)
 #   pragma GCC diagnostic ignored "-Wpedantic"
 #endif
 
-void *impl_library_symbol(os_library_impl_t lib, const char *name)
+CT_LOCAL void *impl_library_symbol(os_library_impl_t lib, const char *name)
 {
     // clear any previous errors
     dlerror();
