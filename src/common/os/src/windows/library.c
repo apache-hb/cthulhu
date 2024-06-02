@@ -2,17 +2,17 @@
 
 #include "os_common.h"
 
-os_library_impl_t impl_library_open(const char *path)
+CT_LOCAL os_library_impl_t impl_library_open(const char *path)
 {
     return LoadLibraryA(path);
 }
 
-bool impl_library_close(os_library_impl_t lib)
+CT_LOCAL bool impl_library_close(os_library_impl_t lib)
 {
     return FreeLibrary(lib) != 0;
 }
 
-void *impl_library_symbol(os_library_impl_t lib, const char *name)
+CT_LOCAL void *impl_library_symbol(os_library_impl_t lib, const char *name)
 {
     return (void*)GetProcAddress(lib, name);
 }

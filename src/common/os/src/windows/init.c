@@ -18,24 +18,24 @@ CT_LOCAL size_t impl_maxpath(void)
     return MAX_PATH;
 }
 
-void impl_init(void)
+CT_LOCAL void impl_init(void)
 {
     _CrtSetReportMode(_CRT_ASSERT, 0);
     _set_abort_behavior(0, _WRITE_ABORT_MSG);
 }
 
-void impl_exit(os_exitcode_t code)
+CT_LOCAL void impl_exit(os_exitcode_t code)
 {
     TerminateProcess(GetCurrentProcess(), code);
 }
 
-void impl_thread_exit(os_status_t status)
+CT_LOCAL void impl_thread_exit(os_status_t status)
 {
     ExitThread(status);
     CT_UNREACHABLE();
 }
 
-void impl_abort(void)
+CT_LOCAL void impl_abort(void)
 {
     abort();
 }

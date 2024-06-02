@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 
-os_error_t impl_copyfile(const char *dst, const char *src)
+CT_LOCAL os_error_t impl_copyfile(const char *dst, const char *src)
 {
     CTASSERT(dst != NULL);
     CTASSERT(src != NULL);
@@ -69,7 +69,7 @@ static DWORD get_disp(os_access_t access)
     }
 }
 
-os_file_impl_t impl_file_open(const char *path, os_access_t access)
+CT_LOCAL os_file_impl_t impl_file_open(const char *path, os_access_t access)
 {
     DWORD dw_access = get_access(access);
     DWORD dw_disp = get_disp(access);
@@ -106,7 +106,7 @@ os_error_t os_tmpfile_open(os_file_t *file)
     return os_file_open(name, eOsAccessWrite, file);
 }
 
-bool impl_file_close(os_file_impl_t impl)
+CT_LOCAL bool impl_file_close(os_file_impl_t impl)
 {
     return CloseHandle(impl) != 0;
 }
@@ -272,7 +272,7 @@ static DWORD get_map_access(os_protect_t protect)
     return result;
 }
 
-void *impl_file_map(os_file_t *file, os_protect_t protect, size_t size, os_mapping_t *mapping)
+CT_LOCAL void *impl_file_map(os_file_t *file, os_protect_t protect, size_t size, os_mapping_t *mapping)
 {
     DWORD prot = get_protect(protect);
     DWORD access = get_map_access(protect);
@@ -311,7 +311,7 @@ void *impl_file_map(os_file_t *file, os_protect_t protect, size_t size, os_mappi
     return view;
 }
 
-os_error_t impl_unmap(os_mapping_t *map)
+CT_LOCAL os_error_t impl_unmap(os_mapping_t *map)
 {
     if (!UnmapViewOfFile(map->view))
     {
