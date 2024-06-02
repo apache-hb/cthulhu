@@ -8,12 +8,12 @@
 
 #include "core/win32.h" // IWYU pragma: keep
 
-size_t impl_maxname(void)
+CT_LOCAL size_t impl_maxname(void)
 {
     return MAX_PATH;
 }
 
-size_t impl_maxpath(void)
+CT_LOCAL size_t impl_maxpath(void)
 {
     return MAX_PATH;
 }

@@ -10,12 +10,12 @@
 static long gMaxNameLength = 0;
 static long gMaxPathLength = 0;
 
-size_t impl_maxname(void)
+CT_LOCAL size_t impl_maxname(void)
 {
     return gMaxNameLength;
 }
 
-size_t impl_maxpath(void)
+CT_LOCAL size_t impl_maxpath(void)
 {
     return gMaxPathLength;
 }
