@@ -1,6 +1,6 @@
 src = [ 'src/cmd.c', 'main.c' ]
 
-cli = executable('cli', src,
+executable('cli', src,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     include_directories : [ 'include' ],

@@ -28,7 +28,7 @@ src = [
     parse.process('src/ap.y')
 ]
 
-libargparse = library('argparse', src,
+libargparse = library('argparse', src, argparse_api,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : generated_args + [ '-DCT_ARGPARSE_BUILD=1' ],

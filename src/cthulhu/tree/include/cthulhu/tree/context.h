@@ -51,6 +51,12 @@ CT_PUREFN
 CT_TREE_API const char *tree_get_name(IN_NOTNULL const tree_t *tree);
 
 CT_PUREFN
+CT_TREE_API const char *tree_get_user_name(IN_NOTNULL const tree_t *tree);
+
+CT_PUREFN
+CT_TREE_API bool tree_is_symbol_anonymous(IN_NOTNULL const tree_t *tree);
+
+CT_PUREFN
 CT_TREE_API const tree_t *tree_get_type(IN_NOTNULL const tree_t *tree);
 
 CT_PUREFN

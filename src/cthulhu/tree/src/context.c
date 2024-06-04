@@ -110,6 +110,26 @@ const char *tree_get_name(const tree_t *tree)
 }
 
 STA_DECL
+const char *tree_get_user_name(const tree_t *tree)
+{
+    CTASSERTF(tree_has_tag(tree, eTagName), "tree type %s does not have a symbol", tree_kind_string(tree));
+
+    if (tree_is(tree, eTreeError)) return tree->message;
+
+    return tree_is_symbol_anonymous(tree) ? "<anonymous>" : tree->name;
+}
+
+STA_DECL
+bool tree_is_symbol_anonymous(const tree_t *tree)
+{
+    CTASSERTF(tree_has_tag(tree, eTagName), "tree type %s does not have a name", tree_kind_string(tree));
+
+    if (tree_is(tree, eTreeError)) return false;
+
+    return tree->name == NULL;
+}
+
+STA_DECL
 const tree_t *tree_get_type(const tree_t *tree)
 {
     CTASSERTF(tree_has_tag(tree, eTagHasType), "tree type %s does not have a type", tree_kind_string(tree));

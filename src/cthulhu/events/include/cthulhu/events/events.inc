@@ -358,7 +358,7 @@ CTU_EVENT(CyclicDependency, {
 })
 
 CTU_EVENT(ImportedWithImpl, {
-    .severity = eSeverityWarn,
+    .severity = eSeverityFatal,
     .id = "M0050",
     .brief = "Imported with impl",
     .description = "A declaration was imported but has a declaration with an implementation in the current translation unit",

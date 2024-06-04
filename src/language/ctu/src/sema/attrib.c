@@ -85,7 +85,8 @@ static tree_linkage_t choose_linkage(tree_t *sema, const ctu_t *expr)
     {
         return eLinkEntryGui;
     }
-    else if (str_equal(name, "cli"))
+
+    if (str_equal(name, "cli"))
     {
         return eLinkEntryCli;
     }
@@ -187,18 +188,19 @@ static void apply_extern(tree_t *sema, tree_t *decl, const vector_t *args)
 {
     if (!tree_is(decl, eTreeDeclFunction))
     {
-        msg_notify(sema->reports, &kEvent_InvalidAttributeApplication, decl->node, "extern attribute can only be applied to functions");
+        msg_notify(sema->reports, &kEvent_InvalidAttributeApplication, decl->node, "`extern` can only be applied to functions");
         return;
     }
 
     const tree_attribs_t *old = tree_get_attrib(decl);
     if (old->mangle != NULL)
     {
-        msg_notify(sema->reports, &kEvent_DuplicateAttribute, decl->node, "extern attribute already applied");
+        msg_notify(sema->reports, &kEvent_DuplicateAttribute, decl->node, "`extern` already applied to this symbol");
         return;
     }
 
     tree_attribs_t *copy = dup_tree_attribs(old);
+    copy->link = eLinkImport;
     if (vector_len(args) == 0)
     {
         copy->mangle = tree_get_name(decl);

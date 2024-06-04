@@ -15,7 +15,7 @@ target_count = targets.keys().length()
 has_static_modules = lang_count > 0 or plugin_count > 0 or target_count > 0
 
 if default_library == 'static' and has_static_modules
-    loader_header = configure_file(
+    configure_file(
         input : 'data/enum_modules.h.in',
         output : 'enum_modules.h',
         configuration : {
@@ -93,7 +93,7 @@ support_impl_include = include_directories('src')
 # gcc warns on this
 support_args = cc.get_supported_arguments('-Wno-type-limits')
 
-libsupport = library('support', src,
+libsupport = library('support', src, support_api,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + support_args + [ '-DCT_SUPPORT_BUILD=1' ],

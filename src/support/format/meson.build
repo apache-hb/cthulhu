@@ -35,7 +35,7 @@ src = [
     'src/version.c'
 ]
 
-libformat_core = library('format_core', src,
+libformat_core = library('format_core', src, format_api,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : format_args,

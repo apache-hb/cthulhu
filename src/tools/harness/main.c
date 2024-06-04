@@ -283,7 +283,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     vector_t *mods = broker_get_modules(broker);
 
     check_tree(logger, mods, arena);
-    CHECK_LOG(logger, "validations failed");
+    CHECK_LOG(logger, "validation");
 
     ssa_result_t ssa = ssa_compile(mods, arena);
     CHECK_LOG(logger, "generating ssa");

@@ -44,8 +44,8 @@ static bool check_simple(check_t *check, const tree_t *decl)
 
     if (tree_is(decl, eTreeError)) { return false; } // TODO: are errors always reported?
 
-    const char *id = tree_get_name(decl);
-    if (id != NULL)
+    const char *id = tree_get_user_name(decl);
+    if (!tree_is_symbol_anonymous(decl))
     {
         if (str_equal(id, ""))
         {
@@ -131,11 +131,10 @@ static void check_func_attribs(check_t *check, const tree_t *fn)
     case eLinkImport:
         if (fn->body != NULL)
         {
-            event_builder_t id = msg_notify(check->reports, &kEvent_ImportedWithImpl, tree_get_node(fn),
+            msg_notify(check->reports, &kEvent_ImportedWithImpl, tree_get_node(fn),
                 "function `%s` is marked as imported but has an implementation",
-                tree_get_name(fn)
+                tree_get_user_name(fn)
             );
-            msg_note(id, "implementation will be ignored");
         }
         break;
 
@@ -144,7 +143,7 @@ static void check_func_attribs(check_t *check, const tree_t *fn)
         {
             event_builder_t id = msg_notify(check->reports, &kEvent_IgnoredMangling, tree_get_node(fn),
                 "function `%s` has internal linkage and user defined mangling",
-                tree_get_name(fn)
+                tree_get_user_name(fn)
             );
             msg_note(id, "attribute will be ignored");
         }
@@ -296,6 +295,8 @@ static void check_call_arguments(check_t *check, const tree_t *expr)
     {
         fn = tree_get_type(fn);
     }
+
+    printf("here %s\n", tree_to_string(fn));
 
     const vector_t *fn_args = expr->args;
     const vector_t *fn_params = tree_fn_get_params(fn);

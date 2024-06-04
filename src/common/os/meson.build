@@ -71,7 +71,7 @@ lib_osnative = static_library('os_' + os_platform,
 
 src = [ 'src/os.c' ]
 
-libos = library('os', src,
+libos = library('os', src, os_config,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ os_api_build ] + os_args,

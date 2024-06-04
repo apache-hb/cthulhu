@@ -1,6 +1,6 @@
 src = [ 'main.c' ]
 
-example = executable('example', src,
+executable('example', src,
     link_args : setargv,
     dependencies : [
         broker, argparse, support,

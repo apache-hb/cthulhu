@@ -17,7 +17,7 @@ deps = [
     events
 ]
 
-libsetup = library('setup', src,
+libsetup = library('setup', src, setup_api,
     build_by_default : not meson.is_subproject(),
     install : not meson.is_subproject(),
     c_args : user_args + [ '-DCT_SETUP_BUILD=1' ],
