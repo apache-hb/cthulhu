@@ -1,3 +1,0 @@
-MODULE Arrays;
-    TYPE X = ARRAY 10 + 10 OF INTEGER;
-END Arrays.

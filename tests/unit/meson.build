@@ -32,23 +32,20 @@ unit = declare_dependency(
     dependencies : [ base, std, memory, arena, setup ]
 )
 
-cases = [
-    'util.str',
-    'util.map',
-    'util.set',
-    'util.bitset'
-]
+cases = {
+    'strings': 'cases/util/str.c',
+    'maps': 'cases/util/map.c',
+    'sets': 'cases/util/set.c',
+    'bitsets': 'cases/util/bitset.c',
+}
 
-foreach case : cases
-    name = case.replace('.', '/')
-    path = 'cases'/name + '.c'
-
-    exe = executable(case, path,
+foreach name, path : cases
+    exe = executable(name, path,
         include_directories : '.',
         dependencies : [ unit, memory, std, setup, arena, base ]
     )
 
-    test(case, exe, suite : 'unit')
+    test(name, exe, suite : 'unit')
 endforeach
 
 # vfs
@@ -62,7 +59,7 @@ test('vfs', vfs_exe, suite : 'unit')
 
 # fs
 
-fs_exe = executable('fs', 'cases/io/fs.c',
+fs_exe = executable('physical fs', 'cases/io/fs.c',
     include_directories : '.',
     dependencies : [ unit, base, std, scan, fs, setup, arena ]
 )
@@ -86,7 +83,7 @@ test('io', io_exe,
 
 # argparse
 
-argparse_exe = executable('argparse.argparse', 'cases/argparse/argparse.c',
+argparse_exe = executable('argparser', 'cases/argparse/argparse.c',
     include_directories : '.',
     dependencies : [ unit, memory, base, std, config, argparse, setup, arena ]
 )

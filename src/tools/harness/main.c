@@ -259,6 +259,7 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
     {
         const char *path = argv[i];
         const char *ext = str_ext(path, arena);
+        CTASSERTF(ext != NULL, "no extension for file `%s`", path);
         language_runtime_t *lang = support_get_lang(support, ext);
         CTASSERTF(lang != NULL, "no language for extension `%s`", ext);
 

@@ -21,7 +21,6 @@
 #include "core/macros.h"
 
 #include <stdint.h>
-#include <stdio.h>
 
 typedef struct check_t
 {
@@ -295,8 +294,6 @@ static void check_call_arguments(check_t *check, const tree_t *expr)
     {
         fn = tree_get_type(fn);
     }
-
-    printf("here %s\n", tree_to_string(fn));
 
     const vector_t *fn_args = expr->args;
     const vector_t *fn_params = tree_fn_get_params(fn);

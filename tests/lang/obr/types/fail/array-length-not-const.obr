@@ -1,0 +1,4 @@
+MODULE Arrays;
+    TYPE X = ARRAY 10 + 10 OF INTEGER;
+    (* todo: this will start passing when consteval gets smarter *)
+END Arrays.
