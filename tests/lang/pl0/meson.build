@@ -1,4 +1,3 @@
-
 langtests += {
     'pl0': {
         'ext': 'pl0',
