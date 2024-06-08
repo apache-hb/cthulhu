@@ -1,3 +1,8 @@
 [submodule "data/scripts/ninjatracing"]
 	path = data/scripts/ninjatracing
 	url = https://github.com/nico/ninjatracing.git
+	shallow = true
+
+[submodule "data/doxygen-awesome-css"]
+	path = data/doxygen-awesome-css
+	url = https://github.com/jothepro/doxygen-awesome-css

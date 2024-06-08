@@ -20,6 +20,11 @@ option('lang_example', type : 'feature',
     value : 'auto'
 )
 
+option('lang_cc', type : 'feature',
+    description : 'build the c language driver',
+    value : 'auto'
+)
+
 # interfaces
 
 option('frontend_cli', type : 'feature',

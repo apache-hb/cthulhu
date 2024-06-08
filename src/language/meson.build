@@ -13,3 +13,7 @@ endif
 if lang_example.allowed()
     subdir('example')
 endif
+
+if lang_cc.allowed()
+    subdir('cfamily/cc')
+endif

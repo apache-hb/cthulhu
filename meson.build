@@ -73,13 +73,11 @@ lang_ctu = get_option('lang_ctu').disable_auto_if(meson.is_subproject())
 lang_pl0 = get_option('lang_pl0').disable_auto_if(meson.is_subproject())
 lang_oberon = get_option('lang_oberon').disable_auto_if(meson.is_subproject())
 lang_example = get_option('lang_example').disable_auto_if(meson.is_subproject())
+lang_cc = get_option('lang_cc').disable_auto_if(meson.is_subproject())
 
 # all the codegen targets
 target_cfamily = get_option('target_cfamily').disable_auto_if(meson.is_subproject())
 target_debug = get_option('target_debug').disable_auto_if(meson.is_subproject())
-target_hlsl = get_option('target_hlsl').disable_auto_if(meson.is_subproject())
-target_llvm = get_option('target_llvm').disable_auto_if(meson.is_subproject())
-default_target = get_option('default_target')
 
 # all compiler plugins
 plugin_timer = get_option('plugin_timer').disable_auto_if(meson.is_subproject())
@@ -264,8 +262,8 @@ if doxygen.found()
     ]
 
     stylesheets = [
-        data_dir / 'doxygen-awesome.css',
-        data_dir / 'doxygen-awesome-sidebar-only.css'
+        data_dir / 'doxygen-awesome-css/doxygen-awesome.css',
+        data_dir / 'doxygen-awesome-css/doxygen-awesome-sidebar-only.css'
     ]
 
     doxy_includes = [
@@ -353,20 +351,17 @@ build_summary = {
     'Targets': {
         'C Family': target_cfamily.allowed(),
         'Debug': target_debug.allowed(),
-        'HLSL': target_hlsl.allowed(),
-        'LLVM': target_llvm.allowed(),
-        'Default': default_target
     },
     'Frontends': {
         'GUI': frontend_gui.allowed(),
-        'CLI': frontend_cli.allowed(),
-        'Example': frontend_example.allowed()
+        'CLI': frontend_cli.allowed()
     },
     'Languages': {
         'Cthulhu': lang_ctu.allowed(),
         'PL/0': lang_pl0.allowed(),
         'Oberon-2': lang_oberon.allowed(),
-        'Example': lang_example.allowed()
+        'Example': lang_example.allowed(),
+        'C': lang_cc.allowed()
     },
     'Tools': {
         'Notify': tool_notify.allowed(),
