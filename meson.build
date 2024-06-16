@@ -5,7 +5,7 @@ project('cthulhu', 'c',
     meson_version : '>=1.3.0',
     default_options : [
         # gcc is picky about POSIX stdlib extensions
-        'c_std=gnu23,c23,gnu11,c11',
+        'c_std=gnu2x,c2x,gnu11,c11',
 
         'cpp_std=c++latest,c++23',
 

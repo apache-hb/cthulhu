@@ -8,22 +8,7 @@
 #include "std/str.h"
 #include "arena/arena.h"
 
-STA_DECL
-os_error_t io_free(io_t *io)
-{
-    CTASSERT(io != NULL);
-
-    os_error_t err = io_close(io);
-    if (err != eOsSuccess)
-        return err;
-
-    arena_free(io, sizeof(io_t) + io->cb->size, io->arena);
-
-    return eOsSuccess;
-}
-
-STA_DECL
-os_error_t io_close(io_t *io)
+static os_error_t impl_close(io_t *io)
 {
     CTASSERT(io != NULL);
 
@@ -35,6 +20,24 @@ os_error_t io_close(io_t *io)
         return io->cb->fn_close(io);
 
     return eOsSuccess;
+}
+
+STA_DECL
+os_error_t io_free(io_t *io)
+{
+    os_error_t err = impl_close(io);
+    if (err != eOsSuccess)
+        return err;
+
+    arena_free(io, sizeof(io_t) + io->cb->size, io->arena);
+
+    return eOsSuccess;
+}
+
+STA_DECL
+os_error_t io_close(io_t *io)
+{
+    return impl_close(io);
 }
 
 STA_DECL

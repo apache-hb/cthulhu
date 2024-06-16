@@ -19,5 +19,5 @@ STA_DECL
 void ctu_vpanic(source_info_t location, const char *msg, va_list args)
 {
     gPanicHandler(location, msg, args);
-    CT_ASSUME(0);
+    CT_UNREACHABLE();
 }
