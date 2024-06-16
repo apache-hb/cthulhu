@@ -1,11 +1,11 @@
 project('cthulhu', 'c',
     license : 'LGPL-3.0-only AND GPL-3.0-only',
-    version : '0.2.9',
+    version : '0.2.10',
     license_files : 'LICENSE',
     meson_version : '>=1.3.0',
     default_options : [
         # gcc is picky about POSIX stdlib extensions
-        'c_std=gnu2x,c2x,gnu11,c11',
+        'c_std=gnu11,c11',
 
         'cpp_std=c++latest,c++23',
 

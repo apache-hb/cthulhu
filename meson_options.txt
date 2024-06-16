@@ -22,7 +22,7 @@ option('lang_example', type : 'feature',
 
 option('lang_cc', type : 'feature',
     description : 'build the c language driver',
-    value : 'auto'
+    value : 'disabled'
 )
 
 # interfaces
@@ -56,18 +56,12 @@ option('target_debug', type : 'feature',
 
 option('target_hlsl', type : 'feature',
     description : 'Emits HLSL code from the tree form',
-    value : 'auto'
+    value : 'disabled'
 )
 
 option('target_llvm', type : 'feature',
     description : 'Emits LLVM IR code from the ssa form',
-    value : 'auto'
-)
-
-option('default_target', type : 'combo',
-    description : 'Control the default target of the compiler',
-    choices : ['cfamily', 'debug', 'hlsl'],
-    value : 'cfamily'
+    value : 'disabled'
 )
 
 # plugins

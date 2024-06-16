@@ -163,10 +163,10 @@ static unsigned match_sequence(
     // we have a match
     // we need to store the sequence and the repeat count
 
-    collapsed->first = scan_start;
-    collapsed->last = scan_start + seq_len - 1;
-    collapsed->repeat = count;
-    return count * seq_len;
+    collapsed->first = (unsigned)(scan_start);
+    collapsed->last = (unsigned)(scan_start + seq_len - 1);
+    collapsed->repeat = (unsigned)(count);
+    return (unsigned)(count * seq_len);
 }
 
 static unsigned collapse_frame(const typevec_t *frames, unsigned start, collapsed_t *collapsed)
@@ -177,10 +177,10 @@ static unsigned collapse_frame(const typevec_t *frames, unsigned start, collapse
         // push the first entry
         const entry_t *head = typevec_offset(frames, start);
 
-        for (size_t i = start + 1; i < len; i++)
+        for (unsigned i = start + 1; i < len; i++)
         {
             const entry_t *frame = typevec_offset(frames, i);
-            CTASSERTF(frame != NULL, "entry at %zu is NULL", i);
+            CTASSERTF(frame != NULL, "entry at %u is NULL", i);
 
             // we might have a match
             if (frame->address == head->address)
@@ -210,12 +210,12 @@ static typevec_t *collapse_frames(const typevec_t *frames, arena_t *arena)
     size_t len = typevec_len(frames);
     typevec_t *result = typevec_new(sizeof(collapsed_t), len, arena);
 
-    for (size_t i = 0; i < len; i++)
+    for (unsigned i = 0; i < len; i++)
     {
         collapsed_t collapsed = {0};
         unsigned count = collapse_frame(frames, i, &collapsed);
 
-        CTASSERTF(count > 0, "count of 0 at %zu", i);
+        CTASSERTF(count > 0, "count of 0 at %u", i);
 
         typevec_push(result, &collapsed);
 
