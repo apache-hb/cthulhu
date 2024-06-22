@@ -59,12 +59,12 @@ jobs:
         with:
           python-version: '3.9'
       - run: pip install meson
-      - name: Configure build directory ${{ matrix.compiler == 'clang' }} ${{ contains('windows', matrix.os) }}
+      - name: Configure build directory ${{ matrix.compiler == 'clang' }} ${{ contains(matrix.os, 'windows') }}
         run: meson setup build
         env:
-          CC:  ${{ (matrix.compiler == 'clang' && contains('windows', matrix.os)) && format('{0}\\bin\\clang-cl.exe', env.LLVM_PATH) || env.CC  }}
-          CXX: ${{ (matrix.compiler == 'clang' && contains('windows', matrix.os)) && format('{0}\\bin\\clang-cl.exe', env.LLVM_PATH) || env.CXX }}
-          LD:  ${{ (matrix.compiler == 'clang' && contains('windows', matrix.os)) && format('{0}\\bin\\lld-link.exe', env.LLVM_PATH) || env.LD  }}
+          CC:  ${{ (matrix.compiler == 'clang' && contains(matrix.os, 'windows')) && format('{0}\\bin\\clang-cl.exe', env.LLVM_PATH) || env.CC  }}
+          CXX: ${{ (matrix.compiler == 'clang' && contains(matrix.os, 'windows')) && format('{0}\\bin\\clang-cl.exe', env.LLVM_PATH) || env.CXX }}
+          LD:  ${{ (matrix.compiler == 'clang' && contains(matrix.os, 'windows')) && format('{0}\\bin\\lld-link.exe', env.LLVM_PATH) || env.LD  }}
       - run: ninja -C build
       - run: ninja -C build test
       - name: Publish Test Report
