@@ -21,15 +21,11 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         compiler: [gcc, clang, msvc]
-        include:
+        exclude:
           - os: ubuntu-latest
-            compiler: gcc
-          - os: ubuntu-latest
-            compiler: clang
-          - os: windows-latest
             compiler: msvc
           - os: windows-latest
-            compiler: clang
+            compiler: gcc
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
