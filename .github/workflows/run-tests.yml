@@ -68,3 +68,4 @@ jobs:
         if: success() || failure() # still publish the report if the tests fail
         with:
           report_paths: 'build/meson-logs/testlog.junit.xml'
+          check_name: Test report for ${{ matrix.compiler }} on ${{ matrix.os }}
