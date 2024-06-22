@@ -104,10 +104,15 @@ all_args = cc.get_supported_arguments(
 
     # more free perf
     '-fstrict-aliasing',
-    '-fmerge-all-constants',
-
-    '-D_ITERATOR_DEBUG_LEVEL=0'
+    '-fmerge-all-constants'
 )
+
+if target == 'windows'
+    all_args += cc.get_supported_arguments(
+        '-Wno-language-extension-token',
+        '-D_ITERATOR_DEBUG_LEVEL=0'
+    )
+endif
 
 has_time_trace = cc.has_argument('-ftime-trace')
 ninjatracing = find_program('data/scripts/ninjatracing/ninjatracing', required : trace_time.enabled())
