@@ -61,9 +61,9 @@ jobs:
       - run: pip install meson
       - run: meson setup build
         env:
-          CC: ${{ (matrix.compiler == 'clang' && contains('windows', matrix.os)) && 'clang-cl' || '' }}
-          CXX: ${{ (matrix.compiler == 'clang' && contains('windows', matrix.os)) && 'clang-cl' || '' }}
-          LD: ${{ (matrix.compiler == 'clang' &&contains('windows', matrix.os)) && 'lld-link' || '' }}
+          CC:  ${{ (matrix.compiler == 'clang' && contains('windows', matrix.os)) && 'clang-cl' || env.CC  }}
+          CXX: ${{ (matrix.compiler == 'clang' && contains('windows', matrix.os)) && 'clang-cl' || env.CXX }}
+          LD:  ${{ (matrix.compiler == 'clang' && contains('windows', matrix.os)) && 'lld-link' || env.LD  }}
       - run: ninja -C build
       - run: ninja -C build test
       - name: Publish Test Report
