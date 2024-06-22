@@ -47,10 +47,7 @@ deps = [
     setup, memory, broker, support, ssa, tree,
 
     # extra utilities
-    json,
-
-    # threading
-    dependency('concurrentqueue')
+    json
 ]
 
 executable('gui', src,

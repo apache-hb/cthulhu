@@ -1,0 +1,75 @@
+name: Run test suite
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+  checks: write
+
+concurrency:
+  group: "tests"
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }} with ${{ matrix.compiler }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        compiler: [gcc, clang, msvc]
+        exclude:
+          - { os: ubuntu-latest,  compiler: msvc }
+          - { os: windows-latest, compiler: gcc  }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install clang if needed
+        if: matrix.compiler == 'clang'
+        uses: KyleMayes/install-llvm-action@v2.0.3
+        with:
+          version: 17
+          env: true
+          directory: ${{ runner.temp }}/clang
+      - name: Install GCC if needed
+        if: matrix.compiler == 'gcc'
+        uses: Dup4/actions-setup-gcc@v1
+        with:
+          version: latest
+      - name: Install MSVC if needed
+        if: contains(matrix.os, 'windows') # the tests require cl to be available on windows
+        uses: ilammy/msvc-dev-cmd@v1.13.0
+      - name: Install linux build dependencies
+        if: matrix.os == 'ubuntu-latest'
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: ninja-build flex bison
+          version: 1.0
+      - name: Install Windows build dependencies
+        if: matrix.os == 'windows-latest'
+        uses: crazy-max/ghaction-chocolatey@v3
+        with:
+          args: install -y ninja winflexbison3
+      - name: Install Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - run: pip install meson
+      - name: Configure build directory
+        run: meson setup build
+        env:
+          CC:  ${{ (matrix.compiler == 'clang' && contains(matrix.os, 'windows')) && format('{0}\bin\clang-cl.exe', env.LLVM_PATH) || env.CC  }}
+          CXX: ${{ (matrix.compiler == 'clang' && contains(matrix.os, 'windows')) && format('{0}\bin\clang-cl.exe', env.LLVM_PATH) || env.CXX }}
+          LD:  ${{ (matrix.compiler == 'clang' && contains(matrix.os, 'windows')) && format('{0}\bin\lld-link.exe', env.LLVM_PATH) || env.LD  }}
+      - run: ninja -C build
+      - run: ninja -C build test
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v4
+        if: success() || failure() # still publish the report if the tests fail
+        with:
+          report_paths: 'build/meson-logs/testlog.junit.xml'
+          check_name: Test report for ${{ matrix.compiler }} on ${{ matrix.os }}
