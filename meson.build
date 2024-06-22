@@ -21,10 +21,7 @@ project('cthulhu', 'c',
 
         # do static linking by default
         # shared linking is supported but slows down the test suite
-        'default_library=static',
-
-        # llvm c++ windows build issues
-        'b_vscrt=mt'
+        'default_library=static'
     ]
 )
 

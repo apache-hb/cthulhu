@@ -1,0 +1,11 @@
+[wrap-file]
+directory = stb-ae721c50eaf761660b4f90cc590453cdb0c2acd0
+
+source_url = https://github.com/nothings/stb/archive/ae721c50eaf761660b4f90cc590453cdb0c2acd0.zip
+source_filename = stb-ae721c50eaf761660b4f90cc590453cdb0c2acd0.zip
+source_hash = 5d075769721e676746d0c25b698a0f00741f68252f9ab4b7ee245c513aeec3de
+
+patch_directory = stb
+
+[provide]
+dependency_names = stb_image, stb_sprintf, stb_perlin, stb_rect_pack, stb_image_resize, stb_image_write, stb_truetype

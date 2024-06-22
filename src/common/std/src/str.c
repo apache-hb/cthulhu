@@ -289,7 +289,7 @@ char *str_join(const char *sep, const vector_t *parts, arena_t *arena)
         }
     }
 
-    CTASSERTF(len > 0, "len = %zu", len);
+    CTASSERTF(len > 0, "joined string would be empty, how did we get this far?");
 
     char *out = ARENA_MALLOC(len + 1, "str_join", parts, arena);
     size_t idx = 0;
