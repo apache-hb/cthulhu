@@ -2,7 +2,7 @@ name: Run test suite
 on:
   push:
     branches: ["master"]
-  pull_request:
+  pull_request_target:
     branches: ["master"]
   workflow_dispatch:
 
@@ -34,6 +34,7 @@ jobs:
         uses: KyleMayes/install-llvm-action@v2.0.3
         with:
           version: '17.0.6'
+          env: true
       - name: Install GCC if needed
         if: matrix.compiler == 'gcc'
         uses: Dup4/actions-setup-gcc@v1
