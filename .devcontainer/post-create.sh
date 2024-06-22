@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BUILDDIR=devcontainer-build
+BUILDDIR=build
 
 meson setup $BUILDDIR
 ninja -C $BUILDDIR
