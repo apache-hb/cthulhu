@@ -41,7 +41,7 @@ jobs:
         with:
           version: latest
       - name: Install MSVC if needed
-        if: matrix.compiler == 'msvc'
+        if: contains(matrix.os, 'windows') # the tests require cl to be available on windows
         uses: ilammy/msvc-dev-cmd@v1.13.0
       - name: Install linux build dependencies
         if: matrix.os == 'ubuntu-latest'
@@ -59,12 +59,12 @@ jobs:
         with:
           python-version: '3.9'
       - run: pip install meson
-      - name: Configure build directory ${{ matrix.compiler == 'clang' }} ${{ contains(matrix.os, 'windows') }}
+      - name: Configure build directory
         run: meson setup build
         env:
-          CC:  ${{ (matrix.compiler == 'clang' && contains(matrix.os, 'windows')) && format('{0}\\bin\\clang-cl.exe', env.LLVM_PATH) || env.CC  }}
-          CXX: ${{ (matrix.compiler == 'clang' && contains(matrix.os, 'windows')) && format('{0}\\bin\\clang-cl.exe', env.LLVM_PATH) || env.CXX }}
-          LD:  ${{ (matrix.compiler == 'clang' && contains(matrix.os, 'windows')) && format('{0}\\bin\\lld-link.exe', env.LLVM_PATH) || env.LD  }}
+          CC:  ${{ (matrix.compiler == 'clang' && contains(matrix.os, 'windows')) && format('{0}\bin\clang-cl.exe', env.LLVM_PATH) || env.CC  }}
+          CXX: ${{ (matrix.compiler == 'clang' && contains(matrix.os, 'windows')) && format('{0}\bin\clang-cl.exe', env.LLVM_PATH) || env.CXX }}
+          LD:  ${{ (matrix.compiler == 'clang' && contains(matrix.os, 'windows')) && format('{0}\bin\lld-link.exe', env.LLVM_PATH) || env.LD  }}
       - run: ninja -C build
       - run: ninja -C build test
       - name: Publish Test Report
