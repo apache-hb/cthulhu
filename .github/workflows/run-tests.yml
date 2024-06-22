@@ -1,0 +1,74 @@
+name: Run test suite
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: "tests"
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }} with ${{ matrix.compiler }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        compiler: [gcc, clang, msvc]
+        include:
+          - os: ubuntu-latest
+            compiler: gcc
+          - os: ubuntu-latest
+            compiler: clang
+          - os: windows-latest
+            compiler: msvc
+          - os: windows-latest
+            compiler: clang
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install clang if needed
+        if: matrix.compiler == 'clang'
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: '18.1.4'
+      - name: Install GCC if needed
+        if: matrix.compiler == 'gcc'
+        uses: Dup4/actions-setup-gcc@v1
+        with:
+          version: latest
+      - name: Install MSVC if needed
+        if: matrix.compiler == 'msvc'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - name: Install linux build dependencies
+        if: matrix.os == 'ubuntu-latest'
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: ninja-build flex bison,
+          version: 1.0
+      - name: Install Windows build dependencies
+        if: matrix.os == 'windows-latest'
+        uses: crazy-max/ghaction-chocolatey@v3
+        with:
+          args: install -y ninja winflexbison3
+      - name: Install Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - run: pip install meson
+      - run: meson setup build
+      - run: ninja -C build
+      - run: ninja -C build test
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v4
+        if: success() || failure() # still publish the report if the tests fail
+        with:
+          report_paths: 'build/meson-logs/testlog.junit.xml'
