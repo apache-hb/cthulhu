@@ -1,0 +1,31 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+{
+	"name": "Cthulhu",
+	"image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+	"features": {
+		"ghcr.io/devcontainers-contrib/features/apt-packages:1": {
+			"clean_ppas": true,
+			"preserve_apt_list": true,
+			"packages": [ "build-essential", "flex", "bison", "ninja-build", "python3" ],
+			"ppas": "ppa:deadsnakes/ppa"
+		},
+		"ghcr.io/devcontainers-contrib/features/meson-asdf:2": {
+			"version": "1.3.0"
+		}
+	},
+	"postCreateCommand": ".devcontainer/post-create.sh",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"llvm-vs-code-extensions.vscode-clangd",
+				"Mrmomo.meson-build"
+			]
+		}
+	},
+	"mounts": [
+		"source=profile,target=/root,type=volume",
+        "target=/root/.vscode-server,type=volume"
+	],
+	"remoteUser": "vscode",
+	"containerUser": "vscode"
+}
