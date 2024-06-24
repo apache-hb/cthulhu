@@ -1,0 +1,20 @@
+import example::config;
+
+@extern("exit")
+def exit(status: int): void;
+
+@extern("printf")
+def printf(format: str, args: ...): int;
+
+@entry(cli)
+def main {
+    var file = config::openConfigFile("example.ini");
+
+    printf("aaa %zu %s\n", file.fileSize);
+
+    config::closeConfigFile(file);
+
+    printf("bbb\n");
+
+    exit(0);
+}

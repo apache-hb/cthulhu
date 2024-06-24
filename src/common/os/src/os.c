@@ -286,6 +286,7 @@ os_error_t os_file_create(const char *path)
 
     return os_file_close(&fd);
 }
+
 STA_DECL
 os_error_t os_file_copy(const char *dst, const char *src)
 {

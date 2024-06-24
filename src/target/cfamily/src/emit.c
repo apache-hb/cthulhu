@@ -13,6 +13,8 @@
 #include "std/vector.h"
 #include "std/typed/vector.h"
 
+#include "os/os.h"
+
 #include "fs/fs.h"
 
 #include "arena/arena.h"
@@ -52,6 +54,9 @@ static c89_source_t *source_for(c89_emit_t *emit, const ssa_module_t *mod, const
 
 c89_source_t *c89_get_source(c89_emit_t *emit, const ssa_module_t *mod)
 {
+    if (emit->layout == eFileLayoutPair)
+        return emit->source;
+
     c89_source_t *src = map_get(emit->srcmap, mod);
     CTASSERTF(src != NULL, "no source for %s", mod->name);
 
@@ -60,6 +65,9 @@ c89_source_t *c89_get_source(c89_emit_t *emit, const ssa_module_t *mod)
 
 c89_source_t *c89_get_header(c89_emit_t *emit, const ssa_module_t *mod)
 {
+    if (emit->layout == eFileLayoutPair)
+        return emit->header;
+
     c89_source_t *src = map_get(emit->hdrmap, mod);
     CTASSERTF(src != NULL, "no header for %s", mod->name);
 
@@ -96,6 +104,63 @@ static void collect_deps(c89_emit_t *emit, const ssa_module_t *mod, vector_t *sy
     }
 }
 
+static void cplusplus_prelude(io_t *io)
+{
+    io_printf(io,
+        "#ifdef __cplusplus\n"
+        "extern \"C\" {\n"
+        "#endif\n"
+    );
+}
+
+static void cplusplus_epilogue(io_t *io)
+{
+    io_printf(io,
+        "#ifdef __cplusplus\n"
+        "}\n"
+        "#endif\n"
+    );
+}
+
+static void c89_begin_all(c89_emit_t *emit)
+{
+    // TODO: use a user provided name
+    fs_file_create(emit->fs, "module.c");
+    fs_file_create(emit->fs, "module.h");
+
+    io_t *src = fs_open(emit->fs, "module.c", eOsAccessWrite | eOsAccessTruncate);
+    io_t *hdr = fs_open(emit->fs, "module.h", eOsAccessWrite | eOsAccessTruncate);
+
+    CTASSERTF(io_error(src) == eOsSuccess, "failed to open module.c (%s)", os_error_string(io_error(src), emit->arena));
+    CTASSERTF(io_error(hdr) == eOsSuccess, "failed to open module.h (%s)", os_error_string(io_error(hdr), emit->arena));
+
+    vector_push(&emit->sources, (char*)"module.c");
+
+    io_printf(src, "#include \"module.h\"\n");
+
+    io_printf(hdr, "#pragma once\n");
+    io_printf(hdr, "#include <stdbool.h>\n");
+    io_printf(hdr, "#include <stdint.h>\n");
+
+    cplusplus_prelude(hdr);
+
+    c89_source_t *src_file = source_new(src, "module.c", emit->arena);
+    c89_source_t *hdr_file = source_new(hdr, "module.h", emit->arena);
+
+    emit->source = src_file;
+    emit->header = hdr_file;
+}
+
+static void c89_end_all(c89_emit_t *emit)
+{
+    c89_source_t *src = emit->source;
+    c89_source_t *hdr = emit->header;
+    cplusplus_epilogue(hdr->io);
+
+    io_close(src->io);
+    io_close(hdr->io);
+}
+
 static void c89_begin_module(c89_emit_t *emit, const ssa_module_t *mod)
 {
     // collect all symbols defined in this module
@@ -103,7 +168,7 @@ static void c89_begin_module(c89_emit_t *emit, const ssa_module_t *mod)
     collect_deps(emit, mod, mod->functions);
 
     // create source and header files
-    char *path = begin_module(&emit->emit, emit->fs, mod); // lets not break the original path
+    char *path = begin_module(&emit->emit, emit->fs, mod);
 
     const char *src_file = format_path(path, mod->name, emit->arena);
     const char *hdr_file = format_path(path, mod->name, emit->arena);
@@ -117,11 +182,7 @@ static void c89_begin_module(c89_emit_t *emit, const ssa_module_t *mod)
     io_printf(hdr->io, "#include <stdbool.h>\n");
     io_printf(hdr->io, "#include <stdint.h>\n");
 
-    io_printf(hdr->io,
-        "#ifdef __cplusplus\n"
-        "extern \"C\" {\n"
-        "#endif\n"
-    );
+    cplusplus_prelude(hdr->io);
 
     io_printf(src->io, "#include \"%s.h\"\n", hdr_file);
 }
@@ -293,24 +354,24 @@ void c89_proto_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbo
     }
 }
 
-void c89_proto_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *func)
+void c89_proto_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *symbol)
 {
     // dont generate prototypes for entry points
-    if (is_entry_point(func->linkage)) { return; }
+    if (is_entry_point(symbol->linkage)) { return; }
 
     io_t *src = c89_get_source_io(emit, mod);
     io_t *hdr = c89_get_header_io(emit, mod);
 
-    const ssa_type_t *type = func->type;
-    CTASSERTF(type->kind == eTypeClosure, "expected closure type on %s, got %d", func->name, type->kind);
+    const ssa_type_t *type = symbol->type;
+    CTASSERTF(type->kind == eTypeClosure, "expected closure type on %s, got %d", symbol->name, type->kind);
 
     ssa_type_closure_t closure = type->closure;
     const char *params = c89_format_params(emit, closure.params, closure.variadic);
-    const char *result = format_symbol(emit, closure.result, mangle_symbol_name(emit, func));
+    const char *result = format_symbol(emit, closure.result, mangle_symbol_name(emit, symbol));
 
-    const char *link = format_c89_link(func->linkage);
+    const char *link = format_c89_link(symbol->linkage);
 
-    io_t *dst = func->visibility == eVisiblePublic ? hdr : src;
+    io_t *dst = symbol->visibility == eVisiblePublic ? hdr : src;
     io_printf(dst, "%s%s(%s);\n", link, result, params);
 }
 
@@ -324,17 +385,53 @@ static void proto_symbols(c89_emit_t *emit, const ssa_module_t *mod, vector_t *v
     }
 }
 
+static void proto_module_types(c89_emit_t *emit, io_t *io, const vector_t *types)
+{
+    size_t len = vector_len(types);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_type_t *type = vector_get(types, i);
+        c89_proto_type(emit, io, type);
+    }
+}
+
+static void c89_proto_all_types(c89_emit_t *emit, const vector_t *modules)
+{
+    // forward declare all types
+    c89_source_t *header = emit->header;
+    for (size_t i = 0; i < vector_len(modules); i++)
+    {
+        const ssa_module_t *mod = vector_get(modules, i);
+        proto_module_types(emit, header->io, mod->types);
+    }
+}
+
+static void c89_proto_all_globals(c89_emit_t *emit, const vector_t *modules)
+{
+    size_t len = vector_len(modules);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_module_t *mod = vector_get(modules, i);
+        proto_symbols(emit, mod, mod->globals, c89_proto_global);
+    }
+}
+
+static void c89_proto_all_functions(c89_emit_t *emit, const vector_t *modules)
+{
+    size_t len = vector_len(modules);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_module_t *mod = vector_get(modules, i);
+        proto_symbols(emit, mod, mod->functions, c89_proto_function);
+    }
+}
+
 static void c89_proto_module(c89_emit_t *emit, const ssa_module_t *mod)
 {
     emit_required_headers(emit, mod);
 
     io_t *hdr = c89_get_header_io(emit, mod);
-    size_t len = vector_len(mod->types);
-    for (size_t i = 0; i < len; i++)
-    {
-        const ssa_type_t *type = vector_get(mod->types, i);
-        c89_proto_type(emit, hdr, type);
-    }
+    proto_module_types(emit, hdr, mod->types);
 
     proto_symbols(emit, mod, mod->globals, c89_proto_global);
     proto_symbols(emit, mod, mod->functions, c89_proto_function);
@@ -439,6 +536,11 @@ static const char *c89_format_pointer(c89_emit_t *emit, vector_t *data)
     return str_format(arena, "{ %s }", joined);
 }
 
+static const char *c89_format_opaque(c89_emit_t *emit, const ssa_value_t *value)
+{
+    return str_format(emit->arena, "((void*)0x%pull)", value->ptr_value);
+}
+
 static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value)
 {
     const ssa_type_t *type = value->type;
@@ -447,6 +549,7 @@ static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value)
     case eTypeBool: return value->bool_value ? "true" : "false";
     case eTypeDigit: return mpz_get_str(NULL, 10, value->digit_value);
     case eTypePointer: return c89_format_pointer(emit, value->data);
+    case eTypeOpaque: return c89_format_opaque(emit, value);
     default: CT_NEVER("unknown type kind %d", type->kind);
     }
 }
@@ -788,28 +891,28 @@ static void write_locals(c89_emit_t *emit, io_t *io, typevec_t *locals)
     }
 }
 
-void c89_define_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *func)
+void c89_define_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *symbol)
 {
     io_t *src = c89_get_source_io(emit, mod);
 
-    const ssa_type_t *type = func->type;
-    CTASSERTF(type->kind == eTypeClosure, "expected closure type on %s, got %d", func->name, type->kind);
+    const ssa_type_t *type = symbol->type;
+    CTASSERTF(type->kind == eTypeClosure, "expected closure type on %s, got %d", symbol->name, type->kind);
 
     ssa_type_closure_t closure = type->closure;
     const char *params = c89_format_params(emit, closure.params, closure.variadic);
-    const char *result = format_symbol(emit, closure.result, mangle_symbol_name(emit, func));
+    const char *result = format_symbol(emit, closure.result, mangle_symbol_name(emit, symbol));
 
-    const char *link = format_c89_link(func->linkage);
+    const char *link = format_c89_link(symbol->linkage);
 
-    if (func->linkage != eLinkImport)
+    if (symbol->linkage != eLinkImport)
     {
         io_printf(src, "%s%s(%s) {\n", link, result, params);
-        write_locals(emit, src, func->locals);
-        io_printf(src, "\tgoto bb%s;\n", get_block_name(&emit->emit, func->entry));
-        size_t len = vector_len(func->blocks);
+        write_locals(emit, src, symbol->locals);
+        io_printf(src, "\tgoto bb%s;\n", get_block_name(&emit->emit, symbol->entry));
+        size_t len = vector_len(symbol->blocks);
         for (size_t i = 0; i < len; i++)
         {
-            const ssa_block_t *bb = vector_get(func->blocks, i);
+            const ssa_block_t *bb = vector_get(symbol->blocks, i);
             c89_write_block(emit, src, bb);
         }
         io_printf(src, "}\n");
@@ -819,7 +922,12 @@ void c89_define_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_sy
     }
 }
 
-static void define_symbols(c89_emit_t *emit, const ssa_module_t *mod, vector_t *vec, void (*fn)(c89_emit_t*, const ssa_module_t*, const ssa_symbol_t*))
+static void define_symbols(
+    c89_emit_t *emit,
+    const ssa_module_t *mod,
+    vector_t *vec,
+    void (*fn)(c89_emit_t*, const ssa_module_t*, const ssa_symbol_t*)
+)
 {
     size_t len = vector_len(vec);
     for (size_t i = 0; i < len; i++)
@@ -835,7 +943,7 @@ static void define_type_ordererd(c89_emit_t *emit, io_t *io, const ssa_type_t *t
     if (set_contains(emit->defined, type)) { return; }
     set_add(emit->defined, type);
 
-    // TODO: this is probably a touch broken, types may be put into the wrong translation
+    // TODO: this is probably a touch broken, types may be put into the wrong translation unit
     if (type->kind == eTypeStruct || type->kind == eTypeUnion)
     {
         // only match struct and union as they can have dependencies
@@ -868,11 +976,37 @@ static void c89_define_module(c89_emit_t *emit, const ssa_module_t *mod)
     define_symbols(emit, mod, mod->globals, c89_define_global);
     define_symbols(emit, mod, mod->functions, c89_define_function);
 
-    io_printf(hdr,
-        "#ifdef __cplusplus\n"
-        "}\n"
-        "#endif\n"
-    );
+    cplusplus_epilogue(hdr);
+}
+
+static void c89_define_all_types(c89_emit_t *emit, const vector_t *modules)
+{
+    size_t len = vector_len(modules);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_module_t *mod = vector_get(modules, i);
+        c89_define_types(emit, emit->header->io, mod->types);
+    }
+}
+
+static void c89_define_all_globals(c89_emit_t *emit, const vector_t *modules)
+{
+    size_t len = vector_len(modules);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_module_t *mod = vector_get(modules, i);
+        define_symbols(emit, mod, mod->globals, c89_define_global);
+    }
+}
+
+static void c89_define_all_functions(c89_emit_t *emit, const vector_t *modules)
+{
+    size_t len = vector_len(modules);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_module_t *mod = vector_get(modules, i);
+        define_symbols(emit, mod, mod->functions, c89_define_function);
+    }
 }
 
 emit_result_t cfamily_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, target_emit_t *emit)
@@ -904,23 +1038,39 @@ emit_result_t cfamily_ssa(target_runtime_t *runtime, const ssa_result_t *ssa, ta
         .layout = emit->layout,
     };
 
-    // simcoe: use the default module generator only when manual output is not specified
-    for (size_t i = 0; i < len; i++)
+    if (emit->layout == eFileLayoutPair)
     {
-        const ssa_module_t *mod = vector_get(modules, i);
-        c89_begin_module(&ctx, mod);
-    }
+        c89_begin_all(&ctx);
 
-    for (size_t i = 0; i < len; i++)
-    {
-        const ssa_module_t *mod = vector_get(modules, i);
-        c89_proto_module(&ctx, mod);
-    }
+        c89_proto_all_types(&ctx, modules);
+        c89_proto_all_globals(&ctx, modules);
+        c89_proto_all_functions(&ctx, modules);
 
-    for (size_t i = 0; i < len; i++)
+        c89_define_all_types(&ctx, modules);
+        c89_define_all_globals(&ctx, modules);
+        c89_define_all_functions(&ctx, modules);
+
+        c89_end_all(&ctx);
+    }
+    else
     {
-        const ssa_module_t *mod = vector_get(modules, i);
-        c89_define_module(&ctx, mod);
+        for (size_t i = 0; i < len; i++)
+        {
+            const ssa_module_t *mod = vector_get(modules, i);
+            c89_begin_module(&ctx, mod);
+        }
+
+        for (size_t i = 0; i < len; i++)
+        {
+            const ssa_module_t *mod = vector_get(modules, i);
+            c89_proto_module(&ctx, mod);
+        }
+
+        for (size_t i = 0; i < len; i++)
+        {
+            const ssa_module_t *mod = vector_get(modules, i);
+            c89_define_module(&ctx, mod);
+        }
     }
 
     emit_result_t result = {

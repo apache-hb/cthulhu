@@ -283,7 +283,7 @@ int main(int argc, const char **argv)
     CHECK_LOG(reports, "creating output directory");
 
     target_emit_t emit = {
-        .layout = eFileLayoutPair,
+        .layout = cfg_enum_value(tool.output_layout),
         .fs = out,
     };
 

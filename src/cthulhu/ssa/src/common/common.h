@@ -35,6 +35,7 @@ ssa_value_t *ssa_value_digit(const ssa_type_t *type, const mpz_t value);
 ssa_value_t *ssa_value_char(const ssa_type_t *type, char value);
 ssa_value_t *ssa_value_string(const ssa_type_t *type, text_view_t text);
 ssa_value_t *ssa_value_pointer(const ssa_type_t *type, const void *value);
+ssa_value_t *ssa_value_opaque(const ssa_type_t *type, const void *value);
 
 ssa_value_t *ssa_value_from(map_t *types, const tree_t *expr);
 ssa_value_t *ssa_value_noinit(const ssa_type_t *type);

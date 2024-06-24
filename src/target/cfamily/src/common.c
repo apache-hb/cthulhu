@@ -59,8 +59,9 @@ static char *name_increment(names_t *names, const void *obj, char *existing, are
 
     if (existing != NULL)
     {
-        map_set(names->names, obj, existing);
-        return existing;
+        char *unique = str_format(arena, "%s%zu", existing, names->counter++);
+        map_set(names->names, obj, unique);
+        return unique;
     }
 
     char *id = str_format(arena, "%zu", names->counter++);

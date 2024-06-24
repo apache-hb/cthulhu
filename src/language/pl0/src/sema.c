@@ -155,8 +155,11 @@ void pl0_init(language_runtime_t *runtime, tree_t *root)
     const node_t *node = tree_get_node(root);
     arena_t *arena = runtime->arena;
 
+    tree_t *character = tree_type_digit(node, "char", eDigitChar, eSignSigned);
+    tree_set_qualifiers(character, eQualConst);
+
     gIntType = tree_type_digit(node, "integer", eDigitInt, eSignSigned);
-    gCharType = tree_type_digit(node, "char", eDigitChar, eSignSigned);
+    gCharType = character;
     gBoolType = get_bool_type(node);
 
     gVoidType = tree_type_unit(node, "void");

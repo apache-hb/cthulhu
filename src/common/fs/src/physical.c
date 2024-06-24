@@ -216,8 +216,7 @@ fs_t *fs_physical(const char *root, arena_t *arena)
 {
     CTASSERT(root != NULL);
 
-    bool exist = os_dir_exists(root);
-    if (exist)
+    if (!os_dir_exists(root))
     {
         os_error_t err = mkdir_recursive(root, arena);
 

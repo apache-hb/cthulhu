@@ -87,6 +87,14 @@ ssa_value_t *ssa_value_pointer(const ssa_type_t *type, const void *value)
     return self;
 }
 
+ssa_value_t *ssa_value_opaque(const ssa_type_t *type, const void *value)
+{
+    EXPECT_TYPE(type, eTypeOpaque);
+    ssa_value_t *self = ssa_value_new(type, true);
+    self->ptr_value = value;
+    return self;
+}
+
 ssa_value_t *ssa_value_from(map_t *types, const tree_t *expr)
 {
     const ssa_type_t *type = ssa_type_create_cached(types, tree_get_type(expr));

@@ -1,0 +1,103 @@
+module example::config;
+
+import win32;
+
+const null = as<opaque>(0);
+
+export struct StringView {
+    front: *char;
+    back: *char;
+}
+
+export struct ConfigEntry {
+    key: StringView;
+    value: StringView;
+}
+
+export struct ConfigSection {
+    name: StringView;
+    firstEntry: uint;
+    lastEntry: uint;
+}
+
+export struct ConfigFile {
+    fileHandle: win32::HANDLE;
+    viewHandle: win32::HANDLE;
+
+    fileView: *char;
+    fileSize: usize;
+
+    sections: [*]ConfigSection;
+    sectionCount: uint;
+
+    entries: [*]ConfigEntry;
+    entryCount: uint;
+}
+
+export def openConfigFile(path: str): ConfigFile {
+    var fileHandle = win32::CreateFileA(
+        /* lpFileName */ path,
+        /* dwDesiredAccess */ 0x80000000, // GENERIC_READ
+        /* dwShareMode */ 0x1, // FILE_SHARE_READ
+        /* lpSecurityAttributes */ null,
+        /* dwCreationDisposition */ 3, // OPEN_EXISTING
+        /* dwFlagsAndAttributes */ 0,
+        /* hTemplateFile */ null
+    );
+
+    if fileHandle == win32::INVALID_HANDLE_VALUE {
+        win32::CloseHandle(fileHandle);
+    }
+
+    var viewHandle = win32::CreateFileMappingA(
+        /* hFile */ fileHandle,
+        /* lpAttributes */ null,
+        /* flProtect */ 4, // PAGE_READ
+        /* dwMaximumSizeHigh */ 0,
+        /* dwMaximumSizeLow */ 0,
+        /* lpName */ null
+    );
+
+    if viewHandle == win32::INVALID_HANDLE_VALUE {
+        win32::CloseHandle(fileHandle);
+        win32::CloseHandle(viewHandle);
+    }
+
+    var fileSize: win32::LARGE_INTEGER = noinit;
+    if win32::GetFileSizeEx(fileHandle, &fileSize) == 0 {
+        win32::CloseHandle(fileHandle);
+        win32::CloseHandle(viewHandle);
+    }
+
+    var fileView = win32::MapViewOfFile(
+        /* hFileMappingObject */ viewHandle,
+        /* dwDesiredAccess */ 4, // FILE_MAP_READ
+        /* dwFileOffsetHigh */ 0,
+        /* dwFileOffsetLow */ 0,
+        /* dwNumberOfBytesToMap */ fileSize.QuadPart
+    );
+
+    if fileView == null {
+        win32::CloseHandle(fileHandle);
+        win32::CloseHandle(viewHandle);
+    }
+
+    return .{
+        fileHandle = fileHandle,
+        viewHandle = viewHandle,
+
+        fileView = fileView,
+        fileSize = fileSize.QuadPart,
+
+        sections = null,
+        sectionCount = 0,
+
+        entries = null,
+        entryCount = 0
+    };
+}
+
+export def closeConfigFile(file: ConfigFile) {
+    win32::CloseHandle(file.viewHandle);
+    win32::CloseHandle(file.fileHandle);
+}

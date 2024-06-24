@@ -24,6 +24,10 @@ typedef struct c89_emit_t
     map_t *srcmap; // map<ssa_module, c89_source>
     map_t *hdrmap; // map<ssa_module, c89_source>
 
+    // file pair when layout is eLayoutFilePair
+    c89_source_t *source;
+    c89_source_t *header;
+
     const ssa_symbol_t *current;
 
     map_t *stepmap; // map<ssa_step, c89_source>
@@ -62,7 +66,7 @@ io_t *c89_get_source_io(c89_emit_t *emit, const ssa_module_t *mod);
 ///
 
 void c89_proto_type(c89_emit_t *emit, io_t *io, const ssa_type_t *type);
-void c89_proto_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *symbol);
+void c89_proto_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *global);
 void c89_proto_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *symbol);
 
 ///

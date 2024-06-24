@@ -46,7 +46,7 @@ static io_t *impl_query_file(fs_t *fs, fs_inode_t *node, os_access_t flags)
     return fs->cb->pfn_query_file(fs, node, flags);
 }
 
-static fs_inode_t *impl_create_file(fs_t *fs, fs_inode_t *node, const char *name)
+static inode_result_t impl_create_file(fs_t *fs, fs_inode_t *node, const char *name)
 {
     CTASSERT(fs != NULL);
     CTASSERT(node != NULL);
@@ -55,9 +55,7 @@ static fs_inode_t *impl_create_file(fs_t *fs, fs_inode_t *node, const char *name
     CTASSERT(inode_is(node, eOsNodeDir));
     CTASSERT(fs->cb->pfn_create_file != NULL);
 
-    inode_result_t result = fs->cb->pfn_create_file(fs, node, name);
-
-    return result.node;
+    return fs->cb->pfn_create_file(fs, node, name);
 }
 
 static os_error_t impl_delete_file(fs_t *fs, fs_inode_t *node, const char *name)
@@ -240,11 +238,16 @@ os_error_t fs_file_delete(fs_t *fs, const char *path)
 
 static const io_callbacks_t kInvalidIo = { 0 };
 
-static io_t *make_invalid_file(const char *name, os_access_t flags, arena_t *arena)
+static io_t *make_error_file(const char *name, os_access_t flags, os_error_t error, arena_t *arena)
 {
     io_t *io = io_new(&kInvalidIo, flags, name, NULL, arena);
-    io->error = eOsNotFound;
+    io->error = error;
     return io;
+}
+
+static io_t *make_missing_file(const char *name, os_access_t flags, arena_t *arena)
+{
+    return make_error_file(name, flags, eOsNotFound, arena);
 }
 
 STA_DECL
@@ -264,26 +267,30 @@ io_t *fs_open(fs_t *fs, const char *path, os_access_t flags)
         {
         case eOsNodeDir: current = node; break;
         case eOsNodeNone: current = impl_create_dir(fs, current, part); break;
-        default: return make_invalid_file(path, flags, fs->arena);
+        default: return make_missing_file(path, flags, fs->arena);
         }
     }
 
-    fs_inode_t *file = impl_query_inode(fs, current, vector_tail(parts));
-    switch (file->type)
-    {
-    case eOsNodeFile:
-        return impl_query_file(fs, file, flags);
-        break;
-    case eOsNodeNone:
-        if (flags == eOsAccessRead)
-            return make_invalid_file(path, eOsAccessNone, fs->arena);
+    CTASSERTF(current != NULL, "current is NULL (path = %s)", path);
 
-        file = impl_create_file(fs, current, vector_tail(parts));
+    fs_inode_t *file = impl_query_inode(fs, current, vector_tail(parts));
+    if (inode_is(file, eOsNodeFile))
+    {
         return impl_query_file(fs, file, flags);
-        break;
-    default:
-        return make_invalid_file(path, flags, fs->arena);
     }
+
+    if (inode_is(file, eOsNodeNone))
+    {
+        inode_result_t result = impl_create_file(fs, current, vector_tail(parts));
+        if (result.error != eOsSuccess)
+        {
+            return make_error_file(path, eOsAccessNone, result.error, fs->arena);
+        }
+
+        return impl_query_file(fs, result.node, flags);
+    }
+
+    return make_missing_file(path, flags, fs->arena);
 }
 
 // fs dir api
@@ -306,7 +313,7 @@ static fs_inode_t *get_file_or_create(fs_t *fs, fs_inode_t *node, const char *na
     switch (file->type)
     {
     case eOsNodeFile: return file;
-    case eOsNodeNone: return impl_create_file(fs, node, name);
+    case eOsNodeNone: return impl_create_file(fs, node, name).node;
 
     default: return NULL;
     }

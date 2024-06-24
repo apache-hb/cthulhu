@@ -233,7 +233,7 @@ static const ssa_value_t *cast_to_opaque(const ssa_type_t *type, const ssa_value
     case eTypeOpaque: return value;
 
     case eTypeDigit:
-        return ssa_value_pointer(type, (void*)(uintptr_t)mpz_get_ui(value->digit_value));
+        return ssa_value_opaque(type, (void*)(uintptr_t)mpz_get_ui(value->digit_value));
 
     default: CT_NEVER("unhandled type %s", ssa_type_name(src->kind));
     }

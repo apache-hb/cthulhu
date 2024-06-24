@@ -52,16 +52,16 @@ endforeach
 
 vfs_exe = executable('vfs', 'cases/io/vfs.c',
     include_directories : '.',
-    dependencies : [ unit, base, scan, fs, setup, arena ]
+    dependencies : [ unit, base, scan, fs, setup, arena, io ]
 )
 
 test('vfs', vfs_exe, suite : 'unit')
 
 # fs
 
-fs_exe = executable('physical fs', 'cases/io/fs.c',
+fs_exe = executable('pfs', 'cases/io/fs.c',
     include_directories : '.',
-    dependencies : [ unit, base, std, scan, fs, setup, arena ]
+    dependencies : [ unit, base, std, scan, fs, setup, arena, io ]
 )
 
 test('fs', fs_exe,
@@ -90,5 +90,4 @@ argparse_exe = executable('argparser', 'cases/argparse/argparse.c',
 
 test('argparse', argparse_exe, suite : 'unit')
 
-# subdir('tar')
 subdir('json')

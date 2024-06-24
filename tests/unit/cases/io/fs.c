@@ -1,3 +1,4 @@
+#include "io/io.h"
 #include "unit/ct-test.h"
 
 #include "arena/arena.h"
@@ -23,7 +24,7 @@ int main(void)
 
     {
         test_group_t group = test_group(&suite, "physical");
-        GROUP_EXPECT_PANIC(group, "no null name", fs_physical(NULL, arena));
+        GROUP_EXPECT_PANIC(group, "no null name", (void)fs_physical(NULL, arena));
         GROUP_EXPECT_PASS(group, "no return null", fs_physical("test", arena) != NULL);
     }
 
@@ -55,6 +56,21 @@ int main(void)
         GROUP_EXPECT_PASS(group, "fs_sync() should sync directories", fs_dir_exists(vfs, "vfs/subdir"));
         GROUP_EXPECT_PASS(group, "fs_sync() should sync files", fs_file_exists(vfs, "vfs/input1.txt"));
         GROUP_EXPECT_PASS(group, "fs_sync() should sync files", fs_file_exists(vfs, "vfs/next/nested/temp.txt"));
+    }
+
+    {
+        test_group_t group = test_group(&suite, "file manipulation");
+
+        fs_t *fs = fs_physical(str_format(arena, "%s" CT_NATIVE_PATH_SEPARATOR "data" CT_NATIVE_PATH_SEPARATOR "unit-test-data", cwd.text), arena);
+
+        GROUP_EXPECT_PASS(group, "fs_physical() should return a valid fs_t pointer", fs != NULL);
+
+        fs_file_create(fs, "hello.txt");
+
+        io_t *io = fs_open(fs, "hello.txt", eOsAccessWrite);
+
+        GROUP_EXPECT_PASS(group, "fs_open() should return a valid io_t pointer", io != NULL);
+        GROUP_EXPECT_PASS(group, "io_error() should return no error", io_error(io) == eOsSuccess);
     }
 
     // cleanup the physical test directory
