@@ -133,9 +133,11 @@ static tree_t *sema_bool(tree_t *sema, const ctu_t *expr, const tree_t *implicit
 
 static tree_t *sema_int(tree_t *sema, const ctu_t *expr, const tree_t *implicit_type)
 {
+    // TODO: validate implicit type if theres a suffix set
+    ctu_integer_t value = expr->integer;
     const tree_t *type = implicit_type
         ? implicit_type
-        : ctu_get_int_type(eDigitInt, eSignSigned); // TODO: calculate proper type to use
+        : ctu_get_int_type(value.digit, value.sign);
 
     if (!tree_is(type, eTreeTypeDigit))
     {
@@ -143,7 +145,7 @@ static tree_t *sema_int(tree_t *sema, const ctu_t *expr, const tree_t *implicit_
                           tree_to_string(type));
     }
 
-    tree_t *it = tree_expr_digit(expr->node, type, expr->int_value);
+    tree_t *it = tree_expr_digit(expr->node, type, value.value);
 
     return verify_expr_type(sema, eTreeTypeDigit, type, "integer literal", it);
 }
@@ -193,7 +195,7 @@ static tree_t *sema_load(tree_t *sema, const ctu_t *expr, const tree_t *implicit
 
     if (implicit_type != NULL)
     {
-        name = tree_resolve_type(name);
+        name = tree_resolve_type(tree_get_cookie(sema), name);
         return ctu_cast_type(sema, name, implicit_type);
     }
 
@@ -205,7 +207,7 @@ static tree_t *sema_compare(ctu_sema_t *sema, const ctu_t *expr)
     tree_t *left = ctu_sema_rvalue(sema, expr->lhs, NULL);
     tree_t *right = ctu_sema_rvalue(sema, expr->rhs, NULL);
 
-    if (!util_types_comparable(tree_get_type(left), tree_get_type(right)))
+    if (!util_types_comparable(tree_get_cookie(sema->sema), tree_get_type(left), tree_get_type(right)))
     {
         return tree_raise(expr->node, ctu_sema_reports(sema), &kEvent_InvalidBinaryOperation, "cannot compare `%s` to `%s`",
                           tree_to_string(tree_get_type(left)),
@@ -287,7 +289,7 @@ static tree_t *sema_call(ctu_sema_t *sema, const ctu_t *expr)
         return callee;
     }
 
-    const tree_t *type = tree_get_type(tree_resolve_type(callee));
+    const tree_t *type = tree_get_type(tree_resolve_type(tree_get_cookie(sema->sema), callee));
     if (tree_is(type, eTreeTypeReference))
     {
         callee = tree_expr_load(expr->node, callee);

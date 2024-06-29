@@ -133,9 +133,9 @@ map_t *tree_module_tag(const tree_t *self, size_t tag)
     return vector_get(self->tags, tag);
 }
 
-tree_cookie_t *tree_get_cookie(tree_t *self)
+tree_cookie_t *tree_get_cookie(tree_t *sema)
 {
-    TREE_EXPECT(self, eTreeDeclModule);
+    TREE_EXPECT(sema, eTreeDeclModule);
 
-    return self->cookie;
+    return sema->cookie;
 }

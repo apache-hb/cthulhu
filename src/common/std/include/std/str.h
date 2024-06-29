@@ -122,6 +122,9 @@ CT_STD_API bool str_startswith(IN_STRING const char *str, IN_STRING const char *
 CT_NODISCARD CT_PUREFN
 CT_STD_API bool str_endswith(IN_STRING const char *str, IN_STRING const char *suffix);
 
+CT_NODISCARD CT_PUREFN
+CT_STD_API bool str_endswithn(IN_STRING const char *str, size_t len, IN_STRING const char *suffix);
+
 /// @brief join strings
 ///
 /// join a vector of strings together with a separator

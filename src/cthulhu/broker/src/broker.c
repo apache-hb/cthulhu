@@ -145,7 +145,8 @@ broker_t *broker_new(const frontend_t *frontend, arena_t *arena)
 
     tree_cookie_t cookie = {
         .reports = broker->logger,
-        .stack = vector_new(16, arena)
+        .stack = vector_new(16, arena),
+        .types = vector_new(16, arena)
     };
 
     ARENA_REPARENT(cookie.stack, broker, arena);

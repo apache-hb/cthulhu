@@ -44,7 +44,7 @@ static void add_param(ctu_sema_t *sema, tree_t *param)
 void ctu_resolve_function(tree_t *sema, tree_t *self, void *user)
 {
     ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclFunction);
-    tree_t *fn = tree_resolve_type(self);
+    tree_t *fn = tree_resolve_type(tree_get_cookie(sema), self);
     if (tree_is(fn, eTreeError)) { return; }
 
     const node_t *node = tree_get_node(fn);

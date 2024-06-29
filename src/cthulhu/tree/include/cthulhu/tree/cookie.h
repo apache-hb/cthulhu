@@ -12,6 +12,7 @@ CT_BEGIN_API
 typedef struct tree_cookie_t {
     logger_t *reports;
     vector_t *stack;
+    vector_t *types;
 } tree_cookie_t;
 
 CT_END_API

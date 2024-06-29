@@ -12,6 +12,12 @@
 typedef struct ctu_t ctu_t;
 typedef struct vector_t vector_t;
 
+typedef struct ctu_integer_t {
+    mpz_t value;
+    digit_t digit;
+    sign_t sign;
+} ctu_integer_t;
+
 typedef enum ctu_kind_t {
     /* expressions */
     eCtuExprInt,
@@ -136,7 +142,7 @@ typedef struct ctu_t {
         };
 
         /* eCtuExprInt */
-        mpz_t int_value;
+        ctu_integer_t integer;
 
         /* eCtuExprBool */
         bool bool_value;
@@ -264,7 +270,7 @@ ctu_t *ctu_stmt_branch(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then, ct
 /// expressions
 ///
 
-ctu_t *ctu_expr_int(scan_t *scan, where_t where, mpz_t value);
+ctu_t *ctu_expr_int(scan_t *scan, where_t where, ctu_integer_t value);
 ctu_t *ctu_expr_bool(scan_t *scan, where_t where, bool value);
 ctu_t *ctu_expr_string(scan_t *scan, where_t where, char *text, size_t length);
 ctu_t *ctu_expr_init(scan_t *scan, where_t where, const vector_t *inits);

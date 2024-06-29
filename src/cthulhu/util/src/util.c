@@ -62,10 +62,10 @@ bool util_types_equal(const tree_t *lhs, const tree_t *rhs)
     }
 }
 
-bool util_types_comparable(const tree_t *lhs, const tree_t *rhs)
+bool util_types_comparable(tree_cookie_t *cookie, const tree_t *lhs, const tree_t *rhs)
 {
-    lhs = tree_follow_type(tree_resolve_type(lhs));
-    rhs = tree_follow_type(tree_resolve_type(rhs));
+    lhs = tree_follow_type(tree_resolve_type(cookie, lhs));
+    rhs = tree_follow_type(tree_resolve_type(cookie, rhs));
 
     if (util_types_equal(lhs, rhs))
     {

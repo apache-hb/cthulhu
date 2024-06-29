@@ -415,7 +415,7 @@ CT_TREE_API tree_t *tree_stmt_jump(const node_t *node, tree_t *label, tree_jump_
 
 // delay the resolve of a declaration
 CT_TREE_API tree_t *tree_resolve(tree_cookie_t *cookie, const tree_t *decl);
-CT_TREE_API tree_t *tree_resolve_type(const tree_t *decl);
+CT_TREE_API tree_t *tree_resolve_type(tree_cookie_t *cookie, const tree_t *decl);
 
 CT_TREE_API tree_t *tree_open_decl(const node_t *node, const char *name, tree_resolve_info_t resolve);
 CT_TREE_API void tree_close_decl(tree_t *self, const tree_t *other);

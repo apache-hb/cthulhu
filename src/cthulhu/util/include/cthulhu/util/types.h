@@ -10,6 +10,7 @@
 #include <stddef.h>
 
 typedef struct tree_t tree_t;
+typedef struct tree_cookie_t tree_cookie_t;
 
 CT_BEGIN_API
 
@@ -31,7 +32,7 @@ CT_UTIL_API bool util_types_equal(const tree_t *lhs, const tree_t *rhs);
 /// @param rhs the right hand side type
 ///
 /// @return true if the types are comparable, false otherwise
-CT_UTIL_API bool util_types_comparable(const tree_t *lhs, const tree_t *rhs);
+CT_UTIL_API bool util_types_comparable(tree_cookie_t *cookie, const tree_t *lhs, const tree_t *rhs);
 
 /// @brief attempt to cast an expression to a type
 ///

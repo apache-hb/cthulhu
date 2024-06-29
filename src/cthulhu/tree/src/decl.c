@@ -70,7 +70,7 @@ tree_t *tree_resolve(tree_cookie_t *cookie, const tree_t *decl)
     return inner;
 }
 
-tree_t *tree_resolve_type(const tree_t *decl)
+static tree_t *resolve_type_inner(const tree_t *decl)
 {
     tree_t *inner = (tree_t*)decl;
     if (tree_is(decl, eTreeError)) { return inner; }
@@ -97,6 +97,27 @@ tree_t *tree_resolve_type(const tree_t *decl)
     res->fn_resolve_type(res->sema, inner, res->user);
 
     return inner;
+}
+
+tree_t *tree_resolve_type(tree_cookie_t *cookie, const tree_t *decl)
+{
+    CTASSERT(cookie != NULL);
+
+    size_t index = vector_find(cookie->types, decl);
+    if (index != SIZE_MAX)
+    {
+        // TODO: better reporting
+        msg_notify(cookie->reports, &kEvent_CyclicDependency, decl->node, "cyclic dependency when resolving %s", tree_get_name(decl));
+        return tree_error(decl->node, &kEvent_CyclicDependency, "cyclic dependency");
+    }
+
+    vector_push(&cookie->types, (tree_t*)decl);
+
+    tree_t *result = resolve_type_inner(decl);
+
+    vector_drop(cookie->types);
+
+    return result;
 }
 
 tree_t *tree_decl_global(

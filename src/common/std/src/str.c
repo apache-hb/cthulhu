@@ -253,6 +253,22 @@ bool str_endswith(const char *str, const char *suffix)
     return ctu_strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 }
 
+
+STA_DECL
+bool str_endswithn(const char *str, size_t len, const char *suffix)
+{
+    CTASSERT(str != NULL);
+    CTASSERT(suffix != NULL);
+
+    size_t lensuffix = ctu_strlen(suffix);
+    if (lensuffix > len)
+    {
+        return false;
+    }
+
+    return ctu_strncmp(str + len - lensuffix, suffix, lensuffix) == 0;
+}
+
 STA_DECL
 char *str_join(const char *sep, const vector_t *parts, arena_t *arena)
 {

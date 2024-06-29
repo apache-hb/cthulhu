@@ -18,6 +18,7 @@
 
 ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 WS [ \t\r\v\n\f]
+SUFFIX ("u"|"ul"|"l"|"uz")?
 
 %%
 
@@ -123,18 +124,18 @@ WS [ \t\r\v\n\f]
     return IDENT;
 }
 
-"0b"[01]+("ul"|"u"|"l")? {
-    ctu_parse_digit(yyextra, *yylloc, yylval->digit, yytext + 2, 2);
+"0b"[01]+{SUFFIX} {
+    ctu_parse_digit(yyextra, *yylloc, &yylval->digit, yytext + 2, yyleng - 2, 2);
     return INTEGER;
 }
 
-"0x"[0-9a-fA-F]+("ul"|"u"|"l")? {
-    ctu_parse_digit(yyextra, *yylloc, yylval->digit, yytext + 2, 16);
+"0x"[0-9a-fA-F]+{SUFFIX} {
+    ctu_parse_digit(yyextra, *yylloc, &yylval->digit, yytext + 2, yyleng - 2, 16);
     return INTEGER;
 }
 
-[0-9]+("ul"|"u"|"l")? {
-    ctu_parse_digit(yyextra, *yylloc, yylval->digit, yytext, 10);
+[0-9]+{SUFFIX} {
+    ctu_parse_digit(yyextra, *yylloc, &yylval->digit, yytext, yyleng, 10);
     return INTEGER;
 }
 

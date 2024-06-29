@@ -101,5 +101,5 @@ static tree_t *sema_type_inner(ctu_sema_t *sema, const ctu_t *type)
 tree_t *ctu_sema_type(ctu_sema_t *sema, const ctu_t *type)
 {
     tree_t *result = sema_type_inner(sema, type);
-    return tree_resolve_type(result);
+    return tree_resolve_type(tree_get_cookie(sema->sema),result);
 }

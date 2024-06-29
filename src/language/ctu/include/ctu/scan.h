@@ -4,11 +4,11 @@
 
 #include "core/where.h"
 
-#include <gmp.h>
-
 typedef struct scan_t scan_t;
 typedef struct vector_t vector_t;
 
+typedef struct ctu_integer_t ctu_integer_t;
+
 #define CTULTYPE where_t
 
-void ctu_parse_digit(scan_t *scan, where_t where, mpz_t digit, const char *str, size_t base);
+void ctu_parse_digit(scan_t *scan, where_t where, ctu_integer_t *integer, const char *str, int len, size_t base);

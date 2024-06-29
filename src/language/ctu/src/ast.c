@@ -129,10 +129,10 @@ ctu_t *ctu_stmt_branch(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then, ct
 
 /* exprs */
 
-ctu_t *ctu_expr_int(scan_t *scan, where_t where, mpz_t value)
+ctu_t *ctu_expr_int(scan_t *scan, where_t where, ctu_integer_t value)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuExprInt);
-    mpz_init_set(ast->int_value, value);
+    ast->integer = value;
     return ast;
 }
 
