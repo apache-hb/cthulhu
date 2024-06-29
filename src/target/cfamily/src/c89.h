@@ -47,13 +47,18 @@ typedef struct c89_emit_t
 typedef enum type_format_t {
     eFormatEmitNone = 0,
     eFormatEmitConst = 1 << 0,
+
+    // TODO: this is a bit of a hack to always emit const types
+    // when an object has const storage, ideally c89_format_type should accept
+    // storage or c89_format_storage should be more generic.
+    eFormatIsConst = 1 << 1,
 } type_format_t;
 
 const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char *name, type_format_t flags);
 const char *c89_format_params(c89_emit_t *emit, typevec_t *params, bool variadic);
 const char *c89_printf_specifier(digit_t digit, sign_t sign);
 
-const char *c89_format_storage(c89_emit_t *emit, ssa_storage_t storage, const char *name);
+const char *c89_format_storage(c89_emit_t *emit, ssa_storage_t storage, const char *name, type_format_t flags);
 
 c89_source_t *c89_get_source(c89_emit_t *emit, const ssa_module_t *mod);
 c89_source_t *c89_get_header(c89_emit_t *emit, const ssa_module_t *mod);

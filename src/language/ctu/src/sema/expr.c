@@ -101,7 +101,6 @@ static tree_t *sema_decl_name(tree_t *sema, const node_t *node, const vector_t *
 static tree_t *verify_expr_type(tree_t *sema, tree_kind_t kind, const tree_t *type,
                                 const char *expr_kind, tree_t *expr)
 {
-    CT_UNUSED(sema);
     CT_UNUSED(kind);
     CT_UNUSED(expr_kind);
 
@@ -137,6 +136,7 @@ static tree_t *sema_int(tree_t *sema, const ctu_t *expr, const tree_t *implicit_
     const tree_t *type = implicit_type
         ? implicit_type
         : ctu_get_int_type(eDigitInt, eSignSigned); // TODO: calculate proper type to use
+
     if (!tree_is(type, eTreeTypeDigit))
     {
         return tree_raise(expr->node, sema->reports, &kEvent_InvalidLiteralType, "invalid type `%s` for integer literal",
@@ -157,13 +157,12 @@ static tree_t *sema_cast(ctu_sema_t *sema, const ctu_t *expr)
     {
         tree_report(ctu_sema_reports(sema), cast);
     }
+
     return cast;
 }
 
 static tree_t *sema_string(tree_t *sema, const ctu_t *expr, const tree_t *implicit_type)
 {
-    CT_UNUSED(sema);
-
     // +1 length for the nul terminator
     tree_t *type = tree_type_array(expr->node, "str", ctu_get_char_type(), expr->length + 1);
     tree_t *str = tree_expr_string(expr->node, type, expr->text, expr->length);
@@ -586,6 +585,8 @@ tree_t *ctu_sema_rvalue(ctu_sema_t *sema, const ctu_t *expr, const tree_t *impli
     const tree_t *inner = implicit_type == NULL
         ? NULL
         : tree_resolve(tree_get_cookie(sema->sema), implicit_type);
+
+    inner = tree_follow_type(inner);
 
     switch (expr->kind)
     {

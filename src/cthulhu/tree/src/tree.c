@@ -94,26 +94,7 @@ tree_t *tree_raise(const node_t *node, logger_t *reports, const diagnostic_t *di
 CT_CONSTFN
 static bool is_type(tree_kind_t kind)
 {
-    switch (kind)
-    {
-    case eTreePartial:
-    case eTreeTypeEmpty:
-    case eTreeTypeUnit:
-    case eTreeTypeBool:
-    case eTreeTypeDigit:
-    case eTreeTypeClosure:
-    case eTreeTypePointer:
-    case eTreeTypeOpaque:
-    case eTreeTypeArray:
-    case eTreeError:
-    case eTreeTypeStruct:
-    case eTreeTypeUnion:
-    case eTreeTypeEnum:
-        return true;
-
-    default:
-        return false;
-    }
+    return kind_has_tag(kind, eTagIsType) || (kind == eTreeError);
 }
 
 CT_CONSTFN

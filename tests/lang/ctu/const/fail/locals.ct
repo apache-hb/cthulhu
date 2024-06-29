@@ -1,0 +1,4 @@
+export def thing {
+    const a = 1;
+    a = 2;
+}

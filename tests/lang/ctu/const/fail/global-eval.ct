@@ -1,0 +1,12 @@
+const a = as<opaque>(0xFFFFFFFFFFFFFFFF);
+
+@extern("exit")
+export def exit(status: int);
+
+@entry(cli)
+def main {
+    const b = as<opaque>(0xFFFFFFFFFFFFFFFF);
+    if a != b {
+        exit(1);
+    }
+}

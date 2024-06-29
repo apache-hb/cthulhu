@@ -19,7 +19,7 @@ static const char *get_c89_digit(ssa_type_digit_t ty)
     case eDigitChar: return (ty.sign == eSignUnsigned) ? "unsigned char" : "char";
     case eDigitShort: return (ty.sign == eSignUnsigned) ? "unsigned short" : "short";
     case eDigitInt: return (ty.sign == eSignUnsigned) ? "unsigned int" : "int";
-    case eDigitLong: return (ty.sign == eSignUnsigned) ? "unsigned long" : "long";
+    case eDigitLong: return (ty.sign == eSignUnsigned) ? "unsigned long long" : "long long";
     case eDigitSize: return (ty.sign == eSignSigned) ? "ptrdiff_t" : "size_t" ;
     case eDigitPtr: return (ty.sign == eSignSigned) ? "intptr_t" : "uintptr_t";
 
@@ -45,9 +45,13 @@ static const char *get_c89_digit(ssa_type_digit_t ty)
     }
 }
 
-static const char *get_quals(tree_quals_t quals, bool emit_const, arena_t *arena)
+// TODO: we should emit east const types rather than west const
+// its more consistent and should make codegen easier
+
+static const char *get_quals(tree_quals_t quals, type_format_t fmt, arena_t *arena)
 {
-    if (quals & eQualConst) { return emit_const ? "const " : ""; }
+    if (fmt & eFormatIsConst) { return "const "; }
+    if (quals & eQualConst) { return (fmt & eFormatEmitConst) ? "const " : ""; }
 
     vector_t *vec = vector_new(3, arena);
     if (quals & eQualAtomic) { vector_push(&vec, "_Atomic"); }
@@ -58,7 +62,7 @@ static const char *get_quals(tree_quals_t quals, bool emit_const, arena_t *arena
 
 static const char *format_c89_closure(c89_emit_t *emit, const char *quals, ssa_type_closure_t type, const char *name)
 {
-    const char *result = c89_format_type(emit, type.result, NULL, true);
+    const char *result = c89_format_type(emit, type.result, NULL, eFormatEmitConst);
     const char *params = c89_format_params(emit, type.params, type.variadic);
 
     return (name == NULL)
@@ -70,7 +74,7 @@ static const char *format_c89_pointer(c89_emit_t *emit, ssa_type_pointer_t point
 {
     const char *tmp = (name == NULL) ? "*" : str_format(emit->arena, "*%s", name);
 
-    return c89_format_type(emit, pointer.pointer, tmp, true);
+    return c89_format_type(emit, pointer.pointer, tmp, eFormatEmitConst);
 }
 
 static const char *format_c89_enum(c89_emit_t *emit, const ssa_type_t *type, const char *name, const char *quals)
@@ -94,7 +98,7 @@ const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char
 {
     CTASSERT(type != NULL);
 
-    const char *quals = get_quals(type->quals, flags & eFormatEmitConst, emit->arena);
+    const char *quals = get_quals(type->quals, flags, emit->arena);
 
     switch (type->kind)
     {
@@ -129,10 +133,10 @@ const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char
     }
 }
 
-const char *c89_format_storage(c89_emit_t *emit, ssa_storage_t storage, const char *name)
+const char *c89_format_storage(c89_emit_t *emit, ssa_storage_t storage, const char *name, type_format_t flags)
 {
     char *it = str_format(emit->arena, "%s[%zu]", name, storage.size);
-    return c89_format_type(emit, storage.type, it, true);
+    return c89_format_type(emit, storage.type, it, flags);
 }
 
 const char *c89_format_params(c89_emit_t *emit, typevec_t *params, bool variadic)
@@ -150,7 +154,7 @@ const char *c89_format_params(c89_emit_t *emit, typevec_t *params, bool variadic
     for (size_t i = 0; i < len; i++)
     {
         const ssa_param_t *param = typevec_offset(params, i);
-        const char *it = c89_format_type(emit, param->type, param->name, true);
+        const char *it = c89_format_type(emit, param->type, param->name, eFormatEmitConst);
         vector_set(args, i, (char*)it);
     }
 

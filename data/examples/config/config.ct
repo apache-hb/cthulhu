@@ -1,6 +1,7 @@
 module example::config;
 
 import win32;
+import cstdlib;
 
 const null = as<opaque>(0);
 
@@ -34,6 +35,11 @@ export struct ConfigFile {
     entryCount: uint;
 }
 
+def reportErrorMessage(name: str) {
+    const lastError = win32::GetLastError();
+    cstdlib::printf("%s: %d\n", name, lastError);
+}
+
 export def openConfigFile(path: str): ConfigFile {
     var fileHandle = win32::CreateFileA(
         /* lpFileName */ path,
@@ -46,6 +52,7 @@ export def openConfigFile(path: str): ConfigFile {
     );
 
     if fileHandle == win32::INVALID_HANDLE_VALUE {
+        reportErrorMessage("CreateFileA");
         win32::CloseHandle(fileHandle);
     }
 
@@ -59,25 +66,28 @@ export def openConfigFile(path: str): ConfigFile {
     );
 
     if viewHandle == win32::INVALID_HANDLE_VALUE {
+        reportErrorMessage("CreateFileMappingA");
         win32::CloseHandle(fileHandle);
         win32::CloseHandle(viewHandle);
     }
 
     var fileSize: win32::LARGE_INTEGER = noinit;
     if win32::GetFileSizeEx(fileHandle, &fileSize) == 0 {
+        reportErrorMessage("GetFileSizeEx");
         win32::CloseHandle(fileHandle);
         win32::CloseHandle(viewHandle);
     }
 
     var fileView = win32::MapViewOfFile(
         /* hFileMappingObject */ viewHandle,
-        /* dwDesiredAccess */ 4, // FILE_MAP_READ
+        /* dwDesiredAccess */ win32::FILE_MAP_READ,
         /* dwFileOffsetHigh */ 0,
         /* dwFileOffsetLow */ 0,
-        /* dwNumberOfBytesToMap */ fileSize.QuadPart
+        /* dwNumberOfBytesToMap */ 0
     );
 
     if fileView == null {
+        reportErrorMessage("MapViewOfFile");
         win32::CloseHandle(fileHandle);
         win32::CloseHandle(viewHandle);
     }

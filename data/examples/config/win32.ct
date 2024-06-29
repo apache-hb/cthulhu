@@ -1,8 +1,10 @@
 module win32;
 
+import cstdlib;
+
 export type HANDLE = opaque;
 
-export type LPVOID = *void;
+export type LPVOID = opaque;
 export type LPCSTR = str;
 export type BOOL = int;
 export type DWORD = uint;
@@ -81,7 +83,25 @@ export def GetFileSizeEx(
     lpFileSize: LPLARGE_INTEGER
 ): BOOL;
 
+@extern("WriteConsole")
+export def WriteConsole(
+    hConsoleOutput: HANDLE,
+    lpBuffer: LPVOID,
+    nNumberOfCharsToWrite: DWORD,
+    lpNumberOfCharsWritten: LPDWORD,
+    lpReserved: LPVOID
+): BOOL;
+
+@extern("GetStdHandle")
+export def GetStdHandle(nStdHandle: DWORD): HANDLE;
+
+export const STD_INPUT_HANDLE: DWORD = 0xFFFFFFF6;
+export const STD_OUTPUT_HANDLE: DWORD = 0xFFFFFFF5;
+export const STD_ERROR_HANDLE: DWORD = 0xFFFFFFF4;
+
 export const GENERIC_READ: DWORD = 0x80000000;
 export const FILE_SHARE_READ: DWORD = 0x1;
 export const OPEN_EXISTING: DWORD = 3;
-export const INVALID_HANDLE_VALUE: HANDLE = as<HANDLE>(0xFFFFFFFFFFFFFFFF);
+export const INVALID_HANDLE_VALUE: HANDLE = as<HANDLE>(cstdlib::ULONG_MAX);
+
+export const FILE_MAP_READ: DWORD = 4;

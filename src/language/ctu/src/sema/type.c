@@ -83,7 +83,7 @@ static tree_t *sema_type_array(ctu_sema_t *sema, const ctu_t *type)
     return tree_type_array(type->node, "", inner, v);
 }
 
-tree_t *ctu_sema_type(ctu_sema_t *sema, const ctu_t *type)
+static tree_t *sema_type_inner(ctu_sema_t *sema, const ctu_t *type)
 {
     CTASSERT(type != NULL);
 
@@ -96,4 +96,10 @@ tree_t *ctu_sema_type(ctu_sema_t *sema, const ctu_t *type)
 
     default: CT_NEVER("invalid type kind %d", type->kind);
     }
+}
+
+tree_t *ctu_sema_type(ctu_sema_t *sema, const ctu_t *type)
+{
+    tree_t *result = sema_type_inner(sema, type);
+    return tree_resolve_type(result);
 }

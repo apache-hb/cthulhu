@@ -515,6 +515,40 @@ static void check_global_recursion(check_t *check, const tree_t *global)
     set_add(check->checked_exprs, global);
 }
 
+static void check_global_type(check_t *check, const tree_t *global)
+{
+    const tree_t *ty = tree_get_type(global);
+    CTASSERTF(ty != NULL, "global `%s` has no type", tree_get_name(global));
+
+    if (tree_is(ty, eTreeTypeUnit))
+    {
+        msg_notify(check->reports, &kEvent_InvalidType, tree_get_node(global),
+            "global `%s` is of unit type `%s`",
+            tree_get_name(global),
+            tree_to_string(ty)
+        );
+    }
+    else if (tree_is(ty, eTreeTypeEmpty))
+    {
+        msg_notify(check->reports, &kEvent_InvalidType, tree_get_node(global),
+            "global `%s` is of empty type `%s`",
+            tree_get_name(global),
+            tree_to_string(ty)
+        );
+    }
+
+    tree_storage_t storage = tree_get_storage(global);
+
+    if (tree_is(storage.storage, eTreeTypeReference))
+    {
+        msg_notify(check->reports, &kEvent_InvalidType, tree_get_node(global),
+            "global value `%s` has invalid storage `%s`",
+            tree_get_name(global),
+            tree_to_string(ty)
+        );
+    }
+}
+
 ///
 /// recursive struct checking
 ///
@@ -535,6 +569,7 @@ static void check_struct_type_recursion(check_t *check, const tree_t *type)
     case eTreeTypeOpaque:
     case eTreeTypeClosure:
     case eTreeTypeEnum:
+    case eTreeTypeAlias:
         break;
 
     case eTreeTypeStruct:
@@ -603,6 +638,10 @@ static void check_inner_type_recursion(check_t *check, const tree_t *type)
     case eTreeTypeUnion:
     case eTreeTypeEnum:
     case eTreeTypeOpaque:
+        break;
+
+    case eTreeTypeAlias:
+        check_type_recursion(check, tree_get_type(type));
         break;
 
     case eTreeTypeClosure:
@@ -694,6 +733,7 @@ static void check_module_valid(check_t *check, const tree_t *mod)
 
         check_global_attribs(check, global);
         check_global_recursion(check, global);
+        check_global_type(check, global);
     }
 
     vector_t *functions = map_values(tree_module_tag(mod, eSemaProcs));

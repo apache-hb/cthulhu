@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 #include "ctu/sema/decl.h"
+#include "arena/arena.h"
 #include "core/macros.h"
 #include "cthulhu/events/events.h"
 #include "ctu/driver.h"
@@ -20,6 +21,7 @@
 #include "std/str.h"
 
 #include "base/panic.h"
+#include <stdio.h>
 
 ///
 /// attributes
@@ -74,21 +76,31 @@ static void ctu_resolve_global(tree_t *sema, tree_t *self, void *user)
 
     const tree_t *real_type = expr == NULL ? type : tree_get_type(expr);
 
+    if (!decl->mut && !tree_is(real_type, eTreeError))
+    {
+        tree_t clone = *real_type;
+        tree_quals_t quals = tree_ty_get_quals(real_type);
+        tree_set_qualifiers(&clone, quals | eQualConst);
+
+        real_type = arena_memdup(&clone, sizeof(tree_t), arena);
+    }
+
     size_t size = ctu_resolve_storage_size(real_type);
     const tree_t *ty = ctu_resolve_storage_type(real_type);
 
-    tree_storage_t storage = {
+    const tree_storage_t storage = {
         .storage = ty,
         .length = size,
         .quals = decl->mut ? eQualMutable : eQualConst
     };
+
     tree_t *ref = tree_type_reference(self->node, self->name, real_type);
     tree_set_type(self, ref);
     tree_set_storage(self, storage);
     tree_close_global(self, expr);
 }
 
-static void ctu_resolve_type(tree_t *sema, tree_t *self, void *user)
+static void ctu_resolve_typealias(tree_t *sema, tree_t *self, void *user)
 {
     ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclTypeAlias);
     CTASSERTF(decl->type_alias != NULL, "decl %s has no type", decl->name);
@@ -97,7 +109,12 @@ static void ctu_resolve_type(tree_t *sema, tree_t *self, void *user)
     ctu_sema_t inner = ctu_sema_init(sema, self, vector_new(0, arena));
 
     const tree_t *temp = tree_resolve(tree_get_cookie(sema), ctu_sema_type(&inner, decl->type_alias)); // TODO: doesnt support newtypes, also feels icky
-    tree_close_decl(self, temp);
+
+    // TODO: bruh
+    tree_t *alias = tree_type_alias(self->node, self->name, temp, eQualNone);
+    tree_set_attrib(alias, decl->exported ? &kAttribExport : &kAttribPrivate);
+
+    tree_close_decl(self, alias);
 }
 
 static vector_t *ctu_collect_fields(tree_t *sema, tree_t *self, ctu_t *decl)
@@ -242,8 +259,8 @@ static tree_t *ctu_forward_type(tree_t *sema, ctu_t *decl)
     tree_resolve_info_t resolve = {
         .sema = sema,
         .user = decl,
-        .fn_resolve = ctu_resolve_type,
-        .fn_resolve_type = ctu_resolve_type
+        .fn_resolve = ctu_resolve_typealias,
+        .fn_resolve_type = ctu_resolve_typealias
     };
 
     return tree_open_decl(decl->node, decl->name, resolve);

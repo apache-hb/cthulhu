@@ -12,6 +12,7 @@
 #include "arena/arena.h"
 #include "memory/memory.h"
 #include "base/panic.h"
+#include <stdio.h>
 
 ssa_type_t *ssa_type_new(ssa_kind_t kind, const char *name, tree_quals_t quals)
 {
@@ -190,6 +191,7 @@ static ssa_type_t *ssa_type_create(map_t *cache, const tree_t *type, arena_t *ar
 
     switch (kind)
     {
+    case eTreeTypeAlias: return ssa_type_create(cache, tree_get_type(type), arena);
     case eTreeTypeEmpty: return ssa_type_empty(name, quals);
     case eTreeTypeUnit: return ssa_type_unit(name, quals);
     case eTreeTypeBool: return ssa_type_bool(name, quals);

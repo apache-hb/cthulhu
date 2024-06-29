@@ -18,10 +18,21 @@ langtests += {
                     'multiple entry points': 'multiple-entry'
                 }
             },
+            'expr': {
+                'pass': {
+                    'complex cast expression': 'cast-expr'
+                }
+            },
+            'const': {
+                'fail': {
+                    'assign to global const': 'globals',
+                    'assign to local const': 'locals'
+                }
+            },
             'digits': {
                 'pass': {
                     'no suffix': 'no-suffix',
-                    #'suffix zoo': 'suffix-zoo',
+                    'suffix zoo': 'suffix-zoo',
                     'complex init': 'complex-init'
                 },
                 'fail': {

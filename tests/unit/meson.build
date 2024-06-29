@@ -37,12 +37,13 @@ cases = {
     'maps': 'cases/util/map.c',
     'sets': 'cases/util/set.c',
     'bitsets': 'cases/util/bitset.c',
+    'tree utils': 'cases/tree/tree.c'
 }
 
 foreach name, path : cases
     exe = executable(name, path,
         include_directories : '.',
-        dependencies : [ unit, memory, std, setup, arena, base ]
+        dependencies : [ unit, memory, std, setup, arena, base, tree ]
     )
 
     test(name, exe, suite : 'unit')

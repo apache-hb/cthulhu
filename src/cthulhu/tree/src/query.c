@@ -13,39 +13,11 @@
 #include "base/panic.h"
 
 #include <stdint.h>
+#include <stdio.h>
 
 static bool has_name(tree_kind_t kind)
 {
-    switch (kind)
-    {
-    case eTreePartial:
-
-    case eTreeTypeEmpty:
-    case eTreeTypeUnit:
-    case eTreeTypeBool:
-    case eTreeTypeDigit:
-    case eTreeTypeClosure:
-    case eTreeTypePointer:
-    case eTreeTypeOpaque:
-    case eTreeTypeArray:
-    case eTreeTypeReference:
-
-    case eTreeTypeStruct:
-    case eTreeTypeUnion:
-    case eTreeTypeEnum:
-
-    case eTreeDeclGlobal:
-    case eTreeDeclLocal:
-    case eTreeDeclParam:
-    case eTreeDeclField:
-    case eTreeDeclCase:
-    case eTreeDeclFunction:
-    case eTreeDeclModule:
-        return true;
-
-    default:
-        return false;
-    }
+    return kind_has_tag(kind, eTagName);
 }
 
 const char *tree_kind_to_string(tree_kind_t kind)
@@ -84,10 +56,10 @@ char *tree_to_string_arena(const tree_t *self, arena_t *arena)
         return str_format(arena, "{ error: %s }", self->message);
 
     case eTreeTypeArray:
-        return str_format(arena, "array %s { element: %s, length: %zu }", tree_get_name(self), tree_to_string(self->ptr), self->length);
+        return str_format(arena, "{ array %s { element: %s, length: %zu } }", tree_get_name(self), tree_to_string(self->ptr), self->length);
 
     case eTreeTypePointer:
-        return str_format(arena, "pointer %s { pointer: %s, length: %s }", tree_get_name(self), tree_to_string(self->ptr), length_name(self->length, arena));
+        return str_format(arena, "{ pointer %s { to: %s, length: %s } }", tree_get_name(self), tree_to_string(self->ptr), length_name(self->length, arena));
 
     default:
         break;

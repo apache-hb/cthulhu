@@ -474,6 +474,7 @@ void pl0_forward_decls(language_runtime_t *runtime, compile_unit_t *context)
 
     tree_t *root = context->tree;
     const tree_storage_t const_storage = get_const_storage(gIntType);
+    const tree_storage_t mutable_storage = get_mutable_storage(gIntType);
 
     // forward declare everything
     for (size_t i = 0; i < const_count; i++)
@@ -504,7 +505,7 @@ void pl0_forward_decls(language_runtime_t *runtime, compile_unit_t *context)
         };
 
         tree_t *tree = tree_open_global(it->node, it->name, gIntRef, resolve);
-        tree_set_storage(tree, const_storage);
+        tree_set_storage(tree, mutable_storage);
         tree_set_attrib(tree, &kExportAttrib);
 
         set_var(root, ePl0TagValues, it->name, tree);

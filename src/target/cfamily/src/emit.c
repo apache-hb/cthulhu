@@ -22,6 +22,31 @@
 #include "base/panic.h"
 #include "core/macros.h"
 
+#include <limits.h>
+#include <stdio.h>
+
+static int integer_fits_longlong(const mpz_t value)
+{
+    // mini gmp doesnt have functions that take longlong so this is a bit of a hack
+    mpz_t max;
+    mpz_init_set_si(max, 2);
+    mpz_pow_ui(max, max, sizeof(long long) * CHAR_BIT - 1);
+    mpz_sub_ui(max, max, 1);
+
+    mpz_t min;
+    mpz_init_set_si(min, 2);
+    mpz_pow_ui(min, min, sizeof(long long) * CHAR_BIT - 1);
+
+    mpz_neg(min, min);
+
+    return mpz_cmp(value, max) <= 0 && mpz_cmp(value, min) >= 0;
+}
+
+static int integer_is_unsigned(const mpz_t value)
+{
+    return mpz_sgn(value) >= 0;
+}
+
 static c89_source_t *source_new(io_t *io, const char *path, arena_t *arena)
 {
     c89_source_t *source = ARENA_MALLOC(sizeof(c89_source_t), path, io, arena);
@@ -278,6 +303,21 @@ static const char *format_symbol(c89_emit_t *emit, const ssa_type_t *type, const
     return c89_format_type(emit, type, name, eFormatEmitConst);
 }
 
+static char *format_integer_literal(arena_t *arena, const mpz_t value)
+{
+    if (mpz_fits_sint_p(value))
+        return mpz_get_str(NULL, 10, value);
+
+    if (integer_fits_longlong(value))
+        return str_format(arena, "%sll", mpz_get_str(NULL, 10, value));
+
+    // integer must be unsigned if we get this far
+    if (integer_is_unsigned(value))
+        return str_format(arena, "%sull", mpz_get_str(NULL, 10, value));
+
+    CT_NEVER("integer literal %s is too large, this should be caught earlier", mpz_get_str(NULL, 10, value));
+}
+
 static void define_enum(io_t *io, const ssa_type_t *type, c89_emit_t *emit)
 {
     // update c89_format_type eTypeEnum when this is changed
@@ -298,7 +338,7 @@ static void define_enum(io_t *io, const ssa_type_t *type, c89_emit_t *emit)
         const ssa_case_t *field = typevec_offset(it.cases, i);
 
         // TODO: formalize the name mangling for enum fields
-        io_printf(io, "\te%s%s = %s,\n", type->name, field->name, mpz_get_str(NULL, 10, field->value));
+        io_printf(io, "\te%s%s = %s,\n", type->name, field->name, format_integer_literal(emit->arena, field->value));
     }
     io_printf(io, "};\n");
 }
@@ -330,7 +370,8 @@ void c89_proto_type(c89_emit_t *emit, io_t *io, const ssa_type_t *type)
 
 static void write_global(c89_emit_t *emit, io_t *io, const ssa_symbol_t *global)
 {
-    const char *it = c89_format_storage(emit, global->storage, mangle_symbol_name(emit, global));
+    ssa_storage_t storage = global->storage;
+    const char *it = c89_format_storage(emit, global->storage, mangle_symbol_name(emit, global), (storage.quals & eQualConst) ? eFormatIsConst : eFormatEmitNone);
     const char *link = format_c89_link(global->linkage);
 
     io_printf(io, "%s%s", link, it);
@@ -547,7 +588,7 @@ static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value)
     switch (type->kind)
     {
     case eTypeBool: return value->bool_value ? "true" : "false";
-    case eTypeDigit: return mpz_get_str(NULL, 10, value->digit_value);
+    case eTypeDigit: return format_integer_literal(emit->arena, value->digit_value);
     case eTypePointer: return c89_format_pointer(emit, value->data);
     case eTypeOpaque: return c89_format_opaque(emit, value);
     default: CT_NEVER("unknown type kind %d", type->kind);
@@ -886,7 +927,7 @@ static void write_locals(c89_emit_t *emit, io_t *io, typevec_t *locals)
     {
         const ssa_local_t *local = typevec_offset(locals, i);
         io_printf(io, "\t%s;\n",
-            c89_format_storage(emit, local->storage, str_format(emit->arena, "l_%s", local->name))
+            c89_format_storage(emit, local->storage, str_format(emit->arena, "l_%s", local->name), eFormatEmitNone)
         );
     }
 }

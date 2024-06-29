@@ -9,6 +9,7 @@
 #include "std/vector.h"
 
 #include "base/panic.h"
+#include <stdio.h>
 
 static tree_t *select_decl_imported(tree_t *sema, const size_t *tags, size_t len, const char *name, tree_t **mod)
 {

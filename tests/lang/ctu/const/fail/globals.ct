@@ -1,0 +1,5 @@
+const a: int = 1;
+
+export def thing {
+    a = 2;
+}

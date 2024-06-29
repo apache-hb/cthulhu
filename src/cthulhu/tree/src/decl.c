@@ -13,6 +13,7 @@
 
 #include "base/panic.h"
 #include <stdint.h>
+#include <stdio.h>
 
 static const tree_storage_t kEmptyStorage = {
     .storage = NULL,
@@ -241,6 +242,22 @@ tree_t *tree_alias(const tree_t *tree, const char *name)
     tree_t *copy = arena_memdup(tree, sizeof(tree_t), arena);
     copy->name = name;
     return copy;
+}
+
+tree_t *tree_type_alias(const node_t *node, const char *name, const tree_t *type, tree_quals_t quals)
+{
+    tree_t *self = tree_decl(eTreeTypeAlias, node, type, name, quals);
+    return self;
+}
+
+const tree_t *tree_follow_type(const tree_t *type)
+{
+    if (type == NULL) return NULL;
+
+    if (tree_is(type, eTreeTypeAlias))
+        return tree_follow_type(tree_get_type(type));
+
+    return type;
 }
 
 ///

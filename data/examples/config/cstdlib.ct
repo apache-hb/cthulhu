@@ -1,0 +1,27 @@
+module cstdlib;
+
+@extern("exit")
+export def exit(status: int): void;
+
+@extern("printf")
+export def printf(format: str, args: ...): int;
+
+export const CHAR_MAX:  char   =  127;
+export const CHAR_MIN:  char   = -128;
+export const UCHAR_MAX: uchar  =  255;
+export const SHRT_MAX:  short  =  32767;
+export const SHRT_MIN:  short  = -32768;
+export const USHRT_MAX: ushort =  65535;
+export const INT_MAX:   int    =  2147483647;
+export const INT_MIN:   int    = -2147483648;
+export const UINT_MAX:  uint   =  4294967295;
+export const LONG_MAX:  long   =  9223372036854775808;
+export const LONG_MIN:  long   = -9223372036854775807;
+export const ULONG_MAX: ulong  =  18446744073709551615;
+
+export def assert(condition: bool, message: str) {
+    if !condition {
+        printf("Assertion failed: %s\n", message);
+        exit(1);
+    }
+}

@@ -496,6 +496,10 @@ CT_TREE_API void tree_set_type(tree_t *self, const tree_t *type);
 
 CT_TREE_API tree_t *tree_alias(const tree_t *tree, const char *name);
 
+CT_TREE_API tree_t *tree_type_alias(const node_t *node, const char *name, const tree_t *type, tree_quals_t quals);
+
+CT_TREE_API const tree_t *tree_follow_type(const tree_t *type);
+
 ///
 /// tree sema interface
 ///

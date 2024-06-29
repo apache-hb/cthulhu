@@ -76,6 +76,9 @@ TREE_KIND(eTreeTypeEnum,    "type_enum",    eTagName | eTagIsType)
 /// a discriminated union, or sum type
 TREE_KIND(eTreeTypeVariant, "type_variant", eTagName | eTagIsType)
 
+/// a type alias
+TREE_KIND(eTreeTypeAlias,   "type_alias",   eTagName | eTagIsType | eTagHasType)
+
 ///
 /// expressions
 /// these yield a value

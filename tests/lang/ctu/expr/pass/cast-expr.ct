@@ -1,0 +1,2 @@
+export const a: opaque = as<opaque>(-1);
+export const b: opaque = as<opaque>(1 * -1);

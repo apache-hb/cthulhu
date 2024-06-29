@@ -443,7 +443,7 @@ primary_expr: LPAREN expr RPAREN { $$ = $2; }
     | BOOLEAN { $$ = ctu_expr_bool(x, @$, $1); }
     | STRING { $$ = ctu_expr_string(x, @$, $1.text, $1.length); }
     | path { $$ = ctu_expr_name(x, @$, $1); }
-    | AS LT type GT LPAREN primary_expr RPAREN { $$ = ctu_expr_cast(x, @$, $6, $3); }
+    | AS LT type GT LPAREN expr RPAREN { $$ = ctu_expr_cast(x, @$, $6, $3); }
     | init { $$ = $1; }
     ;
 

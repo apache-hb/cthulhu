@@ -1,32 +1,27 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
+#include "common.h"
+
 #include "cthulhu/tree/context.h"
 #include "cthulhu/tree/query.h"
 #include "cthulhu/tree/tree.h"
 
 #include "base/panic.h"
-
-typedef enum tree_tags_t
-{
-#define TREE_TAG(ID, NAME, TAGS) ID = (TAGS),
-#include "cthulhu/tree/tree.inc"
-} tree_tags_t;
+#include <stdio.h>
 
 static const tree_tags_t kTreeTags[eTreeTotal] = {
 #define TREE_KIND(ID, NAME, TAGS) [ID] = (TAGS),
 #include "cthulhu/tree/tree.inc"
 };
 
-CT_PUREFN
-static bool kind_has_tag(tree_kind_t kind, tree_tags_t tags)
+bool kind_has_tag(tree_kind_t kind, tree_tags_t tags)
 {
     CTASSERTF(kind < eTreeTotal, "invalid tree kind %d", kind);
 
     return kTreeTags[kind] & tags;
 }
 
-CT_PUREFN
-static bool tree_has_tag(const tree_t *tree, tree_tags_t tags)
+bool tree_has_tag(const tree_t *tree, tree_tags_t tags)
 {
     CTASSERT(tree != NULL);
     return kind_has_tag(tree->kind, tags);

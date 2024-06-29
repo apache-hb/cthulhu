@@ -64,8 +64,8 @@ bool util_types_equal(const tree_t *lhs, const tree_t *rhs)
 
 bool util_types_comparable(const tree_t *lhs, const tree_t *rhs)
 {
-    lhs = tree_resolve_type(lhs);
-    rhs = tree_resolve_type(rhs);
+    lhs = tree_follow_type(tree_resolve_type(lhs));
+    rhs = tree_follow_type(tree_resolve_type(rhs));
 
     if (util_types_equal(lhs, rhs))
     {
@@ -83,6 +83,7 @@ bool util_types_comparable(const tree_t *lhs, const tree_t *rhs)
     switch (lhs_kind)
     {
     case eTreeTypeBool:
+    case eTreeTypeOpaque:
     case eTreeTypeDigit: return true;
 
     default: return false; /* TODO probably wrong */
@@ -203,6 +204,8 @@ tree_t *util_type_cast(const tree_t *dst, tree_t *expr)
     CTASSERTF(dst != NULL && expr != NULL, "(dst=%p, expr=%p)", (void *)dst, (void *)expr);
 
     const tree_t *src = tree_get_type(expr);
+
+    dst = tree_follow_type(dst);
 
     if (util_types_equal(dst, src))
     {

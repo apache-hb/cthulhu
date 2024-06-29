@@ -2,10 +2,12 @@
 
 #include "cthulhu/tree/ops.h"
 
+#include "arena/arena.h"
 #include "base/panic.h"
 #include "memory/memory.h"
 #include "std/vector.h"
 #include "std/str.h"
+#include "base/util.h"
 
 static const char *const kUnaryNames[eUnaryTotal] = {
 #define UNARY_OP(ID, STR, SYM) [ID] = (STR),
@@ -103,27 +105,31 @@ const char *digit_name(digit_t digit)
     return kDigitNames[digit];
 }
 
-// #define STRING_LENGTH kQualStringLen
-// #define FLAG_COUNT kQualFlagsCount
-
-// static const size_t kQualFlagsCount = 1
-// #define TYPE_QUALIFIER(ID, STR, BIT) + 1
-// #include "cthulhu/tree/tree.inc"
-// ;
-
-// static const size_t kQualStringLen = sizeof(
-// #define TYPE_QUALIFIER(ID, STR, BIT) STR
-// #include "cthulhu/tree/tree.inc"
-// );
-
 STA_DECL
 const char *quals_string(tree_quals_t quals)
 {
     arena_t *arena = get_global_arena();
-#define TYPE_QUALIFIER(ID, STR, BIT) if (quals & (BIT)) { vector_push(&names, (char*)(STR)); }
-    vector_t *names = vector_new(4, arena);
+
+    // unhinged macro abuse to make the array size known at compile time
+    char buffer[
+        1
+#define TYPE_QUALIFIER(ID, STR, BIT) + sizeof(STR)
 #include "cthulhu/tree/tree.inc"
-    return str_join(" | ", names, arena);
+    ];
+
+    char *ptr = buffer;
+
+#define TYPE_QUALIFIER(ID, STR, BIT) \
+    if (quals & (ID)) { \
+        if (ptr != buffer) \
+            *ptr++ = '|'; \
+        ctu_memcpy(ptr, STR, sizeof(STR)); \
+        ptr += sizeof(STR) - 1; \
+    }
+#include "cthulhu/tree/tree.inc"
+
+    *ptr = '\0';
+    return arena_strndup(buffer, ptr - buffer, arena);
 }
 
 static const char *const kLinkNames[eLinkTotal] = {

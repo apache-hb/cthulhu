@@ -12,8 +12,8 @@
 
 #include "std/typed/vector.h"
 
-#include "arena/arena.h"
 #include "base/panic.h"
+#include <stdio.h>
 
 /// @brief the ssa compilation context
 typedef struct ssa_compile_t

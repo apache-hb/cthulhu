@@ -123,17 +123,17 @@ WS [ \t\r\v\n\f]
     return IDENT;
 }
 
-"0b"[01]+ {
+"0b"[01]+("ul"|"u"|"l")? {
     ctu_parse_digit(yyextra, *yylloc, yylval->digit, yytext + 2, 2);
     return INTEGER;
 }
 
-"0x"[0-9a-fA-F]+ {
+"0x"[0-9a-fA-F]+("ul"|"u"|"l")? {
     ctu_parse_digit(yyextra, *yylloc, yylval->digit, yytext + 2, 16);
     return INTEGER;
 }
 
-[0-9]+ {
+[0-9]+("ul"|"u"|"l")? {
     ctu_parse_digit(yyextra, *yylloc, yylval->digit, yytext, 10);
     return INTEGER;
 }
