@@ -314,6 +314,21 @@ static void check_call_arguments(check_t *check, const tree_t *expr)
     }
 }
 
+static void check_assign(check_t *check, const tree_t *stmt)
+{
+    if (tree_has_storage(stmt->dst))
+    {
+        tree_quals_t quals = tree_get_storage_quals(stmt->dst);
+        if ((quals & eQualConst) && !stmt->init)
+        {
+            msg_notify(check->reports, &kEvent_AssignToConst, tree_get_node(stmt),
+                "assignment to constant `%s`",
+                tree_get_name(stmt->dst)
+            );
+        }
+    }
+}
+
 static void check_func_body(check_t *check, const tree_t *return_type, const tree_t *stmt)
 {
     switch (stmt->kind)
@@ -327,7 +342,10 @@ static void check_func_body(check_t *check, const tree_t *return_type, const tre
 
     case eTreeStmtLoop:
     case eTreeStmtBranch:
+        break;
+
     case eTreeStmtAssign:
+        check_assign(check, stmt);
         break;
 
     case eTreeStmtReturn:

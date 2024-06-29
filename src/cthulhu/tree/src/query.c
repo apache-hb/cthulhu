@@ -99,7 +99,12 @@ bool tree_has_vis(const tree_t *self, tree_visibility_t visibility)
 /// quals
 ///
 
-#define EXPECT_STORAGE_DECL(SELF) CTASSERTF(tree_is(SELF, eTreeDeclGlobal) || tree_is(SELF, eTreeDeclLocal), "only globals and locals can have storage, got %s", tree_to_string(SELF))
+#define EXPECT_STORAGE_DECL(SELF) CTASSERTF(tree_has_storage(SELF), "only globals and locals can have storage, got %s", tree_to_string(SELF))
+
+bool tree_has_storage(const tree_t *self)
+{
+    return tree_is(self, eTreeDeclGlobal) || tree_is(self, eTreeDeclLocal);
+}
 
 tree_storage_t get_storage(const tree_t *self)
 {

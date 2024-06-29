@@ -362,7 +362,7 @@ tree_t *tree_stmt_return(const node_t *node, const tree_t *value)
     return self;
 }
 
-tree_t *tree_stmt_assign(const node_t *node, tree_t *dst, tree_t *src)
+static tree_t *stmt_assign_inner(const node_t *node, tree_t *dst, tree_t *src, bool init)
 {
     const tree_t *dst_type = tree_get_type(dst);
     TREE_EXPECT_ADDRESS(dst_type);
@@ -372,7 +372,18 @@ tree_t *tree_stmt_assign(const node_t *node, tree_t *dst, tree_t *src)
     tree_t *self = tree_new(eTreeStmtAssign, node, NULL);
     self->dst = dst;
     self->src = src;
+    self->init = init;
     return self;
+}
+
+tree_t *tree_stmt_assign(const node_t *node, tree_t *dst, tree_t *src)
+{
+    return stmt_assign_inner(node, dst, src, false);
+}
+
+tree_t *tree_stmt_init(const node_t *node, tree_t *dst, tree_t *src)
+{
+    return stmt_assign_inner(node, dst, src, true);
 }
 
 tree_t *tree_stmt_loop(const node_t *node, tree_t *cond, tree_t *body, tree_t *other)

@@ -610,4 +610,12 @@ CTU_EVENT(InvalidName, {
         "Non-anonymous symbol had an empty name.",
 })
 
+CTU_EVENT(AssignToConst, {
+    .severity = eSeverityFatal,
+    .id = "M0083",
+    .brief = "Assign to const",
+    .description =
+        "A const value was assigned to.",
+})
+
 #undef CTU_EVENT

@@ -128,6 +128,7 @@ typedef struct tree_t {
         struct {
             tree_t *dst;
             tree_t *src;
+            bool init;
         };
 
         /* eTreeStmtLoop|eTreeStmtBranch */
@@ -405,6 +406,7 @@ CT_TREE_API tree_t *tree_stmt_block(const node_t *node, const vector_t *stmts);
 CT_TREE_API tree_t *tree_stmt_return(const node_t *node, const tree_t *value);
 
 CT_TREE_API tree_t *tree_stmt_assign(const node_t *node, tree_t *dst, tree_t *src);
+CT_TREE_API tree_t *tree_stmt_init(const node_t *node, tree_t *dst, tree_t *src);
 CT_TREE_API tree_t *tree_stmt_loop(const node_t *node, tree_t *cond, tree_t *body, tree_t *other);
 CT_TREE_API tree_t *tree_stmt_branch(const node_t *node, tree_t *cond, tree_t *then, tree_t *other);
 CT_TREE_API tree_t *tree_stmt_jump(const node_t *node, tree_t *label, tree_jump_t jump);

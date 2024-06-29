@@ -18,6 +18,8 @@ CT_TREE_API const tree_attribs_t *tree_get_attrib(const tree_t *self);
 
 CT_TREE_API bool tree_has_vis(const tree_t *self, tree_visibility_t visibility);
 
+CT_TREE_API bool tree_has_storage(const tree_t *self);
+
 ///
 /// storage decl queries
 ///

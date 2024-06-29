@@ -138,7 +138,7 @@ static void resolve_proc(tree_t *sema, tree_t *self, void *user)
         tree_storage_t storage = {
             .storage = type,
             .length = 1,
-            .quals = eQualConst
+            .quals = eQualMutable
         };
 
         tree_t *local_decl = tree_decl_local(local->node, local->name, storage, ref);
