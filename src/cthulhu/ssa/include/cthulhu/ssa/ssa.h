@@ -67,6 +67,7 @@ typedef enum ssa_opcode_t {
 /// a storage of (type=int, size=4) would be equivalent to `int x[4]` in C
 /// a storage of (type=*int, size=4) would be equivalent to `int *x[4]` in C
 /// the underlying storage type should match the type of external accessors with a pointer type
+/// e.g. if the storage is `int` the accessor should be `int *`
 typedef struct ssa_storage_t {
     /// @brief the internal storage type
     const ssa_type_t *type;

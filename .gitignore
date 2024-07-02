@@ -79,3 +79,5 @@ interface/gui/interface/imgui/examples/example_android_opengl3/android/app/src/m
 
 # we do want to commit the snippets
 !.vscode/cthulhu.code-snippets
+*.obj
+*.exe
