@@ -318,6 +318,13 @@ static char *format_integer_literal(arena_t *arena, const mpz_t value)
     CT_NEVER("integer literal %s is too large, this should be caught earlier", mpz_get_str(NULL, 10, value));
 }
 
+static char *format_integer_value(arena_t *arena, const ssa_value_t *value)
+{
+    mpz_t digit;
+    ssa_value_get_digit(value, digit);
+    return format_integer_literal(arena, digit);
+}
+
 static void define_enum(io_t *io, const ssa_type_t *type, c89_emit_t *emit)
 {
     // update c89_format_type eTypeEnum when this is changed
@@ -561,15 +568,22 @@ static const char *operand_type_string(c89_emit_t *emit, ssa_operand_t operand)
 
 static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value);
 
-static const char *c89_format_pointer(c89_emit_t *emit, vector_t *data)
+static const char *c89_format_pointer(c89_emit_t *emit, const ssa_value_t *value)
 {
+    if (value->value == eValueRelative)
+    {
+        ssa_relative_value_t relative = value->relative;
+        return str_format(emit->arena, "(%s)", relative.symbol->name);
+    }
+
+    ssa_literal_value_t literal = ssa_value_get_literal(value);
     arena_t *arena = emit->arena;
-    size_t len = vector_len(data);
+    size_t len = vector_len(literal.data);
     vector_t *result = vector_of(len, arena);
     for (size_t i = 0; i < len; i++)
     {
-        const ssa_value_t *value = vector_get(data, i);
-        const char *it = c89_format_value(emit, value);
+        const ssa_value_t *element = vector_get(literal.data, i);
+        const char *it = c89_format_value(emit, element);
         vector_set(result, i, (char*)it);
     }
 
@@ -579,7 +593,19 @@ static const char *c89_format_pointer(c89_emit_t *emit, vector_t *data)
 
 static const char *c89_format_opaque(c89_emit_t *emit, const ssa_value_t *value)
 {
-    return str_format(emit->arena, "((void*)0x%pull)", value->ptr_value);
+    if (value->value == eValueLiteral)
+    {
+        ssa_literal_value_t literal = value->literal;
+        return str_format(emit->arena, "((void*)%sull)", mpz_get_str(NULL, 10, literal.pointer));
+    }
+
+    if (value->value == eValueRelative)
+    {
+        const ssa_relative_value_t *relative = &value->relative;
+        return str_format(emit->arena, "((void*)%s)", relative->symbol->name);
+    }
+
+    CT_NEVER("unknown opaque value kind %d", value->value);
 }
 
 static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value)
@@ -587,9 +613,11 @@ static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value)
     const ssa_type_t *type = value->type;
     switch (type->kind)
     {
-    case eTypeBool: return value->bool_value ? "true" : "false";
-    case eTypeDigit: return format_integer_literal(emit->arena, value->digit_value);
-    case eTypePointer: return c89_format_pointer(emit, value->data);
+    case eTypeBool:
+        return ssa_value_get_bool(value) ? "true" : "false";
+    case eTypeDigit:
+        return format_integer_value(emit->arena, value);
+    case eTypePointer: return c89_format_pointer(emit, value);
     case eTypeOpaque: return c89_format_opaque(emit, value);
     default: CT_NEVER("unknown type kind %d", type->kind);
     }

@@ -65,11 +65,12 @@ static const char *value_to_string(const ssa_value_t *value, arena_t *arena);
 
 static const char *pointer_value_to_string(const ssa_value_t *value, arena_t *arena)
 {
-    size_t len = vector_len(value->data);
+    ssa_literal_value_t literal = ssa_value_get_literal(value);
+    size_t len = vector_len(literal.data);
     vector_t *parts = vector_new(16, arena);
     for (size_t i = 0; i < CT_MIN(len, 16); i++)
     {
-        const ssa_value_t *elem = vector_get(value->data, i);
+        const ssa_value_t *elem = vector_get(literal.data, i);
         const char *it = value_to_string(elem, arena);
         vector_push(&parts, (char*)it);
     }
@@ -87,8 +88,8 @@ static const char *value_to_string(const ssa_value_t *value, arena_t *arena)
     const ssa_type_t *type = value->type;
     switch (type->kind)
     {
-    case eTypeDigit: return mpz_get_str(NULL, 10, value->digit_value);
-    case eTypeBool: return value->bool_value ? "true" : "false";
+    case eTypeDigit: return mpz_get_str(NULL, 10, ssa_value_get_literal(value).digit);
+    case eTypeBool: return ssa_value_get_bool(value) ? "true" : "false";
     case eTypeUnit: return "unit";
     case eTypeEmpty: return "empty";
     case eTypePointer: return pointer_value_to_string(value, arena);

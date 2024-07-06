@@ -17,6 +17,15 @@ SSA_KIND(eTypeUnion, "union")
 
 #undef SSA_KIND
 
+#ifndef SSA_VALUE
+#   define SSA_VALUE(ID, NAME)
+#endif
+
+SSA_VALUE(eValueRelative, "relative") ///< carries a relocation
+SSA_VALUE(eValueLiteral, "literal") ///< carries a literal, known at compile time
+
+#undef SSA_VALUE
+
 #ifndef SSA_OPERAND
 #   define SSA_OPERAND(ID, NAME)
 #endif

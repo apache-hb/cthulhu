@@ -58,6 +58,13 @@ typedef enum ssa_opcode_t {
     eOpCount
 } ssa_opcode_t;
 
+typedef enum ssa_value_state_t {
+#define SSA_VALUE(ID, NAME) ID,
+#include "ssa.inc"
+
+    eValueCount
+} ssa_value_state_t;
+
 ///
 /// intermediate types
 ///
@@ -149,19 +156,35 @@ typedef struct ssa_type_t {
     };
 } ssa_type_t;
 
+typedef union ssa_literal_value_t {
+    /* eTypeDigit */
+    mpz_t digit;
+
+    /* eTypeBool */
+    bool boolean;
+
+    /* eTypePointer */
+    vector_t *data;
+
+    /* eTypeOpaque */
+    mpz_t pointer;
+} ssa_literal_value_t;
+
+typedef union ssa_relative_value_t {
+    const ssa_symbol_t *symbol;
+} ssa_relative_value_t;
+
 typedef struct ssa_value_t {
     const ssa_type_t *type;
+    ssa_value_state_t value;
     bool init; ///< whether this value has been initialized
 
     union {
-        mpz_t digit_value;
-        bool bool_value;
+        /* eValueLiteral */
+        ssa_literal_value_t literal;
 
-        /* eTypeArray */
-        vector_t *data;
-
-        /* eTypePointer, eTypeOpaque */
-        const void *ptr_value;
+        /* eValueRelocation */
+        ssa_relative_value_t relative;
     };
 } ssa_value_t;
 
@@ -352,6 +375,14 @@ CT_SSA_API ssa_type_t *ssa_type_digit(const char *name, tree_quals_t quals, sign
 CT_SSA_API ssa_type_t *ssa_type_pointer(const char *name, tree_quals_t quals, ssa_type_t *pointer, size_t length);
 
 ///
+/// query
+///
+
+CT_SSA_API ssa_literal_value_t ssa_value_get_literal(IN_NOTNULL const ssa_value_t *value);
+CT_SSA_API bool ssa_value_get_bool(IN_NOTNULL const ssa_value_t *value);
+CT_SSA_API void ssa_value_get_digit(IN_NOTNULL const ssa_value_t *value, OUT_NOTNULL mpz_t result);
+
+///
 /// names
 ///
 
@@ -363,6 +394,9 @@ CT_SSA_API const char *ssa_opkind_name(STA_IN_RANGE(0, eOperandCount - 1) ssa_op
 
 RET_NOTNULL CT_CONSTFN CT_NODISCARD
 CT_SSA_API const char *ssa_opcode_name(STA_IN_RANGE(0, eOpCount - 1) ssa_opcode_t opcode);
+
+RET_NOTNULL CT_CONSTFN CT_NODISCARD
+CT_SSA_API const char *ssa_value_name(STA_IN_RANGE(0, eValueCount - 1) ssa_value_state_t value);
 
 /// @}
 

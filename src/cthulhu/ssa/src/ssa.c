@@ -989,6 +989,11 @@ static const char *const kOpCodeNameTable[eOpCount] = {
 #include "cthulhu/ssa/ssa.inc"
 };
 
+static const char *const kValueNameTable[eValueCount] = {
+#define SSA_VALUE(ID, NAME) [ID] = (NAME),
+#include "cthulhu/ssa/ssa.inc"
+};
+
 STA_DECL
 const char *ssa_type_name(ssa_kind_t kind)
 {
@@ -1011,4 +1016,12 @@ const char *ssa_opcode_name(ssa_opcode_t opcode)
     CT_ASSERT_RANGE(opcode, 0, eOpCount - 1);
 
     return kOpCodeNameTable[opcode];
+}
+
+STA_DECL
+const char *ssa_value_name(ssa_value_state_t value)
+{
+    CT_ASSERT_RANGE(value, 0, eValueCount - 1);
+
+    return kValueNameTable[value];
 }

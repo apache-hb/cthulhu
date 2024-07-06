@@ -137,26 +137,30 @@ static const ssa_value_t *ssa_opt_unary(ssa_scope_t *vm, ssa_unary_t step)
     mpz_t result;
     mpz_init(result);
 
+    const ssa_literal_value_t *literal = &operand->literal;
+
+    CTASSERTF(operand->value == eValueLiteral, "operand of unary %s is not a literal (inside %s)", unary_name(unary), vm->symbol->name);
+
     switch (unary)
     {
     case eUnaryNeg:
         CTASSERTF(value_is(operand, eTypeDigit), "operand of unary %s is not a digit (inside %s)", unary_name(unary), vm->symbol->name);
-        mpz_neg(result, operand->digit_value);
+        mpz_neg(result, literal->digit);
         break;
 
     case eUnaryAbs:
         CTASSERTF(value_is(operand, eTypeDigit), "operand of unary %s is not a digit (inside %s)", unary_name(unary), vm->symbol->name);
-        mpz_abs(result, operand->digit_value);
+        mpz_abs(result, literal->digit);
         break;
 
     case eUnaryFlip:
         CTASSERTF(value_is(operand, eTypeDigit), "operand of unary %s is not a digit (inside %s)", unary_name(unary), vm->symbol->name);
-        mpz_com(result, operand->digit_value);
+        mpz_com(result, literal->digit);
         break;
 
     case eUnaryNot:
         CTASSERTF(value_is(operand, eTypeBool), "operand of unary %s is not a bool (inside %s)", unary_name(unary), vm->symbol->name);
-        return ssa_value_bool(operand->type, !operand->bool_value);
+        return ssa_value_bool(operand->type, !literal->boolean);
 
     default: CT_NEVER("unhandled unary %s (inside %s)", unary_name(unary), vm->symbol->name);
     }
@@ -179,43 +183,49 @@ static const ssa_value_t *ssa_opt_binary(ssa_scope_t *vm, ssa_binary_t step)
     mpz_t result;
     mpz_init(result);
 
+    CTASSERT(lhs->value == eValueLiteral);
+    CTASSERT(rhs->value == eValueLiteral);
+
+    const ssa_literal_value_t *lhs_literal = &lhs->literal;
+    const ssa_literal_value_t *rhs_literal = &rhs->literal;
+
     switch (binary)
     {
     case eBinaryAdd:
-        mpz_add(result, lhs->digit_value, rhs->digit_value);
+        mpz_add(result, lhs_literal->digit, rhs_literal->digit);
         break;
     case eBinarySub:
-        mpz_sub(result, lhs->digit_value, rhs->digit_value);
+        mpz_sub(result, lhs_literal->digit, rhs_literal->digit);
         break;
     case eBinaryMul:
-        mpz_mul(result, lhs->digit_value, rhs->digit_value);
+        mpz_mul(result, lhs_literal->digit, rhs_literal->digit);
         break;
     case eBinaryDiv:
-        if (mpz_cmp_ui(rhs->digit_value, 0) == 0)
+        if (mpz_cmp_ui(rhs_literal->digit, 0) == 0)
         {
             msg_notify(vm->vm->reports, &kEvent_UninitializedValueUsed, vm->vm->node, "division by zero inside `%s`", vm->symbol->name);
             return lhs;
         }
-        mpz_divexact(result, lhs->digit_value, rhs->digit_value);
+        mpz_divexact(result, lhs_literal->digit, rhs_literal->digit);
         break;
     case eBinaryRem:
-        if (mpz_cmp_ui(rhs->digit_value, 0) == 0)
+        if (mpz_cmp_ui(rhs_literal->digit, 0) == 0)
         {
             msg_notify(vm->vm->reports, &kEvent_ModuloByZero, vm->vm->node, "modulo by zero inside `%s`", vm->symbol->name);
             return lhs;
         }
-        mpz_mod(result, lhs->digit_value, rhs->digit_value);
+        mpz_mod(result, lhs_literal->digit, rhs_literal->digit);
         break;
 
     /* TODO: do these produce correct values? */
     case eBinaryShl:
-        mpz_mul_2exp(result, lhs->digit_value, mpz_get_ui(rhs->digit_value));
+        mpz_mul_2exp(result, lhs_literal->digit, mpz_get_ui(rhs_literal->digit));
         break;
     case eBinaryShr:
-        mpz_fdiv_q_2exp(result, lhs->digit_value, mpz_get_ui(rhs->digit_value));
+        mpz_fdiv_q_2exp(result, lhs_literal->digit, mpz_get_ui(rhs_literal->digit));
         break;
     case eBinaryXor:
-        mpz_xor(result, lhs->digit_value, rhs->digit_value);
+        mpz_xor(result, lhs_literal->digit, rhs_literal->digit);
         break;
 
     default: CT_NEVER("unhandled binary %s (inside %s)", binary_name(binary), vm->symbol->name);
@@ -230,10 +240,13 @@ static const ssa_value_t *cast_to_opaque(const ssa_type_t *type, const ssa_value
     const ssa_type_t *src = value->type;
     switch (src->kind)
     {
-    case eTypeOpaque: return value;
+    case eTypeOpaque:
+        return value;
 
-    case eTypeDigit:
-        return ssa_value_opaque(type, (void*)(uintptr_t)mpz_get_ui(value->digit_value));
+    case eTypeDigit: {
+        CTASSERT(value->value == eValueLiteral);
+        return ssa_value_literal(type, value->literal);
+    }
 
     default: CT_NEVER("unhandled type %s", ssa_type_name(src->kind));
     }
@@ -242,14 +255,21 @@ static const ssa_value_t *cast_to_opaque(const ssa_type_t *type, const ssa_value
 static const ssa_value_t *cast_to_pointer(const ssa_type_t *type, const ssa_value_t *value)
 {
     const ssa_type_t *src = value->type;
-    switch (src->kind)
-    {
-    case eTypeOpaque:
-    case eTypePointer:
-        return ssa_value_pointer(type, value->ptr_value);
 
-    default: CT_NEVER("unhandled type %s", ssa_type_name(src->kind));
+    CTASSERT(src->kind == eTypeOpaque || src->kind == eTypePointer);
+
+    if (value->value == eValueLiteral)
+    {
+        const ssa_literal_value_t literal = value->literal;
+        return ssa_value_literal(type, literal);
     }
+
+    if (value->value == eValueRelative)
+    {
+        return ssa_value_relative(type, value->relative);
+    }
+
+    CT_NEVER("unhandled value kind %d", value->value);
 }
 
 static const ssa_value_t *ssa_opt_cast(ssa_scope_t *vm, ssa_cast_t cast)

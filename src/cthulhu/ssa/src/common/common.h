@@ -26,19 +26,19 @@ ssa_type_t *ssa_type_common(const ssa_type_t *lhs, const ssa_type_t *rhs);
 /// value api
 ///
 
-ssa_value_t *ssa_value_new(const ssa_type_t *type, bool init);
-
 ssa_value_t *ssa_value_empty(const ssa_type_t *type);
 ssa_value_t *ssa_value_unit(const ssa_type_t *type);
 ssa_value_t *ssa_value_bool(const ssa_type_t *type, bool value);
 ssa_value_t *ssa_value_digit(const ssa_type_t *type, const mpz_t value);
 ssa_value_t *ssa_value_char(const ssa_type_t *type, char value);
 ssa_value_t *ssa_value_string(const ssa_type_t *type, text_view_t text);
-ssa_value_t *ssa_value_pointer(const ssa_type_t *type, const void *value);
-ssa_value_t *ssa_value_opaque(const ssa_type_t *type, const void *value);
 
 ssa_value_t *ssa_value_from(map_t *types, const tree_t *expr);
 ssa_value_t *ssa_value_noinit(const ssa_type_t *type);
+
+ssa_value_t *ssa_value_literal(const ssa_type_t *type, ssa_literal_value_t value);
+ssa_value_t *ssa_value_relative(const ssa_type_t *type, ssa_relative_value_t value);
+ssa_value_t *ssa_value_opaque_literal(const ssa_type_t *type, mpz_t value);
 
 ///
 /// operand api
