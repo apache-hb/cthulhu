@@ -73,13 +73,15 @@ os_error_t mkdir_recursive(const char *path, arena_t *arena)
 {
     CTASSERT(path != NULL);
 
-    size_t index = str_rfind(path, CT_NATIVE_PATH_SEPARATOR);
+    // TODO: we should use normalized paths that always use the OS path separator
+    // or ideally are in an OS independent format.
+    size_t index = str_rfind_any(path, CT_PATH_SEPERATORS);
     if (index != SIZE_MAX)
     {
         // create parent directory
         char *parent = arena_strndup(path, index, arena);
         os_error_t result = mkdir_recursive(parent, arena);
-        if (result != 0 && result != eOsExists) { return result; }
+        if (result != eOsSuccess && result != eOsExists) { return result; }
     }
 
     // create this directory

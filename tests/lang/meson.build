@@ -19,7 +19,7 @@ foreach langname, info : langtests
         foreach name, path : pass
             where = testdir / 'pass' / path + '.' + info['ext']
             test(feature + ' ' + name, harness,
-                args : [ path, where ],
+                args : [ feature + '-' + path, where ],
                 suite : [ langname, 'pass' ]
             )
         endforeach
@@ -27,7 +27,7 @@ foreach langname, info : langtests
         foreach name, path : fail
             where = testdir / 'fail' / path + '.' + info['ext']
             test(feature + ' ' + name, harness,
-                args : [ path, where ],
+                args : [ feature + '-' + path, where ],
                 suite : [ langname, 'fail' ],
                 should_fail : true
             )
@@ -42,7 +42,7 @@ foreach langname, info : langtests
 
         where = testdir / path + '.' + info['ext']
         test(langname + ' modules ' + name, harness,
-            args : [ name.replace(' ', '-') ] + paths,
+            args : [ langname + '-' + name.replace(' ', '-') ] + paths,
             suite : [ langname, 'module' ],
             should_fail : testconfig.get('should_fail', false)
         )

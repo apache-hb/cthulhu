@@ -37,7 +37,7 @@ os_error_t os_dir_create(const char *path)
         return eOsSuccess;
     }
 
-    if (mkdir(path, 0777) != 0)
+    if (mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO) != 0)
     {
         if (errno == EEXIST)
         {
@@ -81,7 +81,7 @@ os_dirent_t os_dirent_type(const char *path)
     {
         return eOsNodeDir;
     }
-    else if (sb.st_mode & S_IFREG)
+    if (sb.st_mode & S_IFREG)
     {
         return eOsNodeFile;
     }

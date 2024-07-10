@@ -25,7 +25,7 @@ int main(void)
     {
         test_group_t group = test_group(&suite, "physical");
         GROUP_EXPECT_PANIC(group, "no null name", (void)fs_physical(NULL, arena));
-        GROUP_EXPECT_PASS(group, "no return null", fs_physical("test", arena) != NULL);
+        GROUP_EXPECT_PASS(group, "no return null", fs_physical("./test", arena) != NULL);
     }
 
     {

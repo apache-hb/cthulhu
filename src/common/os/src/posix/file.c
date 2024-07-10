@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #include <sys/mman.h>
+#include <sys/stat.h>
 
 static const char *get_access(os_access_t access)
 {
@@ -127,17 +128,14 @@ os_error_t os_file_size(os_file_t *file, size_t *actual)
     CTASSERT(file != NULL);
     CTASSERT(actual != NULL);
 
-    long pos = ftell(file->impl);
+    struct stat info;
+    int result = fstat(fileno(file->impl), &info);
+    if (result < 0)
+    {
+        return errno;
+    }
 
-    if (pos < 0) { return errno; }
-    if (fseek(file->impl, 0, SEEK_END) < 0) { return errno; }
-
-    long size = ftell(file->impl);
-
-    if (size < 0) { return errno; }
-    if (fseek(file->impl, pos, SEEK_SET) < 0) { return errno; }
-
-    *actual = size;
+    *actual = info.st_size;
     return 0;
 }
 

@@ -54,7 +54,7 @@ ssa_value_t *ssa_value_digit(const ssa_type_t *type, const mpz_t value)
 ssa_value_t *ssa_value_char(const ssa_type_t *type, char value)
 {
     EXPECT_TYPE(type, eTypeDigit);
-    ssa_literal_value_t literal = { };
+    ssa_literal_value_t literal = { 0 };
     mpz_init_set_ui(literal.digit, value);
     return ssa_value_literal(type, literal);
 }

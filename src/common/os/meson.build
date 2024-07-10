@@ -9,9 +9,9 @@ os_impl_include = include_directories('src')
 
 src = [ 'src/os_common.c' ]
 
-if target == 'windows'
+if target == 'windows' or get_option('os_like') == 'win32'
     os_platform = 'windows'
-elif target == 'darwin' or target == 'linux'
+elif target == 'darwin' or target == 'linux' or get_option('os_like') == 'posix'
     os_platform = 'posix'
 else
     error('unsupported target os ' + target)

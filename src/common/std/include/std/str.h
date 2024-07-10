@@ -232,6 +232,9 @@ CT_STD_API size_t str_rfind(IN_STRING const char *str, IN_STRING const char *sub
 RET_INSPECT CT_PUREFN
 CT_STD_API size_t str_find(IN_STRING const char *str, IN_STRING const char *sub);
 
+RET_INSPECT CT_PUREFN
+CT_STD_API size_t str_rfind_any(IN_STRING const char *str, IN_STRING const char *chars);
+
 /// @brief check if a character is any of a set of characters
 ///
 /// @param c the character to check

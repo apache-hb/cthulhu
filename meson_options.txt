@@ -124,6 +124,12 @@ option('stb_sprintf', type : 'feature',
     value : 'auto'
 )
 
+option('os_like', type : 'combo',
+    description : 'set the os platform to target if autodetection fails',
+    choices : ['auto', 'posix', 'win32'],
+    value : 'auto'
+)
+
 # tools
 
 option('tool_notify', type : 'feature',

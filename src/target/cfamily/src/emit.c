@@ -166,6 +166,7 @@ static void c89_begin_all(c89_emit_t *emit)
     io_printf(hdr, "#pragma once\n");
     io_printf(hdr, "#include <stdbool.h>\n");
     io_printf(hdr, "#include <stdint.h>\n");
+    io_printf(hdr, "#include <stddef.h>\n");
 
     cplusplus_prelude(hdr);
 
@@ -206,6 +207,7 @@ static void c89_begin_module(c89_emit_t *emit, const ssa_module_t *mod)
     io_printf(hdr->io, "#pragma once\n");
     io_printf(hdr->io, "#include <stdbool.h>\n");
     io_printf(hdr->io, "#include <stdint.h>\n");
+    io_printf(hdr->io, "#include <stddef.h>\n");
 
     cplusplus_prelude(hdr->io);
 

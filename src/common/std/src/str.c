@@ -133,7 +133,8 @@ bool char_is_any_of(char c, const char *chars)
     return false;
 }
 
-static size_t str_rfind_any(const char *str, const char *letters)
+STA_DECL
+size_t str_rfind_any(const char *str, const char *letters)
 {
     CTASSERT(str != NULL);
     CTASSERT(letters != NULL);

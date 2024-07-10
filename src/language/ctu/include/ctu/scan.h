@@ -4,6 +4,8 @@
 
 #include "core/where.h"
 
+#include <stddef.h>
+
 typedef struct scan_t scan_t;
 typedef struct vector_t vector_t;
 
