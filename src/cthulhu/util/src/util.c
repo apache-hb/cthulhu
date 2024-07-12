@@ -34,6 +34,9 @@ bool util_types_equal(const tree_t *lhs, const tree_t *rhs)
 {
     CTASSERTF(lhs != NULL && rhs != NULL, "(lhs=%p, rhs=%p)", (void *)lhs, (void *)rhs);
 
+    lhs = tree_follow_type(lhs);
+    rhs = tree_follow_type(rhs);
+
     if (lhs == rhs)
     {
         return true;
@@ -51,6 +54,7 @@ bool util_types_equal(const tree_t *lhs, const tree_t *rhs)
     {
     case eTreeTypeEmpty:
     case eTreeTypeUnit:
+    case eTreeTypeOpaque:
     case eTreeTypeBool: return true;
 
     case eTreeTypeDigit: return (lhs->digit == rhs->digit) && (lhs->sign == rhs->sign);
@@ -171,7 +175,7 @@ static tree_t *cast_to_digit(const tree_t *dst, tree_t *expr)
         if (dst->digit < src->digit)
         {
             return tree_error(tree_get_node(expr), &kEvent_InvalidCast,
-                              "cannot cast `%s` to `%s`, may truncate", tree_to_string(src),
+                              "casting from `%s` to `%s` may truncate", tree_to_string(src),
                               tree_to_string(dst));
         }
 

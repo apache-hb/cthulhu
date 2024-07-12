@@ -6,10 +6,10 @@ src = main.ct config.ct win32.ct cstdlib.ct
 all: compile
 
 run: compile
-	main.exe
+	out\main.exe
 
 compile: sources
-	$(CC) /nologo out/module.c /Fe:main.exe
+	$(CC) /nologo out/module.c /Fe:out\main.exe
 
 sources: $(src)
 	$(CTC) $(src) /file-layout:pair

@@ -305,52 +305,33 @@ static tree_t *ctu_forward_variant(tree_t *sema, ctu_t *decl)
     return tree_open_enum(decl->node, decl->name, resolve);
 }
 
+static ctu_forward_t new_forward(ctu_tag_t tag, tree_t *decl)
+{
+    ctu_forward_t fwd = {
+        .tag = tag,
+        .decl = decl
+    };
+
+    return fwd;
+}
+
 static ctu_forward_t forward_decl_inner(tree_t *sema, ctu_t *decl)
 {
     switch (decl->kind)
     {
-    case eCtuDeclGlobal: {
-        ctu_forward_t fwd = {
-            .tag = eCtuTagValues,
-            .decl = ctu_forward_global(sema, decl),
-        };
-        return fwd;
-    }
-    case eCtuDeclFunction: {
-        ctu_forward_t fwd = {
-            .tag = eCtuTagFunctions,
-            .decl = ctu_forward_function(sema, decl),
-        };
-        return fwd;
-    }
-    case eCtuDeclTypeAlias: {
-        ctu_forward_t fwd = {
-            .tag = eCtuTagTypes,
-            .decl = ctu_forward_type(sema, decl)
-        };
-        return fwd;
-    }
-    case eCtuDeclUnion: {
-        ctu_forward_t fwd = {
-            .tag = eCtuTagTypes,
-            .decl = ctu_forward_union(sema, decl)
-        };
-        return fwd;
-    }
-    case eCtuDeclStruct: {
-        ctu_forward_t fwd = {
-            .tag = eCtuTagTypes,
-            .decl = ctu_forward_struct(sema, decl)
-        };
-        return fwd;
-    }
-    case eCtuDeclVariant: {
-        ctu_forward_t fwd = {
-            .tag = eCtuTagTypes,
-            .decl = ctu_forward_variant(sema, decl)
-        };
-        return fwd;
-    }
+    case eCtuDeclGlobal:
+        return new_forward(eCtuTagValues, ctu_forward_global(sema, decl));
+    case eCtuDeclFunction:
+        return new_forward(eCtuTagFunctions, ctu_forward_function(sema, decl));
+    case eCtuDeclTypeAlias:
+        return new_forward(eCtuTagTypes, ctu_forward_type(sema, decl));
+    case eCtuDeclUnion:
+        return new_forward(eCtuTagTypes, ctu_forward_union(sema, decl));
+    case eCtuDeclStruct:
+        return new_forward(eCtuTagTypes, ctu_forward_struct(sema, decl));
+    case eCtuDeclVariant:
+        return new_forward(eCtuTagTypes, ctu_forward_variant(sema, decl));
+
     default: CT_NEVER("invalid decl kind %d", decl->kind);
     }
 }

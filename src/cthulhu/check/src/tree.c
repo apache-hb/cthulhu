@@ -21,6 +21,7 @@
 #include "core/macros.h"
 
 #include <stdint.h>
+#include <stdio.h>
 
 typedef struct check_t
 {
@@ -219,6 +220,8 @@ static const char *get_fn_name(const tree_t *fn)
     return tree_to_string(tree_get_type(fn));
 }
 
+static void check_single_expr(check_t *check, const tree_t *expr);
+
 static void check_params(check_t *check, const vector_t *args, const vector_t *params, size_t count, const char *name)
 {
     for (size_t i = 0; i < count; i++)
@@ -231,6 +234,10 @@ static void check_params(check_t *check, const vector_t *args, const vector_t *p
 
         const tree_t *arg_type = tree_get_type(arg);
         const tree_t *param_type = tree_get_type(param);
+
+        printf("arg: %s, param: %s\n", tree_to_string(arg_type), tree_to_string(param_type));
+
+        check_single_expr(check, arg);
 
         if (!util_types_equal(arg_type, param_type))
         {
@@ -288,6 +295,8 @@ static void check_call_args_variadic(check_t *check, const tree_t *expr, const v
 
 static void check_call_arguments(check_t *check, const tree_t *expr)
 {
+    printf("checking call arguments %s\n", tree_to_string(expr));
+
     // if this is an indirect call, we need to get the function type
     const tree_t *fn = expr->callee;
     if (tree_is(fn, eTreeExprLoad))
@@ -314,8 +323,44 @@ static void check_call_arguments(check_t *check, const tree_t *expr)
     }
 }
 
+static void check_single_expr(check_t *check, const tree_t *expr)
+{
+    switch (tree_get_kind(expr))
+    {
+    case eTreeExprCall:
+        check_deprecated_call(check, expr);
+        check_call_arguments(check, expr);
+        break;
+
+    case eTreeExprBinary:  // TODO: check for correct types
+        check_single_expr(check, expr->lhs);
+        check_single_expr(check, expr->rhs);
+        break;
+
+    case eTreeExprCompare: // TODO: check for correct types
+    case eTreeExprUnary:
+    case eTreeExprLoad:
+    case eTreeExprCast:
+    case eTreeDeclLocal:
+    case eTreeDeclParam:
+    case eTreeDeclFunction:
+        break;
+
+    case eTreeExprString:
+    case eTreeExprDigit:
+    case eTreeExprBool:
+    case eTreeExprUnit:
+        break;
+
+    default:
+        CT_NEVER("invalid node kind %s (check-single-expr)", tree_to_string(expr));
+    }
+}
+
 static void check_assign(check_t *check, const tree_t *stmt)
 {
+    CTASSERT(stmt != NULL);
+
     if (tree_has_storage(stmt->dst))
     {
         tree_quals_t quals = tree_get_storage_quals(stmt->dst);
@@ -327,10 +372,14 @@ static void check_assign(check_t *check, const tree_t *stmt)
             );
         }
     }
+
+    check_single_expr(check, stmt->src);
 }
 
 static void check_func_body(check_t *check, const tree_t *return_type, const tree_t *stmt)
 {
+    CTASSERT(stmt != NULL);
+
     switch (stmt->kind)
     {
     case eTreeStmtBlock:
@@ -354,8 +403,11 @@ static void check_func_body(check_t *check, const tree_t *return_type, const tre
 
     case eTreeExprCompare:
     case eTreeExprBinary:
+        break;
+
     case eTreeExprLoad:
-        break; // TODO: check
+        check_single_expr(check, stmt->load);
+        break;
 
     case eTreeExprCall:
         check_deprecated_call(check, stmt);
@@ -732,6 +784,8 @@ static void check_module_valid(check_t *check, const tree_t *mod)
 {
     CTASSERT(check != NULL);
     CTASSERTF(tree_is(mod, eTreeDeclModule), "invalid module `%s`", tree_to_string(mod));
+
+    printf("checking module `%s`\n", tree_get_name(mod));
 
     vector_t *modules = map_values(tree_module_tag(mod, eSemaModules));
     size_t total_modules = vector_len(modules);

@@ -260,6 +260,11 @@ langtests += {
                 'dir': 'circular-import',
                 'should_fail': false,
                 'files': [ 'main', 'left', 'right' ]
+            },
+            'parameter types': {
+                'dir': 'typealias',
+                'should_fail': true,
+                'files': [ 'config', 'win32' ]
             }
         }
     }

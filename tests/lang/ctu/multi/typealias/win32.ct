@@ -1,0 +1,105 @@
+module win32;
+
+export type HANDLE = opaque;
+
+export type LPVOID = opaque;
+export type LPCSTR = str;
+export type BOOL = int;
+export type DWORD = uint;
+export type LPDWORD = *DWORD;
+export type ULONG_PTR = ulong;
+
+export type LPLARGE_INTEGER = *LARGE_INTEGER;
+export struct LARGE_INTEGER {
+    QuadPart: long;
+}
+
+export type LPSECURITY_ATTRIBUTES = *SECURITY_ATTRIBUTES;
+export struct SECURITY_ATTRIBUTES {
+    nLength: DWORD;
+    lpSecurityDescriptor: LPVOID;
+    bInheritHandle: BOOL;
+}
+
+export type LPOVERLAPPED = *OVERLAPPED;
+export struct OVERLAPPED {
+    Internal: ULONG_PTR;
+    InternalHigh: ULONG_PTR;
+    Offset: DWORD;
+    OffsetHigh: DWORD;
+    hEvent: HANDLE;
+}
+
+@extern("CreateFileA")
+export def CreateFileA(
+    lpFileName: LPCSTR,
+    dwDesiredAccess: DWORD,
+    dwShareMode: DWORD,
+    lpSecurityAttributes: LPSECURITY_ATTRIBUTES,
+    dwCreationDisposition: DWORD,
+    dwFlagsAndAttributes: DWORD,
+    hTemplateFile: HANDLE
+): HANDLE;
+
+@extern("CloseHandle")
+export def CloseHandle(hFile: HANDLE): BOOL;
+
+@extern("GetLastError")
+export def GetLastError: DWORD;
+
+@extern("ReadFile")
+export def ReadFile(
+    hFile: HANDLE,
+    lpBuffer: LPVOID,
+    nNumberOfBytesToRead: DWORD,
+    lpNumberOfBytesRead: LPDWORD,
+    lpOverlapped: LPOVERLAPPED
+): BOOL;
+
+@extern("CreateFileMappingA")
+export def CreateFileMappingA(
+    hFile: HANDLE,
+    lpAttributes: LPSECURITY_ATTRIBUTES,
+    flProtect: DWORD,
+    dwMaximumSizeHigh: DWORD,
+    dwMaximumSizeLow: DWORD,
+    lpName: LPCSTR
+): HANDLE;
+
+@extern("MapViewOfFile")
+export def MapViewOfFile(
+    hFileMappingObject: HANDLE,
+    dwDesiredAccess: DWORD,
+    dwFileOffsetHigh: DWORD,
+    dwFileOffsetLow: DWORD,
+    dwNumberOfBytesToMap: DWORD
+): LPVOID;
+
+@extern("GetFileSizeEx")
+export def GetFileSizeEx(
+    hFile: HANDLE,
+    lpFileSize: LPLARGE_INTEGER
+): BOOL;
+
+@extern("WriteConsole")
+export def WriteConsole(
+    hConsoleOutput: HANDLE,
+    lpBuffer: LPVOID,
+    nNumberOfCharsToWrite: DWORD,
+    lpNumberOfCharsWritten: LPDWORD,
+    lpReserved: LPVOID
+): BOOL;
+
+@extern("GetStdHandle")
+export def GetStdHandle(nStdHandle: DWORD): HANDLE;
+
+export const STD_INPUT_HANDLE: DWORD = 0xFFFFFFF6;
+export const STD_OUTPUT_HANDLE: DWORD = 0xFFFFFFF5;
+export const STD_ERROR_HANDLE: DWORD = 0xFFFFFFF4;
+
+export const GENERIC_READ: DWORD = 0x80000000;
+export const FILE_SHARE_READ: DWORD = 0x1;
+export const OPEN_EXISTING: DWORD = 3;
+export const INVALID_HANDLE_VALUE: HANDLE = as<HANDLE>(0xFFFFFFFFFFFFFFFF);
+
+export const FILE_MAP_READ: DWORD = 4;

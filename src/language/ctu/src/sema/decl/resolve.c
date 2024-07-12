@@ -22,47 +22,62 @@ ctu_t *begin_resolve(tree_t *sema, tree_t *self, void *user, ctu_kind_t kind)
 
 static bool is_array(const tree_t *type)
 {
-    return tree_is(type, eTreeTypeArray);
+    return tree_is(tree_follow_type(type), eTreeTypeArray);
 }
 
-tree_t *ctu_cast_type(tree_t *sema, tree_t *expr, const tree_t *type)
+static bool is_pointer(const tree_t *type)
+{
+    return tree_is(tree_follow_type(type), eTreeTypePointer);
+}
+
+static bool is_opaque(const tree_t *type)
+{
+    return tree_is(tree_follow_type(type), eTreeTypeOpaque);
+}
+
+tree_t *ctu_cast_type(tree_t *sema, tree_t *expr, const tree_t *dst)
 {
     CTASSERT(sema != NULL);
     CTASSERT(expr != NULL);
-    CTASSERT(type != NULL);
+    CTASSERT(dst != NULL);
 
-    const tree_t *inner = tree_get_type(expr);
+    const tree_t *inner = tree_follow_type(tree_get_type(expr));
 
     // TODO: deduplicate casting logic
 
     // if we're casting to a pointer we should preserve the length information
-    if (is_array(inner) && tree_is(type, eTreeTypePointer))
+    if (is_array(inner) && is_pointer(dst))
     {
-        if (util_types_equal(inner->ptr, type->ptr))
+        if (util_types_equal(inner->ptr, dst->ptr))
         {
             const tree_t *elem = tree_ty_load_type(inner);
-            tree_t *ptr = tree_type_pointer(tree_get_node(expr), tree_get_name(type), elem, inner->length);
+            tree_t *ptr = tree_type_pointer(tree_get_node(expr), tree_get_name(dst), elem, inner->length);
             return tree_expr_cast(expr->node, ptr, expr);
         }
     }
 
-    if (is_array(type) && tree_is(inner, eTreeTypePointer))
+    if (is_array(dst) && is_pointer(inner))
     {
-        if (util_types_equal(inner->ptr, type->ptr))
+        if (util_types_equal(inner->ptr, dst->ptr))
         {
-            return tree_expr_cast(expr->node, type, expr);
+            return tree_expr_cast(expr->node, dst, expr);
         }
     }
 
-    if (is_array(type) && is_array(inner))
+    if (is_array(dst) && is_array(inner))
     {
-        if (type->length >= inner->length)
+        if (dst->length >= inner->length)
         {
-            if (util_types_equal(type->ptr, inner->ptr))
+            if (util_types_equal(dst->ptr, inner->ptr))
             {
-                return tree_expr_cast(expr->node, type, expr);
+                return tree_expr_cast(expr->node, dst, expr);
             }
         }
+    }
+
+    if (is_pointer(dst) && is_opaque(inner))
+    {
+        return tree_expr_cast(expr->node, dst, expr);
     }
 
     // TODO: deal with other casts
