@@ -536,7 +536,7 @@ static void check_expr_recursion(check_t *check, const tree_t *tree)
         break;
 
     case eTreeExprCast:
-        check_expr_recursion(check, tree->cast);
+        check_expr_recursion(check, tree->expr);
         break;
 
     case eTreeExprCompare:

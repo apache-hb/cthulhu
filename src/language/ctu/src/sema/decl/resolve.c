@@ -52,7 +52,7 @@ tree_t *ctu_cast_type(tree_t *sema, tree_t *expr, const tree_t *dst)
         {
             const tree_t *elem = tree_ty_load_type(inner);
             tree_t *ptr = tree_type_pointer(tree_get_node(expr), tree_get_name(dst), elem, inner->length);
-            return tree_expr_cast(expr->node, ptr, expr);
+            return tree_expr_cast(expr->node, ptr, expr, eCastBit);
         }
     }
 
@@ -60,7 +60,7 @@ tree_t *ctu_cast_type(tree_t *sema, tree_t *expr, const tree_t *dst)
     {
         if (util_types_equal(inner->ptr, dst->ptr))
         {
-            return tree_expr_cast(expr->node, dst, expr);
+            return tree_expr_cast(expr->node, dst, expr, eCastBit);
         }
     }
 
@@ -70,14 +70,14 @@ tree_t *ctu_cast_type(tree_t *sema, tree_t *expr, const tree_t *dst)
         {
             if (util_types_equal(dst->ptr, inner->ptr))
             {
-                return tree_expr_cast(expr->node, dst, expr);
+                return tree_expr_cast(expr->node, dst, expr, eCastBit);
             }
         }
     }
 
     if (is_pointer(dst) && is_opaque(inner))
     {
-        return tree_expr_cast(expr->node, dst, expr);
+        return tree_expr_cast(expr->node, dst, expr, eCastBit);
     }
 
     // TODO: deal with other casts

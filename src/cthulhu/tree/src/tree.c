@@ -241,12 +241,13 @@ tree_t *tree_expr_string(const node_t *node, const tree_t *type, const char *val
 /// must be either storage or a pointer
 #define TREE_EXPECT_ADDRESS(TYPE) CTASSERTF(tree_is(TYPE, eTreeTypePointer) || tree_is(TYPE, eTreeTypeReference) || tree_is(TYPE, eTreeTypeOpaque) || tree_is(TYPE, eTreeError), "expected reference or pointer, found %s", tree_to_string(TYPE))
 
-tree_t *tree_expr_cast(const node_t *node, const tree_t *type, tree_t *expr)
+tree_t *tree_expr_cast(const node_t *node, const tree_t *type, tree_t *expr, tree_cast_t cast)
 {
     CTASSERT(expr != NULL);
 
     tree_t *self = tree_new(eTreeExprCast, node, type);
-    self->cast = expr;
+    self->expr = expr;
+    self->cast = cast;
     return self;
 }
 

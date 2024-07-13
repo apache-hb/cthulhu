@@ -370,7 +370,7 @@ static tree_t *sema_ref(ctu_sema_t *sema, const ctu_t *expr)
         // TODO: do we need a way to get a pointer to a local?
         const tree_t *type = tree_get_storage_type(inner);
         const tree_t *ptr = tree_type_pointer(expr->node, "", type, 1);
-        return tree_expr_cast(expr->node, ptr, inner);
+        return tree_expr_cast(expr->node, ptr, inner, eCastBit); // TODO: is this cast right
     }
 
     return tree_expr_address(expr->node, inner);

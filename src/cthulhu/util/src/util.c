@@ -118,7 +118,7 @@ static tree_t *cast_check_length(const tree_t *dst, tree_t *expr, size_t dstlen,
             util_length_name(srclen), util_length_name(dstlen));
     }
 
-    return tree_expr_cast(tree_get_node(expr), dst, expr);
+    return tree_expr_cast(tree_get_node(expr), dst, expr, eCastBit);
 }
 
 static tree_t *cast_to_opaque(const tree_t *dst, tree_t *expr)
@@ -131,7 +131,7 @@ static tree_t *cast_to_opaque(const tree_t *dst, tree_t *expr)
     {
     case eTreeTypePointer:
     case eTreeTypeDigit:
-        return tree_expr_cast(tree_get_node(expr), dst, expr); // TODO: a little iffy
+        return tree_expr_cast(tree_get_node(expr), dst, expr, eCastBit); // TODO: a little iffy
 
     default:
         return tree_error(tree_get_node(expr), &kEvent_InvalidCast, "cannot cast `%s` to `%s`",
@@ -179,7 +179,7 @@ static tree_t *cast_to_digit(const tree_t *dst, tree_t *expr)
                               tree_to_string(dst));
         }
 
-        return expr;
+        return tree_expr_cast(tree_get_node(expr), dst, expr, eCastSignExtend);
 
     default:
         return tree_error(tree_get_node(expr), &kEvent_InvalidCast, "cannot cast `%s` to `%s`",

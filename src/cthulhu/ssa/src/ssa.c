@@ -496,7 +496,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
     }
 
     case eTreeExprCast: {
-        ssa_operand_t expr = compile_tree(ssa, tree->cast);
+        ssa_operand_t expr = compile_tree(ssa, tree->expr);
         ssa_step_t step = {
             .opcode = eOpCast,
             .cast = {

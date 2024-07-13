@@ -172,7 +172,7 @@ tree_t *obr_cast_type(tree_t *expr, const tree_t *type)
     {
         if (util_types_equal(exprtype->ptr, type->ptr))
         {
-            return tree_expr_cast(expr->node, type, expr);
+            return tree_expr_cast(expr->node, type, expr, eCastBit);
         }
     }
 
@@ -182,7 +182,7 @@ tree_t *obr_cast_type(tree_t *expr, const tree_t *type)
         {
             if (util_types_equal(exprtype->ptr, type->ptr))
             {
-                return tree_expr_cast(expr->node, type, expr);
+                return tree_expr_cast(expr->node, type, expr, eCastBit);
             }
         }
     }

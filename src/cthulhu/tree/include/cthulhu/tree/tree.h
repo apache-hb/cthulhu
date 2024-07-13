@@ -84,10 +84,12 @@ typedef struct tree_t {
         tree_t *load;
 
         /* eTreeExprRef */
-        tree_t *expr;
+        struct {
+            tree_t *expr;
 
-        /* eTreeExprCast */
-        tree_t *cast;
+            /* eTreeExprCast */
+            tree_cast_t cast;
+        };
 
         /* eTreeExprUnary */
         struct {
@@ -351,7 +353,7 @@ CT_TREE_API tree_t *tree_expr_digit(const node_t *node, const tree_t *type, cons
  */
 CT_TREE_API tree_t *tree_expr_string(const node_t *node, const tree_t *type, const char *value, size_t length);
 
-CT_TREE_API tree_t *tree_expr_cast(const node_t *node, const tree_t *type, tree_t *expr);
+CT_TREE_API tree_t *tree_expr_cast(const node_t *node, const tree_t *type, tree_t *expr, tree_cast_t cast);
 
 /**
  * @brief load a value from a pointer or storage
