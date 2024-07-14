@@ -181,6 +181,9 @@ static tree_t *forward_var(tree_t *sema, obr_t *decl)
 
     tree_t *type = obr_sema_type(sema, decl->type, decl->name);
     tree_t *ref = tree_type_reference(decl->node, decl->name, type);
+
+    CTASSERTF(type != NULL, "var %s has no type", decl->name);
+
     tree_storage_t storage = {
         .storage = type,
         .length = 1,

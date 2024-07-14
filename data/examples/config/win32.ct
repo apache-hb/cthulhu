@@ -10,6 +10,7 @@ export type BOOL = int;
 export type DWORD = uint;
 export type LPDWORD = *DWORD;
 export type ULONG_PTR = ulong;
+export type SIZE_T = usize;
 
 export type LPLARGE_INTEGER = *LARGE_INTEGER;
 export struct LARGE_INTEGER {
@@ -74,7 +75,7 @@ export def MapViewOfFile(
     dwDesiredAccess: DWORD,
     dwFileOffsetHigh: DWORD,
     dwFileOffsetLow: DWORD,
-    dwNumberOfBytesToMap: DWORD
+    dwNumberOfBytesToMap: SIZE_T
 ): LPVOID;
 
 @extern("GetFileSizeEx")
@@ -99,9 +100,16 @@ export const STD_INPUT_HANDLE: DWORD = 0xFFFFFFF6;
 export const STD_OUTPUT_HANDLE: DWORD = 0xFFFFFFF5;
 export const STD_ERROR_HANDLE: DWORD = 0xFFFFFFF4;
 
+export const FILE_ATTRIBUTE_NORMAL: DWORD = 0x80;
+
 export const GENERIC_READ: DWORD = 0x80000000;
-export const FILE_SHARE_READ: DWORD = 0x1;
 export const OPEN_EXISTING: DWORD = 3;
 export const INVALID_HANDLE_VALUE: HANDLE = as<HANDLE>(cstdlib::ULONG_MAX);
 
-export const FILE_MAP_READ: DWORD = 4;
+export const FILE_SHARE_READ: DWORD = 0x1;
+
+export const PAGE_READONLY: DWORD = 0x02;
+
+export const FILE_MAP_READ: DWORD = 0x04;
+export const FILE_MAP_WRITE: DWORD = 0x02;
+export const FILE_MAP_COPY: DWORD = 0x01;

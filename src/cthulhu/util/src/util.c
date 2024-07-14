@@ -169,16 +169,10 @@ static tree_t *cast_to_digit(const tree_t *dst, tree_t *expr)
 
     const tree_t *src = tree_get_type(expr);
 
+    // TODO: need to distinguish between explicit and implicit casts
     switch (tree_get_kind(src))
     {
     case eTreeTypeDigit:
-        if (dst->digit < src->digit)
-        {
-            return tree_error(tree_get_node(expr), &kEvent_InvalidCast,
-                              "casting from `%s` to `%s` may truncate", tree_to_string(src),
-                              tree_to_string(dst));
-        }
-
         return tree_expr_cast(tree_get_node(expr), dst, expr, eCastSignExtend);
 
     default:
@@ -289,5 +283,36 @@ const char *util_length_name(size_t length)
 
 bool util_type_is_aggregate(const tree_t *type)
 {
+    CTASSERTF(!tree_is(type, eTreeTypeAlias), "(type=%s)", tree_to_string(type));
     return tree_is(type, eTreeTypeUnion) || tree_is(type, eTreeTypeStruct);
+}
+
+bool util_type_is_pointer(const tree_t *type)
+{
+    CTASSERTF(!tree_is(type, eTreeTypeAlias), "(type=%s)", tree_to_string(type));
+    return tree_is(type, eTreeTypePointer);
+}
+
+bool util_type_is_array(const tree_t *type)
+{
+    CTASSERTF(!tree_is(type, eTreeTypeAlias), "(type=%s)", tree_to_string(type));
+    return tree_is(type, eTreeTypeArray);
+}
+
+bool util_type_is_opaque(const tree_t *type)
+{
+    CTASSERTF(!tree_is(type, eTreeTypeAlias), "(type=%s)", tree_to_string(type));
+    return tree_is(type, eTreeTypeOpaque);
+}
+
+bool util_type_is_reference(const tree_t *type)
+{
+    CTASSERTF(!tree_is(type, eTreeTypeAlias), "(type=%s)", tree_to_string(type));
+    return tree_is(type, eTreeTypeReference);
+}
+
+bool util_type_is_digit(const tree_t *type)
+{
+    CTASSERTF(!tree_is(type, eTreeTypeAlias), "(type=%s)", tree_to_string(type));
+    return tree_is(type, eTreeTypeDigit);
 }

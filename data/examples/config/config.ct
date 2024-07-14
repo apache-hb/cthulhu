@@ -43,11 +43,11 @@ def reportErrorMessage(name: str) {
 export def openConfigFile(path: str): ConfigFile {
     var fileHandle = win32::CreateFileA(
         /* lpFileName */ path,
-        /* dwDesiredAccess */ 0x80000000, // GENERIC_READ
-        /* dwShareMode */ 0x1, // FILE_SHARE_READ
+        /* dwDesiredAccess */ win32::GENERIC_READ,
+        /* dwShareMode */ win32::FILE_SHARE_READ,
         /* lpSecurityAttributes */ null,
-        /* dwCreationDisposition */ 3, // OPEN_EXISTING
-        /* dwFlagsAndAttributes */ 0,
+        /* dwCreationDisposition */ win32::OPEN_EXISTING,
+        /* dwFlagsAndAttributes */ win32::FILE_ATTRIBUTE_NORMAL,
         /* hTemplateFile */ null
     );
 
@@ -56,24 +56,23 @@ export def openConfigFile(path: str): ConfigFile {
         win32::CloseHandle(fileHandle);
     }
 
-    var viewHandle = win32::CreateFileMappingA(
-        /* hFile */ fileHandle,
-        /* lpAttributes */ null,
-        /* flProtect */ 4, // PAGE_READ
-        /* dwMaximumSizeHigh */ 0,
-        /* dwMaximumSizeLow */ 0,
-        /* lpName */ null
-    );
-
-    if viewHandle == win32::INVALID_HANDLE_VALUE {
-        reportErrorMessage("CreateFileMappingA");
-        win32::CloseHandle(fileHandle);
-        win32::CloseHandle(viewHandle);
-    }
-
     var fileSize: win32::LARGE_INTEGER = noinit;
     if win32::GetFileSizeEx(fileHandle, &fileSize) == 0 {
         reportErrorMessage("GetFileSizeEx");
+        win32::CloseHandle(fileHandle);
+    }
+
+    var viewHandle = win32::CreateFileMappingA(
+        /* hFile */ fileHandle,
+        /* lpAttributes */ null,
+        /* flProtect */ win32::PAGE_READONLY,
+        /* dwMaximumSizeHigh */ as<win32::DWORD>(fileSize.QuadPart >> 32),
+        /* dwMaximumSizeLow */ as<win32::DWORD>(fileSize.QuadPart & 0xFFFFFFFF),
+        /* lpName */ null
+    );
+
+    if viewHandle == null {
+        reportErrorMessage("CreateFileMappingA");
         win32::CloseHandle(fileHandle);
         win32::CloseHandle(viewHandle);
     }
@@ -83,7 +82,7 @@ export def openConfigFile(path: str): ConfigFile {
         /* dwDesiredAccess */ win32::FILE_MAP_READ,
         /* dwFileOffsetHigh */ 0,
         /* dwFileOffsetLow */ 0,
-        /* dwNumberOfBytesToMap */ as<win32::DWORD>(fileSize.QuadPart)
+        /* dwNumberOfBytesToMap */ 0
     );
 
     if fileView == null {

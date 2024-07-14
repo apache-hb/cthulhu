@@ -59,6 +59,12 @@ CT_UTIL_API const char *util_length_name(size_t length);
 
 CT_UTIL_API bool util_type_is_aggregate(const tree_t *type);
 
+CT_UTIL_API bool util_type_is_pointer(const tree_t *type);
+CT_UTIL_API bool util_type_is_array(const tree_t *type);
+CT_UTIL_API bool util_type_is_opaque(const tree_t *type);
+CT_UTIL_API bool util_type_is_reference(const tree_t *type);
+CT_UTIL_API bool util_type_is_digit(const tree_t *type);
+
 /// @}
 
 CT_END_API

@@ -353,6 +353,21 @@ CT_TREE_API tree_t *tree_expr_digit(const node_t *node, const tree_t *type, cons
  */
 CT_TREE_API tree_t *tree_expr_string(const node_t *node, const tree_t *type, const char *value, size_t length);
 
+/**
+ * @brief create a cast expression
+ *
+ * @note there are various rules around casting depending on the type of the expression and the destination type.
+ * 1. any cast that involves @ref eTreeTypePointer, @ref eTreeTypeArray, or @ref eTreeTypeOpaque
+ *    must be an @ref eCastBit cast.
+ * 2. @ref eTreeTypeUnit and @ref eTreeTypeEmpty can never be involed in a cast expression.
+ * 3. rules around @ref eTreeTypeReference are not yet defined.
+ *
+ * @param node the location of the cast
+ * @param type the type to cast to
+ * @param expr the expression to cast
+ * @param cast the kind of cast to perform
+ * @return tree_t* the cast expression
+ */
 CT_TREE_API tree_t *tree_expr_cast(const node_t *node, const tree_t *type, tree_t *expr, tree_cast_t cast);
 
 /**

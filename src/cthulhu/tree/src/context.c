@@ -58,6 +58,10 @@ STA_DECL
 void tree_set_storage(tree_t *tree, tree_storage_t storage)
 {
     CTASSERTF(tree_has_tag(tree, eTagStorage), "tree type %s does not have storage", tree_kind_string(tree));
+    if (storage.storage != NULL)
+    {
+        CTASSERTF(!tree_is(storage.storage, eTreeTypeReference), "storage cannot be a reference (%s)", tree_to_string(tree));
+    }
 
     tree->storage = storage;
 }

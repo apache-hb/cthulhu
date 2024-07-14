@@ -235,8 +235,6 @@ static void check_params(check_t *check, const vector_t *args, const vector_t *p
         const tree_t *arg_type = tree_get_type(arg);
         const tree_t *param_type = tree_get_type(param);
 
-        printf("arg: %s, param: %s\n", tree_to_string(arg_type), tree_to_string(param_type));
-
         check_single_expr(check, arg);
 
         if (!util_types_equal(arg_type, param_type))
@@ -295,8 +293,6 @@ static void check_call_args_variadic(check_t *check, const tree_t *expr, const v
 
 static void check_call_arguments(check_t *check, const tree_t *expr)
 {
-    printf("checking call arguments %s\n", tree_to_string(expr));
-
     // if this is an indirect call, we need to get the function type
     const tree_t *fn = expr->callee;
     if (tree_is(fn, eTreeExprLoad))
@@ -323,6 +319,131 @@ static void check_call_arguments(check_t *check, const tree_t *expr)
     }
 }
 
+static const tree_t *get_simple_expr_type(const tree_t *expr)
+{
+    return tree_follow_type(tree_get_type(expr));
+}
+
+static bool is_valid_bitcast_type(const tree_t *type)
+{
+    return tree_is(type, eTreeTypeDigit)
+        || tree_is(type, eTreeTypePointer)
+        || tree_is(type, eTreeTypeOpaque)
+        || tree_is(type, eTreeTypeArray)
+        || tree_is(type, eTreeTypeReference); // TODO: reference is an odd case, will need extra testing
+}
+
+static void check_bitcast_expr(check_t *check, const tree_t *expr)
+{
+    const tree_t *dst = get_simple_expr_type(expr);
+    if (!is_valid_bitcast_type(dst))
+    {
+        event_builder_t msg = msg_notify(check->reports, &kEvent_InvalidType, tree_get_node(expr),
+            "bitcast to invalid type `%s`",
+            tree_to_string(dst)
+        );
+        msg_note(msg, "expected digit, pointer or opaque pointer");
+    }
+
+    const tree_t *src = get_simple_expr_type(expr->expr);
+    if (!is_valid_bitcast_type(src))
+    {
+        event_builder_t msg = msg_notify(check->reports, &kEvent_InvalidType, tree_get_node(expr),
+            "bitcast from invalid type `%s`",
+            tree_to_string(src)
+        );
+        msg_note(msg, "expected digit, pointer or opaque pointer");
+    }
+}
+
+static void check_signextend_expr(check_t *check, const tree_t *expr)
+{
+    const tree_t *dst = get_simple_expr_type(expr);
+    if (!util_type_is_digit(dst))
+    {
+        msg_notify(check->reports, &kEvent_InvalidType, tree_get_node(expr),
+            "sign extension of non-integer type `%s`",
+            tree_to_string(dst)
+        );
+    }
+
+    const tree_t *src = get_simple_expr_type(expr->expr);
+    if (!util_type_is_digit(src))
+    {
+        msg_notify(check->reports, &kEvent_InvalidType, tree_get_node(expr),
+            "sign extension from non-integer type `%s`",
+            tree_to_string(src)
+        );
+    }
+}
+
+static void check_zeroextend_expr(check_t *check, const tree_t *expr)
+{
+    const tree_t *dst = get_simple_expr_type(expr);
+    if (!util_type_is_digit(dst))
+    {
+        msg_notify(check->reports, &kEvent_InvalidType, tree_get_node(expr),
+            "zero extension into non-integer type `%s`",
+            tree_to_string(dst)
+        );
+    }
+
+    const tree_t *src = get_simple_expr_type(expr->expr);
+    if (!util_type_is_digit(src))
+    {
+        msg_notify(check->reports, &kEvent_InvalidType, tree_get_node(expr),
+            "zero extension of non-integer type `%s`",
+            tree_to_string(src)
+        );
+    }
+}
+
+static bool is_invalid_cast_type(const tree_t *type)
+{
+    return tree_is(type, eTreeTypeUnit)
+        || tree_is(type, eTreeTypeEmpty);
+}
+
+static void check_cast_expr(check_t *check, const tree_t *expr)
+{
+    const tree_t *dst = get_simple_expr_type(expr);
+    const tree_t *src = get_simple_expr_type(expr->expr);
+    if (is_invalid_cast_type(src))
+    {
+        msg_notify(check->reports, &kEvent_InvalidType, tree_get_node(expr),
+            "invalid cast from type `%s`",
+            tree_to_string(src)
+        );
+
+        return;
+    }
+
+    if (is_invalid_cast_type(dst))
+    {
+        msg_notify(check->reports, &kEvent_InvalidType, tree_get_node(expr),
+            "invalid cast to type `%s`",
+            tree_to_string(dst)
+        );
+
+        return;
+    }
+
+    switch (expr->cast)
+    {
+    case eCastBit:
+        check_bitcast_expr(check, expr);
+        break;
+    case eCastSignExtend:
+        check_signextend_expr(check, expr);
+        break;
+    case eCastZeroExtend:
+        check_zeroextend_expr(check, expr);
+        break;
+    default:
+        CT_NEVER("invalid cast kind %s (check-cast-expr)", tree_to_string(expr));
+    }
+}
+
 static void check_single_expr(check_t *check, const tree_t *expr)
 {
     switch (tree_get_kind(expr))
@@ -337,10 +458,13 @@ static void check_single_expr(check_t *check, const tree_t *expr)
         check_single_expr(check, expr->rhs);
         break;
 
+    case eTreeExprCast:
+        check_cast_expr(check, expr);
+        break;
+
     case eTreeExprCompare: // TODO: check for correct types
     case eTreeExprUnary:
     case eTreeExprLoad:
-    case eTreeExprCast:
     case eTreeDeclLocal:
     case eTreeDeclParam:
     case eTreeDeclFunction:
@@ -478,7 +602,7 @@ static void check_func_locals(check_t *check, const vector_t *locals)
     }
 }
 
-static void check_func_details(check_t *check, const tree_t *fn)
+static void check_function_definition(check_t *check, const tree_t *fn)
 {
     if (fn->body == NULL) { return; }
 
@@ -780,12 +904,18 @@ static void check_any_type_recursion(check_t *check, const tree_t *type)
     }
 }
 
+static void check_global_init(check_t *check, const tree_t *global)
+{
+    if (global->initial != NULL)
+    {
+        check_single_expr(check, global->initial);
+    }
+}
+
 static void check_module_valid(check_t *check, const tree_t *mod)
 {
     CTASSERT(check != NULL);
     CTASSERTF(tree_is(mod, eTreeDeclModule), "invalid module `%s`", tree_to_string(mod));
-
-    printf("checking module `%s`\n", tree_get_name(mod));
 
     vector_t *modules = map_values(tree_module_tag(mod, eSemaModules));
     size_t total_modules = vector_len(modules);
@@ -806,6 +936,7 @@ static void check_module_valid(check_t *check, const tree_t *mod)
         check_global_attribs(check, global);
         check_global_recursion(check, global);
         check_global_type(check, global);
+        check_global_init(check, global);
     }
 
     vector_t *functions = map_values(tree_module_tag(mod, eSemaProcs));
@@ -817,7 +948,7 @@ static void check_module_valid(check_t *check, const tree_t *mod)
         check_simple(check, function);
 
         check_func_attribs(check, function);
-        check_func_details(check, function);
+        check_function_definition(check, function);
     }
 
     vector_t *types = map_values(tree_module_tag(mod, eSemaTypes));

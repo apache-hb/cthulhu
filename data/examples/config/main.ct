@@ -2,23 +2,9 @@ import example::config;
 import cstdlib as libc;
 import win32;
 
-const FIRST = as<win32::HANDLE>(0xFFFFFFFFFFFFFFFF);
-
 @entry(cli)
 def main {
-    libc::assert(libc::CHAR_MAX - 1 == 126, "CHAR_MAX - 1 == 126");
-
-    const SECOND = as<opaque>(0xFFFFFFFFFFFFFFFF);
-    libc::printf("%p %p\n", FIRST, SECOND);
-    libc::assert(FIRST == SECOND, "FIRST == SECOND");
-
     var file = config::openConfigFile("example.ini");
-
-    libc::printf("aaa %zu %s\n", file.fileSize);
-
     config::closeConfigFile(file);
-
-    libc::printf("bbb\n");
-
     libc::exit(0);
 }

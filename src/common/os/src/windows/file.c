@@ -3,9 +3,15 @@
 #include "os/os.h"
 #include "os_common.h"
 
+#include "core/compiler.h"
 #include "base/panic.h"
 
 #include <stdint.h>
+
+#if CT_CC_CLANG
+#   pragma clang diagnostic push
+#   pragma clang diagnostic ignored "-Wswitch"
+#endif
 
 CT_LOCAL os_error_t impl_copyfile(const char *dst, const char *src)
 {
@@ -74,7 +80,7 @@ CT_LOCAL os_file_impl_t impl_file_open(const char *path, os_access_t access)
     DWORD dw_access = get_access(access);
     DWORD dw_disp = get_disp(access);
 
-    return CreateFile(
+    return CreateFileA(
         /* lpFileName = */ path,
         /* dwDesiredAccess = */ dw_access,
         /* dwShareMode = */ FILE_SHARE_READ,
@@ -280,7 +286,7 @@ CT_LOCAL void *impl_file_map(os_file_t *file, os_protect_t protect, size_t size,
     DWORD high = (DWORD)(size >> 32);
     DWORD low = (DWORD)(size & 0xFFFFFFFF);
 
-    HANDLE handle = CreateFileMapping(
+    HANDLE handle = CreateFileMappingA(
         /* hFile = */ file->impl,
         /* lpFileMappingAttributes = */ NULL,
         /* flProtect = */ prot,
