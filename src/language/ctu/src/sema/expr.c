@@ -3,6 +3,7 @@
 #include "ctu/sema/expr.h"
 #include "cthulhu/events/events.h"
 #include "ctu/sema/decl/resolve.h"
+#include "ctu/sema/default.h"
 #include "ctu/sema/type.h"
 #include "ctu/driver.h"
 
@@ -14,6 +15,7 @@
 #include "ctu/ast.h"
 
 #include "memory/memory.h"
+#include "std/set.h"
 #include "std/str.h"
 #include "std/vector.h"
 
@@ -537,8 +539,11 @@ static tree_t *sema_init(ctu_sema_t *sema, const ctu_t *expr, const tree_t *impl
         .length = 1,
         .quals = eQualMutable
     };
-    tree_t *local = tree_decl_local(expr->node, "$tmp", storage, ref);
+    tree_t *local = tree_decl_local(expr->node, NULL, storage, ref);
     tree_add_local(sema->decl, local);
+
+    size_t field_count = vector_len(implicit_type->fields);
+    set_t *fields = set_new(field_count, kTypeInfoPtr, get_global_arena());
 
     size_t len = vector_len(expr->inits);
     for (size_t i = 0; i < len; i++)
@@ -561,9 +566,23 @@ static tree_t *sema_init(ctu_sema_t *sema, const ctu_t *expr, const tree_t *impl
         tree_t *assign = tree_stmt_assign(init->node, dst, value);
 
         vector_push(&sema->block, assign);
+        set_add(fields, field);
     }
 
-    // TODO: default init remaining fields
+    for (size_t i = 0; i < field_count; i++)
+    {
+        tree_t *field = vector_get(implicit_type->fields, i);
+        if (!set_contains(fields, field))
+        {
+            // default init field
+            const tree_t *value = ctu_get_default_value(expr->node, tree_get_type(field));
+            tree_t *ref_type = tree_type_reference(expr->node, "", tree_get_type(field));
+            tree_t *dst = tree_expr_field(expr->node, ref_type, local, field);
+            tree_t *assign = tree_stmt_assign(expr->node, dst, value);
+
+            vector_push(&sema->block, assign);
+        }
+    }
 
     return tree_expr_load(expr->node, local);
 }

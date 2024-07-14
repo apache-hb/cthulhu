@@ -40,6 +40,19 @@ CT_NORETURN os_abort(void)
 ///
 
 STA_DECL
+size_t os_error_get_string(os_error_t error, char *buffer, size_t size)
+{
+    if (size == 0)
+    {
+        CTASSERT(buffer == NULL);
+        return impl_error_length(error);
+    }
+
+    CTASSERT(buffer != NULL);
+    return impl_error_string(error, buffer, size);
+}
+
+STA_DECL
 char *os_error_string(os_error_t error, arena_t *arena)
 {
     CTASSERT(arena != NULL);

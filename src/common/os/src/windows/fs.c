@@ -6,6 +6,8 @@
 
 #include "os/os.h"
 
+#include <limits.h>
+
 STA_DECL
 os_error_t os_file_delete(const char *path)
 {
@@ -76,6 +78,8 @@ os_dirent_t os_dirent_type(const char *path)
 STA_DECL
 size_t os_cwd_get_string(char *buffer, size_t size)
 {
+    CTASSERTF(size < UINT_MAX, "size %zu is too large", size);
+
     if (size == 0)
         CTASSERT(buffer == NULL);
     else

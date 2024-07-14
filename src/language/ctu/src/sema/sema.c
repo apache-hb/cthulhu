@@ -204,6 +204,72 @@ tree_t *ctu_get_void_type(void) { return gVoidType; }
 /// runtime and builtin modules
 ///
 
+typedef struct digit_info_t {
+    const char *name;
+    digit_t digit;
+    sign_t sign;
+} digit_info_t;
+
+static const digit_info_t kDigitInfo[] = {
+    { "char", eDigitChar, eSignSigned },
+    { "uchar", eDigitChar, eSignUnsigned },
+
+    { "short", eDigitShort, eSignSigned },
+    { "ushort", eDigitShort, eSignUnsigned },
+
+    { "int", eDigitInt, eSignSigned },
+    { "uint", eDigitInt, eSignUnsigned },
+
+    { "long", eDigitLong, eSignSigned },
+    { "ulong", eDigitLong, eSignUnsigned },
+
+    { "isize", eDigitSize, eSignSigned },
+    { "usize", eDigitSize, eSignUnsigned },
+
+    // TODO: better names for these
+    { "ptrdiff", eDigitPtr, eSignSigned },
+    { "uptrdiff", eDigitPtr, eSignUnsigned },
+
+    { "int8", eDigit8, eSignSigned },
+    { "uint8", eDigit8, eSignUnsigned },
+
+    { "int16", eDigit16, eSignSigned },
+    { "uint16", eDigit16, eSignUnsigned },
+
+    { "int32", eDigit32, eSignSigned },
+    { "uint32", eDigit32, eSignUnsigned },
+
+    { "int64", eDigit64, eSignSigned },
+    { "uint64", eDigit64, eSignUnsigned },
+
+    { "intfast8", eDigitFast8, eSignSigned },
+    { "uintfast8", eDigitFast8, eSignUnsigned },
+
+    { "intfast16", eDigitFast16, eSignSigned },
+    { "uintfast16", eDigitFast16, eSignUnsigned },
+
+    { "intfast32", eDigitFast32, eSignSigned },
+    { "uintfast32", eDigitFast32, eSignUnsigned },
+
+    { "intfast64", eDigitFast64, eSignSigned },
+    { "uintfast64", eDigitFast64, eSignUnsigned },
+
+    { "intleast8", eDigitLeast8, eSignSigned },
+    { "uintleast8", eDigitLeast8, eSignUnsigned },
+
+    { "intleast16", eDigitLeast16, eSignSigned },
+    { "uintleast16", eDigitLeast16, eSignUnsigned },
+
+    { "intleast32", eDigitLeast32, eSignSigned },
+    { "uintleast32", eDigitLeast32, eSignUnsigned },
+
+    { "intleast64", eDigitLeast64, eSignSigned },
+    { "uintleast64", eDigitLeast64, eSignUnsigned },
+
+    { "float", eDigitFloat, eSignDefault },
+    { "double", eDigitDouble, eSignDefault },
+};
+
 void ctu_rt_mod(language_runtime_t *runtime, tree_t *root)
 {
     arena_t *arena = runtime->arena;
@@ -212,61 +278,12 @@ void ctu_rt_mod(language_runtime_t *runtime, tree_t *root)
     gLetter = tree_type_digit(node, "letter", eDigitChar, eSignSigned);
     tree_set_qualifiers(gLetter, eQualConst);
 
-    ctu_add_decl(root, eCtuTagTypes, "char", make_int_type(node, "char", eDigitChar, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uchar", make_int_type(node, "uchar", eDigitChar, eSignUnsigned));
-
-    ctu_add_decl(root, eCtuTagTypes, "short", make_int_type(node, "short", eDigitShort, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "ushort", make_int_type(node, "ushort", eDigitShort, eSignUnsigned));
-
-    ctu_add_decl(root, eCtuTagTypes, "int", make_int_type(node, "int", eDigitInt, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uint", make_int_type(node, "uint", eDigitInt, eSignUnsigned));
-
-    ctu_add_decl(root, eCtuTagTypes, "long", make_int_type(node, "long", eDigitLong, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "ulong", make_int_type(node, "ulong", eDigitLong, eSignUnsigned));
-
-    ctu_add_decl(root, eCtuTagTypes, "isize", make_int_type(node, "isize", eDigitSize, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "usize", make_int_type(node, "usize", eDigitSize, eSignUnsigned));
-
-    // simcoe: these should be made into a library
-
-    ctu_add_decl(root, eCtuTagTypes, "int8", make_int_type(node, "int8", eDigit8, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uint8", make_int_type(node, "uint8", eDigit8, eSignUnsigned));
-
-    ctu_add_decl(root, eCtuTagTypes, "int16", make_int_type(node, "int16", eDigit16, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uint16", make_int_type(node, "uint16", eDigit16, eSignUnsigned));
-
-    ctu_add_decl(root, eCtuTagTypes, "int32", make_int_type(node, "int32", eDigit32, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uint32", make_int_type(node, "uint32", eDigit32, eSignUnsigned));
-
-    ctu_add_decl(root, eCtuTagTypes, "int64", make_int_type(node, "int64", eDigit64, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uint64", make_int_type(node, "uint64", eDigit64, eSignUnsigned));
-
-    ctu_add_decl(root, eCtuTagTypes, "intfast8", make_int_type(node, "intfast8", eDigitFast8, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uintfast8", make_int_type(node, "uintfast8", eDigitFast8, eSignUnsigned));
-
-    ctu_add_decl(root, eCtuTagTypes, "intfast16", make_int_type(node, "intfast16", eDigitFast16, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uintfast16", make_int_type(node, "uintfast16", eDigitFast16, eSignUnsigned));
-
-    ctu_add_decl(root, eCtuTagTypes, "intfast32", make_int_type(node, "intfast32", eDigitFast32, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uintfast32", make_int_type(node, "uintfast32", eDigitFast32, eSignUnsigned));
-
-    ctu_add_decl(root, eCtuTagTypes, "intfast64", make_int_type(node, "intfast64", eDigitFast64, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uintfast64", make_int_type(node, "uintfast64", eDigitFast64, eSignUnsigned));
-
-    ctu_add_decl(root, eCtuTagTypes, "intleast8", make_int_type(node, "intleast8", eDigitLeast8, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uintleast8", make_int_type(node, "uintleast8", eDigitLeast8, eSignUnsigned));
-
-    ctu_add_decl(root, eCtuTagTypes, "intleast16", make_int_type(node, "intleast16", eDigitLeast16, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uintleast16", make_int_type(node, "uintleast16", eDigitLeast16, eSignUnsigned));
-
-    ctu_add_decl(root, eCtuTagTypes, "intleast32", make_int_type(node, "intleast32", eDigitLeast32, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uintleast32", make_int_type(node, "uintleast32", eDigitLeast32, eSignUnsigned));
-
-    ctu_add_decl(root, eCtuTagTypes, "intleast64", make_int_type(node, "intleast64", eDigitLeast64, eSignSigned));
-    ctu_add_decl(root, eCtuTagTypes, "uintleast64", make_int_type(node, "uintleast64", eDigitLeast64, eSignUnsigned));
-
-    ctu_add_decl(root, eCtuTagTypes, "float", make_int_type(node, "float", eDigitFloat, eSignDefault));
-    ctu_add_decl(root, eCtuTagTypes, "double", make_int_type(node, "double", eDigitDouble, eSignDefault));
+    for (size_t i = 0; i < sizeof(kDigitInfo) / sizeof(digit_info_t); i++)
+    {
+        const digit_info_t *info = &kDigitInfo[i];
+        tree_t *it = make_int_type(node, info->name, info->digit, info->sign);
+        ctu_add_decl(root, eCtuTagTypes, info->name, it);
+    }
 
     ctu_add_decl(root, eCtuTagTypes, "bool", make_bool_type(node, "bool"));
     ctu_add_decl(root, eCtuTagTypes, "str", make_str_type(node, "str"));

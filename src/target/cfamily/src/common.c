@@ -79,7 +79,7 @@ char *get_block_name(emit_t *emit, const ssa_block_t *block)
     return name_increment(&emit->block_names, block, (char*)block->name, emit->arena);
 }
 
-char *get_anon_name(emit_t *emit, const ssa_symbol_t *symbol, const char *prefix)
+static char *get_anon_name(emit_t *emit, const void *symbol, const char *prefix)
 {
     names_t *names = &emit->anon_names;
     char *name = map_get(names->names, symbol);
@@ -88,6 +88,16 @@ char *get_anon_name(emit_t *emit, const ssa_symbol_t *symbol, const char *prefix
     char *id = str_format(emit->arena, "%s%zu", prefix, names->counter++);
     map_set(names->names, symbol, id);
     return id;
+}
+
+char *get_anon_symbol_name(emit_t *emit, const ssa_symbol_t *symbol, const char *prefix)
+{
+    return get_anon_name(emit, symbol, prefix);
+}
+
+char *get_anon_local_name(emit_t *emit, const ssa_local_t *local, const char *prefix)
+{
+    return get_anon_name(emit, local, prefix);
 }
 
 char *get_step_from_block(emit_t *emit, const ssa_block_t *block, size_t index)

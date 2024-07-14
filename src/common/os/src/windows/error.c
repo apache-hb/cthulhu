@@ -4,9 +4,9 @@
 #include "os_common.h"
 
 #include "std/str.h"
-#include "base/panic.h"
 #include "base/util.h"
 
+#include "core/macros.h"
 #include "core/win32.h" // IWYU pragma: keep
 
 #define FORMAT_FLAGS (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS)
@@ -29,25 +29,21 @@ static DWORD format_inner(os_error_t error, char *buffer, size_t size)
         /* Arguments = */ NULL);
 }
 
-STA_DECL
-size_t os_error_get_string(os_error_t error, char *buffer, size_t size)
+CT_LOCAL size_t impl_error_length(os_error_t error)
 {
-    if (size == 0)
-    {
-        // caller is asking for the size of the buffer
-        CTASSERT(buffer == NULL);
+    // TODO: is there a way of asking for the size of the buffer at all?
+    // this is what .NET core does, but its not clear if this is correct.
+    CT_UNUSED(error);
+    return 1024;
+}
 
-        // TODO: is there a way of asking for the size of the buffer at all?
-        // this is what .NET core does, but its not clear if this is correct.
-        return 512 * sizeof(TCHAR);
-    }
-
-    CTASSERT(buffer != NULL);
+CT_LOCAL size_t impl_error_string(os_error_t error, char *buffer, size_t size)
+{
     DWORD written = format_inner(error, buffer, size);
 
     if (written == 0)
     {
-        return str_sprintf(buffer, size, "unknown error (0x%08lX)", (DWORD)error);
+        return str_sprintf(buffer, size, "GetLastError: 0x%08lX", (DWORD)error);
     }
 
     // replace every instance of \n\r\t with a single space

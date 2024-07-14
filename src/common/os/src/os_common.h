@@ -27,6 +27,12 @@ CT_LOCAL os_error_t impl_last_error(void);
 CT_LOCAL size_t impl_maxname(void);
 CT_LOCAL size_t impl_maxpath(void);
 
+// get the required buffer size for an error message
+CT_LOCAL size_t impl_error_length(os_error_t error);
+
+// get the error message for an error code
+CT_LOCAL size_t impl_error_string(os_error_t error, char *buffer, size_t size);
+
 // copies the file at src to dst, overwriting dst if it exists
 // only needs to be implemented if CT_OS_COPYFILE is 1
 CT_LOCAL os_error_t impl_copyfile(const char *dst, const char *src);

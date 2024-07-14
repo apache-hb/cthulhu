@@ -138,7 +138,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     expr_list
     type_list
     variant_field_list
-    initList
+    init_list opt_init_list
     attribs attrib attrib_body attrib_list
 
 %type<cvector>
@@ -177,7 +177,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     single_attrib
 
 %type<ident>
-    importAlias ident opt_ident while_name variadic
+    import_alias ident opt_ident while_name variadic
 
 %type<boolean>
     exported mut is_default
@@ -206,10 +206,10 @@ import_seq: import { $$ = ctx_vector_init($1, x); }
     | import_seq import { vector_push(&$1, $2); $$ = $1; }
     ;
 
-import: IMPORT path importAlias SEMI { $$ = ctu_import(x, @$, $2, ($3 != NULL) ? $3 : vector_tail($2)); }
+import: IMPORT path import_alias SEMI { $$ = ctu_import(x, @$, $2, ($3 != NULL) ? $3 : vector_tail($2)); }
     ;
 
-importAlias: %empty { $$ = NULL; }
+import_alias: %empty { $$ = NULL; }
     | AS IDENT { $$ = $2; }
     ;
 
@@ -414,11 +414,15 @@ stmt: expr SEMI { $$ = $1; }
 
 /* init */
 
-init: DOT LBRACE initList RBRACE { $$ = ctu_expr_init(x, @$, $3); }
+init: DOT LBRACE opt_init_list RBRACE { $$ = ctu_expr_init(x, @$, $3); }
     ;
 
-initList: field_init { $$ = ctx_vector_init($1, x); }
-    | initList COMMA field_init { vector_push(&$1, $3); $$ = $1; }
+opt_init_list: %empty { $$ = ctx_vector_of(0, x); }
+    | init_list { $$ = $1; }
+    ;
+
+init_list: field_init { $$ = ctx_vector_init($1, x); }
+    | init_list COMMA field_init { vector_push(&$1, $3); $$ = $1; }
     ;
 
 field_init: ident ASSIGN expr { $$ = ctu_field_init(x, @$, $1, $3); }

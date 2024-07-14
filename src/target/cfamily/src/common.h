@@ -30,7 +30,8 @@ CT_LOCAL void counter_reset(emit_t *emit);
 
 CT_LOCAL char *get_step_name(emit_t *emit, const ssa_step_t *step);
 CT_LOCAL char *get_block_name(emit_t *emit, const ssa_block_t *block);
-CT_LOCAL char *get_anon_name(emit_t *emit, const ssa_symbol_t *symbol, const char *prefix);
+CT_LOCAL char *get_anon_symbol_name(emit_t *emit, const ssa_symbol_t *symbol, const char *prefix);
+CT_LOCAL char *get_anon_local_name(emit_t *emit, const ssa_local_t *local, const char *prefix);
 CT_LOCAL char *get_step_from_block(emit_t *emit, const ssa_block_t *block, size_t index);
 
 CT_LOCAL const char *type_to_string(const ssa_type_t *type, arena_t *arena);

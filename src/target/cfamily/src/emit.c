@@ -289,7 +289,7 @@ static const char *mangle_symbol_name(c89_emit_t *emit, const ssa_symbol_t *symb
     if (symbol->name == NULL)
     {
         // this is an anonymous symbol, we need to generate a unique name
-        return get_anon_name(&emit->emit, symbol, "anon");
+        return get_anon_symbol_name(&emit->emit, symbol, "anon");
     }
 
     return symbol->name;
@@ -625,13 +625,21 @@ static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value)
     }
 }
 
+static const char *get_local_name(c89_emit_t *emit, const ssa_local_t *local)
+{
+    if (local->name != NULL)
+        return str_format(emit->arena, "local_%s", local->name);
+
+    return get_anon_local_name(&emit->emit, local, "local_");
+}
+
 static const char *c89_format_local(c89_emit_t *emit, size_t local)
 {
     typevec_t *locals = emit->current->locals;
     CTASSERTF(local < typevec_len(locals), "local(%zu) > locals(%zu)", local, typevec_len(locals));
 
     const ssa_local_t *it = typevec_offset(locals, local);
-    return str_format(emit->arena, "l_%s", it->name);
+    return get_local_name(emit, it);
 }
 
 static const char *c89_format_param(c89_emit_t *emit, size_t param)
@@ -956,8 +964,9 @@ static void write_locals(c89_emit_t *emit, io_t *io, typevec_t *locals)
     for (size_t i = 0; i < len; i++)
     {
         const ssa_local_t *local = typevec_offset(locals, i);
+        const char *name = get_local_name(emit, local);
         io_printf(io, "\t%s;\n",
-            c89_format_storage(emit, local->storage, str_format(emit->arena, "l_%s", local->name), eFormatEmitNone)
+            c89_format_storage(emit, local->storage, name, eFormatEmitNone)
         );
     }
 }

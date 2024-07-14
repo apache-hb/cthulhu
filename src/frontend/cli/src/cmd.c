@@ -132,7 +132,7 @@ tool_t make_tool(version_info_t version, arena_t *arena)
     cfg_field_t *emit_tree_field = config_bool(config, &kEmitTree, false);
     cfg_field_t *emit_ir_field = config_bool(config, &kEmitIr, false);
 
-    cfg_field_t *output_dir_field = config_string(config, &kOutputDir, NULL);
+    cfg_field_t *output_dir_field = config_string(config, &kOutputDir, "builddir");
 
     cfg_enum_t file_layout_options = {
         .options = kFileLayoutChoices,

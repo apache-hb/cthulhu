@@ -29,10 +29,10 @@ export struct ConfigFile {
     fileSize: usize;
 
     sections: [*]ConfigSection;
-    sectionCount: uint;
+    sectionCount: usize;
 
     entries: [*]ConfigEntry;
-    entryCount: uint;
+    entryCount: usize;
 }
 
 def reportErrorMessage(name: str) {
@@ -54,12 +54,16 @@ export def openConfigFile(path: str): ConfigFile {
     if fileHandle == win32::INVALID_HANDLE_VALUE {
         reportErrorMessage("CreateFileA");
         win32::CloseHandle(fileHandle);
+
+        return .{ };
     }
 
     var fileSize: win32::LARGE_INTEGER = noinit;
     if win32::GetFileSizeEx(fileHandle, &fileSize) == 0 {
         reportErrorMessage("GetFileSizeEx");
         win32::CloseHandle(fileHandle);
+
+        return .{ };
     }
 
     var viewHandle = win32::CreateFileMappingA(
@@ -75,6 +79,8 @@ export def openConfigFile(path: str): ConfigFile {
         reportErrorMessage("CreateFileMappingA");
         win32::CloseHandle(fileHandle);
         win32::CloseHandle(viewHandle);
+
+        return .{ };
     }
 
     var fileView = win32::MapViewOfFile(
@@ -89,6 +95,8 @@ export def openConfigFile(path: str): ConfigFile {
         reportErrorMessage("MapViewOfFile");
         win32::CloseHandle(fileHandle);
         win32::CloseHandle(viewHandle);
+
+        return .{ };
     }
 
     return .{
@@ -96,13 +104,7 @@ export def openConfigFile(path: str): ConfigFile {
         viewHandle = viewHandle,
 
         fileView = fileView,
-        fileSize = fileSize.QuadPart,
-
-        sections = null,
-        sectionCount = 0,
-
-        entries = null,
-        entryCount = 0
+        fileSize = fileSize.QuadPart
     };
 }
 

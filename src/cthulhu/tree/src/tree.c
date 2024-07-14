@@ -34,10 +34,8 @@ tree_t *tree_new(tree_kind_t kind, const node_t *node, const tree_t *type)
 
 tree_t *tree_decl(tree_kind_t kind, const node_t *node, const tree_t *type, const char *name, tree_quals_t quals)
 {
-    CTASSERT(name != NULL);
-
     tree_t *self = tree_new(kind, node, type);
-    ARENA_RENAME(self, name, get_global_arena());
+    ARENA_RENAME(self, (name == NULL) ? "<anonymous>" : name, get_global_arena());
 
     self->name = name;
     self->attrib = &kDefaultAttrib;
@@ -225,6 +223,15 @@ tree_t *tree_expr_digit(const node_t *node, const tree_t *type, const mpz_t valu
     return self;
 }
 
+tree_t *tree_expr_digit_int(const node_t *node, const tree_t *type, int value)
+{
+    mpz_t val;
+    mpz_init_set_si(val, value);
+    tree_t *self = tree_expr_digit(node, type, val);
+    mpz_clear(val);
+    return self;
+}
+
 tree_t *tree_expr_string(const node_t *node, const tree_t *type, const char *value, size_t length)
 {
     CTASSERT(value != NULL);
@@ -363,7 +370,7 @@ tree_t *tree_stmt_return(const node_t *node, const tree_t *value)
     return self;
 }
 
-static tree_t *stmt_assign_inner(const node_t *node, tree_t *dst, tree_t *src, bool init)
+static tree_t *stmt_assign_inner(const node_t *node, tree_t *dst, const tree_t *src, bool init)
 {
     const tree_t *dst_type = tree_get_type(dst);
     TREE_EXPECT_ADDRESS(dst_type);
@@ -377,7 +384,7 @@ static tree_t *stmt_assign_inner(const node_t *node, tree_t *dst, tree_t *src, b
     return self;
 }
 
-tree_t *tree_stmt_assign(const node_t *node, tree_t *dst, tree_t *src)
+tree_t *tree_stmt_assign(const node_t *node, tree_t *dst, const tree_t *src)
 {
     return stmt_assign_inner(node, dst, src, false);
 }

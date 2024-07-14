@@ -5,6 +5,7 @@ import win32;
 @entry(cli)
 def main {
     var file = config::openConfigFile("example.ini");
+    cstdlib::printf("sectionCount: %zu, entryCount: %zu\n", file.sectionCount, file.entryCount);
     config::closeConfigFile(file);
     libc::exit(0);
 }

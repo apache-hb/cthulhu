@@ -6,6 +6,7 @@ src = [
     'src/sema/decl.c',
     'src/sema/expr.c',
     'src/sema/attrib.c',
+    'src/sema/default.c',
 
     'src/sema/decl/resolve.c',
     'src/sema/decl/function.c',

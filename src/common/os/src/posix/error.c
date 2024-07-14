@@ -7,6 +7,7 @@
 
 #include "base/util.h"
 #include "std/str.h"
+#include "core/macros.h"
 
 #include <string.h>
 #include <errno.h>
@@ -17,15 +18,14 @@ CT_LOCAL os_error_t impl_last_error(void)
     return (os_error_t)errno;
 }
 
-STA_DECL
-size_t os_error_get_string(os_error_t error, char *buffer, size_t size)
+CT_LOCAL size_t impl_error_length(os_error_t error)
 {
-    if (size == 0)
-    {
-        // caller is asking for the size of the buffer
-        return 256; // TODO: find a way to get the size of the buffer
-    }
+    CT_UNUSED(error);
+    return 256; // TODO: find a way to get the size of the buffer
+}
 
+CT_LOCAL size_t impl_error_string(os_error_t error, char *buffer, size_t size)
+{
     int err = (int)error;
     if (strerror_r(err, buffer, size) != 0)
     {

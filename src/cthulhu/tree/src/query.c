@@ -61,6 +61,9 @@ char *tree_to_string_arena(const tree_t *self, arena_t *arena)
     case eTreeTypePointer:
         return str_format(arena, "{ pointer %s { to: %s, length: %s } }", tree_get_name(self), tree_to_string(self->ptr), length_name(self->length, arena));
 
+    case eTreeTypeAlias:
+        return str_format(arena, "{ alias %s { to: %s } }", tree_get_name(self), tree_to_string_arena(tree_get_type(self), arena));
+
     default:
         break;
     }

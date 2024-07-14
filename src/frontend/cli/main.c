@@ -263,6 +263,8 @@ int main(int argc, const char **argv)
     if (str_equal(target_output, "auto"))
         target_output = "cfamily";
 
+    const char *output_dir = cfg_string_value(tool.output_dir);
+
     target_runtime_t *target = support_get_target(support, target_output);
     if (target == NULL)
     {
@@ -271,13 +273,11 @@ int main(int argc, const char **argv)
     }
     CHECK_LOG(reports, "querying target");
 
-    const char *outpath = "out";
-
-    fs_t *out = fs_physical(outpath, arena);
+    fs_t *out = fs_physical(output_dir, arena);
     if (out == NULL)
     {
         msg_notify(reports, &kEvent_FailedToCreateOutputDirectory, node,
-                   "failed to create output directory `%s`", outpath);
+                   "failed to create output directory `%s`", output_dir);
     }
 
     CHECK_LOG(reports, "creating output directory");

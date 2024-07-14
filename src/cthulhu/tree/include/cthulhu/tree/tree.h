@@ -129,7 +129,7 @@ typedef struct tree_t {
         /* eTreeStmtAssign */
         struct {
             tree_t *dst;
-            tree_t *src;
+            const tree_t *src;
             bool init;
         };
 
@@ -341,6 +341,7 @@ CT_TREE_API tree_t *tree_expr_empty(const node_t *node, const tree_t *type);
 CT_TREE_API tree_t *tree_expr_unit(const node_t *node, const tree_t *type);
 CT_TREE_API tree_t *tree_expr_bool(const node_t *node, const tree_t *type, bool value);
 CT_TREE_API tree_t *tree_expr_digit(const node_t *node, const tree_t *type, const mpz_t value);
+CT_TREE_API tree_t *tree_expr_digit_int(const node_t *node, const tree_t *type, int value);
 
 /**
  * @brief create a string expression
@@ -422,7 +423,7 @@ CT_TREE_API tree_t *tree_stmt_block(const node_t *node, const vector_t *stmts);
  */
 CT_TREE_API tree_t *tree_stmt_return(const node_t *node, const tree_t *value);
 
-CT_TREE_API tree_t *tree_stmt_assign(const node_t *node, tree_t *dst, tree_t *src);
+CT_TREE_API tree_t *tree_stmt_assign(const node_t *node, tree_t *dst, const tree_t *src);
 CT_TREE_API tree_t *tree_stmt_init(const node_t *node, tree_t *dst, tree_t *src);
 CT_TREE_API tree_t *tree_stmt_loop(const node_t *node, tree_t *cond, tree_t *body, tree_t *other);
 CT_TREE_API tree_t *tree_stmt_branch(const node_t *node, tree_t *cond, tree_t *then, tree_t *other);
