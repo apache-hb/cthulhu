@@ -5,7 +5,7 @@ gui_args = cpp.get_supported_arguments([
 ])
 
 # we provide imgui here ourselves so we can configure the assert handler
-subdir('vendor/imgui')
+subdir('vendor')
 
 memedit = declare_dependency(
     include_directories : 'vendor/imgui_memory_editor'
@@ -13,7 +13,6 @@ memedit = declare_dependency(
 
 # we also modify imfilebrowser to not need exceptions enabled
 subdir('vendor/imfilebrowser')
-subdir('vendor/implot')
 
 # this is just the d3d12 imgui example, but with a few changes
 # to allow us to use it as a library.
