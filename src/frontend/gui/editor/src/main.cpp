@@ -1103,7 +1103,7 @@ int main(int argc, const char **argv)
 
     while (draw::begin_frame())
     {
-        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+        ImGui::DockSpaceOverViewport();
         DrawMainMenuBar("Cthulhu");
         DrawEditorWidgets();
         draw::end_frame();
