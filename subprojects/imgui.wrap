@@ -1,0 +1,11 @@
+[wrap-file]
+directory = imgui-1.91.0-docking
+
+source_url = https://github.com/ocornut/imgui/archive/refs/tags/v1.91.0-docking.zip
+source_filename = imgui-1.91.0-docking.zip
+source_hash = 657b225d99fd34ce10a3bd0da2a72359362ae709a774811aa22ee30085660240
+
+patch_directory = imgui
+
+[provide]
+dependency_names = imgui

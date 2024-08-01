@@ -1,0 +1,12 @@
+[wrap-file]
+
+directory = implot-f156599faefe316f7dd20fe6c783bf87c8bb6fd9
+
+source_url = https://github.com/epezent/implot/archive/f156599faefe316f7dd20fe6c783bf87c8bb6fd9.zip
+source_filename = implot-f156599faefe316f7dd20fe6c783bf87c8bb6fd9.zip
+source_hash = d65e73017f485cfe31097c26360d4b81b69e553f89586b3394429f76a5df3ba6
+
+patch_directory = implot
+
+[provide]
+dependency_names = implot
