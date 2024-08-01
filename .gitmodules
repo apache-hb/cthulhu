@@ -6,10 +6,7 @@
 [submodule "data/doxygen-awesome-css"]
 	path = data/doxygen-awesome-css
 	url = https://github.com/jothepro/doxygen-awesome-css
-[submodule "imgui"]
-	path = src/frontend/gui/vendor/imgui
-	url = https://github.com/ocornut/imgui
-	branch = docking
+
 [submodule "implot"]
 	path = src/frontend/gui/vendor/implot
 	url = https://github.com/epezent/implot
