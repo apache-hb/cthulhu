@@ -50,6 +50,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %token<string>
     STRING "`string literal`"
+    CHARACTER "`character literal`"
 
 %token
     MODULE "`module`"
@@ -79,7 +80,14 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     DEFAULT "`default`"
     CASE "`case`"
 
+    IN "`in`"
+    OUT "`out`"
+
     AS "`as`"
+
+    SIZEOF "`__sizeof`"
+    ALIGNOF "`__alignof`"
+    OFFSETOF "`__offsetof`"
 
     DISCARD "`$`"
     AT "`@`"
@@ -138,11 +146,13 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     expr_list
     type_list
     variant_field_list
+    variant_case_field_list
     init_list opt_init_list
     attribs attrib attrib_body attrib_list
 
 %type<cvector>
     modspec imports opt_type_list opt_expr_list decls opt_variant_field_list
+    variant_case_fields
 
 /**
  * order of operations, tightest first
@@ -172,7 +182,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     opt_expr
     stmt stmts local_decl return_stmt while_stmt assign_stmt branch_stmt
     fn_param fn_result
-    variant_decl variant_field underlying
+    variant_decl variant_field underlying variant_case_field variant_init
     field_init init
     single_attrib
 
@@ -277,11 +287,25 @@ variant_field_list: variant_field { $$ = ctx_vector_init($1, x); }
     | variant_field_list variant_field { vector_push(&$1, $2); $$ = $1; }
     ;
 
-variant_field: is_default ident ASSIGN expr { $$ = ctu_variant_case(x, @$, $2, $1, $4); }
+variant_field: is_default ident variant_case_fields variant_init { $$ = ctu_variant_case(x, @$, $2, $1, $4); }
+    ;
+
+variant_init: ASSIGN expr { $$ = $2; }
     ;
 
 is_default: DEFAULT { $$ = true; }
     | CASE { $$ = false; }
+    ;
+
+variant_case_fields: %empty { $$ = &kEmptyVector; }
+    | LPAREN variant_case_field_list RPAREN { $$ = $2; }
+    ;
+
+variant_case_field_list: variant_case_field { $$ = ctx_vector_init($1, x); }
+    | variant_case_field_list COMMA variant_case_field { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+variant_case_field: ident COLON type { $$ = ctu_field(x, @$, $1, $3); }
     ;
 
 /* functions */
@@ -355,10 +379,11 @@ record_field: ident COLON type SEMI { $$ = ctu_field(x, @$, $1, $3); }
 /* types */
 
 type: path { $$ = ctu_type_name(x, @$, $1); }
-    | STAR type { $$ = ctu_type_pointer(x, @$, $2); }
-    | LSQUARE STAR RSQUARE type { $$ = ctu_type_pointer(x, @$, $4); /* TODO: implement indexable pointers */ }
+    | STAR type { $$ = ctu_type_pointer(x, @$, $2, false); }
+    | LSQUARE STAR RSQUARE type { $$ = ctu_type_pointer(x, @$, $4, true); }
     | DEF LPAREN opt_type_list RPAREN ARROW type { $$ = ctu_type_function(x, @$, $3, $6); }
     | LSQUARE expr RSQUARE type { $$ = ctu_type_array(x, @$, $4, $2); }
+    | CONST LPAREN type RPAREN { $$ = ctu_type_const(x, @$, $3); }
     ;
 
 type_list: type { $$ = ctx_vector_init($1, x); }
@@ -446,9 +471,13 @@ primary_expr: LPAREN expr RPAREN { $$ = $2; }
     | INTEGER { $$ = ctu_expr_int(x, @$, $1); }
     | BOOLEAN { $$ = ctu_expr_bool(x, @$, $1); }
     | STRING { $$ = ctu_expr_string(x, @$, $1.text, $1.length); }
+    | CHARACTER { $$ = ctu_expr_char(x, @$, $1.text, $1.length); }
     | path { $$ = ctu_expr_name(x, @$, $1); }
     | AS LT type GT LPAREN expr RPAREN { $$ = ctu_expr_cast(x, @$, $6, $3); }
     | init { $$ = $1; }
+    | SIZEOF LPAREN type RPAREN { $$ = ctu_builtin_sizeof(x, @$, $3); }
+    | ALIGNOF LPAREN type RPAREN { $$ = ctu_builtin_alignof(x, @$, $3); }
+    | OFFSETOF LPAREN type DOT IDENT RPAREN { $$ = ctu_builtin_offsetof(x, @$, $3, $5); }
     ;
 
 postfix_expr: primary_expr { $$ = $1; }

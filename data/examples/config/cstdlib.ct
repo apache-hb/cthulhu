@@ -1,7 +1,7 @@
 module cstdlib;
 
 @extern("exit")
-export def exit(status: int): void;
+export def exit(status: int);
 
 @extern("printf")
 export def printf(format: str, args: ...): int;
@@ -25,3 +25,15 @@ export def assert(condition: bool, message: str) {
         exit(1);
     }
 }
+
+@extern("malloc")
+export def malloc(size: usize): opaque;
+
+@extern("free")
+export def free(ptr: opaque);
+
+@extern("realloc")
+export def realloc(ptr: opaque, size: usize): opaque;
+
+@extern("memcpy")
+export def memcpy(dst: opaque, src: opaque, size: usize): opaque;

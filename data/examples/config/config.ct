@@ -40,7 +40,48 @@ def reportErrorMessage(name: str) {
     cstdlib::printf("%s: %d\n", name, lastError);
 }
 
+struct Lexer {
+    front: *char;
+    back: *char;
+
+    current: *char;
+}
+
+def isAlpha(letter: char): bool = (letter >= 'a' && letter <= 'z') || (letter >= 'A' && letter <= 'Z');
+def isSpace(letter: char): bool = letter == ' ' || letter == '\t' || letter == '\n' || letter == '\r';
+
 export def openConfigFile(path: str): ConfigFile {
+    var file = mapFileHandle(path);
+    if file.fileView == null {
+        return .{ };
+    }
+
+    var sections: [*]ConfigSection = cstdlib::malloc(__sizeof(ConfigSection) * 4);
+    var entries: [*]ConfigEntry = cstdlib::malloc(__sizeof(ConfigEntry) * 16);
+
+    var index: uint = 0;
+
+    while index < file.fileSize {
+        const letter = file.fileView[index];
+        while isSpace(letter) {
+            index += 1;
+        }
+
+        if isAlpha(letter) {
+
+        }
+    }
+
+    return file;
+}
+
+export def closeConfigFile(file: ConfigFile) {
+    win32::CloseHandle(file.viewHandle);
+    win32::CloseHandle(file.fileHandle);
+}
+
+
+def mapFileHandle(path: str): ConfigFile {
     var fileHandle = win32::CreateFileA(
         /* lpFileName */ path,
         /* dwDesiredAccess */ win32::GENERIC_READ,
@@ -106,9 +147,4 @@ export def openConfigFile(path: str): ConfigFile {
         fileView = fileView,
         fileSize = fileSize.QuadPart
     };
-}
-
-export def closeConfigFile(file: ConfigFile) {
-    win32::CloseHandle(file.viewHandle);
-    win32::CloseHandle(file.fileHandle);
 }

@@ -79,19 +79,26 @@ bool util_types_comparable(tree_cookie_t *cookie, const tree_t *lhs, const tree_
     tree_kind_t lhs_kind = tree_get_kind(lhs);
     tree_kind_t rhs_kind = tree_get_kind(rhs);
 
-    if (lhs_kind != rhs_kind)
+    if (lhs_kind == rhs_kind)
     {
-        return false;
+        switch (lhs_kind)
+        {
+        case eTreeTypeBool:
+        case eTreeTypeOpaque:
+        case eTreeTypeDigit:
+            return true;
+
+        default: break;
+        }
     }
 
-    switch (lhs_kind)
-    {
-    case eTreeTypeBool:
-    case eTreeTypeOpaque:
-    case eTreeTypeDigit: return true;
+    if (util_type_is_pointer(lhs) && util_type_is_opaque(rhs))
+        return true;
 
-    default: return false; /* TODO probably wrong */
-    }
+    if (util_type_is_opaque(lhs) && util_type_is_pointer(rhs))
+        return true;
+
+    return false;
 }
 
 static bool can_cast_length(size_t dst, size_t src)

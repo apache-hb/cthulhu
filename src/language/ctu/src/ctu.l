@@ -103,7 +103,14 @@ SUFFIX ("u"|"ul"|"l"|"uz")?
 
 "noinit" { return NOINIT; }
 
+"in" { return IN; }
+"out" { return OUT; }
+
 "as" { return AS; }
+
+"__sizeof" { return SIZEOF; }
+"__alignof" { return ALIGNOF; }
+"__offsetof" { return OFFSETOF; }
 
 "$" { return DISCARD; }
 "@" { return AT; }
@@ -144,6 +151,13 @@ SUFFIX ("u"|"ul"|"l"|"uz")?
     logger_t *logger = ctx_get_logger(yyextra);
 	yylval->string = util_text_escape(logger, node_new(yyextra, *yylloc), yytext + 1, yyleng - 2, arena);
     return STRING;
+}
+
+\'([^'\\\n]|{ESCAPES})\' {
+    arena_t *arena = ctx_get_string_arena(yyextra);
+    logger_t *logger = ctx_get_logger(yyextra);
+    yylval->string = util_text_escape(logger, node_new(yyextra, *yylloc), yytext + 1, yyleng - 2, arena);
+    return CHARACTER;
 }
 
 . { ctx_unknown_symbol(yyextra, yylloc, yytext); }

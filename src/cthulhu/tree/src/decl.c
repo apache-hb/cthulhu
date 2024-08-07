@@ -363,10 +363,10 @@ static void check_enum_cases(vector_t *cases)
     }
 }
 
-tree_t *tree_decl_enum(const node_t *node, const char *name, const tree_t *underlying, vector_t *cases, tree_t *default_case)
+tree_t *tree_decl_enum(const node_t *node, const char *name, const tree_t *underlying, vector_t *fields, tree_t *default_case)
 {
     tree_t *self = decl_open(node, name, NULL, eTreeTypeEnum, NULL);
-    tree_close_enum(self, underlying, cases, default_case);
+    tree_close_enum(self, underlying, fields, default_case);
     return self;
 }
 

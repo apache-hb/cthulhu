@@ -5,6 +5,8 @@
 #include "base/util.h"
 #include "c89.h"
 
+#include "cthulhu/ssa/ssa.h"
+#include "cthulhu/tree/ops.h"
 #include "io/io.h"
 #include "notify/notify.h"
 #include "std/str.h"
@@ -726,6 +728,14 @@ static void c89_write_offset(c89_emit_t *emit, io_t *io, const ssa_step_t *step)
     );
 }
 
+static const ssa_field_t *get_aggregate_field(c89_emit_t *emit, const ssa_type_t *type, size_t index)
+{
+    CTASSERTF(type->kind == eTypeStruct, "expected record type, got %s", type_to_string(type, emit->arena));
+
+    const ssa_type_record_t record = type->record;
+    return typevec_offset(record.fields, index);
+}
+
 static void c89_write_member(c89_emit_t *emit, io_t *io, const ssa_step_t *step)
 {
     CTASSERTF(step->opcode == eOpMember, "expected member, got %s", ssa_opcode_name(step->opcode));
@@ -738,8 +748,7 @@ static void c89_write_member(c89_emit_t *emit, io_t *io, const ssa_step_t *step)
     const ssa_type_t *record = ptr.pointer;
     CTASSERTF(record->kind == eTypeStruct, "expected record type, got %s", type_to_string(record, emit->arena));
 
-    ssa_type_record_t record_type = record->record;
-    const ssa_field_t *field = typevec_offset(record_type.fields, member.index);
+    const ssa_field_t *field = get_aggregate_field(emit, record, member.index);
 
     io_printf(io, "\t%s = &%s->%s;\n",
         c89_name_vreg(emit, step, ssa_type_pointer(field->name, eQualNone, (ssa_type_t*)field->type, 1)),
@@ -889,6 +898,31 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
             break;
         }
 
+        case eOpSizeOf:
+            io_printf(io, "\t%s = sizeof(%s);\n",
+                c89_name_vreg(emit, step, ssa_type_digit("size_t", eQualConst, eSignUnsigned, eDigitSize)),
+                c89_format_type(emit, step->size_of.type, NULL, eFormatEmitNone)
+            );
+            break;
+
+        case eOpAlignOf:
+            io_printf(io, "\t%s = alignof(%s);\n",
+                c89_name_vreg(emit, step, ssa_type_digit("size_t", eQualConst, eSignUnsigned, eDigitSize)),
+                c89_format_type(emit, step->align_of.type, NULL, eFormatEmitNone)
+            );
+            break;
+
+        case eOpOffsetOf: {
+            ssa_offsetof_t offset = step->offset_of;
+            const ssa_field_t *field = get_aggregate_field(emit, offset.type, offset.index);
+            io_printf(io, "\t%s = offsetof(%s, %s);\n",
+                c89_name_vreg(emit, step, ssa_type_digit("size_t", eQualConst, eSignUnsigned, eDigitSize)),
+                c89_format_type(emit, step->offset_of.type, NULL, eFormatEmitNone),
+                field->name
+            );
+            break;
+        }
+
         default: CT_NEVER("unknown opcode %d", step->opcode);
         }
     }
@@ -958,6 +992,11 @@ void c89_define_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symb
     }
 }
 
+static bool is_type_pointer(const ssa_type_t *type)
+{
+    return type->kind == eTypePointer || type->kind == eTypeOpaque || type->kind == eTypeClosure;
+}
+
 static void write_locals(c89_emit_t *emit, io_t *io, typevec_t *locals)
 {
     size_t len = typevec_len(locals);
@@ -965,8 +1004,16 @@ static void write_locals(c89_emit_t *emit, io_t *io, typevec_t *locals)
     {
         const ssa_local_t *local = typevec_offset(locals, i);
         const char *name = get_local_name(emit, local);
+
+        // TODO: this is a little bit of a hack, works around const locals
+        // being assigned to at initialization
+        type_format_t flags = eFormatEmitConst;
+        ssa_storage_t storage = local->storage;
+        if (!is_type_pointer(storage.type))
+            flags = eFormatEmitNone;
+
         io_printf(io, "\t%s;\n",
-            c89_format_storage(emit, local->storage, name, eFormatEmitNone)
+            c89_format_storage(emit, local->storage, name, flags)
         );
     }
 }

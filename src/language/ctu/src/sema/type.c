@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 #include "ctu/sema/type.h"
+#include "arena/arena.h"
 #include "cthulhu/events/events.h"
+#include "cthulhu/tree/tree.h"
 #include "ctu/sema/sema.h"
 #include "ctu/sema/expr.h"
 #include "ctu/ast.h"
@@ -83,6 +85,16 @@ static tree_t *sema_type_array(ctu_sema_t *sema, const ctu_t *type)
     return tree_type_array(type->node, "", inner, v);
 }
 
+static tree_t *sema_type_const(ctu_sema_t *sema, const ctu_t *type)
+{
+    tree_t *inner = ctu_sema_type(sema, type->type);
+
+    tree_t *result = arena_memdup(inner, sizeof(tree_t), get_global_arena());
+    result->quals |= eQualConst;
+
+    return result;
+}
+
 static tree_t *sema_type_inner(ctu_sema_t *sema, const ctu_t *type)
 {
     CTASSERT(type != NULL);
@@ -93,6 +105,7 @@ static tree_t *sema_type_inner(ctu_sema_t *sema, const ctu_t *type)
     case eCtuTypeName: return sema_type_name(sema->sema, type);
     case eCtuTypeFunction: return sema_type_function(sema, type);
     case eCtuTypeArray: return sema_type_array(sema, type);
+    case eCtuTypeConst: return sema_type_const(sema, type);
 
     default: CT_NEVER("invalid type kind %d", type->kind);
     }

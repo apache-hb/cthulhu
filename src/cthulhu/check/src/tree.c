@@ -476,6 +476,11 @@ static void check_single_expr(check_t *check, const tree_t *expr)
     case eTreeExprUnit:
         break;
 
+    case eTreeExprSizeOf:
+    case eTreeExprAlignOf:
+    case eTreeExprOffsetOf:
+        break;
+
     default:
         CT_NEVER("invalid node kind %s (check-single-expr)", tree_to_string(expr));
     }

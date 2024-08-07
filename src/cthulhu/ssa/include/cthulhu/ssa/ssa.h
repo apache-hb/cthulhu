@@ -282,6 +282,19 @@ typedef struct ssa_jump_t {
     ssa_operand_t target;
 } ssa_jump_t;
 
+typedef struct ssa_sizeof_t {
+    const ssa_type_t *type;
+} ssa_sizeof_t;
+
+typedef struct ssa_alignof_t {
+    const ssa_type_t *type;
+} ssa_alignof_t;
+
+typedef struct ssa_offsetof_t {
+    const ssa_type_t *type;
+    size_t index;
+} ssa_offsetof_t;
+
 typedef struct ssa_step_t {
     ssa_opcode_t opcode;
 
@@ -304,6 +317,10 @@ typedef struct ssa_step_t {
         ssa_return_t ret;
         ssa_branch_t branch;
         ssa_jump_t jump;
+
+        ssa_sizeof_t size_of;
+        ssa_alignof_t align_of;
+        ssa_offsetof_t offset_of;
     };
 } ssa_step_t;
 

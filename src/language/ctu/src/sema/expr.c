@@ -2,17 +2,17 @@
 
 #include "ctu/sema/expr.h"
 #include "cthulhu/events/events.h"
+#include "cthulhu/tree/builtin.h"
 #include "ctu/sema/decl/resolve.h"
 #include "ctu/sema/default.h"
 #include "ctu/sema/type.h"
 #include "ctu/driver.h"
+#include "ctu/ast.h"
 
 #include "cthulhu/util/types.h"
 #include "cthulhu/util/util.h"
 
 #include "cthulhu/tree/query.h"
-
-#include "ctu/ast.h"
 
 #include "memory/memory.h"
 #include "std/set.h"
@@ -587,6 +587,41 @@ static tree_t *sema_init(ctu_sema_t *sema, const ctu_t *expr, const tree_t *impl
     return tree_expr_load(expr->node, local);
 }
 
+static tree_t *sema_sizeof(ctu_sema_t *sema, const ctu_t *expr)
+{
+    const tree_t *ty = ctu_sema_type(sema, expr->type);
+    return tree_builtin_sizeof(expr->node, ty, ctu_get_int_type(eDigitSize, eSignUnsigned));
+}
+
+static tree_t *sema_alignof(ctu_sema_t *sema, const ctu_t *expr)
+{
+    const tree_t *ty = ctu_sema_type(sema, expr->type);
+    return tree_builtin_alignof(expr->node, ty, ctu_get_int_type(eDigitSize, eSignUnsigned));
+}
+
+static tree_t *sema_offsetof(ctu_sema_t *sema, const ctu_t *expr)
+{
+    const tree_t *ty = ctu_sema_type(sema, expr->expr);
+    if (!util_type_is_aggregate(ty))
+    {
+        return tree_raise(
+            expr->node, ctu_sema_reports(sema), &kEvent_NotAnAggregate,
+            "cannot get offset of non-aggregate type `%s`", tree_to_string(ty)
+        );
+    }
+
+    const tree_t *field = tree_ty_get_field(ty, expr->field);
+    if (field == NULL)
+    {
+        return tree_raise(
+            expr->node, ctu_sema_reports(sema), &kEvent_FieldNotFound,
+            "field `%s` not found in struct `%s`", expr->expr, tree_to_string(ty)
+        );
+    }
+
+    return tree_builtin_offsetof(expr->node, ty, field, ctu_get_int_type(eDigitSize, eSignUnsigned));
+}
+
 tree_t *ctu_sema_lvalue(ctu_sema_t *sema, const ctu_t *expr)
 {
     CTASSERT(expr != NULL);
@@ -633,6 +668,9 @@ tree_t *ctu_sema_rvalue(ctu_sema_t *sema, const ctu_t *expr, const tree_t *impli
     case eCtuExprCompare: return sema_compare(sema, expr);
     case eCtuExprBinary: return sema_binary(sema, expr, inner);
     case eCtuExprUnary: return sema_unary(sema, expr, inner);
+    case eCtuExprSizeOf: return sema_sizeof(sema, expr);
+    case eCtuExprAlignOf: return sema_alignof(sema, expr);
+    case eCtuExprOffsetOf: return sema_offsetof(sema, expr);
 
     default: CT_NEVER("invalid rvalue-expr kind %d", expr->kind);
     }

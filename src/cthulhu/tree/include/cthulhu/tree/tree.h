@@ -97,7 +97,7 @@ typedef struct tree_t {
             tree_t *operand;
         };
 
-        /* eTreeExprBinary|eTreeExprCompare */
+        /* eTreeExprBinary, eTreeExprCompare */
         struct {
             union {
                 binary_t binary;
@@ -133,7 +133,7 @@ typedef struct tree_t {
             bool init;
         };
 
-        /* eTreeStmtLoop|eTreeStmtBranch */
+        /* eTreeStmtLoop, eTreeStmtBranch */
         struct {
             tree_t *cond;
             tree_t *then;
@@ -141,13 +141,14 @@ typedef struct tree_t {
         };
 
         struct {
-            tree_t *object;
+            /* eTreeExprSizeOf, eTreeExprAlignOf */
+            const tree_t *object;
             struct {
                 /* eTreeExprOffset */
-                tree_t *offset;
+                const tree_t *offset;
 
-                /* eTreeExprField */
-                tree_t *field;
+                /* eTreeExprField, eTreeExprOffsetOf */
+                const tree_t *field;
             };
         };
 
@@ -166,7 +167,7 @@ typedef struct tree_t {
             eval_model_t eval_model;
 
             union {
-                /* eTreeTypePointer|eTreeTypeReference|eTreeTypeArray */
+                /* eTreeTypePointer, eTreeTypeReference, eTreeTypeArray */
                 struct {
                     const tree_t *ptr;
                     const tree_t *len;
@@ -210,7 +211,7 @@ typedef struct tree_t {
                     };
                 };
 
-                /* eTreeDeclGlobal|eTreeDeclLocal */
+                /* eTreeDeclGlobal, eTreeDeclLocal */
                 struct {
                     tree_storage_t storage;
 

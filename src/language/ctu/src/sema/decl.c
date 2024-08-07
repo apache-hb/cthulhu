@@ -185,6 +185,7 @@ static void ctu_resolve_variant(tree_t *sema, tree_t *self, void *user)
     {
         ctu_t *it = vector_get(decl->cases, i);
         CTASSERTF(it->kind == eCtuVariantCase, "decl %s is not a variant case", it->name);
+        CTASSERTF(it->case_value != NULL, "decl %s has no case value", it->name);
 
         tree_t *val = ctu_sema_rvalue(&inner, it->case_value, underlying);
         tree_t *field = tree_decl_case(it->node, it->name, val);

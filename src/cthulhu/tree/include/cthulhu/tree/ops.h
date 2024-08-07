@@ -59,14 +59,6 @@ typedef enum tree_cast_t
     eCastTotal
 } tree_cast_t;
 
-/// @brief all builtins
-typedef enum builtin_t
-{
-#define TREE_BUILTIN(ID, NAME) ID,
-#include "tree.inc"
-    eBuiltinTotal
-} builtin_t;
-
 /// @brief all arities
 typedef enum tree_arity_t
 {

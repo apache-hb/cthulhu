@@ -151,6 +151,14 @@ ctu_t *ctu_expr_string(scan_t *scan, where_t where, char *text, size_t length)
     return ast;
 }
 
+ctu_t *ctu_expr_char(scan_t *scan, where_t where, char *text, size_t length)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuExprChar);
+    ast->text = text;
+    ast->length = length;
+    return ast;
+}
+
 ctu_t *ctu_expr_init(scan_t *scan, where_t where, const vector_t *inits)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuExprInit);
@@ -245,6 +253,30 @@ ctu_t *ctu_expr_compare(scan_t *scan, where_t where, compare_t compare, ctu_t *l
     return ast;
 }
 
+/* builtins */
+
+ctu_t *ctu_builtin_sizeof(scan_t *scan, where_t where, ctu_t *type)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuExprSizeOf);
+    ast->type = type;
+    return ast;
+}
+
+ctu_t *ctu_builtin_alignof(scan_t *scan, where_t where, ctu_t *type)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuExprAlignOf);
+    ast->type = type;
+    return ast;
+}
+
+ctu_t *ctu_builtin_offsetof(scan_t *scan, where_t where, ctu_t *type, char *field)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuExprOffsetOf);
+    ast->expr = type;
+    ast->field = field;
+    return ast;
+}
+
 /* types */
 
 ctu_t *ctu_type_name(scan_t *scan, where_t where, vector_t *path)
@@ -254,10 +286,11 @@ ctu_t *ctu_type_name(scan_t *scan, where_t where, vector_t *path)
     return ast;
 }
 
-ctu_t *ctu_type_pointer(scan_t *scan, where_t where, ctu_t *pointer)
+ctu_t *ctu_type_pointer(scan_t *scan, where_t where, ctu_t *pointer, bool array)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuTypePointer);
     ast->pointer = pointer;
+    ast->array = array;
     return ast;
 }
 
@@ -274,6 +307,13 @@ ctu_t *ctu_type_function(scan_t *scan, where_t where, const vector_t *params, ct
     ctu_t *ast = ctu_new(scan, where, eCtuTypeFunction);
     ast->params = params;
     ast->return_type = return_type;
+    return ast;
+}
+
+ctu_t *ctu_type_const(scan_t *scan, where_t where, ctu_t *type)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuTypeConst);
+    ast->type = type;
     return ast;
 }
 

@@ -84,8 +84,14 @@ TREE_KIND(eTreeTypeAlias,   "type_alias",   eTagName | eTagIsType | eTagHasType)
 /// these yield a value
 ///
 
-/// builtin expressions
-TREE_KIND(eTreeExprBuiltin, "expr_builtin", eTagHasType)
+/// sizeof expression
+TREE_KIND(eTreeExprSizeOf,  "expr_sizeof",  eTagHasType)
+
+/// alignof expression
+TREE_KIND(eTreeExprAlignOf, "expr_alignof", eTagHasType)
+
+/// offsetof expression
+TREE_KIND(eTreeExprOffsetOf, "expr_offsetof", eTagHasType)
 
 /// an uninitialized value
 TREE_KIND(eTreeExprEmpty,  "expr_empty",  eTagHasType)
@@ -212,17 +218,6 @@ SIGN_KIND(eSignUnsigned, "unsigned")
 SIGN_KIND(eSignSigned,   "signed")
 
 #undef SIGN_KIND
-
-#ifndef TREE_BUILTIN
-#   define TREE_BUILTIN(ID, STR)
-#endif
-
-TREE_BUILTIN(eBuiltinSizeOf,    "sizeof")
-TREE_BUILTIN(eBuiltinAlignOf,   "alignof")
-TREE_BUILTIN(eBuiltinOffsetOf,  "offsetof")
-TREE_BUILTIN(eBuiltinUuidOf,    "uuidof") // __uuidof in msvc
-
-#undef TREE_BUILTIN
 
 #ifndef TYPE_QUALIFIER
 #   define TYPE_QUALIFIER(ID, STR, BIT)

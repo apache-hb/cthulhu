@@ -23,6 +23,7 @@ typedef enum ctu_kind_t {
     eCtuExprInt,
     eCtuExprBool,
     eCtuExprString,
+    eCtuExprChar,
     eCtuExprName,
     eCtuExprCast,
     eCtuExprInit,
@@ -37,6 +38,11 @@ typedef enum ctu_kind_t {
 
     eCtuExprRef,
     eCtuExprDeref,
+
+    /* builtins */
+    eCtuExprSizeOf,
+    eCtuExprAlignOf,
+    eCtuExprOffsetOf,
 
     /* statements */
     eCtuStmtList,
@@ -53,6 +59,7 @@ typedef enum ctu_kind_t {
     eCtuTypePointer,
     eCtuTypeFunction,
     eCtuTypeArray,
+    eCtuTypeConst,
 
     /* real decls */
     eCtuDeclGlobal,
@@ -215,7 +222,10 @@ typedef struct ctu_t {
         vector_t *type_name;
 
         /* eCtuTypePointer */
-        ctu_t *pointer;
+        struct {
+            ctu_t *pointer;
+            bool array;
+        };
 
         /* eCtuTypeArray */
         struct {
@@ -273,6 +283,7 @@ ctu_t *ctu_stmt_branch(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then, ct
 ctu_t *ctu_expr_int(scan_t *scan, where_t where, ctu_integer_t value);
 ctu_t *ctu_expr_bool(scan_t *scan, where_t where, bool value);
 ctu_t *ctu_expr_string(scan_t *scan, where_t where, char *text, size_t length);
+ctu_t *ctu_expr_char(scan_t *scan, where_t where, char *text, size_t length);
 ctu_t *ctu_expr_init(scan_t *scan, where_t where, const vector_t *inits);
 
 ctu_t *ctu_expr_call(scan_t *scan, where_t where, ctu_t *callee, const vector_t *args);
@@ -289,14 +300,19 @@ ctu_t *ctu_expr_unary(scan_t *scan, where_t where, unary_t unary, ctu_t *expr);
 ctu_t *ctu_expr_binary(scan_t *scan, where_t where, binary_t binary, ctu_t *lhs, ctu_t *rhs);
 ctu_t *ctu_expr_compare(scan_t *scan, where_t where, compare_t compare, ctu_t *lhs, ctu_t *rhs);
 
+ctu_t *ctu_builtin_sizeof(scan_t *scan, where_t where, ctu_t *type);
+ctu_t *ctu_builtin_alignof(scan_t *scan, where_t where, ctu_t *type);
+ctu_t *ctu_builtin_offsetof(scan_t *scan, where_t where, ctu_t *type, char *field);
+
 ///
 /// types
 ///
 
 ctu_t *ctu_type_name(scan_t *scan, where_t where, vector_t *path);
-ctu_t *ctu_type_pointer(scan_t *scan, where_t where, ctu_t *pointer);
+ctu_t *ctu_type_pointer(scan_t *scan, where_t where, ctu_t *pointer, bool array);
 ctu_t *ctu_type_array(scan_t *scan, where_t where, ctu_t *array, ctu_t *length);
 ctu_t *ctu_type_function(scan_t *scan, where_t where, const vector_t *params, ctu_t *return_type);
+ctu_t *ctu_type_const(scan_t *scan, where_t where, ctu_t *type);
 
 ///
 /// real declarations

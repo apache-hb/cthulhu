@@ -12,7 +12,8 @@ src = [
     'src/ops.c',
     'src/sema.c',
     'src/decl.c',
-    'src/query.c'
+    'src/query.c',
+    'src/builtin.c'
 ]
 
 libtree = library('tree', src,

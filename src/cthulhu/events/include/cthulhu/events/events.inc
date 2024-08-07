@@ -360,7 +360,7 @@ CTU_EVENT(CyclicDependency, {
 CTU_EVENT(ImportedWithImpl, {
     .severity = eSeverityFatal,
     .id = "M0050",
-    .brief = "Imported with impl",
+    .brief = "Imported declaration has implementation",
     .description = "A declaration was imported but has a declaration with an implementation in the current translation unit",
 })
 
@@ -412,14 +412,14 @@ CTU_EVENT(RecursiveEval, {
     .severity = eSeverityFatal,
     .id = "M0057",
     .brief = "Recursive eval",
-    .description = "Static evaluation of a value encountered a infinite recursion",
+    .description = "Static evaluation of a value would recurse infinitely",
 })
 
 CTU_EVENT(InfiniteSizedType, {
     .severity = eSeverityFatal,
     .id = "M0058",
     .brief = "Infinite sized type",
-    .description = "A type was infinitely sized, indicating a recursive type with no indirection",
+    .description = "A type was infinitely sized, indicating a recursive type",
 })
 
 CTU_EVENT(InvalidType, {
@@ -616,6 +616,14 @@ CTU_EVENT(AssignToConst, {
     .brief = "Assign to const",
     .description =
         "A const value was assigned to.",
+})
+
+CTU_EVENT(NotAnAggregate, {
+    .severity = eSeverityFatal,
+    .id = "M0084",
+    .brief = "Not an aggregate",
+    .description =
+        "A type was not an aggregate type.",
 })
 
 #undef CTU_EVENT

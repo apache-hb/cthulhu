@@ -709,6 +709,42 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
     case eTreeStmtLoop:
         return compile_loop(ssa, tree);
 
+    case eTreeExprAlignOf: {
+        ssa_step_t step = {
+            .opcode = eOpAlignOf,
+            .size_of = {
+                ssa_type_create_cached(ssa->types, tree->object)
+            }
+        };
+
+        return add_step(ssa, step);
+    }
+
+    case eTreeExprSizeOf: {
+        ssa_step_t step = {
+            .opcode = eOpSizeOf,
+            .size_of = {
+                ssa_type_create_cached(ssa->types, tree->object)
+            }
+        };
+
+        return add_step(ssa, step);
+    }
+
+    case eTreeExprOffsetOf: {
+        const ssa_type_t *ty = ssa_type_create_cached(ssa->types, tree->object);
+
+        ssa_step_t step = {
+            .opcode = eOpOffsetOf,
+            .offset_of = {
+                .type = ty,
+                .index = get_field_index(tree->object, tree->field)
+            }
+        };
+
+        return add_step(ssa, step);
+    }
+
     default: CT_NEVER("unhandled tree %s", tree_to_string(tree));
     }
 }

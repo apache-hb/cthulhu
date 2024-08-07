@@ -2,7 +2,7 @@ module win32;
 
 import cstdlib;
 
-export type HANDLE = opaque;
+export type HANDLE = const(opaque);
 
 export type LPVOID = opaque;
 export type LPCSTR = str;

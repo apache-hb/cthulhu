@@ -68,4 +68,8 @@ SSA_OPCODE(eOpReturn, "return")
 SSA_OPCODE(eOpBranch, "branch")
 SSA_OPCODE(eOpJump,   "jump")
 
+SSA_OPCODE(eOpOffsetOf, "offsetof") ///< get the offset of a member in a struct
+SSA_OPCODE(eOpSizeOf, "sizeof") ///< get the size of a type
+SSA_OPCODE(eOpAlignOf, "alignof") ///< get the alignment of a type
+
 #undef SSA_OPCODE
