@@ -50,6 +50,18 @@ struct Lexer {
 def isAlpha(letter: char): bool = (letter >= 'a' && letter <= 'z') || (letter >= 'A' && letter <= 'Z');
 def isSpace(letter: char): bool = letter == ' ' || letter == '\t' || letter == '\n' || letter == '\r';
 
+def readUntil(current: *char, terminator: char): StringView {
+    var front = current;
+    while *current != terminator && *current != '\0' {
+        current = current + 1;
+    }
+
+    return .{
+        front = front,
+        back = current
+    };
+}
+
 export def openConfigFile(path: str): ConfigFile {
     var file = mapFileHandle(path);
     if file.fileView == null {
@@ -63,8 +75,20 @@ export def openConfigFile(path: str): ConfigFile {
 
     while index < file.fileSize {
         const letter = file.fileView[index];
-        while isSpace(letter) {
-            index += 1;
+        index = index + 1;
+
+        if isSpace(letter) {
+            continue;
+        }
+
+        if letter == '[' {
+            const name = readUntil(file.fileView + index, ']');
+
+            sections[file.sectionCount] = .{
+                name = name,
+                firstEntry = file.entryCount,
+                lastEntry = file.entryCount
+            };
         }
 
         if isAlpha(letter) {

@@ -85,7 +85,7 @@ typedef struct tree_t {
 
         /* eTreeExprRef */
         struct {
-            tree_t *expr;
+            const tree_t *expr;
 
             /* eTreeExprCast */
             tree_cast_t cast;
@@ -370,7 +370,7 @@ CT_TREE_API tree_t *tree_expr_string(const node_t *node, const tree_t *type, con
  * @param cast the kind of cast to perform
  * @return tree_t* the cast expression
  */
-CT_TREE_API tree_t *tree_expr_cast(const node_t *node, const tree_t *type, tree_t *expr, tree_cast_t cast);
+CT_TREE_API tree_t *tree_expr_cast(const node_t *node, const tree_t *type, const tree_t *expr, tree_cast_t cast);
 
 /**
  * @brief load a value from a pointer or storage

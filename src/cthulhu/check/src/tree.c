@@ -467,6 +467,7 @@ static void check_single_expr(check_t *check, const tree_t *expr)
     case eTreeExprLoad:
     case eTreeDeclLocal:
     case eTreeDeclParam:
+    case eTreeDeclCase:
     case eTreeDeclFunction:
         break;
 
@@ -502,6 +503,16 @@ static void check_assign(check_t *check, const tree_t *stmt)
         }
     }
 
+    printf("dst: %s\n", tree_to_string(stmt->dst));
+
+    if (tree_is(stmt->dst, eTreeDeclParam))
+    {
+        msg_notify(check->reports, &kEvent_AssignToParam, tree_get_node(stmt),
+            "assignment to parameter `%s`",
+            tree_get_name(stmt->dst)
+        );
+    }
+
     check_single_expr(check, stmt->src);
 }
 
@@ -511,6 +522,9 @@ static void check_func_body(check_t *check, const tree_t *return_type, const tre
 
     switch (stmt->kind)
     {
+    case eTreeStmtJump:
+        break;
+
     case eTreeStmtBlock:
         for (size_t i = 0; i < vector_len(stmt->stmts); i++)
         {
@@ -519,8 +533,14 @@ static void check_func_body(check_t *check, const tree_t *return_type, const tre
         break;
 
     case eTreeStmtLoop:
-    case eTreeStmtBranch:
+    case eTreeStmtBranch: {
+        check_func_body(check, return_type, stmt->then);
+
+        if (stmt->other != NULL)
+            check_func_body(check, return_type, stmt->other);
+
         break;
+    }
 
     case eTreeStmtAssign:
         check_assign(check, stmt);

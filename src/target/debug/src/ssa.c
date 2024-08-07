@@ -265,6 +265,31 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
             );
             break;
         }
+        case eOpSizeOf: {
+            ssa_sizeof_t size_of = step->size_of;
+            io_printf(io, "\t%%%s = sizeof %s\n",
+                get_step_name(&emit->emit, step),
+                type_to_string(size_of.type, base->arena)
+            );
+            break;
+        }
+        case eOpAlignOf: {
+            ssa_alignof_t align_of = step->align_of;
+            io_printf(io, "\t%%%s = alignof %s\n",
+                get_step_name(&emit->emit, step),
+                type_to_string(align_of.type, base->arena)
+            );
+            break;
+        }
+        case eOpOffsetOf: {
+            ssa_offsetof_t offset_of = step->offset_of;
+            io_printf(io, "\t%%%s = offsetof %s %zu\n",
+                get_step_name(&emit->emit, step),
+                type_to_string(offset_of.type, base->arena),
+                offset_of.index
+            );
+            break;
+        }
         default: CT_NEVER("unknown opcode %d", step->opcode);
         }
     }

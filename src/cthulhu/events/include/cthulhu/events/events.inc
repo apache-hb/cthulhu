@@ -626,4 +626,12 @@ CTU_EVENT(NotAnAggregate, {
         "A type was not an aggregate type.",
 })
 
+CTU_EVENT(AssignToParam, {
+    .severity = eSeverityInternal,
+    .id = "M0085",
+    .brief = "Assign to param",
+    .description =
+        "A parameter was assigned to, if a frontend allows this it must create a local copy.",
+})
+
 #undef CTU_EVENT

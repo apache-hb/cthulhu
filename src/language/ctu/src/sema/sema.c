@@ -191,6 +191,7 @@ static tree_t *make_opaque_type(const node_t *node, const char *name)
 {
     return (gOpaqueType = tree_type_opaque(node, name));
 }
+
 tree_t *ctu_get_int_type(digit_t digit, sign_t sign)
 {
     return DIGIT_TYPE(digit, sign);

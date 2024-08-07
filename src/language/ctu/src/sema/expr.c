@@ -62,7 +62,9 @@ static tree_t *sema_decl_name(tree_t *sema, const node_t *node, const vector_t *
         if (it != NULL)
         {
             *needs_load = false;
-            return it->case_value;
+            // TODO: we always treat this as const
+            // just need to slap const on everything in this file
+            return (tree_t*)it;
         }
 
         return tree_raise(node, sema->reports, &kEvent_SymbolNotFound,
@@ -176,6 +178,27 @@ static tree_t *sema_string(tree_t *sema, const ctu_t *expr, const tree_t *implic
     }
 
     return str;
+}
+
+static tree_t *sema_char(tree_t *sema, const ctu_t *expr, const tree_t *implicit_type)
+{
+    const tree_t *type = implicit_type ? implicit_type : ctu_get_char_type();
+    if (!tree_is(type, eTreeTypeDigit))
+    {
+        return tree_raise(expr->node, sema->reports, &kEvent_InvalidLiteralType, "invalid type `%s` for char literal",
+                          tree_to_string(type));
+    }
+
+    if (expr->length < 1)
+    {
+        return tree_raise(expr->node, sema->reports, &kEvent_InvalidLiteralType, "char literal must contain at least 1 code point");
+    }
+
+    mpz_t value;
+    mpz_init_set_ui(value, expr->text[0]);
+    tree_t *it = tree_expr_digit(expr->node, type, value);
+
+    return verify_expr_type(sema, eTreeTypeDigit, type, "char literal", it);
 }
 
 static tree_t *sema_name(tree_t *sema, const ctu_t *expr)
@@ -392,7 +415,7 @@ static bool can_index_type(const tree_t *ty)
 static tree_t *sema_index_rvalue(ctu_sema_t *sema, const ctu_t *expr)
 {
     tree_t *index = ctu_sema_rvalue(sema, expr->index, ctu_get_int_type(eDigitSize, eSignUnsigned));
-    tree_t *object = ctu_sema_lvalue(sema, expr->expr);
+    tree_t *object = ctu_sema_rvalue(sema, expr->expr, NULL);
 
     const tree_t *ty = get_ptr_type(tree_get_type(object));
     if (!can_index_type(ty))
@@ -408,7 +431,7 @@ static tree_t *sema_index_rvalue(ctu_sema_t *sema, const ctu_t *expr)
 static tree_t *sema_index_lvalue(ctu_sema_t *sema, const ctu_t *expr)
 {
     tree_t *index = ctu_sema_rvalue(sema, expr->index, ctu_get_int_type(eDigitSize, eSignUnsigned));
-    tree_t *object = ctu_sema_lvalue(sema, expr->expr);
+    tree_t *object = ctu_sema_rvalue(sema, expr->expr, NULL);
 
     const tree_t *ty = get_ptr_type(tree_get_type(object));
     if (!can_index_type(ty))
@@ -653,6 +676,7 @@ tree_t *ctu_sema_rvalue(ctu_sema_t *sema, const ctu_t *expr, const tree_t *impli
     case eCtuExprBool: return sema_bool(sema->sema, expr, inner);
     case eCtuExprInt: return sema_int(sema->sema, expr, inner);
     case eCtuExprString: return sema_string(sema->sema, expr, inner);
+    case eCtuExprChar: return sema_char(sema->sema, expr, inner);
     case eCtuExprCast: return sema_cast(sema, expr);
     case eCtuExprInit: return sema_init(sema, expr, inner);
 

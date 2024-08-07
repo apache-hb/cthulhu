@@ -533,7 +533,7 @@ eq_expr: compare_expr { $$ = $1; }
     ;
 
 and_expr: eq_expr { $$ = $1; }
-    | eq_expr AND xor_expr { $$ = ctu_expr_compare(x, @$, eCompareAnd, $1, $3); }
+    | and_expr AND eq_expr { $$ = ctu_expr_compare(x, @$, eCompareAnd, $1, $3); }
     ;
 
 or_expr: and_expr { $$ = $1; }
