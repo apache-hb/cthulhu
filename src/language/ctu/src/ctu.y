@@ -84,6 +84,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     OUT "`out`"
 
     AS "`as`"
+    CAST "`cast`"
 
     SIZEOF "`__sizeof`"
     ALIGNOF "`__alignof`"
@@ -473,6 +474,7 @@ primary_expr: LPAREN expr RPAREN { $$ = $2; }
     | STRING { $$ = ctu_expr_string(x, @$, $1.text, $1.length); }
     | CHARACTER { $$ = ctu_expr_char(x, @$, $1.text, $1.length); }
     | path { $$ = ctu_expr_name(x, @$, $1); }
+    | CAST LPAREN expr AS type RPAREN { $$ = ctu_expr_cast(x, @$, $3, $5); }
     | AS LT type GT LPAREN expr RPAREN { $$ = ctu_expr_cast(x, @$, $6, $3); }
     | init { $$ = $1; }
     | SIZEOF LPAREN type RPAREN { $$ = ctu_builtin_sizeof(x, @$, $3); }

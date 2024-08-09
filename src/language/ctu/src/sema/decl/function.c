@@ -20,11 +20,11 @@ static void add_param(ctu_sema_t *sema, tree_t *param)
     const char *id = tree_get_name(param);
     const node_t *node = tree_get_node(param);
 
-    if (!tree_is(ty, eTreeTypeStruct))
-    {
-        ctu_add_decl(sema->sema, eCtuTagValues, id, param);
-        return;
-    }
+    // if (!tree_is(ty, eTreeTypeStruct))
+    // {
+    //     ctu_add_decl(sema->sema, eCtuTagValues, id, param);
+    //     return;
+    // }
 
     tree_t *ref = tree_type_reference(node, id, ty);
 

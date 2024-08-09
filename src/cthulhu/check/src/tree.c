@@ -5,6 +5,7 @@
 
 #include "cthulhu/events/events.h"
 
+#include "cthulhu/tree/ops.h"
 #include "cthulhu/util/util.h"
 #include "cthulhu/util/types.h"
 
@@ -491,6 +492,7 @@ static void check_single_expr(check_t *check, const tree_t *expr)
     case eTreeExprField:
     case eTreeExprSizeOf:
     case eTreeExprAlignOf:
+    case eTreeExprAddressOf:
         break;
 
     case eTreeExprOffsetOf:

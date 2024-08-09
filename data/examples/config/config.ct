@@ -53,7 +53,7 @@ def isSpace(letter: char): bool = letter == ' ' || letter == '\t' || letter == '
 def readUntil(current: *char, terminator: char): StringView {
     var front = current;
     while *current != terminator && *current != '\0' {
-        current = current + 1;
+        current = &current[1];
     }
 
     return .{

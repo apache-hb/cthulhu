@@ -107,6 +107,7 @@ SUFFIX ("u"|"ul"|"l"|"uz")?
 "out" { return OUT; }
 
 "as" { return AS; }
+"cast" { return CAST; }
 
 "__sizeof" { return SIZEOF; }
 "__alignof" { return ALIGNOF; }
