@@ -454,6 +454,7 @@ static void check_single_expr(check_t *check, const tree_t *expr)
         break;
 
     case eTreeExprBinary:  // TODO: check for correct types
+    case eTreeExprCompare:
         check_single_expr(check, expr->lhs);
         check_single_expr(check, expr->rhs);
         break;
@@ -462,12 +463,22 @@ static void check_single_expr(check_t *check, const tree_t *expr)
         check_cast_expr(check, expr);
         break;
 
-    case eTreeExprCompare: // TODO: check for correct types
     case eTreeExprUnary:
+        check_single_expr(check, expr->operand);
+        break;
     case eTreeExprLoad:
+        check_single_expr(check, expr->load);
+        break;
+
+    case eTreeExprOffset:
+        check_single_expr(check, expr->object);
+        check_single_expr(check, expr->offset);
+        break;
+
     case eTreeDeclLocal:
     case eTreeDeclParam:
     case eTreeDeclCase:
+    case eTreeDeclGlobal:
     case eTreeDeclFunction:
         break;
 
@@ -477,13 +488,17 @@ static void check_single_expr(check_t *check, const tree_t *expr)
     case eTreeExprUnit:
         break;
 
+    case eTreeExprField:
     case eTreeExprSizeOf:
     case eTreeExprAlignOf:
+        break;
+
     case eTreeExprOffsetOf:
+        check_single_expr(check, expr->object);
         break;
 
     default:
-        CT_NEVER("invalid node kind %s (check-single-expr)", tree_to_string(expr));
+        CT_NEVER("invalid node kind %s", tree_to_string(expr));
     }
 }
 
@@ -502,8 +517,6 @@ static void check_assign(check_t *check, const tree_t *stmt)
             );
         }
     }
-
-    printf("dst: %s\n", tree_to_string(stmt->dst));
 
     if (tree_is(stmt->dst, eTreeDeclParam))
     {
@@ -564,7 +577,7 @@ static void check_func_body(check_t *check, const tree_t *return_type, const tre
         break;
 
     default:
-        CT_NEVER("invalid statement kind %s (check-func-body)", tree_to_string(stmt));
+        CT_NEVER("invalid statement kind %s", tree_to_string(stmt));
     }
 }
 

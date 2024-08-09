@@ -202,9 +202,9 @@ tree_t *tree_decl_local(const node_t *node, const char *name, tree_storage_t sto
     return self;
 }
 
-tree_t *tree_decl_case(const node_t *node, const char *name, tree_t *expr)
+tree_t *tree_decl_case(const node_t *node, const char *name, const tree_t *type, tree_t *expr)
 {
-    tree_t *self = tree_decl(eTreeDeclCase, node, tree_get_type(expr), name, eQualNone);
+    tree_t *self = tree_decl(eTreeDeclCase, node, type, name, eQualNone);
     self->case_value = expr;
     return self;
 }

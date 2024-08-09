@@ -475,6 +475,15 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
         return operand;
     }
 
+    case eTreeDeclCase: {
+        ssa_operand_t operand = {
+            .kind = eOperandImm,
+            .value = ssa_value_from(ssa->types, tree->case_value)
+        };
+
+        return operand;
+    }
+
     case eTreeExprDigit:
     case eTreeExprBool:
     case eTreeExprUnit: {

@@ -504,7 +504,7 @@ CT_TREE_API void tree_close_enum(tree_t *self, const tree_t *underlying, vector_
 CT_TREE_API tree_t *tree_decl_param(const node_t *node, const char *name, const tree_t *type);
 CT_TREE_API tree_t *tree_decl_field(const node_t *node, const char *name, const tree_t *type);
 CT_TREE_API tree_t *tree_decl_local(const node_t *node, const char *name, tree_storage_t storage, const tree_t *type);
-CT_TREE_API tree_t *tree_decl_case(const node_t *node, const char *name, tree_t *expr);
+CT_TREE_API tree_t *tree_decl_case(const node_t *node, const char *name, const tree_t *type, tree_t *expr);
 
 ///
 /// various helpers

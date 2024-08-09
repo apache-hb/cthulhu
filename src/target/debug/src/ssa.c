@@ -290,7 +290,9 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
             );
             break;
         }
-        default: CT_NEVER("unknown opcode %d", step->opcode);
+
+        default:
+            CT_NEVER("unknown opcode %d", step->opcode);
         }
     }
 }
