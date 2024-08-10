@@ -3,6 +3,8 @@
 #include "ctu/sema/expr.h"
 #include "cthulhu/events/events.h"
 #include "cthulhu/tree/builtin.h"
+#include "cthulhu/tree/ops.h"
+#include "cthulhu/tree/tree.h"
 #include "ctu/sema/decl/resolve.h"
 #include "ctu/sema/default.h"
 #include "ctu/sema/type.h"
@@ -398,6 +400,13 @@ static tree_t *sema_ref(ctu_sema_t *sema, const ctu_t *expr)
         return tree_expr_cast(expr->node, ptr, inner, eCastBit); // TODO: is this cast right
     }
 
+    const tree_t *type = tree_get_type(inner);
+    if (tree_is(type, eTreeTypeReference))
+    {
+        tree_t *ptr = tree_type_pointer(expr->node, "", type->ptr, 1);
+        return tree_expr_cast(expr->node, ptr, inner, eCastBit);
+    }
+
     return tree_expr_address(expr->node, inner);
 }
 
@@ -412,7 +421,13 @@ static bool can_index_type(const tree_t *ty)
     }
 }
 
-static tree_t *sema_index_rvalue(ctu_sema_t *sema, const ctu_t *expr)
+typedef struct index_pair_t {
+    tree_t *object;
+    tree_t *index;
+    const tree_t *type;
+} index_pair_t;
+
+static index_pair_t sema_index_inner(ctu_sema_t *sema, const ctu_t *expr)
 {
     tree_t *index = ctu_sema_rvalue(sema, expr->index, ctu_get_int_type(eDigitSize, eSignUnsigned));
     tree_t *object = ctu_sema_rvalue(sema, expr->expr, NULL);
@@ -420,28 +435,48 @@ static tree_t *sema_index_rvalue(ctu_sema_t *sema, const ctu_t *expr)
     const tree_t *ty = get_ptr_type(tree_get_type(object));
     if (!can_index_type(ty))
     {
-        return tree_raise(expr->node, ctu_sema_reports(sema), &kEvent_InvalidIndex,
-                          "cannot index non-pointer type `%s` inside rvalue", tree_to_string(ty));
+        tree_t *error = tree_raise(expr->node, ctu_sema_reports(sema), &kEvent_InvalidIndex,
+                                   "cannot index non-pointer type `%s`", tree_to_string(ty));
+        index_pair_t pair = {
+            .object = error,
+            .index = NULL,
+            .type = NULL,
+        };
+        return pair;
     }
 
-    tree_t *offset = tree_expr_offset(expr->node, ty, object, index);
+    index_pair_t pair = {
+        .object = object,
+        .index = index,
+        .type = ty,
+    };
+
+    return pair;
+}
+
+static tree_t *sema_index_rvalue(ctu_sema_t *sema, const ctu_t *expr)
+{
+    index_pair_t pair = sema_index_inner(sema, expr);
+    if (tree_is(pair.object, eTreeError))
+    {
+        return pair.object;
+    }
+
+    tree_t *offset = tree_expr_offset(expr->node, pair.type, pair.object, pair.index);
     return tree_expr_load(expr->node, offset);
 }
 
 static tree_t *sema_index_lvalue(ctu_sema_t *sema, const ctu_t *expr)
 {
-    tree_t *index = ctu_sema_rvalue(sema, expr->index, ctu_get_int_type(eDigitSize, eSignUnsigned));
-    tree_t *object = ctu_sema_rvalue(sema, expr->expr, NULL);
-
-    const tree_t *ty = get_ptr_type(tree_get_type(object));
-    if (!can_index_type(ty))
+    index_pair_t pair = sema_index_inner(sema, expr);
+    if (tree_is(pair.object, eTreeError))
     {
-        return tree_raise(expr->node, ctu_sema_reports(sema), &kEvent_InvalidIndex,
-                          "cannot index non-pointer type `%s` inside lvalue", tree_to_string(ty));
+        return pair.object;
     }
 
+    const tree_t *ty = pair.type;
     tree_t *ref = tree_type_reference(expr->node, "", ty->ptr);
-    return tree_expr_offset(expr->node, ref, object, index);
+    return tree_expr_offset(expr->node, ref, pair.object, pair.index);
 }
 
 ///
