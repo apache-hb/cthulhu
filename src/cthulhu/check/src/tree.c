@@ -528,6 +528,24 @@ static void check_assign(check_t *check, const tree_t *stmt)
         );
     }
 
+    const tree_t *src_type = tree_follow_type(tree_get_type(stmt->src));
+    const tree_t *dst_type = tree_follow_type(tree_get_type(stmt->dst));
+
+    if (tree_is(src_type, eTreeTypeReference))
+        src_type = src_type->ptr;
+
+    if (tree_is(dst_type, eTreeTypeReference))
+        dst_type = dst_type->ptr;
+
+    if (!util_types_equal(src_type, dst_type))
+    {
+        msg_notify(check->reports, &kEvent_InvalidAssignment, tree_get_node(stmt),
+            "assignment of type `%s` to `%s`",
+            tree_to_string(src_type),
+            tree_to_string(dst_type)
+        );
+    }
+
     check_single_expr(check, stmt->src);
 }
 

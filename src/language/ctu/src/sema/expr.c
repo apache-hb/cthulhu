@@ -24,6 +24,7 @@
 #include "base/panic.h"
 
 #include "core/macros.h"
+#include <stdio.h>
 
 ///
 /// get decls
@@ -215,19 +216,6 @@ static tree_t *sema_load(tree_t *sema, const ctu_t *expr, const tree_t *implicit
 
     tree_t *name = sema_decl_name(sema, expr->node, expr->path, &needs_load);
 
-    // TODO: this feels like a bit of a hack
-    // works around loading a string literal which turns into a char
-    // but we need to check if its a function first to prevent
-    // and assert from getting the type of a possibly unresolved function
-    if (!tree_is(name, eTreeDeclFunction))
-    {
-        const tree_t *type = tree_get_type(name);
-        if (tree_is(type, eTreeTypeString))
-        {
-            needs_load = false;
-        }
-    }
-
     if (needs_load)
     {
         name = tree_expr_load(expr->node, name);
@@ -235,8 +223,8 @@ static tree_t *sema_load(tree_t *sema, const ctu_t *expr, const tree_t *implicit
 
     if (implicit_type != NULL)
     {
-        name = tree_resolve_type(tree_get_cookie(sema), name);
-        return ctu_cast_type(sema, name, implicit_type);
+        tree_t *inner = tree_resolve_type(tree_get_cookie(sema), name);
+        return ctu_cast_type(sema, inner, implicit_type);
     }
 
     return name;

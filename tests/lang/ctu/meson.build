@@ -202,7 +202,9 @@ langtests += {
                 'fail': { },
                 'pass': {
                     'struct ordering': 'struct-ordering',
-                    'string locals': 'string-locals'
+                    'string locals': 'string-locals',
+                    'string init': 'string-init',
+                    'nested string init': 'string-nested-init',
                 }
             }
         },

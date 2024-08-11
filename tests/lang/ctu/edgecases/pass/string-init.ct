@@ -1,0 +1,9 @@
+const a = "a";
+
+struct Data {
+    first: *const(char);
+}
+
+export def hello: Data = .{
+    first = a
+};

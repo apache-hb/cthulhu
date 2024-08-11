@@ -1,0 +1,15 @@
+const a = "a";
+
+struct Inner {
+    a: *const(char);
+}
+
+struct Data {
+    first: Inner;
+}
+
+export def hello: Data = .{
+    first = .{
+        a = a
+    }
+};

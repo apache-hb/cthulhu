@@ -634,4 +634,12 @@ CTU_EVENT(AssignToParam, {
         "A parameter was assigned to, if a frontend allows this it must create a local copy.",
 })
 
+CTU_EVENT(InvalidAssignment, {
+    .severity = eSeverityFatal,
+    .id = "M0086",
+    .brief = "Invalid assignment",
+    .description =
+        "Source and destination types in assignment are incompatible.",
+})
+
 #undef CTU_EVENT
