@@ -104,7 +104,7 @@ export const FILE_ATTRIBUTE_NORMAL: DWORD = 0x80;
 
 export const GENERIC_READ: DWORD = 0x80000000;
 export const OPEN_EXISTING: DWORD = 3;
-export const INVALID_HANDLE_VALUE: HANDLE = as<HANDLE>(cstdlib::ULONG_MAX);
+export const INVALID_HANDLE_VALUE: HANDLE = cast(-1 as HANDLE);
 
 export const FILE_SHARE_READ: DWORD = 0x1;
 

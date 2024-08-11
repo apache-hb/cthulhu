@@ -165,7 +165,7 @@ static char *enum_to_string(ssa_type_enum_t sum, arena_t *arena)
     for (size_t i = 0; i < len; i++)
     {
         const ssa_case_t *field = typevec_offset(sum.cases, i);
-        char *segment = str_format(arena, "%s: %s", field->name, mpz_get_str(NULL, 10, field->value));
+        char *segment = str_format(arena, "%s: %s", field->name, c89_format_integer_literal(arena, field->value));
         vector_set(variants, i, segment);
     }
 

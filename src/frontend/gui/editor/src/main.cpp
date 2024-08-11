@@ -567,8 +567,7 @@ static void draw_json_number(const ctu::json::Json& value)
     mpz_t digit;
     value.as_integer(digit);
     char buffer[1024];
-    mpz_get_str(buffer, 10, digit);
-    ImGui::TextUnformatted(buffer);
+    ImGui::TextUnformatted(mpz_get_str(buffer, 10, digit));
     mpz_clear(digit);
 }
 

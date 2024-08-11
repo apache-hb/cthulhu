@@ -25,7 +25,6 @@
 #include "core/macros.h"
 
 #include <limits.h>
-#include <stdio.h>
 
 static int integer_fits_longlong(const mpz_t value)
 {
@@ -307,7 +306,7 @@ static const char *format_symbol(c89_emit_t *emit, const ssa_type_t *type, const
     return c89_format_type(emit, type, name, eFormatEmitConst);
 }
 
-static char *format_integer_literal(arena_t *arena, const mpz_t value)
+char *c89_format_integer_literal(arena_t *arena, const mpz_t value)
 {
     if (mpz_fits_sint_p(value))
         return mpz_get_str(NULL, 10, value);
@@ -326,7 +325,7 @@ static char *format_integer_value(arena_t *arena, const ssa_value_t *value)
 {
     mpz_t digit;
     ssa_value_get_digit(value, digit);
-    return format_integer_literal(arena, digit);
+    return c89_format_integer_literal(arena, digit);
 }
 
 static void define_enum(io_t *io, const ssa_type_t *type, c89_emit_t *emit)
@@ -349,7 +348,7 @@ static void define_enum(io_t *io, const ssa_type_t *type, c89_emit_t *emit)
         const ssa_case_t *field = typevec_offset(it.cases, i);
 
         // TODO: formalize the name mangling for enum fields
-        io_printf(io, "\te%s%s = %s,\n", type->name, field->name, format_integer_literal(emit->arena, field->value));
+        io_printf(io, "\te%s%s = %s,\n", type->name, field->name, c89_format_integer_literal(emit->arena, field->value));
     }
     io_printf(io, "};\n");
 }
@@ -600,7 +599,7 @@ static const char *c89_format_opaque(c89_emit_t *emit, const ssa_value_t *value)
     if (value->value == eValueLiteral)
     {
         ssa_literal_value_t literal = value->literal;
-        return str_format(emit->arena, "((void*)%sull)", mpz_get_str(NULL, 10, literal.pointer));
+        return str_format(emit->arena, "((void*)%s)", c89_format_integer_literal(emit->arena, literal.pointer));
     }
 
     if (value->value == eValueRelative)

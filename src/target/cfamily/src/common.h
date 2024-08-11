@@ -35,3 +35,5 @@ CT_LOCAL char *get_anon_local_name(emit_t *emit, const ssa_local_t *local, const
 CT_LOCAL char *get_step_from_block(emit_t *emit, const ssa_block_t *block, size_t index);
 
 CT_LOCAL const char *type_to_string(const ssa_type_t *type, arena_t *arena);
+
+CT_LOCAL char *c89_format_integer_literal(arena_t *arena, const mpz_t value);

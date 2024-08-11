@@ -528,6 +528,7 @@ static void check_assign(check_t *check, const tree_t *stmt)
         );
     }
 
+#if 0
     const tree_t *src_type = tree_follow_type(tree_get_type(stmt->src));
     const tree_t *dst_type = tree_follow_type(tree_get_type(stmt->dst));
 
@@ -545,6 +546,7 @@ static void check_assign(check_t *check, const tree_t *stmt)
             tree_to_string(dst_type)
         );
     }
+#endif
 
     check_single_expr(check, stmt->src);
 }
