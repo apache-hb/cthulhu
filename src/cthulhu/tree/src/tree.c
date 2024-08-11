@@ -270,7 +270,11 @@ tree_t *tree_expr_load(const node_t *node, tree_t *expr)
 
 static const tree_t *get_ref_inner(const tree_t *ty)
 {
-    if (tree_is(ty, eTreeTypeReference) || tree_is(ty, eTreeTypePointer)) { return ty->ptr; }
+    if (tree_is(ty, eTreeTypeReference) || tree_is(ty, eTreeTypePointer))
+    {
+        return ty->ptr;
+    }
+
     return ty;
 }
 

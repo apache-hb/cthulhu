@@ -1,9 +1,7 @@
 module example::config;
 
 import win32;
-import cstdlib;
-
-const null = as<opaque>(0);
+import cstdlib as libc;
 
 export struct StringView {
     front: *char;
@@ -37,7 +35,7 @@ export struct ConfigFile {
 
 def reportErrorMessage(name: str) {
     const lastError = win32::GetLastError();
-    cstdlib::printf("%s: %d\n", name, lastError);
+    libc::printf("%s: %d\n", name, lastError);
 }
 
 struct Lexer {
@@ -64,12 +62,12 @@ def readUntil(current: *char, terminator: char): StringView {
 
 export def openConfigFile(path: str): ConfigFile {
     var file = mapFileHandle(path);
-    if file.fileView == null {
+    if file.fileView == libc::null {
         return .{ };
     }
 
-    var sections: [*]ConfigSection = cstdlib::malloc(__sizeof(ConfigSection) * 4);
-    var entries: [*]ConfigEntry = cstdlib::malloc(__sizeof(ConfigEntry) * 16);
+    var sections: [*]ConfigSection = libc::malloc(__sizeof(ConfigSection) * 4);
+    var entries: [*]ConfigEntry = libc::malloc(__sizeof(ConfigEntry) * 16);
 
     var index: uint = 0;
 
@@ -89,6 +87,8 @@ export def openConfigFile(path: str): ConfigFile {
                 firstEntry = file.entryCount,
                 lastEntry = file.entryCount
             };
+
+            file.sectionCount = file.sectionCount + 1;
         }
 
         if isAlpha(letter) {
@@ -110,10 +110,10 @@ def mapFileHandle(path: str): ConfigFile {
         /* lpFileName */ path,
         /* dwDesiredAccess */ win32::GENERIC_READ,
         /* dwShareMode */ win32::FILE_SHARE_READ,
-        /* lpSecurityAttributes */ null,
+        /* lpSecurityAttributes */ libc::null,
         /* dwCreationDisposition */ win32::OPEN_EXISTING,
         /* dwFlagsAndAttributes */ win32::FILE_ATTRIBUTE_NORMAL,
-        /* hTemplateFile */ null
+        /* hTemplateFile */ libc::null
     );
 
     if fileHandle == win32::INVALID_HANDLE_VALUE {
@@ -133,14 +133,14 @@ def mapFileHandle(path: str): ConfigFile {
 
     var viewHandle = win32::CreateFileMappingA(
         /* hFile */ fileHandle,
-        /* lpAttributes */ null,
+        /* lpAttributes */ libc::null,
         /* flProtect */ win32::PAGE_READONLY,
         /* dwMaximumSizeHigh */ as<win32::DWORD>(fileSize.QuadPart >> 32),
         /* dwMaximumSizeLow */ as<win32::DWORD>(fileSize.QuadPart & 0xFFFFFFFF),
-        /* lpName */ null
+        /* lpName */ libc::null
     );
 
-    if viewHandle == null {
+    if viewHandle == libc::null {
         reportErrorMessage("CreateFileMappingA");
         win32::CloseHandle(fileHandle);
         win32::CloseHandle(viewHandle);
@@ -156,7 +156,7 @@ def mapFileHandle(path: str): ConfigFile {
         /* dwNumberOfBytesToMap */ 0
     );
 
-    if fileView == null {
+    if fileView == libc::null {
         reportErrorMessage("MapViewOfFile");
         win32::CloseHandle(fileHandle);
         win32::CloseHandle(viewHandle);

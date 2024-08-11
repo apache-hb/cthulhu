@@ -512,20 +512,28 @@ static tree_t *sema_field_common(ctu_sema_t *sema, const ctu_t *expr, tree_t **o
 
 static tree_t *sema_field_lvalue(ctu_sema_t *sema, const ctu_t *expr)
 {
-    tree_t *object;
-    tree_t *field;
-    tree_t *ref = sema_field_common(sema, expr, &object, &field);
+    tree_t *object = NULL;
+    tree_t *field = NULL;
+    tree_t *type = sema_field_common(sema, expr, &object, &field);
+    if (tree_is(type, eTreeError))
+    {
+        return type;
+    }
 
-    return tree_expr_field(expr->node, ref, object, field);
+    return tree_expr_field(expr->node, type, object, field);
 }
 
 static tree_t *sema_field_rvalue(ctu_sema_t *sema, const ctu_t *expr)
 {
-    tree_t *object;
-    tree_t *field;
-    tree_t *ref = sema_field_common(sema, expr, &object, &field);
+    tree_t *object = NULL;
+    tree_t *field = NULL;
+    tree_t *type = sema_field_common(sema, expr, &object, &field);
+    if (tree_is(type, eTreeError))
+    {
+        return type;
+    }
 
-    tree_t *access = tree_expr_field(expr->node, ref, object, field);
+    tree_t *access = tree_expr_field(expr->node, type, object, field);
     return tree_expr_load(expr->node, access);
 }
 

@@ -1,5 +1,7 @@
 module cstdlib;
 
+export const null: opaque = cast(0 as opaque);
+
 @extern("exit")
 export def exit(status: int);
 
