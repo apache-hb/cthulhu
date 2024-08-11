@@ -215,6 +215,19 @@ static tree_t *sema_load(tree_t *sema, const ctu_t *expr, const tree_t *implicit
 
     tree_t *name = sema_decl_name(sema, expr->node, expr->path, &needs_load);
 
+    // TODO: this feels like a bit of a hack
+    // works around loading a string literal which turns into a char
+    // but we need to check if its a function first to prevent
+    // and assert from getting the type of a possibly unresolved function
+    if (!tree_is(name, eTreeDeclFunction))
+    {
+        const tree_t *type = tree_get_type(name);
+        if (tree_is(type, eTreeTypeString))
+        {
+            needs_load = false;
+        }
+    }
+
     if (needs_load)
     {
         name = tree_expr_load(expr->node, name);
@@ -614,22 +627,24 @@ static tree_t *sema_init(ctu_sema_t *sema, const ctu_t *expr, const tree_t *impl
     size_t len = vector_len(expr->inits);
     for (size_t i = 0; i < len; i++)
     {
-        ctu_t *init = vector_get(expr->inits, i);
-        CTASSERTF(init->kind == eCtuFieldInit, "invalid init kind %d", init->kind);
+        ctu_t *element = vector_get(expr->inits, i);
+        CTASSERTF(element->kind == eCtuFieldInit, "invalid init kind %d", element->kind);
 
-        tree_t *field = tree_ty_get_field(implicit_type, init->field);
+        tree_t *field = tree_ty_get_field(implicit_type, element->field);
         if (field == NULL)
         {
-            msg_notify(reports, &kEvent_FieldNotFound, init->node,
-                       "field `%s` not found in struct `%s`", init->field,
+            msg_notify(reports, &kEvent_FieldNotFound, element->node,
+                       "field `%s` not found in struct `%s`", element->field,
                        tree_to_string(implicit_type));
             continue;
         }
 
-        tree_t *value = ctu_sema_rvalue(sema, init->expr, tree_get_type(field));
-        tree_t *ref_type = tree_type_reference(init->node, "", tree_get_type(field));
-        tree_t *dst = tree_expr_field(init->node, ref_type, local, field);
-        tree_t *assign = tree_stmt_assign(init->node, dst, value);
+        const tree_t *field_type = tree_get_type(field);
+
+        tree_t *value = ctu_sema_rvalue(sema, element->expr, field_type);
+        tree_t *ref_type = tree_type_reference(element->node, "", field_type);
+        tree_t *dst = tree_expr_field(element->node, ref_type, local, field);
+        tree_t *assign = tree_stmt_assign(element->node, dst, value);
 
         vector_push(&sema->block, assign);
         set_add(fields, field);

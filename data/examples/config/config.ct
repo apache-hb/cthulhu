@@ -4,8 +4,8 @@ import win32;
 import cstdlib as libc;
 
 export struct StringView {
-    front: *char;
-    back: *char;
+    front: *const(char);
+    back: *const(char);
 }
 
 export struct ConfigEntry {
@@ -60,17 +60,36 @@ def readUntil(current: *char, terminator: char): StringView {
     };
 }
 
+const kGlobalSectionName = "global";
+
 export def openConfigFile(path: str): ConfigFile {
     var file = mapFileHandle(path);
     if file.fileView == libc::null {
         return .{ };
     }
 
-    var sections: [*]ConfigSection = libc::malloc(__sizeof(ConfigSection) * 4);
+    var sections: [*]ConfigSection = libc::malloc(__sizeof(ConfigSection) * 8);
     var entries: [*]ConfigEntry = libc::malloc(__sizeof(ConfigEntry) * 16);
 
-    var index: uint = 0;
+    file.sections = sections;
+    file.entries = entries;
 
+    const innerName = kGlobalSectionName;
+
+    const globalName: StringView = .{
+        front = kGlobalSectionName,
+        back = &kGlobalSectionName[6]
+    };
+
+    sections[0] = .{
+        name = globalName,
+        firstEntry = 0,
+        lastEntry = 0
+    };
+
+    file.sectionCount = 1;
+
+    var index: uint = 0;
     while index < file.fileSize {
         const letter = file.fileView[index];
         index = index + 1;
