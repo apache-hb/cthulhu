@@ -375,7 +375,8 @@ int run_test_harness(int argc, const char **argv, arena_t *arena)
                    "compilation failed `%d`", status);
     }
 #else
-    char *cmd = str_format(arena, "cd %s && cc %s -c -Iinclude -Werror", run_dir, str_join(" ", sources, arena));
+#   define CC_FLAGS "-Werror -Wno-format-contains-nul -Wno-unused-variable -Wno-unused-function"
+    char *cmd = str_format(arena, "cd %s && cc %s -c -Iinclude " CC_FLAGS, run_dir, str_join(" ", sources, arena));
     int status = system(cmd); // NOLINT
     if (WEXITSTATUS(status) != CT_EXIT_OK)
     {

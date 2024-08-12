@@ -1026,6 +1026,8 @@ void c89_define_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_sy
 
     ssa_type_closure_t closure = type->closure;
     const char *params = c89_format_params(emit, closure.params, closure.variadic);
+
+    // TODO: handle -Werror=main when the entry point doesnt return int
     const char *result = format_symbol(emit, closure.result, mangle_symbol_name(emit, symbol));
 
     const char *link = format_c89_link(symbol->linkage);

@@ -216,6 +216,14 @@ static tree_t *sema_load(tree_t *sema, const ctu_t *expr, const tree_t *implicit
 
     tree_t *name = sema_decl_name(sema, expr->node, expr->path, &needs_load);
 
+    if (!tree_is(name, eTreeDeclFunction))
+    {
+        if (tree_is(tree_get_type(name), eTreeTypeArray))
+        {
+            needs_load = false;
+        }
+    }
+
     if (needs_load)
     {
         name = tree_expr_load(expr->node, name);
@@ -926,14 +934,14 @@ tree_t *ctu_sema_stmt(ctu_sema_t *sema, const ctu_t *stmt)
     }
 }
 
-size_t ctu_resolve_storage_size(const tree_t *type)
+size_t ctu_resolve_storage_length(const tree_t *type)
 {
     switch (tree_get_kind(type))
     {
     case eTreeTypePointer:
     case eTreeTypeArray:
         CTASSERTF(type->length != SIZE_MAX, "type %s has no length", tree_to_string(type));
-        return ctu_resolve_storage_size(type->ptr) * type->length;
+        return ctu_resolve_storage_length(type->ptr) * type->length;
 
     default: return 1;
     }
