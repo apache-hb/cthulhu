@@ -1,15 +1,35 @@
-import example::config;
+import example::config as cfg;
 import cstdlib as libc;
 import win32;
 
 @entry(cli)
 def main {
-    var file = config::openConfigFile("example.ini");
+    var file = cfg::openConfigFile("example.ini");
     if file.fileView == libc::null {
         cstdlib::printf("Failed to open file\n");
         libc::exit(1);
     }
-    cstdlib::printf("sectionCount: %zu, entryCount: %zu\n", file.sectionCount, file.entryCount);
-    config::closeConfigFile(file);
+
+    libc::printf("sectionCount: %zu, entryCount: %zu\n", file.sectionCount, file.entryCount);
+
+    var index: uint = 0;
+    while index < file.sectionCount {
+        const section = file.sections[index];
+        const nameLength = cfg::stringViewLength(section.name);
+        libc::printf("Section %u: %.*s (%u entries)\n", index, nameLength, section.name.front, (section.lastEntry - section.firstEntry) + 1);
+
+        var entryIndex = section.firstEntry;
+        while entryIndex <= section.lastEntry {
+            const entry = file.entries[entryIndex];
+            const keyLength = cfg::stringViewLength(entry.key);
+            const valueLength = cfg::stringViewLength(entry.value);
+            libc::printf("Key %u: `%.*s` = `%.*s`\n", entryIndex, keyLength, entry.key.front, valueLength, entry.value.front);
+            entryIndex = entryIndex + 1;
+        }
+
+        index = index + 1;
+    }
+
+    cfg::closeConfigFile(file);
     libc::exit(0);
 }

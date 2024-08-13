@@ -176,6 +176,11 @@ static tree_t *cast_to_digit(const tree_t *dst, tree_t *expr)
 
     const tree_t *src = tree_get_type(expr);
 
+    if (util_type_is_pointer(src) && dst->digit == eDigitPtr)
+    {
+        return tree_expr_cast(tree_get_node(expr), dst, expr, eCastBit);
+    }
+
     // TODO: need to distinguish between explicit and implicit casts
     switch (tree_get_kind(src))
     {

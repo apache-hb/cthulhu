@@ -267,6 +267,11 @@ langtests += {
                 'dir': 'typealias',
                 'should_fail': true,
                 'files': [ 'config', 'win32' ]
+            },
+            'invalid import alias': {
+                'dir': 'import-alias',
+                'should_fail': true,
+                'files': [ 'main', 'cstdlib' ]
             }
         }
     }

@@ -23,7 +23,7 @@ run: $(MAIN)
 
 ifeq ($(OS),Windows_NT)
 $(MAIN): $(SOURCES)
-	$(CC) /nologo $(BUILDDIR)/module.c /TC /Fe:$(MAIN) /DEBUG:FULL /Zi /Fo:$(BUILDDIR)/main.obj /Fd:$(BUILDDIR)/
+	$(CC) /nologo $(BUILDDIR)/module.c /TC /Fe:$(MAIN) /DEBUG:FULL /Zi /Fo:$(BUILDDIR)/main.obj /Fd:$(BUILDDIR)/ /fsanitize=address
 else
 $(MAIN): $(SOURCES)
 	$(CC) $(BUILDDIR)/module.c -o$(BUILDDIR)/main -Wno-format-security -Wno-format-contains-nul

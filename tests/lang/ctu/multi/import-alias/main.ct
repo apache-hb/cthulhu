@@ -1,0 +1,6 @@
+import cstdlib as libc;
+
+@entry(cli)
+def main {
+    cstdlib::printf("Hello, World!\n");
+}
