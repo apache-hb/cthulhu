@@ -453,6 +453,15 @@ static void check_binary_expr(check_t *check, const tree_t *expr)
     const tree_t *lhs = get_simple_expr_type(expr->lhs);
     const tree_t *rhs = get_simple_expr_type(expr->rhs);
 
+    if (!tree_is(lhs, eTreeTypeDigit) || !tree_is(rhs, eTreeTypeDigit))
+    {
+        msg_notify(check->reports, &kEvent_InvalidType, tree_get_node(expr),
+            "binary operation with non-digit types `%s` and `%s`",
+            tree_to_string(lhs),
+            tree_to_string(rhs)
+        );
+    }
+
     if (!util_types_equal(lhs, rhs))
     {
         msg_notify(check->reports, &kEvent_InvalidType, tree_get_node(expr),
