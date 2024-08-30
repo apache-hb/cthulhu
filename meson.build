@@ -71,6 +71,7 @@ lang_pl0 = get_option('lang_pl0').disable_auto_if(meson.is_subproject())
 lang_oberon = get_option('lang_oberon').disable_auto_if(meson.is_subproject())
 lang_example = get_option('lang_example').disable_auto_if(meson.is_subproject())
 lang_cc = get_option('lang_cc').disable_auto_if(meson.is_subproject())
+lang_sql = get_option('lang_sql').disable_auto_if(meson.is_subproject())
 
 # all the codegen targets
 target_cfamily = get_option('target_cfamily').disable_auto_if(meson.is_subproject())
@@ -92,6 +93,11 @@ frontend_gui = frontend_gui.require(target == 'windows')
 if unit_tests.enabled() and is_release and cc.get_id() == 'gcc'
     warning('enabling unit tests in release mode with gcc will result in degraded performance')
 endif
+
+libkwargs = {
+    'install': not meson.is_subproject(),
+    'build_by_default': not meson.is_subproject()
+}
 
 # args for all code
 all_args = cc.get_supported_arguments(
@@ -358,7 +364,8 @@ build_summary = {
         'PL/0': lang_pl0.allowed(),
         'Oberon-2': lang_oberon.allowed(),
         'Example': lang_example.allowed(),
-        'C': lang_cc.allowed()
+        'C': lang_cc.allowed(),
+        'SQL': lang_sql.allowed()
     },
     'Tools': {
         'Notify': tool_notify.allowed(),

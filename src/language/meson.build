@@ -17,3 +17,7 @@ endif
 if lang_cc.allowed()
     subdir('cfamily/cc')
 endif
+
+if lang_sql.allowed()
+    subdir('sql')
+endif
