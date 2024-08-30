@@ -272,6 +272,19 @@ static const ssa_value_t *cast_to_pointer(const ssa_type_t *type, const ssa_valu
     CT_NEVER("unhandled value kind %d", value->value);
 }
 
+static const ssa_value_t *cast_to_digit(const ssa_value_t *value)
+{
+    const ssa_type_t *src = value->type;
+    switch (src->kind)
+    {
+    case eTypeOpaque:
+    case eTypeDigit:
+        return value;
+
+    default: CT_NEVER("unhandled type %s", ssa_type_name(src->kind));
+    }
+}
+
 static const ssa_value_t *ssa_opt_cast(ssa_scope_t *vm, ssa_cast_t cast)
 {
     const ssa_value_t *value = ssa_opt_operand(vm, cast.operand);
@@ -283,6 +296,9 @@ static const ssa_value_t *ssa_opt_cast(ssa_scope_t *vm, ssa_cast_t cast)
 
     case eTypePointer:
         return cast_to_pointer(type, value);
+
+    case eTypeDigit:
+        return cast_to_digit(value);
 
     default:
         CT_NEVER("unhandled type %s", ssa_type_name(type->kind));

@@ -269,14 +269,41 @@ static bool eval_binary(mpz_t value, const tree_t *expr)
     return true;
 }
 
+static bool eval_cast(mpz_t value, const tree_t *expr)
+{
+    CTASSERT(expr != NULL);
+
+    mpz_t src;
+    mpz_init(src);
+
+    if (!util_eval_digit(src, expr->expr))
+    {
+        return false;
+    }
+
+    switch (expr->cast)
+    {
+    case eCastSignExtend: mpz_set(value, src); break;
+    default: return false;
+    }
+
+    return true;
+}
+
 bool util_eval_digit(mpz_t value, const tree_t *expr)
 {
     CTASSERT(expr != NULL);
     switch (tree_get_kind(expr))
     {
-    case eTreeExprDigit: mpz_set(value, expr->digit_value); return true;
+    case eTreeExprDigit:
+        mpz_set(value, expr->digit_value);
+        return true;
 
-    case eTreeExprBinary: return eval_binary(value, expr);
+    case eTreeExprBinary:
+        return eval_binary(value, expr);
+
+    case eTreeExprCast:
+        return eval_cast(value, expr);
 
     default: return false;
     }

@@ -104,8 +104,8 @@ typedef struct tree_t {
                 compare_t compare;
             };
 
-            tree_t *lhs;
-            tree_t *rhs;
+            const tree_t *lhs;
+            const tree_t *rhs;
         };
 
         /* eTreeExprCall */
@@ -391,8 +391,8 @@ CT_TREE_API tree_t *tree_expr_load(const node_t *node, tree_t *expr);
 CT_TREE_API tree_t *tree_expr_address(const node_t *node, tree_t *expr);
 
 CT_TREE_API tree_t *tree_expr_unary(const node_t *node, unary_t unary, tree_t *expr);
-CT_TREE_API tree_t *tree_expr_binary(const node_t *node, const tree_t *type, binary_t binary, tree_t *lhs, tree_t *rhs);
-CT_TREE_API tree_t *tree_expr_compare(const node_t *node, const tree_t *type, compare_t compare, tree_t *lhs, tree_t *rhs);
+CT_TREE_API tree_t *tree_expr_binary(const node_t *node, const tree_t *type, binary_t binary, const tree_t *lhs, const tree_t *rhs);
+CT_TREE_API tree_t *tree_expr_compare(const node_t *node, const tree_t *type, compare_t compare, const tree_t *lhs, const tree_t *rhs);
 
 CT_TREE_API tree_t *tree_expr_field(const node_t *node, const tree_t *type, tree_t *object, tree_t *field);
 

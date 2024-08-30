@@ -266,7 +266,10 @@ static tree_t *sema_binary(ctu_sema_t *sema, const ctu_t *expr, const tree_t *im
     // TODO: calculate proper type to use
     const tree_t *common_type = implicit_type == NULL ? tree_get_type(left) : implicit_type;
 
-    return tree_expr_binary(expr->node, common_type, expr->binary, left, right);
+    const tree_t *lhs = ctu_cast_type(sema->sema, left, common_type);
+    const tree_t *rhs = ctu_cast_type(sema->sema, right, common_type);
+
+    return tree_expr_binary(expr->node, common_type, expr->binary, lhs, rhs);
 }
 
 static tree_t *sema_unary(ctu_sema_t *sema, const ctu_t *expr, const tree_t *implicit_type)

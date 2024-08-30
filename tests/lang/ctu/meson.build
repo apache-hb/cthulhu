@@ -21,6 +21,10 @@ langtests += {
             'expr': {
                 'pass': {
                     'complex cast expression': 'cast-expr'
+                },
+                'fail': {
+                    'pointer arithmetic': 'add-ptr',
+                    'pointer arithmetic with a literal number': 'add-ptr-literal'
                 }
             },
             'const': {
