@@ -36,7 +36,7 @@ typedef struct map_t map_t;
 /// @param args the arguments to format
 ///
 /// @return the number of characters written
-CT_STD_API size_t str_vsprintf(OUT_WRITES(len) char *str, size_t len, IN_STRING const char *fmt, va_list args);
+CT_STD_API size_t str_vsprintf(STA_WRITES(len) char *str, size_t len, IN_STRING const char *fmt, va_list args);
 
 /// @brief format a string with printf-like syntax
 ///
@@ -52,7 +52,7 @@ CT_STD_API size_t str_vsprintf(OUT_WRITES(len) char *str, size_t len, IN_STRING 
 ///
 /// @return the number of characters written
 STA_PRINTF(3, 4)
-CT_STD_API size_t str_sprintf(OUT_WRITES(len) char *str, size_t len, STA_FORMAT_STRING const char *fmt, ...);
+CT_STD_API size_t str_sprintf(STA_WRITES(len) char *str, size_t len, STA_FORMAT_STRING const char *fmt, ...);
 
 /// @brief format a string
 ///
@@ -122,8 +122,17 @@ CT_STD_API bool str_startswith(IN_STRING const char *str, IN_STRING const char *
 CT_NODISCARD CT_PUREFN
 CT_STD_API bool str_endswith(IN_STRING const char *str, IN_STRING const char *suffix);
 
+/// @brief check if a string ends with a substring
+///
+/// equivalent to str_endswith but with a length parameter
+///
+/// @param str the string to search
+/// @param len the length of the string
+/// @param suffix the suffix to check for
+///
+/// @return if str ends with suffix
 CT_NODISCARD CT_PUREFN
-CT_STD_API bool str_endswithn(IN_STRING const char *str, size_t len, IN_STRING const char *suffix);
+CT_STD_API bool str_endswithn(STA_READS(len) const char *str, size_t len, IN_STRING const char *suffix);
 
 /// @brief join strings
 ///
@@ -232,8 +241,14 @@ CT_STD_API size_t str_rfind(IN_STRING const char *str, IN_STRING const char *sub
 RET_INSPECT CT_PUREFN
 CT_STD_API size_t str_find(IN_STRING const char *str, IN_STRING const char *sub);
 
+/// @brief find the first instance of a set of characters in a string
+///
+/// @param str the string to search
+/// @param letters the characters to search for
+///
+/// @return the index of the first instance of any character in @p letters in @p str, or @a SIZE_MAX if no character is found
 RET_INSPECT CT_PUREFN
-CT_STD_API size_t str_rfind_any(IN_STRING const char *str, IN_STRING const char *chars);
+CT_STD_API size_t str_rfind_any(IN_STRING const char *str, IN_STRING const char *letters);
 
 /// @brief check if a character is any of a set of characters
 ///
@@ -302,7 +317,7 @@ CT_STD_API char *str_replace_many(IN_STRING const char *str, IN_NOTNULL const ma
 ///
 /// @return @p str with all instances of @p letters removed
 CT_NODISCARD CT_NOALIAS
-CT_STD_API char *str_erase(IN_READS(len) char *str, size_t len, IN_STRING const char *letters);
+CT_STD_API char *str_erase(STA_READS(len) char *str, size_t len, IN_STRING const char *letters);
 
 /// @brief get the filename from a path
 ///

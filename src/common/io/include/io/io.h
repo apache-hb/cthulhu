@@ -115,7 +115,7 @@ CT_IO_API io_t *io_string(IN_STRING const char *name, IN_STRING const char *stri
 ///
 /// @return the initialized io object
 CT_NODISCARD CT_ALLOC(io_close)
-CT_IO_API io_t *io_file_init(OUT_WRITES(IO_FILE_SIZE) void *buffer, IN_STRING const char *path, os_access_t mode);
+CT_IO_API io_t *io_file_init(STA_WRITES(IO_FILE_SIZE) void *buffer, IN_STRING const char *path, os_access_t mode);
 
 /// @brief create an io object from a memory buffer
 /// initializes an io object using a preallocated buffer.
@@ -134,7 +134,7 @@ CT_IO_API io_t *io_file_init(OUT_WRITES(IO_FILE_SIZE) void *buffer, IN_STRING co
 ///
 /// @return the initialized io object
 CT_NODISCARD CT_ALLOC(io_close)
-CT_IO_API io_t *io_memory_init(OUT_WRITES(IO_BUFFER_SIZE) void *buffer, IN_STRING const char *name, const void *data, size_t size, os_access_t flags, IN_NOTNULL arena_t *arena);
+CT_IO_API io_t *io_memory_init(STA_WRITES(IO_BUFFER_SIZE) void *buffer, IN_STRING const char *name, const void *data, size_t size, os_access_t flags, IN_NOTNULL arena_t *arena);
 
 /// @brief create an io object from a memory buffer
 /// initializes an io object using a preallocated buffer.
@@ -152,7 +152,7 @@ CT_IO_API io_t *io_memory_init(OUT_WRITES(IO_BUFFER_SIZE) void *buffer, IN_STRIN
 ///
 /// @return the initialized io object
 CT_NODISCARD CT_ALLOC(io_close)
-CT_IO_API io_t *io_blob_init(OUT_WRITES(IO_BUFFER_SIZE) void *buffer, IN_STRING const char *name, size_t size, os_access_t flags, IN_NOTNULL arena_t *arena);
+CT_IO_API io_t *io_blob_init(STA_WRITES(IO_BUFFER_SIZE) void *buffer, IN_STRING const char *name, size_t size, os_access_t flags, IN_NOTNULL arena_t *arena);
 
 /// @brief create an io object from a memory buffer
 /// initializes an io object using a preallocated buffer.
@@ -169,7 +169,7 @@ CT_IO_API io_t *io_blob_init(OUT_WRITES(IO_BUFFER_SIZE) void *buffer, IN_STRING 
 ///
 /// @return the initialized io object
 CT_NODISCARD CT_ALLOC(io_close)
-CT_IO_API io_t *io_view_init(OUT_WRITES(IO_VIEW_SIZE) void *buffer, IN_STRING const char *name, IN_NOTNULL const void *data, size_t size);
+CT_IO_API io_t *io_view_init(STA_WRITES(IO_VIEW_SIZE) void *buffer, IN_STRING const char *name, IN_NOTNULL const void *data, size_t size);
 
 /// @brief create an io object from a memory buffer
 /// initializes an io object using a preallocated buffer.
@@ -185,7 +185,7 @@ CT_IO_API io_t *io_view_init(OUT_WRITES(IO_VIEW_SIZE) void *buffer, IN_STRING co
 ///
 /// @return the initialized io object
 CT_NODISCARD CT_ALLOC(io_close)
-CT_IO_API io_t *io_string_init(OUT_WRITES(IO_VIEW_SIZE) void *buffer, IN_STRING const char *name, IN_STRING const char *string);
+CT_IO_API io_t *io_string_init(STA_WRITES(IO_VIEW_SIZE) void *buffer, IN_STRING const char *name, IN_STRING const char *string);
 
 /// @brief read from an io object
 /// @pre the io object must have been created with the @a eOsAccessRead flag
@@ -195,7 +195,7 @@ CT_IO_API io_t *io_string_init(OUT_WRITES(IO_VIEW_SIZE) void *buffer, IN_STRING 
 /// @param size the number of bytes to read
 ///
 /// @return the number of bytes actually read
-CT_IO_API size_t io_read(IN_NOTNULL io_t *io, OUT_WRITES(size) void *dst, size_t size);
+CT_IO_API size_t io_read(IN_NOTNULL io_t *io, STA_WRITES(size) void *dst, size_t size);
 
 /// @brief write to an io object
 /// @pre the io object must have been created with the @a eOsAccessWrite flag
@@ -205,7 +205,7 @@ CT_IO_API size_t io_read(IN_NOTNULL io_t *io, OUT_WRITES(size) void *dst, size_t
 /// @param size the number of bytes to copy into the file
 ///
 /// @return the number of bytes actually written
-CT_IO_API size_t io_write(IN_NOTNULL io_t *io, IN_READS(size) const void *src, size_t size);
+CT_IO_API size_t io_write(IN_NOTNULL io_t *io, STA_READS(size) const void *src, size_t size);
 
 /// @brief printf to an io object
 /// @pre the io object must have been created with the @a eOsAccessWrite flag
@@ -216,7 +216,7 @@ CT_IO_API size_t io_write(IN_NOTNULL io_t *io, IN_READS(size) const void *src, s
 ///
 /// @return the number of bytes actually written
 STA_PRINTF(2, 3)
-CT_IO_API size_t io_printf(STA_IN io_t *io, STA_FORMAT_STRING const char *fmt, ...);
+CT_IO_API size_t io_printf(IN_NOTNULL io_t *io, STA_FORMAT_STRING const char *fmt, ...);
 
 /// @brief vprintf to an io object
 /// @pre the io object must have been created with the @a eOsAccessWrite flag

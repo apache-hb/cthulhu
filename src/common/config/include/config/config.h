@@ -68,10 +68,10 @@ typedef struct cfg_arg_array_t
 typedef struct cfg_info_t
 {
     /// @brief the name of this field
-    FIELD_STRING const char *name;
+    STA_FIELD_STRING const char *name;
 
     /// @brief a brief description of this field
-    FIELD_STRING const char *brief;
+    STA_FIELD_STRING const char *brief;
 
     /// @brief the spellings to use for this field
     cfg_arg_array_t args;
@@ -81,22 +81,22 @@ typedef struct cfg_info_t
 typedef struct cfg_int_t
 {
     /// @brief default value
-    FIELD_RANGE(min, max) int initial;
+    STA_FIELD_RANGE(min, max) int initial;
 
     /// @brief minimum value
     /// @note if min == INT_MIN, there is no minimum
-    FIELD_RANGE(INT_MIN, max) int min;
+    STA_FIELD_RANGE(INT_MIN, max) int min;
 
     /// @brief maximum value
     /// @note if max == INT_MAX, there is no maximum
-    FIELD_RANGE(min, INT_MAX) int max;
+    STA_FIELD_RANGE(min, INT_MAX) int max;
 } cfg_int_t;
 
 /// @brief a choice in a set of options
 typedef struct cfg_choice_t
 {
     /// @brief the name of this choice
-    FIELD_STRING const char *text;
+    STA_FIELD_STRING const char *text;
 
     /// @brief the value of this choice
     size_t value;

@@ -90,7 +90,7 @@ CT_STD_API typevec_t *typevec_of(IN_DOMAIN(>, 0) size_t width, size_t len, IN_NO
 CT_NODISCARD
 CT_STD_API typevec_t *typevec_of_array(
     IN_DOMAIN(>, 0) size_t width,
-    IN_READS(count * width) const void *src,
+    STA_READS(count * width) const void *src,
     size_t count,
     IN_NOTNULL arena_t *arena);
 
@@ -133,7 +133,7 @@ CT_STD_API void typevec_set(IN_NOTNULL typevec_t *vec, size_t index, IN_NOTNULL 
 /// @param vec the vector to get the value from
 /// @param index the index to get the value from
 /// @param dst the destination to copy the value to
-CT_STD_API void typevec_get(IN_NOTNULL const typevec_t *vec, size_t index, OUT_WRITES(vec->width) void *dst);
+CT_STD_API void typevec_get(IN_NOTNULL const typevec_t *vec, size_t index, STA_WRITES(vec->width) void *dst);
 
 /// @brief get the last element from the vector
 ///

@@ -24,7 +24,7 @@ CT_BEGIN_API
 ///
 /// @retval true if the path is special
 CT_NODISCARD CT_PUREFN
-CT_BASE_API bool is_path_special(STA_IN_CSTRING const char *path);
+CT_BASE_API bool is_path_special(IN_STRING const char *path);
 
 /// @brief hash a pointer value
 ///
@@ -40,7 +40,7 @@ CT_BASE_API ctu_hash_t ctu_ptrhash(const void *ptr);
 ///
 /// @return the hash
 CT_NODISCARD CT_PUREFN
-CT_BASE_API ctu_hash_t str_hash(STA_IN_CSTRING const char *str);
+CT_BASE_API ctu_hash_t str_hash(IN_STRING const char *str);
 
 /// @brief hash a string with a provided length
 ///
@@ -88,7 +88,7 @@ CT_BASE_API bool ctu_isalnum(int c);
 ///
 /// @return if the strings are equal
 CT_NODISCARD CT_PUREFN
-CT_BASE_API bool str_equal(STA_IN_CSTRING const char *lhs, STA_IN_CSTRING const char *rhs);
+CT_BASE_API bool str_equal(IN_STRING const char *lhs, IN_STRING const char *rhs);
 
 /// @brief copy a string
 /// equivalent to strcpy but with safety checks
@@ -100,7 +100,7 @@ CT_BASE_API bool str_equal(STA_IN_CSTRING const char *lhs, STA_IN_CSTRING const 
 /// @param size the size of @p dst
 ///
 /// @return the destination
-CT_BASE_API char *ctu_strcpy(STA_WRITES(size) char *dst, STA_IN_CSTRING const char *src, size_t size);
+CT_BASE_API char *ctu_strcpy(STA_WRITES(size) char *dst, IN_STRING const char *src, size_t size);
 
 /// @brief get the length of a string not including the null terminator
 /// equivalent to strlen but with safety checks
@@ -111,7 +111,7 @@ CT_BASE_API char *ctu_strcpy(STA_WRITES(size) char *dst, STA_IN_CSTRING const ch
 ///
 /// @return the length of the string
 CT_NODISCARD CT_PUREFN
-CT_BASE_API size_t ctu_strlen(STA_IN_CSTRING const char *str);
+CT_BASE_API size_t ctu_strlen(IN_STRING const char *str);
 
 /// @brief check if a string is empty
 /// equivalent to strlen(str) == 0
@@ -123,7 +123,7 @@ CT_BASE_API size_t ctu_strlen(STA_IN_CSTRING const char *str);
 /// @retval true if the string is empty
 /// @retval false otherwise
 CT_NODISCARD CT_PUREFN
-CT_BASE_API bool ctu_string_empty(STA_IN_CSTRING const char *str);
+CT_BASE_API bool ctu_string_empty(IN_STRING const char *str);
 
 /// @brief compare two strings
 /// equivalent to strncmp but with safety checks
@@ -136,7 +136,7 @@ CT_BASE_API bool ctu_string_empty(STA_IN_CSTRING const char *str);
 ///
 /// @return the comparison result
 CT_NODISCARD CT_PUREFN
-CT_BASE_API int ctu_strncmp(STA_IN_CSTRING const char *lhs, STA_IN_CSTRING const char *rhs, size_t length);
+CT_BASE_API int ctu_strncmp(IN_STRING const char *lhs, IN_STRING const char *rhs, size_t length);
 
 /// @brief compare two strings
 /// equivalent to strcmp but with safety checks
@@ -148,7 +148,7 @@ CT_BASE_API int ctu_strncmp(STA_IN_CSTRING const char *lhs, STA_IN_CSTRING const
 ///
 /// @return the comparison result
 CT_NODISCARD CT_PUREFN
-CT_BASE_API int ctu_strcmp(STA_IN_CSTRING const char *lhs, STA_IN_CSTRING const char *rhs);
+CT_BASE_API int ctu_strcmp(IN_STRING const char *lhs, IN_STRING const char *rhs);
 
 /// @brief copy memory from one location to another
 /// equivalent to memcpy but with safety checks
@@ -196,7 +196,7 @@ CT_BASE_API void ctu_memset(STA_WRITES(size) void *dst, int value, size_t size);
 ///
 /// @return the position of @p needle in @p haystack or null if not found
 CT_NODISCARD CT_PUREFN
-CT_BASE_API char *ctu_strstr(STA_IN_CSTRING const char *haystack, STA_IN_CSTRING const char *needle);
+CT_BASE_API char *ctu_strstr(IN_STRING const char *haystack, IN_STRING const char *needle);
 
 // text api
 
@@ -208,7 +208,7 @@ CT_BASE_API char *ctu_strstr(STA_IN_CSTRING const char *haystack, STA_IN_CSTRING
 ///
 /// @return the text object
 CT_CONSTFN
-CT_BASE_API text_t text_make(STA_NOTNULL char *text, size_t length);
+CT_BASE_API text_t text_make(STA_READS(length) char *text, size_t length);
 
 /// @brief create a new owning text array
 /// this is a shortcut for
@@ -220,7 +220,7 @@ CT_BASE_API text_t text_make(STA_NOTNULL char *text, size_t length);
 ///
 /// @return the text object
 CT_PUREFN
-CT_BASE_API text_t text_from(STA_IN_CSTRING char *text);
+CT_BASE_API text_t text_from(IN_STRING char *text);
 
 /// @brief create a new non-owning text array
 /// @p text must be at least @p length bytes long
@@ -230,7 +230,7 @@ CT_BASE_API text_t text_from(STA_IN_CSTRING char *text);
 ///
 /// @return the text object
 CT_CONSTFN
-CT_BASE_API text_view_t text_view_make(STA_NOTNULL const char *text, size_t length);
+CT_BASE_API text_view_t text_view_make(STA_READS(length) const char *text, size_t length);
 
 /// @brief create a new non-owning text array
 /// this is a shortcut for
@@ -242,7 +242,7 @@ CT_BASE_API text_view_t text_view_make(STA_NOTNULL const char *text, size_t leng
 ///
 /// @return the text object
 CT_PUREFN
-CT_BASE_API text_view_t text_view_from(STA_IN_CSTRING const char *text);
+CT_BASE_API text_view_t text_view_from(IN_STRING const char *text);
 
 /// @brief check if two text objects are equal
 ///

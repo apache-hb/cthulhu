@@ -39,7 +39,7 @@ typedef struct bitset_t
 ///
 /// @return the new bitset
 CT_NODISCARD
-CT_BASE_API bitset_t bitset_of(IN_READS(words) void *data, size_t words);
+CT_BASE_API bitset_t bitset_of(STA_READS(words) void *data, size_t words);
 
 /// @brief scan for the next free bit and set it
 ///

@@ -38,7 +38,7 @@ typedef bool (*equals_fn_t)(const void *lhs, const void *rhs);
 typedef struct hash_info_t
 {
     /// @brief the size of the type
-    FIELD_RANGE(0, SIZE_MAX) size_t size;
+    STA_FIELD_RANGE(0, SIZE_MAX) size_t size;
 
     /// @brief the hash function for the type
     hash_fn_t hash;

@@ -41,7 +41,7 @@ typedef struct event_t
     node_t node;
 
     /// @brief the primary message
-    FIELD_STRING char *message;
+    STA_FIELD_STRING char *message;
 
     /// @brief extra segments that this event is attached to
     /// @note typevec_t<segment_t>
@@ -59,7 +59,7 @@ typedef struct segment_t
     node_t node;
 
     /// @brief the message associated with this segment
-    FIELD_STRING char *message;
+    STA_FIELD_STRING char *message;
 } segment_t;
 
 /// @brief an event builder

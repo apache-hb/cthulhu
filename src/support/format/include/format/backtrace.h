@@ -38,7 +38,7 @@ typedef struct fmt_backtrace_t
     print_options_t options;
 
     /// @brief the line heading style
-    FIELD_RANGE(0, eHeadingCount) fmt_heading_t header;
+    STA_FIELD_RANGE(0, eHeadingCount) fmt_heading_t header;
 
     /// @brief configuration flags
     fmt_backtrace_options_t config;
