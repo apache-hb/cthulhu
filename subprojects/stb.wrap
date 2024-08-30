@@ -8,4 +8,4 @@ source_hash = 5d075769721e676746d0c25b698a0f00741f68252f9ab4b7ee245c513aeec3de
 patch_directory = stb
 
 [provide]
-dependency_names = stb_image, stb_sprintf, stb_perlin, stb_rect_pack, stb_image_resize, stb_image_write, stb_truetype
+dependency_names = stb_hexwave, stb_image, stb_truetype, stb_image_write, stb_image_resize2, stb_rect_pack, stb_perlin, stb_ds, stb_sprintf, stb_textedit, stb_voxel_render, stb_dxt, stb_easy_font, stb_tilemap_editor, stb_herringbone_wang_tile, stb_c_lexer, stb_divide, stb_connected_components, stb_leakcheck, stb_include,
