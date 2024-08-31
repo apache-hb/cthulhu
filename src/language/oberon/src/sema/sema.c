@@ -15,25 +15,29 @@
 tree_t *obr_get_type(tree_t *sema, const char *name)
 {
     const size_t tags[] = { eObrTagTypes };
-    return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
+    search_t search = { tags, sizeof(tags) / sizeof(size_t) };
+    return util_select_decl(sema, search, name);
 }
 
 tree_t *obr_get_module(tree_t *sema, const char *name)
 {
     const size_t tags[] = { eObrTagModules };
-    return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
+    search_t search = { tags, sizeof(tags) / sizeof(size_t) };
+    return util_select_decl(sema, search, name);
 }
 
 tree_t *obr_get_symbol(tree_t *sema, obr_tag_t tag, const char *name)
 {
     const size_t tags[] = { tag };
-    return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
+    search_t search = { tags, sizeof(tags) / sizeof(size_t) };
+    return util_select_decl(sema, search, name);
 }
 
 tree_t *obr_get_namespace(tree_t *sema, const char *name)
 {
     const size_t tags[] = { eObrTagModules, eObrTagImports };
-    return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
+    search_t search = { tags, sizeof(tags) / sizeof(size_t) };
+    return util_select_decl(sema, search, name);
 }
 
 void obr_add_decl(tree_t *sema, obr_tag_t tag, const char *name, tree_t *decl)

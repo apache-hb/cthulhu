@@ -80,6 +80,11 @@ tree_t *ctu_cast_type(tree_t *sema, tree_t *expr, const tree_t *dst)
         return tree_expr_cast(expr->node, dst, expr, eCastBit);
     }
 
+    if (util_type_is_digit(inner) && util_type_is_digit(dst))
+    {
+        return tree_expr_cast(expr->node, dst, expr, eCastSignExtend);
+    }
+
     // TODO: deal with other casts
     return expr;
 }

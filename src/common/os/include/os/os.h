@@ -290,7 +290,7 @@ CT_OS_API os_error_t os_file_close(STA_RELEASE os_file_t *file);
 RET_INSPECT
 CT_OS_API os_error_t os_file_read(
         IN_NOTNULL os_file_t *file,
-        OUT_WRITES(size) void *buffer,
+        STA_WRITES(size) void *buffer,
         IN_DOMAIN(>, 0) size_t size,
         OUT_NOTNULL size_t *actual);
 
@@ -306,7 +306,7 @@ CT_OS_API os_error_t os_file_read(
 RET_INSPECT
 CT_OS_API os_error_t os_file_write(
         IN_NOTNULL os_file_t *file,
-        IN_READS(size) const void *buffer,
+        STA_READS(size) const void *buffer,
         IN_DOMAIN(>, 0) size_t size,
         OUT_NOTNULL size_t *actual);
 

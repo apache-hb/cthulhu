@@ -27,26 +27,18 @@
 #   ifndef CT_NODISCARD
 #      define CT_NODISCARD _Check_return_
 #   endif
-#   define IN_READS(expr) _In_reads_(expr)
-#   define IN_READS_OPT(expr) _In_reads_opt_(expr)
-#   define OUT_WRITES(expr) _Out_writes_(expr)
 
 #   define RET_DOMAIN(cmp, it) _Ret_range_(cmp, it)
 #   define RET_NOTNULL _Ret_notnull_
 #   define RET_INSPECT _Must_inspect_result_
-
-#   define FIELD_STRING _Field_z_
-#   define FIELD_RANGE(lo, hi) _Field_range_(lo, hi)
 
 #   define IN_NOTNULL _In_
 #   define IN_STRING _In_z_
 #   define IN_DOMAIN(cmp, it) _In_range_(cmp, it)
 
 #   define OUT_NOTNULL _Out_
-#   define OUT_STRING _Out_z_
 
 #   define INOUT_NOTNULL _Inout_
-#   define INOUT_STRING _Inout_z_
 
 #   define STA_PRESENT 1
 
@@ -66,12 +58,8 @@
 
     // struct annotations
 #   define STA_FIELD_SIZE(of) _Field_size_(of)
-#   define STA_FIELD_CSTRING _Field_z_
+#   define STA_FIELD_STRING _Field_z_
 #   define STA_FIELD_RANGE(lo, hi) _Field_range_(lo, hi)
-
-    // nullability annotations
-#   define STA_NOTNULL _Notnull_
-#   define STA_NULLABLE _Maybenull_
 
     // array parameter annotations
 #   define STA_UPDATES(size) _Inout_updates_(size)
@@ -87,16 +75,12 @@
 #   define STA_FORMAT_STRING _Printf_format_string_
 
     // out parameter annotations
-#   define STA_OUT _Out_
 #   define STA_OUT_OPT _Out_opt_
 #   define STA_OUT_CSTRING _Out_z_
 #   define STA_OUT_RANGE(lo, hi) _Out_range_(lo, hi)
 #   define STA_OUT_INVALID _Post_ptr_invalid_
 
     // in parameter annotations
-#   define STA_IN _In_
-#   define STA_IN_OPT _In_opt_
-#   define STA_IN_CSTRING _In_z_
 #   define STA_IN_RANGE(lo, hi) _In_range_(lo, hi)
 
     // inout parameter annotations
@@ -104,26 +88,17 @@
 #   define STA_INOUT_OPT _Inout_opt_
 #   define STA_INOUT_CSTRING _Inout_z_
 #else
-#   define IN_READS(expr)
-#   define IN_READS_OPT(expr)
-#   define OUT_WRITES(expr)
-
 #   define RET_DOMAIN(cmp, it)
 #   define RET_NOTNULL
 #   define RET_INSPECT
-
-#   define FIELD_STRING
-#   define FIELD_RANGE(lo, hi)
 
 #   define IN_NOTNULL
 #   define IN_STRING
 #   define IN_DOMAIN(cmp, it)
 
 #   define OUT_NOTNULL
-#   define OUT_STRING
 
 #   define INOUT_NOTNULL
-#   define INOUT_STRING
 
     // other annotations
 #   define STA_DECL
@@ -141,12 +116,8 @@
 
     // struct annotations
 #   define STA_FIELD_SIZE(of)
-#   define STA_FIELD_CSTRING
+#   define STA_FIELD_STRING
 #   define STA_FIELD_RANGE(lo, hi)
-
-    // nullability annotations
-#   define STA_NOTNULL
-#   define STA_NULLABLE
 
     // array parameter annotations
 #   define STA_UPDATES(size)
@@ -162,16 +133,12 @@
 #   define STA_FORMAT_STRING
 
     // out parameter annotations
-#   define STA_OUT
 #   define STA_OUT_OPT
 #   define STA_OUT_CSTRING
 #   define STA_OUT_RANGE(lo, hi)
 #   define STA_OUT_INVALID
 
     // in parameter annotations
-#   define STA_IN
-#   define STA_IN_OPT
-#   define STA_IN_CSTRING
 #   define STA_IN_RANGE(lo, hi)
 
     // inout parameter annotations
@@ -182,7 +149,7 @@
 
 #define CT_NORETURN STA_RET_NEVER CT_NORETURN_IMPL
 
-#define STA_RELEASE STA_IN STA_OUT_INVALID
+#define STA_RELEASE IN_NOTNULL STA_OUT_INVALID
 
 /// @def STA_PRINTF(a, b)
 /// @brief mark a function as a printf style function
@@ -328,12 +295,12 @@
 /// @def STA_DECL
 /// @brief sal2 annotation on function implementations to copy annotations from the declaration
 
-/// @def IN_READS(expr)
+/// @def STA_READS(expr)
 /// @brief annotate a parameter as reading @p expr elements
 ///
 /// @param expr the number of elements read
 
-/// @def OUT_WRITES(expr)
+/// @def STA_WRITES(expr)
 /// @brief annotate a parameter as writing @p expr elements
 ///
 /// @param expr the number of elements written
@@ -364,12 +331,12 @@
 ///
 /// @param of the number of elements in the array
 
-/// @def FIELD_STRING
+/// @def STA_FIELD_STRING
 /// @brief annotate a field as being a null terminated string
 
-/// @def FIELD_RANGE(cmp, it)
+/// @def STA_FIELD_RANGE(cmp, it)
 /// @brief annotate a field as being bounded by the expression of @p cmp and @p it
-/// FIELD_RANGE(!=, 0) means the field will never be 0
+/// STA_FIELD_RANGE(!=, 0) means the field will never be 0
 ///
 /// @param cmp the comparison operator
 /// @param it the expression to compare against

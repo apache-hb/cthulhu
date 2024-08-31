@@ -38,7 +38,7 @@ typedef enum colour_t
 typedef struct colour_pallete_t
 {
     const char *colours[eColourCount];
-    FIELD_STRING const char *reset;
+    STA_FIELD_STRING const char *reset;
 } colour_pallete_t;
 
 /// @brief a formatting context when using colours

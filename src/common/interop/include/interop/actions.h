@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-only
 #pragma once
 
 #include <ctu_interop_api.h>
@@ -28,7 +28,7 @@ CT_INTEROP_API void flex_action(INOUT_NOTNULL where_t *where, IN_STRING const ch
 /// @param size total number of characters to write
 ///
 /// @return number of characters written
-CT_INTEROP_API int flex_input(INOUT_NOTNULL scan_t *scan, OUT_WRITES(size) char *out, int size);
+CT_INTEROP_API int flex_input(INOUT_NOTNULL scan_t *scan, STA_WRITES(size) char *out, int size);
 
 /// @brief initialize source location tracking
 ///
@@ -40,7 +40,7 @@ CT_INTEROP_API void flex_init(OUT_NOTNULL where_t *where);
 /// @param where the source location to update
 /// @param offsets the source location offsets
 /// @param steps the number of steps to update by
-CT_INTEROP_API void flex_update(INOUT_NOTNULL where_t *where, IN_READS(steps) const where_t *offsets, int steps);
+CT_INTEROP_API void flex_update(INOUT_NOTNULL where_t *where, STA_READS(steps) const where_t *offsets, int steps);
 
 /// @}
 

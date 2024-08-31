@@ -21,6 +21,10 @@ langtests += {
             'expr': {
                 'pass': {
                     'complex cast expression': 'cast-expr'
+                },
+                'fail': {
+                    'pointer arithmetic': 'add-ptr',
+                    'pointer arithmetic with a literal number': 'add-ptr-literal'
                 }
             },
             'const': {
@@ -267,6 +271,11 @@ langtests += {
                 'dir': 'typealias',
                 'should_fail': true,
                 'files': [ 'config', 'win32' ]
+            },
+            'invalid import alias': {
+                'dir': 'import-alias',
+                'should_fail': true,
+                'files': [ 'main', 'cstdlib' ]
             }
         }
     }

@@ -1,6 +1,5 @@
 # pull stb_sprintf in here if its required, common and frontend use it
-stb = subproject('stb', required : opt_stb_sprintf)
-stb_sprintf = stb.found() ? stb.get_variable('stb_sprintf') : declare_dependency()
+stb_sprintf = dependency('stb_sprintf', allow_fallback : true, required : opt_stb_sprintf)
 
 # base libraries
 subdir('common')

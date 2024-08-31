@@ -43,10 +43,10 @@ typedef struct map_t
     hash_info_t info;
 
     /// @brief the number of top level buckets
-    FIELD_RANGE(>, 0) size_t size;
+    STA_FIELD_RANGE(>, 0) size_t size;
 
     /// @brief the number of buckets used
-    FIELD_RANGE(<, size) size_t used;
+    STA_FIELD_RANGE(<, size) size_t used;
 
     /// @brief bucket data
     STA_FIELD_SIZE(size) bucket_t *data;

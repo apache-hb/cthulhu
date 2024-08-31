@@ -425,6 +425,7 @@ assign_stmt: expr ASSIGN expr SEMI { $$ = ctu_stmt_assign(x, @$, $1, $3); }
 
 branch_stmt: IF expr stmts { $$ = ctu_stmt_branch(x, @$, $2, $3, NULL); }
     | IF expr stmts ELSE stmts { $$ = ctu_stmt_branch(x, @$, $2, $3, $5); }
+    | IF expr stmts ELSE branch_stmt { $$ = ctu_stmt_branch(x, @$, $2, $3, $5); }
     ;
 
 stmt: expr SEMI { $$ = $1; }

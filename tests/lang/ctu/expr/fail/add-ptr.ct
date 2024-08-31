@@ -1,0 +1,8 @@
+@entry(cli)
+def main {
+    var a = 100;
+    var b = &a;
+    var c = 1;
+
+    b = b + c;
+}

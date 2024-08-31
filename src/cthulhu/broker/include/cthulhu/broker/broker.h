@@ -132,8 +132,7 @@ typedef struct language_builtins_t
     STA_FIELD_SIZE(length) const char * const *names;
 
     /// @brief size of decls
-    // FIELD_RANGE(eSemaCount, SIZE_MAX)
-    size_t length;
+    STA_FIELD_RANGE(eSemaCount, SIZE_MAX) size_t length;
 } language_info_t;
 
 /// @brief convert a tree node to a string

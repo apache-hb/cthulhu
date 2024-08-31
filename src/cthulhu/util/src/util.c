@@ -13,14 +13,14 @@
 
 #include <stdint.h>
 
-void *util_select_decl(tree_t *sema, const size_t *tags, size_t len, const char *name)
+void *util_select_decl(tree_t *sema, search_t search, const char *name)
 {
-    CTASSERT(tags != NULL);
-    CTASSERT(len > 0);
+    CTASSERT(search.tags != NULL);
+    CTASSERT(search.count > 0);
 
-    for (size_t i = 0; i < len; i++)
+    for (size_t i = 0; i < search.count; i++)
     {
-        tree_t *decl = tree_module_get(sema, tags[i], name);
+        tree_t *decl = tree_module_get(sema, search.tags[i], name);
         if (decl != NULL)
         {
             return decl;
@@ -176,6 +176,11 @@ static tree_t *cast_to_digit(const tree_t *dst, tree_t *expr)
 
     const tree_t *src = tree_get_type(expr);
 
+    if (util_type_is_pointer(src) && dst->digit == eDigitPtr)
+    {
+        return tree_expr_cast(tree_get_node(expr), dst, expr, eCastBit);
+    }
+
     // TODO: need to distinguish between explicit and implicit casts
     switch (tree_get_kind(src))
     {
@@ -264,14 +269,41 @@ static bool eval_binary(mpz_t value, const tree_t *expr)
     return true;
 }
 
+static bool eval_cast(mpz_t value, const tree_t *expr)
+{
+    CTASSERT(expr != NULL);
+
+    mpz_t src;
+    mpz_init(src);
+
+    if (!util_eval_digit(src, expr->expr))
+    {
+        return false;
+    }
+
+    switch (expr->cast)
+    {
+    case eCastSignExtend: mpz_set(value, src); break;
+    default: return false;
+    }
+
+    return true;
+}
+
 bool util_eval_digit(mpz_t value, const tree_t *expr)
 {
     CTASSERT(expr != NULL);
     switch (tree_get_kind(expr))
     {
-    case eTreeExprDigit: mpz_set(value, expr->digit_value); return true;
+    case eTreeExprDigit:
+        mpz_set(value, expr->digit_value);
+        return true;
 
-    case eTreeExprBinary: return eval_binary(value, expr);
+    case eTreeExprBinary:
+        return eval_binary(value, expr);
+
+    case eTreeExprCast:
+        return eval_cast(value, expr);
 
     default: return false;
     }

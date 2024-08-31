@@ -27,10 +27,10 @@ export struct ConfigFile {
     fileSize: usize;
 
     sections: [*]ConfigSection;
-    sectionCount: usize;
+    sectionCount: uint;
 
     entries: [*]ConfigEntry;
-    entryCount: usize;
+    entryCount: uint;
 }
 
 def reportErrorMessage(name: str) {
@@ -44,6 +44,8 @@ struct Lexer {
 
     current: *char;
 }
+
+export def stringViewLength(view: StringView): usize = cast(view.back as uptrdiff) - cast(view.front as uptrdiff);
 
 def isAlpha(letter: char): bool = (letter >= 'a' && letter <= 'z') || (letter >= 'A' && letter <= 'Z');
 def isSpace(letter: char): bool = letter == ' ' || letter == '\t' || letter == '\n' || letter == '\r';
@@ -68,26 +70,23 @@ export def openConfigFile(path: str): ConfigFile {
         return .{ };
     }
 
-    var sections: [*]ConfigSection = libc::malloc(__sizeof(ConfigSection) * 8);
-    var entries: [*]ConfigEntry = libc::malloc(__sizeof(ConfigEntry) * 16);
+    var sections: [*]ConfigSection = libc::malloc(__sizeof(ConfigSection) * 64);
+    var entries: [*]ConfigEntry = libc::malloc(__sizeof(ConfigEntry) * 256);
 
     file.sections = sections;
     file.entries = entries;
 
-    const innerName = kGlobalSectionName;
-
-    const globalName: StringView = .{
-        front = kGlobalSectionName,
-        back = &kGlobalSectionName[6]
-    };
-
     sections[0] = .{
-        name = globalName,
+        name = .{
+            front = kGlobalSectionName,
+            back = &kGlobalSectionName[6]
+        },
         firstEntry = 0,
         lastEntry = 0
     };
 
     file.sectionCount = 1;
+    file.entryCount = 0;
 
     var index: uint = 0;
     while index < file.fileSize {
@@ -100,6 +99,7 @@ export def openConfigFile(path: str): ConfigFile {
 
         if letter == '[' {
             const name = readUntil(file.fileView + index, ']');
+            index = index + stringViewLength(name) + 1;
 
             sections[file.sectionCount] = .{
                 name = name,
@@ -108,10 +108,37 @@ export def openConfigFile(path: str): ConfigFile {
             };
 
             file.sectionCount = file.sectionCount + 1;
+
+            continue;
         }
 
         if isAlpha(letter) {
+            index = index - 1;
+            var key = readUntil(file.fileView + index, '=');
+            key.back = &key.back[-1];
 
+            index = index + stringViewLength(key);
+
+            const value = readUntil(file.fileView + index, '\n');
+            index = index + stringViewLength(value) + 1;
+
+            entries[file.entryCount] = .{
+                key = key,
+                value = value
+            };
+
+            sections[file.sectionCount - 1].lastEntry = file.entryCount;
+
+            file.entryCount = file.entryCount + 1;
+
+            continue;
+        }
+
+        if letter == ';' {
+            const comment = readUntil(file.fileView + index, '\n');
+            index = index + stringViewLength(comment) + 1;
+
+            continue;
         }
     }
 

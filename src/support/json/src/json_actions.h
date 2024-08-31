@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-only
 #pragma once
 
 #include "json_scan.h"
@@ -10,7 +10,7 @@ CT_BEGIN_API
 
 CT_LOCAL void json_action(INOUT_NOTNULL json_where_t *where, const char *text, size_t len);
 CT_LOCAL void json_init(OUT_NOTNULL json_where_t *where);
-CT_LOCAL void json_update(INOUT_NOTNULL json_where_t *where, IN_READS(steps) const json_where_t *offsets, int steps);
+CT_LOCAL void json_update(INOUT_NOTNULL json_where_t *where, STA_READS(steps) const json_where_t *offsets, int steps);
 
 #define YY_USER_ACTION json_action(yylloc, yytext, yyleng);
 #define YYLLOC_DEFAULT(current, rhs, offset) json_update(&(current), rhs, offset)

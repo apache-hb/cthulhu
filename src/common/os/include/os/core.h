@@ -115,7 +115,7 @@ CT_NORETURN CT_OS_API os_abort(void);
 ///
 /// @return the number of characters written
 CT_NODISCARD
-CT_OS_API size_t os_error_get_string(os_error_t error, OUT_WRITES(size) char *buffer, size_t size);
+CT_OS_API size_t os_error_get_string(os_error_t error, STA_WRITES(size) char *buffer, size_t size);
 
 /// @brief get the current working directory
 ///
@@ -126,7 +126,7 @@ CT_OS_API size_t os_error_get_string(os_error_t error, OUT_WRITES(size) char *bu
 ///
 /// @return the number of characters written, or 0 on error
 CT_NODISCARD
-CT_OS_API size_t os_cwd_get_string(OUT_WRITES(size) char *buffer, size_t size);
+CT_OS_API size_t os_cwd_get_string(STA_WRITES(size) char *buffer, size_t size);
 
 /// @brief convert an os error code to a string
 ///

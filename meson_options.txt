@@ -25,6 +25,11 @@ option('lang_cc', type : 'feature',
     value : 'disabled'
 )
 
+option('lang_sql', type : 'feature',
+    description : 'build the sql language driver',
+    value : 'disabled'
+)
+
 # interfaces
 
 option('frontend_cli', type : 'feature',

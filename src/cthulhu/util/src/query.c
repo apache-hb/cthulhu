@@ -28,15 +28,33 @@ static tree_t *select_decl_imported(tree_t *sema, const size_t *tags, size_t len
     return NULL;
 }
 
-static tree_t *select_module(tree_t *sema, const decl_search_t *search, const char *name, bool *imported)
+static tree_t *select_module(tree_t *sema, search_t search, const char *name, bool *imported)
 {
     CTASSERT(imported != NULL);
 
     tree_t *context = NULL;
 
-    tree_t *inner = select_decl_imported(sema, search->module_tags, search->module_count, name, &context);
+    tree_t *inner = select_decl_imported(sema, search.tags, search.count, name, &context);
     *imported = (inner != context);
     return inner;
+}
+
+static search_t get_module_search(const decl_search_t *search)
+{
+    search_t result = {
+        .tags = search->module_tags,
+        .count = search->module_count
+    };
+    return result;
+}
+
+static search_t get_decl_search(const decl_search_t *search)
+{
+    search_t result = {
+        .tags = search->decl_tags,
+        .count = search->decl_count
+    };
+    return result;
 }
 
 static bool is_public(const tree_t *decl)
@@ -45,9 +63,9 @@ static bool is_public(const tree_t *decl)
     return attrib->visibility == eVisiblePublic;
 }
 
-tree_t *util_search_namespace(tree_t *sema, const decl_search_t *search, const node_t *node, const vector_t *path, bool *is_imported)
+tree_t *util_search_namespace(tree_t *sema, search_t search, const node_t *node, const vector_t *path, bool *is_imported)
 {
-    CTASSERTF(sema != NULL && search != NULL, "(sema = %p, search = %p)", (void*)sema, (void*)search);
+    CTASSERT(sema != NULL);
     CTASSERT(vector_len(path) > 0);
     CTASSERT(is_imported != NULL);
 
@@ -82,7 +100,7 @@ tree_t *util_search_path(tree_t *sema, const decl_search_t *search, const node_t
     for (size_t i = 0; i < len - 1; i++)
     {
         const char *segment = vector_get(path, i);
-        ns = select_module(ns, search, segment, &is_imported);
+        ns = select_module(ns, get_module_search(search), segment, &is_imported);
         if (ns == NULL)
         {
             return tree_raise(node, sema->reports, &kEvent_SymbolNotFound, "namespace `%s` not found", segment);
@@ -90,7 +108,7 @@ tree_t *util_search_path(tree_t *sema, const decl_search_t *search, const node_t
     }
 
     const char *name = vector_tail(path);
-    tree_t *decl = util_select_decl(ns, search->decl_tags, search->decl_count, name);
+    tree_t *decl = util_select_decl(ns, get_decl_search(search), name);
     if (decl == NULL)
     {
         return tree_raise(node, sema->reports, &kEvent_SymbolNotFound, "decl `%s` not found", name);
@@ -107,13 +125,13 @@ tree_t *util_search_path(tree_t *sema, const decl_search_t *search, const node_t
 tree_t *util_search_qualified(tree_t *sema, const decl_search_t *search, const node_t *node, const char *mod, const char *name)
 {
     bool is_imported = false;
-    tree_t *ns = select_module(sema, search, mod, &is_imported);
+    tree_t *ns = select_module(sema, get_module_search(search), mod, &is_imported);
     if (ns == NULL)
     {
         return tree_raise(node, sema->reports, &kEvent_SymbolNotFound, "namespace `%s` not found", mod);
     }
 
-    tree_t *decl = util_select_decl(ns, search->decl_tags, search->decl_count, name);
+    tree_t *decl = util_select_decl(ns, get_decl_search(search), name);
     if (decl == NULL)
     {
         return tree_raise(node, sema->reports, &kEvent_SymbolNotFound, "decl `%s` not found", name);

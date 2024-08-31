@@ -445,6 +445,33 @@ static void check_cast_expr(check_t *check, const tree_t *expr)
     }
 }
 
+static void check_binary_expr(check_t *check, const tree_t *expr)
+{
+    check_single_expr(check, expr->lhs);
+    check_single_expr(check, expr->rhs);
+
+    const tree_t *lhs = get_simple_expr_type(expr->lhs);
+    const tree_t *rhs = get_simple_expr_type(expr->rhs);
+
+    if (!tree_is(lhs, eTreeTypeDigit) || !tree_is(rhs, eTreeTypeDigit))
+    {
+        msg_notify(check->reports, &kEvent_InvalidType, tree_get_node(expr),
+            "binary operation with non-digit types `%s` and `%s`",
+            tree_to_string(lhs),
+            tree_to_string(rhs)
+        );
+    }
+
+    if (!util_types_equal(lhs, rhs))
+    {
+        msg_notify(check->reports, &kEvent_InvalidType, tree_get_node(expr),
+            "binary operation with different types `%s` and `%s`",
+            tree_to_string(lhs),
+            tree_to_string(rhs)
+        );
+    }
+}
+
 static void check_single_expr(check_t *check, const tree_t *expr)
 {
     switch (tree_get_kind(expr))
@@ -455,6 +482,9 @@ static void check_single_expr(check_t *check, const tree_t *expr)
         break;
 
     case eTreeExprBinary:  // TODO: check for correct types
+        check_binary_expr(check, expr);
+        break;
+
     case eTreeExprCompare:
         check_single_expr(check, expr->lhs);
         check_single_expr(check, expr->rhs);
@@ -490,6 +520,9 @@ static void check_single_expr(check_t *check, const tree_t *expr)
         break;
 
     case eTreeExprField:
+        check_single_expr(check, expr->object);
+        break;
+
     case eTreeExprSizeOf:
     case eTreeExprAlignOf:
     case eTreeExprAddressOf:
@@ -585,17 +618,16 @@ static void check_func_body(check_t *check, const tree_t *return_type, const tre
         check_func_return_equal(check, return_type, tree_get_type(stmt->value));
         break;
 
-    case eTreeExprCompare:
-    case eTreeExprBinary:
-        break;
-
+    case eTreeExprCast:
     case eTreeExprLoad:
-        check_single_expr(check, stmt->load);
-        break;
-
+    case eTreeExprAddressOf:
+    case eTreeExprUnary:
+    case eTreeExprBinary:
+    case eTreeExprCompare:
+    case eTreeExprField:
+    case eTreeExprOffset:
     case eTreeExprCall:
-        check_deprecated_call(check, stmt);
-        check_call_arguments(check, stmt);
+        check_single_expr(check, stmt);
         break;
 
     default:

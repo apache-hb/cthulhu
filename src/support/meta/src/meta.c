@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-only
 #include "meta.h"
 #include "arena/arena.h"
 #include "cthulhu/events/events.h"

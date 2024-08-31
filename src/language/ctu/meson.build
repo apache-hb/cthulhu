@@ -31,7 +31,8 @@ ctu_lang = static_library('ctu_lang', src,
     dependencies : deps,
     c_args : generated_args,
     include_directories : [ 'src', 'include' ],
-    override_options : [ 'unity=off' ]
+    override_options : [ 'unity=off' ],
+    kwargs : libkwargs
 )
 
 if default_library == 'static'
@@ -39,7 +40,8 @@ if default_library == 'static'
         link_with : ctu_lang,
         c_args : user_args,
         dependencies : deps,
-        include_directories : [ 'src', 'include', ctu_lang.private_dir_include() ]
+        include_directories : [ 'src', 'include', ctu_lang.private_dir_include() ],
+        kwargs : libkwargs
     )
 
     ctu += {
@@ -51,12 +53,11 @@ if default_library == 'static'
     }
 elif default_library == 'shared'
     ctu_shared = shared_module('ctu_shared', 'src/main.c',
-        build_by_default : not meson.is_subproject(),
-        install : not meson.is_subproject(),
         link_with : ctu_lang,
         dependencies : deps,
         c_args : user_args + [ '-DCTU_DRIVER_SHARED=1' ],
-        include_directories : [ 'src', 'include', ctu_lang.private_dir_include() ]
+        include_directories : [ 'src', 'include', ctu_lang.private_dir_include() ],
+        kwargs : libkwargs
     )
 
     ctu += {

@@ -24,7 +24,8 @@ obr_lang = static_library('obr_lang', src,
     dependencies : deps,
     c_args : generated_args,
     include_directories : [ 'src', 'include' ],
-    override_options : [ 'unity=off' ]
+    override_options : [ 'unity=off' ],
+    kwargs : libkwargs
 )
 
 if default_library == 'static'
@@ -32,7 +33,8 @@ if default_library == 'static'
         link_with : obr_lang,
         dependencies : deps,
         c_args : user_args,
-        include_directories : [ 'src', 'include', obr_lang.private_dir_include() ]
+        include_directories : [ 'src', 'include', obr_lang.private_dir_include() ],
+        kwargs : libkwargs
     )
 
     obr += {
@@ -44,12 +46,11 @@ if default_library == 'static'
     }
 elif default_library == 'shared'
     obr_shared = shared_module('obr_shared', 'src/main.c',
-        build_by_default : not meson.is_subproject(),
-        install : not meson.is_subproject(),
         link_with : obr_lang,
         dependencies : deps,
         c_args : user_args + [ '-DCTU_DRIVER_SHARED=1' ],
-        include_directories : [ 'src', 'include', obr_lang.private_dir_include() ]
+        include_directories : [ 'src', 'include', obr_lang.private_dir_include() ],
+        kwargs : libkwargs
     )
 
     obr += { 'shared': obr_shared }

@@ -1,0 +1,4 @@
+module cstdlib;
+
+@extern("printf")
+export def printf(format: str, args: ...): int;

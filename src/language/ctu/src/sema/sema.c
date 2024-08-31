@@ -75,11 +75,13 @@ logger_t *ctu_sema_reports(ctu_sema_t *sema)
 tree_t *ctu_get_namespace(tree_t *sema, const char *name, bool *imported)
 {
     const size_t local[] = { eCtuTagModules };
-    void *it = util_select_decl(sema, local, sizeof(local) / sizeof(size_t), name);
+    search_t search_local = { local, sizeof(local) / sizeof(size_t) };
+    void *it = util_select_decl(sema, search_local, name);
     if (it != NULL) { return it; }
 
     const size_t global[] = { eCtuTagImports };
-    it = util_select_decl(sema, global, sizeof(global) / sizeof(size_t), name);
+    search_t search_global = { global, sizeof(global) / sizeof(size_t) };
+    it = util_select_decl(sema, search_global, name);
     if (it != NULL)
     {
         if (imported != NULL) { *imported = true; }
@@ -92,31 +94,36 @@ tree_t *ctu_get_namespace(tree_t *sema, const char *name, bool *imported)
 tree_t *ctu_get_import(tree_t *sema, const char *name)
 {
     const size_t tags[] = { eCtuTagImports };
-    return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
+    search_t search = { tags, sizeof(tags) / sizeof(size_t) };
+    return util_select_decl(sema, search, name);
 }
 
 tree_t *ctu_get_type(tree_t *sema, const char *name)
 {
     const size_t tags[] = { eCtuTagTypes };
-    return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
+    search_t search = { tags, sizeof(tags) / sizeof(size_t) };
+    return util_select_decl(sema, search, name);
 }
 
 ctu_attrib_t *ctu_get_attrib(tree_t *sema, const char *name)
 {
     const size_t tags[] = { eCtuTagAttribs };
-    return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
+    search_t search = { tags, sizeof(tags) / sizeof(size_t) };
+    return util_select_decl(sema, search, name);
 }
 
 tree_t *ctu_get_decl(tree_t *sema, const char *name)
 {
     const size_t tags[] = { eCtuTagValues, eCtuTagFunctions };
-    return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
+    search_t search = { tags, sizeof(tags) / sizeof(size_t) };
+    return util_select_decl(sema, search, name);
 }
 
 tree_t *ctu_get_loop(tree_t *sema, const char *name)
 {
     const size_t tags[] = { eCtuTagLabels };
-    return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
+    search_t search = { tags, sizeof(tags) / sizeof(size_t) };
+    return util_select_decl(sema, search, name);
 }
 
 void ctu_add_decl(tree_t *sema, ctu_tag_t tag, const char *name, tree_t *decl)
