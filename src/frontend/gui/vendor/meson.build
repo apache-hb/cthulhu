@@ -64,7 +64,7 @@ inc = include_directories('.', 'imgui', 'imgui/backends')
 args = [ '-DIMGUI_USER_CONFIG="ctuconfig.h"' ]
 
 libimgui = static_library('imgui', src,
-    cpp_args: args,
+    cpp_args: [ all_args, args ],
     include_directories: inc,
     dependencies: deps,
 )
@@ -89,6 +89,7 @@ inc = include_directories('implot')
 libimplot = static_library('implot', src,
     include_directories: inc,
     dependencies: imgui,
+    cpp_args : [ all_args, cpp.get_supported_arguments('/wd4127') ]
 )
 
 implot = declare_dependency(

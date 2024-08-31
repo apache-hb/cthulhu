@@ -112,7 +112,8 @@ all_args = cc.get_supported_arguments(
     '-fstrict-aliasing',
     '-fmerge-all-constants',
 
-    '-D_ITERATOR_DEBUG_LEVEL=0'
+    '-D_ITERATOR_DEBUG_LEVEL=0',
+    '-D_HAS_EXCEPTIONS=0'
 )
 
 has_time_trace = cc.has_argument('-ftime-trace')
