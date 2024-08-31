@@ -25,15 +25,19 @@ CT_BEGIN_API
 /// query helpers
 ///
 
+typedef struct search_t {
+    const size_t *tags;
+    size_t count;
+} search_t;
+
 /// @brief search for a declaration by name in a set of tags
 ///
 /// @param sema the sema context
-/// @param tags the tags ids to search in
-/// @param len the count of @p tags
+/// @param search the tags ids to search
 /// @param name the name of the decl
 ///
 /// @return the decl if found, an error otherwise
-CT_UTIL_API void *util_select_decl(tree_t *sema, const size_t *tags, size_t len, const char *name);
+CT_UTIL_API void *util_select_decl(tree_t *sema, search_t search, const char *name);
 
 typedef struct decl_search_t {
     const size_t *module_tags;
@@ -52,7 +56,7 @@ typedef struct decl_search_t {
 /// @param is_imported whether the namespace was imported
 ///
 /// @return the namespace if found, an error otherwise
-CT_UTIL_API tree_t *util_search_namespace(tree_t *sema, const decl_search_t *search, const node_t *node, const vector_t *path, bool *is_imported);
+CT_UTIL_API tree_t *util_search_namespace(tree_t *sema, search_t search, const node_t *node, const vector_t *path, bool *is_imported);
 
 /// @brief search for a decl given a path
 ///

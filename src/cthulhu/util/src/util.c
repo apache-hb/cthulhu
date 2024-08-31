@@ -13,14 +13,14 @@
 
 #include <stdint.h>
 
-void *util_select_decl(tree_t *sema, const size_t *tags, size_t len, const char *name)
+void *util_select_decl(tree_t *sema, search_t search, const char *name)
 {
-    CTASSERT(tags != NULL);
-    CTASSERT(len > 0);
+    CTASSERT(search.tags != NULL);
+    CTASSERT(search.count > 0);
 
-    for (size_t i = 0; i < len; i++)
+    for (size_t i = 0; i < search.count; i++)
     {
-        tree_t *decl = tree_module_get(sema, tags[i], name);
+        tree_t *decl = tree_module_get(sema, search.tags[i], name);
         if (decl != NULL)
         {
             return decl;

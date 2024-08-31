@@ -169,8 +169,9 @@ TREE_KIND(eTreeDeclField,    "decl_field",    eTagName | eTagHasType)
 TREE_KIND(eTreeDeclFunction, "decl_function", eTagName | eTagEval | eTagHasType)
 TREE_KIND(eTreeDeclModule,   "decl_module",   eTagName)
 
-TREE_KIND(eTreePartial, "partial_type", eTagName | eTagIsType) ///< unresolved type
-TREE_KIND(eTreeError,   "error",        eTagName | eTagHasType) ///< an error message
+TREE_KIND(eTreeQualified, "qualified",    eTagName) ///< a qualified node
+TREE_KIND(eTreePartial,   "partial_type", eTagName | eTagIsType) ///< unresolved type
+TREE_KIND(eTreeError,     "error",        eTagName | eTagHasType) ///< an error message
 
 #undef TREE_KIND
 

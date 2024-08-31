@@ -30,15 +30,17 @@
 /// get decls
 ///
 
-static const size_t kModuleTags[] = {eCtuTagModules, eCtuTagImports, eCtuTagTypes};
+static const size_t kImportTags[] = {eCtuTagImports, eCtuTagTypes};
 static const size_t kDeclTags[] = {eCtuTagValues, eCtuTagFunctions};
 
-static const decl_search_t kSearchName = {
-    .module_tags = kModuleTags,
-    .module_count = sizeof(kModuleTags) / sizeof(size_t),
+static const search_t kSearchImports = {
+    .tags = kImportTags,
+    .count = sizeof(kImportTags) / sizeof(size_t),
+};
 
-    .decl_tags = kDeclTags,
-    .decl_count = sizeof(kDeclTags) / sizeof(size_t),
+static const search_t kSearchDecl = {
+    .tags = kDeclTags,
+    .count = sizeof(kDeclTags) / sizeof(size_t),
 };
 
 static bool is_public(const tree_t *decl)
@@ -51,7 +53,7 @@ static bool is_public(const tree_t *decl)
 static tree_t *sema_decl_name(tree_t *sema, const node_t *node, const vector_t *path, bool *needs_load)
 {
     bool is_imported = false;
-    tree_t *ns = util_search_namespace(sema, &kSearchName, node, path, &is_imported);
+    tree_t *ns = util_search_namespace(sema, kSearchImports, node, path, &is_imported);
     if (tree_is(ns, eTreeError))
     {
         return ns;
@@ -76,7 +78,7 @@ static tree_t *sema_decl_name(tree_t *sema, const node_t *node, const vector_t *
 
     if (tree_is(ns, eTreeDeclModule))
     {
-        tree_t *decl = util_select_decl(ns, kDeclTags, sizeof(kDeclTags) / sizeof(size_t), name);
+        tree_t *decl = util_select_decl(ns, kSearchDecl, name);
         if (decl == NULL)
         {
             return tree_raise(node, sema->reports, &kEvent_SymbolNotFound,
