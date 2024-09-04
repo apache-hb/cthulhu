@@ -123,6 +123,10 @@ bt_resolve_t bt_resolve_inner(bt_address_t frame, bt_symbol_t *symbol)
 
 static LONG WINAPI bt_exception_handler(EXCEPTION_POINTERS *exception)
 {
+    /* ignore C++ exceptions */
+    if (exception->ExceptionRecord->ExceptionCode == 0xe06d7363)
+        return EXCEPTION_CONTINUE_SEARCH;
+
     gSystemError.begin(exception->ExceptionRecord->ExceptionCode, gSystemError.user);
 
     read_context_stack(exception->ContextRecord, gSystemError.next, gSystemError.user);
