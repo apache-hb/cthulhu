@@ -103,9 +103,15 @@ CT_BASE_API CT_NORETURN ctu_vpanic(source_info_t location, STA_FORMAT_STRING con
 
 #if CTU_ASSERTS
 #   define CTASSERTF(expr, ...) CTASSERTF_ALWAYS(expr, __VA_ARGS__)
-#elif defined(__cplusplus)
-    // in C++ assume is very picky about the expression
-#   define CTASSERTF(expr, ...) ((void)0)
+#elif defined(__cplusplus) && (defined(__clang__) || defined(__GNUC__))
+#   define CTASSERTF(expr, ...) \
+    do { \
+        if constexpr (__builtin_constant_p(expr) && (expr)) { \
+            CT_UNREACHABLE(); \
+        } else { \
+            CTASSERTF_ALWAYS(expr, __VA_ARGS__); \
+        } \
+    } while (0)
 #else
 #   define CTASSERTF(expr, ...) CT_ASSUME(expr)
 #endif
