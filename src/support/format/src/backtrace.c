@@ -242,7 +242,7 @@ static typevec_t *collapse_frames(const typevec_t *frames, arena_t *arena)
 // get the longest symbol in a sequence of entries
 static size_t get_longest_symbol(const typevec_t *frames, collapsed_t range)
 {
-    CTASSERTF(is_collapsed_range(range), "range is not a single frame");
+    CTASSERTF(IS_COLLAPSED_RANGE(range), "range is not a single frame");
     size_t largest = 0;
 
     for (size_t i = range.first; i <= range.last; i++)
@@ -278,7 +278,7 @@ static symbol_match_info_t get_largest_collapsed_symbol(const typevec_t *frames,
         const collapsed_t *range = entries + i;
         CTASSERTF(range != NULL, "entry at %zu is NULL", i);
 
-        if (is_collapsed_range(*range))
+        if (IS_COLLAPSED_RANGE(*range))
         {
             symbol_match_info_t info = {
                 .largest_symbol = largest,
@@ -411,7 +411,7 @@ static void print_frame_sequence(backtrace_t *pass, size_t index, collapsed_t co
 
 static void print_collapsed(backtrace_t *pass, size_t index, collapsed_t collapsed)
 {
-    if (is_collapsed_range(collapsed))
+    if (IS_COLLAPSED_RANGE(collapsed))
     {
         print_frame_sequence(pass, index, collapsed);
     }
