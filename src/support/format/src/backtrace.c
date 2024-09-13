@@ -101,14 +101,11 @@ typedef struct collapsed_t
     unsigned repeat;
 } collapsed_t;
 
-static bool is_collapsed_range(collapsed_t collapsed)
-{
-    return collapsed.repeat != 0;
-}
+#define IS_COLLAPSED_RANGE(it) ((it).repeat != 0)
 
 static const entry_t *get_collapsed_entry(const backtrace_t *self, collapsed_t range)
 {
-    CTASSERTF(!is_collapsed_range(range), "range is not a single frame");
+    CTASSERTF(!IS_COLLAPSED_RANGE(range), "range is not a single frame");
 
     return typevec_offset(self->entries, range.first);
 }
@@ -472,7 +469,7 @@ void fmt_backtrace(fmt_backtrace_t fmt, bt_report_t *report)
         }
         else
         {
-            if (!is_collapsed_range(*frame))
+            if (!IS_COLLAPSED_RANGE(*frame))
             {
                 size_t remaining = frame_count - i;
                 symbol_align = get_largest_collapsed_symbol(report->frames, frame, remaining);
