@@ -6,7 +6,7 @@ project('mini_gmp', 'c',
     version : '6.0.0',
     license : 'LGPLv3',
     license_files : [ 'LICENSE' ],
-    meson_version : '>=1.1.0',
+    meson_version : '>=1.3.0',
 )
 
 cc = meson.get_compiler('c')
