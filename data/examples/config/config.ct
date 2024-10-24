@@ -115,11 +115,15 @@ export def openConfigFile(path: str): ConfigFile {
         if isAlpha(letter) {
             index = index - 1;
             var key = readUntil(file.fileView + index, '=');
+            index = index + stringViewLength(key) + 1;
+
             key.back = &key.back[-1];
 
-            index = index + stringViewLength(key);
+            var value = readUntil(file.fileView + index, '\n');
+            while isSpace(*value.front) && value.front < value.back {
+                value.front = &value.front[1];
+            }
 
-            const value = readUntil(file.fileView + index, '\n');
             index = index + stringViewLength(value) + 1;
 
             entries[file.entryCount] = .{

@@ -445,6 +445,11 @@ static void check_cast_expr(check_t *check, const tree_t *expr)
     }
 }
 
+static bool is_pointer_arithmetic(const tree_t *lhs, const tree_t *rhs)
+{
+    return tree_is(lhs, eTreeTypeDigit) && tree_is(rhs, eTreeTypePointer);
+}
+
 static void check_binary_expr(check_t *check, const tree_t *expr)
 {
     check_single_expr(check, expr->lhs);
@@ -453,7 +458,7 @@ static void check_binary_expr(check_t *check, const tree_t *expr)
     const tree_t *lhs = get_simple_expr_type(expr->lhs);
     const tree_t *rhs = get_simple_expr_type(expr->rhs);
 
-    if (!tree_is(lhs, eTreeTypeDigit) || !tree_is(rhs, eTreeTypeDigit))
+    if (!tree_is(lhs, eTreeTypeDigit) && !tree_is(rhs, eTreeTypeDigit))
     {
         msg_notify(check->reports, &kEvent_InvalidType, tree_get_node(expr),
             "binary operation with non-digit types `%s` and `%s`",
@@ -461,6 +466,13 @@ static void check_binary_expr(check_t *check, const tree_t *expr)
             tree_to_string(rhs)
         );
     }
+
+    if (is_pointer_arithmetic(lhs, rhs) || is_pointer_arithmetic(rhs, lhs))
+    {
+        return;
+    }
+
+
 
     if (!util_types_equal(lhs, rhs))
     {

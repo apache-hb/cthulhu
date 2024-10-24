@@ -6,7 +6,7 @@ import win32;
 def main {
     var file = cfg::openConfigFile("example.ini");
     if file.fileView == libc::null {
-        cstdlib::printf("Failed to open file\n");
+        libc::printf("Failed to open file\n");
         libc::exit(1);
     }
 
@@ -16,13 +16,13 @@ def main {
     while index < file.sectionCount {
         const section = file.sections[index];
         const nameLength = cfg::stringViewLength(section.name);
-        libc::printf("Section %u: %.*s (%u entries)\n", index, nameLength, section.name.front, (section.lastEntry - section.firstEntry) + 1);
+        libc::printf("Section %u: %.*s (%u)\n", index, nameLength, section.name.front, (section.lastEntry - section.firstEntry) + 1);
 
         var entryIndex = section.firstEntry;
         while entryIndex <= section.lastEntry {
             const entry = file.entries[entryIndex];
-            const keyLength = cfg::stringViewLength(entry.key);
-            const valueLength = cfg::stringViewLength(entry.value);
+            const keyLength = cast(cfg::stringViewLength(entry.key) as int);
+            const valueLength = cast(cfg::stringViewLength(entry.value) as int);
             libc::printf("Key %u: `%.*s` = `%.*s`\n", entryIndex, keyLength, entry.key.front, valueLength, entry.value.front);
             entryIndex = entryIndex + 1;
         }
