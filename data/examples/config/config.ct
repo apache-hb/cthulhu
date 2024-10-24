@@ -49,6 +49,26 @@ export def stringViewLength(view: StringView): usize = cast(view.back as uptrdif
 
 def isAlpha(letter: char): bool = (letter >= 'a' && letter <= 'z') || (letter >= 'A' && letter <= 'Z');
 def isSpace(letter: char): bool = letter == ' ' || letter == '\t' || letter == '\n' || letter == '\r';
+def isNewline(letter: char): bool = (letter == '\n' || letter == '\r');
+
+def readUntilNewline(current: *char): StringView {
+    var front = current;
+    while !isNewline(*current) && *current != '\0' {
+        current = &current[1];
+    }
+    var back = current;
+
+    current = &current[1];
+
+    while isNewline(*current) {
+        current = &current[1];
+    }
+
+    return .{
+        front = front,
+        back = back
+    };
+}
 
 def readUntil(current: *char, terminator: char): StringView {
     var front = current;
@@ -119,7 +139,7 @@ export def openConfigFile(path: str): ConfigFile {
 
             key.back = &key.back[-1];
 
-            var value = readUntil(file.fileView + index, '\n');
+            var value = readUntilNewline(file.fileView + index);
             while isSpace(*value.front) && value.front < value.back {
                 value.front = &value.front[1];
             }
