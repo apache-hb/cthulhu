@@ -76,9 +76,12 @@ def readUntil(current: *char, terminator: char): StringView {
         current = &current[1];
     }
 
+    var back = current;
+    current = &current[1];
+
     return .{
         front = front,
-        back = current
+        back = back
     };
 }
 
@@ -119,7 +122,7 @@ export def openConfigFile(path: str): ConfigFile {
 
         if letter == '[' {
             const name = readUntil(file.fileView + index, ']');
-            index = index + stringViewLength(name) + 1;
+            index = index + stringViewLength(name);
 
             sections[file.sectionCount] = .{
                 name = name,
